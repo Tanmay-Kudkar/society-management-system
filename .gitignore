@@ -1,0 +1,134 @@
+############################################################
+# 🚫 GLOBAL IGNORE RULES
+# Applies to entire Society Management System repository
+############################################################
+
+# OS generated files
+.DS_Store
+Thumbs.db
+ehthumbs.db
+desktop.ini
+
+############################################################
+# 🧠 IDE / EDITOR FILES
+############################################################
+
+# VS Code
+.vscode/
+.history/
+
+# IntelliJ IDEA
+.idea/
+*.iml
+out/
+
+# Eclipse / STS
+.classpath
+.project
+.settings/
+.springBeans
+
+############################################################
+# ☕ JAVA / SPRING BOOT (BACKEND)
+############################################################
+
+# Compiled class files
+*.class
+
+# Maven / Gradle build output
+target/
+build/
+
+# Maven wrapper logs
+.mvn/wrapper/maven-wrapper.log
+
+# Spring Boot runtime files
+logs/
+*.log
+
+# Application secrets
+application-local.yml
+application-dev.yml
+application-prod.yml
+.env
+
+############################################################
+# 🌐 FRONTEND (REACT / REACT NATIVE)
+############################################################
+
+# Node modules
+node_modules/
+
+# Build output
+dist/
+build/
+
+# Package manager logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Expo / React Native
+.expo/
+.expo-shared/
+android/.gradle/
+android/app/build/
+ios/build/
+
+############################################################
+# 🗄️ DATABASE / DATA FILES
+############################################################
+
+# Local database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Dumps / backups
+*.sql.bak
+*.dump
+*.backup
+
+############################################################
+# 🔐 ENVIRONMENT & SECRETS
+############################################################
+
+# Environment variables
+.env
+.env.*
+*.key
+*.pem
+*.crt
+
+############################################################
+# 🧪 TEST / TEMP FILES
+############################################################
+
+# Test reports
+coverage/
+*.coverage
+
+# Temporary files
+tmp/
+temp/
+
+############################################################
+# 📦 ARCHIVES
+############################################################
+
+*.zip
+*.tar
+*.tar.gz
+*.rar
+
+############################################################
+# ✅ KEEP THESE TRACKED (IMPORTANT)
+############################################################
+# DO NOT ignore:
+# - database/schema.sql
+# - docs/
+# - README.md
+# - Rules.md
+# - source code
+############################################################
