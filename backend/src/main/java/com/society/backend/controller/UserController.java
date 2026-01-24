@@ -1,4 +1,4 @@
 package com.society.backend.controller;
 
-public class HealthController {
+public class UserController {
 }
