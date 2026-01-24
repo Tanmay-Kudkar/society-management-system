@@ -108,7 +108,7 @@ Now `main` contains the working version.
 
 ---
 
-### 7️⃣ Sync After Merge
+### 7️⃣ Sync After Merge (Everyone should follow)
 
 After a merge, everyone must update their branch:
 
@@ -145,7 +145,7 @@ That is completely fine.
 
 - Everyone codes ✔️  
 - Everyone experiments ✔️  
-- Only one person (Team Lead) merges ti `main`✔️  
+- Only one person (Team Lead) merges to `main`✔️  
 - `main branch` stays stable ✔️  
 - Demo never breaks ✔️  
 ```
