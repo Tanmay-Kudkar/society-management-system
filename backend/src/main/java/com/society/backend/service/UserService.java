@@ -1,4 +1,13 @@
 package com.society.backend.service;
 
-public class UserService {
+import com.society.backend.dto.UserRequest;
+import com.society.backend.dto.UserResponse;
+
+import java.util.List;
+
+public interface UserService {
+
+    UserResponse createUser(UserRequest request);
+
+    List<UserResponse> getAllUsers();
 }
