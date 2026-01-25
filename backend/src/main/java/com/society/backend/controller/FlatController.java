@@ -3,6 +3,7 @@ package com.society.backend.controller;
 import com.society.backend.dto.FlatRequest;
 import com.society.backend.dto.FlatResponse;
 import com.society.backend.service.FlatService;
+import com.society.backend.service.RoleService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -14,16 +15,23 @@ import java.util.List;
 public class FlatController {
 
     private final FlatService flatService;
+    private final RoleService roleService;
 
-    public FlatController(FlatService flatService) {
+    public FlatController(FlatService flatService, RoleService roleService) {
         this.flatService = flatService;
+        this.roleService = roleService;
     }
 
+    // MASTER_ADMIN, COMMITTEE only
     @PostMapping
-    public ResponseEntity<FlatResponse> create(@Valid @RequestBody FlatRequest request) {
+    public ResponseEntity<FlatResponse> create(
+            @RequestParam Long userId,
+            @Valid @RequestBody FlatRequest request) {
+        roleService.canManageFlats(userId);
         return ResponseEntity.ok(flatService.create(request));
     }
 
+    // All authenticated users can view
     @GetMapping
     public ResponseEntity<List<FlatResponse>> getAll() {
         return ResponseEntity.ok(flatService.getAll());
@@ -39,13 +47,22 @@ public class FlatController {
         return ResponseEntity.ok(flatService.getById(id));
     }
 
+    // MASTER_ADMIN, COMMITTEE only
     @PutMapping("/{id}")
-    public ResponseEntity<FlatResponse> update(@PathVariable Long id, @Valid @RequestBody FlatRequest request) {
+    public ResponseEntity<FlatResponse> update(
+            @PathVariable Long id,
+            @RequestParam Long userId,
+            @Valid @RequestBody FlatRequest request) {
+        roleService.canManageFlats(userId);
         return ResponseEntity.ok(flatService.update(id, request));
     }
 
+    // MASTER_ADMIN, COMMITTEE only
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
+    public ResponseEntity<Void> delete(
+            @PathVariable Long id,
+            @RequestParam Long userId) {
+        roleService.canManageFlats(userId);
         flatService.delete(id);
         return ResponseEntity.noContent().build();
     }

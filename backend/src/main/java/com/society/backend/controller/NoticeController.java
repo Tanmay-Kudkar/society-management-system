@@ -3,6 +3,7 @@ package com.society.backend.controller;
 import com.society.backend.dto.NoticeRequest;
 import com.society.backend.dto.NoticeResponse;
 import com.society.backend.service.NoticeService;
+import com.society.backend.service.RoleService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -14,16 +15,23 @@ import java.util.List;
 public class NoticeController {
 
     private final NoticeService noticeService;
+    private final RoleService roleService;
 
-    public NoticeController(NoticeService noticeService) {
+    public NoticeController(NoticeService noticeService, RoleService roleService) {
         this.noticeService = noticeService;
+        this.roleService = roleService;
     }
 
+    // MASTER_ADMIN, COMMITTEE, EMPLOYEE can create
     @PostMapping
-    public ResponseEntity<NoticeResponse> create(@Valid @RequestBody NoticeRequest request) {
+    public ResponseEntity<NoticeResponse> create(
+            @RequestParam Long userId,
+            @Valid @RequestBody NoticeRequest request) {
+        roleService.canManageNotices(userId);
         return ResponseEntity.ok(noticeService.create(request));
     }
 
+    // All users can view notices
     @GetMapping
     public ResponseEntity<List<NoticeResponse>> getAll() {
         return ResponseEntity.ok(noticeService.getAll());
@@ -34,13 +42,22 @@ public class NoticeController {
         return ResponseEntity.ok(noticeService.getById(id));
     }
 
+    // MASTER_ADMIN, COMMITTEE, EMPLOYEE can update
     @PutMapping("/{id}")
-    public ResponseEntity<NoticeResponse> update(@PathVariable Long id, @Valid @RequestBody NoticeRequest request) {
+    public ResponseEntity<NoticeResponse> update(
+            @PathVariable Long id,
+            @RequestParam Long userId,
+            @Valid @RequestBody NoticeRequest request) {
+        roleService.canManageNotices(userId);
         return ResponseEntity.ok(noticeService.update(id, request));
     }
 
+    // MASTER_ADMIN, COMMITTEE, EMPLOYEE can delete
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
+    public ResponseEntity<Void> delete(
+            @PathVariable Long id,
+            @RequestParam Long userId) {
+        roleService.canManageNotices(userId);
         noticeService.delete(id);
         return ResponseEntity.noContent().build();
     }
