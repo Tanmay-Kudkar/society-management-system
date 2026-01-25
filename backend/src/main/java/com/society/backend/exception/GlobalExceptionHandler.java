@@ -1,4 +1,4 @@
-package com.society.backend.controller.exception;
+package com.society.backend.exception;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
