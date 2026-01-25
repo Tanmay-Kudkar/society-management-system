@@ -16,21 +16,15 @@ public class AuthController {
         this.authService = authService;
     }
 
-    @PostMapping("/login")
-    public ResponseEntity<LoginResponse> login(
-            @RequestBody LoginRequest request) {
-
-        return ResponseEntity.ok(
-                authService.login(request)
-        );
-    }
-
     @PostMapping("/register")
     public ResponseEntity<UserResponse> register(
             @Valid @RequestBody RegisterRequest request) {
+        return ResponseEntity.ok(authService.register(request));
+    }
 
-        return ResponseEntity.ok(
-                authService.register(request)
-        );
+    @PostMapping("/login")
+    public ResponseEntity<LoginResponse> login(
+            @Valid @RequestBody LoginRequest request) {
+        return ResponseEntity.ok(authService.login(request));
     }
 }

@@ -1,24 +1,29 @@
 package com.society.backend.service.impl;
 
-import com.society.backend.dto.UserRequest;
-import com.society.backend.dto.UserResponse;
-import com.society.backend.entity.User;
-import com.society.backend.repository.UserRepository;
-import com.society.backend.service.UserService;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.stereotype.Service;
-
 import java.time.LocalDateTime;
 import java.util.List;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+
+import com.society.backend.dto.UserRequest;
+import com.society.backend.dto.UserResponse;
+import com.society.backend.entity.Role;
+import com.society.backend.entity.User;
+import com.society.backend.exception.ApiException;
+import com.society.backend.repository.UserRepository;
+import com.society.backend.service.UserService;
 
 @Service
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
-    private final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
+    private final PasswordEncoder passwordEncoder;
 
-    public UserServiceImpl(UserRepository userRepository) {
+    public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Override
@@ -26,12 +31,23 @@ public class UserServiceImpl implements UserService {
         User user = new User();
         user.setName(request.getName());
         user.setEmail(request.getEmail());
-        user.setPassword(encoder.encode(request.getPassword()));
-        user.setRole(request.getRole());
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
+        user.setRole(resolveRole(request.getRole()));
         user.setCreatedAt(LocalDateTime.now());
 
         User saved = userRepository.save(user);
         return mapToResponse(saved);
+    }
+
+    private Role resolveRole(String roleValue) {
+        if (roleValue == null || roleValue.trim().isEmpty()) {
+            return Role.MEMBER;
+        }
+        try {
+            return Role.valueOf(roleValue.trim().toUpperCase());
+        } catch (IllegalArgumentException ex) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Invalid role");
+        }
     }
 
     @Override
@@ -47,8 +63,6 @@ public class UserServiceImpl implements UserService {
                 user.getId(),
                 user.getName(),
                 user.getEmail(),
-                user.getRole(),
-                user.getCreatedAt()
-        );
+                user.getRole().name());
     }
 }

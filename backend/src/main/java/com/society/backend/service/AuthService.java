@@ -7,7 +7,7 @@ import com.society.backend.dto.UserResponse;
 
 public interface AuthService {
 
-    LoginResponse login(LoginRequest request);
-
     UserResponse register(RegisterRequest request);
+
+    LoginResponse login(LoginRequest request);
 }
