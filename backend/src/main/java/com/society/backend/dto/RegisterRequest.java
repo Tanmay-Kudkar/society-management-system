@@ -1,6 +1,7 @@
 package com.society.backend.dto;
 
 import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
@@ -21,6 +22,10 @@ public class RegisterRequest {
     @Size(min = 8, message = "Password must be at least 8 characters")
     private String password;
 
-    @NotBlank(message = "role can't be blank")
+    @NotBlank(message = "Role is required")
+    @Pattern(
+            regexp = "USER|ADMIN|VISITOR|COMMITTEE",
+            message = "Role must be USER, ADMIN, VISITOR, or COMMITTEE"
+    )
     private String role;
 }
