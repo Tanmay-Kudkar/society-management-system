@@ -92,9 +92,11 @@
 			<scope>test</scope>
 		</dependency>
 
-
-
-
+		<!-- Spring Mail for Email Service -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-mail</artifactId>
+		</dependency>
 
 	</dependencies>
 

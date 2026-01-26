@@ -63,71 +63,102 @@ public class SecurityConfig {
                         // Public endpoints
                         .requestMatchers("/auth/**").permitAll()
                         .requestMatchers("/error").permitAll()
+                        .requestMatchers("/api/test/**").permitAll() // Test endpoints (remove in production)
 
-                        // Master Admin only endpoints
-                        .requestMatchers("/societies/**").hasRole("MASTER_ADMIN")
+                        // ==================== MASTER_ADMIN ONLY ====================
+                        // Platform-level management (societies, approvals, escalations)
+                        .requestMatchers("/admin/societies/**").hasRole("MASTER_ADMIN")
+                        .requestMatchers("/admin/approvals/**").hasRole("MASTER_ADMIN")
+                        .requestMatchers("/admin/escalations/**").hasRole("MASTER_ADMIN")
+                        .requestMatchers("/admin/platform/**").hasRole("MASTER_ADMIN")
 
-                        // Admin and Committee can manage users
-                        .requestMatchers(HttpMethod.POST, "/users/**").hasAnyRole("MASTER_ADMIN", "COMMITTEE")
-                        .requestMatchers(HttpMethod.PUT, "/users/**").hasAnyRole("MASTER_ADMIN", "COMMITTEE")
-                        .requestMatchers(HttpMethod.DELETE, "/users/**").hasAnyRole("MASTER_ADMIN", "COMMITTEE")
+                        // ==================== SOCIETY_ADMIN & ABOVE ====================
+                        // Society-level management (users, settings, reports)
+                        .requestMatchers("/societies/{societyId}/**").hasAnyRole("MASTER_ADMIN", "SOCIETY_ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/users/**").hasAnyRole("MASTER_ADMIN", "SOCIETY_ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/users/**").hasAnyRole("MASTER_ADMIN", "SOCIETY_ADMIN")
+                        .requestMatchers("/reports/**").hasAnyRole("MASTER_ADMIN", "SOCIETY_ADMIN", "CHAIRMAN")
 
-                        // Admin, Committee, and Employee can manage flats
-                        .requestMatchers("/flats/**").hasAnyRole("MASTER_ADMIN", "COMMITTEE", "EMPLOYEE")
+                        // ==================== CHAIRMAN LEVEL ====================
+                        // Financial approvals, high-value decisions
+                        .requestMatchers(HttpMethod.POST, "/contracts/**")
+                        .hasAnyRole("MASTER_ADMIN", "SOCIETY_ADMIN", "CHAIRMAN")
+                        .requestMatchers(HttpMethod.DELETE, "/contracts/**")
+                        .hasAnyRole("MASTER_ADMIN", "SOCIETY_ADMIN", "CHAIRMAN")
+                        .requestMatchers("/financial-approvals/**")
+                        .hasAnyRole("MASTER_ADMIN", "SOCIETY_ADMIN", "CHAIRMAN")
 
-                        // Admin, Committee can manage vendors and contracts
-                        .requestMatchers("/vendors/**").hasAnyRole("MASTER_ADMIN", "COMMITTEE")
-                        .requestMatchers("/vendor-bills/**").hasAnyRole("MASTER_ADMIN", "COMMITTEE")
-                        .requestMatchers("/contracts/**").hasAnyRole("MASTER_ADMIN", "COMMITTEE")
-
-                        // Admin, Committee can manage maintenance
-                        .requestMatchers(HttpMethod.POST, "/maintenance-bills/**")
-                        .hasAnyRole("MASTER_ADMIN", "COMMITTEE")
-                        .requestMatchers(HttpMethod.PUT, "/maintenance-bills/**")
-                        .hasAnyRole("MASTER_ADMIN", "COMMITTEE")
-                        .requestMatchers(HttpMethod.DELETE, "/maintenance-bills/**")
-                        .hasAnyRole("MASTER_ADMIN", "COMMITTEE")
-
-                        // Admin, Committee can manage transactions
-                        .requestMatchers("/transactions/**").hasAnyRole("MASTER_ADMIN", "COMMITTEE")
-
-                        // Admin, Committee, Employee can create notices
+                        // ==================== SECRETARY LEVEL ====================
+                        // Administrative tasks, notices, meetings
                         .requestMatchers(HttpMethod.POST, "/notices/**")
-                        .hasAnyRole("MASTER_ADMIN", "COMMITTEE", "EMPLOYEE")
+                        .hasAnyRole("MASTER_ADMIN", "SOCIETY_ADMIN", "CHAIRMAN", "SECRETARY")
                         .requestMatchers(HttpMethod.PUT, "/notices/**")
-                        .hasAnyRole("MASTER_ADMIN", "COMMITTEE", "EMPLOYEE")
+                        .hasAnyRole("MASTER_ADMIN", "SOCIETY_ADMIN", "CHAIRMAN", "SECRETARY")
                         .requestMatchers(HttpMethod.DELETE, "/notices/**")
-                        .hasAnyRole("MASTER_ADMIN", "COMMITTEE", "EMPLOYEE")
+                        .hasAnyRole("MASTER_ADMIN", "SOCIETY_ADMIN", "CHAIRMAN", "SECRETARY")
+                        .requestMatchers("/meetings/**")
+                        .hasAnyRole("MASTER_ADMIN", "SOCIETY_ADMIN", "CHAIRMAN", "SECRETARY")
 
-                        // Admin, Committee can manage banners
-                        .requestMatchers("/banners/**").hasAnyRole("MASTER_ADMIN", "COMMITTEE")
+                        // ==================== TREASURER LEVEL ====================
+                        // Financial operations, bills, transactions
+                        .requestMatchers("/transactions/**")
+                        .hasAnyRole("MASTER_ADMIN", "SOCIETY_ADMIN", "CHAIRMAN", "TREASURER")
+                        .requestMatchers(HttpMethod.POST, "/maintenance-bills/**")
+                        .hasAnyRole("MASTER_ADMIN", "SOCIETY_ADMIN", "CHAIRMAN", "TREASURER")
+                        .requestMatchers(HttpMethod.PUT, "/maintenance-bills/**")
+                        .hasAnyRole("MASTER_ADMIN", "SOCIETY_ADMIN", "CHAIRMAN", "TREASURER")
+                        .requestMatchers(HttpMethod.DELETE, "/maintenance-bills/**")
+                        .hasAnyRole("MASTER_ADMIN", "SOCIETY_ADMIN", "CHAIRMAN", "TREASURER")
 
-                        // Admin, Committee, Employee can manage documents
-                        .requestMatchers("/documents/**").hasAnyRole("MASTER_ADMIN", "COMMITTEE", "EMPLOYEE")
+                        // ==================== COMMITTEE LEVEL ====================
+                        // Vendors, contracts (view/update), banners, documents
+                        .requestMatchers("/vendors/**")
+                        .hasAnyRole("MASTER_ADMIN", "SOCIETY_ADMIN", "CHAIRMAN", "SECRETARY", "TREASURER", "COMMITTEE")
+                        .requestMatchers("/vendor-bills/**")
+                        .hasAnyRole("MASTER_ADMIN", "SOCIETY_ADMIN", "CHAIRMAN", "TREASURER", "COMMITTEE")
+                        .requestMatchers(HttpMethod.PUT, "/contracts/**")
+                        .hasAnyRole("MASTER_ADMIN", "SOCIETY_ADMIN", "CHAIRMAN", "SECRETARY", "COMMITTEE")
+                        .requestMatchers(HttpMethod.GET, "/contracts/**")
+                        .hasAnyRole("MASTER_ADMIN", "SOCIETY_ADMIN", "CHAIRMAN", "SECRETARY", "TREASURER", "COMMITTEE")
+                        .requestMatchers("/banners/**")
+                        .hasAnyRole("MASTER_ADMIN", "SOCIETY_ADMIN", "CHAIRMAN", "SECRETARY", "COMMITTEE")
+                        .requestMatchers(HttpMethod.PUT, "/users/**")
+                        .hasAnyRole("MASTER_ADMIN", "SOCIETY_ADMIN", "CHAIRMAN", "SECRETARY", "COMMITTEE")
 
-                        // Admin, Committee, Employee can manage emergency contacts
+                        // ==================== EMPLOYEE LEVEL ====================
+                        // Flats, documents, emergency contacts management
+                        .requestMatchers("/flats/**")
+                        .hasAnyRole("MASTER_ADMIN", "SOCIETY_ADMIN", "CHAIRMAN", "SECRETARY", "TREASURER", "COMMITTEE",
+                                "EMPLOYEE")
+                        .requestMatchers("/documents/**")
+                        .hasAnyRole("MASTER_ADMIN", "SOCIETY_ADMIN", "CHAIRMAN", "SECRETARY", "TREASURER", "COMMITTEE",
+                                "EMPLOYEE")
                         .requestMatchers(HttpMethod.POST, "/emergency-contacts/**")
-                        .hasAnyRole("MASTER_ADMIN", "COMMITTEE", "EMPLOYEE")
+                        .hasAnyRole("MASTER_ADMIN", "SOCIETY_ADMIN", "CHAIRMAN", "SECRETARY", "COMMITTEE", "EMPLOYEE")
                         .requestMatchers(HttpMethod.PUT, "/emergency-contacts/**")
-                        .hasAnyRole("MASTER_ADMIN", "COMMITTEE", "EMPLOYEE")
+                        .hasAnyRole("MASTER_ADMIN", "SOCIETY_ADMIN", "CHAIRMAN", "SECRETARY", "COMMITTEE", "EMPLOYEE")
                         .requestMatchers(HttpMethod.DELETE, "/emergency-contacts/**")
-                        .hasAnyRole("MASTER_ADMIN", "COMMITTEE", "EMPLOYEE")
+                        .hasAnyRole("MASTER_ADMIN", "SOCIETY_ADMIN", "CHAIRMAN", "SECRETARY", "COMMITTEE", "EMPLOYEE")
 
-                        // All authenticated users can view notices, emergency contacts
+                        // ==================== MEMBER LEVEL ====================
+                        // Tenants, vehicles (for their own flats)
+                        .requestMatchers("/tenants/**")
+                        .hasAnyRole("MASTER_ADMIN", "SOCIETY_ADMIN", "CHAIRMAN", "SECRETARY", "TREASURER", "COMMITTEE",
+                                "EMPLOYEE", "MEMBER")
+                        .requestMatchers("/vehicles/**")
+                        .hasAnyRole("MASTER_ADMIN", "SOCIETY_ADMIN", "CHAIRMAN", "SECRETARY", "TREASURER", "COMMITTEE",
+                                "EMPLOYEE", "MEMBER")
+
+                        // ==================== ALL AUTHENTICATED USERS ====================
+                        // View notices, emergency contacts, own maintenance bills
                         .requestMatchers(HttpMethod.GET, "/notices/**").authenticated()
                         .requestMatchers(HttpMethod.GET, "/emergency-contacts/**").authenticated()
                         .requestMatchers(HttpMethod.GET, "/maintenance-bills/**").authenticated()
-
-                        // All authenticated users can create and view tickets/complaints
-                        .requestMatchers("/tickets/**").authenticated()
-                        .requestMatchers("/complaints/**").authenticated()
-
-                        // All authenticated users can view/update their own profile
                         .requestMatchers(HttpMethod.GET, "/users/**").authenticated()
 
-                        // Tenants and vehicles
-                        .requestMatchers("/tenants/**").hasAnyRole("MASTER_ADMIN", "COMMITTEE", "EMPLOYEE", "MEMBER")
-                        .requestMatchers("/vehicles/**").hasAnyRole("MASTER_ADMIN", "COMMITTEE", "EMPLOYEE", "MEMBER")
+                        // Tickets and complaints (any authenticated user can create/view)
+                        .requestMatchers("/tickets/**").authenticated()
+                        .requestMatchers("/complaints/**").authenticated()
 
                         // Any other request requires authentication
                         .anyRequest().authenticated())

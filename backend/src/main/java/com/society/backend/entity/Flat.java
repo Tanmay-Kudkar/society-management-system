@@ -25,4 +25,14 @@ public class Flat {
 
     @Column(name = "owner_name")
     private String ownerName;
+
+    @Column(name = "owner_email")
+    private String ownerEmail;
+
+    @Column(name = "owner_phone")
+    private String ownerPhone;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "owner_user_id")
+    private User owner;
 }
