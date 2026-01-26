@@ -3,6 +3,8 @@ package com.society.backend.service.auth;
 import java.time.LocalDateTime;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -14,17 +16,24 @@ import com.society.backend.entity.Role;
 import com.society.backend.entity.User;
 import com.society.backend.exception.ApiException;
 import com.society.backend.repository.user.UserRepository;
+import com.society.backend.security.JwtUtils;
 
 @Service
 public class AuthServiceImpl implements AuthService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JwtUtils jwtUtils;
+    private final AuthenticationManager authenticationManager;
 
     public AuthServiceImpl(UserRepository userRepository,
-            PasswordEncoder passwordEncoder) {
+            PasswordEncoder passwordEncoder,
+            JwtUtils jwtUtils,
+            AuthenticationManager authenticationManager) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.jwtUtils = jwtUtils;
+        this.authenticationManager = authenticationManager;
     }
 
     @Override
@@ -55,18 +64,24 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public LoginResponse login(LoginRequest request) {
 
+        // Authenticate user credentials
+        authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                        request.getEmail(),
+                        request.getPassword()));
+
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new ApiException(HttpStatus.UNAUTHORIZED, "Invalid email or password"));
 
-        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-            throw new ApiException(HttpStatus.UNAUTHORIZED, "Invalid email or password");
-        }
+        // Generate JWT token
+        String token = jwtUtils.generateToken(user.getEmail(), user.getRole().name(), user.getId());
 
         return new LoginResponse(
                 user.getId(),
                 user.getName(),
                 user.getEmail(),
-                user.getRole().name());
+                user.getRole().name(),
+                token);
     }
 
     private Role resolveRole(String roleValue) {
