@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Getter
@@ -13,10 +14,13 @@ public class MaintenanceBillResponse {
     private Long flatId;
     private String flatNumber;
     private String ownerName;
+    private String societyName;
     private String billMonth;
     private BigDecimal amount;
     private BigDecimal paidAmount;
     private BigDecimal pendingAmount;
+    private LocalDate dueDate;
+    private LocalDate paymentDate;
     private String status;
     private String paymentMode;
     private String receiptNumber;

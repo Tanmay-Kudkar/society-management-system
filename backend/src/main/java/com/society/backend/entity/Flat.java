@@ -5,6 +5,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.math.BigDecimal;
+
 @Entity
 @Table(name = "flats")
 @Getter
@@ -23,6 +25,15 @@ public class Flat {
     @Column(name = "flat_number", nullable = false)
     private String flatNumber;
 
+    @Column(name = "flat_type")
+    private String flatType; // 1BHK, 2BHK, 3BHK, STUDIO, PENTHOUSE, etc.
+
+    @Column
+    private Integer floor;
+
+    @Column
+    private BigDecimal area; // in sq ft
+
     @Column(name = "owner_name")
     private String ownerName;
 
@@ -35,4 +46,7 @@ public class Flat {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "owner_user_id")
     private User owner;
+
+    @Column(name = "is_occupied")
+    private Boolean isOccupied = false;
 }

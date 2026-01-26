@@ -30,9 +30,7 @@ public class FlatServiceImpl implements FlatService {
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Society not found"));
 
         Flat flat = new Flat();
-        flat.setSociety(society);
-        flat.setFlatNumber(request.getFlatNumber());
-        flat.setOwnerName(request.getOwnerName());
+        mapRequestToEntity(request, flat, society);
         Flat saved = flatRepository.save(flat);
         return toResponse(saved);
     }
@@ -66,9 +64,7 @@ public class FlatServiceImpl implements FlatService {
         Society society = societyRepository.findById(request.getSocietyId())
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Society not found"));
 
-        flat.setSociety(society);
-        flat.setFlatNumber(request.getFlatNumber());
-        flat.setOwnerName(request.getOwnerName());
+        mapRequestToEntity(request, flat, society);
         Flat saved = flatRepository.save(flat);
         return toResponse(saved);
     }
@@ -81,12 +77,30 @@ public class FlatServiceImpl implements FlatService {
         flatRepository.deleteById(id);
     }
 
+    private void mapRequestToEntity(FlatRequest request, Flat flat, Society society) {
+        flat.setSociety(society);
+        flat.setFlatNumber(request.getFlatNumber());
+        flat.setFlatType(request.getFlatType());
+        flat.setFloor(request.getFloor());
+        flat.setArea(request.getArea());
+        flat.setOwnerName(request.getOwnerName());
+        flat.setOwnerEmail(request.getOwnerEmail());
+        flat.setOwnerPhone(request.getOwnerPhone());
+    }
+
     private FlatResponse toResponse(Flat flat) {
-        return new FlatResponse(
-                flat.getId(),
-                flat.getSociety().getId(),
-                flat.getSociety().getName(),
-                flat.getFlatNumber(),
-                flat.getOwnerName());
+        FlatResponse response = new FlatResponse();
+        response.setId(flat.getId());
+        response.setSocietyId(flat.getSociety().getId());
+        response.setSocietyName(flat.getSociety().getName());
+        response.setFlatNumber(flat.getFlatNumber());
+        response.setFlatType(flat.getFlatType());
+        response.setFloor(flat.getFloor());
+        response.setArea(flat.getArea());
+        response.setOwnerName(flat.getOwnerName());
+        response.setOwnerEmail(flat.getOwnerEmail());
+        response.setOwnerPhone(flat.getOwnerPhone());
+        response.setIsOccupied(flat.getIsOccupied());
+        return response;
     }
 }

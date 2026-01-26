@@ -42,6 +42,11 @@ public class NoticeController {
         return ResponseEntity.ok(noticeService.getById(id));
     }
 
+    @GetMapping("/society/{societyId}")
+    public ResponseEntity<List<NoticeResponse>> getBySociety(@PathVariable Long societyId) {
+        return ResponseEntity.ok(noticeService.getBySocietyId(societyId));
+    }
+
     // MASTER_ADMIN, COMMITTEE, EMPLOYEE can update
     @PutMapping("/{id}")
     public ResponseEntity<NoticeResponse> update(

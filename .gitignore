@@ -110,6 +110,8 @@ coverage/
 *.coverage
 
 # Temporary files
+.vite/
+.vite/deps/
 tmp/
 temp/
 

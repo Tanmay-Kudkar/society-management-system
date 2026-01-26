@@ -45,6 +45,7 @@ public class MaintenanceBillServiceImpl implements MaintenanceBillService {
         bill.setFlat(flat);
         bill.setBillMonth(request.getBillMonth());
         bill.setAmount(request.getAmount());
+        bill.setDueDate(request.getDueDate());
         bill.setPaidAmount(request.getPaidAmount() != null ? request.getPaidAmount() : BigDecimal.ZERO);
         bill.setPaymentMode(request.getPaymentMode());
         bill.setReferenceNumber(request.getReferenceNumber());
@@ -196,10 +197,13 @@ public class MaintenanceBillServiceImpl implements MaintenanceBillService {
         response.setFlatId(bill.getFlat().getId());
         response.setFlatNumber(bill.getFlat().getFlatNumber());
         response.setOwnerName(bill.getFlat().getOwnerName());
+        response.setSocietyName(bill.getFlat().getSociety().getName());
         response.setBillMonth(bill.getBillMonth());
         response.setAmount(bill.getAmount());
         response.setPaidAmount(bill.getPaidAmount());
         response.setPendingAmount(bill.getAmount().subtract(bill.getPaidAmount()));
+        response.setDueDate(bill.getDueDate());
+        response.setPaymentDate(bill.getPaymentDate());
         response.setStatus(bill.getStatus());
         response.setPaymentMode(bill.getPaymentMode());
         response.setReceiptNumber(bill.getReceiptNumber());

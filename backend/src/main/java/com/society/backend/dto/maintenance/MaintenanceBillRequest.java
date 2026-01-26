@@ -7,6 +7,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 
 @Getter
 @Setter
@@ -21,6 +22,7 @@ public class MaintenanceBillRequest {
     @Positive(message = "Amount must be positive")
     private BigDecimal amount;
 
+    private LocalDate dueDate;
     private BigDecimal paidAmount;
     private String paymentMode;
     private String referenceNumber;

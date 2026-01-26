@@ -17,7 +17,15 @@ import com.society.backend.entity.User;
 import com.society.backend.exception.ApiException;
 import com.society.backend.repository.user.UserRepository;
 import com.society.backend.security.JwtUtils;
+import com.society.backend.security.RolePermissions;
 
+/**
+ * Auth service handles login and public self-registration.
+ * 
+ * IMPORTANT: Public registration is restricted!
+ * - Only MEMBER role can self-register (residents joining a society)
+ * - All other roles must be created by authorized users through /users endpoint
+ */
 @Service
 public class AuthServiceImpl implements AuthService {
 
@@ -45,11 +53,20 @@ public class AuthServiceImpl implements AuthService {
 
         Role role = resolveRole(request.getRole());
 
+        // Only MEMBER can self-register through public registration
+        if (!RolePermissions.canSelfRegister(role)) {
+            throw new ApiException(
+                    HttpStatus.FORBIDDEN,
+                    "Only MEMBER role can self-register. Contact your Society Admin for other roles."
+            );
+        }
+
         User user = new User();
         user.setName(request.getName());
         user.setEmail(request.getEmail());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setRole(role);
+        user.setIsActive(true);
         user.setCreatedAt(LocalDateTime.now());
 
         User saved = userRepository.save(user);
@@ -73,6 +90,11 @@ public class AuthServiceImpl implements AuthService {
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new ApiException(HttpStatus.UNAUTHORIZED, "Invalid email or password"));
 
+        // Check if user is active
+        if (user.getIsActive() == null || !user.getIsActive()) {
+            throw new ApiException(HttpStatus.FORBIDDEN, "Account is disabled. Contact your administrator.");
+        }
+
         // Generate JWT token
         String token = jwtUtils.generateToken(user.getEmail(), user.getRole().name(), user.getId());
 
@@ -86,7 +108,7 @@ public class AuthServiceImpl implements AuthService {
 
     private Role resolveRole(String roleValue) {
         if (roleValue == null || roleValue.trim().isEmpty()) {
-            return Role.MEMBER;
+            return Role.MEMBER; // Default to MEMBER for self-registration
         }
         try {
             return Role.valueOf(roleValue.trim().toUpperCase());

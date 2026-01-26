@@ -3,7 +3,10 @@ CREATE TABLE users (
     name VARCHAR(100),
     email VARCHAR(100) UNIQUE,
     password VARCHAR(255),
-    role VARCHAR(20) CHECK (role IN ('MASTER_ADMIN', 'COMMITTEE', 'EMPLOYEE', 'MEMBER', 'VISITOR')),
+    phone VARCHAR(20),
+    society_id INT REFERENCES societies(id),
+    role VARCHAR(50) CHECK (role IN ('MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'EMPLOYEE', 'MEMBER', 'TENANT', 'VISITOR')),
+    is_active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -11,6 +14,12 @@ CREATE TABLE societies (
     id SERIAL PRIMARY KEY,
     name VARCHAR(100),
     address TEXT,
+    city VARCHAR(100),
+    state VARCHAR(100),
+    pincode VARCHAR(10),
+    registration_number VARCHAR(50),
+    email VARCHAR(100),
+    phone VARCHAR(20),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -18,7 +27,13 @@ CREATE TABLE flats (
     id SERIAL PRIMARY KEY,
     society_id INT REFERENCES societies(id),
     flat_number VARCHAR(20),
-    owner_name VARCHAR(100)
+    flat_type VARCHAR(50),
+    floor INT DEFAULT 0,
+    area DECIMAL(10,2),
+    owner_name VARCHAR(100),
+    owner_email VARCHAR(100),
+    owner_phone VARCHAR(20),
+    is_occupied BOOLEAN DEFAULT FALSE
 );
 
 CREATE TABLE complaints (
@@ -34,7 +49,9 @@ CREATE TABLE notices (
     id SERIAL PRIMARY KEY,
     society_id INT REFERENCES societies(id),
     title VARCHAR(200),
-    message TEXT,
+    content TEXT,
+    priority VARCHAR(20) DEFAULT 'MEDIUM',
+    expiry_date DATE,
     is_active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -143,6 +160,8 @@ CREATE TABLE maintenance_bills (
     bill_month VARCHAR(7),
     amount DECIMAL(12,2),
     paid_amount DECIMAL(12,2) DEFAULT 0,
+    due_date DATE,
+    payment_date DATE,
     status VARCHAR(20) DEFAULT 'PENDING',
     payment_mode VARCHAR(20),
     receipt_number VARCHAR(50),

@@ -23,8 +23,7 @@ public class SocietyServiceImpl implements SocietyService {
     @Override
     public SocietyResponse create(SocietyRequest request) {
         Society society = new Society();
-        society.setName(request.getName());
-        society.setAddress(request.getAddress());
+        mapRequestToEntity(request, society);
         Society saved = societyRepository.save(society);
         return toResponse(saved);
     }
@@ -47,8 +46,7 @@ public class SocietyServiceImpl implements SocietyService {
     public SocietyResponse update(Long id, SocietyRequest request) {
         Society society = societyRepository.findById(id)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Society not found"));
-        society.setName(request.getName());
-        society.setAddress(request.getAddress());
+        mapRequestToEntity(request, society);
         Society saved = societyRepository.save(society);
         return toResponse(saved);
     }
@@ -61,10 +59,27 @@ public class SocietyServiceImpl implements SocietyService {
         societyRepository.deleteById(id);
     }
 
+    private void mapRequestToEntity(SocietyRequest request, Society society) {
+        society.setName(request.getName());
+        society.setAddress(request.getAddress());
+        society.setCity(request.getCity());
+        society.setState(request.getState());
+        society.setPincode(request.getPincode());
+        society.setRegistrationNumber(request.getRegistrationNumber());
+        society.setEmail(request.getEmail());
+        society.setPhone(request.getPhone());
+    }
+
     private SocietyResponse toResponse(Society society) {
         return new SocietyResponse(
                 society.getId(),
                 society.getName(),
-                society.getAddress());
+                society.getAddress(),
+                society.getCity(),
+                society.getState(),
+                society.getPincode(),
+                society.getRegistrationNumber(),
+                society.getEmail(),
+                society.getPhone());
     }
 }

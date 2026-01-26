@@ -12,4 +12,16 @@ public class SocietyRequest {
     private String name;
 
     private String address;
+
+    private String city;
+
+    private String state;
+
+    private String pincode;
+
+    private String registrationNumber;
+
+    private String email;
+
+    private String phone;
 }
