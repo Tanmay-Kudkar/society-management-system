@@ -474,23 +474,9 @@ export default function Settings() {
                 </div>
               </div>
 
-              <div className="pt-6 border-t border-gray-100 dark:border-slate-700">
-                <h3 className="font-semibold text-gray-900 dark:text-white mb-4">Sidebar</h3>
-                <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-slate-700 rounded-lg">
-                  <div>
-                    <h4 className="font-medium text-gray-900 dark:text-white">Compact Sidebar</h4>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Use icons only in the sidebar</p>
-                  </div>
-                  <Toggle
-                    checked={compactSidebar}
-                    onChange={(e) => setCompactSidebarPreview(e.target.checked)}
-                  />
-                </div>
-              </div>
-
               <button
                 onClick={handleAppearanceSave}
-                className="inline-flex items-center gap-2 px-4 py-2 accent-btn rounded-lg transition"
+                className="inline-flex items-center gap-2 px-4 py-2 accent-btn rounded-lg transition mt-6"
               >
                 <Save size={18} />
                 {saved ? 'Saved!' : 'Save Preferences'}

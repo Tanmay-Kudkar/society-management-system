@@ -183,3 +183,25 @@ button:focus,
 button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
 }
+
+/* Select dropdown styling for dark mode */
+select option {
+  background-color: white;
+  color: #1f2937;
+}
+
+.dark select option {
+  background-color: #1e293b;
+  color: #f1f5f9;
+}
+
+/* Form input placeholders in dark mode */
+.dark ::placeholder {
+  color: #9ca3af;
+  opacity: 1;
+}
+
+/* Accent utilities for dark mode */
+.dark .accent-bg-light {
+  background-color: color-mix(in srgb, var(--accent-500) 15%, transparent);
+}

@@ -99,8 +99,8 @@ export default function VendorBills() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Vendor Bills</h1>
-          <p className="text-gray-600 mt-1">Track vendor invoices and payments</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Vendor Bills</h1>
+          <p className="text-gray-600 dark:text-gray-400 mt-1">Track vendor invoices and payments</p>
         </div>
         <button
           onClick={() => { setEditingBill(null); setShowModal(true) }}
@@ -112,7 +112,7 @@ export default function VendorBills() {
       </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-6">
+      <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-4 mb-6">
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -121,13 +121,13 @@ export default function VendorBills() {
               placeholder="Search bills..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white placeholder:text-gray-400 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
             />
           </div>
           <select
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+            className="px-4 py-2 border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
           >
             <option value="">All Status</option>
             <option value="PENDING">Pending</option>
@@ -138,7 +138,7 @@ export default function VendorBills() {
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+      <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 overflow-hidden">
         {isLoading ? (
           <div className="p-8 text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
@@ -146,34 +146,34 @@ export default function VendorBills() {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-gray-50 border-b border-gray-100">
+              <thead className="bg-gray-50 dark:bg-slate-700 border-b border-gray-100 dark:border-slate-600">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vendor</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Bill #</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Paid</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Due Date</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Vendor</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Bill #</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Amount</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Paid</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Due Date</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Status</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody className="divide-y divide-gray-100 dark:divide-slate-700">
                 {filteredBills.map((bill) => {
                   const StatusIcon = statusIcons[bill.status] || Clock
                   return (
-                    <tr key={bill.id} className="hover:bg-gray-50">
+                    <tr key={bill.id} className="hover:bg-gray-50 dark:hover:bg-slate-700">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-lg bg-orange-50 flex items-center justify-center">
-                            <Receipt className="w-4 h-4 text-orange-600" />
+                          <div className="w-8 h-8 rounded-lg bg-orange-50 dark:bg-orange-900/30 flex items-center justify-center">
+                            <Receipt className="w-4 h-4 text-orange-600 dark:text-orange-400" />
                           </div>
-                          <span className="font-medium text-gray-900">{bill.vendorName}</span>
+                          <span className="font-medium text-gray-900 dark:text-white">{bill.vendorName}</span>
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-gray-600">{bill.billNumber}</td>
-                      <td className="px-6 py-4 whitespace-nowrap font-medium text-gray-900">₹{bill.amount?.toLocaleString()}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-gray-600">₹{bill.paidAmount?.toLocaleString() || 0}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-gray-600">
+                      <td className="px-6 py-4 whitespace-nowrap text-gray-600 dark:text-gray-300">{bill.billNumber}</td>
+                      <td className="px-6 py-4 whitespace-nowrap font-medium text-gray-900 dark:text-white">₹{bill.amount?.toLocaleString()}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-gray-600 dark:text-gray-300">₹{bill.paidAmount?.toLocaleString() || 0}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-gray-600 dark:text-gray-300">
                         {bill.dueDate ? new Date(bill.dueDate).toLocaleDateString() : '-'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
