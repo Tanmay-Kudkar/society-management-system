@@ -69,8 +69,11 @@ export default function VendorBills() {
   const handleSubmit = (e) => {
     e.preventDefault()
     const formData = new FormData(e.target)
+    const vendorId = parseInt(formData.get('vendorId'))
+    const selectedVendor = vendors.find(v => v.id === vendorId)
     const data = {
-      vendorId: parseInt(formData.get('vendorId')),
+      vendorId: vendorId,
+      societyId: selectedVendor?.societyId,
       billNumber: formData.get('billNumber'),
       billDate: formData.get('billDate'),
       dueDate: formData.get('dueDate'),

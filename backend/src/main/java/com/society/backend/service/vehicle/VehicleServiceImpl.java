@@ -39,6 +39,8 @@ public class VehicleServiceImpl implements VehicleService {
         vehicle.setBrand(request.getBrand());
         vehicle.setModel(request.getModel());
         vehicle.setColor(request.getColor());
+        vehicle.setOwnerName(request.getOwnerName());
+        vehicle.setParkingSlot(request.getParkingSlot());
 
         Vehicle saved = vehicleRepository.save(vehicle);
         return mapToResponse(saved);
@@ -89,6 +91,10 @@ public class VehicleServiceImpl implements VehicleService {
             vehicle.setModel(request.getModel());
         if (request.getColor() != null)
             vehicle.setColor(request.getColor());
+        if (request.getOwnerName() != null)
+            vehicle.setOwnerName(request.getOwnerName());
+        if (request.getParkingSlot() != null)
+            vehicle.setParkingSlot(request.getParkingSlot());
 
         Vehicle saved = vehicleRepository.save(vehicle);
         return mapToResponse(saved);
@@ -115,6 +121,8 @@ public class VehicleServiceImpl implements VehicleService {
         response.setBrand(vehicle.getBrand());
         response.setModel(vehicle.getModel());
         response.setColor(vehicle.getColor());
+        response.setOwnerName(vehicle.getOwnerName());
+        response.setParkingSlot(vehicle.getParkingSlot());
         response.setCreatedAt(vehicle.getCreatedAt());
         return response;
     }

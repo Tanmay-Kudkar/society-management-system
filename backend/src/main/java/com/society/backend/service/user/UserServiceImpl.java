@@ -14,6 +14,8 @@ import com.society.backend.dto.user.UserResponse;
 import com.society.backend.entity.Role;
 import com.society.backend.entity.User;
 import com.society.backend.exception.ApiException;
+import com.society.backend.repository.complaint.ComplaintRepository;
+import com.society.backend.repository.ticket.TicketRepository;
 import com.society.backend.repository.user.UserRepository;
 import com.society.backend.security.RolePermissions;
 
@@ -22,10 +24,15 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final ComplaintRepository complaintRepository;
+    private final TicketRepository ticketRepository;
 
-    public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder,
+            ComplaintRepository complaintRepository, TicketRepository ticketRepository) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.complaintRepository = complaintRepository;
+        this.ticketRepository = ticketRepository;
     }
 
     @Override
@@ -146,6 +153,34 @@ public class UserServiceImpl implements UserService {
         // Prevent deleting MASTER_ADMIN
         if (user.getRole() == Role.MASTER_ADMIN) {
             throw new ApiException(HttpStatus.FORBIDDEN, "Cannot delete MASTER_ADMIN");
+        }
+
+        // Check for related records
+        java.util.List<String> associations = new java.util.ArrayList<>();
+
+        // Check complaints
+        int complaintCount = complaintRepository.findByUserId(id).size();
+        if (complaintCount > 0) {
+            associations.add(complaintCount + " complaint(s)");
+        }
+
+        // Check tickets raised by user
+        int ticketsRaisedCount = ticketRepository.findByRaisedById(id).size();
+        if (ticketsRaisedCount > 0) {
+            associations.add(ticketsRaisedCount + " ticket(s) raised");
+        }
+
+        // Check tickets assigned to user
+        int ticketsAssignedCount = ticketRepository.findByAssignedToId(id).size();
+        if (ticketsAssignedCount > 0) {
+            associations.add(ticketsAssignedCount + " ticket(s) assigned");
+        }
+
+        if (!associations.isEmpty()) {
+            String message = "Cannot delete user '" + user.getName() + "'. User is associated with: "
+                    + String.join(", ", associations)
+                    + ". Please reassign or delete these records first.";
+            throw new ApiException(HttpStatus.BAD_REQUEST, message);
         }
 
         userRepository.delete(user);

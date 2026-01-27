@@ -11,8 +11,12 @@ import {
   TrendingDown,
   AlertTriangle,
   Clock,
+  Car,
+  UserCheck,
+  DollarSign,
+  PieChart,
 } from 'lucide-react'
-import { societyApi, flatApi, contractApi, ticketApi, maintenanceBillApi } from '../api'
+import { societyApi, flatApi, contractApi, ticketApi, maintenanceBillApi, tenantApi, vehicleApi, transactionApi, complaintApi } from '../api'
 
 const StatCard = ({ title, value, icon: Icon, color, subtext }) => (
   <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
@@ -67,19 +71,42 @@ export default function Dashboard() {
     queryFn: () => flatApi.getAll().then(res => res.data).catch(() => []),
   })
 
+  const { data: tenants = [] } = useQuery({
+    queryKey: ['tenants'],
+    queryFn: () => tenantApi.getAll().then(res => res.data).catch(() => []),
+  })
+
+  const { data: vehicles = [] } = useQuery({
+    queryKey: ['vehicles'],
+    queryFn: () => vehicleApi.getAll().then(res => res.data).catch(() => []),
+  })
+
   const { data: contracts = [] } = useQuery({
     queryKey: ['contracts'],
     queryFn: () => contractApi.getAll().then(res => res.data).catch(() => []),
   })
 
-  const { data: pendingTickets = [] } = useQuery({
-    queryKey: ['tickets', 'pending'],
-    queryFn: () => ticketApi.getByStatus('PENDING').then(res => res.data).catch(() => []),
+  const { data: allTickets = [] } = useQuery({
+    queryKey: ['tickets'],
+    queryFn: () => ticketApi.getAll().then(res => res.data).catch(() => []),
   })
+  
+  // Open tickets are those not yet closed or resolved
+  const openTickets = allTickets.filter(t => 
+    t.status === 'OPEN' || t.status === 'IN_PROGRESS'
+  )
+  
+  // Pending tickets for the alerts section (only OPEN status)
+  const pendingTickets = allTickets.filter(t => t.status === 'OPEN')
 
   const { data: pendingBills = [] } = useQuery({
     queryKey: ['bills', 'pending'],
     queryFn: () => maintenanceBillApi.getPending().then(res => res.data).catch(() => []),
+  })
+
+  const { data: complaints = [] } = useQuery({
+    queryKey: ['complaints'],
+    queryFn: () => complaintApi.getAll(user?.id).then(res => res.data).catch(() => []),
   })
 
   // Filter expiring contracts (within 30 days)
@@ -90,6 +117,27 @@ export default function Dashboard() {
     const daysUntilExpiry = Math.ceil((endDate - today) / (1000 * 60 * 60 * 24))
     return daysUntilExpiry > 0 && daysUntilExpiry <= 30
   })
+
+  // Filter expiring tenant agreements (within 30 days)
+  const expiringTenants = tenants.filter(t => {
+    if (!t.agreementEndDate || !t.isActive) return false
+    const endDate = new Date(t.agreementEndDate)
+    const today = new Date()
+    const daysUntilExpiry = Math.ceil((endDate - today) / (1000 * 60 * 60 * 24))
+    return daysUntilExpiry > 0 && daysUntilExpiry <= 30
+  })
+
+  // Calculate bill statistics
+  const totalBillAmount = pendingBills.reduce((sum, b) => sum + (b.amount || 0), 0)
+  const paidBills = pendingBills.filter(b => b.status === 'PAID')
+  const pendingBillsCount = pendingBills.filter(b => b.status === 'PENDING')
+  const overdueBills = pendingBills.filter(b => {
+    if (b.status !== 'PENDING' || !b.dueDate) return false
+    return new Date(b.dueDate) < new Date()
+  })
+
+  // Complaint statistics
+  const pendingComplaints = complaints.filter(c => c.status === 'PENDING' || c.status === 'IN_PROGRESS')
 
   return (
     <div>
@@ -116,16 +164,36 @@ export default function Dashboard() {
           color="bg-blue-500"
         />
         <StatCard
+          title="Active Tenants"
+          value={tenants.filter(t => t.isActive).length}
+          icon={UserCheck}
+          color="bg-teal-500"
+          subtext={`${expiringTenants.length} expiring soon`}
+        />
+        <StatCard
+          title="Vehicles"
+          value={vehicles.length}
+          icon={Car}
+          color="bg-indigo-500"
+        />
+        <StatCard
           title="Pending Bills"
-          value={pendingBills.length}
+          value={pendingBillsCount.length}
           icon={CreditCard}
           color="bg-orange-500"
+          subtext={overdueBills.length > 0 ? `${overdueBills.length} overdue` : undefined}
         />
         <StatCard
           title="Open Tickets"
-          value={pendingTickets.length}
+          value={openTickets.length}
           icon={Ticket}
           color="bg-red-500"
+        />
+        <StatCard
+          title="Pending Complaints"
+          value={pendingComplaints.length}
+          icon={AlertTriangle}
+          color="bg-amber-500"
         />
         <StatCard
           title="Expiring Contracts"
@@ -137,7 +205,7 @@ export default function Dashboard() {
       </div>
 
       {/* Alerts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
         <AlertCard
           title="Expiring Contracts"
           icon={AlertTriangle}
@@ -145,6 +213,15 @@ export default function Dashboard() {
           items={expiringContracts.map(contract => ({
             title: contract.title,
             subtitle: new Date(contract.endDate).toLocaleDateString(),
+          }))}
+        />
+        <AlertCard
+          title="Expiring Tenant Agreements"
+          icon={UserCheck}
+          color="text-teal-500"
+          items={expiringTenants.map(tenant => ({
+            title: tenant.name,
+            subtitle: new Date(tenant.agreementEndDate).toLocaleDateString(),
           }))}
         />
         <AlertCard
@@ -158,16 +235,69 @@ export default function Dashboard() {
         />
       </div>
 
+      {/* Financial Overview */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <DollarSign className="w-5 h-5 text-green-600" />
+            <h3 className="font-semibold text-gray-900">Bills Summary</h3>
+          </div>
+          <div className="space-y-4">
+            <div className="flex justify-between items-center">
+              <span className="text-gray-600">Total Bills Amount</span>
+              <span className="font-semibold text-gray-900">₹{totalBillAmount.toLocaleString()}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-gray-600">Paid Bills</span>
+              <span className="font-semibold text-green-600">{paidBills.length}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-gray-600">Pending Bills</span>
+              <span className="font-semibold text-orange-600">{pendingBillsCount.length}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-gray-600">Overdue Bills</span>
+              <span className="font-semibold text-red-600">{overdueBills.length}</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <PieChart className="w-5 h-5 text-blue-600" />
+            <h3 className="font-semibold text-gray-900">Vehicle Distribution</h3>
+          </div>
+          <div className="flex items-center justify-around">
+            <div className="text-center">
+              <div className="w-20 h-20 rounded-full bg-blue-100 flex items-center justify-center mx-auto mb-2">
+                <span className="text-2xl font-bold text-blue-600">
+                  {vehicles.filter(v => v.vehicleType === 'FOUR_WHEELER').length}
+                </span>
+              </div>
+              <p className="text-sm text-gray-600">Four Wheelers</p>
+            </div>
+            <div className="text-center">
+              <div className="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-2">
+                <span className="text-2xl font-bold text-green-600">
+                  {vehicles.filter(v => v.vehicleType === 'TWO_WHEELER').length}
+                </span>
+              </div>
+              <p className="text-sm text-gray-600">Two Wheelers</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Quick Stats */}
-      <div className="mt-8 bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
         <h3 className="font-semibold text-gray-900 mb-4">Quick Overview</h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
           <div className="text-center p-4 bg-gray-50 rounded-lg">
-            <p className="text-2xl font-bold text-green-600">{pendingBills.filter(b => b.status === 'PAID').length}</p>
+            <p className="text-2xl font-bold text-green-600">{paidBills.length}</p>
             <p className="text-sm text-gray-500">Paid Bills</p>
           </div>
           <div className="text-center p-4 bg-gray-50 rounded-lg">
-            <p className="text-2xl font-bold text-orange-600">{pendingBills.filter(b => b.status === 'PENDING').length}</p>
+            <p className="text-2xl font-bold text-orange-600">{pendingBillsCount.length}</p>
             <p className="text-sm text-gray-500">Pending Bills</p>
           </div>
           <div className="text-center p-4 bg-gray-50 rounded-lg">
@@ -175,7 +305,11 @@ export default function Dashboard() {
             <p className="text-sm text-gray-500">In Progress</p>
           </div>
           <div className="text-center p-4 bg-gray-50 rounded-lg">
-            <p className="text-2xl font-bold text-green-600">{expiringContracts.filter(c => c.isActive).length}</p>
+            <p className="text-2xl font-bold text-teal-600">{tenants.filter(t => t.isActive).length}</p>
+            <p className="text-sm text-gray-500">Active Tenants</p>
+          </div>
+          <div className="text-center p-4 bg-gray-50 rounded-lg">
+            <p className="text-2xl font-bold text-purple-600">{contracts.filter(c => c.isActive).length}</p>
             <p className="text-sm text-gray-500">Active Contracts</p>
           </div>
         </div>

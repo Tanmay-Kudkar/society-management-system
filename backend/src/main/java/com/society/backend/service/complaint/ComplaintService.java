@@ -16,7 +16,7 @@ public interface ComplaintService {
 
     ComplaintResponse getById(Long id);
 
-    ComplaintResponse updateStatus(Long id, String status);
+    ComplaintResponse updateStatus(Long id, String status, String resolution);
 
     void delete(Long id);
 }

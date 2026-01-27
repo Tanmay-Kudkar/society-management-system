@@ -27,4 +27,6 @@ public class TenantRequest {
     private String idProofNumber;
     private LocalDate agreementStartDate;
     private LocalDate agreementEndDate;
+    private java.math.BigDecimal rentAmount;
+    private java.math.BigDecimal depositAmount;
 }

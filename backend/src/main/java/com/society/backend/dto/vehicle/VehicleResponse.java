@@ -16,5 +16,7 @@ public class VehicleResponse {
     private String brand;
     private String model;
     private String color;
+    private String ownerName;
+    private String parkingSlot;
     private LocalDateTime createdAt;
 }

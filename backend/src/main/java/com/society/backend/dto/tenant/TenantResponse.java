@@ -15,6 +15,8 @@ public class TenantResponse {
     private String name;
     private String phone;
     private String email;
+    private java.math.BigDecimal rentAmount;
+    private java.math.BigDecimal depositAmount;
     private String idProofType;
     private String idProofNumber;
     private LocalDate agreementStartDate;

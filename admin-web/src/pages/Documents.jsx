@@ -1,15 +1,16 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '../context/AuthContext'
-import { documentTemplateApi, societyApi } from '../api'
-import { Plus, Search, X, FileText, Download, Edit, Trash2, Eye } from 'lucide-react'
+import { documentTemplateApi } from '../api'
+import { Plus, Search, X, FileText, Edit, Trash2 } from 'lucide-react'
 import clsx from 'clsx'
 
-const categoryColors = {
+const templateTypeColors = {
   NOC: 'bg-blue-100 text-blue-800',
-  IDENTITY: 'bg-green-100 text-green-800',
-  CERTIFICATE: 'bg-purple-100 text-purple-800',
-  FORM: 'bg-orange-100 text-orange-800',
+  LETTER: 'bg-green-100 text-green-800',
+  MEETING_AGENDA: 'bg-purple-100 text-purple-800',
+  AGREEMENT: 'bg-orange-100 text-orange-800',
+  RESOLUTION: 'bg-cyan-100 text-cyan-800',
   OTHER: 'bg-gray-100 text-gray-800',
 }
 
@@ -24,11 +25,6 @@ export default function Documents() {
   const { data: documents = [], isLoading } = useQuery({
     queryKey: ['documentTemplates'],
     queryFn: () => documentTemplateApi.getAll().then(res => res.data),
-  })
-
-  const { data: societies = [] } = useQuery({
-    queryKey: ['societies'],
-    queryFn: () => societyApi.getAll().then(res => res.data),
   })
 
   const createMutation = useMutation({
@@ -53,8 +49,8 @@ export default function Documents() {
   })
 
   const filteredDocuments = documents.filter(d => {
-    const matchesSearch = d.name?.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesCategory = !filterCategory || d.category === filterCategory
+    const matchesSearch = d.title?.toLowerCase().includes(searchTerm.toLowerCase())
+    const matchesCategory = !filterCategory || d.templateType === filterCategory
     return matchesSearch && matchesCategory
   })
 
@@ -67,12 +63,9 @@ export default function Documents() {
     e.preventDefault()
     const formData = new FormData(e.target)
     const data = {
-      societyId: formData.get('societyId') ? parseInt(formData.get('societyId')) : null,
-      name: formData.get('name'),
-      category: formData.get('category'),
-      description: formData.get('description') || null,
-      templateContent: formData.get('templateContent'),
-      isActive: formData.get('isActive') === 'true',
+      title: formData.get('title'),
+      templateType: formData.get('templateType'),
+      content: formData.get('content'),
     }
     if (editingDocument) {
       updateMutation.mutate({ id: editingDocument.id, data })
@@ -99,15 +92,15 @@ export default function Documents() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
           <p className="text-sm text-gray-500">Total</p>
           <p className="text-2xl font-bold text-gray-900">{documents.length}</p>
         </div>
-        {Object.keys(categoryColors).map(cat => (
+        {['NOC', 'LETTER', 'AGREEMENT'].map(cat => (
           <div key={cat} className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
             <p className="text-sm text-gray-500">{cat}</p>
-            <p className="text-2xl font-bold text-gray-900">{documents.filter(d => d.category === cat).length}</p>
+            <p className="text-2xl font-bold text-gray-900">{documents.filter(d => d.templateType === cat).length}</p>
           </div>
         ))}
       </div>
@@ -130,11 +123,12 @@ export default function Documents() {
             onChange={(e) => setFilterCategory(e.target.value)}
             className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
           >
-            <option value="">All Categories</option>
+            <option value="">All Types</option>
             <option value="NOC">NOC</option>
-            <option value="IDENTITY">Identity</option>
-            <option value="CERTIFICATE">Certificate</option>
-            <option value="FORM">Form</option>
+            <option value="LETTER">Letter</option>
+            <option value="MEETING_AGENDA">Meeting Agenda</option>
+            <option value="AGREEMENT">Agreement</option>
+            <option value="RESOLUTION">Resolution</option>
             <option value="OTHER">Other</option>
           </select>
         </div>
@@ -155,8 +149,8 @@ export default function Documents() {
                     <FileText className="w-5 h-5 text-gray-600" />
                   </div>
                   <div>
-                    <span className={clsx('px-2 py-0.5 rounded-full text-xs font-medium', categoryColors[doc.category])}>
-                      {doc.category}
+                    <span className={clsx('px-2 py-0.5 rounded-full text-xs font-medium', templateTypeColors[doc.templateType] || 'bg-gray-100 text-gray-800')}>
+                      {doc.templateType}
                     </span>
                   </div>
                 </div>
@@ -168,11 +162,10 @@ export default function Documents() {
                 </span>
               </div>
               
-              <h3 className="font-semibold text-gray-900 mb-1">{doc.name}</h3>
-              <p className="text-sm text-gray-600 line-clamp-2 mb-3">{doc.description || 'No description'}</p>
+              <h3 className="font-semibold text-gray-900 mb-1">{doc.title}</h3>
+              <p className="text-sm text-gray-600 line-clamp-2 mb-3">{doc.content?.substring(0, 100)}...</p>
               
               <div className="text-xs text-gray-500 mb-4">
-                <p>{doc.societyName || 'All Societies'}</p>
                 <p>Updated: {doc.updatedAt && new Date(doc.updatedAt).toLocaleDateString()}</p>
               </div>
 
@@ -209,71 +202,39 @@ export default function Documents() {
             <form onSubmit={handleSubmit} className="p-4 space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
                   <input
                     type="text"
-                    name="name"
-                    defaultValue={editingDocument?.name || ''}
+                    name="title"
+                    defaultValue={editingDocument?.title || ''}
                     required
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Template Type</label>
                   <select
-                    name="category"
-                    defaultValue={editingDocument?.category || 'OTHER'}
+                    name="templateType"
+                    defaultValue={editingDocument?.templateType || 'OTHER'}
                     required
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
                   >
                     <option value="NOC">NOC</option>
-                    <option value="IDENTITY">Identity</option>
-                    <option value="CERTIFICATE">Certificate</option>
-                    <option value="FORM">Form</option>
+                    <option value="LETTER">Letter</option>
+                    <option value="MEETING_AGENDA">Meeting Agenda</option>
+                    <option value="AGREEMENT">Agreement</option>
+                    <option value="RESOLUTION">Resolution</option>
                     <option value="OTHER">Other</option>
                   </select>
                 </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Society (Optional)</label>
-                  <select
-                    name="societyId"
-                    defaultValue={editingDocument?.societyId || ''}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                  >
-                    <option value="">All Societies</option>
-                    {societies.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
-                  <select
-                    name="isActive"
-                    defaultValue={editingDocument?.isActive?.toString() || 'true'}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                  >
-                    <option value="true">Active</option>
-                    <option value="false">Inactive</option>
-                  </select>
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                <input
-                  type="text"
-                  name="description"
-                  defaultValue={editingDocument?.description || ''}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Template Content</label>
                 <p className="text-xs text-gray-500 mb-2">Use placeholders like {"{{owner_name}}"}, {"{{flat_number}}"}, {"{{society_name}}"}, {"{{date}}"} etc.</p>
                 <textarea
-                  name="templateContent"
+                  name="content"
                   rows={10}
-                  defaultValue={editingDocument?.templateContent || ''}
+                  defaultValue={editingDocument?.content || ''}
                   required
                   placeholder="Enter template content with placeholders..."
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none font-mono text-sm"

@@ -5,11 +5,12 @@ import { emergencyContactApi, societyApi } from '../api'
 import { Plus, Search, X, Phone, Edit, Trash2, AlertCircle } from 'lucide-react'
 import clsx from 'clsx'
 
-const categoryColors = {
+const contactTypeColors = {
   POLICE: 'bg-blue-100 text-blue-800',
   FIRE: 'bg-red-100 text-red-800',
   AMBULANCE: 'bg-green-100 text-green-800',
   HOSPITAL: 'bg-purple-100 text-purple-800',
+  DOCTOR: 'bg-pink-100 text-pink-800',
   SECURITY: 'bg-orange-100 text-orange-800',
   ELECTRICIAN: 'bg-yellow-100 text-yellow-800',
   PLUMBER: 'bg-cyan-100 text-cyan-800',
@@ -59,7 +60,7 @@ export default function EmergencyContacts() {
   const filteredContacts = contacts.filter(c => {
     const matchesSearch = c.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          c.phone?.includes(searchTerm)
-    const matchesCategory = !filterCategory || c.category === filterCategory
+    const matchesCategory = !filterCategory || c.contactType === filterCategory
     const matchesSociety = !filterSociety || c.societyId === parseInt(filterSociety) || !c.societyId
     return matchesSearch && matchesCategory && matchesSociety
   })
@@ -77,9 +78,9 @@ export default function EmergencyContacts() {
       name: formData.get('name'),
       phone: formData.get('phone'),
       alternatePhone: formData.get('alternatePhone') || null,
-      category: formData.get('category'),
+      contactType: formData.get('contactType'),
       address: formData.get('address') || null,
-      isCommon: formData.get('isCommon') === 'true',
+      notes: formData.get('notes') || null,
     }
     if (editingContact) {
       updateMutation.mutate({ id: editingContact.id, data })
@@ -88,11 +89,11 @@ export default function EmergencyContacts() {
     }
   }
 
-  // Group contacts by category
+  // Group contacts by contactType
   const groupedContacts = filteredContacts.reduce((acc, contact) => {
-    const category = contact.category || 'OTHER'
-    if (!acc[category]) acc[category] = []
-    acc[category].push(contact)
+    const contactType = contact.contactType || 'OTHER'
+    if (!acc[contactType]) acc[contactType] = []
+    acc[contactType].push(contact)
     return acc
   }, {})
 
@@ -159,28 +160,28 @@ export default function EmergencyContacts() {
         </div>
       ) : (
         <div className="space-y-6">
-          {Object.entries(groupedContacts).map(([category, categoryContacts]) => (
-            <div key={category} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+          {Object.entries(groupedContacts).map(([contactType, contactTypeContacts]) => (
+            <div key={contactType} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
               <div className="px-5 py-3 border-b border-gray-100 bg-gray-50">
                 <div className="flex items-center gap-2">
                   <AlertCircle className="w-4 h-4 text-gray-600" />
-                  <h3 className="font-semibold text-gray-900">{category}</h3>
-                  <span className="text-sm text-gray-500">({categoryContacts.length})</span>
+                  <h3 className="font-semibold text-gray-900">{contactType}</h3>
+                  <span className="text-sm text-gray-500">({contactTypeContacts.length})</span>
                 </div>
               </div>
               <div className="divide-y divide-gray-100">
-                {categoryContacts.map((contact) => (
+                {contactTypeContacts.map((contact) => (
                   <div key={contact.id} className="p-4 hover:bg-gray-50 transition">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-4">
-                        <div className={clsx('p-3 rounded-lg', categoryColors[category]?.replace('text', 'bg').split(' ')[0] || 'bg-gray-100')}>
-                          <Phone className={clsx('w-5 h-5', categoryColors[category]?.split(' ')[1] || 'text-gray-600')} />
+                        <div className={clsx('p-3 rounded-lg', contactTypeColors[contactType]?.replace('text', 'bg').split(' ')[0] || 'bg-gray-100')}>
+                          <Phone className={clsx('w-5 h-5', contactTypeColors[contactType]?.split(' ')[1] || 'text-gray-600')} />
                         </div>
                         <div>
                           <div className="flex items-center gap-2">
                             <h4 className="font-semibold text-gray-900">{contact.name}</h4>
-                            {contact.isCommon && (
-                              <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs rounded-full">Common</span>
+                            {!contact.isActive && (
+                              <span className="px-2 py-0.5 bg-red-100 text-red-700 text-xs rounded-full">Inactive</span>
                             )}
                           </div>
                           <p className="text-lg font-mono text-blue-600 mt-0.5">{contact.phone}</p>
@@ -190,7 +191,10 @@ export default function EmergencyContacts() {
                           {contact.address && (
                             <p className="text-sm text-gray-500 mt-1">{contact.address}</p>
                           )}
-                          <p className="text-xs text-gray-400 mt-1">{contact.societyName || 'All Societies'}</p>
+                          {contact.notes && (
+                            <p className="text-sm text-gray-400 italic mt-1">{contact.notes}</p>
+                          )}
+                          <p className="text-xs text-gray-400 mt-1">{contact.societyName}</p>
                         </div>
                       </div>
                       <div className="flex gap-1">
@@ -266,10 +270,10 @@ export default function EmergencyContacts() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Contact Type</label>
                   <select
-                    name="category"
-                    defaultValue={editingContact?.category || 'OTHER'}
+                    name="contactType"
+                    defaultValue={editingContact?.contactType || 'OTHER'}
                     required
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
                   >
@@ -277,6 +281,7 @@ export default function EmergencyContacts() {
                     <option value="FIRE">Fire</option>
                     <option value="AMBULANCE">Ambulance</option>
                     <option value="HOSPITAL">Hospital</option>
+                    <option value="DOCTOR">Doctor</option>
                     <option value="SECURITY">Security</option>
                     <option value="ELECTRICIAN">Electrician</option>
                     <option value="PLUMBER">Plumber</option>
@@ -284,27 +289,17 @@ export default function EmergencyContacts() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Common Contact?</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Society</label>
                   <select
-                    name="isCommon"
-                    defaultValue={editingContact?.isCommon?.toString() || 'false'}
+                    name="societyId"
+                    defaultValue={editingContact?.societyId || ''}
+                    required
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
                   >
-                    <option value="true">Yes (All Societies)</option>
-                    <option value="false">No (Specific Society)</option>
+                    <option value="">Select Society</option>
+                    {societies.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                   </select>
                 </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Society (if not common)</label>
-                <select
-                  name="societyId"
-                  defaultValue={editingContact?.societyId || ''}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                >
-                  <option value="">Select Society</option>
-                  {societies.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-                </select>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
@@ -312,6 +307,16 @@ export default function EmergencyContacts() {
                   name="address"
                   rows={2}
                   defaultValue={editingContact?.address || ''}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+                <textarea
+                  name="notes"
+                  rows={2}
+                  defaultValue={editingContact?.notes || ''}
+                  placeholder="Additional notes..."
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
                 />
               </div>

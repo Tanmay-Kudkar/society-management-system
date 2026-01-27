@@ -35,6 +35,12 @@ public class Vehicle {
     @Column
     private String color;
 
+    @Column(name = "owner_name")
+    private String ownerName;
+
+    @Column(name = "parking_slot")
+    private String parkingSlot;
+
     @Column(name = "created_at")
     private java.time.LocalDateTime createdAt;
 

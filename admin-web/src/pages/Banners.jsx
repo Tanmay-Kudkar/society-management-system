@@ -69,11 +69,10 @@ export default function Banners() {
       societyId: formData.get('societyId') ? parseInt(formData.get('societyId')) : null,
       title: formData.get('title'),
       imageUrl: formData.get('imageUrl'),
-      linkUrl: formData.get('linkUrl') || null,
+      redirectUrl: formData.get('redirectUrl') || null,
       startDate: formData.get('startDate'),
       endDate: formData.get('endDate'),
       displayOrder: parseInt(formData.get('displayOrder')) || 1,
-      isActive: formData.get('isActive') === 'true',
     }
     if (editingBanner) {
       updateMutation.mutate({ id: editingBanner.id, data })
@@ -242,11 +241,11 @@ export default function Banners() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Link URL (Optional)</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Redirect URL (Optional)</label>
                 <input
                   type="url"
-                  name="linkUrl"
-                  defaultValue={editingBanner?.linkUrl || ''}
+                  name="redirectUrl"
+                  defaultValue={editingBanner?.redirectUrl || ''}
                   placeholder="https://example.com"
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
                 />

@@ -1,0 +1,421 @@
+import { useState } from 'react'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useAuth } from '../context/AuthContext'
+import { tenantApi, flatApi } from '../api'
+import { Plus, Edit, Trash2, Search, X, User, Calendar, Phone, Mail } from 'lucide-react'
+
+export default function Tenants() {
+  const { user } = useAuth()
+  const queryClient = useQueryClient()
+  const [showModal, setShowModal] = useState(false)
+  const [editingTenant, setEditingTenant] = useState(null)
+  const [searchTerm, setSearchTerm] = useState('')
+  const [filterStatus, setFilterStatus] = useState('')
+
+  const { data: tenants = [], isLoading } = useQuery({
+    queryKey: ['tenants'],
+    queryFn: () => tenantApi.getAll().then(res => res.data),
+  })
+
+  const { data: flats = [] } = useQuery({
+    queryKey: ['flats'],
+    queryFn: () => flatApi.getAll().then(res => res.data),
+  })
+
+  const createMutation = useMutation({
+    mutationFn: (data) => tenantApi.create(data, user.id),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['tenants'])
+      setShowModal(false)
+    },
+  })
+
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }) => tenantApi.update(id, data, user.id),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['tenants'])
+      setShowModal(false)
+      setEditingTenant(null)
+    },
+  })
+
+  const deleteMutation = useMutation({
+    mutationFn: (id) => tenantApi.delete(id, user.id),
+    onSuccess: () => queryClient.invalidateQueries(['tenants']),
+  })
+
+  const deactivateMutation = useMutation({
+    mutationFn: (id) => tenantApi.deactivate(id, user.id),
+    onSuccess: () => queryClient.invalidateQueries(['tenants']),
+  })
+
+  const filteredTenants = tenants.filter(t => {
+    const matchesSearch = t.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         t.phone?.includes(searchTerm) ||
+                         t.email?.toLowerCase().includes(searchTerm.toLowerCase())
+    const matchesStatus = !filterStatus || 
+                         (filterStatus === 'active' && t.isActive) ||
+                         (filterStatus === 'inactive' && !t.isActive)
+    return matchesSearch && matchesStatus
+  })
+
+  const handleSubmit = (e) => {
+    e.preventDefault()
+    const formData = new FormData(e.target)
+    const data = {
+      flatId: parseInt(formData.get('flatId')),
+      name: formData.get('name'),
+      email: formData.get('email'),
+      phone: formData.get('phone'),
+      agreementStartDate: formData.get('agreementStartDate'),
+      agreementEndDate: formData.get('agreementEndDate'),
+      rentAmount: parseFloat(formData.get('rentAmount')) || 0,
+      depositAmount: parseFloat(formData.get('depositAmount')) || 0,
+      idProofType: formData.get('idProofType'),
+      idProofNumber: formData.get('idProofNumber'),
+    }
+
+    if (editingTenant) {
+      updateMutation.mutate({ id: editingTenant.id, data })
+    } else {
+      createMutation.mutate(data)
+    }
+  }
+
+  const getFlatDisplay = (flatId) => {
+    const flat = flats.find(f => f.id === flatId)
+    return flat ? `${flat.flatNumber} - ${flat.societyName || 'N/A'}` : 'N/A'
+  }
+
+  const formatDate = (dateStr) => {
+    if (!dateStr) return 'N/A'
+    return new Date(dateStr).toLocaleDateString()
+  }
+
+  const isExpiringSoon = (endDate) => {
+    if (!endDate) return false
+    const end = new Date(endDate)
+    const today = new Date()
+    const daysUntil = Math.ceil((end - today) / (1000 * 60 * 60 * 24))
+    return daysUntil > 0 && daysUntil <= 30
+  }
+
+  return (
+    <div>
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Tenants</h1>
+          <p className="text-gray-600 mt-1">Manage tenant details and agreements</p>
+        </div>
+        <button
+          onClick={() => { setEditingTenant(null); setShowModal(true) }}
+          className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition cursor-pointer"
+        >
+          <Plus size={20} />
+          Add Tenant
+        </button>
+      </div>
+
+      {/* Filters */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-6">
+        <div className="flex flex-col sm:flex-row gap-4">
+          <div className="flex-1 relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search tenants..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+            />
+          </div>
+          <select
+            value={filterStatus}
+            onChange={(e) => setFilterStatus(e.target.value)}
+            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+          >
+            <option value="">All Status</option>
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+          </select>
+        </div>
+      </div>
+
+      {/* Table */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+        {isLoading ? (
+          <div className="p-8 text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-50 border-b border-gray-100">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tenant</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Flat</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Agreement Period</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rent</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {filteredTenants.map((tenant) => (
+                  <tr key={tenant.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center">
+                          <span className="text-purple-600 font-medium">
+                            {tenant.name?.charAt(0)?.toUpperCase() || 'T'}
+                          </span>
+                        </div>
+                        <span className="font-medium text-gray-900">{tenant.name}</span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-gray-700">
+                      {getFlatDisplay(tenant.flatId)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm">
+                        <div className="flex items-center gap-1 text-gray-700">
+                          <Phone size={14} />
+                          {tenant.phone || 'N/A'}
+                        </div>
+                        <div className="flex items-center gap-1 text-gray-500">
+                          <Mail size={14} />
+                          {tenant.email || 'N/A'}
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm">
+                        <div className="text-gray-700">{formatDate(tenant.agreementStartDate)}</div>
+                        <div className={`text-gray-500 ${isExpiringSoon(tenant.agreementEndDate) ? 'text-orange-600 font-medium' : ''}`}>
+                          to {formatDate(tenant.agreementEndDate)}
+                          {isExpiringSoon(tenant.agreementEndDate) && ' ⚠️'}
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-gray-700">
+                      ₹{tenant.rentAmount?.toLocaleString() || 0}/mo
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
+                        tenant.isActive ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'
+                      }`}>
+                        {tenant.isActive ? 'Active' : 'Inactive'}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        <button
+                          onClick={() => { setEditingTenant(tenant); setShowModal(true) }}
+                          className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition cursor-pointer"
+                        >
+                          <Edit size={18} />
+                        </button>
+                        {tenant.isActive && (
+                          <button
+                            onClick={() => {
+                              if (confirm('Deactivate this tenant?')) {
+                                deactivateMutation.mutate(tenant.id)
+                              }
+                            }}
+                            className="p-2 text-gray-600 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition cursor-pointer"
+                            title="Deactivate"
+                          >
+                            <User size={18} />
+                          </button>
+                        )}
+                        <button
+                          onClick={() => {
+                            if (confirm('Delete this tenant?')) {
+                              deleteMutation.mutate(tenant.id)
+                            }
+                          }}
+                          className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition cursor-pointer"
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+                {filteredTenants.length === 0 && (
+                  <tr>
+                    <td colSpan="7" className="px-6 py-8 text-center text-gray-500">
+                      No tenants found
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* Modal */}
+      {showModal && (
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+          <div className="flex min-h-full items-center justify-center p-4">
+            <div className="fixed inset-0 bg-black/50" onClick={() => setShowModal(false)} />
+            <div className="relative bg-white rounded-xl shadow-xl w-full max-w-lg p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-semibold text-gray-900">
+                  {editingTenant ? 'Edit Tenant' : 'Add Tenant'}
+                </h2>
+                <button
+                  onClick={() => { setShowModal(false); setEditingTenant(null) }}
+                  className="p-2 hover:bg-gray-100 rounded-lg cursor-pointer"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Flat</label>
+                  <select
+                    name="flatId"
+                    defaultValue={editingTenant?.flatId || ''}
+                    required
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                  >
+                    <option value="">Select Flat</option>
+                    {flats.map(f => (
+                      <option key={f.id} value={f.id}>{f.flatNumber} - {f.societyName || 'N/A'}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Tenant Name</label>
+                  <input
+                    type="text"
+                    name="name"
+                    defaultValue={editingTenant?.name || ''}
+                    required
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                    <input
+                      type="email"
+                      name="email"
+                      defaultValue={editingTenant?.email || ''}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+                    <input
+                      type="tel"
+                      name="phone"
+                      defaultValue={editingTenant?.phone || ''}
+                      required
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Agreement Start</label>
+                    <input
+                      type="date"
+                      name="agreementStartDate"
+                      defaultValue={editingTenant?.agreementStartDate || ''}
+                      required
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Agreement End</label>
+                    <input
+                      type="date"
+                      name="agreementEndDate"
+                      defaultValue={editingTenant?.agreementEndDate || ''}
+                      required
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Monthly Rent (₹)</label>
+                    <input
+                      type="number"
+                      name="rentAmount"
+                      defaultValue={editingTenant?.rentAmount || ''}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Deposit (₹)</label>
+                    <input
+                      type="number"
+                      name="depositAmount"
+                      defaultValue={editingTenant?.depositAmount || ''}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">ID Proof Type</label>
+                    <select
+                      name="idProofType"
+                      defaultValue={editingTenant?.idProofType || ''}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                    >
+                      <option value="">Select Type</option>
+                      <option value="AADHAR">Aadhar Card</option>
+                      <option value="PAN">PAN Card</option>
+                      <option value="PASSPORT">Passport</option>
+                      <option value="DRIVING_LICENSE">Driving License</option>
+                      <option value="VOTER_ID">Voter ID</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">ID Proof Number</label>
+                    <input
+                      type="text"
+                      name="idProofNumber"
+                      defaultValue={editingTenant?.idProofNumber || ''}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex justify-end gap-3 pt-4">
+                  <button
+                    type="button"
+                    onClick={() => { setShowModal(false); setEditingTenant(null) }}
+                    className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={createMutation.isPending || updateMutation.isPending}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 cursor-pointer"
+                  >
+                    {createMutation.isPending || updateMutation.isPending ? 'Saving...' : 'Save'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}

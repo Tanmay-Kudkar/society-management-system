@@ -8,8 +8,12 @@ import lombok.Setter;
 @Setter
 public class ComplaintRequest {
 
-    @NotBlank(message = "Title is required")
-    private String title;
+    private Long societyId;
+
+    @NotBlank(message = "Subject is required")
+    private String subject;
 
     private String description;
+
+    private String category;
 }

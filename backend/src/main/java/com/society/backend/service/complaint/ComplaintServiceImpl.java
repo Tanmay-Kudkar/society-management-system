@@ -3,9 +3,11 @@ package com.society.backend.service.complaint;
 import com.society.backend.dto.complaint.ComplaintRequest;
 import com.society.backend.dto.complaint.ComplaintResponse;
 import com.society.backend.entity.Complaint;
+import com.society.backend.entity.Society;
 import com.society.backend.entity.User;
 import com.society.backend.exception.ApiException;
 import com.society.backend.repository.complaint.ComplaintRepository;
+import com.society.backend.repository.society.SocietyRepository;
 import com.society.backend.repository.user.UserRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -18,10 +20,13 @@ public class ComplaintServiceImpl implements ComplaintService {
 
     private final ComplaintRepository complaintRepository;
     private final UserRepository userRepository;
+    private final SocietyRepository societyRepository;
 
-    public ComplaintServiceImpl(ComplaintRepository complaintRepository, UserRepository userRepository) {
+    public ComplaintServiceImpl(ComplaintRepository complaintRepository, UserRepository userRepository,
+            SocietyRepository societyRepository) {
         this.complaintRepository = complaintRepository;
         this.userRepository = userRepository;
+        this.societyRepository = societyRepository;
     }
 
     @Override
@@ -31,9 +36,19 @@ public class ComplaintServiceImpl implements ComplaintService {
 
         Complaint complaint = new Complaint();
         complaint.setUser(user);
-        complaint.setTitle(request.getTitle());
+        complaint.setSubject(request.getSubject());
         complaint.setDescription(request.getDescription());
+        complaint.setCategory(request.getCategory());
         complaint.setStatus("PENDING");
+
+        if (request.getSocietyId() != null) {
+            Society society = societyRepository.findById(request.getSocietyId())
+                    .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Society not found"));
+            complaint.setSociety(society);
+        } else if (user.getSociety() != null) {
+            complaint.setSociety(user.getSociety());
+        }
+
         Complaint saved = complaintRepository.save(complaint);
         return toResponse(saved);
     }
@@ -67,10 +82,13 @@ public class ComplaintServiceImpl implements ComplaintService {
     }
 
     @Override
-    public ComplaintResponse updateStatus(Long id, String status) {
+    public ComplaintResponse updateStatus(Long id, String status, String resolution) {
         Complaint complaint = complaintRepository.findById(id)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Complaint not found"));
         complaint.setStatus(status);
+        if (resolution != null) {
+            complaint.setResolution(resolution);
+        }
         Complaint saved = complaintRepository.save(complaint);
         return toResponse(saved);
     }
@@ -84,13 +102,21 @@ public class ComplaintServiceImpl implements ComplaintService {
     }
 
     private ComplaintResponse toResponse(Complaint complaint) {
-        return new ComplaintResponse(
-                complaint.getId(),
-                complaint.getUser().getId(),
-                complaint.getUser().getName(),
-                complaint.getTitle(),
-                complaint.getDescription(),
-                complaint.getStatus(),
-                complaint.getCreatedAt());
+        ComplaintResponse response = new ComplaintResponse();
+        response.setId(complaint.getId());
+        response.setComplaintNumber(complaint.getComplaintNumber());
+        response.setUserId(complaint.getUser().getId());
+        response.setRaisedByName(complaint.getUser().getName());
+        if (complaint.getSociety() != null) {
+            response.setSocietyId(complaint.getSociety().getId());
+            response.setSocietyName(complaint.getSociety().getName());
+        }
+        response.setSubject(complaint.getSubject());
+        response.setDescription(complaint.getDescription());
+        response.setCategory(complaint.getCategory());
+        response.setStatus(complaint.getStatus());
+        response.setResolution(complaint.getResolution());
+        response.setCreatedAt(complaint.getCreatedAt());
+        return response;
     }
 }

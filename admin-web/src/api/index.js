@@ -90,7 +90,7 @@ export const vendorBillApi = {
   create: (data, userId) => api.post(`/vendor-bills?userId=${userId}`, data),
   update: (id, data, userId) => api.put(`/vendor-bills/${id}?userId=${userId}`, data),
   recordPayment: (id, amount, paymentMode, referenceNumber, userId) => 
-    api.patch(`/vendor-bills/${id}/payment?amount=${amount}&paymentMode=${paymentMode}&referenceNumber=${referenceNumber}&userId=${userId}`),
+    api.post(`/vendor-bills/${id}/payment?amount=${amount}&paymentMode=${paymentMode}&referenceNumber=${encodeURIComponent(referenceNumber || '')}&userId=${userId}`),
   delete: (id, userId) => api.delete(`/vendor-bills/${id}?userId=${userId}`),
 }
 
@@ -115,7 +115,7 @@ export const maintenanceBillApi = {
   create: (data, userId) => api.post(`/maintenance-bills?userId=${userId}`, data),
   update: (id, data, userId) => api.put(`/maintenance-bills/${id}?userId=${userId}`, data),
   recordPayment: (id, amount, paymentMode, referenceNumber, userId) => 
-    api.patch(`/maintenance-bills/${id}/payment?amount=${amount}&paymentMode=${paymentMode}&referenceNumber=${referenceNumber}&userId=${userId}`),
+    api.post(`/maintenance-bills/${id}/payment?amount=${amount}&paymentMode=${paymentMode}&referenceNumber=${encodeURIComponent(referenceNumber || '')}&userId=${userId}`),
   generateForSociety: (societyId, billMonth, amount, userId) => 
     api.post(`/maintenance-bills/generate?societyId=${societyId}&billMonth=${billMonth}&amount=${amount}&userId=${userId}`),
   delete: (id, userId) => api.delete(`/maintenance-bills/${id}?userId=${userId}`),
@@ -167,8 +167,11 @@ export const ticketApi = {
   getByStatus: (status) => api.get(`/tickets/status/${status}`),
   create: (data, userId) => api.post(`/tickets?userId=${userId}`, data),
   update: (id, data, userId) => api.put(`/tickets/${id}?userId=${userId}`, data),
-  updateStatus: (id, status, resolution, userId) => 
-    api.patch(`/tickets/${id}/status?status=${status}&resolution=${resolution}&userId=${userId}`),
+  updateStatus: (id, status, resolution, userId) => {
+    let url = `/tickets/${id}/status?status=${status}&userId=${userId}`;
+    if (resolution) url += `&resolution=${encodeURIComponent(resolution)}`;
+    return api.patch(url);
+  },
   assign: (id, assignedToId, userId) => api.patch(`/tickets/${id}/assign?assignedToId=${assignedToId}&userId=${userId}`),
   delete: (id, userId) => api.delete(`/tickets/${id}?userId=${userId}`),
 }
@@ -180,7 +183,11 @@ export const complaintApi = {
   getByUser: (targetUserId, userId) => api.get(`/complaints/user/${targetUserId}?userId=${userId}`),
   getByStatus: (status, userId) => api.get(`/complaints/status/${status}?userId=${userId}`),
   create: (data, userId) => api.post(`/complaints?userId=${userId}`, data),
-  updateStatus: (id, status, userId) => api.patch(`/complaints/${id}/status?status=${status}&userId=${userId}`),
+  updateStatus: (id, status, resolution, userId) => {
+    let url = `/complaints/${id}/status?status=${status}&userId=${userId}`;
+    if (resolution) url += `&resolution=${encodeURIComponent(resolution)}`;
+    return api.patch(url);
+  },
   delete: (id, userId) => api.delete(`/complaints/${id}?userId=${userId}`),
 }
 
@@ -202,4 +209,32 @@ export const documentTemplateApi = {
   create: (data, userId) => api.post(`/document-templates?userId=${userId}`, data),
   update: (id, data, userId) => api.put(`/document-templates/${id}?userId=${userId}`, data),
   delete: (id, userId) => api.delete(`/document-templates/${id}?userId=${userId}`),
+}
+
+// Tenant API
+export const tenantApi = {
+  getAll: () => api.get('/tenants'),
+  getById: (id) => api.get(`/tenants/${id}`),
+  getByFlat: (flatId) => api.get(`/tenants/flat/${flatId}`),
+  getActive: () => api.get('/tenants/active'),
+  create: (data, userId) => api.post(`/tenants?userId=${userId}`, data),
+  update: (id, data, userId) => api.put(`/tenants/${id}?userId=${userId}`, data),
+  deactivate: (id, userId) => api.patch(`/tenants/${id}/deactivate?userId=${userId}`),
+  delete: (id, userId) => api.delete(`/tenants/${id}?userId=${userId}`),
+}
+
+// Vehicle API
+export const vehicleApi = {
+  getAll: () => api.get('/vehicles'),
+  getById: (id) => api.get(`/vehicles/${id}`),
+  getByFlat: (flatId) => api.get(`/vehicles/flat/${flatId}`),
+  create: (data, userId) => api.post(`/vehicles?userId=${userId}`, data),
+  update: (id, data, userId) => api.put(`/vehicles/${id}?userId=${userId}`, data),
+  delete: (id, userId) => api.delete(`/vehicles/${id}?userId=${userId}`),
+}
+
+// Notification Preferences API
+export const notificationPreferenceApi = {
+  getByUserId: (userId) => api.get(`/notification-preferences/${userId}`),
+  update: (userId, data) => api.put(`/notification-preferences/${userId}`, data),
 }

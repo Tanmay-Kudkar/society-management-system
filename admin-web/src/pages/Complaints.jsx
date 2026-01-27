@@ -27,8 +27,9 @@ export default function Complaints() {
   const [filterStatus, setFilterStatus] = useState('')
 
   const { data: complaints = [], isLoading } = useQuery({
-    queryKey: ['complaints'],
-    queryFn: () => complaintApi.getAll().then(res => res.data),
+    queryKey: ['complaints', user?.id],
+    queryFn: () => complaintApi.getAll(user.id).then(res => res.data),
+    enabled: !!user?.id,
   })
 
   const { data: societies = [] } = useQuery({

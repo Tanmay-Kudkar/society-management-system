@@ -52,7 +52,7 @@ export default function Tickets() {
   })
 
   const updateStatusMutation = useMutation({
-    mutationFn: ({ id, status }) => ticketApi.updateStatus(id, status, user.id),
+    mutationFn: ({ id, status }) => ticketApi.updateStatus(id, status, null, user.id),
     onSuccess: () => queryClient.invalidateQueries(['tickets']),
   })
 
@@ -67,7 +67,7 @@ export default function Tickets() {
 
   const filteredTickets = tickets.filter(t => {
     const matchesSearch = t.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         t.ticketNumber?.toLowerCase().includes(searchTerm.toLowerCase())
+                         t.type?.toLowerCase().includes(searchTerm.toLowerCase())
     const matchesStatus = !filterStatus || t.status === filterStatus
     return matchesSearch && matchesStatus
   })
@@ -79,7 +79,7 @@ export default function Tickets() {
       societyId: parseInt(formData.get('societyId')),
       title: formData.get('title'),
       description: formData.get('description'),
-      category: formData.get('category'),
+      type: formData.get('type'),
       priority: formData.get('priority'),
     })
   }
@@ -173,7 +173,7 @@ export default function Tickets() {
                   </div>
                   <div>
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-sm font-mono text-gray-500">{ticket.ticketNumber}</span>
+                      <span className="text-sm font-mono text-gray-500">#{ticket.id}</span>
                       <span className={clsx('px-2 py-0.5 rounded-full text-xs font-medium', statusColors[ticket.status])}>
                         {ticket.status?.replace('_', ' ')}
                       </span>
@@ -184,10 +184,10 @@ export default function Tickets() {
                     <h3 className="font-semibold text-gray-900 mt-1">{ticket.title}</h3>
                     <p className="text-sm text-gray-600 mt-1 line-clamp-2">{ticket.description}</p>
                     <div className="flex items-center gap-4 mt-2 text-xs text-gray-500">
-                      <span>{ticket.category}</span>
+                      <span>{ticket.type}</span>
                       <span>{ticket.societyName}</span>
                       <span>{ticket.createdAt && new Date(ticket.createdAt).toLocaleDateString()}</span>
-                      {ticket.assignedTo && (
+                      {ticket.assignedToId && (
                         <span className="inline-flex items-center gap-1">
                           <User size={12} />
                           {ticket.assignedToName}
@@ -253,14 +253,12 @@ export default function Tickets() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
-                  <select name="category" required className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
-                    <option value="MAINTENANCE">Maintenance</option>
-                    <option value="SECURITY">Security</option>
-                    <option value="CLEANING">Cleaning</option>
-                    <option value="ELECTRICAL">Electrical</option>
-                    <option value="PLUMBING">Plumbing</option>
-                    <option value="OTHER">Other</option>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
+                  <select name="type" required className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
+                    <option value="COMPLAINT">Complaint</option>
+                    <option value="REQUEST">Request</option>
+                    <option value="ISSUE">Issue</option>
+                    <option value="TASK">Task</option>
                   </select>
                 </div>
                 <div>
@@ -294,7 +292,7 @@ export default function Tickets() {
             </div>
             <form onSubmit={handleAssign} className="p-4 space-y-4">
               <div className="bg-gray-50 p-3 rounded-lg">
-                <p className="text-sm text-gray-600">Ticket: <span className="font-medium">{selectedTicket.ticketNumber}</span></p>
+                <p className="text-sm text-gray-600">Ticket ID: <span className="font-medium">#{selectedTicket.id}</span></p>
                 <p className="text-sm text-gray-600 mt-1">{selectedTicket.title}</p>
               </div>
               <div>

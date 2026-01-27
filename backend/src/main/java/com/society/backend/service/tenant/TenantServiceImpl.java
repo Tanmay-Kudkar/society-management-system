@@ -41,6 +41,8 @@ public class TenantServiceImpl implements TenantService {
         tenant.setIdProofNumber(request.getIdProofNumber());
         tenant.setAgreementStartDate(request.getAgreementStartDate());
         tenant.setAgreementEndDate(request.getAgreementEndDate());
+        tenant.setRentAmount(request.getRentAmount());
+        tenant.setDepositAmount(request.getDepositAmount());
         tenant.setIsActive(true);
 
         Tenant saved = tenantRepository.save(tenant);
@@ -103,6 +105,10 @@ public class TenantServiceImpl implements TenantService {
             tenant.setAgreementStartDate(request.getAgreementStartDate());
         if (request.getAgreementEndDate() != null)
             tenant.setAgreementEndDate(request.getAgreementEndDate());
+        if (request.getRentAmount() != null)
+            tenant.setRentAmount(request.getRentAmount());
+        if (request.getDepositAmount() != null)
+            tenant.setDepositAmount(request.getDepositAmount());
 
         Tenant saved = tenantRepository.save(tenant);
         return mapToResponse(saved);
@@ -144,6 +150,8 @@ public class TenantServiceImpl implements TenantService {
         response.setIdProofNumber(tenant.getIdProofNumber());
         response.setAgreementStartDate(tenant.getAgreementStartDate());
         response.setAgreementEndDate(tenant.getAgreementEndDate());
+        response.setRentAmount(tenant.getRentAmount());
+        response.setDepositAmount(tenant.getDepositAmount());
         response.setIsActive(tenant.getIsActive());
         response.setCreatedAt(tenant.getCreatedAt());
         return response;

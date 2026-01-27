@@ -37,6 +37,12 @@ public class Tenant {
     @Column(name = "agreement_end_date")
     private LocalDate agreementEndDate;
 
+    @Column(name = "rent_amount")
+    private java.math.BigDecimal rentAmount;
+
+    @Column(name = "deposit_amount")
+    private java.math.BigDecimal depositAmount;
+
     @Column(name = "id_proof_type")
     private String idProofType;
 

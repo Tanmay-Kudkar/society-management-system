@@ -78,9 +78,17 @@ export default function Users() {
     },
   })
 
+  const [deleteError, setDeleteError] = useState('')
+
   const deleteMutation = useMutation({
     mutationFn: (id) => userApi.delete(id),
-    onSuccess: () => queryClient.invalidateQueries(['users']),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['users'])
+      setDeleteError('')
+    },
+    onError: (err) => {
+      setDeleteError(err.response?.data?.message || 'Failed to delete user')
+    },
   })
 
   const filteredUsers = users.filter(u => {
@@ -124,6 +132,22 @@ export default function Users() {
           Add User
         </button>
       </div>
+
+      {/* Delete Error Alert */}
+      {deleteError && (
+        <div className="flex items-center justify-between gap-2 p-4 mb-6 bg-red-50 border border-red-200 rounded-xl text-red-700">
+          <div className="flex items-center gap-2">
+            <AlertCircle size={20} />
+            <span>{deleteError}</span>
+          </div>
+          <button 
+            onClick={() => setDeleteError('')}
+            className="p-1 hover:bg-red-100 rounded"
+          >
+            <X size={18} />
+          </button>
+        </div>
+      )}
 
       {/* Filters */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-6">

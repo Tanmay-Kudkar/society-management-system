@@ -6,6 +6,8 @@ import Dashboard from './pages/Dashboard'
 import Users from './pages/Users'
 import Societies from './pages/Societies'
 import Flats from './pages/Flats'
+import Tenants from './pages/Tenants'
+import Vehicles from './pages/Vehicles'
 import Vendors from './pages/Vendors'
 import VendorBills from './pages/VendorBills'
 import Contracts from './pages/Contracts'
@@ -52,6 +54,8 @@ function App() {
         <Route path="users" element={<Users />} />
         <Route path="societies" element={<Societies />} />
         <Route path="flats" element={<Flats />} />
+        <Route path="tenants" element={<Tenants />} />
+        <Route path="vehicles" element={<Vehicles />} />
         <Route path="vendors" element={<Vendors />} />
         <Route path="vendor-bills" element={<VendorBills />} />
         <Route path="contracts" element={<Contracts />} />

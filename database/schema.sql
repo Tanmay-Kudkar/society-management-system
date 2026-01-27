@@ -227,3 +227,13 @@ CREATE TABLE banners (
     is_active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Notification Preferences table
+CREATE TABLE notification_preferences (
+    id SERIAL PRIMARY KEY,
+    user_id INT REFERENCES users(id) UNIQUE,
+    email_tickets BOOLEAN DEFAULT TRUE,
+    email_complaints BOOLEAN DEFAULT TRUE,
+    email_payments BOOLEAN DEFAULT TRUE,
+    email_contracts BOOLEAN DEFAULT TRUE
+);

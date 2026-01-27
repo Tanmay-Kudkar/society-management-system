@@ -1,12 +1,95 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
-import { Settings as SettingsIcon, User, Bell, Shield, Palette, Save } from 'lucide-react'
+import { useSettings } from '../context/SettingsContext'
+import { userApi, notificationPreferenceApi } from '../api'
+import { User, Bell, Shield, Palette, Save } from 'lucide-react'
 import clsx from 'clsx'
+import Toggle from '../components/Toggle'
 
 export default function Settings() {
-  const { user, logout } = useAuth()
+  const { user, logout, updateUser } = useAuth()
+  const { 
+    theme, accentColor, compactSidebar,
+    setThemePreview, setAccentColorPreview, setCompactSidebarPreview,
+    clearPreviews, updateTheme, updateAccentColor, updateCompactSidebar 
+  } = useSettings()
+  
   const [activeTab, setActiveTab] = useState('profile')
+  const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
+  const [error, setError] = useState('')
+
+  // Profile form state
+  const [profileData, setProfileData] = useState({
+    name: user?.name || '',
+    phone: user?.phone || '',
+  })
+
+  // Password form state
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: '',
+  })
+  const [passwordError, setPasswordError] = useState('')
+  const [passwordSaved, setPasswordSaved] = useState(false)
+
+  // Notification preferences state
+  const [localNotifications, setLocalNotifications] = useState({
+    emailTickets: true,
+    emailComplaints: true,
+    emailPayments: true,
+    emailContracts: true,
+    emailTenants: true,
+    emailNotices: true,
+  })
+  const [notificationsLoading, setNotificationsLoading] = useState(false)
+
+  // Load notification preferences from API
+  useEffect(() => {
+    if (user?.id) {
+      notificationPreferenceApi.getByUserId(user.id)
+        .then(res => {
+          setLocalNotifications({
+            emailTickets: res.data.emailTickets,
+            emailComplaints: res.data.emailComplaints,
+            emailPayments: res.data.emailPayments,
+            emailContracts: res.data.emailContracts,
+            emailTenants: res.data.emailTenants,
+            emailNotices: res.data.emailNotices,
+          })
+        })
+        .catch(() => {
+          // Use defaults if API fails
+        })
+    }
+  }, [user?.id])
+
+  // Clear previews when leaving the appearance tab or unmounting
+  useEffect(() => {
+    return () => {
+      clearPreviews()
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // Clear previews when switching away from appearance tab
+  useEffect(() => {
+    if (activeTab !== 'appearance') {
+      clearPreviews()
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab])
+
+  // Update profile data when user changes
+  useEffect(() => {
+    if (user) {
+      setProfileData({
+        name: user.name || '',
+        phone: user.phone || '',
+      })
+    }
+  }, [user])
 
   const tabs = [
     { id: 'profile', label: 'Profile', icon: User },
@@ -15,7 +98,88 @@ export default function Settings() {
     { id: 'appearance', label: 'Appearance', icon: Palette },
   ]
 
-  const handleSave = () => {
+  const handleProfileSave = async () => {
+    setSaving(true)
+    setError('')
+    try {
+      await userApi.update(user.id, {
+        name: profileData.name,
+        email: user.email,
+        phone: profileData.phone,
+        role: user.role,
+      })
+      // Update local storage and context
+      const updatedUser = { ...user, name: profileData.name, phone: profileData.phone }
+      localStorage.setItem('user', JSON.stringify(updatedUser))
+      if (updateUser) {
+        updateUser(updatedUser)
+      }
+      setSaved(true)
+      setTimeout(() => setSaved(false), 2000)
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to update profile')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handlePasswordChange = async () => {
+    setPasswordError('')
+    
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      setPasswordError('New passwords do not match')
+      return
+    }
+    
+    if (passwordData.newPassword.length < 6) {
+      setPasswordError('Password must be at least 6 characters')
+      return
+    }
+
+    setSaving(true)
+    try {
+      await userApi.update(user.id, {
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        role: user.role,
+        password: passwordData.newPassword,
+      })
+      setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' })
+      setPasswordSaved(true)
+      setTimeout(() => setPasswordSaved(false), 2000)
+    } catch (err) {
+      setPasswordError(err.response?.data?.message || 'Failed to update password')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleNotificationsSave = async () => {
+    setNotificationsLoading(true)
+    try {
+      await notificationPreferenceApi.update(user.id, {
+        emailTickets: localNotifications.emailTickets,
+        emailComplaints: localNotifications.emailComplaints,
+        emailPayments: localNotifications.emailPayments,
+        emailContracts: localNotifications.emailContracts,
+        emailTenants: localNotifications.emailTenants,
+        emailNotices: localNotifications.emailNotices,
+      })
+      setSaved(true)
+      setTimeout(() => setSaved(false), 2000)
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to save notification preferences')
+    } finally {
+      setNotificationsLoading(false)
+    }
+  }
+
+  const handleAppearanceSave = () => {
+    // Save the current (preview or saved) values to localStorage
+    updateTheme(theme)
+    updateAccentColor(accentColor)
+    updateCompactSidebar(compactSidebar)
     setSaved(true)
     setTimeout(() => setSaved(false), 2000)
   }
@@ -24,13 +188,13 @@ export default function Settings() {
     <div>
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Settings</h1>
-        <p className="text-gray-600 mt-1">Manage your account preferences</p>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Settings</h1>
+        <p className="text-gray-600 dark:text-gray-400 mt-1">Manage your account preferences</p>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100">
+      <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700">
         {/* Tabs */}
-        <div className="border-b border-gray-100">
+        <div className="border-b border-gray-100 dark:border-slate-700">
           <nav className="flex overflow-x-auto">
             {tabs.map((tab) => (
               <button
@@ -39,8 +203,8 @@ export default function Settings() {
                 className={clsx(
                   'flex items-center gap-2 px-6 py-4 text-sm font-medium whitespace-nowrap transition',
                   activeTab === tab.id
-                    ? 'text-blue-600 border-b-2 border-blue-600'
-                    : 'text-gray-500 hover:text-gray-700'
+                    ? 'accent-text border-b-2 accent-border'
+                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
                 )}
               >
                 <tab.icon size={18} />
@@ -55,147 +219,186 @@ export default function Settings() {
           {activeTab === 'profile' && (
             <div className="space-y-6 max-w-2xl">
               <div className="flex items-center gap-4">
-                <div className="w-20 h-20 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 text-2xl font-bold">
-                  {user?.name?.charAt(0) || 'A'}
+                <div className="w-20 h-20 rounded-full accent-bg-light flex items-center justify-center accent-text text-2xl font-bold">
+                  {profileData.name?.charAt(0) || user?.name?.charAt(0) || 'A'}
                 </div>
                 <div>
-                  <h3 className="font-semibold text-gray-900">{user?.name}</h3>
-                  <p className="text-sm text-gray-500">{user?.email}</p>
-                  <span className="inline-block mt-1 px-2 py-0.5 bg-blue-100 text-blue-700 text-xs rounded-full">{user?.role}</span>
+                  <h3 className="font-semibold text-gray-900 dark:text-white">{profileData.name || user?.name}</h3>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">{user?.email}</p>
+                  <span className="inline-block mt-1 px-2 py-0.5 accent-bg-light accent-text text-xs rounded-full">{user?.role}</span>
                 </div>
               </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-gray-100">
+              {error && (
+                <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 rounded-lg text-sm">
+                  {error}
+                </div>
+              )}
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-gray-100 dark:border-slate-700">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Full Name</label>
                   <input
                     type="text"
-                    defaultValue={user?.name}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                    value={profileData.name}
+                    onChange={(e) => setProfileData({ ...profileData, name: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email</label>
                   <input
                     type="email"
-                    defaultValue={user?.email}
+                    value={user?.email || ''}
                     disabled
-                    className="w-full px-3 py-2 border border-gray-200 bg-gray-50 rounded-lg text-gray-500"
+                    className="w-full px-3 py-2 border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-600 rounded-lg text-gray-500 dark:text-gray-400"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
-                  <input
-                    type="tel"
-                    defaultValue={user?.phone || ''}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Role</label>
                   <input
                     type="text"
-                    defaultValue={user?.role}
+                    value={user?.role || ''}
                     disabled
-                    className="w-full px-3 py-2 border border-gray-200 bg-gray-50 rounded-lg text-gray-500"
+                    className="w-full px-3 py-2 border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-600 rounded-lg text-gray-500 dark:text-gray-400"
                   />
                 </div>
               </div>
 
               <button
-                onClick={handleSave}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                onClick={handleProfileSave}
+                disabled={saving}
+                className="inline-flex items-center gap-2 px-4 py-2 accent-btn rounded-lg transition disabled:opacity-50"
               >
                 <Save size={18} />
-                {saved ? 'Saved!' : 'Save Changes'}
+                {saving ? 'Saving...' : saved ? 'Saved!' : 'Save Changes'}
               </button>
             </div>
           )}
 
           {activeTab === 'notifications' && (
             <div className="space-y-4 max-w-2xl">
-              <h3 className="font-semibold text-gray-900">Notification Preferences</h3>
+              <h3 className="font-semibold text-gray-900 dark:text-white">Notification Preferences</h3>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Choose which email notifications you want to receive</p>
               
               {[
-                { id: 'email_tickets', label: 'New Tickets', desc: 'Get notified when new tickets are created' },
-                { id: 'email_complaints', label: 'Complaints', desc: 'Get notified about new complaints' },
-                { id: 'email_payments', label: 'Payments', desc: 'Get notified about payment activities' },
-                { id: 'email_contracts', label: 'Contract Expiry', desc: 'Get reminded about expiring contracts' },
+                { id: 'emailTickets', label: 'New Tickets', desc: 'Get notified when new tickets are created or updated' },
+                { id: 'emailComplaints', label: 'Complaints', desc: 'Get notified about new complaints' },
+                { id: 'emailPayments', label: 'Payments', desc: 'Get notified about payment activities and due bills' },
+                { id: 'emailContracts', label: 'Contract Expiry', desc: 'Get reminded about expiring contracts and agreements' },
+                { id: 'emailTenants', label: 'Tenant Agreements', desc: 'Get reminded about expiring tenant agreements' },
+                { id: 'emailNotices', label: 'Notices', desc: 'Get notified when new notices are published' },
               ].map((item) => (
-                <div key={item.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                <div key={item.id} className="flex items-center justify-between p-4 bg-gray-50 dark:bg-slate-700 rounded-lg">
                   <div>
-                    <h4 className="font-medium text-gray-900">{item.label}</h4>
-                    <p className="text-sm text-gray-500">{item.desc}</p>
+                    <h4 className="font-medium text-gray-900 dark:text-white">{item.label}</h4>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">{item.desc}</p>
                   </div>
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input type="checkbox" defaultChecked className="sr-only peer" />
-                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                  </label>
+                  <Toggle
+                    checked={localNotifications[item.id]}
+                    onChange={(e) => setLocalNotifications({ ...localNotifications, [item.id]: e.target.checked })}
+                  />
                 </div>
               ))}
 
               <button
-                onClick={handleSave}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition mt-4"
+                onClick={handleNotificationsSave}
+                disabled={notificationsLoading}
+                className="inline-flex items-center gap-2 px-4 py-2 accent-btn rounded-lg transition mt-4 disabled:opacity-50"
               >
                 <Save size={18} />
-                {saved ? 'Saved!' : 'Save Preferences'}
+                {notificationsLoading ? 'Saving...' : saved ? 'Saved!' : 'Save Preferences'}
               </button>
             </div>
           )}
 
           {activeTab === 'security' && (
             <div className="space-y-6 max-w-2xl">
-              <h3 className="font-semibold text-gray-900">Change Password</h3>
+              <h3 className="font-semibold text-gray-900 dark:text-white">Change Password</h3>
               
-              <div className="space-y-4">
+              {passwordError && (
+                <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 rounded-lg text-sm">
+                  {passwordError}
+                </div>
+              )}
+              
+              {passwordSaved && (
+                <div className="p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-400 rounded-lg text-sm">
+                  Password updated successfully!
+                </div>
+              )}
+              
+              <form onSubmit={(e) => { e.preventDefault(); handlePasswordChange(); }} className="space-y-4">
+                {/* Hidden username field for accessibility */}
+                <input
+                  type="text"
+                  name="username"
+                  autoComplete="username"
+                  value={user?.email || ''}
+                  readOnly
+                  className="sr-only"
+                  aria-hidden="true"
+                />
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Current Password</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Current Password</label>
                   <input
                     type="password"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                    name="currentPassword"
+                    autoComplete="current-password"
+                    value={passwordData.currentPassword}
+                    onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">New Password</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">New Password</label>
                   <input
                     type="password"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                    name="newPassword"
+                    autoComplete="new-password"
+                    value={passwordData.newPassword}
+                    onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Confirm New Password</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Confirm New Password</label>
                   <input
                     type="password"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                    name="confirmPassword"
+                    autoComplete="new-password"
+                    value={passwordData.confirmPassword}
+                    onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
                   />
                 </div>
-              </div>
 
-              <button
-                onClick={handleSave}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-              >
-                <Save size={18} />
-                Update Password
-              </button>
+                <button
+                  type="submit"
+                  disabled={saving}
+                  className="inline-flex items-center gap-2 px-4 py-2 accent-btn rounded-lg transition disabled:opacity-50"
+                >
+                  <Save size={18} />
+                  {saving ? 'Updating...' : 'Update Password'}
+                </button>
+              </form>
 
-              <div className="pt-6 border-t border-gray-100">
-                <h3 className="font-semibold text-gray-900 mb-4">Active Sessions</h3>
-                <div className="p-4 bg-gray-50 rounded-lg flex items-center justify-between">
+              <div className="pt-6 border-t border-gray-100 dark:border-slate-700">
+                <h3 className="font-semibold text-gray-900 dark:text-white mb-4">Active Sessions</h3>
+                <div className="p-4 bg-gray-50 dark:bg-slate-700 rounded-lg flex items-center justify-between">
                   <div>
-                    <p className="font-medium text-gray-900">Current Session</p>
-                    <p className="text-sm text-gray-500">Windows • Chrome • Active now</p>
+                    <p className="font-medium text-gray-900 dark:text-white">Current Session</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">Windows • Chrome • Active now</p>
                   </div>
-                  <span className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full">Active</span>
+                  <span className="px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs rounded-full">Active</span>
                 </div>
               </div>
 
-              <div className="pt-6 border-t border-gray-100">
-                <h3 className="font-semibold text-red-600 mb-2">Danger Zone</h3>
+              <div className="pt-6 border-t border-gray-100 dark:border-slate-700">
+                <h3 className="font-semibold text-red-600 dark:text-red-400 mb-2">Danger Zone</h3>
                 <button
                   onClick={logout}
-                  className="px-4 py-2 border border-red-300 text-red-600 rounded-lg hover:bg-red-50 transition"
+                  className="px-4 py-2 border border-red-300 dark:border-red-700 text-red-600 dark:text-red-400 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition"
                 >
                   Logout from all devices
                 </button>
@@ -205,57 +408,89 @@ export default function Settings() {
 
           {activeTab === 'appearance' && (
             <div className="space-y-6 max-w-2xl">
-              <h3 className="font-semibold text-gray-900">Theme</h3>
+              <h3 className="font-semibold text-gray-900 dark:text-white">Theme</h3>
               
               <div className="grid grid-cols-3 gap-4">
-                <button className="p-4 border-2 border-blue-500 rounded-lg bg-white text-center">
+                <button 
+                  onClick={() => setThemePreview('light')}
+                  className={clsx(
+                    "p-4 border-2 rounded-lg bg-white text-center transition",
+                    theme === 'light' ? 'border-blue-500' : 'border-gray-200 dark:border-slate-600 hover:border-gray-300 dark:hover:border-slate-500'
+                  )}
+                >
                   <div className="w-full h-12 bg-white border border-gray-200 rounded mb-2"></div>
-                  <span className="text-sm font-medium">Light</span>
+                  <span className="text-sm font-medium text-gray-900 dark:text-white">Light</span>
                 </button>
-                <button className="p-4 border-2 border-gray-200 rounded-lg bg-white text-center hover:border-gray-300 transition">
+                <button 
+                  onClick={() => setThemePreview('dark')}
+                  className={clsx(
+                    "p-4 border-2 rounded-lg bg-white dark:bg-slate-700 text-center transition",
+                    theme === 'dark' ? 'border-blue-500' : 'border-gray-200 dark:border-slate-600 hover:border-gray-300 dark:hover:border-slate-500'
+                  )}
+                >
                   <div className="w-full h-12 bg-gray-900 rounded mb-2"></div>
-                  <span className="text-sm font-medium">Dark</span>
+                  <span className="text-sm font-medium text-gray-900 dark:text-white">Dark</span>
                 </button>
-                <button className="p-4 border-2 border-gray-200 rounded-lg bg-white text-center hover:border-gray-300 transition">
+                <button 
+                  onClick={() => setThemePreview('system')}
+                  className={clsx(
+                    "p-4 border-2 rounded-lg bg-white dark:bg-slate-700 text-center transition",
+                    theme === 'system' ? 'border-blue-500' : 'border-gray-200 dark:border-slate-600 hover:border-gray-300 dark:hover:border-slate-500'
+                  )}
+                >
                   <div className="w-full h-12 bg-gradient-to-r from-white to-gray-900 rounded mb-2"></div>
-                  <span className="text-sm font-medium">System</span>
+                  <span className="text-sm font-medium text-gray-900 dark:text-white">System</span>
                 </button>
               </div>
 
-              <div className="pt-6 border-t border-gray-100">
-                <h3 className="font-semibold text-gray-900 mb-4">Accent Color</h3>
+              <div className="pt-6 border-t border-gray-100 dark:border-slate-700">
+                <h3 className="font-semibold text-gray-900 dark:text-white mb-4">Accent Color</h3>
                 <div className="flex gap-3">
                   {['blue', 'indigo', 'purple', 'pink', 'green', 'orange'].map((color) => (
                     <button
                       key={color}
+                      onClick={() => setAccentColorPreview(color)}
                       className={clsx(
-                        'w-10 h-10 rounded-full ring-2 ring-offset-2 transition',
-                        color === 'blue' && 'bg-blue-500 ring-blue-500',
-                        color === 'indigo' && 'bg-indigo-500 ring-transparent hover:ring-indigo-500',
-                        color === 'purple' && 'bg-purple-500 ring-transparent hover:ring-purple-500',
-                        color === 'pink' && 'bg-pink-500 ring-transparent hover:ring-pink-500',
-                        color === 'green' && 'bg-green-500 ring-transparent hover:ring-green-500',
-                        color === 'orange' && 'bg-orange-500 ring-transparent hover:ring-orange-500'
+                        'w-10 h-10 rounded-full ring-2 ring-offset-2 dark:ring-offset-slate-800 transition',
+                        color === 'blue' && 'bg-blue-500',
+                        color === 'indigo' && 'bg-indigo-500',
+                        color === 'purple' && 'bg-purple-500',
+                        color === 'pink' && 'bg-pink-500',
+                        color === 'green' && 'bg-green-500',
+                        color === 'orange' && 'bg-orange-500',
+                        accentColor === color 
+                          ? {
+                              blue: 'ring-blue-500',
+                              indigo: 'ring-indigo-500',
+                              purple: 'ring-purple-500',
+                              pink: 'ring-pink-500',
+                              green: 'ring-green-500',
+                              orange: 'ring-orange-500',
+                            }[color]
+                          : 'ring-transparent hover:ring-gray-300 dark:hover:ring-slate-600'
                       )}
                     />
                   ))}
                 </div>
               </div>
 
-              <div className="pt-6 border-t border-gray-100">
-                <h3 className="font-semibold text-gray-900 mb-4">Sidebar</h3>
-                <label className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+              <div className="pt-6 border-t border-gray-100 dark:border-slate-700">
+                <h3 className="font-semibold text-gray-900 dark:text-white mb-4">Sidebar</h3>
+                <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-slate-700 rounded-lg">
                   <div>
-                    <h4 className="font-medium text-gray-900">Compact Sidebar</h4>
-                    <p className="text-sm text-gray-500">Use icons only in the sidebar</p>
+                    <h4 className="font-medium text-gray-900 dark:text-white">Compact Sidebar</h4>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">Use icons only in the sidebar</p>
                   </div>
-                  <input type="checkbox" className="w-5 h-5 text-blue-600 rounded focus:ring-blue-500" />
-                </label>
+                  <Toggle
+                    checked={compactSidebar}
+                    onChange={(e) => setCompactSidebarPreview(e.target.checked)}
+                  />
+                </div>
               </div>
 
               <button
-                onClick={handleSave}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                onClick={handleAppearanceSave}
+                className="inline-flex items-center gap-2 px-4 py-2 accent-btn rounded-lg transition"
               >
                 <Save size={18} />
                 {saved ? 'Saved!' : 'Save Preferences'}

@@ -78,11 +78,17 @@ export const AuthProvider = ({ children }) => {
   const isAdminLevel = () => hasRole('MASTER_ADMIN', 'SOCIETY_ADMIN')
   const isCommitteeLevel = () => hasRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE')
 
+  const updateUser = (updatedUser) => {
+    setUser(updatedUser)
+    localStorage.setItem('user', JSON.stringify(updatedUser))
+  }
+
   const value = {
     user,
     loading,
     login,
     logout,
+    updateUser,
     hasRole,
     isMasterAdmin,
     isSocietyAdmin,

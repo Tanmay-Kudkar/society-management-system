@@ -69,9 +69,10 @@ public class ComplaintController {
     public ResponseEntity<ComplaintResponse> updateStatus(
             @PathVariable Long id,
             @RequestParam Long userId,
-            @RequestParam String status) {
+            @RequestParam String status,
+            @RequestParam(required = false) String resolution) {
         roleService.canUpdateComplaintStatus(userId);
-        return ResponseEntity.ok(complaintService.updateStatus(id, status));
+        return ResponseEntity.ok(complaintService.updateStatus(id, status, resolution));
     }
 
     // MASTER_ADMIN, COMMITTEE can delete

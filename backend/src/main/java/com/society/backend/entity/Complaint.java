@@ -18,18 +18,30 @@ public class Complaint {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "complaint_number", unique = true)
+    private String complaintNumber;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "society_id")
+    private Society society;
+
     @Column(nullable = false)
-    private String title;
+    private String subject;
 
     @Column(columnDefinition = "TEXT")
     private String description;
 
+    private String category;
+
     @Column(nullable = false)
     private String status = "PENDING";
+
+    @Column(columnDefinition = "TEXT")
+    private String resolution;
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
@@ -37,5 +49,8 @@ public class Complaint {
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
+        if (complaintNumber == null) {
+            complaintNumber = "CMP-" + System.currentTimeMillis();
+        }
     }
 }
