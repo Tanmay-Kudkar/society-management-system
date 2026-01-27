@@ -1,7 +1,6 @@
-import { useState } from 'react'
-import { Outlet, NavLink, useNavigate } from 'react-router-dom'
+import { useState, useRef, useEffect } from 'react'
+import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { useSettings } from '../context/SettingsContext'
 import {
   LayoutDashboard,
   Users,
@@ -24,159 +23,444 @@ import {
   LogOut,
   Menu,
   X,
+  ChevronDown,
 } from 'lucide-react'
 import clsx from 'clsx'
 
-const menuItems = [
-  { path: '/', icon: LayoutDashboard, label: 'Dashboard' },
-  { path: '/users', icon: Users, label: 'Users', roles: ['MASTER_ADMIN', 'SOCIETY_ADMIN'] },
-  { path: '/societies', icon: Building2, label: 'Societies', roles: ['MASTER_ADMIN'] },
-  { path: '/flats', icon: Home, label: 'Flats' },
-  { path: '/tenants', icon: UserCheck, label: 'Tenants' },
-  { path: '/vehicles', icon: Car, label: 'Vehicles' },
-  { path: '/vendors', icon: Truck, label: 'Vendors' },
-  { path: '/vendor-bills', icon: Receipt, label: 'Vendor Bills' },
-  { path: '/contracts', icon: FileText, label: 'Contracts' },
-  { path: '/maintenance-bills', icon: CreditCard, label: 'Maintenance Bills' },
-  { path: '/transactions', icon: DollarSign, label: 'Transactions' },
-  { path: '/notices', icon: Megaphone, label: 'Notices' },
-  { path: '/banners', icon: Image, label: 'Banners' },
-  { path: '/tickets', icon: Ticket, label: 'Tickets' },
-  { path: '/complaints', icon: MessageSquare, label: 'Complaints' },
-  { path: '/emergency-contacts', icon: Phone, label: 'Emergency Contacts' },
-  { path: '/documents', icon: FileCheck, label: 'Documents' },
-  { path: '/settings', icon: Settings, label: 'Settings' },
+// Grouped menu structure
+const menuGroups = [
+  {
+    id: 'dashboard',
+    label: 'Dashboard',
+    icon: LayoutDashboard,
+    path: '/',
+  },
+  {
+    id: 'management',
+    label: 'Management',
+    icon: Building2,
+    items: [
+      { path: '/users', icon: Users, label: 'Users', roles: ['MASTER_ADMIN', 'SOCIETY_ADMIN'] },
+      { path: '/societies', icon: Building2, label: 'Societies', roles: ['MASTER_ADMIN'] },
+      { path: '/flats', icon: Home, label: 'Flats' },
+      { path: '/tenants', icon: UserCheck, label: 'Tenants' },
+      { path: '/vehicles', icon: Car, label: 'Vehicles' },
+    ],
+  },
+  {
+    id: 'finance',
+    label: 'Finance',
+    icon: DollarSign,
+    items: [
+      { path: '/vendors', icon: Truck, label: 'Vendors' },
+      { path: '/vendor-bills', icon: Receipt, label: 'Vendor Bills' },
+      { path: '/contracts', icon: FileText, label: 'Contracts' },
+      { path: '/maintenance-bills', icon: CreditCard, label: 'Maintenance Bills' },
+      { path: '/transactions', icon: DollarSign, label: 'Transactions' },
+    ],
+  },
+  {
+    id: 'communication',
+    label: 'Communication',
+    icon: Megaphone,
+    items: [
+      { path: '/notices', icon: Megaphone, label: 'Notices' },
+      { path: '/banners', icon: Image, label: 'Banners' },
+      { path: '/tickets', icon: Ticket, label: 'Tickets' },
+      { path: '/complaints', icon: MessageSquare, label: 'Complaints' },
+    ],
+  },
+  {
+    id: 'resources',
+    label: 'Resources',
+    icon: FileCheck,
+    items: [
+      { path: '/emergency-contacts', icon: Phone, label: 'Emergency Contacts' },
+      { path: '/documents', icon: FileCheck, label: 'Documents' },
+    ],
+  },
+  {
+    id: 'settings',
+    label: 'Settings',
+    icon: Settings,
+    path: '/settings',
+  },
 ]
+
+// Dropdown component for desktop navbar
+function NavDropdown({ group, hasRole }) {
+  const [isOpen, setIsOpen] = useState(false)
+  const timeoutRef = useRef(null)
+  const location = useLocation()
+
+  const filteredItems = group.items?.filter(item => {
+    if (!item.roles) return true
+    return hasRole(...item.roles)
+  }) || []
+
+  if (group.items && filteredItems.length === 0) return null
+
+  const isActive = group.path
+    ? location.pathname === group.path
+    : filteredItems.some(item => location.pathname === item.path)
+
+  const handleMouseEnter = () => {
+    if (timeoutRef.current) clearTimeout(timeoutRef.current)
+    setIsOpen(true)
+  }
+
+  const handleMouseLeave = () => {
+    timeoutRef.current = setTimeout(() => setIsOpen(false), 150)
+  }
+
+  // Single link (no dropdown)
+  if (group.path) {
+    return (
+      <NavLink
+        to={group.path}
+        className={clsx(
+          'flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200',
+          isActive
+            ? 'accent-bg-light accent-text'
+            : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-700'
+        )}
+      >
+        <group.icon size={18} />
+        <span>{group.label}</span>
+      </NavLink>
+    )
+  }
+
+  // Dropdown
+  return (
+    <div
+      className="relative"
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+    >
+      <button
+        className={clsx(
+          'flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200',
+          isActive
+            ? 'accent-bg-light accent-text'
+            : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-700'
+        )}
+      >
+        <group.icon size={18} />
+        <span>{group.label}</span>
+        <ChevronDown size={14} className={clsx('transition-transform duration-200', isOpen && 'rotate-180')} />
+      </button>
+
+      <div 
+        className={clsx(
+          'absolute top-full left-0 mt-1 py-2 bg-white dark:bg-slate-800 rounded-lg shadow-lg border border-gray-200 dark:border-slate-700 min-w-48 z-50 transition-all duration-200 origin-top',
+          isOpen 
+            ? 'opacity-100 scale-100 translate-y-0' 
+            : 'opacity-0 scale-95 -translate-y-2 pointer-events-none'
+        )}
+      >
+        {filteredItems.map((item) => (
+          <NavLink
+            key={item.path}
+            to={item.path}
+            onClick={() => setIsOpen(false)}
+            className={({ isActive }) =>
+              clsx(
+                'flex items-center gap-3 px-4 py-2.5 text-sm transition-all duration-150',
+                isActive
+                  ? 'accent-bg-light accent-text'
+                  : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-700'
+              )
+            }
+          >
+            <item.icon size={16} />
+            <span>{item.label}</span>
+          </NavLink>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// Mobile menu accordion - controlled from parent
+function MobileAccordion({ group, hasRole, onNavigate, isOpen, onToggle }) {
+  const location = useLocation()
+  const contentRef = useRef(null)
+  const [contentHeight, setContentHeight] = useState(0)
+
+  const filteredItems = group.items?.filter(item => {
+    if (!item.roles) return true
+    return hasRole(...item.roles)
+  }) || []
+
+  // Calculate content height for smooth animation
+  useEffect(() => {
+    if (contentRef.current) {
+      setContentHeight(contentRef.current.scrollHeight)
+    }
+  }, [filteredItems])
+
+  if (group.items && filteredItems.length === 0) return null
+
+  const isActiveGroup = group.path
+    ? location.pathname === group.path
+    : filteredItems.some(item => location.pathname === item.path)
+
+  // Single link
+  if (group.path) {
+    return (
+      <NavLink
+        to={group.path}
+        onClick={onNavigate}
+        className={clsx(
+          'flex items-center gap-3 px-4 py-3 text-base font-medium transition-all duration-200',
+          isActiveGroup
+            ? 'accent-bg-light accent-text'
+            : 'text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-700'
+        )}
+      >
+        <group.icon size={20} />
+        <span>{group.label}</span>
+      </NavLink>
+    )
+  }
+
+  // Accordion
+  return (
+    <div className="overflow-hidden">
+      <button
+        onClick={onToggle}
+        className={clsx(
+          'w-full flex items-center justify-between px-4 py-3 text-base font-medium transition-all duration-200',
+          isActiveGroup
+            ? 'accent-text'
+            : 'text-gray-700 dark:text-gray-200'
+        )}
+      >
+        <div className="flex items-center gap-3">
+          <group.icon size={20} />
+          <span>{group.label}</span>
+        </div>
+        <ChevronDown size={18} className={clsx('transition-transform duration-300 ease-out', isOpen && 'rotate-180')} />
+      </button>
+
+      <div 
+        className="transition-all duration-300 ease-out overflow-hidden"
+        style={{ height: isOpen ? contentHeight : 0 }}
+      >
+        <div ref={contentRef} className="bg-gray-50 dark:bg-slate-900/50">
+          {filteredItems.map((item) => (
+            <NavLink
+              key={item.path}
+              to={item.path}
+              onClick={onNavigate}
+              className={({ isActive }) =>
+                clsx(
+                  'flex items-center gap-3 pl-12 pr-4 py-3 text-sm transition-all duration-150',
+                  isActive
+                    ? 'accent-bg-light accent-text'
+                    : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-700'
+                )
+              }
+            >
+              <item.icon size={18} />
+              <span>{item.label}</span>
+            </NavLink>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
 
 export default function Layout() {
   const { user, logout, hasRole } = useAuth()
-  const { compactSidebar } = useSettings()
   const navigate = useNavigate()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [openAccordion, setOpenAccordion] = useState(null) // Track which accordion is open
 
   const handleLogout = () => {
     logout()
     navigate('/login')
   }
 
-  const filteredMenuItems = menuItems.filter(item => {
-    if (!item.roles) return true
-    return hasRole(...item.roles)
-  })
+  const closeMobileMenu = () => {
+    setMobileMenuOpen(false)
+    // Reset accordions after drawer closes
+    setTimeout(() => setOpenAccordion(null), 300)
+  }
+
+  const toggleMobileMenu = () => {
+    if (mobileMenuOpen) {
+      // Closing - reset accordions after transition
+      setMobileMenuOpen(false)
+      setTimeout(() => setOpenAccordion(null), 300)
+    } else {
+      // Opening - reset accordions immediately
+      setOpenAccordion(null)
+      setMobileMenuOpen(true)
+    }
+  }
+
+  const handleAccordionToggle = (groupId) => {
+    // If clicking the same one, close it; otherwise open the new one (closes others)
+    setOpenAccordion(prev => prev === groupId ? null : groupId)
+  }
+
+  // Close mobile menu on resize to desktop
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 1024) {
+        setMobileMenuOpen(false)
+        setOpenAccordion(null)
+      }
+    }
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-slate-900 transition-colors duration-300">
-      {/* Mobile menu button - only shown on mobile when sidebar is hidden */}
-      <div className="lg:hidden fixed top-4 left-4 z-50">
-        <button
-          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          className="p-2 rounded-lg bg-white dark:bg-slate-800 shadow-md border border-gray-200 dark:border-slate-700 dark:text-white"
-        >
-          {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-        </button>
-      </div>
+      {/* Top Navbar */}
+      <header className="fixed top-0 left-0 right-0 z-40 h-16 bg-white dark:bg-slate-800 border-b border-gray-200 dark:border-slate-700 shadow-sm transition-colors duration-300">
+        <div className="h-full px-4 flex items-center justify-between">
+          {/* Logo */}
+          <div className="flex items-center gap-4">
+            <span className="text-xl font-bold accent-text">Society SMS</span>
+          </div>
 
-      {/* Sidebar */}
-      <aside
+          {/* Desktop Navigation */}
+          <nav className="hidden lg:flex items-center gap-1">
+            {menuGroups.map((group) => (
+              <NavDropdown key={group.id} group={group} hasRole={hasRole} />
+            ))}
+          </nav>
+
+          {/* User section - Desktop */}
+          <div className="hidden lg:flex items-center gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-full accent-bg-light flex items-center justify-center transition-colors duration-200">
+                <span className="accent-text font-medium text-sm">
+                  {user?.name?.charAt(0)?.toUpperCase() || 'U'}
+                </span>
+              </div>
+              <div className="text-right">
+                <p className="text-sm font-medium text-gray-900 dark:text-white transition-colors duration-200">{user?.name}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 transition-colors duration-200">{user?.role?.replace('_', ' ')}</p>
+              </div>
+            </div>
+            <button
+              onClick={handleLogout}
+              title="Logout"
+              className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all duration-200 cursor-pointer"
+            >
+              <LogOut size={20} />
+            </button>
+          </div>
+
+          {/* Hamburger - Mobile */}
+          <button
+            onClick={toggleMobileMenu}
+            className="lg:hidden p-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-700 transition-all duration-200"
+          >
+            <div className="relative w-6 h-6">
+              <Menu 
+                size={24} 
+                className={clsx(
+                  'absolute inset-0 transition-all duration-300',
+                  mobileMenuOpen ? 'opacity-0 rotate-90 scale-0' : 'opacity-100 rotate-0 scale-100'
+                )}
+              />
+              <X 
+                size={24} 
+                className={clsx(
+                  'absolute inset-0 transition-all duration-300',
+                  mobileMenuOpen ? 'opacity-100 rotate-0 scale-100' : 'opacity-0 -rotate-90 scale-0'
+                )}
+              />
+            </div>
+          </button>
+        </div>
+      </header>
+
+      {/* Mobile Menu Drawer */}
+      <div
         className={clsx(
-          'fixed top-0 left-0 z-40 h-screen transition-all duration-300 bg-white dark:bg-slate-800 border-r border-gray-200 dark:border-slate-700',
-          compactSidebar ? 'w-16' : 'w-64',
-          mobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+          'fixed inset-0 z-50 lg:hidden transition-all duration-300',
+          mobileMenuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
         )}
       >
-        {/* Logo */}
-        <div className="flex items-center h-16 px-4 border-b border-gray-200 dark:border-slate-700">
-          <span className={clsx("text-xl font-bold accent-text", compactSidebar && "text-center w-full")}>
-            {compactSidebar ? 'S' : 'Society SMS'}
-          </span>
-        </div>
+        {/* Backdrop */}
+        <div
+          className={clsx(
+            'absolute inset-0 bg-black transition-opacity duration-300',
+            mobileMenuOpen ? 'opacity-50' : 'opacity-0'
+          )}
+          onClick={closeMobileMenu}
+        />
 
-        {/* Navigation */}
-        <nav className="flex-1 px-3 py-4 overflow-y-auto">
-          <ul className="space-y-1">
-            {filteredMenuItems.map((item) => (
-              <li key={item.path}>
-                <NavLink
-                  to={item.path}
-                  onClick={() => setMobileMenuOpen(false)}
-                  title={compactSidebar ? item.label : undefined}
-                  className={({ isActive }) =>
-                    clsx(
-                      'flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors',
-                      compactSidebar && 'justify-center',
-                      isActive
-                        ? 'accent-bg-light accent-text'
-                        : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-700'
-                    )
-                  }
-                >
-                  <item.icon size={20} className="flex-shrink-0" />
-                  {!compactSidebar && <span>{item.label}</span>}
-                </NavLink>
-              </li>
+        {/* Drawer */}
+        <aside
+          className={clsx(
+            'absolute top-0 right-0 h-full w-80 max-w-[85vw] bg-white dark:bg-slate-800 shadow-xl transition-transform duration-300 ease-out',
+            mobileMenuOpen ? 'translate-x-0' : 'translate-x-full'
+          )}
+        >
+          {/* Mobile Header */}
+          <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200 dark:border-slate-700">
+            <span className="text-lg font-bold accent-text">Menu</span>
+            <button
+              onClick={closeMobileMenu}
+              className="p-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-700 transition-all duration-200"
+            >
+              <X size={24} />
+            </button>
+          </div>
+
+          {/* Mobile Navigation */}
+          <nav className="flex-1 overflow-y-auto pb-40">
+            {menuGroups.map((group) => (
+              <MobileAccordion
+                key={group.id}
+                group={group}
+                hasRole={hasRole}
+                onNavigate={closeMobileMenu}
+                isOpen={openAccordion === group.id}
+                onToggle={() => handleAccordionToggle(group.id)}
+              />
             ))}
-          </ul>
-        </nav>
+          </nav>
 
-        {/* User section */}
-        <div className="p-4 border-t border-gray-200 dark:border-slate-700">
-          {compactSidebar ? (
-            <div className="flex flex-col items-center gap-3">
+          {/* Mobile User Section */}
+          <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800">
+            <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 rounded-full accent-bg-light flex items-center justify-center">
                 <span className="accent-text font-medium">
                   {user?.name?.charAt(0)?.toUpperCase() || 'U'}
                 </span>
               </div>
-              <button
-                onClick={handleLogout}
-                title="Logout"
-                className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
-              >
-                <LogOut size={18} />
-              </button>
-            </div>
-          ) : (
-            <>
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full accent-bg-light flex items-center justify-center">
-                  <span className="accent-text font-medium">
-                    {user?.name?.charAt(0)?.toUpperCase() || 'U'}
-                  </span>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{user?.name}</p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{user?.role?.replace('_', ' ')}</p>
-                </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{user?.name}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{user?.role?.replace('_', ' ')}</p>
               </div>
-              <button
-                onClick={handleLogout}
-                className="mt-4 flex items-center gap-2 text-red-600 hover:text-red-700 transition-colors cursor-pointer"
-              >
-                <LogOut size={18} />
-                <span>Logout</span>
-              </button>
-            </>
-          )}
-        </div>
-      </aside>
+            </div>
+            <button
+              onClick={handleLogout}
+              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 transition-all duration-200 cursor-pointer"
+            >
+              <LogOut size={18} />
+              <span>Logout</span>
+            </button>
+          </div>
+        </aside>
+      </div>
 
       {/* Main content */}
-      <main className={clsx(
-        "transition-all duration-300 min-h-screen overflow-auto bg-gray-50 dark:bg-slate-900",
-        compactSidebar ? 'lg:ml-16' : 'lg:ml-64'
-      )}>
-        <div className="p-6 lg:p-8 pb-20 pt-16 lg:pt-6">
+      <main className="pt-16 min-h-screen bg-gray-50 dark:bg-slate-900 transition-colors duration-300">
+        <div className="p-4 md:p-6 lg:p-8">
           <Outlet />
         </div>
       </main>
-
-      {/* Mobile overlay */}
-      {mobileMenuOpen && (
-        <div
-          className="fixed inset-0 z-30 bg-black/50 lg:hidden"
-          onClick={() => setMobileMenuOpen(false)}
-        />
-      )}
     </div>
   )
 }
