@@ -105,8 +105,8 @@ export default function Tenants() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Tenants</h1>
-          <p className="text-gray-600 mt-1">Manage tenant details and agreements</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Tenants</h1>
+          <p className="text-gray-600 dark:text-gray-400 mt-1">Manage tenant details and agreements</p>
         </div>
         <button
           onClick={() => { setEditingTenant(null); setShowModal(true) }}
@@ -118,7 +118,7 @@ export default function Tenants() {
       </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-6">
+      <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-4 mb-6">
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -127,13 +127,13 @@ export default function Tenants() {
               placeholder="Search tenants..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white placeholder:text-gray-400"
             />
           </div>
           <select
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+            className="px-4 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
           >
             <option value="">All Status</option>
             <option value="active">Active</option>
@@ -143,7 +143,7 @@ export default function Tenants() {
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+      <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 overflow-hidden">
         {isLoading ? (
           <div className="p-8 text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
@@ -151,40 +151,40 @@ export default function Tenants() {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-gray-50 border-b border-gray-100">
+              <thead className="bg-gray-50 dark:bg-slate-700 border-b border-gray-100 dark:border-slate-700">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tenant</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Flat</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Agreement Period</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rent</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Tenant</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Flat</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Contact</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Agreement Period</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Rent</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Status</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody className="divide-y divide-gray-100 dark:divide-slate-700">
                 {filteredTenants.map((tenant) => (
-                  <tr key={tenant.id} className="hover:bg-gray-50">
+                  <tr key={tenant.id} className="hover:bg-gray-50 dark:hover:bg-slate-700">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center">
-                          <span className="text-purple-600 font-medium">
+                        <div className="w-10 h-10 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
+                          <span className="text-purple-600 dark:text-purple-400 font-medium">
                             {tenant.name?.charAt(0)?.toUpperCase() || 'T'}
                           </span>
                         </div>
-                        <span className="font-medium text-gray-900">{tenant.name}</span>
+                        <span className="font-medium text-gray-900 dark:text-white">{tenant.name}</span>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-gray-700">
+                    <td className="px-6 py-4 whitespace-nowrap text-gray-700 dark:text-gray-300">
                       {getFlatDisplay(tenant.flatId)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm">
-                        <div className="flex items-center gap-1 text-gray-700">
+                        <div className="flex items-center gap-1 text-gray-700 dark:text-gray-300">
                           <Phone size={14} />
                           {tenant.phone || 'N/A'}
                         </div>
-                        <div className="flex items-center gap-1 text-gray-500">
+                        <div className="flex items-center gap-1 text-gray-500 dark:text-gray-400">
                           <Mail size={14} />
                           {tenant.email || 'N/A'}
                         </div>
@@ -192,14 +192,14 @@ export default function Tenants() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm">
-                        <div className="text-gray-700">{formatDate(tenant.agreementStartDate)}</div>
-                        <div className={`text-gray-500 ${isExpiringSoon(tenant.agreementEndDate) ? 'text-orange-600 font-medium' : ''}`}>
+                        <div className="text-gray-700 dark:text-gray-300">{formatDate(tenant.agreementStartDate)}</div>
+                        <div className={`text-gray-500 dark:text-gray-400 ${isExpiringSoon(tenant.agreementEndDate) ? 'text-orange-600 dark:text-orange-400 font-medium' : ''}`}>
                           to {formatDate(tenant.agreementEndDate)}
                           {isExpiringSoon(tenant.agreementEndDate) && ' ⚠️'}
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-gray-700">
+                    <td className="px-6 py-4 whitespace-nowrap text-gray-700 dark:text-gray-300">
                       ₹{tenant.rentAmount?.toLocaleString() || 0}/mo
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -213,7 +213,7 @@ export default function Tenants() {
                       <div className="flex items-center justify-end gap-2">
                         <button
                           onClick={() => { setEditingTenant(tenant); setShowModal(true) }}
-                          className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition cursor-pointer"
+                          className="p-2 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition cursor-pointer"
                         >
                           <Edit size={18} />
                         </button>
@@ -224,7 +224,7 @@ export default function Tenants() {
                                 deactivateMutation.mutate(tenant.id)
                               }
                             }}
-                            className="p-2 text-gray-600 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition cursor-pointer"
+                            className="p-2 text-gray-600 dark:text-gray-400 hover:text-orange-600 dark:hover:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/30 rounded-lg transition cursor-pointer"
                             title="Deactivate"
                           >
                             <User size={18} />
@@ -236,7 +236,7 @@ export default function Tenants() {
                               deleteMutation.mutate(tenant.id)
                             }
                           }}
-                          className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition cursor-pointer"
+                          className="p-2 text-gray-600 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition cursor-pointer"
                         >
                           <Trash2 size={18} />
                         </button>
@@ -246,7 +246,7 @@ export default function Tenants() {
                 ))}
                 {filteredTenants.length === 0 && (
                   <tr>
-                    <td colSpan="7" className="px-6 py-8 text-center text-gray-500">
+                    <td colSpan="7" className="px-6 py-8 text-center text-gray-500 dark:text-gray-400">
                       No tenants found
                     </td>
                   </tr>
@@ -262,14 +262,14 @@ export default function Tenants() {
         <div className="fixed inset-0 z-50 overflow-y-auto">
           <div className="flex min-h-full items-center justify-center p-4">
             <div className="fixed inset-0 bg-black/50" onClick={() => setShowModal(false)} />
-            <div className="relative bg-white rounded-xl shadow-xl w-full max-w-lg p-6">
+            <div className="relative bg-white dark:bg-slate-800 rounded-xl shadow-xl w-full max-w-lg p-6">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-semibold text-gray-900">
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
                   {editingTenant ? 'Edit Tenant' : 'Add Tenant'}
                 </h2>
                 <button
                   onClick={() => { setShowModal(false); setEditingTenant(null) }}
-                  className="p-2 hover:bg-gray-100 rounded-lg cursor-pointer"
+                  className="p-2 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg cursor-pointer text-gray-500 dark:text-gray-400"
                 >
                   <X size={20} />
                 </button>
@@ -277,12 +277,12 @@ export default function Tenants() {
 
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Flat</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Flat</label>
                   <select
                     name="flatId"
                     defaultValue={editingTenant?.flatId || ''}
                     required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
                   >
                     <option value="">Select Flat</option>
                     {flats.map(f => (
@@ -292,89 +292,89 @@ export default function Tenants() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Tenant Name</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Tenant Name</label>
                   <input
                     type="text"
                     name="name"
                     defaultValue={editingTenant?.name || ''}
                     required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
                   />
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email</label>
                     <input
                       type="email"
                       name="email"
                       defaultValue={editingTenant?.email || ''}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Phone</label>
                     <input
                       type="tel"
                       name="phone"
                       defaultValue={editingTenant?.phone || ''}
                       required
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Agreement Start</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Agreement Start</label>
                     <input
                       type="date"
                       name="agreementStartDate"
                       defaultValue={editingTenant?.agreementStartDate || ''}
                       required
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Agreement End</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Agreement End</label>
                     <input
                       type="date"
                       name="agreementEndDate"
                       defaultValue={editingTenant?.agreementEndDate || ''}
                       required
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Monthly Rent (₹)</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Monthly Rent (₹)</label>
                     <input
                       type="number"
                       name="rentAmount"
                       defaultValue={editingTenant?.rentAmount || ''}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Deposit (₹)</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Deposit (₹)</label>
                     <input
                       type="number"
                       name="depositAmount"
                       defaultValue={editingTenant?.depositAmount || ''}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">ID Proof Type</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">ID Proof Type</label>
                     <select
                       name="idProofType"
                       defaultValue={editingTenant?.idProofType || ''}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
                     >
                       <option value="">Select Type</option>
                       <option value="AADHAR">Aadhar Card</option>
@@ -385,12 +385,12 @@ export default function Tenants() {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">ID Proof Number</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">ID Proof Number</label>
                     <input
                       type="text"
                       name="idProofNumber"
                       defaultValue={editingTenant?.idProofNumber || ''}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
                     />
                   </div>
                 </div>
@@ -399,7 +399,7 @@ export default function Tenants() {
                   <button
                     type="button"
                     onClick={() => { setShowModal(false); setEditingTenant(null) }}
-                    className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition cursor-pointer"
+                    className="px-4 py-2 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-slate-700 rounded-lg hover:bg-gray-200 dark:hover:bg-slate-600 transition cursor-pointer"
                   >
                     Cancel
                   </button>

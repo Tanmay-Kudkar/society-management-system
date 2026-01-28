@@ -77,8 +77,8 @@ export default function Flats() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Flats</h1>
-          <p className="text-gray-600 mt-1">Manage society flats and owners</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Flats</h1>
+          <p className="text-gray-600 dark:text-gray-400 mt-1">Manage society flats and owners</p>
         </div>
         <button
           onClick={() => { setEditingFlat(null); setShowModal(true) }}
@@ -90,7 +90,7 @@ export default function Flats() {
       </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-6">
+      <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-4 mb-6">
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -99,13 +99,13 @@ export default function Flats() {
               placeholder="Search flats..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white placeholder:text-gray-400"
             />
           </div>
           <select
             value={filterSociety}
             onChange={(e) => setFilterSociety(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+            className="px-4 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
           >
             <option value="">All Societies</option>
             {societies.map(s => (
@@ -116,7 +116,7 @@ export default function Flats() {
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+      <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 overflow-hidden">
         {isLoading ? (
           <div className="p-8 text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
@@ -124,43 +124,43 @@ export default function Flats() {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-gray-50 border-b border-gray-100">
+              <thead className="bg-gray-50 dark:bg-slate-700 border-b border-gray-100 dark:border-slate-700">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Flat</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Society</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Owner</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Area</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Flat</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Society</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Owner</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Type</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Area</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody className="divide-y divide-gray-100 dark:divide-slate-700">
                 {filteredFlats.map((flat) => (
-                  <tr key={flat.id} className="hover:bg-gray-50">
+                  <tr key={flat.id} className="hover:bg-gray-50 dark:hover:bg-slate-700">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center">
+                        <div className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center">
                           <Home className="w-4 h-4 text-blue-600" />
                         </div>
                         <div>
-                          <span className="font-medium text-gray-900">{flat.flatNumber}</span>
-                          <p className="text-xs text-gray-500">Floor {flat.floor}</p>
+                          <span className="font-medium text-gray-900 dark:text-white">{flat.flatNumber}</span>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">Floor {flat.floor}</p>
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-gray-600">{flat.societyName}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-gray-600 dark:text-gray-300">{flat.societyName}</td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div>
-                        <span className="text-gray-900">{flat.ownerName || '-'}</span>
-                        <p className="text-xs text-gray-500">{flat.ownerPhone || ''}</p>
+                        <span className="text-gray-900 dark:text-white">{flat.ownerName || '-'}</span>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">{flat.ownerPhone || ''}</p>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-gray-600">{flat.flatType || '-'}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-gray-600">{flat.area ? `${flat.area} sq.ft` : '-'}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-gray-600 dark:text-gray-300">{flat.flatType || '-'}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-gray-600 dark:text-gray-300">{flat.area ? `${flat.area} sq.ft` : '-'}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-right">
                       <button
                         onClick={() => { setEditingFlat(flat); setShowModal(true) }}
-                        className="p-1.5 text-gray-500 hover:text-blue-600 transition"
+                        className="p-1.5 text-gray-500 dark:text-gray-400 hover:text-blue-600 transition"
                       >
                         <Edit size={18} />
                       </button>
@@ -170,7 +170,7 @@ export default function Flats() {
                             deleteMutation.mutate(flat.id)
                           }
                         }}
-                        className="p-1.5 text-gray-500 hover:text-red-600 transition ml-2"
+                        className="p-1.5 text-gray-500 dark:text-gray-400 hover:text-red-600 transition ml-2"
                       >
                         <Trash2 size={18} />
                       </button>
@@ -186,21 +186,21 @@ export default function Flats() {
       {/* Modal */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between p-4 border-b border-gray-100 sticky top-0 bg-white">
-              <h3 className="text-lg font-semibold">{editingFlat ? 'Edit Flat' : 'Add Flat'}</h3>
+          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-slate-700 sticky top-0 bg-white dark:bg-slate-800">
+              <h3 className="text-lg font-semibold dark:text-white">{editingFlat ? 'Edit Flat' : 'Add Flat'}</h3>
               <button onClick={() => setShowModal(false)} className="p-1 hover:bg-gray-100 rounded">
                 <X size={20} />
               </button>
             </div>
             <form onSubmit={handleSubmit} className="p-4 space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Society</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Society</label>
                 <select
                   name="societyId"
                   defaultValue={editingFlat?.societyId}
                   required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
                 >
                   <option value="">Select Society</option>
                   {societies.map(s => (
@@ -210,21 +210,21 @@ export default function Flats() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Flat Number</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Flat Number</label>
                   <input
                     type="text"
                     name="flatNumber"
                     defaultValue={editingFlat?.flatNumber}
                     required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Flat Type</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Flat Type</label>
                   <select
                     name="flatType"
                     defaultValue={editingFlat?.flatType || 'FLAT'}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
                   >
                     <option value="FLAT">Flat</option>
                     <option value="SHOP">Shop</option>
@@ -234,51 +234,51 @@ export default function Flats() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Floor</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Floor</label>
                   <input
                     type="number"
                     name="floor"
                     defaultValue={editingFlat?.floor || 0}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Area (sq.ft)</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Area (sq.ft)</label>
                   <input
                     type="number"
                     name="area"
                     step="0.01"
                     defaultValue={editingFlat?.area}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
                   />
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Owner Name</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Owner Name</label>
                 <input
                   type="text"
                   name="ownerName"
                   defaultValue={editingFlat?.ownerName}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Owner Email</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Owner Email</label>
                   <input
                     type="email"
                     name="ownerEmail"
                     defaultValue={editingFlat?.ownerEmail}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Owner Phone</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Owner Phone</label>
                   <input
                     type="tel"
                     name="ownerPhone"
                     defaultValue={editingFlat?.ownerPhone}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
                   />
                 </div>
               </div>
@@ -286,7 +286,7 @@ export default function Flats() {
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition"
+                  className="flex-1 px-4 py-2 border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition"
                 >
                   Cancel
                 </button>

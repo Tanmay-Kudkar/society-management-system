@@ -121,8 +121,8 @@ export default function Users() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Users</h1>
-          <p className="text-gray-600 mt-1">Manage system users and roles</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Users</h1>
+          <p className="text-gray-600 dark:text-gray-400 mt-1">Manage system users and roles</p>
         </div>
         <button
           onClick={() => { setEditingUser(null); setShowModal(true) }}
@@ -150,7 +150,7 @@ export default function Users() {
       )}
 
       {/* Filters */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-6">
+      <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-4 mb-6">
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -159,13 +159,13 @@ export default function Users() {
               placeholder="Search users..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white placeholder:text-gray-400"
             />
           </div>
           <select
             value={filterRole}
             onChange={(e) => setFilterRole(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+            className="px-4 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
           >
             <option value="">All Roles</option>
             {allRoles.map(role => (
@@ -176,7 +176,7 @@ export default function Users() {
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+      <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 overflow-hidden">
         {isLoading ? (
           <div className="p-8 text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
@@ -184,18 +184,18 @@ export default function Users() {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-gray-50 border-b border-gray-100">
+              <thead className="bg-gray-50 dark:bg-slate-700 border-b border-gray-100 dark:border-slate-700">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phone</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Name</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Email</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Role</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Phone</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody className="divide-y divide-gray-100 dark:divide-slate-700">
                 {filteredUsers.map((u) => (
-                  <tr key={u.id} className="hover:bg-gray-50">
+                  <tr key={u.id} className="hover:bg-gray-50 dark:hover:bg-slate-700">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
@@ -203,20 +203,20 @@ export default function Users() {
                             {u.name?.charAt(0)?.toUpperCase()}
                           </span>
                         </div>
-                        <span className="font-medium text-gray-900">{u.name}</span>
+                        <span className="font-medium text-gray-900 dark:text-white">{u.name}</span>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-gray-600">{u.email}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-gray-600 dark:text-gray-300">{u.email}</td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={clsx('px-2.5 py-1 rounded-full text-xs font-medium', roleColors[u.role])}>
                         {u.role?.replace('_', ' ')}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-gray-600">{u.phone || '-'}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-gray-600 dark:text-gray-300">{u.phone || '-'}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-right">
                       <button
                         onClick={() => { setEditingUser(u); setShowModal(true) }}
-                        className="p-1.5 text-gray-500 hover:text-blue-600 transition"
+                        className="p-1.5 text-gray-500 dark:text-gray-400 hover:text-blue-600 transition"
                       >
                         <Edit size={18} />
                       </button>
@@ -226,7 +226,7 @@ export default function Users() {
                             deleteMutation.mutate(u.id)
                           }
                         }}
-                        className="p-1.5 text-gray-500 hover:text-red-600 transition ml-2"
+                        className="p-1.5 text-gray-500 dark:text-gray-400 hover:text-red-600 transition ml-2"
                       >
                         <Trash2 size={18} />
                       </button>
@@ -242,9 +242,9 @@ export default function Users() {
       {/* Modal */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
-            <div className="flex items-center justify-between p-4 border-b border-gray-100">
-              <h3 className="text-lg font-semibold">{editingUser ? 'Edit User' : 'Add User'}</h3>
+          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-xl w-full max-w-md">
+            <div className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-slate-700">
+              <h3 className="text-lg font-semibold dark:text-white">{editingUser ? 'Edit User' : 'Add User'}</h3>
               <button onClick={() => { setShowModal(false); setError(''); }} className="p-1 hover:bg-gray-100 rounded">
                 <X size={20} />
               </button>
@@ -257,42 +257,42 @@ export default function Users() {
                 </div>
               )}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Name</label>
                 <input
                   type="text"
                   name="name"
                   defaultValue={editingUser?.name}
                   required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email</label>
                 <input
                   type="email"
                   name="email"
                   defaultValue={editingUser?.email}
                   required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
                 />
               </div>
               {!editingUser && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Password</label>
                   <input
                     type="password"
                     name="password"
                     required={!editingUser}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
                   />
                 </div>
               )}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Role</label>
                 <select
                   name="role"
                   defaultValue={editingUser?.role || (creatableRoles[0] || 'MEMBER')}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
                 >
                   {creatableRoles.length > 0 ? (
                     creatableRoles.map(role => (
@@ -307,19 +307,19 @@ export default function Users() {
                 )}
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Phone</label>
                 <input
                   type="tel"
                   name="phone"
                   defaultValue={editingUser?.phone}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
                 />
               </div>
               <div className="flex gap-3 pt-4">
                 <button
                   type="button"
                   onClick={() => { setShowModal(false); setError(''); }}
-                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition"
+                  className="flex-1 px-4 py-2 border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition"
                 >
                   Cancel
                 </button>

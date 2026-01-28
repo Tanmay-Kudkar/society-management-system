@@ -79,8 +79,8 @@ export default function Vendors() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Vendors</h1>
-          <p className="text-gray-600 mt-1">Manage service providers and contractors</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Vendors</h1>
+          <p className="text-gray-600 dark:text-gray-400 mt-1">Manage service providers and contractors</p>
         </div>
         <button
           onClick={() => { setEditingVendor(null); setShowModal(true) }}
@@ -92,7 +92,7 @@ export default function Vendors() {
       </div>
 
       {/* Search */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-6">
+      <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-4 mb-6">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
           <input
@@ -100,7 +100,7 @@ export default function Vendors() {
             placeholder="Search vendors..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+            className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white placeholder:text-gray-400"
           />
         </div>
       </div>
@@ -113,15 +113,15 @@ export default function Vendors() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredVendors.map((vendor) => (
-            <div key={vendor.id} className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+            <div key={vendor.id} className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-6">
               <div className="flex items-start justify-between mb-4">
-                <div className="p-3 rounded-lg bg-orange-50">
-                  <Truck className="w-6 h-6 text-orange-600" />
+                <div className="p-3 rounded-lg bg-orange-50 dark:bg-orange-900/30">
+                  <Truck className="w-6 h-6 text-orange-600 dark:text-orange-400" />
                 </div>
                 <div className="flex gap-1">
                   <button
                     onClick={() => { setEditingVendor(vendor); setShowModal(true) }}
-                    className="p-1.5 text-gray-500 hover:text-blue-600 transition"
+                    className="p-1.5 text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition"
                   >
                     <Edit size={18} />
                   </button>
@@ -131,33 +131,33 @@ export default function Vendors() {
                         deleteMutation.mutate(vendor.id)
                       }
                     }}
-                    className="p-1.5 text-gray-500 hover:text-red-600 transition"
+                    className="p-1.5 text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition"
                   >
                     <Trash2 size={18} />
                   </button>
                 </div>
               </div>
-              <h3 className="font-semibold text-gray-900 mb-1">{vendor.name}</h3>
-              <span className="inline-block px-2 py-0.5 bg-blue-50 text-blue-700 text-xs rounded-full mb-3">
+              <h3 className="font-semibold text-gray-900 dark:text-white mb-1">{vendor.name}</h3>
+              <span className="inline-block px-2 py-0.5 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 text-xs rounded-full mb-3">
                 {vendor.serviceType}
               </span>
               <div className="space-y-2 text-sm">
                 {vendor.contactPerson && (
-                  <p className="text-gray-600">{vendor.contactPerson}</p>
+                  <p className="text-gray-600 dark:text-gray-300">{vendor.contactPerson}</p>
                 )}
                 {vendor.phone && (
-                  <p className="flex items-center gap-2 text-gray-500">
+                  <p className="flex items-center gap-2 text-gray-500 dark:text-gray-400">
                     <Phone size={14} /> {vendor.phone}
                   </p>
                 )}
                 {vendor.email && (
-                  <p className="flex items-center gap-2 text-gray-500">
+                  <p className="flex items-center gap-2 text-gray-500 dark:text-gray-400">
                     <Mail size={14} /> {vendor.email}
                   </p>
                 )}
               </div>
-              <div className="mt-4 pt-4 border-t border-gray-100">
-                <span className={`text-xs px-2 py-1 rounded-full ${vendor.isCommon ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'}`}>
+              <div className="mt-4 pt-4 border-t border-gray-100 dark:border-slate-700">
+                <span className={`text-xs px-2 py-1 rounded-full ${vendor.isCommon ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' : 'bg-gray-100 dark:bg-slate-600 text-gray-700 dark:text-gray-300'}`}>
                   {vendor.isCommon ? 'Common Vendor' : 'Society Specific'}
                 </span>
               </div>
@@ -169,31 +169,31 @@ export default function Vendors() {
       {/* Modal */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between p-4 border-b border-gray-100 sticky top-0 bg-white">
-              <h3 className="text-lg font-semibold">{editingVendor ? 'Edit Vendor' : 'Add Vendor'}</h3>
-              <button onClick={() => setShowModal(false)} className="p-1 hover:bg-gray-100 rounded">
+          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-slate-700 sticky top-0 bg-white dark:bg-slate-800">
+              <h3 className="text-lg font-semibold dark:text-white">{editingVendor ? 'Edit Vendor' : 'Add Vendor'}</h3>
+              <button onClick={() => setShowModal(false)} className="p-1 hover:bg-gray-100 dark:hover:bg-slate-700 rounded text-gray-500 dark:text-gray-400">
                 <X size={20} />
               </button>
             </div>
             <form onSubmit={handleSubmit} className="p-4 space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Vendor Name</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Vendor Name</label>
                 <input
                   type="text"
                   name="name"
                   defaultValue={editingVendor?.name}
                   required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Service Type</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Service Type</label>
                 <select
                   name="serviceType"
                   defaultValue={editingVendor?.serviceType}
                   required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
                 >
                   <option value="">Select Type</option>
                   <option value="HOUSEKEEPING">Housekeeping</option>
@@ -208,22 +208,22 @@ export default function Vendors() {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Vendor Type</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Vendor Type</label>
                 <select
                   name="isCommon"
                   defaultValue={editingVendor?.isCommon?.toString() || 'false'}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
                 >
                   <option value="false">Society Specific</option>
                   <option value="true">Common Vendor</option>
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Society (if specific)</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Society (if specific)</label>
                 <select
                   name="societyId"
                   defaultValue={editingVendor?.societyId}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
                 >
                   <option value="">None</option>
                   {societies.map(s => (
@@ -233,47 +233,47 @@ export default function Vendors() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Contact Person</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Contact Person</label>
                   <input
                     type="text"
                     name="contactPerson"
                     defaultValue={editingVendor?.contactPerson}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Phone</label>
                   <input
                     type="tel"
                     name="phone"
                     defaultValue={editingVendor?.phone}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
                   />
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email</label>
                 <input
                   type="email"
                   name="email"
                   defaultValue={editingVendor?.email}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Address</label>
                 <textarea
                   name="address"
                   defaultValue={editingVendor?.address}
                   rows={2}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
                 />
               </div>
               <div className="flex gap-3 pt-4">
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition"
+                  className="flex-1 px-4 py-2 border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition"
                 >
                   Cancel
                 </button>

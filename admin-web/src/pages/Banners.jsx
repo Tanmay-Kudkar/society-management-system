@@ -86,8 +86,8 @@ export default function Banners() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Banners</h1>
-          <p className="text-gray-600 mt-1">Manage promotional banners for mobile app</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Banners</h1>
+          <p className="text-gray-600 dark:text-gray-400 mt-1">Manage promotional banners for mobile app</p>
         </div>
         <button
           onClick={() => setShowModal(true)}
@@ -99,7 +99,7 @@ export default function Banners() {
       </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-6">
+      <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-4 mb-6">
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -108,13 +108,13 @@ export default function Banners() {
               placeholder="Search banners..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white placeholder:text-gray-400 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
             />
           </div>
           <select
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+            className="px-4 py-2 border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
           >
             <option value="">All Status</option>
             <option value="active">Active</option>
@@ -131,9 +131,9 @@ export default function Banners() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredBanners.map((banner) => (
-            <div key={banner.id} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition">
+            <div key={banner.id} className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 overflow-hidden hover:shadow-md transition">
               {/* Banner Image */}
-              <div className="aspect-video bg-gray-100 relative">
+              <div className="aspect-video bg-gray-100 dark:bg-slate-700 relative">
                 {banner.imageUrl ? (
                   <img 
                     src={banner.imageUrl} 
@@ -143,12 +143,12 @@ export default function Banners() {
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">
-                    <Image className="w-12 h-12 text-gray-300" />
+                    <Image className="w-12 h-12 text-gray-300 dark:text-gray-500" />
                   </div>
                 )}
                 <div className={clsx(
                   'absolute top-2 right-2 px-2 py-1 rounded-full text-xs font-medium',
-                  banner.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                  banner.isActive ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300' : 'bg-gray-100 dark:bg-slate-700 text-gray-800 dark:text-gray-300'
                 )}>
                   {banner.isActive ? 'Active' : 'Inactive'}
                 </div>
@@ -156,10 +156,10 @@ export default function Banners() {
 
               {/* Banner Details */}
               <div className="p-4">
-                <h3 className="font-semibold text-gray-900 mb-1">{banner.title}</h3>
-                <p className="text-sm text-gray-500 mb-3">{banner.societyName || 'All Societies'}</p>
+                <h3 className="font-semibold text-gray-900 dark:text-white mb-1">{banner.title}</h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">{banner.societyName || 'All Societies'}</p>
                 
-                <div className="text-xs text-gray-500 space-y-1 mb-4">
+                <div className="text-xs text-gray-500 dark:text-gray-400 space-y-1 mb-4">
                   <p>Start: {banner.startDate && new Date(banner.startDate).toLocaleDateString()}</p>
                   <p>End: {banner.endDate && new Date(banner.endDate).toLocaleDateString()}</p>
                   <p>Order: {banner.displayOrder}</p>

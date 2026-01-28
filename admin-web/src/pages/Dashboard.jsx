@@ -237,80 +237,80 @@ export default function Dashboard() {
 
       {/* Financial Overview */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-6">
           <div className="flex items-center gap-2 mb-4">
-            <DollarSign className="w-5 h-5 text-green-600" />
-            <h3 className="font-semibold text-gray-900">Bills Summary</h3>
+            <DollarSign className="w-5 h-5 text-green-600 dark:text-green-400" />
+            <h3 className="font-semibold text-gray-900 dark:text-white">Bills Summary</h3>
           </div>
           <div className="space-y-4">
             <div className="flex justify-between items-center">
-              <span className="text-gray-600">Total Bills Amount</span>
-              <span className="font-semibold text-gray-900">₹{totalBillAmount.toLocaleString()}</span>
+              <span className="text-gray-600 dark:text-gray-400">Total Bills Amount</span>
+              <span className="font-semibold text-gray-900 dark:text-white">₹{totalBillAmount.toLocaleString()}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-gray-600">Paid Bills</span>
-              <span className="font-semibold text-green-600">{paidBills.length}</span>
+              <span className="text-gray-600 dark:text-gray-400">Paid Bills</span>
+              <span className="font-semibold text-green-600 dark:text-green-400">{paidBills.length}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-gray-600">Pending Bills</span>
-              <span className="font-semibold text-orange-600">{pendingBillsCount.length}</span>
+              <span className="text-gray-600 dark:text-gray-400">Pending Bills</span>
+              <span className="font-semibold text-orange-600 dark:text-orange-400">{pendingBillsCount.length}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-gray-600">Overdue Bills</span>
-              <span className="font-semibold text-red-600">{overdueBills.length}</span>
+              <span className="text-gray-600 dark:text-gray-400">Overdue Bills</span>
+              <span className="font-semibold text-red-600 dark:text-red-400">{overdueBills.length}</span>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-6">
           <div className="flex items-center gap-2 mb-4">
-            <PieChart className="w-5 h-5 text-blue-600" />
-            <h3 className="font-semibold text-gray-900">Vehicle Distribution</h3>
+            <PieChart className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+            <h3 className="font-semibold text-gray-900 dark:text-white">Vehicle Distribution</h3>
           </div>
           <div className="flex items-center justify-around">
             <div className="text-center">
-              <div className="w-20 h-20 rounded-full bg-blue-100 flex items-center justify-center mx-auto mb-2">
-                <span className="text-2xl font-bold text-blue-600">
+              <div className="w-20 h-20 rounded-full bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center mx-auto mb-2">
+                <span className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                   {vehicles.filter(v => v.vehicleType === 'FOUR_WHEELER').length}
                 </span>
               </div>
-              <p className="text-sm text-gray-600">Four Wheelers</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400">Four Wheelers</p>
             </div>
             <div className="text-center">
-              <div className="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-2">
-                <span className="text-2xl font-bold text-green-600">
+              <div className="w-20 h-20 rounded-full bg-green-100 dark:bg-green-900/40 flex items-center justify-center mx-auto mb-2">
+                <span className="text-2xl font-bold text-green-600 dark:text-green-400">
                   {vehicles.filter(v => v.vehicleType === 'TWO_WHEELER').length}
                 </span>
               </div>
-              <p className="text-sm text-gray-600">Two Wheelers</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400">Two Wheelers</p>
             </div>
           </div>
         </div>
       </div>
 
       {/* Quick Stats */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-        <h3 className="font-semibold text-gray-900 mb-4">Quick Overview</h3>
+      <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-6">
+        <h3 className="font-semibold text-gray-900 dark:text-white mb-4">Quick Overview</h3>
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-          <div className="text-center p-4 bg-gray-50 rounded-lg">
-            <p className="text-2xl font-bold text-green-600">{paidBills.length}</p>
-            <p className="text-sm text-gray-500">Paid Bills</p>
+          <div className="text-center p-4 bg-gray-50 dark:bg-slate-700 rounded-lg">
+            <p className="text-2xl font-bold text-green-600 dark:text-green-400">{paidBills.length}</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">Paid Bills</p>
           </div>
-          <div className="text-center p-4 bg-gray-50 rounded-lg">
-            <p className="text-2xl font-bold text-orange-600">{pendingBillsCount.length}</p>
-            <p className="text-sm text-gray-500">Pending Bills</p>
+          <div className="text-center p-4 bg-gray-50 dark:bg-slate-700 rounded-lg">
+            <p className="text-2xl font-bold text-orange-600 dark:text-orange-400">{pendingBillsCount.length}</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">Pending Bills</p>
           </div>
-          <div className="text-center p-4 bg-gray-50 rounded-lg">
-            <p className="text-2xl font-bold text-blue-600">{pendingTickets.filter(t => t.status === 'IN_PROGRESS').length}</p>
-            <p className="text-sm text-gray-500">In Progress</p>
+          <div className="text-center p-4 bg-gray-50 dark:bg-slate-700 rounded-lg">
+            <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{pendingTickets.filter(t => t.status === 'IN_PROGRESS').length}</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">In Progress</p>
           </div>
-          <div className="text-center p-4 bg-gray-50 rounded-lg">
-            <p className="text-2xl font-bold text-teal-600">{tenants.filter(t => t.isActive).length}</p>
-            <p className="text-sm text-gray-500">Active Tenants</p>
+          <div className="text-center p-4 bg-gray-50 dark:bg-slate-700 rounded-lg">
+            <p className="text-2xl font-bold text-teal-600 dark:text-teal-400">{tenants.filter(t => t.isActive).length}</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">Active Tenants</p>
           </div>
-          <div className="text-center p-4 bg-gray-50 rounded-lg">
-            <p className="text-2xl font-bold text-purple-600">{contracts.filter(c => c.isActive).length}</p>
-            <p className="text-sm text-gray-500">Active Contracts</p>
+          <div className="text-center p-4 bg-gray-50 dark:bg-slate-700 rounded-lg">
+            <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">{contracts.filter(c => c.isActive).length}</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">Active Contracts</p>
           </div>
         </div>
       </div>

@@ -98,8 +98,8 @@ export default function Tickets() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Tickets</h1>
-          <p className="text-gray-600 mt-1">Manage support tickets and requests</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Tickets</h1>
+          <p className="text-gray-600 dark:text-gray-400 mt-1">Manage support tickets and requests</p>
         </div>
         <button
           onClick={() => setShowModal(true)}
@@ -112,26 +112,26 @@ export default function Tickets() {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
-          <p className="text-sm text-gray-500">Open</p>
-          <p className="text-2xl font-bold text-yellow-600">{tickets.filter(t => t.status === 'OPEN').length}</p>
+        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-4">
+          <p className="text-sm text-gray-500 dark:text-gray-400">Open</p>
+          <p className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">{tickets.filter(t => t.status === 'OPEN').length}</p>
         </div>
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
-          <p className="text-sm text-gray-500">In Progress</p>
-          <p className="text-2xl font-bold text-blue-600">{tickets.filter(t => t.status === 'IN_PROGRESS').length}</p>
+        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-4">
+          <p className="text-sm text-gray-500 dark:text-gray-400">In Progress</p>
+          <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{tickets.filter(t => t.status === 'IN_PROGRESS').length}</p>
         </div>
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
-          <p className="text-sm text-gray-500">Resolved</p>
-          <p className="text-2xl font-bold text-green-600">{tickets.filter(t => t.status === 'RESOLVED').length}</p>
+        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-4">
+          <p className="text-sm text-gray-500 dark:text-gray-400">Resolved</p>
+          <p className="text-2xl font-bold text-green-600 dark:text-green-400">{tickets.filter(t => t.status === 'RESOLVED').length}</p>
         </div>
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
-          <p className="text-sm text-gray-500">Total</p>
-          <p className="text-2xl font-bold text-gray-900">{tickets.length}</p>
+        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-4">
+          <p className="text-sm text-gray-500 dark:text-gray-400">Total</p>
+          <p className="text-2xl font-bold text-gray-900 dark:text-white">{tickets.length}</p>
         </div>
       </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-6">
+      <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-4 mb-6">
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -140,13 +140,13 @@ export default function Tickets() {
               placeholder="Search tickets..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white placeholder:text-gray-400 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
             />
           </div>
           <select
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+            className="px-4 py-2 border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
           >
             <option value="">All Status</option>
             <option value="OPEN">Open</option>
@@ -165,15 +165,15 @@ export default function Tickets() {
       ) : (
         <div className="space-y-4">
           {filteredTickets.map((ticket) => (
-            <div key={ticket.id} className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition">
+            <div key={ticket.id} className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-5 hover:shadow-md transition">
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div className="flex items-start gap-4">
-                  <div className="p-3 bg-blue-50 rounded-lg">
-                    <Ticket className="w-5 h-5 text-blue-600" />
+                  <div className="p-3 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
+                    <Ticket className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                   </div>
                   <div>
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-sm font-mono text-gray-500">#{ticket.id}</span>
+                      <span className="text-sm font-mono text-gray-500 dark:text-gray-400">#{ticket.id}</span>
                       <span className={clsx('px-2 py-0.5 rounded-full text-xs font-medium', statusColors[ticket.status])}>
                         {ticket.status?.replace('_', ' ')}
                       </span>
@@ -181,9 +181,9 @@ export default function Tickets() {
                         {ticket.priority}
                       </span>
                     </div>
-                    <h3 className="font-semibold text-gray-900 mt-1">{ticket.title}</h3>
-                    <p className="text-sm text-gray-600 mt-1 line-clamp-2">{ticket.description}</p>
-                    <div className="flex items-center gap-4 mt-2 text-xs text-gray-500">
+                    <h3 className="font-semibold text-gray-900 dark:text-white mt-1">{ticket.title}</h3>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 line-clamp-2">{ticket.description}</p>
+                    <div className="flex items-center gap-4 mt-2 text-xs text-gray-500 dark:text-gray-400">
                       <span>{ticket.type}</span>
                       <span>{ticket.societyName}</span>
                       <span>{ticket.createdAt && new Date(ticket.createdAt).toLocaleDateString()}</span>

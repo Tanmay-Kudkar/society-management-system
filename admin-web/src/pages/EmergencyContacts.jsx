@@ -102,8 +102,8 @@ export default function EmergencyContacts() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Emergency Contacts</h1>
-          <p className="text-gray-600 mt-1">Manage emergency contact directory</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Emergency Contacts</h1>
+          <p className="text-gray-600 dark:text-gray-400 mt-1">Manage emergency contact directory</p>
         </div>
         <button
           onClick={() => setShowModal(true)}
@@ -115,7 +115,7 @@ export default function EmergencyContacts() {
       </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-6">
+      <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-4 mb-6">
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -124,13 +124,13 @@ export default function EmergencyContacts() {
               placeholder="Search by name or phone..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white placeholder:text-gray-400 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
             />
           </div>
           <select
             value={filterCategory}
             onChange={(e) => setFilterCategory(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+            className="px-4 py-2 border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
           >
             <option value="">All Categories</option>
             <option value="POLICE">Police</option>
@@ -145,7 +145,7 @@ export default function EmergencyContacts() {
           <select
             value={filterSociety}
             onChange={(e) => setFilterSociety(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+            className="px-4 py-2 border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
           >
             <option value="">All Societies</option>
             {societies.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
@@ -161,17 +161,17 @@ export default function EmergencyContacts() {
       ) : (
         <div className="space-y-6">
           {Object.entries(groupedContacts).map(([contactType, contactTypeContacts]) => (
-            <div key={contactType} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-              <div className="px-5 py-3 border-b border-gray-100 bg-gray-50">
+            <div key={contactType} className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 overflow-hidden">
+              <div className="px-5 py-3 border-b border-gray-100 dark:border-slate-700 bg-gray-50 dark:bg-slate-700">
                 <div className="flex items-center gap-2">
-                  <AlertCircle className="w-4 h-4 text-gray-600" />
-                  <h3 className="font-semibold text-gray-900">{contactType}</h3>
-                  <span className="text-sm text-gray-500">({contactTypeContacts.length})</span>
+                  <AlertCircle className="w-4 h-4 text-gray-600 dark:text-gray-300" />
+                  <h3 className="font-semibold text-gray-900 dark:text-white">{contactType}</h3>
+                  <span className="text-sm text-gray-500 dark:text-gray-400">({contactTypeContacts.length})</span>
                 </div>
               </div>
-              <div className="divide-y divide-gray-100">
+              <div className="divide-y divide-gray-100 dark:divide-slate-700">
                 {contactTypeContacts.map((contact) => (
-                  <div key={contact.id} className="p-4 hover:bg-gray-50 transition">
+                  <div key={contact.id} className="p-4 hover:bg-gray-50 dark:hover:bg-slate-700 transition">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-4">
                         <div className={clsx('p-3 rounded-lg', contactTypeColors[contactType]?.replace('text', 'bg').split(' ')[0] || 'bg-gray-100')}>
@@ -179,22 +179,22 @@ export default function EmergencyContacts() {
                         </div>
                         <div>
                           <div className="flex items-center gap-2">
-                            <h4 className="font-semibold text-gray-900">{contact.name}</h4>
+                            <h4 className="font-semibold text-gray-900 dark:text-white">{contact.name}</h4>
                             {!contact.isActive && (
-                              <span className="px-2 py-0.5 bg-red-100 text-red-700 text-xs rounded-full">Inactive</span>
+                              <span className="px-2 py-0.5 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 text-xs rounded-full">Inactive</span>
                             )}
                           </div>
-                          <p className="text-lg font-mono text-blue-600 mt-0.5">{contact.phone}</p>
+                          <p className="text-lg font-mono text-blue-600 dark:text-blue-400 mt-0.5">{contact.phone}</p>
                           {contact.alternatePhone && (
-                            <p className="text-sm text-gray-500">Alt: {contact.alternatePhone}</p>
+                            <p className="text-sm text-gray-500 dark:text-gray-400">Alt: {contact.alternatePhone}</p>
                           )}
                           {contact.address && (
-                            <p className="text-sm text-gray-500 mt-1">{contact.address}</p>
+                            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{contact.address}</p>
                           )}
                           {contact.notes && (
-                            <p className="text-sm text-gray-400 italic mt-1">{contact.notes}</p>
+                            <p className="text-sm text-gray-400 dark:text-gray-500 italic mt-1">{contact.notes}</p>
                           )}
-                          <p className="text-xs text-gray-400 mt-1">{contact.societyName}</p>
+                          <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">{contact.societyName}</p>
                         </div>
                       </div>
                       <div className="flex gap-1">

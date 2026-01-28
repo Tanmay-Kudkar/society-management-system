@@ -79,8 +79,8 @@ export default function Documents() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Document Templates</h1>
-          <p className="text-gray-600 mt-1">Manage document templates for NOC, certificates, etc.</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Document Templates</h1>
+          <p className="text-gray-600 dark:text-gray-400 mt-1">Manage document templates for NOC, certificates, etc.</p>
         </div>
         <button
           onClick={() => setShowModal(true)}
@@ -93,20 +93,20 @@ export default function Documents() {
 
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
-          <p className="text-sm text-gray-500">Total</p>
-          <p className="text-2xl font-bold text-gray-900">{documents.length}</p>
+        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-4">
+          <p className="text-sm text-gray-500 dark:text-gray-400">Total</p>
+          <p className="text-2xl font-bold text-gray-900 dark:text-white">{documents.length}</p>
         </div>
         {['NOC', 'LETTER', 'AGREEMENT'].map(cat => (
-          <div key={cat} className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
-            <p className="text-sm text-gray-500">{cat}</p>
-            <p className="text-2xl font-bold text-gray-900">{documents.filter(d => d.templateType === cat).length}</p>
+          <div key={cat} className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-4">
+            <p className="text-sm text-gray-500 dark:text-gray-400">{cat}</p>
+            <p className="text-2xl font-bold text-gray-900 dark:text-white">{documents.filter(d => d.templateType === cat).length}</p>
           </div>
         ))}
       </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-6">
+      <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-4 mb-6">
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -115,13 +115,13 @@ export default function Documents() {
               placeholder="Search templates..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white placeholder:text-gray-400 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
             />
           </div>
           <select
             value={filterCategory}
             onChange={(e) => setFilterCategory(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+            className="px-4 py-2 border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
           >
             <option value="">All Types</option>
             <option value="NOC">NOC</option>
@@ -142,11 +142,11 @@ export default function Documents() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredDocuments.map((doc) => (
-            <div key={doc.id} className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition">
+            <div key={doc.id} className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-5 hover:shadow-md transition">
               <div className="flex items-start justify-between mb-3">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 bg-gray-50 rounded-lg">
-                    <FileText className="w-5 h-5 text-gray-600" />
+                  <div className="p-2 bg-gray-50 dark:bg-slate-700 rounded-lg">
+                    <FileText className="w-5 h-5 text-gray-600 dark:text-gray-300" />
                   </div>
                   <div>
                     <span className={clsx('px-2 py-0.5 rounded-full text-xs font-medium', templateTypeColors[doc.templateType] || 'bg-gray-100 text-gray-800')}>
@@ -156,30 +156,30 @@ export default function Documents() {
                 </div>
                 <span className={clsx(
                   'px-2 py-0.5 rounded-full text-xs font-medium',
-                  doc.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                  doc.isActive ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300' : 'bg-gray-100 dark:bg-slate-700 text-gray-800 dark:text-gray-300'
                 )}>
                   {doc.isActive ? 'Active' : 'Inactive'}
                 </span>
               </div>
               
-              <h3 className="font-semibold text-gray-900 mb-1">{doc.title}</h3>
-              <p className="text-sm text-gray-600 line-clamp-2 mb-3">{doc.content?.substring(0, 100)}...</p>
+              <h3 className="font-semibold text-gray-900 dark:text-white mb-1">{doc.title}</h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2 mb-3">{doc.content?.substring(0, 100)}...</p>
               
-              <div className="text-xs text-gray-500 mb-4">
+              <div className="text-xs text-gray-500 dark:text-gray-400 mb-4">
                 <p>Updated: {doc.updatedAt && new Date(doc.updatedAt).toLocaleDateString()}</p>
               </div>
 
-              <div className="flex gap-2 pt-3 border-t border-gray-100">
+              <div className="flex gap-2 pt-3 border-t border-gray-100 dark:border-slate-700">
                 <button
                   onClick={() => { setEditingDocument(doc); setShowModal(true) }}
-                  className="flex-1 inline-flex items-center justify-center gap-1 px-3 py-1.5 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition"
+                  className="flex-1 inline-flex items-center justify-center gap-1 px-3 py-1.5 text-sm bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-slate-600 transition"
                 >
                   <Edit size={14} />
                   Edit
                 </button>
                 <button
                   onClick={() => deleteMutation.mutate(doc.id)}
-                  className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg"
+                  className="p-1.5 text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg"
                 >
                   <Trash2 size={16} />
                 </button>
