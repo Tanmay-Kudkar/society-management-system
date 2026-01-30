@@ -116,6 +116,8 @@ public class TicketServiceImpl implements TicketService {
             ticket.setDescription(request.getDescription());
         if (request.getPriority() != null)
             ticket.setPriority(request.getPriority());
+        if (request.getProgressPercent() != null)
+            ticket.setProgressPercent(request.getProgressPercent());
 
         Ticket saved = ticketRepository.save(ticket);
         return mapToResponse(saved);
@@ -161,6 +163,34 @@ public class TicketServiceImpl implements TicketService {
 
     @Override
     @Transactional
+    public TicketResponse updateProgress(Long id, Integer progress, Long userId) {
+        roleService.requireStaff(userId);
+
+        Ticket ticket = ticketRepository.findById(id)
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Ticket not found"));
+
+        // Validate progress is between 0 and 100
+        if (progress < 0)
+            progress = 0;
+        if (progress > 100)
+            progress = 100;
+
+        ticket.setProgressPercent(progress);
+
+        // Auto-update status based on progress
+        if (progress == 100 && !"RESOLVED".equals(ticket.getStatus()) && !"CLOSED".equals(ticket.getStatus())) {
+            ticket.setStatus("RESOLVED");
+            ticket.setResolvedAt(LocalDateTime.now());
+        } else if (progress > 0 && "OPEN".equals(ticket.getStatus())) {
+            ticket.setStatus("IN_PROGRESS");
+        }
+
+        Ticket saved = ticketRepository.save(ticket);
+        return mapToResponse(saved);
+    }
+
+    @Override
+    @Transactional
     public void delete(Long id, Long userId) {
         roleService.requireAdminOrCommittee(userId);
 
@@ -189,7 +219,9 @@ public class TicketServiceImpl implements TicketService {
         response.setStatus(ticket.getStatus());
         response.setPriority(ticket.getPriority());
         response.setResolution(ticket.getResolution());
+        response.setProgressPercent(ticket.getProgressPercent() != null ? ticket.getProgressPercent() : 0);
         response.setPendingDays(ticket.getPendingDays());
+        response.setIsOverdue(ticket.getPendingDays() != null && ticket.getPendingDays() > 7);
         response.setCreatedAt(ticket.getCreatedAt());
         response.setUpdatedAt(ticket.getUpdatedAt());
         response.setResolvedAt(ticket.getResolvedAt());

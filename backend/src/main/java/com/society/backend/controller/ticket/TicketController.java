@@ -80,6 +80,14 @@ public class TicketController {
         return ResponseEntity.ok(ticketService.assign(id, assignedToId, userId));
     }
 
+    @PatchMapping("/{id}/progress")
+    public ResponseEntity<TicketResponse> updateProgress(
+            @PathVariable Long id,
+            @RequestParam Integer progress,
+            @RequestParam Long userId) {
+        return ResponseEntity.ok(ticketService.updateProgress(id, progress, userId));
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(
             @PathVariable Long id,

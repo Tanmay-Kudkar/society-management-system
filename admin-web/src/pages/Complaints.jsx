@@ -26,9 +26,15 @@ export default function Complaints() {
   const [searchTerm, setSearchTerm] = useState('')
   const [filterStatus, setFilterStatus] = useState('')
 
+  const canViewAll = ['MASTER_ADMIN', 'COMMITTEE', 'EMPLOYEE'].includes(user?.role)
+
   const { data: complaints = [], isLoading } = useQuery({
-    queryKey: ['complaints', user?.id],
-    queryFn: () => complaintApi.getAll(user.id).then(res => res.data),
+    queryKey: ['complaints', user?.id, canViewAll ? 'all' : 'user'],
+    queryFn: () =>
+      (canViewAll
+        ? complaintApi.getAll(user.id)
+        : complaintApi.getByUser(user.id, user.id))
+        .then(res => res.data),
     enabled: !!user?.id,
   })
 

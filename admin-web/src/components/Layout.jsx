@@ -24,6 +24,7 @@ import {
   Menu,
   X,
   ChevronDown,
+  BarChart3,
 } from 'lucide-react'
 import clsx from 'clsx'
 
@@ -57,6 +58,7 @@ const menuGroups = [
       { path: '/contracts', icon: FileText, label: 'Contracts' },
       { path: '/maintenance-bills', icon: CreditCard, label: 'Maintenance Bills' },
       { path: '/transactions', icon: DollarSign, label: 'Transactions' },
+      { path: '/reports', icon: BarChart3, label: 'Reports' },
     ],
   },
   {

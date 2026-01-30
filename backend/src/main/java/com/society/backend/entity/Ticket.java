@@ -48,6 +48,9 @@ public class Ticket {
     @Column(columnDefinition = "TEXT")
     private String resolution;
 
+    @Column(name = "progress_percent")
+    private Integer progressPercent = 0; // 0-100
+
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 

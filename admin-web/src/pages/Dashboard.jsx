@@ -16,7 +16,15 @@ import {
   DollarSign,
   PieChart,
 } from 'lucide-react'
-import { societyApi, flatApi, contractApi, ticketApi, maintenanceBillApi, tenantApi, vehicleApi, transactionApi, complaintApi } from '../api'
+import { societyApi, flatApi, contractApi, ticketApi, maintenanceBillApi, tenantApi, vehicleApi, transactionApi, complaintApi, reportApi } from '../api'
+
+const formatCurrency = (amount) => {
+  return new Intl.NumberFormat('en-IN', {
+    style: 'currency',
+    currency: 'INR',
+    maximumFractionDigits: 0,
+  }).format(amount || 0)
+}
 
 const StatCard = ({ title, value, icon: Icon, color, subtext }) => (
   <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-6 transition-colors">
@@ -139,6 +147,13 @@ export default function Dashboard() {
   // Complaint statistics
   const pendingComplaints = complaints.filter(c => c.status === 'PENDING' || c.status === 'IN_PROGRESS')
 
+  // MTD/YTD Report data
+  const { data: dashboardReport } = useQuery({
+    queryKey: ['dashboardReport', user?.societyId],
+    queryFn: () => user?.societyId ? reportApi.getDashboard(user.societyId).then(res => res.data) : null,
+    enabled: !!user?.societyId,
+  })
+
   return (
     <div>
       {/* Header */}
@@ -203,6 +218,32 @@ export default function Dashboard() {
           subtext="Next 30 days"
         />
       </div>
+
+      {/* MTD/YTD Financial Overview */}
+      {dashboardReport && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-xl shadow-sm p-6 text-white">
+            <p className="text-sm font-medium text-green-100">MTD Income</p>
+            <p className="text-2xl font-bold mt-1">{formatCurrency(dashboardReport.totalIncome)}</p>
+            <p className="text-xs text-green-100 mt-2">This month</p>
+          </div>
+          <div className="bg-gradient-to-br from-red-500 to-red-600 rounded-xl shadow-sm p-6 text-white">
+            <p className="text-sm font-medium text-red-100">MTD Expense</p>
+            <p className="text-2xl font-bold mt-1">{formatCurrency(dashboardReport.totalExpense)}</p>
+            <p className="text-xs text-red-100 mt-2">This month</p>
+          </div>
+          <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-sm p-6 text-white">
+            <p className="text-sm font-medium text-blue-100">YTD Income</p>
+            <p className="text-2xl font-bold mt-1">{formatCurrency(dashboardReport.previousPeriodIncome)}</p>
+            <p className="text-xs text-blue-100 mt-2">Year to date</p>
+          </div>
+          <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl shadow-sm p-6 text-white">
+            <p className="text-sm font-medium text-purple-100">Cash Balance</p>
+            <p className="text-2xl font-bold mt-1">{formatCurrency(dashboardReport.cashBalance)}</p>
+            <p className="text-xs text-purple-100 mt-2">All time</p>
+          </div>
+        </div>
+      )}
 
       {/* Alerts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">

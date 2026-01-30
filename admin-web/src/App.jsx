@@ -20,6 +20,7 @@ import Complaints from './pages/Complaints'
 import EmergencyContacts from './pages/EmergencyContacts'
 import Documents from './pages/Documents'
 import Settings from './pages/Settings'
+import Reports from './pages/Reports'
 
 // Protected Route component
 const ProtectedRoute = ({ children }) => {
@@ -61,6 +62,7 @@ function App() {
         <Route path="contracts" element={<Contracts />} />
         <Route path="maintenance-bills" element={<MaintenanceBills />} />
         <Route path="transactions" element={<Transactions />} />
+        <Route path="reports" element={<Reports />} />
         <Route path="notices" element={<Notices />} />
         <Route path="banners" element={<Banners />} />
         <Route path="tickets" element={<Tickets />} />

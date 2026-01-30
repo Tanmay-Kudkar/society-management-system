@@ -56,6 +56,11 @@ ALTER TABLE maintenance_bills ADD COLUMN IF NOT EXISTS due_date DATE;
 ALTER TABLE maintenance_bills ADD COLUMN IF NOT EXISTS payment_date DATE;
 
 -- =====================================================
+-- TICKETS TABLE UPDATES
+-- =====================================================
+ALTER TABLE tickets ADD COLUMN IF NOT EXISTS progress_percent INT DEFAULT 0;
+
+-- =====================================================
 -- Verify all columns exist by selecting sample data
 -- =====================================================
 -- SELECT 'Migration completed successfully!' as status;

@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '../context/AuthContext'
-import { transactionApi, societyApi } from '../api'
-import { Plus, Search, X, TrendingUp, TrendingDown, DollarSign } from 'lucide-react'
+import { transactionApi, societyApi, exportApi, downloadBlob } from '../api'
+import { Plus, Search, X, TrendingUp, TrendingDown, DollarSign, FileSpreadsheet } from 'lucide-react'
 import clsx from 'clsx'
 
 export default function Transactions() {
@@ -12,6 +12,7 @@ export default function Transactions() {
   const [searchTerm, setSearchTerm] = useState('')
   const [filterType, setFilterType] = useState('')
   const [filterMode, setFilterMode] = useState('')
+  const [isExporting, setIsExporting] = useState(false)
 
   const { data: transactions = [], isLoading } = useQuery({
     queryKey: ['transactions'],
@@ -60,6 +61,21 @@ export default function Transactions() {
     createMutation.mutate(data)
   }
 
+  const handleExport = async () => {
+    setIsExporting(true)
+    try {
+      // Export last 30 days by default
+      const endDate = new Date().toISOString().split('T')[0]
+      const startDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+      const response = await exportApi.allTransactions(startDate, endDate)
+      downloadBlob(response.data, `transactions_${endDate}.xlsx`)
+    } catch (error) {
+      console.error('Export failed:', error)
+    } finally {
+      setIsExporting(false)
+    }
+  }
+
   return (
     <div>
       {/* Header */}
@@ -68,13 +84,23 @@ export default function Transactions() {
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Transactions</h1>
           <p className="text-gray-600 dark:text-gray-400 mt-1">Track income and expenses</p>
         </div>
-        <button
-          onClick={() => setShowModal(true)}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-        >
-          <Plus size={20} />
-          Add Transaction
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={handleExport}
+            disabled={isExporting}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition disabled:opacity-50"
+          >
+            <FileSpreadsheet size={20} />
+            {isExporting ? 'Exporting...' : 'Export'}
+          </button>
+          <button
+            onClick={() => setShowModal(true)}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+          >
+            <Plus size={20} />
+            Add Transaction
+          </button>
+        </div>
       </div>
 
       {/* Summary Cards */}
