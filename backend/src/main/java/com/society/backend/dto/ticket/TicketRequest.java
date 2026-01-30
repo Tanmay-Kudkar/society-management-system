@@ -22,4 +22,6 @@ public class TicketRequest {
     private String priority; // LOW, MEDIUM, HIGH, URGENT
 
     private Long assignedToId;
+
+    private Integer progressPercent; // 0-100
 }

@@ -21,7 +21,9 @@ public class TicketResponse {
     private String status;
     private String priority;
     private String resolution;
+    private Integer progressPercent;
     private Integer pendingDays;
+    private Boolean isOverdue;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private LocalDateTime resolvedAt;

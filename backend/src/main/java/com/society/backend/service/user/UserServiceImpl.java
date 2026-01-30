@@ -17,6 +17,7 @@ import com.society.backend.exception.ApiException;
 import com.society.backend.repository.complaint.ComplaintRepository;
 import com.society.backend.repository.ticket.TicketRepository;
 import com.society.backend.repository.user.UserRepository;
+import com.society.backend.repository.society.SocietyRepository;
 import com.society.backend.security.RolePermissions;
 
 @Service
@@ -26,13 +27,16 @@ public class UserServiceImpl implements UserService {
     private final PasswordEncoder passwordEncoder;
     private final ComplaintRepository complaintRepository;
     private final TicketRepository ticketRepository;
+    private final SocietyRepository societyRepository;
 
     public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder,
-            ComplaintRepository complaintRepository, TicketRepository ticketRepository) {
+            ComplaintRepository complaintRepository, TicketRepository ticketRepository,
+            SocietyRepository societyRepository) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.complaintRepository = complaintRepository;
         this.ticketRepository = ticketRepository;
+        this.societyRepository = societyRepository;
     }
 
     @Override
@@ -67,11 +71,16 @@ public class UserServiceImpl implements UserService {
         user.setIsActive(true);
         user.setCreatedAt(LocalDateTime.now());
 
-        // If creating a SOCIETY_ADMIN, they need a society assigned
-        // If creator is SOCIETY_ADMIN or below, assign their society to the new user
+        // Assign society based on context
         User currentUser = getCurrentUser();
-        if (currentUser != null && currentUser.getSociety() != null
-                && targetRole != Role.SOCIETY_ADMIN) {
+
+        // If MASTER_ADMIN is creating any user and provides societyId, use it
+        if (creatorRole == Role.MASTER_ADMIN && request.getSocietyId() != null) {
+            user.setSociety(societyRepository.findById(request.getSocietyId())
+                    .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Society not found")));
+        }
+        // If creator is not MASTER_ADMIN but has a society, inherit it
+        else if (currentUser != null && currentUser.getSociety() != null) {
             user.setSociety(currentUser.getSociety());
         }
 
@@ -98,6 +107,11 @@ public class UserServiceImpl implements UserService {
                     .stream()
                     .map(this::mapToResponse)
                     .toList();
+        }
+
+        // No society assigned, return current user if available
+        if (currentUser != null) {
+            return List.of(mapToResponse(currentUser));
         }
 
         // No society assigned, return empty
@@ -139,6 +153,12 @@ public class UserServiceImpl implements UserService {
         user.setPhone(request.getPhone());
         if (request.getRole() != null) {
             user.setRole(resolveRole(request.getRole()));
+        }
+
+        // Allow MASTER_ADMIN to update society assignment
+        if (request.getSocietyId() != null && getCurrentUserRole() == Role.MASTER_ADMIN) {
+            user.setSociety(societyRepository.findById(request.getSocietyId())
+                    .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Society not found")));
         }
 
         User saved = userRepository.save(user);

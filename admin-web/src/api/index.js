@@ -172,6 +172,7 @@ export const ticketApi = {
     if (resolution) url += `&resolution=${encodeURIComponent(resolution)}`;
     return api.patch(url);
   },
+  updateProgress: (id, progress, userId) => api.patch(`/tickets/${id}/progress?progress=${progress}&userId=${userId}`),
   assign: (id, assignedToId, userId) => api.patch(`/tickets/${id}/assign?assignedToId=${assignedToId}&userId=${userId}`),
   delete: (id, userId) => api.delete(`/tickets/${id}?userId=${userId}`),
 }
@@ -238,3 +239,54 @@ export const notificationPreferenceApi = {
   getByUserId: (userId) => api.get(`/notification-preferences/${userId}`),
   update: (userId, data) => api.put(`/notification-preferences/${userId}`, data),
 }
+
+// Reports API
+export const reportApi = {
+  getMTD: (societyId) => api.get(`/api/reports/mtd/${societyId}`),
+  getYTD: (societyId) => api.get(`/api/reports/ytd/${societyId}`),
+  getCustom: (societyId, startDate, endDate) => 
+    api.get(`/api/reports/custom/${societyId}?startDate=${startDate}&endDate=${endDate}`),
+  getDashboard: (societyId) => api.get(`/api/reports/dashboard/${societyId}`),
+  getComparison: (societyId, periodType) => 
+    api.get(`/api/reports/comparison/${societyId}?periodType=${periodType}`),
+}
+
+// Export API for Excel downloads
+export const exportApi = {
+  transactions: (societyId, startDate, endDate) => 
+    api.get(`/api/export/transactions/${societyId}?startDate=${startDate}&endDate=${endDate}`, { responseType: 'blob' }),
+  maintenanceBills: (societyId, month) => 
+    api.get(`/api/export/maintenance-bills/${societyId}${month ? `?month=${month}` : ''}`, { responseType: 'blob' }),
+  vendorBills: (societyId, startDate, endDate) => {
+    let url = `/api/export/vendor-bills/${societyId}`;
+    if (startDate && endDate) url += `?startDate=${startDate}&endDate=${endDate}`;
+    return api.get(url, { responseType: 'blob' });
+  },
+  tickets: (societyId, status) => 
+    api.get(`/api/export/tickets/${societyId}${status ? `?status=${status}` : ''}`, { responseType: 'blob' }),
+  flats: (societyId) => 
+    api.get(`/api/export/flats/${societyId}`, { responseType: 'blob' }),
+  financialReport: (societyId, reportType, startDate, endDate) => {
+    let url = `/api/export/financial-report/${societyId}?reportType=${reportType}`;
+    if (startDate) url += `&startDate=${startDate}`;
+    if (endDate) url += `&endDate=${endDate}`;
+    return api.get(url, { responseType: 'blob' });
+  },
+  allTransactions: (startDate, endDate) => 
+    api.get(`/api/export/all-transactions?startDate=${startDate}&endDate=${endDate}`, { responseType: 'blob' }),
+  allTickets: (status) => 
+    api.get(`/api/export/all-tickets${status ? `?status=${status}` : ''}`, { responseType: 'blob' }),
+}
+
+// Helper function to download blob as file
+export const downloadBlob = (blob, filename) => {
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  window.URL.revokeObjectURL(url);
+  document.body.removeChild(a);
+}
+

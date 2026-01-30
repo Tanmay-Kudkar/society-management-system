@@ -66,7 +66,11 @@ public class RoleService {
      * Check if user is any registered member (not visitor)
      */
     public void requireMember(Long userId) {
-        checkRole(userId, Role.MASTER_ADMIN, Role.COMMITTEE, Role.EMPLOYEE, Role.MEMBER);
+        User user = getUser(userId);
+        if (user.getRole() == Role.VISITOR) {
+            throw new AccessDeniedException(
+                    "Access denied. VISITOR cannot perform this action.");
+        }
     }
 
     /**
@@ -91,11 +95,11 @@ public class RoleService {
     }
 
     /**
-     * Check if user can manage complaints (MASTER_ADMIN, COMMITTEE for status
-     * updates)
+     * Check if user can manage complaints (MASTER_ADMIN, SOCIETY_ADMIN,
+     * COMMITTEE, EMPLOYEE for status updates)
      */
     public void canUpdateComplaintStatus(Long userId) {
-        requireAdminOrCommittee(userId);
+        checkRole(userId, Role.MASTER_ADMIN, Role.SOCIETY_ADMIN, Role.COMMITTEE, Role.EMPLOYEE);
     }
 
     /**

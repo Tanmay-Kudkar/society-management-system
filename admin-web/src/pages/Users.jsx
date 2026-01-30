@@ -1,7 +1,7 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '../context/AuthContext'
-import { userApi } from '../api'
+import { userApi, societyApi } from '../api'
 import { Plus, Edit, Trash2, Search, X, AlertCircle } from 'lucide-react'
 import clsx from 'clsx'
 
@@ -39,6 +39,7 @@ export default function Users() {
   const [searchTerm, setSearchTerm] = useState('')
   const [filterRole, setFilterRole] = useState('')
   const [error, setError] = useState('')
+  const [selectedRole, setSelectedRole] = useState('')
 
   // Fetch users
   const { data: users = [], isLoading } = useQuery({
@@ -50,6 +51,18 @@ export default function Users() {
   const { data: creatableRoles = [] } = useQuery({
     queryKey: ['creatable-roles'],
     queryFn: () => userApi.getCreatableRoles().then(res => res.data).catch(() => []),
+  })
+
+  useEffect(() => {
+    if (showModal) {
+      setSelectedRole(editingUser?.role || creatableRoles[0] || 'MEMBER')
+    }
+  }, [showModal, editingUser, creatableRoles])
+
+  const { data: societies = [] } = useQuery({
+    queryKey: ['societies'],
+    queryFn: () => societyApi.getAll().then(res => res.data).catch(() => []),
+    enabled: user?.role === 'MASTER_ADMIN',
   })
 
   const createMutation = useMutation({
@@ -107,6 +120,7 @@ export default function Users() {
       password: formData.get('password'),
       role: formData.get('role'),
       phone: formData.get('phone'),
+      societyId: formData.get('societyId') ? parseInt(formData.get('societyId')) : null,
     }
 
     if (editingUser) {
@@ -292,6 +306,7 @@ export default function Users() {
                 <select
                   name="role"
                   defaultValue={editingUser?.role || (creatableRoles[0] || 'MEMBER')}
+                  onChange={(e) => setSelectedRole(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
                 >
                   {creatableRoles.length > 0 ? (
@@ -306,6 +321,22 @@ export default function Users() {
                   <p className="text-xs text-gray-500 mt-1">You don't have permission to create users.</p>
                 )}
               </div>
+              {user?.role === 'MASTER_ADMIN' && (selectedRole || editingUser?.role) === 'SOCIETY_ADMIN' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Society</label>
+                  <select
+                    name="societyId"
+                    defaultValue={editingUser?.societyId || ''}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
+                    required
+                  >
+                    <option value="">Select Society</option>
+                    {societies.map(s => (
+                      <option key={s.id} value={s.id}>{s.name}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Phone</label>
                 <input
