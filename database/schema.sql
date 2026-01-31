@@ -106,6 +106,9 @@ CREATE TABLE vendors (
     society_id INT REFERENCES societies(id),
     name VARCHAR(100),
     service_type VARCHAR(50),
+    contact_person VARCHAR(100),
+    contact_person_phone VARCHAR(20),
+    contact_person_email VARCHAR(100),
     phone VARCHAR(20),
     email VARCHAR(100),
     address TEXT,
@@ -115,6 +118,7 @@ CREATE TABLE vendors (
     account_number VARCHAR(30),
     ifsc_code VARCHAR(20),
     is_common BOOLEAN DEFAULT FALSE,
+    approval_status VARCHAR(20) DEFAULT 'PENDING' CHECK (approval_status IN ('PENDING', 'APPROVED', 'REJECTED')),
     is_active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

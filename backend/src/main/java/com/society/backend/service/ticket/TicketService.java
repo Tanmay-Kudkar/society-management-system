@@ -26,5 +26,7 @@ public interface TicketService {
 
     TicketResponse assign(Long id, Long assignedToId, Long userId);
 
+    TicketResponse updateProgress(Long id, Integer progress, Long userId);
+
     void delete(Long id, Long userId);
 }

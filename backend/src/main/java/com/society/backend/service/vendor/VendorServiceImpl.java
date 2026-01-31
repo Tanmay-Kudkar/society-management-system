@@ -39,6 +39,9 @@ public class VendorServiceImpl implements VendorService {
 
         vendor.setName(request.getName());
         vendor.setServiceType(request.getServiceType());
+        vendor.setContactPerson(request.getContactPerson());
+        vendor.setContactPersonPhone(request.getContactPersonPhone());
+        vendor.setContactPersonEmail(request.getContactPersonEmail());
         vendor.setPhone(request.getPhone());
         vendor.setEmail(request.getEmail());
         vendor.setAddress(request.getAddress());
@@ -107,6 +110,12 @@ public class VendorServiceImpl implements VendorService {
             vendor.setName(request.getName());
         if (request.getServiceType() != null)
             vendor.setServiceType(request.getServiceType());
+        if (request.getContactPerson() != null)
+            vendor.setContactPerson(request.getContactPerson());
+        if (request.getContactPersonPhone() != null)
+            vendor.setContactPersonPhone(request.getContactPersonPhone());
+        if (request.getContactPersonEmail() != null)
+            vendor.setContactPersonEmail(request.getContactPersonEmail());
         if (request.getPhone() != null)
             vendor.setPhone(request.getPhone());
         if (request.getEmail() != null)
@@ -154,6 +163,50 @@ public class VendorServiceImpl implements VendorService {
         vendorRepository.deleteById(id);
     }
 
+    @Override
+    @Transactional
+    public VendorResponse approveVendor(Long id, Long userId) {
+        roleService.requireAdminOrCommittee(userId);
+
+        Vendor vendor = vendorRepository.findById(id)
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Vendor not found"));
+
+        vendor.setApprovalStatus("APPROVED");
+        vendor.setIsActive(true);
+        Vendor saved = vendorRepository.save(vendor);
+        return mapToResponse(saved);
+    }
+
+    @Override
+    @Transactional
+    public VendorResponse rejectVendor(Long id, Long userId) {
+        roleService.requireAdminOrCommittee(userId);
+
+        Vendor vendor = vendorRepository.findById(id)
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Vendor not found"));
+
+        vendor.setApprovalStatus("REJECTED");
+        vendor.setIsActive(false);
+        Vendor saved = vendorRepository.save(vendor);
+        return mapToResponse(saved);
+    }
+
+    @Override
+    public List<VendorResponse> getPendingVendors(Long societyId) {
+        List<Vendor> vendors;
+        if (societyId != null) {
+            vendors = vendorRepository.findAll().stream()
+                    .filter(v -> "PENDING".equals(v.getApprovalStatus()))
+                    .filter(v -> v.getSociety() != null && v.getSociety().getId().equals(societyId))
+                    .toList();
+        } else {
+            vendors = vendorRepository.findAll().stream()
+                    .filter(v -> "PENDING".equals(v.getApprovalStatus()))
+                    .toList();
+        }
+        return vendors.stream().map(this::mapToResponse).toList();
+    }
+
     private VendorResponse mapToResponse(Vendor vendor) {
         VendorResponse response = new VendorResponse();
         response.setId(vendor.getId());
@@ -165,6 +218,9 @@ public class VendorServiceImpl implements VendorService {
 
         response.setName(vendor.getName());
         response.setServiceType(vendor.getServiceType());
+        response.setContactPerson(vendor.getContactPerson());
+        response.setContactPersonPhone(vendor.getContactPersonPhone());
+        response.setContactPersonEmail(vendor.getContactPersonEmail());
         response.setPhone(vendor.getPhone());
         response.setEmail(vendor.getEmail());
         response.setAddress(vendor.getAddress());
@@ -174,6 +230,7 @@ public class VendorServiceImpl implements VendorService {
         response.setAccountNumber(vendor.getAccountNumber());
         response.setIfscCode(vendor.getIfscCode());
         response.setIsCommon(vendor.getIsCommon());
+        response.setApprovalStatus(vendor.getApprovalStatus());
         response.setIsActive(vendor.getIsActive());
         response.setCreatedAt(vendor.getCreatedAt());
         return response;
