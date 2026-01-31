@@ -231,6 +231,10 @@ curl -X POST http://localhost:8080/auth/login \
 
 ### Using Postman
 
+**Quick Start:** Import the provided Postman collection file: [`Society-Management-API.postman_collection.json`](Society-Management-API.postman_collection.json)
+
+**Manual Setup:**
+
 1. **Set Request Type:** POST
 2. **Enter URL:** 
    - Register: `http://localhost:8080/auth/register`
@@ -440,6 +444,53 @@ After successfully registering and logging in:
 4. **API Testing:** Consider using tools like Postman, Insomnia, or Thunder Client (VS Code extension) for easier API testing.
 
 5. **Log Files:** Check the console output for detailed error messages if something goes wrong.
+
+---
+
+## 📦 Postman Collection
+
+A ready-to-use Postman collection is provided in the backend directory:
+- **File:** [`Society-Management-API.postman_collection.json`](Society-Management-API.postman_collection.json)
+- **How to use:**
+  1. Open Postman
+  2. Click "Import"
+  3. Select the collection file
+  4. Update the `base_url` variable if needed (default: `http://localhost:8080`)
+  5. Start making requests!
+
+The collection includes:
+- Register endpoints for all user roles
+- Login endpoint
+- Health check endpoint
+
+---
+
+## 📋 Quick Reference
+
+### Available Roles
+- `MASTER_ADMIN` - Platform owner
+- `SOCIETY_ADMIN` - Society administrator
+- `CHAIRMAN` - Committee head
+- `SECRETARY` - Society secretary
+- `TREASURER` - Finance handler
+- `COMMITTEE` - Committee member
+- `EMPLOYEE` - Society staff
+- `MEMBER` - Flat owner
+- `TENANT` - Renter
+- `VISITOR` - Temporary access
+
+### API Base URL
+```
+http://localhost:8080
+```
+
+### Authentication Endpoints
+- **Register:** `POST /auth/register`
+- **Login:** `POST /auth/login`
+
+### Health Check
+- **Endpoint:** `GET /health`
+- **Expected Response:** `{"status": "UP"}`
 
 ---
 
