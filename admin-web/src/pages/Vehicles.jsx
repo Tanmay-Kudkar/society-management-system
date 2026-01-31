@@ -83,7 +83,7 @@ export default function Vehicles() {
       return <Bike className="w-5 h-5 text-green-600" />
     }
     return <Car className="w-5 h-5 text-blue-600" />
-  }
+  } 
 
   return (
     <div>

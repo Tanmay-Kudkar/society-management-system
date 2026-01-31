@@ -1,6 +1,9 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { useAuth } from './context/AuthContext'
+import { ToastProvider } from './context/ToastContext'
+import { ThemeProvider } from './context/ThemeContext'
 import Layout from './components/Layout'
+import Welcome from './pages/Welcome'
 import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
 import Users from './pages/Users'
@@ -21,6 +24,12 @@ import EmergencyContacts from './pages/EmergencyContacts'
 import Documents from './pages/Documents'
 import Settings from './pages/Settings'
 import Reports from './pages/Reports'
+// Footer Pages
+import About from './pages/footer/About'
+import Privacy from './pages/footer/Privacy'
+import Terms from './pages/footer/Terms'
+import Contact from './pages/footer/Contact'
+import './styles/animations.css'
 
 // Protected Route component
 const ProtectedRoute = ({ children }) => {
@@ -28,8 +37,8 @@ const ProtectedRoute = ({ children }) => {
   
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="min-h-screen flex items-center justify-center bg-slate-900">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500"></div>
       </div>
     )
   }
@@ -43,8 +52,17 @@ const ProtectedRoute = ({ children }) => {
 
 function App() {
   return (
-    <Routes>
-      <Route path="/login" element={<Login />} />
+    <ThemeProvider>
+      <ToastProvider>
+        <Routes>
+          <Route path="/welcome" element={<Welcome />} />
+          <Route path="/login" element={<Login />} />
+          
+          {/* Footer Pages */}
+          <Route path="/about" element={<About />} />
+          <Route path="/privacy" element={<Privacy />} />
+          <Route path="/terms" element={<Terms />} />
+          <Route path="/contact" element={<Contact />} />
       
       <Route path="/" element={
         <ProtectedRoute>
@@ -70,10 +88,12 @@ function App() {
         <Route path="emergency-contacts" element={<EmergencyContacts />} />
         <Route path="documents" element={<Documents />} />
         <Route path="settings" element={<Settings />} />
-      </Route>
-      
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+        </Route>
+        
+        <Route path="*" element={<Navigate to="/welcome" replace />} />
+      </Routes>
+      </ToastProvider>
+    </ThemeProvider>
   )
 }
 

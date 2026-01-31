@@ -1,15 +1,24 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { Building2, Mail, Lock, AlertCircle } from 'lucide-react'
+import { useTheme } from '../context/ThemeContext'
+import { Building2, Mail, Lock, AlertCircle, Eye, EyeOff, ArrowLeft, Sparkles, Sun, Moon } from 'lucide-react'
+import '../styles/animations.css'
 
 export default function Login() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [isLoaded, setIsLoaded] = useState(false)
   const { login } = useAuth()
+  const { isDark, toggleTheme } = useTheme()
   const navigate = useNavigate()
+
+  useEffect(() => {
+    setIsLoaded(true)
+  }, [])
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -27,86 +36,243 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 px-4">
-      <div className="max-w-md w-full">
-        {/* Logo */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-600 mb-4">
-            <Building2 className="w-8 h-8 text-white" />
+    <div className={`min-h-screen flex overflow-hidden transition-colors duration-500 ${isDark ? 'bg-slate-900' : 'bg-gray-50'}`}>
+      {/* Left Side - Decorative */}
+      <div className={`hidden lg:flex lg:w-1/2 relative overflow-hidden ${isDark ? 'bg-slate-900' : 'bg-gradient-to-br from-purple-600 via-pink-500 to-orange-400'}`}>
+        {/* Background Elements */}
+        {isDark ? (
+          <>
+            <div className="absolute inset-0 bg-gradient-to-br from-purple-900/50 via-slate-900 to-blue-900/50"></div>
+            <div className="absolute inset-0 gradient-mesh opacity-30"></div>
+            {/* Floating Orbs */}
+            <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-purple-500/20 rounded-full blur-3xl animate-floatSlow"></div>
+            <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl animate-float"></div>
+            <div className="absolute top-1/2 left-1/2 w-48 h-48 bg-pink-500/20 rounded-full blur-3xl animate-floatSlow" style={{ animationDelay: '1s' }}></div>
+          </>
+        ) : (
+          <>
+            <div className="absolute inset-0 opacity-30">
+              <div className="absolute top-0 left-0 w-96 h-96 bg-white/20 rounded-full blur-3xl"></div>
+              <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-white/10 rounded-full blur-3xl"></div>
+            </div>
+          </>
+        )}
+
+        {/* Content */}
+        <div className="relative z-10 flex flex-col justify-center px-12 xl:px-20">
+          <div className={`transition-all duration-1000 delay-300 ${isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
+            <Link to="/welcome" className={`inline-flex items-center gap-2 transition-colors mb-12 group ${isDark ? 'text-gray-400 hover:text-white' : 'text-white/80 hover:text-white'}`}>
+              <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+              Back to Home
+            </Link>
+
+            <div className="flex items-center gap-4 mb-8">
+              <div className={`p-4 rounded-2xl shadow-2xl ${isDark ? 'bg-gradient-to-br from-purple-500 to-pink-500 shadow-purple-500/30' : 'bg-white/20 backdrop-blur-xl'}`}>
+                <Building2 className="w-10 h-10 text-white" />
+              </div>
+              <div>
+                <h1 className="text-3xl font-bold text-white">SocietyHub</h1>
+                <p className={isDark ? 'text-gray-400' : 'text-white/80'}>Admin Portal</p>
+              </div>
+            </div>
+
+            <h2 className="text-4xl xl:text-5xl font-bold text-white mb-6 leading-tight">
+              Welcome back to
+              <span className={`block ${isDark ? 'bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent' : 'text-yellow-200'}`}>
+                the future of society management
+              </span>
+            </h2>
+
+            <p className={`text-lg max-w-md ${isDark ? 'text-gray-400' : 'text-white/80'}`}>
+              Sign in to access your dashboard and manage your society with ease.
+            </p>
+
+            {/* Feature Pills */}
+            <div className="flex flex-wrap gap-3 mt-8">
+              {['Secure Login', 'Role Based Access', '24/7 Available'].map((feature, i) => (
+                <div 
+                  key={i}
+                  className={`px-4 py-2 rounded-full text-sm flex items-center gap-2 ${isDark ? 'glass-dark text-gray-300' : 'bg-white/20 backdrop-blur-sm text-white'}`}
+                  style={{ animationDelay: `${0.5 + i * 0.1}s` }}
+                >
+                  <Sparkles className={`w-4 h-4 ${isDark ? 'text-purple-400' : 'text-yellow-300'}`} />
+                  {feature}
+                </div>
+              ))}
+            </div>
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">Society Management</h1>
-          <p className="text-gray-600 mt-1">Admin Portal</p>
         </div>
 
-        {/* Login Form */}
-        <div className="bg-white rounded-2xl shadow-xl p-8">
-          <h2 className="text-xl font-semibold text-gray-900 mb-6">Sign in to your account</h2>
+        {/* Grid Pattern */}
+        <div className={`absolute inset-0 ${isDark ? 'opacity-5' : 'opacity-10'}`} 
+          style={{
+            backgroundImage: `linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)`,
+            backgroundSize: '50px 50px'
+          }}
+        />
+      </div>
 
+      {/* Right Side - Login Form */}
+      <div className={`w-full lg:w-1/2 flex items-center justify-center px-4 py-12 transition-colors ${isDark ? 'bg-slate-900' : 'bg-white'}`}>
+        <div className={`max-w-md w-full transition-all duration-1000 ${isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
+          {/* Theme Toggle - Top Right */}
+          <div className="flex justify-end mb-6">
+            <button
+              onClick={toggleTheme}
+              className={`p-2.5 rounded-xl transition-all duration-300 hover:scale-110 focus:outline-none ${
+                isDark 
+                  ? 'bg-slate-800 hover:bg-slate-700 text-yellow-400' 
+                  : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+              }`}
+              aria-label="Toggle theme"
+            >
+              {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+            </button>
+          </div>
+
+          {/* Mobile Logo */}
+          <div className="lg:hidden text-center mb-8">
+            <Link to="/welcome" className={`inline-flex items-center gap-2 transition-colors mb-6 ${isDark ? 'text-gray-400 hover:text-gray-200' : 'text-gray-500 hover:text-gray-700'}`}>
+              <ArrowLeft className="w-4 h-4" />
+              Back to Home
+            </Link>
+            <div className="flex items-center justify-center gap-3 mb-4">
+              <div className="p-3 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500">
+                <Building2 className="w-8 h-8 text-white" />
+              </div>
+              <span className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>SocietyHub</span>
+            </div>
+          </div>
+
+          {/* Form Header */}
+          <div className="text-center lg:text-left mb-8">
+            <h2 className={`text-2xl lg:text-3xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+              Sign in to your account
+            </h2>
+            <p className={isDark ? 'text-gray-400' : 'text-gray-600'}>
+              Enter your credentials to access the dashboard
+            </p>
+          </div>
+
+          {/* Error Message */}
           {error && (
-            <div className="mb-4 p-3 rounded-lg bg-red-50 text-red-700 flex items-center gap-2">
-              <AlertCircle className="w-5 h-5" />
-              <span>{error}</span>
+            <div className={`mb-6 p-4 rounded-xl border flex items-start gap-3 animate-shake ${isDark ? 'bg-red-900/20 border-red-800/50' : 'bg-red-50 border-red-200'}`}>
+              <div className={`flex-shrink-0 p-1 rounded-lg ${isDark ? 'bg-red-800/30' : 'bg-red-100'}`}>
+                <AlertCircle className={`w-5 h-5 ${isDark ? 'text-red-400' : 'text-red-600'}`} />
+              </div>
+              <div>
+                <p className={`font-medium ${isDark ? 'text-red-400' : 'text-red-700'}`}>Authentication Failed</p>
+                <p className={`text-sm mt-0.5 ${isDark ? 'text-red-300' : 'text-red-600'}`}>{error}</p>
+              </div>
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-5">
+          {/* Login Form */}
+          <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">
+              <label className={`block text-sm font-semibold mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                 Email Address
               </label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition bg-white text-gray-900 placeholder:text-gray-400"
-                  placeholder="Enter your email"
-                  required
-                />
+              <div className="relative group">
+                <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl opacity-0 group-focus-within:opacity-100 blur transition-opacity -m-0.5"></div>
+                <div className="relative">
+                  <Mail className={`absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 transition-colors ${isDark ? 'text-gray-400 group-focus-within:text-purple-400' : 'text-gray-400 group-focus-within:text-purple-500'}`} />
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className={`w-full pl-12 pr-4 py-3.5 border-2 rounded-xl outline-none transition-all ${
+                      isDark 
+                        ? 'border-slate-700 focus:border-purple-500 bg-slate-800 text-white placeholder:text-gray-500' 
+                        : 'border-gray-200 focus:border-purple-500 bg-white text-gray-900 placeholder:text-gray-400'
+                    }`}
+                    placeholder="Enter your email"
+                    required
+                  />
+                </div>
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">
+              <label className={`block text-sm font-semibold mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                 Password
               </label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition bg-white text-gray-900 placeholder:text-gray-400"
-                  placeholder="Enter your password"
-                  required
-                />
+              <div className="relative group">
+                <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl opacity-0 group-focus-within:opacity-100 blur transition-opacity -m-0.5"></div>
+                <div className="relative">
+                  <Lock className={`absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 transition-colors ${isDark ? 'text-gray-400 group-focus-within:text-purple-400' : 'text-gray-400 group-focus-within:text-purple-500'}`} />
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className={`w-full pl-12 pr-12 py-3.5 border-2 rounded-xl outline-none transition-all ${
+                      isDark 
+                        ? 'border-slate-700 focus:border-purple-500 bg-slate-800 text-white placeholder:text-gray-500' 
+                        : 'border-gray-200 focus:border-purple-500 bg-white text-gray-900 placeholder:text-gray-400'
+                    }`}
+                    placeholder="Enter your password"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className={`absolute right-4 top-1/2 -translate-y-1/2 transition-colors focus:outline-none ${isDark ? 'text-gray-400 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600'}`}
+                  >
+                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  </button>
+                </div>
               </div>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" className="w-4 h-4 rounded border-gray-300 text-purple-500 focus:ring-purple-500" />
+                <span className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Remember me</span>
+              </label>
+              <a href="#" className={`text-sm font-medium ${isDark ? 'text-purple-400 hover:text-purple-300' : 'text-purple-600 hover:text-purple-700'}`}>
+                Forgot password?
+              </a>
             </div>
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-2.5 px-4 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:ring-4 focus:ring-blue-200 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              className="relative w-full py-4 px-6 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl hover:from-purple-700 hover:to-pink-700 focus:ring-4 focus:ring-purple-200 dark:focus:ring-purple-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed overflow-hidden group focus:outline-none"
             >
-              {loading ? (
-                <span className="flex items-center justify-center gap-2">
-                  <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                  </svg>
+              <span className={`flex items-center justify-center gap-2 transition-all ${loading ? 'opacity-0' : 'opacity-100'}`}>
+                Sign In
+              </span>
+              
+              {loading && (
+                <span className="absolute inset-0 flex items-center justify-center gap-3">
+                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                   Signing in...
                 </span>
-              ) : (
-                'Sign In'
               )}
+
+              {/* Hover Shine Effect */}
+              <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
             </button>
           </form>
-        </div>
 
-        <p className="text-center text-gray-500 text-sm mt-6">
-          © 2026 Society Management System. All rights reserved.
-        </p>
+          {/* Footer */}
+          <p className={`mt-8 text-center text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+            Don't have an account?{' '}
+            <a href="#" className={`font-semibold ${isDark ? 'text-purple-400 hover:text-purple-300' : 'text-purple-600 hover:text-purple-700'}`}>
+              Contact Admin
+            </a>
+          </p>
+
+          {/* Demo Credentials */}
+          <div className={`mt-6 p-4 rounded-xl border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-gray-50 border-gray-200'}`}>
+            <p className={`text-xs font-semibold uppercase tracking-wide mb-2 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Demo Credentials</p>
+            <div className="space-y-1 text-sm">
+              <p className={isDark ? 'text-gray-300' : 'text-gray-600'}><span className="font-medium">Email:</span> admin@society.com</p>
+              <p className={isDark ? 'text-gray-300' : 'text-gray-600'}><span className="font-medium">Password:</span> admin123</p>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   )

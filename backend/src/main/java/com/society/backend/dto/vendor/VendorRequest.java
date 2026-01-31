@@ -16,10 +16,16 @@ public class VendorRequest {
     @NotBlank(message = "Service type is required")
     private String serviceType;
 
-    @NotBlank(message = "Phone is required")
+    private String contactPerson;
+    private String contactPersonPhone;
+
+    @Email(message = "Invalid contact person email format")
+    private String contactPersonEmail;
+
+    @NotBlank(message = "Vendor phone is required")
     private String phone;
 
-    @Email(message = "Invalid email format")
+    @Email(message = "Invalid vendor email format")
     private String email;
 
     private String address;

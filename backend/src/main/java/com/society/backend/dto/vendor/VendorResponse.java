@@ -13,6 +13,9 @@ public class VendorResponse {
     private String societyName;
     private String name;
     private String serviceType;
+    private String contactPerson;
+    private String contactPersonPhone;
+    private String contactPersonEmail;
     private String phone;
     private String email;
     private String address;
@@ -22,6 +25,7 @@ public class VendorResponse {
     private String accountNumber;
     private String ifscCode;
     private Boolean isCommon;
+    private String approvalStatus;
     private Boolean isActive;
     private LocalDateTime createdAt;
 }

@@ -324,11 +324,16 @@ export default function Layout() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-slate-900 transition-colors duration-300">
       {/* Top Navbar */}
-      <header className="fixed top-0 left-0 right-0 z-40 h-16 bg-white dark:bg-slate-800 border-b border-gray-200 dark:border-slate-700 shadow-sm transition-colors duration-300">
+      <header className="fixed top-0 left-0 right-0 z-40 h-16 bg-white/80 dark:bg-slate-800/80 backdrop-blur-lg border-b border-gray-200/50 dark:border-slate-700/50 transition-colors duration-300">
         <div className="h-full px-4 flex items-center justify-between">
           {/* Logo */}
           <div className="flex items-center gap-4">
-            <span className="text-xl font-bold accent-text">Society SMS</span>
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 shadow-lg shadow-purple-500/25">
+                <Building2 size={20} className="text-white" />
+              </div>
+              <span className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">SocietyHub</span>
+            </div>
           </div>
 
           {/* Desktop Navigation */}
@@ -340,23 +345,23 @@ export default function Layout() {
 
           {/* User section - Desktop */}
           <div className="hidden lg:flex items-center gap-4">
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-full accent-bg-light flex items-center justify-center transition-colors duration-200">
-                <span className="accent-text font-medium text-sm">
+            <div className="flex items-center gap-3 px-3 py-2 rounded-xl bg-gray-50 dark:bg-slate-700/50 border border-gray-100 dark:border-slate-600/50">
+              <div className="w-9 h-9 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center shadow-lg shadow-purple-500/25 transition-transform duration-200 hover:scale-105">
+                <span className="text-white font-semibold text-sm">
                   {user?.name?.charAt(0)?.toUpperCase() || 'U'}
                 </span>
               </div>
               <div className="text-right">
-                <p className="text-sm font-medium text-gray-900 dark:text-white transition-colors duration-200">{user?.name}</p>
+                <p className="text-sm font-semibold text-gray-900 dark:text-white transition-colors duration-200">{user?.name}</p>
                 <p className="text-xs text-gray-500 dark:text-gray-400 transition-colors duration-200">{user?.role?.replace('_', ' ')}</p>
               </div>
             </div>
             <button
               onClick={handleLogout}
               title="Logout"
-              className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all duration-200 cursor-pointer"
+              className="p-2.5 text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 bg-gray-50 hover:bg-red-50 dark:bg-slate-700/50 dark:hover:bg-red-900/20 border border-gray-100 dark:border-slate-600/50 rounded-xl transition-all duration-200 cursor-pointer"
             >
-              <LogOut size={20} />
+              <LogOut size={18} />
             </button>
           </div>
 
@@ -409,8 +414,13 @@ export default function Layout() {
           )}
         >
           {/* Mobile Header */}
-          <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200 dark:border-slate-700">
-            <span className="text-lg font-bold accent-text">Menu</span>
+          <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200 dark:border-slate-700 bg-gradient-to-r from-purple-500/5 to-pink-500/5">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500">
+                <Building2 size={18} className="text-white" />
+              </div>
+              <span className="text-lg font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">Menu</span>
+            </div>
             <button
               onClick={closeMobileMenu}
               className="p-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-700 transition-all duration-200"
@@ -435,20 +445,20 @@ export default function Layout() {
 
           {/* Mobile User Section */}
           <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-full accent-bg-light flex items-center justify-center">
-                <span className="accent-text font-medium">
+            <div className="flex items-center gap-3 mb-4 p-3 rounded-xl bg-gray-50 dark:bg-slate-700/50">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center shadow-lg shadow-purple-500/25">
+                <span className="text-white font-semibold">
                   {user?.name?.charAt(0)?.toUpperCase() || 'U'}
                 </span>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{user?.name}</p>
+                <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">{user?.name}</p>
                 <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{user?.role?.replace('_', ' ')}</p>
               </div>
             </div>
             <button
               onClick={handleLogout}
-              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 transition-all duration-200 cursor-pointer"
+              className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-red-500 to-rose-500 text-white rounded-xl hover:from-red-600 hover:to-rose-600 shadow-lg shadow-red-500/25 transition-all duration-200 cursor-pointer font-medium"
             >
               <LogOut size={18} />
               <span>Logout</span>

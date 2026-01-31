@@ -23,4 +23,10 @@ public interface VendorService {
     VendorResponse deactivate(Long id, Long userId);
 
     void delete(Long id, Long userId);
+
+    VendorResponse approveVendor(Long id, Long userId);
+
+    VendorResponse rejectVendor(Long id, Long userId);
+
+    List<VendorResponse> getPendingVendors(Long societyId);
 }
