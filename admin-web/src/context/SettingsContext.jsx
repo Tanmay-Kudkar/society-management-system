@@ -2,6 +2,130 @@ import { createContext, useContext, useState, useEffect, useRef } from 'react'
 
 const SettingsContext = createContext(null)
 
+// Accent color configurations with CSS variables for global theming
+export const ACCENT_COLORS = {
+  purple: {
+    name: 'Purple',
+    primary: '#8b5cf6',
+    secondary: '#a78bfa',
+    ring: 'ring-purple-500',
+    bg: 'bg-purple-500',
+    cssVars: {
+      '--accent-primary': '#8b5cf6',
+      '--accent-secondary': '#a78bfa',
+      '--accent-light': '#c4b5fd',
+      '--accent-gradient-from': '#8b5cf6',
+      '--accent-gradient-via': '#a855f7',
+      '--accent-gradient-to': '#7c3aed',
+    }
+  },
+  blue: {
+    name: 'Blue',
+    primary: '#3b82f6',
+    secondary: '#60a5fa',
+    ring: 'ring-blue-500',
+    bg: 'bg-blue-500',
+    cssVars: {
+      '--accent-primary': '#3b82f6',
+      '--accent-secondary': '#60a5fa',
+      '--accent-light': '#93c5fd',
+      '--accent-gradient-from': '#3b82f6',
+      '--accent-gradient-via': '#2563eb',
+      '--accent-gradient-to': '#1d4ed8',
+    }
+  },
+  indigo: {
+    name: 'Indigo',
+    primary: '#6366f1',
+    secondary: '#818cf8',
+    ring: 'ring-indigo-500',
+    bg: 'bg-indigo-500',
+    cssVars: {
+      '--accent-primary': '#6366f1',
+      '--accent-secondary': '#818cf8',
+      '--accent-light': '#a5b4fc',
+      '--accent-gradient-from': '#6366f1',
+      '--accent-gradient-via': '#4f46e5',
+      '--accent-gradient-to': '#4338ca',
+    }
+  },
+  pink: {
+    name: 'Pink',
+    primary: '#ec4899',
+    secondary: '#f472b6',
+    ring: 'ring-pink-500',
+    bg: 'bg-pink-500',
+    cssVars: {
+      '--accent-primary': '#ec4899',
+      '--accent-secondary': '#f472b6',
+      '--accent-light': '#f9a8d4',
+      '--accent-gradient-from': '#ec4899',
+      '--accent-gradient-via': '#db2777',
+      '--accent-gradient-to': '#be185d',
+    }
+  },
+  green: {
+    name: 'Green',
+    primary: '#22c55e',
+    secondary: '#4ade80',
+    ring: 'ring-green-500',
+    bg: 'bg-green-500',
+    cssVars: {
+      '--accent-primary': '#22c55e',
+      '--accent-secondary': '#4ade80',
+      '--accent-light': '#86efac',
+      '--accent-gradient-from': '#22c55e',
+      '--accent-gradient-via': '#16a34a',
+      '--accent-gradient-to': '#15803d',
+    }
+  },
+  orange: {
+    name: 'Orange',
+    primary: '#f97316',
+    secondary: '#fb923c',
+    ring: 'ring-orange-500',
+    bg: 'bg-orange-500',
+    cssVars: {
+      '--accent-primary': '#f97316',
+      '--accent-secondary': '#fb923c',
+      '--accent-light': '#fdba74',
+      '--accent-gradient-from': '#f97316',
+      '--accent-gradient-via': '#ea580c',
+      '--accent-gradient-to': '#c2410c',
+    }
+  },
+  teal: {
+    name: 'Teal',
+    primary: '#14b8a6',
+    secondary: '#2dd4bf',
+    ring: 'ring-teal-500',
+    bg: 'bg-teal-500',
+    cssVars: {
+      '--accent-primary': '#14b8a6',
+      '--accent-secondary': '#2dd4bf',
+      '--accent-light': '#5eead4',
+      '--accent-gradient-from': '#14b8a6',
+      '--accent-gradient-via': '#0d9488',
+      '--accent-gradient-to': '#0f766e',
+    }
+  },
+  red: {
+    name: 'Red',
+    primary: '#ef4444',
+    secondary: '#f87171',
+    ring: 'ring-red-500',
+    bg: 'bg-red-500',
+    cssVars: {
+      '--accent-primary': '#ef4444',
+      '--accent-secondary': '#f87171',
+      '--accent-light': '#fca5a5',
+      '--accent-gradient-from': '#ef4444',
+      '--accent-gradient-via': '#dc2626',
+      '--accent-gradient-to': '#b91c1c',
+    }
+  },
+}
+
 export const useSettings = () => {
   const context = useContext(SettingsContext)
   if (!context) {
@@ -13,7 +137,7 @@ export const useSettings = () => {
 export const SettingsProvider = ({ children }) => {
   // Load settings from localStorage (these are the "saved" values)
   const [savedTheme, setSavedTheme] = useState(() => localStorage.getItem('theme') || 'light')
-  const [savedAccentColor, setSavedAccentColor] = useState(() => localStorage.getItem('accentColor') || 'blue')
+  const [savedAccentColor, setSavedAccentColor] = useState(() => localStorage.getItem('accentColor') || 'purple')
   const [savedCompactSidebar, setSavedCompactSidebar] = useState(() => {
     const saved = localStorage.getItem('compactSidebar')
     return saved ? JSON.parse(saved) : false
@@ -75,9 +199,18 @@ export const SettingsProvider = ({ children }) => {
     }
   }, [theme])
 
-  // Apply accent color to document
+  // Apply accent color CSS variables to document
   useEffect(() => {
     document.documentElement.setAttribute('data-accent', accentColor)
+    
+    // Apply CSS variables for global accent theming
+    const colorConfig = ACCENT_COLORS[accentColor]
+    if (colorConfig?.cssVars) {
+      const root = document.documentElement
+      Object.entries(colorConfig.cssVars).forEach(([property, value]) => {
+        root.style.setProperty(property, value)
+      })
+    }
   }, [accentColor])
 
   // Preview functions (set temporarily without persisting)
