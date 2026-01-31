@@ -10,7 +10,9 @@ Before running the backend, ensure you have the following installed:
 
 1. **Java Development Kit (JDK) 21**
    - Download from: https://www.oracle.com/java/technologies/downloads/#java21
+   - Or use OpenJDK: https://adoptium.net/
    - Verify installation: `java -version`
+   - **Note:** If you only have Java 17 available, see the "Alternative: Using Java 17" section below.
 
 2. **PostgreSQL Database**
    - Download from: https://www.postgresql.org/download/
@@ -19,6 +21,19 @@ Before running the backend, ensure you have the following installed:
 
 3. **Maven** (included with the project via mvnw)
    - Verify: `./mvnw -version`
+
+### Alternative: Using Java 17
+
+If you don't have Java 21 and want to use Java 17 instead, modify `backend/pom.xml`:
+
+```xml
+<properties>
+    <java.version>17</java.version>  <!-- Change from 21 to 17 -->
+    <lombok.version>1.18.32</lombok.version>
+</properties>
+```
+
+**Note:** The application should work with Java 17, but Java 21 is the officially supported version.
 
 ---
 
@@ -309,7 +324,15 @@ http POST http://localhost:8080/auth/login \
 
 ## ⚠️ Common Errors
 
-### 1. Database Connection Error
+### 1. Java Version Error
+```
+Error: release version 21 not supported
+```
+**Solution:** 
+- Install Java 21 (see Prerequisites section)
+- Or modify `pom.xml` to use Java 17 (see "Alternative: Using Java 17" section)
+
+### 2. Database Connection Error
 ```
 Error: Could not open JPA EntityManager for transaction
 ```
@@ -318,7 +341,7 @@ Error: Could not open JPA EntityManager for transaction
 - Check database credentials in `application.properties`
 - Ensure database `society_db` exists
 
-### 2. Port Already in Use
+### 3. Port Already in Use
 ```
 Error: Web server failed to start. Port 8080 was already in use.
 ```
@@ -329,7 +352,7 @@ Error: Web server failed to start. Port 8080 was already in use.
   server.port=8081
   ```
 
-### 3. Email Already Exists
+### 4. Email Already Exists
 ```json
 {
   "error": "Email already registered"
@@ -337,7 +360,7 @@ Error: Web server failed to start. Port 8080 was already in use.
 ```
 **Solution:** Use a different email address for registration.
 
-### 4. Invalid Role
+### 5. Invalid Role
 ```json
 {
   "error": "Invalid role specified"
@@ -345,7 +368,7 @@ Error: Web server failed to start. Port 8080 was already in use.
 ```
 **Solution:** Use one of the valid roles listed in the "Available Roles" section.
 
-### 5. Password Too Short
+### 6. Password Too Short
 ```json
 {
   "password": "Password must be at least 6 characters"
