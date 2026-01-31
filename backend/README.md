@@ -3,6 +3,14 @@
 ## Overview
 Spring Boot 3.5.10 REST API for Society Management System with role-based access control.
 
+## 🚀 Quick Start
+
+**New to the backend?** Check out the [Backend Setup Guide](BACKEND_SETUP.md) for:
+- Step-by-step setup instructions
+- How to run the backend
+- Detailed register and login API examples
+- Common troubleshooting tips
+
 ## Tech Stack
 - Java 21
 - Spring Boot 3.5.10
@@ -19,19 +27,65 @@ Spring Boot 3.5.10 REST API for Society Management System with role-based access
 - **VISITOR** - Read-only access
 
 ## Running the Application
+
+### Prerequisites
+- Java 21
+- PostgreSQL database
+- Maven (included via mvnw)
+
+### Database Setup
+1. Create a PostgreSQL database named `society_db`
+2. Configure database credentials in `src/main/resources/application.properties`
+
+### Start the Server
 ```bash
 ./mvnw spring-boot:run
 ```
 
 Server runs on `http://localhost:8080`
 
+For complete setup instructions, see [Backend Setup Guide](BACKEND_SETUP.md).
+
 ## API Endpoints
 
 ### Authentication
+
+For detailed examples and step-by-step instructions, see [Backend Setup Guide](BACKEND_SETUP.md).
+
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | POST | `/auth/register` | Register new user |
 | POST | `/auth/login` | User login |
+
+**Register Request Body:**
+```json
+{
+  "name": "John Doe",
+  "email": "john.doe@example.com",
+  "password": "password123",
+  "role": "MEMBER"
+}
+```
+
+**Login Request Body:**
+```json
+{
+  "email": "john.doe@example.com",
+  "password": "password123"
+}
+```
+
+**Login Response:**
+```json
+{
+  "id": 1,
+  "name": "John Doe",
+  "email": "john.doe@example.com",
+  "role": "MEMBER",
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "tokenType": "Bearer"
+}
+```
 
 ### Health
 | Method | Endpoint | Description |
