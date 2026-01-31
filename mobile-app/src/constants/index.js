@@ -3,7 +3,11 @@ import Layout, { scale, verticalScale, moderateScale } from './Layout';
 
 // API Configuration
 export const API_CONFIG = {
+<<<<<<< HEAD
   BASE_URL: 'http://localhost:8080',
+=======
+  BASE_URL: 'http://localhost:8080/api',
+>>>>>>> Nidhish
   TIMEOUT: 30000,
   RETRY_ATTEMPTS: 3,
 };
