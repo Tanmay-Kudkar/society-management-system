@@ -314,16 +314,28 @@ export default function Welcome() {
               {/* Logo */}
               <div className="flex items-center gap-2 sm:gap-3 group cursor-pointer" onClick={() => scrollToSection('hero')}>
                 <div className="relative">
-                  <div className="p-2 sm:p-2.5 rounded-xl bg-gradient-to-br from-purple-500 via-pink-500 to-orange-400 shadow-lg shadow-purple-500/30 group-hover:shadow-purple-500/50 transition-all duration-300 group-hover:scale-110">
+                  <div 
+                    className="p-2 sm:p-2.5 rounded-xl shadow-lg transition-all duration-300 group-hover:scale-110"
+                    style={{ 
+                      background: `linear-gradient(to bottom right, var(--accent-primary), var(--accent-secondary))`,
+                      boxShadow: `0 10px 15px -3px color-mix(in srgb, var(--accent-primary) 30%, transparent)`
+                    }}
+                  >
                     <Building2 className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                   </div>
-                  <div className="absolute -inset-1 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl blur opacity-30 group-hover:opacity-60 transition-opacity"></div>
+                  <div 
+                    className="absolute -inset-1 rounded-xl blur opacity-30 group-hover:opacity-60 transition-opacity"
+                    style={{ background: `linear-gradient(to bottom right, var(--accent-primary), var(--accent-secondary))` }}
+                  ></div>
                 </div>
                 <div className="flex flex-col">
-                  <span className={`text-lg sm:text-xl font-black tracking-tight ${isDark ? 'bg-gradient-to-r from-white via-purple-200 to-pink-200' : 'bg-gradient-to-r from-gray-900 via-purple-700 to-pink-600'} bg-clip-text text-transparent`}>
+                  <span 
+                    className={`text-lg sm:text-xl font-black tracking-tight bg-clip-text text-transparent`}
+                    style={{ backgroundImage: isDark ? `linear-gradient(to right, white, var(--accent-light), var(--accent-secondary))` : `linear-gradient(to right, #111827, var(--accent-primary), var(--accent-secondary))` }}
+                  >
                     SocietyHub
                   </span>
-                  <span className={`text-[8px] sm:text-[10px] font-medium -mt-1 tracking-widest uppercase ${isDark ? 'text-purple-300/70' : 'text-purple-600/70'}`}>Management System</span>
+                  <span className="text-[8px] sm:text-[10px] font-medium -mt-1 tracking-widest uppercase" style={{ color: isDark ? `color-mix(in srgb, var(--accent-light) 70%, transparent)` : `color-mix(in srgb, var(--accent-primary) 70%, transparent)` }}>Management System</span>
                 </div>
               </div>
 
@@ -446,9 +458,10 @@ export default function Welcome() {
                   onClick={() => scrollToSection(item.id)}
                   className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all focus:outline-none focus:ring-0 ${
                     activeNavItem === item.id 
-                      ? 'bg-purple-500/20 text-purple-500' 
+                      ? '' 
                       : isDark ? 'hover:bg-slate-700' : 'hover:bg-gray-100'
                   }`}
+                  style={activeNavItem === item.id ? { background: 'color-mix(in srgb, var(--accent-primary) 20%, transparent)', color: 'var(--accent-primary)' } : {}}
                 >
                   <item.icon className="w-5 h-5" />
                   {item.label}
@@ -457,7 +470,8 @@ export default function Welcome() {
               <hr className={isDark ? 'border-slate-700' : 'border-gray-200'} />
               <button
                 onClick={() => { navigate('/login'); setMobileMenuOpen(false) }}
-                className="w-full p-3 rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold flex items-center justify-center gap-2"
+                className="w-full p-3 rounded-xl text-white font-semibold flex items-center justify-center gap-2"
+                style={{ background: `linear-gradient(to right, var(--accent-primary), var(--accent-secondary))` }}
               >
                 <Key className="w-5 h-5" />
                 Login to Dashboard
@@ -474,7 +488,11 @@ export default function Welcome() {
               <div className={`inline-flex items-center gap-3 px-4 sm:px-5 py-2 sm:py-2.5 rounded-full mb-6 sm:mb-8 hover-lift transition-all ${isDark ? 'glass-badge' : 'bg-white/80 shadow-lg shadow-violet-500/10 border border-violet-200/50 backdrop-blur-sm'}`}>
                 <div className="flex -space-x-2">
                   {[...Array(3)].map((_, i) => (
-                    <div key={i} className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 border-2 border-slate-900 flex items-center justify-center text-[8px] sm:text-[10px] font-bold text-white">
+                    <div 
+                      key={i} 
+                      className="w-5 h-5 sm:w-6 sm:h-6 rounded-full border-2 border-slate-900 flex items-center justify-center text-[8px] sm:text-[10px] font-bold text-white"
+                      style={{ background: `linear-gradient(to bottom right, var(--accent-primary), var(--accent-secondary))` }}
+                    >
                       {['S', 'M', 'R'][i]}
                     </div>
                   ))}
@@ -495,7 +513,7 @@ export default function Welcome() {
 
             {/* Subheading */}
             <p className={`text-lg sm:text-xl md:text-2xl max-w-3xl mx-auto mb-8 sm:mb-12 transition-all duration-1000 delay-700 leading-relaxed px-4 ${isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'} ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-              The complete <span className="text-purple-500 font-semibold">digital ecosystem</span> for modern housing societies. 
+              The complete <span className="font-semibold" style={{ color: 'var(--accent-primary)' }}>digital ecosystem</span> for modern housing societies. 
               Manage bills, complaints, notices, and residents — all in one powerful platform.
             </p>
 
@@ -527,8 +545,15 @@ export default function Welcome() {
                 { icon: Bell, text: 'Instant Notices' },
                 { icon: MessageSquare, text: 'Quick Support' },
               ].map((item, i) => (
-                <div key={i} className={`flex items-center gap-2 transition-colors group ${isDark ? 'text-gray-400 hover:text-white' : 'text-violet-600 hover:text-violet-800'}`}>
-                  <div className={`p-1.5 rounded-lg transition-colors ${isDark ? 'bg-white/5 group-hover:bg-purple-500/20' : 'bg-violet-100 group-hover:bg-violet-200'}`}>
+                <div 
+                  key={i} 
+                  className={`flex items-center gap-2 transition-colors group ${isDark ? 'text-gray-400 hover:text-white' : ''}`}
+                  style={{ color: isDark ? undefined : 'var(--accent-primary)' }}
+                >
+                  <div 
+                    className={`p-1.5 rounded-lg transition-colors ${isDark ? 'bg-white/5 group-hover:bg-[var(--accent-primary)]/20' : ''}`}
+                    style={isDark ? {} : { background: 'color-mix(in srgb, var(--accent-primary) 10%, white)' }}
+                  >
                     <item.icon className="w-4 h-4" />
                   </div>
                   <span className="text-sm font-medium">{item.text}</span>
@@ -540,10 +565,10 @@ export default function Welcome() {
             <div className={`mt-16 sm:mt-20 transition-all duration-1000 delay-1000 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}>
               <button 
                 onClick={(e) => { e.currentTarget.blur(); scrollToSection('features'); }} 
-                className={`inline-flex flex-col items-center transition-colors group focus:outline-none focus:ring-0 focus:border-none ${isDark ? 'text-gray-400 hover:text-white' : 'text-violet-500 hover:text-violet-700'}`}
-                style={{ outline: 'none', border: 'none' }}
+                className={`inline-flex flex-col items-center transition-colors group focus:outline-none focus:ring-0 focus:border-none ${isDark ? 'text-gray-400 hover:text-white' : ''}`}
+                style={{ outline: 'none', border: 'none', color: isDark ? undefined : 'var(--accent-primary)' }}
               >
-                <span className="text-sm mb-2 group-hover:text-violet-600 transition-colors">Explore Features</span>
+                <span className="text-sm mb-2 transition-colors" style={{ color: isDark ? undefined : 'var(--accent-primary)' }}>Explore Features</span>
                 <div className="scroll-indicator">
                   <ChevronDown className="w-5 h-5" />
                 </div>
@@ -556,9 +581,12 @@ export default function Welcome() {
         <section id="features" className="py-20 sm:py-32 px-4">
           <div className="max-w-7xl mx-auto">
             <div className="text-center mb-12 sm:mb-20">
-              <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6 ${isDark ? 'glass-badge' : 'bg-gradient-to-r from-violet-100 to-fuchsia-100 border border-violet-200/50'}`}>
-                <Sparkles className={`w-4 h-4 ${isDark ? 'text-purple-500' : 'text-violet-600'}`} />
-                <span className={`text-sm font-medium ${isDark ? 'text-gray-300' : 'text-violet-700'}`}>Powerful Features</span>
+              <div 
+                className={`inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6 ${isDark ? 'glass-badge' : 'border'}`}
+                style={isDark ? {} : { background: `linear-gradient(to right, color-mix(in srgb, var(--accent-primary) 10%, white), color-mix(in srgb, var(--accent-secondary) 10%, white))`, borderColor: 'color-mix(in srgb, var(--accent-primary) 20%, transparent)' }}
+              >
+                <Sparkles className="w-4 h-4" style={{ color: 'var(--accent-primary)' }} />
+                <span className={`text-sm font-medium ${isDark ? 'text-gray-300' : ''}`} style={{ color: isDark ? undefined : 'var(--accent-primary)' }}>Powerful Features</span>
               </div>
               <h2 className="text-3xl sm:text-4xl md:text-6xl font-black mb-4 sm:mb-6">
                 <span className={isDark ? 'text-white' : 'text-gray-900'}>Everything Your </span>
@@ -594,6 +622,201 @@ export default function Welcome() {
           </div>
         </section>
 
+        {/* GitHub-style Animated Showcase - Dark Mode Only */}
+        {isDark && (
+          <section className="py-20 sm:py-32 px-4 relative overflow-hidden">
+            <div className="max-w-7xl mx-auto">
+              <div className="text-center mb-12 sm:mb-16">
+                <h2 className="text-3xl sm:text-4xl md:text-5xl font-black mb-4">
+                  <span className="text-white">See It </span>
+                  <span className="hero-gradient-text">In Action</span>
+                </h2>
+                <p className="text-lg text-gray-400 max-w-2xl mx-auto">
+                  Watch how SocietyHub transforms daily operations
+                </p>
+              </div>
+
+              {/* Animated Tiles Container */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* Community Tile */}
+                <div className="github-tile group">
+                  <div className="github-tile-bg"></div>
+                  <div className="relative z-10 p-6">
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="p-2 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500">
+                        <Users className="w-5 h-5 text-white" />
+                      </div>
+                      <h3 className="font-bold text-white">Community Connect</h3>
+                    </div>
+                    
+                    {/* Animated People */}
+                    <div className="relative h-48 overflow-hidden rounded-lg bg-slate-900/50">
+                      <svg viewBox="0 0 300 150" className="w-full h-full">
+                        {/* Building Background */}
+                        <rect x="20" y="50" width="60" height="100" fill="#1e293b" rx="4"/>
+                        <rect x="120" y="30" width="60" height="120" fill="#1e293b" rx="4"/>
+                        <rect x="220" y="60" width="60" height="90" fill="#1e293b" rx="4"/>
+                        
+                        {/* Windows */}
+                        {[30, 50, 70].map((x, i) => 
+                          [60, 80, 100, 120].map((y, j) => (
+                            <rect key={`w1-${i}-${j}`} x={x} y={y} width="8" height="10" 
+                              className="github-window" style={{ animationDelay: `${(i + j) * 0.3}s` }}/>
+                          ))
+                        )}
+                        {[130, 150, 170].map((x, i) => 
+                          [40, 60, 80, 100, 120].map((y, j) => (
+                            <rect key={`w2-${i}-${j}`} x={x} y={y} width="8" height="10" 
+                              className="github-window" style={{ animationDelay: `${(i + j) * 0.25}s` }}/>
+                          ))
+                        )}
+                        
+                        {/* Animated People Walking */}
+                        <g className="github-person-1">
+                          <circle cx="0" cy="140" r="6" fill="#8b5cf6"/>
+                          <rect x="-3" y="146" width="6" height="10" fill="#8b5cf6" rx="2"/>
+                        </g>
+                        <g className="github-person-2">
+                          <circle cx="0" cy="140" r="6" fill="#ec4899"/>
+                          <rect x="-3" y="146" width="6" height="10" fill="#ec4899" rx="2"/>
+                        </g>
+                        <g className="github-person-3">
+                          <circle cx="0" cy="140" r="6" fill="#22c55e"/>
+                          <rect x="-3" y="146" width="6" height="10" fill="#22c55e" rx="2"/>
+                        </g>
+                      </svg>
+                      
+                      {/* Status Updates */}
+                      <div className="absolute bottom-3 left-3 right-3 space-y-2">
+                        <div className="github-notification-popup">
+                          <span className="text-green-400 text-xs">●</span>
+                          <span className="text-xs text-gray-300">New resident moved in</span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <p className="text-sm text-gray-400 mt-4">
+                      Residents connect, share updates, and build community
+                    </p>
+                  </div>
+                </div>
+
+                {/* Parking Tile */}
+                <div className="github-tile group">
+                  <div className="github-tile-bg"></div>
+                  <div className="relative z-10 p-6">
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="p-2 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-500">
+                        <Car className="w-5 h-5 text-white" />
+                      </div>
+                      <h3 className="font-bold text-white">Smart Parking</h3>
+                    </div>
+                    
+                    {/* Animated Parking Lot */}
+                    <div className="relative h-48 overflow-hidden rounded-lg bg-slate-900/50">
+                      <svg viewBox="0 0 300 150" className="w-full h-full">
+                        {/* Parking Lines */}
+                        <rect x="20" y="30" width="50" height="80" fill="none" stroke="#334155" strokeWidth="2"/>
+                        <rect x="80" y="30" width="50" height="80" fill="none" stroke="#334155" strokeWidth="2"/>
+                        <rect x="140" y="30" width="50" height="80" fill="none" stroke="#334155" strokeWidth="2"/>
+                        <rect x="200" y="30" width="50" height="80" fill="none" stroke="#334155" strokeWidth="2"/>
+                        
+                        {/* Parked Cars */}
+                        <rect x="28" y="45" width="34" height="50" fill="#3b82f6" rx="4"/>
+                        <rect x="148" y="45" width="34" height="50" fill="#22c55e" rx="4"/>
+                        
+                        {/* Animated Car Entering */}
+                        <g className="github-car-enter">
+                          <rect x="0" y="0" width="34" height="50" fill="#f97316" rx="4"/>
+                          <rect x="4" y="6" width="26" height="12" fill="#1e293b" rx="2"/>
+                          <circle cx="8" cy="45" r="5" fill="#1e293b"/>
+                          <circle cx="26" cy="45" r="5" fill="#1e293b"/>
+                        </g>
+                        
+                        {/* Slot Status Indicators */}
+                        <circle cx="45" cy="120" r="4" fill="#3b82f6"/>
+                        <circle cx="105" cy="120" r="4" className="github-slot-available"/>
+                        <circle cx="165" cy="120" r="4" fill="#22c55e"/>
+                        <circle cx="225" cy="120" r="4" className="github-slot-available"/>
+                        
+                        {/* Labels */}
+                        <text x="45" y="140" textAnchor="middle" className="text-[10px] fill-gray-500">A1</text>
+                        <text x="105" y="140" textAnchor="middle" className="text-[10px] fill-gray-500">A2</text>
+                        <text x="165" y="140" textAnchor="middle" className="text-[10px] fill-gray-500">A3</text>
+                        <text x="225" y="140" textAnchor="middle" className="text-[10px] fill-gray-500">A4</text>
+                      </svg>
+                      
+                      {/* Live Counter */}
+                      <div className="absolute top-3 right-3 bg-slate-800/80 px-3 py-1 rounded-full">
+                        <span className="text-xs text-gray-300">Available: </span>
+                        <span className="text-xs text-green-400 font-bold github-counter">2</span>
+                      </div>
+                    </div>
+                    
+                    <p className="text-sm text-gray-400 mt-4">
+                      Real-time parking availability and vehicle tracking
+                    </p>
+                  </div>
+                </div>
+
+                {/* Security Tile */}
+                <div className="github-tile group">
+                  <div className="github-tile-bg"></div>
+                  <div className="relative z-10 p-6">
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="p-2 rounded-lg bg-gradient-to-br from-green-500 to-emerald-500">
+                        <Shield className="w-5 h-5 text-white" />
+                      </div>
+                      <h3 className="font-bold text-white">Security Center</h3>
+                    </div>
+                    
+                    {/* Animated Security Dashboard */}
+                    <div className="relative h-48 overflow-hidden rounded-lg bg-slate-900/50">
+                      <svg viewBox="0 0 300 150" className="w-full h-full">
+                        {/* Security Gate */}
+                        <rect x="130" y="100" width="40" height="50" fill="#334155"/>
+                        <rect x="125" y="95" width="50" height="8" fill="#475569"/>
+                        
+                        {/* Gate Barrier - Animated */}
+                        <g className="github-gate-barrier">
+                          <rect x="170" y="108" width="60" height="6" fill="#f97316" rx="2"/>
+                          <circle cx="175" cy="111" r="3" fill="#fbbf24"/>
+                        </g>
+                        
+                        {/* Entry/Exit Arrows */}
+                        <path d="M 80 120 L 120 120" stroke="#22c55e" strokeWidth="2" className="github-arrow-in"/>
+                        <path d="M 180 130 L 240 130" stroke="#3b82f6" strokeWidth="2" className="github-arrow-out"/>
+                        
+                        {/* Security Icons */}
+                        <circle cx="60" cy="50" r="20" fill="#1e293b" stroke="#22c55e" strokeWidth="2"/>
+                        <text x="60" y="55" textAnchor="middle" className="text-[16px] fill-green-400">✓</text>
+                        
+                        <circle cx="150" cy="50" r="20" fill="#1e293b" stroke="#8b5cf6" strokeWidth="2" className="github-scan-ring"/>
+                        <text x="150" y="55" textAnchor="middle" className="text-[14px] fill-purple-400">ID</text>
+                        
+                        <circle cx="240" cy="50" r="20" fill="#1e293b" stroke="#3b82f6" strokeWidth="2"/>
+                        <text x="240" y="55" textAnchor="middle" className="text-[16px] fill-blue-400">📹</text>
+                      </svg>
+                      
+                      {/* Security Log */}
+                      <div className="absolute bottom-3 left-3 right-3">
+                        <div className="github-security-log">
+                          <span className="text-xs text-gray-500">Latest:</span>
+                          <span className="text-xs text-green-400 github-log-text">Entry approved - A-101</span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <p className="text-sm text-gray-400 mt-4">
+                      Secure access control and visitor management
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+        )}
+
         {/* Stats Section */}
         <section id="stats" className="py-20 sm:py-32 px-4">
           <div className="max-w-5xl mx-auto">
@@ -618,8 +841,14 @@ export default function Welcome() {
               <div className="grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8">
                 {stats.map((stat, index) => (
                   <div key={index} className="stat-item-new group">
-                    <div className={`stat-icon-wrapper-new ${isDark ? 'bg-purple-500/10' : 'bg-purple-100'}`}>
-                      <stat.icon className="w-5 h-5 sm:w-6 sm:h-6 text-purple-500 group-hover:text-pink-500 transition-colors" />
+                    <div 
+                      className="stat-icon-wrapper-new"
+                      style={{ background: isDark ? 'color-mix(in srgb, var(--accent-primary) 10%, transparent)' : 'color-mix(in srgb, var(--accent-primary) 15%, white)' }}
+                    >
+                      <stat.icon 
+                        className="w-5 h-5 sm:w-6 sm:h-6 transition-colors" 
+                        style={{ color: 'var(--accent-primary)' }}
+                      />
                     </div>
                     <div className="text-3xl sm:text-4xl md:text-5xl font-black stat-number-new">
                       <AnimatedCounter value={stat.value} duration={2000 + index * 300} />
@@ -635,36 +864,46 @@ export default function Welcome() {
         {/* CTA Section */}
         <section className="py-20 sm:py-32 px-4">
           <div className="max-w-5xl mx-auto">
-            <div className={`cta-card-new ${isDark ? '' : 'shadow-2xl'}`}>
-              <div className={`cta-card-bg-new ${isDark ? '' : 'from-purple-500 to-pink-500'}`}></div>
+            <div className={`cta-card-new ${isDark ? '' : ''}`} style={isDark ? {} : { background: `linear-gradient(135deg, var(--accent-gradient-from), var(--accent-gradient-via), var(--accent-gradient-to))` }}>
+              <div className={`cta-card-bg-new ${isDark ? '' : ''}`} style={isDark ? {} : { background: `linear-gradient(135deg, color-mix(in srgb, var(--accent-primary) 95%, white), color-mix(in srgb, var(--accent-secondary) 95%, white), color-mix(in srgb, var(--accent-gradient-to) 95%, white))`, backgroundSize: '200% 200%', animation: 'gradientShift 8s ease infinite' }}></div>
               <div className="relative z-10 text-center px-4">
-                <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6 sm:mb-8 ${isDark ? 'bg-white/10' : 'bg-white/20'}`}>
+                <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6 sm:mb-8 ${isDark ? 'bg-white/10' : 'bg-white/20 backdrop-blur-sm'}`}>
                   <CheckCircle className="w-4 h-4 text-green-400" />
-                  <span className="text-sm text-white">No credit card required</span>
+                  <span className="text-sm text-white font-medium">No credit card required</span>
                 </div>
-                <h2 className="text-3xl sm:text-4xl md:text-6xl font-black mb-4 sm:mb-6 text-white">
+                <h2 className="text-3xl sm:text-4xl md:text-6xl font-black mb-4 sm:mb-6 text-white drop-shadow-lg">
                   Ready to Transform<br />
-                  <span className={isDark ? 'hero-gradient-text' : 'text-yellow-300'}>Your Society?</span>
+                  <span className="hero-gradient-text" style={isDark ? {} : { background: 'linear-gradient(135deg, #fff, #fef08a, #fff)', WebkitBackgroundClip: 'text', backgroundClip: 'text' }}>Your Society?</span>
                 </h2>
-                <p className="text-lg sm:text-xl text-white/80 mb-8 sm:mb-10 max-w-2xl mx-auto">
+                <p className="text-lg sm:text-xl text-white/90 mb-8 sm:mb-10 max-w-2xl mx-auto">
                   Join thousands of societies already using our platform to streamline their operations
                 </p>
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                   <button
                     onClick={() => navigate('/login')}
-                    className="w-full sm:w-auto btn-cta-primary-new group"
+                    className={`w-full sm:w-auto group px-8 py-4 rounded-xl font-bold text-lg transition-all duration-300 ${
+                      isDark 
+                        ? 'bg-white text-slate-900 hover:bg-gray-100 shadow-xl shadow-white/20 hover:shadow-white/30 hover:scale-105' 
+                        : 'bg-white text-violet-700 hover:bg-gray-50 shadow-xl shadow-black/20 hover:shadow-black/30 hover:scale-105'
+                    }`}
                   >
-                    <span className="relative z-10 flex items-center justify-center gap-3">
+                    <span className="flex items-center justify-center gap-3">
                       Start Now - It's Free
                       <ArrowRight className="w-5 h-5 sm:w-6 sm:h-6 group-hover:translate-x-2 transition-transform" />
                     </span>
                   </button>
                   <button
                     onClick={() => navigate('/contact')}
-                    className="w-full sm:w-auto btn-cta-secondary-new"
+                    className={`w-full sm:w-auto group px-8 py-4 rounded-xl font-semibold text-lg transition-all duration-300 ${
+                      isDark 
+                        ? 'bg-transparent border-2 border-white/30 text-white hover:bg-white/10 hover:border-white/50' 
+                        : 'bg-white/20 backdrop-blur-sm border-2 border-white/40 text-white hover:bg-white/30 hover:border-white/60'
+                    }`}
                   >
-                    <Phone className="w-5 h-5" />
-                    Contact Sales
+                    <span className="flex items-center justify-center gap-3">
+                      <Phone className="w-5 h-5" />
+                      Contact Sales
+                    </span>
                   </button>
                 </div>
               </div>
@@ -678,7 +917,10 @@ export default function Welcome() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-8 sm:gap-12 mb-12 sm:mb-16">
               <div className="col-span-2 md:col-span-1">
                 <div className="flex items-center gap-3 mb-4 sm:mb-6 group cursor-pointer" onClick={() => scrollToSection('hero')}>
-                  <div className="p-2.5 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 group-hover:scale-110 transition-transform">
+                  <div 
+                    className="p-2.5 rounded-xl group-hover:scale-110 transition-transform"
+                    style={{ background: `linear-gradient(to bottom right, var(--accent-primary), var(--accent-secondary))` }}
+                  >
                     <Building2 className="w-6 h-6 text-white" />
                   </div>
                   <span className={`text-xl font-black ${isDark ? 'text-white' : 'text-gray-900'}`}>SocietyHub</span>

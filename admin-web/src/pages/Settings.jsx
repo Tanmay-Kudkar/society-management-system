@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
-import { useSettings } from '../context/SettingsContext'
+import { useSettings, ACCENT_COLORS } from '../context/SettingsContext'
 import { userApi, notificationPreferenceApi } from '../api'
-import { User, Bell, Shield, Palette, Save } from 'lucide-react'
+import { User, Bell, Shield, Palette, Save, Check } from 'lucide-react'
 import clsx from 'clsx'
 import Toggle from '../components/Toggle'
 
@@ -445,33 +445,32 @@ export default function Settings() {
 
               <div className="pt-6 border-t border-gray-100 dark:border-slate-700">
                 <h3 className="font-semibold text-gray-900 dark:text-white mb-4">Accent Color</h3>
-                <div className="flex gap-3">
-                  {['blue', 'indigo', 'purple', 'pink', 'green', 'orange'].map((color) => (
+                <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                  Choose an accent color that will be applied throughout the app, including the landing page.
+                </p>
+                <div className="flex flex-wrap gap-3">
+                  {Object.entries(ACCENT_COLORS).map(([key, config]) => (
                     <button
-                      key={color}
-                      onClick={() => setAccentColorPreview(color)}
+                      key={key}
+                      onClick={() => setAccentColorPreview(key)}
+                      title={config.name}
                       className={clsx(
-                        'w-10 h-10 rounded-full ring-2 ring-offset-2 dark:ring-offset-slate-800 transition',
-                        color === 'blue' && 'bg-blue-500',
-                        color === 'indigo' && 'bg-indigo-500',
-                        color === 'purple' && 'bg-purple-500',
-                        color === 'pink' && 'bg-pink-500',
-                        color === 'green' && 'bg-green-500',
-                        color === 'orange' && 'bg-orange-500',
-                        accentColor === color 
-                          ? {
-                              blue: 'ring-blue-500',
-                              indigo: 'ring-indigo-500',
-                              purple: 'ring-purple-500',
-                              pink: 'ring-pink-500',
-                              green: 'ring-green-500',
-                              orange: 'ring-orange-500',
-                            }[color]
-                          : 'ring-transparent hover:ring-gray-300 dark:hover:ring-slate-600'
+                        'relative w-10 h-10 rounded-full ring-2 ring-offset-2 dark:ring-offset-slate-800 transition-all duration-200 hover:scale-110',
+                        config.bg,
+                        accentColor === key 
+                          ? config.ring
+                          : 'ring-transparent hover:ring-gray-300 dark:hover:ring-slate-500'
                       )}
-                    />
+                    >
+                      {accentColor === key && (
+                        <Check className="absolute inset-0 m-auto w-5 h-5 text-white drop-shadow-md" />
+                      )}
+                    </button>
                   ))}
                 </div>
+                <p className="text-xs text-gray-400 dark:text-gray-500 mt-3">
+                  Current: <span className="font-medium" style={{ color: 'var(--accent-primary)' }}>{ACCENT_COLORS[accentColor]?.name || 'Blue'}</span>
+                </p>
               </div>
 
               <button

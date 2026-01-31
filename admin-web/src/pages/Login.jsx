@@ -38,16 +38,22 @@ export default function Login() {
   return (
     <div className={`min-h-screen flex overflow-hidden transition-colors duration-500 ${isDark ? 'bg-slate-900' : 'bg-gray-50'}`}>
       {/* Left Side - Decorative */}
-      <div className={`hidden lg:flex lg:w-1/2 relative overflow-hidden ${isDark ? 'bg-slate-900' : 'bg-gradient-to-br from-purple-600 via-pink-500 to-orange-400'}`}>
+      <div 
+        className={`hidden lg:flex lg:w-1/2 relative overflow-hidden ${isDark ? 'bg-slate-900' : ''}`}
+        style={isDark ? {} : { background: `linear-gradient(to bottom right, var(--accent-gradient-from), var(--accent-gradient-via), var(--accent-gradient-to))` }}
+      >
         {/* Background Elements */}
         {isDark ? (
           <>
-            <div className="absolute inset-0 bg-gradient-to-br from-purple-900/50 via-slate-900 to-blue-900/50"></div>
+            <div 
+              className="absolute inset-0"
+              style={{ background: `linear-gradient(to bottom right, color-mix(in srgb, var(--accent-primary) 30%, #0f172a), #0f172a, color-mix(in srgb, var(--accent-secondary) 20%, #0f172a))` }}
+            ></div>
             <div className="absolute inset-0 gradient-mesh opacity-30"></div>
             {/* Floating Orbs */}
-            <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-purple-500/20 rounded-full blur-3xl animate-floatSlow"></div>
-            <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl animate-float"></div>
-            <div className="absolute top-1/2 left-1/2 w-48 h-48 bg-pink-500/20 rounded-full blur-3xl animate-floatSlow" style={{ animationDelay: '1s' }}></div>
+            <div className="absolute top-1/4 left-1/4 w-64 h-64 rounded-full blur-3xl animate-floatSlow" style={{ background: 'color-mix(in srgb, var(--accent-primary) 20%, transparent)' }}></div>
+            <div className="absolute bottom-1/4 right-1/4 w-96 h-96 rounded-full blur-3xl animate-float" style={{ background: 'color-mix(in srgb, var(--accent-secondary) 20%, transparent)' }}></div>
+            <div className="absolute top-1/2 left-1/2 w-48 h-48 rounded-full blur-3xl animate-floatSlow" style={{ animationDelay: '1s', background: 'color-mix(in srgb, var(--accent-light) 20%, transparent)' }}></div>
           </>
         ) : (
           <>
@@ -67,7 +73,10 @@ export default function Login() {
             </Link>
 
             <div className="flex items-center gap-4 mb-8">
-              <div className={`p-4 rounded-2xl shadow-2xl ${isDark ? 'bg-gradient-to-br from-purple-500 to-pink-500 shadow-purple-500/30' : 'bg-white/20 backdrop-blur-xl'}`}>
+              <div 
+                className={`p-4 rounded-2xl shadow-2xl ${isDark ? 'shadow-[var(--accent-primary)]/30' : 'bg-white/20 backdrop-blur-xl'}`}
+                style={isDark ? { background: `linear-gradient(to bottom right, var(--accent-primary), var(--accent-secondary))` } : {}}
+              >
                 <Building2 className="w-10 h-10 text-white" />
               </div>
               <div>
@@ -78,7 +87,10 @@ export default function Login() {
 
             <h2 className="text-4xl xl:text-5xl font-bold text-white mb-6 leading-tight">
               Welcome back to
-              <span className={`block ${isDark ? 'bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent' : 'text-yellow-200'}`}>
+              <span 
+                className={`block ${isDark ? 'bg-clip-text text-transparent' : 'text-yellow-200'}`}
+                style={isDark ? { backgroundImage: `linear-gradient(to right, var(--accent-light), var(--accent-secondary))` } : {}}
+              >
                 the future of society management
               </span>
             </h2>
@@ -95,7 +107,7 @@ export default function Login() {
                   className={`px-4 py-2 rounded-full text-sm flex items-center gap-2 ${isDark ? 'glass-dark text-gray-300' : 'bg-white/20 backdrop-blur-sm text-white'}`}
                   style={{ animationDelay: `${0.5 + i * 0.1}s` }}
                 >
-                  <Sparkles className={`w-4 h-4 ${isDark ? 'text-purple-400' : 'text-yellow-300'}`} />
+                  <Sparkles className="w-4 h-4" style={{ color: isDark ? 'var(--accent-light)' : '#fde047' }} />
                   {feature}
                 </div>
               ))}
@@ -138,7 +150,7 @@ export default function Login() {
               Back to Home
             </Link>
             <div className="flex items-center justify-center gap-3 mb-4">
-              <div className="p-3 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500">
+              <div className="p-3 rounded-xl" style={{ background: `linear-gradient(to bottom right, var(--accent-primary), var(--accent-secondary))` }}>
                 <Building2 className="w-8 h-8 text-white" />
               </div>
               <span className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>SocietyHub</span>
@@ -175,18 +187,25 @@ export default function Login() {
                 Email Address
               </label>
               <div className="relative group">
-                <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl opacity-0 group-focus-within:opacity-100 blur transition-opacity -m-0.5"></div>
+                <div 
+                  className="absolute inset-0 rounded-xl opacity-0 group-focus-within:opacity-100 blur transition-opacity -m-0.5"
+                  style={{ background: `linear-gradient(to right, var(--accent-primary), var(--accent-secondary))` }}
+                ></div>
                 <div className="relative">
-                  <Mail className={`absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 transition-colors ${isDark ? 'text-gray-400 group-focus-within:text-purple-400' : 'text-gray-400 group-focus-within:text-purple-500'}`} />
+                  <Mail 
+                    className={`absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 transition-colors ${isDark ? 'text-gray-400' : 'text-gray-400'}`}
+                    style={{ '--group-focus-color': 'var(--accent-primary)' }}
+                  />
                   <input
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className={`w-full pl-12 pr-4 py-3.5 border-2 rounded-xl outline-none transition-all ${
                       isDark 
-                        ? 'border-slate-700 focus:border-purple-500 bg-slate-800 text-white placeholder:text-gray-500' 
-                        : 'border-gray-200 focus:border-purple-500 bg-white text-gray-900 placeholder:text-gray-400'
+                        ? 'border-slate-700 bg-slate-800 text-white placeholder:text-gray-500' 
+                        : 'border-gray-200 bg-white text-gray-900 placeholder:text-gray-400'
                     }`}
+                    style={{ '--tw-border-opacity': 1 }}
                     placeholder="Enter your email"
                     required
                   />
@@ -199,17 +218,20 @@ export default function Login() {
                 Password
               </label>
               <div className="relative group">
-                <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl opacity-0 group-focus-within:opacity-100 blur transition-opacity -m-0.5"></div>
+                <div 
+                  className="absolute inset-0 rounded-xl opacity-0 group-focus-within:opacity-100 blur transition-opacity -m-0.5"
+                  style={{ background: `linear-gradient(to right, var(--accent-primary), var(--accent-secondary))` }}
+                ></div>
                 <div className="relative">
-                  <Lock className={`absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 transition-colors ${isDark ? 'text-gray-400 group-focus-within:text-purple-400' : 'text-gray-400 group-focus-within:text-purple-500'}`} />
+                  <Lock className={`absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 transition-colors ${isDark ? 'text-gray-400' : 'text-gray-400'}`} />
                   <input
                     type={showPassword ? 'text' : 'password'}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className={`w-full pl-12 pr-12 py-3.5 border-2 rounded-xl outline-none transition-all ${
                       isDark 
-                        ? 'border-slate-700 focus:border-purple-500 bg-slate-800 text-white placeholder:text-gray-500' 
-                        : 'border-gray-200 focus:border-purple-500 bg-white text-gray-900 placeholder:text-gray-400'
+                        ? 'border-slate-700 bg-slate-800 text-white placeholder:text-gray-500' 
+                        : 'border-gray-200 bg-white text-gray-900 placeholder:text-gray-400'
                     }`}
                     placeholder="Enter your password"
                     required
@@ -230,7 +252,7 @@ export default function Login() {
                 <input type="checkbox" className="w-4 h-4 rounded border-gray-300 text-purple-500 focus:ring-purple-500" />
                 <span className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Remember me</span>
               </label>
-              <a href="#" className={`text-sm font-medium ${isDark ? 'text-purple-400 hover:text-purple-300' : 'text-purple-600 hover:text-purple-700'}`}>
+              <a href="#" className="text-sm font-medium transition-colors" style={{ color: 'var(--accent-primary)' }}>
                 Forgot password?
               </a>
             </div>
@@ -238,7 +260,10 @@ export default function Login() {
             <button
               type="submit"
               disabled={loading}
-              className="relative w-full py-4 px-6 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl hover:from-purple-700 hover:to-pink-700 focus:ring-4 focus:ring-purple-200 dark:focus:ring-purple-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed overflow-hidden group focus:outline-none"
+              className="relative w-full py-4 px-6 text-white font-semibold rounded-xl focus:ring-4 transition-all disabled:opacity-50 disabled:cursor-not-allowed overflow-hidden group focus:outline-none"
+              style={{ 
+                background: `linear-gradient(to right, var(--accent-gradient-from), var(--accent-gradient-to))`,
+              }}
             >
               <span className={`flex items-center justify-center gap-2 transition-all ${loading ? 'opacity-0' : 'opacity-100'}`}>
                 Sign In
@@ -259,7 +284,7 @@ export default function Login() {
           {/* Footer */}
           <p className={`mt-8 text-center text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
             Don't have an account?{' '}
-            <a href="#" className={`font-semibold ${isDark ? 'text-purple-400 hover:text-purple-300' : 'text-purple-600 hover:text-purple-700'}`}>
+            <a href="#" className="font-semibold transition-colors" style={{ color: 'var(--accent-primary)' }}>
               Contact Admin
             </a>
           </p>
