@@ -72,4 +72,27 @@ public class VendorController {
         vendorService.delete(id, userId);
         return ResponseEntity.noContent().build();
     }
+
+    @PatchMapping("/{id}/approve")
+    public ResponseEntity<VendorResponse> approveVendor(
+            @PathVariable Long id,
+            @RequestParam Long userId) {
+        VendorResponse response = vendorService.approveVendor(id, userId);
+        return ResponseEntity.ok(response);
+    }
+
+    @PatchMapping("/{id}/reject")
+    public ResponseEntity<VendorResponse> rejectVendor(
+            @PathVariable Long id,
+            @RequestParam Long userId) {
+        VendorResponse response = vendorService.rejectVendor(id, userId);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/pending")
+    public ResponseEntity<List<VendorResponse>> getPendingVendors(
+            @RequestParam(required = false) Long societyId) {
+        List<VendorResponse> vendors = vendorService.getPendingVendors(societyId);
+        return ResponseEntity.ok(vendors);
+    }
 }

@@ -29,6 +29,15 @@ public class Vendor {
     @Column(name = "service_type", nullable = false)
     private String serviceType; // PLUMBER, ELECTRICIAN, SECURITY, HOUSEKEEPING, etc.
 
+    @Column(name = "contact_person")
+    private String contactPerson;
+
+    @Column(name = "contact_person_phone")
+    private String contactPersonPhone;
+
+    @Column(name = "contact_person_email")
+    private String contactPersonEmail;
+
     @Column
     private String phone;
 
@@ -55,6 +64,9 @@ public class Vendor {
 
     @Column(name = "is_common")
     private Boolean isCommon = false; // true = available to all societies
+
+    @Column(name = "approval_status")
+    private String approvalStatus = "PENDING"; // PENDING, APPROVED, REJECTED
 
     @Column(name = "is_active")
     private Boolean isActive = true;

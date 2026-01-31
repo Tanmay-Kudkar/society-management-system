@@ -79,6 +79,9 @@ export const vendorApi = {
   create: (data, userId) => api.post(`/vendors?userId=${userId}`, data),
   update: (id, data, userId) => api.put(`/vendors/${id}?userId=${userId}`, data),
   delete: (id, userId) => api.delete(`/vendors/${id}?userId=${userId}`),
+  approve: (id, userId) => api.patch(`/vendors/${id}/approve?userId=${userId}`),
+  reject: (id, userId) => api.patch(`/vendors/${id}/reject?userId=${userId}`),
+  getPending: (societyId) => api.get(`/vendors/pending${societyId ? `?societyId=${societyId}` : ''}`),
 }
 
 // Vendor Bill API
