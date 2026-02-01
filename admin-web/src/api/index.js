@@ -78,12 +78,12 @@ export const flatApi = {
 
 // Wing API
 export const wingApi = {
-  getAll: () => api.get('/wings'),
-  getById: (id) => api.get(`/wings/${id}`),
-  getBySociety: (societyId) => api.get(`/wings/society/${societyId}`),
-  create: (data) => api.post('/wings', data),
-  update: (id, data) => api.put(`/wings/${id}`, data),
-  delete: (id) => api.delete(`/wings/${id}`),
+  getAll: () => api.get('/api/wings'),
+  getById: (id) => api.get(`/api/wings/${id}`),
+  getBySociety: (societyId) => api.get(`/api/wings/society/${societyId}`),
+  create: (data) => api.post('/api/wings', data),
+  update: (id, data) => api.put(`/api/wings/${id}`, data),
+  delete: (id) => api.delete(`/api/wings/${id}`),
 }
 
 // Vendor API

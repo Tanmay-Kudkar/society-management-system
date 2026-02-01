@@ -56,6 +56,10 @@ export default function Wings() {
       queryClient.invalidateQueries(['wings'])
       setShowModal(false)
     },
+    onError: (error) => {
+      console.error('Create wing error:', error.response?.data || error.message)
+      alert('Failed to create wing: ' + (error.response?.data?.message || error.message))
+    },
   })
 
   // Update mutation
@@ -65,6 +69,10 @@ export default function Wings() {
       queryClient.invalidateQueries(['wings'])
       setShowModal(false)
       setEditingWing(null)
+    },
+    onError: (error) => {
+      console.error('Update wing error:', error.response?.data || error.message)
+      alert('Failed to update wing: ' + (error.response?.data?.message || error.message))
     },
   })
 
@@ -78,8 +86,7 @@ export default function Wings() {
 
   // Filter wings
   const filteredWings = wings.filter(wing => {
-    const matchesSearch = wing.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         wing.description?.toLowerCase().includes(searchTerm.toLowerCase())
+    const matchesSearch = wing.name?.toLowerCase().includes(searchTerm.toLowerCase())
     const matchesSociety = !filterSociety || wing.societyId?.toString() === filterSociety
     return matchesSearch && matchesSociety
   })
@@ -92,17 +99,20 @@ export default function Wings() {
       ? parseInt(formData.get('societyId')) 
       : user?.societyId
 
+    console.log('Society ID:', societyId, 'User:', user, 'isMasterAdmin:', isMasterAdmin)
+
     if (!societyId) {
       alert('Society ID is required.')
       return
     }
 
     const data = {
-      societyId,
+      societyId: parseInt(societyId),
       name: formData.get('name'),
-      description: formData.get('description'),
       totalFloors: parseInt(formData.get('totalFloors')) || 0,
     }
+
+    console.log('Sending wing data:', data)
 
     if (editingWing) {
       updateMutation.mutate({ id: editingWing.id, data })
@@ -273,17 +283,6 @@ export default function Wings() {
                   required
                   placeholder="e.g., A Wing, Tower 1, Building A"
                   className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description</label>
-                <textarea
-                  name="description"
-                  defaultValue={editingWing?.description}
-                  rows={3}
-                  placeholder="Optional description..."
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white resize-none"
                 />
               </div>
 
