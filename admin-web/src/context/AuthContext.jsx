@@ -1,4 +1,5 @@
-import { createContext, useContext, useState, useEffect } from 'react'
+import { createContext, useContext, useState, useEffect, useRef } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { authApi } from '../api'
 
 const AuthContext = createContext(null)
@@ -12,38 +13,61 @@ export const useAuth = () => {
 }
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null)
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    // Check for stored user on mount
+  const queryClient = useQueryClient()
+  const [user, setUser] = useState(() => {
+    // Initialize from localStorage immediately to prevent flash
     try {
       const storedUser = localStorage.getItem('user')
       const token = localStorage.getItem('token')
-      
       if (storedUser && storedUser !== 'undefined' && token) {
-        setUser(JSON.parse(storedUser))
-      } else {
-        // Clear invalid data
-        localStorage.removeItem('user')
-        localStorage.removeItem('token')
+        return JSON.parse(storedUser)
       }
-    } catch (error) {
-      console.error('Error parsing stored user:', error)
-      localStorage.removeItem('user')
-      localStorage.removeItem('token')
+    } catch (e) {
+      // Ignore parse errors
     }
-    setLoading(false)
+    return null
+  })
+  const [loading, setLoading] = useState(true)
+  const authChecked = useRef(false)
+
+  useEffect(() => {
+    // Prevent multiple auth checks
+    if (authChecked.current) return
+    authChecked.current = true
+
+    const checkAuth = async () => {
+      const token = localStorage.getItem('token')
+      
+      // Only try /auth/me if we have a token (meaning user previously logged in)
+      if (token) {
+        try {
+          const response = await authApi.me()
+          const userData = response.data
+          setUser(userData)
+          localStorage.setItem('user', JSON.stringify(userData))
+        } catch (error) {
+          // Cookie/token invalid - use localStorage data if available
+          // Don't clear localStorage here, let the user stay logged in
+          // They'll get 401 on actual API calls which will trigger logout
+          console.log('Auth check failed, using cached user data')
+        }
+      }
+      setLoading(false)
+    }
+    
+    checkAuth()
   }, [])
 
   const login = async (email, password) => {
     try {
       const response = await authApi.login({ email, password })
-      // Backend returns: { id, name, email, role, token, tokenType }
-      const { token, id, name, email: userEmail, role } = response.data
+      // Backend returns: { id, name, email, role, societyId, token, tokenType }
+      // Backend also sets HTTP-only cookie with JWT
+      const { token, id, name, email: userEmail, role, societyId } = response.data
       
-      const userData = { id, name, email: userEmail, role }
+      const userData = { id, name, email: userEmail, role, societyId }
       
+      // Store in localStorage as fallback and for quick access
       localStorage.setItem('token', token)
       localStorage.setItem('user', JSON.stringify(userData))
       setUser(userData)
@@ -58,9 +82,15 @@ export const AuthProvider = ({ children }) => {
   }
 
   const logout = () => {
+    // Clear user state immediately for instant UI response
+    setUser(null)
+    // Clear all cached queries to ensure fresh data on next login
+    queryClient.clear()
+    // Clear localStorage
     localStorage.removeItem('token')
     localStorage.removeItem('user')
-    setUser(null)
+    // Call backend to clear HTTP-only cookie (fire and forget - don't wait)
+    authApi.logout().catch(() => {})
   }
 
   const hasRole = (...roles) => {

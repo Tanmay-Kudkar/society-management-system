@@ -214,20 +214,20 @@ export default function VendorBills() {
       {/* Add Bill Modal */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
-            <div className="flex items-center justify-between p-4 border-b border-gray-100">
-              <h3 className="text-lg font-semibold">Add Vendor Bill</h3>
-              <button onClick={() => setShowModal(false)} className="p-1 hover:bg-gray-100 rounded">
+          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-xl w-full max-w-md">
+            <div className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-slate-700">
+              <h3 className="text-lg font-semibold dark:text-white">Add Vendor Bill</h3>
+              <button onClick={() => setShowModal(false)} className="p-1 hover:bg-gray-100 dark:hover:bg-slate-700 rounded dark:text-gray-400">
                 <X size={20} />
               </button>
             </div>
             <form onSubmit={handleSubmit} className="p-4 space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Vendor</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Vendor</label>
                 <select
                   name="vendorId"
                   required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 dark:text-white"
                 >
                   <option value="">Select Vendor</option>
                   {vendors.map(v => (
@@ -237,57 +237,57 @@ export default function VendorBills() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Bill Number</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Bill Number</label>
                   <input
                     type="text"
                     name="billNumber"
                     required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 dark:text-white"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Amount</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Amount</label>
                   <input
                     type="number"
                     name="amount"
                     step="0.01"
                     required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 dark:text-white"
                   />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Bill Date</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Bill Date</label>
                   <input
                     type="date"
                     name="billDate"
                     required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 dark:text-white"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Due Date</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Due Date</label>
                   <input
                     type="date"
                     name="dueDate"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 dark:text-white"
                   />
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description</label>
                 <textarea
                   name="description"
                   rows={2}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 dark:text-white"
                 />
               </div>
               <div className="flex gap-3 pt-4">
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition"
+                  className="flex-1 px-4 py-2 border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition"
                 >
                   Cancel
                 </button>
@@ -306,37 +306,37 @@ export default function VendorBills() {
       {/* Payment Modal */}
       {showPaymentModal && editingBill && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
-            <div className="flex items-center justify-between p-4 border-b border-gray-100">
-              <h3 className="text-lg font-semibold">Record Payment</h3>
-              <button onClick={() => setShowPaymentModal(false)} className="p-1 hover:bg-gray-100 rounded">
+          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-xl w-full max-w-md">
+            <div className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-slate-700">
+              <h3 className="text-lg font-semibold dark:text-white">Record Payment</h3>
+              <button onClick={() => setShowPaymentModal(false)} className="p-1 hover:bg-gray-100 dark:hover:bg-slate-700 rounded dark:text-gray-400">
                 <X size={20} />
               </button>
             </div>
             <form onSubmit={handlePayment} className="p-4 space-y-4">
-              <div className="bg-gray-50 p-3 rounded-lg">
-                <p className="text-sm text-gray-600">Bill: <span className="font-medium">{editingBill.billNumber}</span></p>
-                <p className="text-sm text-gray-600">Total: <span className="font-medium">₹{editingBill.amount?.toLocaleString()}</span></p>
-                <p className="text-sm text-gray-600">Paid: <span className="font-medium">₹{editingBill.paidAmount?.toLocaleString() || 0}</span></p>
-                <p className="text-sm text-gray-600">Balance: <span className="font-medium text-red-600">₹{(editingBill.amount - (editingBill.paidAmount || 0)).toLocaleString()}</span></p>
+              <div className="bg-gray-50 dark:bg-slate-700 p-3 rounded-lg">
+                <p className="text-sm text-gray-600 dark:text-gray-300">Bill: <span className="font-medium dark:text-white">{editingBill.billNumber}</span></p>
+                <p className="text-sm text-gray-600 dark:text-gray-300">Total: <span className="font-medium dark:text-white">₹{editingBill.amount?.toLocaleString()}</span></p>
+                <p className="text-sm text-gray-600 dark:text-gray-300">Paid: <span className="font-medium dark:text-white">₹{editingBill.paidAmount?.toLocaleString() || 0}</span></p>
+                <p className="text-sm text-gray-600 dark:text-gray-300">Balance: <span className="font-medium text-red-600">₹{(editingBill.amount - (editingBill.paidAmount || 0)).toLocaleString()}</span></p>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Payment Amount</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Payment Amount</label>
                 <input
                   type="number"
                   name="amount"
                   step="0.01"
                   max={editingBill.amount - (editingBill.paidAmount || 0)}
                   required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 dark:text-white"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Payment Mode</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Payment Mode</label>
                 <select
                   name="paymentMode"
                   required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 dark:text-white"
                 >
                   <option value="CASH">Cash</option>
                   <option value="CHEQUE">Cheque</option>
@@ -344,18 +344,18 @@ export default function VendorBills() {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Reference Number</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Reference Number</label>
                 <input
                   type="text"
                   name="referenceNumber"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 dark:text-white"
                 />
               </div>
               <div className="flex gap-3 pt-4">
                 <button
                   type="button"
                   onClick={() => setShowPaymentModal(false)}
-                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition"
+                  className="flex-1 px-4 py-2 border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition"
                 >
                   Cancel
                 </button>

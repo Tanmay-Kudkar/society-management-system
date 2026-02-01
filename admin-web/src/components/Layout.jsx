@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useMemo } from 'react'
 import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import {
@@ -28,8 +28,36 @@ import {
 } from 'lucide-react'
 import clsx from 'clsx'
 
-// Grouped menu structure
-const menuGroups = [
+// MASTER_ADMIN specific menu - simplified for platform management
+const masterAdminMenu = [
+  {
+    id: 'dashboard',
+    label: 'Dashboard',
+    icon: LayoutDashboard,
+    path: '/',
+  },
+  {
+    id: 'societies',
+    label: 'Societies',
+    icon: Building2,
+    path: '/societies',
+  },
+  {
+    id: 'users',
+    label: 'Society Admins',
+    icon: Users,
+    path: '/users',
+  },
+  {
+    id: 'settings',
+    label: 'Settings',
+    icon: Settings,
+    path: '/settings',
+  },
+]
+
+// Standard menu for SOCIETY_ADMIN and below - grouped by function
+const standardMenuGroups = [
   {
     id: 'dashboard',
     label: 'Dashboard',
@@ -41,24 +69,24 @@ const menuGroups = [
     label: 'Management',
     icon: Building2,
     items: [
-      { path: '/users', icon: Users, label: 'Users', roles: ['MASTER_ADMIN', 'SOCIETY_ADMIN'] },
-      { path: '/societies', icon: Building2, label: 'Societies', roles: ['MASTER_ADMIN'] },
-      { path: '/flats', icon: Home, label: 'Flats' },
-      { path: '/tenants', icon: UserCheck, label: 'Tenants' },
-      { path: '/vehicles', icon: Car, label: 'Vehicles' },
+      { path: '/users', icon: Users, label: 'Users', roles: ['SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER'] },
+      { path: '/flats', icon: Home, label: 'Flats', roles: ['SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE'] },
+      { path: '/tenants', icon: UserCheck, label: 'Tenants', roles: ['SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'MEMBER'] },
+      { path: '/vehicles', icon: Car, label: 'Vehicles', roles: ['SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'EMPLOYEE'] },
     ],
   },
   {
     id: 'finance',
     label: 'Finance',
     icon: DollarSign,
+    roles: ['SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER'],
     items: [
-      { path: '/vendors', icon: Truck, label: 'Vendors' },
-      { path: '/vendor-bills', icon: Receipt, label: 'Vendor Bills' },
-      { path: '/contracts', icon: FileText, label: 'Contracts' },
-      { path: '/maintenance-bills', icon: CreditCard, label: 'Maintenance Bills' },
-      { path: '/transactions', icon: DollarSign, label: 'Transactions' },
-      { path: '/reports', icon: BarChart3, label: 'Reports' },
+      { path: '/vendors', icon: Truck, label: 'Vendors', roles: ['SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER'] },
+      { path: '/vendor-bills', icon: Receipt, label: 'Vendor Bills', roles: ['SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER'] },
+      { path: '/contracts', icon: FileText, label: 'Contracts', roles: ['SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER'] },
+      { path: '/maintenance-bills', icon: CreditCard, label: 'Maintenance Bills', roles: ['SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE'] },
+      { path: '/transactions', icon: DollarSign, label: 'Transactions', roles: ['SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER'] },
+      { path: '/reports', icon: BarChart3, label: 'Reports', roles: ['SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER'] },
     ],
   },
   {
@@ -67,7 +95,7 @@ const menuGroups = [
     icon: Megaphone,
     items: [
       { path: '/notices', icon: Megaphone, label: 'Notices' },
-      { path: '/banners', icon: Image, label: 'Banners' },
+      { path: '/banners', icon: Image, label: 'Banners', roles: ['SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY'] },
       { path: '/tickets', icon: Ticket, label: 'Tickets' },
       { path: '/complaints', icon: MessageSquare, label: 'Complaints' },
     ],
@@ -94,6 +122,9 @@ function NavDropdown({ group, hasRole }) {
   const [isOpen, setIsOpen] = useState(false)
   const timeoutRef = useRef(null)
   const location = useLocation()
+
+  // Check if user has access to the group itself
+  if (group.roles && !hasRole(...group.roles)) return null
 
   const filteredItems = group.items?.filter(item => {
     if (!item.roles) return true
@@ -190,10 +221,16 @@ function MobileAccordion({ group, hasRole, onNavigate, isOpen, onToggle }) {
   const contentRef = useRef(null)
   const [contentHeight, setContentHeight] = useState(0)
 
-  const filteredItems = group.items?.filter(item => {
-    if (!item.roles) return true
-    return hasRole(...item.roles)
-  }) || []
+  // Check access permissions
+  const hasGroupAccess = !group.roles || hasRole(...group.roles)
+  
+  const filteredItems = useMemo(() => {
+    if (!group.items) return []
+    return group.items.filter(item => {
+      if (!item.roles) return true
+      return hasRole(...item.roles)
+    })
+  }, [group.items, hasRole])
 
   // Calculate content height for smooth animation
   useEffect(() => {
@@ -202,6 +239,8 @@ function MobileAccordion({ group, hasRole, onNavigate, isOpen, onToggle }) {
     }
   }, [filteredItems])
 
+  // Early returns after all hooks
+  if (!hasGroupAccess) return null
   if (group.items && filteredItems.length === 0) return null
 
   const isActiveGroup = group.path
@@ -280,6 +319,10 @@ export default function Layout() {
   const navigate = useNavigate()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [openAccordion, setOpenAccordion] = useState(null) // Track which accordion is open
+
+  // Determine which menu to show based on user role
+  const isMasterAdmin = user?.role === 'MASTER_ADMIN'
+  const menuGroups = isMasterAdmin ? masterAdminMenu : standardMenuGroups
 
   const handleLogout = () => {
     logout()

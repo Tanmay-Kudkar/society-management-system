@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '../context/AuthContext'
-import { maintenanceBillApi, flatApi, societyApi } from '../api'
+import { maintenanceBillApi, flatApi } from '../api'
 import { Plus, Search, X, CreditCard, CheckCircle, Clock, AlertCircle } from 'lucide-react'
 import clsx from 'clsx'
 
@@ -22,19 +22,18 @@ export default function MaintenanceBills() {
   const [searchTerm, setSearchTerm] = useState('')
   const [filterStatus, setFilterStatus] = useState('')
 
+  // Check if current user is MASTER_ADMIN
+  const isMasterAdmin = user?.role === 'MASTER_ADMIN'
+
   const { data: bills = [], isLoading } = useQuery({
     queryKey: ['maintenanceBills'],
     queryFn: () => maintenanceBillApi.getAll().then(res => res.data),
   })
 
   const { data: flats = [] } = useQuery({
-    queryKey: ['flats'],
-    queryFn: () => flatApi.getAll().then(res => res.data),
-  })
-
-  const { data: societies = [] } = useQuery({
-    queryKey: ['societies'],
-    queryFn: () => societyApi.getAll().then(res => res.data),
+    queryKey: ['flats', user?.id],
+    queryFn: () => flatApi.getAll(user.id).then(res => res.data),
+    enabled: !!user?.id,
   })
 
   const createMutation = useMutation({
@@ -87,7 +86,7 @@ export default function MaintenanceBills() {
     e.preventDefault()
     const formData = new FormData(e.target)
     bulkGenerateMutation.mutate({
-      societyId: parseInt(formData.get('societyId')),
+      societyId: user.societyId,
       billMonth: formData.get('billMonth'),
       amount: parseFloat(formData.get('amount')),
     })
@@ -237,58 +236,60 @@ export default function MaintenanceBills() {
       {/* Add Bill Modal */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
-            <div className="flex items-center justify-between p-4 border-b border-gray-100">
-              <h3 className="text-lg font-semibold">Add Maintenance Bill</h3>
-              <button onClick={() => setShowModal(false)} className="p-1 hover:bg-gray-100 rounded">
+          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-xl w-full max-w-md">
+            <div className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-slate-700">
+              <h3 className="text-lg font-semibold dark:text-white">Add Maintenance Bill</h3>
+              <button onClick={() => setShowModal(false)} className="p-1 hover:bg-gray-100 dark:hover:bg-slate-700 rounded dark:text-gray-400">
                 <X size={20} />
               </button>
             </div>
             <form onSubmit={handleSubmit} className="p-4 space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Flat</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Flat</label>
                 <select
                   name="flatId"
                   required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 dark:text-white"
                 >
                   <option value="">Select Flat</option>
                   {flats.map(f => (
-                    <option key={f.id} value={f.id}>{f.flatNumber} - {f.societyName}</option>
+                    <option key={f.id} value={f.id}>
+                      {isMasterAdmin ? `${f.flatNumber} - ${f.societyName}` : f.flatNumber}
+                    </option>
                   ))}
                 </select>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Bill Month</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Bill Month</label>
                   <input
                     type="month"
                     name="billMonth"
                     required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 dark:text-white"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Amount</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Amount</label>
                   <input
                     type="number"
                     name="amount"
                     step="0.01"
                     required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 dark:text-white"
                   />
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Due Date</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Due Date</label>
                 <input
                   type="date"
                   name="dueDate"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 dark:text-white"
                 />
               </div>
               <div className="flex gap-3 pt-4">
-                <button type="button" onClick={() => setShowModal(false)} className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition">Cancel</button>
+                <button type="button" onClick={() => setShowModal(false)} className="flex-1 px-4 py-2 border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition">Cancel</button>
                 <button type="submit" className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">Create</button>
               </div>
             </form>
@@ -299,51 +300,38 @@ export default function MaintenanceBills() {
       {/* Bulk Generate Modal */}
       {showBulkModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
-            <div className="flex items-center justify-between p-4 border-b border-gray-100">
-              <h3 className="text-lg font-semibold">Bulk Generate Bills</h3>
-              <button onClick={() => setShowBulkModal(false)} className="p-1 hover:bg-gray-100 rounded">
+          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-xl w-full max-w-md">
+            <div className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-slate-700">
+              <h3 className="text-lg font-semibold dark:text-white">Bulk Generate Bills</h3>
+              <button onClick={() => setShowBulkModal(false)} className="p-1 hover:bg-gray-100 dark:hover:bg-slate-700 rounded dark:text-gray-400">
                 <X size={20} />
               </button>
             </div>
             <form onSubmit={handleBulkGenerate} className="p-4 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Society</label>
-                <select
-                  name="societyId"
-                  required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                >
-                  <option value="">Select Society</option>
-                  {societies.map(s => (
-                    <option key={s.id} value={s.id}>{s.name}</option>
-                  ))}
-                </select>
-              </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Bill Month</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Bill Month</label>
                   <input
                     type="month"
                     name="billMonth"
                     required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 dark:text-white"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Amount per Flat</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Amount per Flat</label>
                   <input
                     type="number"
                     name="amount"
                     step="0.01"
                     required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 dark:text-white"
                   />
                 </div>
               </div>
-              <p className="text-sm text-gray-500">This will generate bills for all flats in the selected society.</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">This will generate bills for all flats in your society.</p>
               <div className="flex gap-3 pt-4">
-                <button type="button" onClick={() => setShowBulkModal(false)} className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition">Cancel</button>
+                <button type="button" onClick={() => setShowBulkModal(false)} className="flex-1 px-4 py-2 border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition">Cancel</button>
                 <button type="submit" className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">Generate</button>
               </div>
             </form>
@@ -354,37 +342,37 @@ export default function MaintenanceBills() {
       {/* Payment Modal */}
       {showPaymentModal && selectedBill && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
-            <div className="flex items-center justify-between p-4 border-b border-gray-100">
-              <h3 className="text-lg font-semibold">Record Payment</h3>
-              <button onClick={() => setShowPaymentModal(false)} className="p-1 hover:bg-gray-100 rounded">
+          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-xl w-full max-w-md">
+            <div className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-slate-700">
+              <h3 className="text-lg font-semibold dark:text-white">Record Payment</h3>
+              <button onClick={() => setShowPaymentModal(false)} className="p-1 hover:bg-gray-100 dark:hover:bg-slate-700 rounded dark:text-gray-400">
                 <X size={20} />
               </button>
             </div>
             <form onSubmit={handlePayment} className="p-4 space-y-4">
-              <div className="bg-gray-50 p-3 rounded-lg">
-                <p className="text-sm text-gray-600">Flat: <span className="font-medium">{selectedBill.flatNumber}</span></p>
-                <p className="text-sm text-gray-600">Month: <span className="font-medium">{selectedBill.billMonth}</span></p>
-                <p className="text-sm text-gray-600">Total: <span className="font-medium">₹{selectedBill.amount?.toLocaleString()}</span></p>
-                <p className="text-sm text-gray-600">Balance: <span className="font-medium text-red-600">₹{(selectedBill.amount - (selectedBill.paidAmount || 0)).toLocaleString()}</span></p>
+              <div className="bg-gray-50 dark:bg-slate-700 p-3 rounded-lg">
+                <p className="text-sm text-gray-600 dark:text-gray-300">Flat: <span className="font-medium dark:text-white">{selectedBill.flatNumber}</span></p>
+                <p className="text-sm text-gray-600 dark:text-gray-300">Month: <span className="font-medium dark:text-white">{selectedBill.billMonth}</span></p>
+                <p className="text-sm text-gray-600 dark:text-gray-300">Total: <span className="font-medium dark:text-white">₹{selectedBill.amount?.toLocaleString()}</span></p>
+                <p className="text-sm text-gray-600 dark:text-gray-300">Balance: <span className="font-medium text-red-600">₹{(selectedBill.amount - (selectedBill.paidAmount || 0)).toLocaleString()}</span></p>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Amount</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Amount</label>
                 <input
                   type="number"
                   name="amount"
                   step="0.01"
                   max={selectedBill.amount - (selectedBill.paidAmount || 0)}
                   required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 dark:text-white"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Payment Mode</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Payment Mode</label>
                 <select
                   name="paymentMode"
                   required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 dark:text-white"
                 >
                   <option value="CASH">Cash</option>
                   <option value="CHEQUE">Cheque</option>
@@ -392,15 +380,15 @@ export default function MaintenanceBills() {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Reference Number</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Reference Number</label>
                 <input
                   type="text"
                   name="referenceNumber"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 dark:text-white"
                 />
               </div>
               <div className="flex gap-3 pt-4">
-                <button type="button" onClick={() => setShowPaymentModal(false)} className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition">Cancel</button>
+                <button type="button" onClick={() => setShowPaymentModal(false)} className="flex-1 px-4 py-2 border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition">Cancel</button>
                 <button type="submit" className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">Record Payment</button>
               </div>
             </form>

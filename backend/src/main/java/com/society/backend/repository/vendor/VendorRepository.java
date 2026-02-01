@@ -10,8 +10,6 @@ import java.util.List;
 public interface VendorRepository extends JpaRepository<Vendor, Long> {
     List<Vendor> findBySocietyId(Long societyId);
 
-    List<Vendor> findByIsCommonTrue();
-
     List<Vendor> findByServiceType(String serviceType);
 
     List<Vendor> findByIsActiveTrue();

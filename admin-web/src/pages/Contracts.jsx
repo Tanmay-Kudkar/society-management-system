@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '../context/AuthContext'
-import { contractApi, vendorApi, societyApi } from '../api'
+import { contractApi, vendorApi } from '../api'
 import { Plus, Edit, Trash2, Search, X, FileText, AlertTriangle, CheckCircle } from 'lucide-react'
 import clsx from 'clsx'
 
@@ -18,6 +18,9 @@ export default function Contracts() {
   const [searchTerm, setSearchTerm] = useState('')
   const [filterType, setFilterType] = useState('')
 
+  // Check if current user is MASTER_ADMIN
+  const isMasterAdmin = user?.role === 'MASTER_ADMIN'
+
   const { data: contracts = [], isLoading } = useQuery({
     queryKey: ['contracts'],
     queryFn: () => contractApi.getAll().then(res => res.data),
@@ -28,10 +31,7 @@ export default function Contracts() {
     queryFn: () => vendorApi.getAll().then(res => res.data),
   })
 
-  const { data: societies = [] } = useQuery({
-    queryKey: ['societies'],
-    queryFn: () => societyApi.getAll().then(res => res.data),
-  })
+
 
   const createMutation = useMutation({
     mutationFn: (data) => contractApi.create(data, user.id),
@@ -66,7 +66,7 @@ export default function Contracts() {
     e.preventDefault()
     const formData = new FormData(e.target)
     const data = {
-      societyId: parseInt(formData.get('societyId')),
+      societyId: user.societyId,
       vendorId: formData.get('vendorId') ? parseInt(formData.get('vendorId')) : null,
       contractType: formData.get('contractType'),
       title: formData.get('title'),
@@ -169,7 +169,7 @@ export default function Contracts() {
                           </div>
                           <div>
                             <span className="font-medium text-gray-900 dark:text-white">{contract.title}</span>
-                            <p className="text-xs text-gray-500 dark:text-gray-400">{contract.societyName}</p>
+                            {isMasterAdmin && <p className="text-xs text-gray-500 dark:text-gray-400">{contract.societyName}</p>}
                           </div>
                         </div>
                       </td>
@@ -235,20 +235,6 @@ export default function Contracts() {
               </button>
             </div>
             <form onSubmit={handleSubmit} className="p-4 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Society</label>
-                <select
-                  name="societyId"
-                  defaultValue={editingContract?.societyId}
-                  required
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                >
-                  <option value="">Select Society</option>
-                  {societies.map(s => (
-                    <option key={s.id} value={s.id}>{s.name}</option>
-                  ))}
-                </select>
-              </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Title</label>
                 <input

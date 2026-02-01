@@ -11,7 +11,9 @@ export default function Vendors() {
   const [editingVendor, setEditingVendor] = useState(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [viewingVendor, setViewingVendor] = useState(null)
-  const [isCommonVendor, setIsCommonVendor] = useState(false)
+
+  // Check if current user is MASTER_ADMIN
+  const isMasterAdmin = user?.role === 'MASTER_ADMIN'
 
   const { data: vendors = [], isLoading } = useQuery({
     queryKey: ['vendors'],
@@ -21,6 +23,7 @@ export default function Vendors() {
   const { data: societies = [] } = useQuery({
     queryKey: ['societies'],
     queryFn: () => societyApi.getAll().then(res => res.data),
+    enabled: isMasterAdmin,
   })
 
   const createMutation = useMutation({
@@ -81,8 +84,19 @@ export default function Vendors() {
   const handleSubmit = (e) => {
     e.preventDefault()
     const formData = new FormData(e.target)
+    
+    // For non-MASTER_ADMIN, always set societyId to user's society
+    const societyId = isMasterAdmin 
+      ? parseInt(formData.get('societyId'))
+      : user?.societyId
+    
+    if (!societyId) {
+      alert('Society is required. Please select a society or log in again.')
+      return
+    }
+    
     const data = {
-      societyId: formData.get('societyId') ? parseInt(formData.get('societyId')) : null,
+      societyId,
       name: formData.get('name'),
       serviceType: formData.get('serviceType'),
       contactPerson: formData.get('contactPerson'),
@@ -96,7 +110,6 @@ export default function Vendors() {
       bankName: formData.get('bankName'),
       accountNumber: formData.get('accountNumber'),
       ifscCode: formData.get('ifscCode'),
-      isCommon: formData.get('isCommon') === 'true',
     }
 
     if (editingVendor) {
@@ -117,7 +130,6 @@ export default function Vendors() {
         <button
           onClick={() => { 
             setEditingVendor(null)
-            setIsCommonVendor(false)
             setShowModal(true) 
           }}
           className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
@@ -165,7 +177,6 @@ export default function Vendors() {
                   <button
                     onClick={() => { 
                       setEditingVendor(vendor)
-                      setIsCommonVendor(vendor.isCommon || false)
                       setShowModal(true) 
                     }}
                     className="p-2 text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-all"
@@ -190,9 +201,6 @@ export default function Vendors() {
               <div className="flex items-center gap-2 mb-3 flex-wrap">
                 <span className="inline-block px-3 py-1 bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-900/30 dark:to-blue-800/30 text-blue-700 dark:text-blue-400 text-xs font-medium rounded-full">
                   {vendor.serviceType}
-                </span>
-                <span className={`text-xs px-3 py-1 rounded-full font-medium ${vendor.isCommon ? 'bg-gradient-to-r from-green-50 to-green-100 dark:from-green-900/30 dark:to-green-800/30 text-green-700 dark:text-green-400' : 'bg-gradient-to-r from-gray-50 to-gray-100 dark:from-slate-700 dark:to-slate-600 text-gray-700 dark:text-gray-300'}`}>
-                  {vendor.isCommon ? '🌐 Common' : '🏢 Society'}
                 </span>
                 <span className={`text-xs px-3 py-1 rounded-full font-semibold ${
                   vendor.approvalStatus === 'APPROVED' ? 'bg-green-500 text-white' :
@@ -250,16 +258,6 @@ export default function Vendors() {
             </div>
             <form onSubmit={handleSubmit} className="p-4 space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Vendor Name</label>
-                <input
-                  type="text"
-                  name="name"
-                  defaultValue={editingVendor?.name}
-                  required
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
-                />
-              </div>
-              <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Service Type</label>
                 <select
                   name="serviceType"
@@ -279,22 +277,11 @@ export default function Vendors() {
                   <option value="OTHER">Other</option>
                 </select>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Vendor Type</label>
-                <select
-                  name="isCommon"
-                  value={isCommonVendor ? 'true' : 'false'}
-                  onChange={(e) => setIsCommonVendor(e.target.value === 'true')}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
-                >
-                  <option value="false">Society Specific</option>
-                  <option value="true">Common Vendor</option>
-                </select>
-              </div>
               
-              {!isCommonVendor && (
+              {/* Society dropdown - only show for MASTER_ADMIN */}
+              {isMasterAdmin && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Society (if specific)</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Society</label>
                   <select
                     name="societyId"
                     defaultValue={editingVendor?.societyId}
@@ -357,27 +344,40 @@ export default function Vendors() {
                   <Building2 size={16} />
                   Vendor Business Contact
                 </h3>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Business Phone</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Vendor Name</label>
                     <input
-                      type="tel"
-                      name="phone"
-                      defaultValue={editingVendor?.phone}
-                      placeholder="Vendor's business phone"
+                      type="text"
+                      name="name"
+                      defaultValue={editingVendor?.name}
                       required
+                      placeholder="Vendor's business name"
                       className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
                     />
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Business Email</label>
-                    <input
-                      type="email"
-                      name="email"
-                      defaultValue={editingVendor?.email}
-                      placeholder="Vendor's business email"
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
-                    />
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Business Phone</label>
+                      <input
+                        type="tel"
+                        name="phone"
+                        defaultValue={editingVendor?.phone}
+                        placeholder="Vendor's business phone"
+                        required
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Business Email</label>
+                      <input
+                        type="email"
+                        name="email"
+                        defaultValue={editingVendor?.email}
+                        placeholder="Vendor's business email"
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
@@ -519,43 +519,20 @@ export default function Vendors() {
                   </div>
                 </div>
 
-                {/* Vendor Type & Society Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <div className="bg-white dark:bg-slate-800 rounded-xl p-5 border-2 border-gray-200 dark:border-slate-700 hover:border-purple-300 dark:hover:border-purple-700 transition-colors">
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className={`p-2 rounded-lg ${viewingVendor.isCommon ? 'bg-green-100 dark:bg-green-900/30' : 'bg-blue-100 dark:bg-blue-900/30'}`}>
-                        {viewingVendor.isCommon ? (
-                          <span className="text-2xl">🌐</span>
-                        ) : (
-                          <span className="text-2xl">🏢</span>
-                        )}
+                {/* Society Info - only show for MASTER_ADMIN */}
+                {isMasterAdmin && viewingVendor.societyName && (
+                  <div className="bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-900/20 dark:to-amber-900/10 rounded-xl p-4 border-2 border-orange-200 dark:border-orange-800/40">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 rounded-lg bg-orange-200 dark:bg-orange-800/50">
+                        <Building2 className="w-5 h-5 text-orange-700 dark:text-orange-300" />
                       </div>
                       <div className="flex-1">
-                        <p className="text-xs text-gray-500 dark:text-gray-400 font-medium mb-1">Vendor Type</p>
-                        <p className="text-base font-bold text-gray-900 dark:text-white">
-                          {viewingVendor.isCommon ? 'Common Vendor' : 'Society Specific'}
-                        </p>
+                        <p className="text-xs text-orange-700 dark:text-orange-400 font-semibold mb-1">Assigned Society</p>
+                        <p className="text-base font-bold text-gray-900 dark:text-white leading-tight">{viewingVendor.societyName}</p>
                       </div>
                     </div>
-                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${viewingVendor.isCommon ? 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300' : 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300'}`}>
-                      {viewingVendor.isCommon ? 'Available to all societies' : 'Assigned to specific society'}
-                    </span>
                   </div>
-
-                  {!viewingVendor.isCommon && viewingVendor.societyName && (
-                    <div className="bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-900/20 dark:to-amber-900/10 rounded-xl p-4 border-2 border-orange-200 dark:border-orange-800/40">
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 rounded-lg bg-orange-200 dark:bg-orange-800/50">
-                          <Building2 className="w-5 h-5 text-orange-700 dark:text-orange-300" />
-                        </div>
-                        <div className="flex-1">
-                          <p className="text-xs text-orange-700 dark:text-orange-400 font-semibold mb-1">Assigned Society</p>
-                          <p className="text-base font-bold text-gray-900 dark:text-white leading-tight">{viewingVendor.societyName}</p>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
+                )}
               </div>
 
               {/* Contact Information */}
@@ -745,7 +722,6 @@ export default function Vendors() {
                   onClick={() => { 
                     setViewingVendor(null)
                     setEditingVendor(viewingVendor)
-                    setIsCommonVendor(viewingVendor.isCommon || false)
                     setShowModal(true) 
                   }}
                   className="flex-1 px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium flex items-center justify-center gap-2"

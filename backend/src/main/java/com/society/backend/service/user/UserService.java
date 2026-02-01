@@ -23,4 +23,9 @@ public interface UserService {
      * Get the roles that the current user can create.
      */
     Set<Role> getCreatableRoles();
+
+    /**
+     * Get the roles that the current user can update/delete.
+     */
+    Set<Role> getUpdatableRoles();
 }

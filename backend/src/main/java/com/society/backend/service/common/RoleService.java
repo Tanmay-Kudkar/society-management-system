@@ -49,17 +49,19 @@ public class RoleService {
     }
 
     /**
-     * Check if user is MASTER_ADMIN or COMMITTEE
+     * Check if user is MASTER_ADMIN, SOCIETY_ADMIN, or COMMITTEE
      */
     public void requireAdminOrCommittee(Long userId) {
-        checkRole(userId, Role.MASTER_ADMIN, Role.COMMITTEE);
+        checkRole(userId, Role.MASTER_ADMIN, Role.SOCIETY_ADMIN, Role.CHAIRMAN, Role.SECRETARY, Role.TREASURER,
+                Role.COMMITTEE);
     }
 
     /**
-     * Check if user is MASTER_ADMIN, COMMITTEE, or EMPLOYEE
+     * Check if user is MASTER_ADMIN, SOCIETY_ADMIN, COMMITTEE, or EMPLOYEE
      */
     public void requireStaff(Long userId) {
-        checkRole(userId, Role.MASTER_ADMIN, Role.COMMITTEE, Role.EMPLOYEE);
+        checkRole(userId, Role.MASTER_ADMIN, Role.SOCIETY_ADMIN, Role.CHAIRMAN, Role.SECRETARY, Role.TREASURER,
+                Role.COMMITTEE, Role.EMPLOYEE);
     }
 
     /**

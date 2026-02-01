@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '../context/AuthContext'
-import { bannerApi, societyApi } from '../api'
+import { bannerApi } from '../api'
 import { Plus, Search, X, Image, Edit, Trash2, Eye, EyeOff } from 'lucide-react'
 import clsx from 'clsx'
 
@@ -13,15 +13,15 @@ export default function Banners() {
   const [searchTerm, setSearchTerm] = useState('')
   const [filterStatus, setFilterStatus] = useState('')
 
+  // Check if current user is MASTER_ADMIN
+  const isMasterAdmin = user?.role === 'MASTER_ADMIN'
+
   const { data: banners = [], isLoading } = useQuery({
     queryKey: ['banners'],
     queryFn: () => bannerApi.getAll().then(res => res.data),
   })
 
-  const { data: societies = [] } = useQuery({
-    queryKey: ['societies'],
-    queryFn: () => societyApi.getAll().then(res => res.data),
-  })
+
 
   const createMutation = useMutation({
     mutationFn: (data) => bannerApi.create(data, user.id),
@@ -66,7 +66,7 @@ export default function Banners() {
     e.preventDefault()
     const formData = new FormData(e.target)
     const data = {
-      societyId: formData.get('societyId') ? parseInt(formData.get('societyId')) : null,
+      societyId: user.societyId,
       title: formData.get('title'),
       imageUrl: formData.get('imageUrl'),
       redirectUrl: formData.get('redirectUrl') || null,
@@ -157,7 +157,7 @@ export default function Banners() {
               {/* Banner Details */}
               <div className="p-4">
                 <h3 className="font-semibold text-gray-900 dark:text-white mb-1">{banner.title}</h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">{banner.societyName || 'All Societies'}</p>
+                {isMasterAdmin && <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">{banner.societyName || 'All Societies'}</p>}
                 
                 <div className="text-xs text-gray-500 dark:text-gray-400 space-y-1 mb-4">
                   <p>Start: {banner.startDate && new Date(banner.startDate).toLocaleDateString()}</p>
@@ -200,95 +200,84 @@ export default function Banners() {
       {/* Modal */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between p-4 border-b border-gray-100 sticky top-0 bg-white">
-              <h3 className="text-lg font-semibold">{editingBanner ? 'Edit Banner' : 'Add Banner'}</h3>
-              <button onClick={closeModal} className="p-1 hover:bg-gray-100 rounded">
+          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-slate-700 sticky top-0 bg-white dark:bg-slate-800">
+              <h3 className="text-lg font-semibold dark:text-white">{editingBanner ? 'Edit Banner' : 'Add Banner'}</h3>
+              <button onClick={closeModal} className="p-1 hover:bg-gray-100 dark:hover:bg-slate-700 rounded dark:text-gray-400">
                 <X size={20} />
               </button>
             </div>
             <form onSubmit={handleSubmit} className="p-4 space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Society (Optional)</label>
-                <select
-                  name="societyId"
-                  defaultValue={editingBanner?.societyId || ''}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                >
-                  <option value="">All Societies</option>
-                  {societies.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Title</label>
                 <input
                   type="text"
                   name="title"
                   defaultValue={editingBanner?.title || ''}
                   required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 dark:text-white"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Image URL</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Image URL</label>
                 <input
                   type="url"
                   name="imageUrl"
                   defaultValue={editingBanner?.imageUrl || ''}
                   required
                   placeholder="https://example.com/image.jpg"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 dark:text-white"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Redirect URL (Optional)</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Redirect URL (Optional)</label>
                 <input
                   type="url"
                   name="redirectUrl"
                   defaultValue={editingBanner?.redirectUrl || ''}
                   placeholder="https://example.com"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 dark:text-white"
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Start Date</label>
                   <input
                     type="date"
                     name="startDate"
                     defaultValue={editingBanner?.startDate || ''}
                     required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 dark:text-white"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">End Date</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">End Date</label>
                   <input
                     type="date"
                     name="endDate"
                     defaultValue={editingBanner?.endDate || ''}
                     required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 dark:text-white"
                   />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Display Order</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Display Order</label>
                   <input
                     type="number"
                     name="displayOrder"
                     defaultValue={editingBanner?.displayOrder || 1}
                     min="1"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 dark:text-white"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status</label>
                   <select
                     name="isActive"
                     defaultValue={editingBanner?.isActive?.toString() || 'true'}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 dark:text-white"
                   >
                     <option value="true">Active</option>
                     <option value="false">Inactive</option>
@@ -296,7 +285,7 @@ export default function Banners() {
                 </div>
               </div>
               <div className="flex gap-3 pt-4">
-                <button type="button" onClick={closeModal} className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition">Cancel</button>
+                <button type="button" onClick={closeModal} className="flex-1 px-4 py-2 border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition">Cancel</button>
                 <button type="submit" className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
                   {editingBanner ? 'Update' : 'Create'}
                 </button>

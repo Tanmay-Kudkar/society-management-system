@@ -192,32 +192,32 @@ export default function Documents() {
       {/* Modal */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between p-4 border-b border-gray-100 sticky top-0 bg-white">
-              <h3 className="text-lg font-semibold">{editingDocument ? 'Edit Template' : 'Add Document Template'}</h3>
-              <button onClick={closeModal} className="p-1 hover:bg-gray-100 rounded">
+          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-slate-700 sticky top-0 bg-white dark:bg-slate-800">
+              <h3 className="text-lg font-semibold dark:text-white">{editingDocument ? 'Edit Template' : 'Add Document Template'}</h3>
+              <button onClick={closeModal} className="p-1 hover:bg-gray-100 dark:hover:bg-slate-700 rounded dark:text-gray-400">
                 <X size={20} />
               </button>
             </div>
             <form onSubmit={handleSubmit} className="p-4 space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Title</label>
                   <input
                     type="text"
                     name="title"
                     defaultValue={editingDocument?.title || ''}
                     required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 dark:text-white"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Template Type</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Template Type</label>
                   <select
                     name="templateType"
                     defaultValue={editingDocument?.templateType || 'OTHER'}
                     required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 dark:text-white"
                   >
                     <option value="NOC">NOC</option>
                     <option value="LETTER">Letter</option>
@@ -229,19 +229,19 @@ export default function Documents() {
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Template Content</label>
-                <p className="text-xs text-gray-500 mb-2">Use placeholders like {"{{owner_name}}"}, {"{{flat_number}}"}, {"{{society_name}}"}, {"{{date}}"} etc.</p>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Template Content</label>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">Use placeholders like {"{{owner_name}}"}, {"{{flat_number}}"}, {"{{society_name}}"}, {"{{date}}"} etc.</p>
                 <textarea
                   name="content"
                   rows={10}
                   defaultValue={editingDocument?.content || ''}
                   required
                   placeholder="Enter template content with placeholders..."
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none font-mono text-sm"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none font-mono text-sm bg-white dark:bg-slate-700 dark:text-white"
                 />
               </div>
               <div className="flex gap-3 pt-4">
-                <button type="button" onClick={closeModal} className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition">Cancel</button>
+                <button type="button" onClick={closeModal} className="flex-1 px-4 py-2 border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition">Cancel</button>
                 <button type="submit" className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
                   {editingDocument ? 'Update' : 'Create'}
                 </button>

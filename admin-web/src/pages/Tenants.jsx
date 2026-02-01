@@ -12,14 +12,18 @@ export default function Tenants() {
   const [searchTerm, setSearchTerm] = useState('')
   const [filterStatus, setFilterStatus] = useState('')
 
+  // Check if current user is MASTER_ADMIN
+  const isMasterAdmin = user?.role === 'MASTER_ADMIN'
+
   const { data: tenants = [], isLoading } = useQuery({
     queryKey: ['tenants'],
     queryFn: () => tenantApi.getAll().then(res => res.data),
   })
 
   const { data: flats = [] } = useQuery({
-    queryKey: ['flats'],
-    queryFn: () => flatApi.getAll().then(res => res.data),
+    queryKey: ['flats', user?.id],
+    queryFn: () => flatApi.getAll(user.id).then(res => res.data),
+    enabled: !!user?.id,
   })
 
   const createMutation = useMutation({
@@ -84,7 +88,9 @@ export default function Tenants() {
 
   const getFlatDisplay = (flatId) => {
     const flat = flats.find(f => f.id === flatId)
-    return flat ? `${flat.flatNumber} - ${flat.societyName || 'N/A'}` : 'N/A'
+    if (!flat) return 'N/A'
+    // Only show society name for MASTER_ADMIN
+    return isMasterAdmin ? `${flat.flatNumber} - ${flat.societyName || 'N/A'}` : flat.flatNumber
   }
 
   const formatDate = (dateStr) => {
@@ -286,7 +292,9 @@ export default function Tenants() {
                   >
                     <option value="">Select Flat</option>
                     {flats.map(f => (
-                      <option key={f.id} value={f.id}>{f.flatNumber} - {f.societyName || 'N/A'}</option>
+                      <option key={f.id} value={f.id}>
+                        {isMasterAdmin ? `${f.flatNumber} - ${f.societyName || 'N/A'}` : f.flatNumber}
+                      </option>
                     ))}
                   </select>
                 </div>

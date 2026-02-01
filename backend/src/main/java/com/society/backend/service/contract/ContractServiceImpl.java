@@ -144,7 +144,7 @@ public class ContractServiceImpl implements ContractService {
     @Override
     @Transactional
     public void delete(Long id, Long userId) {
-        roleService.requireMasterAdmin(userId);
+        roleService.requireAdminOrCommittee(userId);
 
         if (!contractRepository.existsById(id)) {
             throw new ApiException(HttpStatus.NOT_FOUND, "Contract not found");

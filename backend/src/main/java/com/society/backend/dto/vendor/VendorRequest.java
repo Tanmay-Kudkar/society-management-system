@@ -34,5 +34,4 @@ public class VendorRequest {
     private String bankName;
     private String accountNumber;
     private String ifscCode;
-    private Boolean isCommon; // true if vendor serves multiple societies
 }

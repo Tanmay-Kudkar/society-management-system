@@ -29,14 +29,16 @@ public class VendorServiceImpl implements VendorService {
     public VendorResponse create(VendorRequest request, Long userId) {
         roleService.requireAdminOrCommittee(userId);
 
-        Vendor vendor = new Vendor();
-
-        if (request.getSocietyId() != null) {
-            Society society = societyRepository.findById(request.getSocietyId())
-                    .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Society not found"));
-            vendor.setSociety(society);
+        // Society is required for all vendors (no common vendors)
+        if (request.getSocietyId() == null) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Society is required for vendors");
         }
 
+        Society society = societyRepository.findById(request.getSocietyId())
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Society not found"));
+
+        Vendor vendor = new Vendor();
+        vendor.setSociety(society);
         vendor.setName(request.getName());
         vendor.setServiceType(request.getServiceType());
         vendor.setContactPerson(request.getContactPerson());
@@ -50,7 +52,6 @@ public class VendorServiceImpl implements VendorService {
         vendor.setBankName(request.getBankName());
         vendor.setAccountNumber(request.getAccountNumber());
         vendor.setIfscCode(request.getIfscCode());
-        vendor.setIsCommon(request.getIsCommon() != null ? request.getIsCommon() : false);
         vendor.setIsActive(true);
 
         Vendor saved = vendorRepository.save(vendor);
@@ -73,9 +74,8 @@ public class VendorServiceImpl implements VendorService {
 
     @Override
     public List<VendorResponse> getCommonVendors() {
-        return vendorRepository.findByIsCommonTrue().stream()
-                .map(this::mapToResponse)
-                .collect(Collectors.toList());
+        // Common vendors concept removed - return empty list
+        return List.of();
     }
 
     @Override
@@ -132,8 +132,6 @@ public class VendorServiceImpl implements VendorService {
             vendor.setAccountNumber(request.getAccountNumber());
         if (request.getIfscCode() != null)
             vendor.setIfscCode(request.getIfscCode());
-        if (request.getIsCommon() != null)
-            vendor.setIsCommon(request.getIsCommon());
 
         Vendor saved = vendorRepository.save(vendor);
         return mapToResponse(saved);
@@ -155,7 +153,7 @@ public class VendorServiceImpl implements VendorService {
     @Override
     @Transactional
     public void delete(Long id, Long userId) {
-        roleService.requireMasterAdmin(userId);
+        roleService.requireAdminOrCommittee(userId);
 
         if (!vendorRepository.existsById(id)) {
             throw new ApiException(HttpStatus.NOT_FOUND, "Vendor not found");
@@ -229,7 +227,6 @@ public class VendorServiceImpl implements VendorService {
         response.setBankName(vendor.getBankName());
         response.setAccountNumber(vendor.getAccountNumber());
         response.setIfscCode(vendor.getIfscCode());
-        response.setIsCommon(vendor.getIsCommon());
         response.setApprovalStatus(vendor.getApprovalStatus());
         response.setIsActive(vendor.getIsActive());
         response.setCreatedAt(vendor.getCreatedAt());

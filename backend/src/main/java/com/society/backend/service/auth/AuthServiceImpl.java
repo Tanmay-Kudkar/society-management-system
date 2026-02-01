@@ -57,8 +57,7 @@ public class AuthServiceImpl implements AuthService {
         if (!RolePermissions.canSelfRegister(role)) {
             throw new ApiException(
                     HttpStatus.FORBIDDEN,
-                    "Only MEMBER role can self-register. Contact your Society Admin for other roles."
-            );
+                    "Only MEMBER role can self-register. Contact your Society Admin for other roles.");
         }
 
         User user = new User();
@@ -98,12 +97,36 @@ public class AuthServiceImpl implements AuthService {
         // Generate JWT token
         String token = jwtUtils.generateToken(user.getEmail(), user.getRole().name(), user.getId());
 
+        // Get societyId if user belongs to a society
+        Long societyId = user.getSociety() != null ? user.getSociety().getId() : null;
+
         return new LoginResponse(
                 user.getId(),
                 user.getName(),
                 user.getEmail(),
                 user.getRole().name(),
+                societyId,
                 token);
+    }
+
+    @Override
+    public UserResponse getUserFromToken(String token) {
+        if (!jwtUtils.validateToken(token)) {
+            throw new ApiException(HttpStatus.UNAUTHORIZED, "Invalid or expired token");
+        }
+
+        String email = jwtUtils.getEmailFromToken(token);
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ApiException(HttpStatus.UNAUTHORIZED, "User not found"));
+
+        Long societyId = user.getSociety() != null ? user.getSociety().getId() : null;
+
+        return new UserResponse(
+                user.getId(),
+                user.getName(),
+                user.getEmail(),
+                user.getRole().name(),
+                societyId);
     }
 
     private Role resolveRole(String roleValue) {

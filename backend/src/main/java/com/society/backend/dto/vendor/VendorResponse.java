@@ -24,7 +24,6 @@ public class VendorResponse {
     private String bankName;
     private String accountNumber;
     private String ifscCode;
-    private Boolean isCommon;
     private String approvalStatus;
     private Boolean isActive;
     private LocalDateTime createdAt;
