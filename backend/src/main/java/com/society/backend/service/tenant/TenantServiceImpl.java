@@ -143,6 +143,9 @@ public class TenantServiceImpl implements TenantService {
         response.setId(tenant.getId());
         response.setFlatId(tenant.getFlat().getId());
         response.setFlatNumber(tenant.getFlat().getFlatNumber());
+        if (tenant.getFlat().getSociety() != null) {
+            response.setSocietyId(tenant.getFlat().getSociety().getId());
+        }
         response.setName(tenant.getName());
         response.setPhone(tenant.getPhone());
         response.setEmail(tenant.getEmail());

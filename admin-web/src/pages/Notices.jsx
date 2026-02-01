@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { noticeApi } from '../api'
 import { Plus, Search, X, Megaphone, Edit, Trash2 } from 'lucide-react'
@@ -15,16 +16,25 @@ const priorityColors = {
 export default function Notices() {
   const { user } = useAuth()
   const queryClient = useQueryClient()
+  const [searchParams] = useSearchParams()
   const [showModal, setShowModal] = useState(false)
   const [editingNotice, setEditingNotice] = useState(null)
   const [searchTerm, setSearchTerm] = useState('')
 
+  // Get society filter from URL (for MASTER_ADMIN viewing specific society)
+  const societyIdFromUrl = searchParams.get('society')
+
   // Check if current user is MASTER_ADMIN
   const isMasterAdmin = user?.role === 'MASTER_ADMIN'
 
+  // Determine effective society ID for filtering
+  const effectiveSocietyId = isMasterAdmin && societyIdFromUrl ? parseInt(societyIdFromUrl) : user?.societyId
+
   const { data: notices = [], isLoading } = useQuery({
-    queryKey: ['notices'],
-    queryFn: () => noticeApi.getAll().then(res => res.data),
+    queryKey: ['notices', effectiveSocietyId],
+    queryFn: () => effectiveSocietyId
+      ? noticeApi.getBySociety(effectiveSocietyId).then(res => res.data)
+      : noticeApi.getAll().then(res => res.data),
   })
 
 

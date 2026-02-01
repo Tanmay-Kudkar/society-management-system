@@ -1,10 +1,10 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '../context/AuthContext'
 import { userApi, societyApi } from '../api'
 import { Plus, Edit, Trash2, Search, X, AlertCircle, Shield, Users as UsersIcon, Building2 } from 'lucide-react'
 import clsx from 'clsx'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 
 const roleColors = {
   MASTER_ADMIN: 'bg-purple-100 text-purple-800',
@@ -37,12 +37,25 @@ export default function Users() {
   const { user } = useAuth()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
+  const [searchParams] = useSearchParams()
+  
+  // Get URL parameters for filtering
+  const urlSocietyId = searchParams.get('society')
+  const urlRole = searchParams.get('role')
+  
   const [showModal, setShowModal] = useState(false)
   const [editingUser, setEditingUser] = useState(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [filterRole, setFilterRole] = useState('')
   const [error, setError] = useState('')
   const [selectedRole, setSelectedRole] = useState('')
+  
+  // Initialize filterRole from URL parameter
+  useEffect(() => {
+    if (urlRole) {
+      setFilterRole(urlRole)
+    }
+  }, [urlRole])
 
   // Check if current user is MASTER_ADMIN
   const isMasterAdmin = user?.role === 'MASTER_ADMIN'
@@ -117,10 +130,17 @@ export default function Users() {
   })
 
   // For MASTER_ADMIN, only show SOCIETY_ADMINs (not all users scattered)
+  // UNLESS viewing a specific society from URL - then show all users in that society
   // For others, show all users they can see
-  const displayUsers = isMasterAdmin 
-    ? users.filter(u => u.role === 'SOCIETY_ADMIN')
-    : users
+  let displayUsers = users
+  
+  // Apply society filter from URL if present
+  if (urlSocietyId) {
+    displayUsers = displayUsers.filter(u => String(u.societyId) === urlSocietyId)
+  } else if (isMasterAdmin) {
+    // Only apply SOCIETY_ADMIN filter when not viewing a specific society
+    displayUsers = displayUsers.filter(u => u.role === 'SOCIETY_ADMIN')
+  }
 
   const filteredUsers = displayUsers.filter(u => {
     const matchesSearch = u.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -158,16 +178,40 @@ export default function Users() {
     }
   }
 
+  // Determine page title based on context
+  const getPageTitle = () => {
+    if (urlSocietyId && urlRole) {
+      return `${urlRole.replace('_', ' ')}s`
+    }
+    if (urlSocietyId) {
+      return 'Society Users'
+    }
+    if (isMasterAdmin) {
+      return 'Society Admins'
+    }
+    return 'Users'
+  }
+  
+  const getPageDescription = () => {
+    if (urlSocietyId) {
+      return 'View users in this society'
+    }
+    if (isMasterAdmin) {
+      return 'Manage society administrators'
+    }
+    return 'Manage system users and roles'
+  }
+
   return (
     <div>
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-            {isMasterAdmin ? 'Society Admins' : 'Users'}
+            {getPageTitle()}
           </h1>
           <p className="text-gray-600 dark:text-gray-400 mt-1">
-            {isMasterAdmin ? 'Manage society administrators' : 'Manage system users and roles'}
+            {getPageDescription()}
           </p>
         </div>
         {creatableRoles.length > 0 && (
@@ -176,7 +220,7 @@ export default function Users() {
             className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
           >
             <Plus size={20} />
-            {isMasterAdmin ? 'Create Society Admin' : 'Add User'}
+            {isMasterAdmin && !urlSocietyId ? 'Create Society Admin' : 'Add User'}
           </button>
         )}
       </div>
@@ -238,14 +282,14 @@ export default function Users() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
             <input
               type="text"
-              placeholder={isMasterAdmin ? "Search society admins..." : "Search users..."}
+              placeholder={isMasterAdmin && !urlSocietyId ? "Search society admins..." : "Search users..."}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white placeholder:text-gray-400"
             />
           </div>
-          {/* Only show role filter for non-MASTER_ADMIN users, and only show roles they can see */}
-          {!isMasterAdmin && updatableRoles.length > 0 && (
+          {/* Only show role filter for non-MASTER_ADMIN users (or when viewing specific society), and only show roles they can see */}
+          {(!isMasterAdmin || urlSocietyId) && updatableRoles.length > 0 && (
             <select
               value={filterRole}
               onChange={(e) => setFilterRole(e.target.value)}
@@ -261,8 +305,8 @@ export default function Users() {
         </div>
       </div>
 
-      {/* MASTER_ADMIN sees Society Admin cards with navigation */}
-      {isMasterAdmin ? (
+      {/* MASTER_ADMIN sees Society Admin cards with navigation (unless viewing specific society) */}
+      {isMasterAdmin && !urlSocietyId ? (
         <div className="space-y-4">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
             <UsersIcon className="w-5 h-5" />

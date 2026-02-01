@@ -123,6 +123,15 @@ public class UserServiceImpl implements UserService {
         return List.of();
     }
 
+    @Override
+    public List<UserResponse> getUsersBySociety(Long societyId) {
+        return userRepository.findBySocietyId(societyId)
+                .stream()
+                .filter(u -> u.getRole() != Role.MASTER_ADMIN)
+                .map(this::mapToResponse)
+                .toList();
+    }
+
     /**
      * Get the roles that the current user can create.
      */

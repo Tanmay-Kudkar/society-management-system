@@ -54,8 +54,31 @@ public class ComplaintServiceImpl implements ComplaintService {
     }
 
     @Override
-    public List<ComplaintResponse> getAll() {
-        return complaintRepository.findAll().stream()
+    public List<ComplaintResponse> getAll(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "User not found"));
+
+        // MASTER_ADMIN sees all complaints
+        if (user.getRole().name().equals("MASTER_ADMIN")) {
+            return complaintRepository.findAll().stream()
+                    .map(this::toResponse)
+                    .collect(Collectors.toList());
+        }
+
+        // Others see only complaints from their society
+        if (user.getSociety() != null) {
+            return complaintRepository.findBySocietyId(user.getSociety().getId()).stream()
+                    .map(this::toResponse)
+                    .collect(Collectors.toList());
+        }
+
+        // No society, return empty
+        return List.of();
+    }
+
+    @Override
+    public List<ComplaintResponse> getBySociety(Long societyId) {
+        return complaintRepository.findBySocietyId(societyId).stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
     }

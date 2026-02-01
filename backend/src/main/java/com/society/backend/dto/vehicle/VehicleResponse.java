@@ -11,6 +11,7 @@ public class VehicleResponse {
     private Long id;
     private Long flatId;
     private String flatNumber;
+    private Long societyId;
     private String vehicleType;
     private String vehicleNumber;
     private String brand;

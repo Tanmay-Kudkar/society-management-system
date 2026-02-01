@@ -35,7 +35,7 @@ public class ComplaintController {
     @GetMapping
     public ResponseEntity<List<ComplaintResponse>> getAll(@RequestParam Long userId) {
         roleService.canViewAll(userId);
-        return ResponseEntity.ok(complaintService.getAll());
+        return ResponseEntity.ok(complaintService.getAll(userId));
     }
 
     // Users can view their own complaints
@@ -57,6 +57,15 @@ public class ComplaintController {
             @RequestParam Long userId) {
         roleService.canViewAll(userId);
         return ResponseEntity.ok(complaintService.getByStatus(status));
+    }
+
+    // Get complaints for a specific society
+    @GetMapping("/society/{societyId}")
+    public ResponseEntity<List<ComplaintResponse>> getBySociety(
+            @PathVariable Long societyId,
+            @RequestParam Long userId) {
+        roleService.canViewAll(userId);
+        return ResponseEntity.ok(complaintService.getBySociety(societyId));
     }
 
     @GetMapping("/{id}")

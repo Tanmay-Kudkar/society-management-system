@@ -19,6 +19,9 @@ import {
   Sparkles,
   Activity,
   BarChart3,
+  Store,
+  Briefcase,
+  Layers,
 } from "lucide-react";
 
 import {
@@ -281,10 +284,27 @@ export default function Dashboard() {
         )}
         <StatCard
           title="Total Flats"
-          value={flats.length}
+          value={flats.filter(f => !f.unitType || f.unitType === 'FLAT').length}
           icon={Home}
           gradient="bg-gradient-to-br from-blue-500 to-blue-700"
+          subtext={`${flats.filter(f => (!f.unitType || f.unitType === 'FLAT') && f.ownerName).length} occupied`}
           delay={150}
+        />
+        <StatCard
+          title="Total Shops"
+          value={flats.filter(f => f.unitType === 'SHOP').length}
+          icon={Store}
+          gradient="bg-gradient-to-br from-green-500 to-green-700"
+          subtext={`${flats.filter(f => f.unitType === 'SHOP' && f.ownerName).length} occupied`}
+          delay={175}
+        />
+        <StatCard
+          title="Total Offices"
+          value={flats.filter(f => f.unitType === 'OFFICE').length}
+          icon={Briefcase}
+          gradient="bg-gradient-to-br from-amber-500 to-amber-700"
+          subtext={`${flats.filter(f => f.unitType === 'OFFICE' && f.ownerName).length} occupied`}
+          delay={190}
         />
         <StatCard
           title="Active Tenants"

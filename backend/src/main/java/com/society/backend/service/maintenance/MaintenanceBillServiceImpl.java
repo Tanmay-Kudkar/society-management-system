@@ -197,6 +197,7 @@ public class MaintenanceBillServiceImpl implements MaintenanceBillService {
         response.setFlatId(bill.getFlat().getId());
         response.setFlatNumber(bill.getFlat().getFlatNumber());
         response.setOwnerName(bill.getFlat().getOwnerName());
+        response.setSocietyId(bill.getFlat().getSociety().getId());
         response.setSocietyName(bill.getFlat().getSociety().getName());
         response.setBillMonth(bill.getBillMonth());
         response.setAmount(bill.getAmount());

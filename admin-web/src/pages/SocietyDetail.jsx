@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { societyApi, userApi, flatApi } from '../api'
+import { societyApi, userApi, flatApi, wingApi } from '../api'
 import {
   ArrowLeft,
   Building2,
@@ -22,7 +22,9 @@ import {
   Plus,
   AlertCircle,
   User,
-  Briefcase
+  Briefcase,
+  Store,
+  Layers
 } from 'lucide-react'
 import clsx from 'clsx'
 
@@ -72,27 +74,26 @@ export default function SocietyDetail() {
     enabled: !!id,
   })
 
-  // Fetch users for this society
-  const { data: allUsers = [] } = useQuery({
-    queryKey: ['users'],
-    queryFn: () => userApi.getAll().then(res => res.data).catch(() => []),
+  // Fetch users for this society using society-specific endpoint
+  const { data: societyUsers = [] } = useQuery({
+    queryKey: ['society-users', id],
+    queryFn: () => userApi.getBySociety(id).then(res => res.data).catch(() => []),
+    enabled: !!id,
   })
 
-  // Fetch flats for this society
-  const { data: allFlats = [] } = useQuery({
-    queryKey: ['flats'],
-    queryFn: () => flatApi.getAll().then(res => res.data).catch(() => []),
+  // Fetch flats for this society using society-specific endpoint
+  const { data: societyFlats = [] } = useQuery({
+    queryKey: ['society-flats', id],
+    queryFn: () => flatApi.getBySociety(id).then(res => res.data).catch(() => []),
+    enabled: !!id,
   })
 
-  // Filter users for this society
-  const societyUsers = useMemo(() => {
-    return allUsers.filter(u => u.societyId === parseInt(id))
-  }, [allUsers, id])
-
-  // Filter flats for this society
-  const societyFlats = useMemo(() => {
-    return allFlats.filter(f => f.societyId === parseInt(id))
-  }, [allFlats, id])
+  // Fetch wings for this society
+  const { data: societyWings = [] } = useQuery({
+    queryKey: ['society-wings', id],
+    queryFn: () => wingApi.getBySociety(id).then(res => res.data).catch(() => []),
+    enabled: !!id,
+  })
 
   // Group users by role
   const usersByRole = useMemo(() => {
@@ -104,17 +105,36 @@ export default function SocietyDetail() {
   }, [societyUsers])
 
   // Calculate stats
-  const stats = useMemo(() => ({
-    totalUsers: societyUsers.length,
-    totalFlats: societyFlats.length,
-    occupiedFlats: societyFlats.filter(f => f.isOccupied).length,
-    totalMembers: usersByRole.MEMBER?.length || 0,
-    totalTenants: usersByRole.TENANT?.length || 0,
-    totalEmployees: usersByRole.EMPLOYEE?.length || 0,
-  }), [societyUsers, societyFlats, usersByRole])
+  const stats = useMemo(() => {
+    const flats = societyFlats.filter(f => !f.unitType || f.unitType === 'FLAT')
+    const shops = societyFlats.filter(f => f.unitType === 'SHOP')
+    const offices = societyFlats.filter(f => f.unitType === 'OFFICE')
+    
+    return {
+      totalUsers: societyUsers.length,
+      totalFlats: flats.length,
+      occupiedFlats: flats.filter(f => f.isOccupied === true || f.ownerName).length,
+      totalShops: shops.length,
+      occupiedShops: shops.filter(f => f.isOccupied === true || f.ownerName).length,
+      totalOffices: offices.length,
+      occupiedOffices: offices.filter(f => f.isOccupied === true || f.ownerName).length,
+      totalWings: societyWings.length,
+      totalMembers: usersByRole.MEMBER?.length || 0,
+      totalTenants: usersByRole.TENANT?.length || 0,
+      totalEmployees: usersByRole.EMPLOYEE?.length || 0,
+    }
+  }, [societyUsers, societyFlats, societyWings, usersByRole])
 
   // Quick action links
   const quickActions = [
+    { 
+      title: 'Wings', 
+      count: stats.totalWings, 
+      icon: Layers, 
+      color: 'bg-indigo-500', 
+      href: `/wings?society=${id}`,
+      description: 'Building wings'
+    },
     { 
       title: 'Flats', 
       count: stats.totalFlats, 
@@ -124,11 +144,27 @@ export default function SocietyDetail() {
       description: `${stats.occupiedFlats} occupied`
     },
     { 
+      title: 'Shops', 
+      count: stats.totalShops, 
+      icon: Store, 
+      color: 'bg-green-500', 
+      href: `/flats?society=${id}&unitType=SHOP`,
+      description: `${stats.occupiedShops} occupied`
+    },
+    { 
+      title: 'Offices', 
+      count: stats.totalOffices, 
+      icon: Briefcase, 
+      color: 'bg-amber-500', 
+      href: `/flats?society=${id}&unitType=OFFICE`,
+      description: `${stats.occupiedOffices} occupied`
+    },
+    { 
       title: 'Members', 
       count: stats.totalMembers, 
       icon: Users, 
       color: 'bg-emerald-500', 
-      href: `/tenants?society=${id}`,
+      href: `/users?society=${id}&role=MEMBER`,
       description: 'Flat owners'
     },
     { 
@@ -143,7 +179,7 @@ export default function SocietyDetail() {
       title: 'Maintenance', 
       count: '—', 
       icon: CreditCard, 
-      color: 'bg-amber-500', 
+      color: 'bg-orange-500', 
       href: `/maintenance-bills?society=${id}`,
       description: 'Bills & payments'
     },
@@ -240,16 +276,43 @@ export default function SocietyDetail() {
       {/* Stats Row */}
       <div className="society-stats">
         <div className="society-stat-card">
+          <div className="society-stat-icon indigo">
+            <Layers size={24} />
+          </div>
+          <div className="society-stat-content">
+            <div className="society-stat-value">{stats.totalWings}</div>
+            <div className="society-stat-label">Wings</div>
+          </div>
+        </div>
+        <div className="society-stat-card">
           <div className="society-stat-icon blue">
             <Home size={24} />
           </div>
           <div className="society-stat-content">
             <div className="society-stat-value">{stats.totalFlats}</div>
-            <div className="society-stat-label">Total Flats</div>
+            <div className="society-stat-label">Flats ({stats.occupiedFlats} occupied)</div>
           </div>
         </div>
         <div className="society-stat-card">
           <div className="society-stat-icon green">
+            <Store size={24} />
+          </div>
+          <div className="society-stat-content">
+            <div className="society-stat-value">{stats.totalShops}</div>
+            <div className="society-stat-label">Shops ({stats.occupiedShops} occupied)</div>
+          </div>
+        </div>
+        <div className="society-stat-card">
+          <div className="society-stat-icon amber">
+            <Briefcase size={24} />
+          </div>
+          <div className="society-stat-content">
+            <div className="society-stat-value">{stats.totalOffices}</div>
+            <div className="society-stat-label">Offices ({stats.occupiedOffices} occupied)</div>
+          </div>
+        </div>
+        <div className="society-stat-card">
+          <div className="society-stat-icon purple">
             <Users size={24} />
           </div>
           <div className="society-stat-content">
@@ -258,21 +321,12 @@ export default function SocietyDetail() {
           </div>
         </div>
         <div className="society-stat-card">
-          <div className="society-stat-icon purple">
+          <div className="society-stat-icon teal">
             <User size={24} />
           </div>
           <div className="society-stat-content">
             <div className="society-stat-value">{stats.totalMembers}</div>
             <div className="society-stat-label">Members</div>
-          </div>
-        </div>
-        <div className="society-stat-card">
-          <div className="society-stat-icon amber">
-            <Briefcase size={24} />
-          </div>
-          <div className="society-stat-content">
-            <div className="society-stat-value">{stats.totalEmployees}</div>
-            <div className="society-stat-label">Employees</div>
           </div>
         </div>
       </div>
@@ -342,12 +396,7 @@ export default function SocietyDetail() {
                 <Users size={20} />
                 Society Members
               </h2>
-              <Link 
-                to="/users" 
-                className="text-sm text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
-              >
-                View All <ChevronRight size={16} />
-              </Link>
+              {/* View All removed - all members shown on this page */}
             </div>
 
             {societyUsers.length === 0 ? (
@@ -358,7 +407,7 @@ export default function SocietyDetail() {
               </div>
             ) : (
               <div className="society-users-grid">
-                {societyUsers.slice(0, 6).map((u, idx) => (
+                {societyUsers.map((u, idx) => (
                   <div key={u.id} className="society-user-card">
                     <div className="society-user-header">
                       <div className={clsx('society-user-avatar', avatarColors[idx % avatarColors.length])}>
@@ -382,18 +431,6 @@ export default function SocietyDetail() {
                     )}
                   </div>
                 ))}
-              </div>
-            )}
-
-            {societyUsers.length > 6 && (
-              <div className="text-center mt-4">
-                <Link 
-                  to="/users"
-                  className="inline-flex items-center gap-2 px-4 py-2 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition"
-                >
-                  View all {societyUsers.length} users
-                  <ChevronRight size={16} />
-                </Link>
               </div>
             )}
           </div>

@@ -14,8 +14,12 @@ public class FlatRequest {
     @NotNull(message = "Society ID is required")
     private Long societyId;
 
+    private Long wingId; // Optional - can be null if no wing
+
     @NotBlank(message = "Flat number is required")
     private String flatNumber;
+
+    private String unitType; // FLAT, SHOP, OFFICE
 
     private String flatType; // 1BHK, 2BHK, 3BHK, etc.
 

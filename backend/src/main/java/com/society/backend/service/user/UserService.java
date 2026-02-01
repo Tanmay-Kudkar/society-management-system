@@ -13,6 +13,8 @@ public interface UserService {
 
     List<UserResponse> getAllUsers();
 
+    List<UserResponse> getUsersBySociety(Long societyId);
+
     UserResponse getUserById(Long id);
 
     UserResponse updateUser(Long id, UserRequest request);

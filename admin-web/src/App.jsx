@@ -10,6 +10,7 @@ import Users from './pages/Users'
 import Societies from './pages/Societies'
 import SocietyDetail from './pages/SocietyDetail'
 import Flats from './pages/Flats'
+import Wings from './pages/Wings'
 import Tenants from './pages/Tenants'
 import Vehicles from './pages/Vehicles'
 import Vendors from './pages/Vendors'
@@ -74,6 +75,7 @@ function App() {
         <Route path="users" element={<Users />} />
         <Route path="societies" element={<Societies />} />
         <Route path="societies/:id" element={<SocietyDetail />} />
+        <Route path="wings" element={<Wings />} />
         <Route path="flats" element={<Flats />} />
         <Route path="tenants" element={<Tenants />} />
         <Route path="vehicles" element={<Vehicles />} />

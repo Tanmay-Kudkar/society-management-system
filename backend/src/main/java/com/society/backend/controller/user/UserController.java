@@ -52,6 +52,16 @@ public class UserController {
     }
 
     /**
+     * Get all users for a specific society.
+     * Only MASTER_ADMIN can use this endpoint.
+     */
+    @GetMapping("/society/{societyId}")
+    @PreAuthorize("hasRole('MASTER_ADMIN')")
+    public List<UserResponse> getUsersBySociety(@PathVariable Long societyId) {
+        return userService.getUsersBySociety(societyId);
+    }
+
+    /**
      * Get the roles that the current user is allowed to create.
      * Used by frontend to populate the role dropdown for creating users.
      */
