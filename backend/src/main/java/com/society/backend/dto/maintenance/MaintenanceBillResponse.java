@@ -14,6 +14,7 @@ public class MaintenanceBillResponse {
     private Long flatId;
     private String flatNumber;
     private String ownerName;
+    private Long societyId;
     private String societyName;
     private String billMonth;
     private BigDecimal amount;

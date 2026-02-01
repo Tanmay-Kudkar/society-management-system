@@ -116,6 +116,9 @@ public class VehicleServiceImpl implements VehicleService {
         response.setId(vehicle.getId());
         response.setFlatId(vehicle.getFlat().getId());
         response.setFlatNumber(vehicle.getFlat().getFlatNumber());
+        if (vehicle.getFlat().getSociety() != null) {
+            response.setSocietyId(vehicle.getFlat().getSociety().getId());
+        }
         response.setVehicleType(vehicle.getVehicleType());
         response.setVehicleNumber(vehicle.getVehicleNumber());
         response.setBrand(vehicle.getBrand());

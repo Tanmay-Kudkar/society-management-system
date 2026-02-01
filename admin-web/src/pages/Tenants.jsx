@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { tenantApi, flatApi } from '../api'
 import { Plus, Edit, Trash2, Search, X, User, Calendar, Phone, Mail } from 'lucide-react'
@@ -7,18 +8,31 @@ import { Plus, Edit, Trash2, Search, X, User, Calendar, Phone, Mail } from 'luci
 export default function Tenants() {
   const { user } = useAuth()
   const queryClient = useQueryClient()
+  const [searchParams] = useSearchParams()
   const [showModal, setShowModal] = useState(false)
   const [editingTenant, setEditingTenant] = useState(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [filterStatus, setFilterStatus] = useState('')
 
+  // Get society filter from URL (for MASTER_ADMIN viewing specific society)
+  const societyIdFromUrl = searchParams.get('society')
+
   // Check if current user is MASTER_ADMIN
   const isMasterAdmin = user?.role === 'MASTER_ADMIN'
 
-  const { data: tenants = [], isLoading } = useQuery({
+  // Determine effective society ID for filtering
+  const effectiveSocietyId = isMasterAdmin && societyIdFromUrl ? parseInt(societyIdFromUrl) : user?.societyId
+
+  const { data: allTenants = [], isLoading } = useQuery({
     queryKey: ['tenants'],
     queryFn: () => tenantApi.getAll().then(res => res.data),
   })
+
+  // Filter tenants by society
+  const tenants = useMemo(() => {
+    if (!effectiveSocietyId) return allTenants
+    return allTenants.filter(t => t.societyId === effectiveSocietyId)
+  }, [allTenants, effectiveSocietyId])
 
   const { data: flats = [] } = useQuery({
     queryKey: ['flats', user?.id],

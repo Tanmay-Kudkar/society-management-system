@@ -6,10 +6,13 @@ import com.society.backend.entity.Flat;
 import com.society.backend.entity.Role;
 import com.society.backend.entity.Society;
 import com.society.backend.entity.User;
+import com.society.backend.entity.Wing;
 import com.society.backend.exception.ApiException;
+import com.society.backend.repository.WingRepository;
 import com.society.backend.repository.flat.FlatRepository;
 import com.society.backend.repository.society.SocietyRepository;
 import com.society.backend.repository.user.UserRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -17,18 +20,13 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class FlatServiceImpl implements FlatService {
 
     private final FlatRepository flatRepository;
     private final SocietyRepository societyRepository;
     private final UserRepository userRepository;
-
-    public FlatServiceImpl(FlatRepository flatRepository, SocietyRepository societyRepository,
-            UserRepository userRepository) {
-        this.flatRepository = flatRepository;
-        this.societyRepository = societyRepository;
-        this.userRepository = userRepository;
-    }
+    private final WingRepository wingRepository;
 
     @Override
     public FlatResponse create(FlatRequest request) {
@@ -102,12 +100,22 @@ public class FlatServiceImpl implements FlatService {
     private void mapRequestToEntity(FlatRequest request, Flat flat, Society society) {
         flat.setSociety(society);
         flat.setFlatNumber(request.getFlatNumber());
+        flat.setUnitType(request.getUnitType() != null ? request.getUnitType() : "FLAT");
         flat.setFlatType(request.getFlatType());
         flat.setFloor(request.getFloor());
         flat.setArea(request.getArea());
         flat.setOwnerName(request.getOwnerName());
         flat.setOwnerEmail(request.getOwnerEmail());
         flat.setOwnerPhone(request.getOwnerPhone());
+
+        // Handle wing assignment
+        if (request.getWingId() != null) {
+            Wing wing = wingRepository.findById(request.getWingId())
+                    .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Wing not found"));
+            flat.setWing(wing);
+        } else {
+            flat.setWing(null);
+        }
     }
 
     private FlatResponse toResponse(Flat flat) {
@@ -115,7 +123,14 @@ public class FlatServiceImpl implements FlatService {
         response.setId(flat.getId());
         response.setSocietyId(flat.getSociety().getId());
         response.setSocietyName(flat.getSociety().getName());
+
+        if (flat.getWing() != null) {
+            response.setWingId(flat.getWing().getId());
+            response.setWingName(flat.getWing().getName());
+        }
+
         response.setFlatNumber(flat.getFlatNumber());
+        response.setUnitType(flat.getUnitType() != null ? flat.getUnitType() : "FLAT");
         response.setFlatType(flat.getFlatType());
         response.setFloor(flat.getFloor());
         response.setArea(flat.getArea());

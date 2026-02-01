@@ -6,6 +6,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "societies")
@@ -36,6 +38,19 @@ public class Society {
     private String email;
 
     private String phone;
+
+    // Total capacity for units (for planning/display purposes)
+    @Column(name = "total_flats")
+    private Integer totalFlats = 0;
+
+    @Column(name = "total_shops")
+    private Integer totalShops = 0;
+
+    @Column(name = "total_offices")
+    private Integer totalOffices = 0;
+
+    @Column(name = "total_wings")
+    private Integer totalWings = 0;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;

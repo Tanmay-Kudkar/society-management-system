@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { maintenanceBillApi, flatApi } from '../api'
 import { Plus, Search, X, CreditCard, CheckCircle, Clock, AlertCircle } from 'lucide-react'
@@ -15,6 +16,7 @@ const statusColors = {
 export default function MaintenanceBills() {
   const { user } = useAuth()
   const queryClient = useQueryClient()
+  const [searchParams] = useSearchParams()
   const [showModal, setShowModal] = useState(false)
   const [showPaymentModal, setShowPaymentModal] = useState(false)
   const [showBulkModal, setShowBulkModal] = useState(false)
@@ -22,13 +24,25 @@ export default function MaintenanceBills() {
   const [searchTerm, setSearchTerm] = useState('')
   const [filterStatus, setFilterStatus] = useState('')
 
+  // Get society filter from URL (for MASTER_ADMIN viewing specific society)
+  const societyIdFromUrl = searchParams.get('society')
+
   // Check if current user is MASTER_ADMIN
   const isMasterAdmin = user?.role === 'MASTER_ADMIN'
 
-  const { data: bills = [], isLoading } = useQuery({
+  // Determine effective society ID for filtering
+  const effectiveSocietyId = isMasterAdmin && societyIdFromUrl ? parseInt(societyIdFromUrl) : user?.societyId
+
+  const { data: allBills = [], isLoading } = useQuery({
     queryKey: ['maintenanceBills'],
     queryFn: () => maintenanceBillApi.getAll().then(res => res.data),
   })
+
+  // Filter bills by society
+  const bills = useMemo(() => {
+    if (!effectiveSocietyId) return allBills
+    return allBills.filter(b => b.societyId === effectiveSocietyId)
+  }, [allBills, effectiveSocietyId])
 
   const { data: flats = [] } = useQuery({
     queryKey: ['flats', user?.id],

@@ -58,6 +58,7 @@ export const societyApi = {
 export const userApi = {
   getAll: () => api.get('/users'),
   getById: (id) => api.get(`/users/${id}`),
+  getBySociety: (societyId) => api.get(`/users/society/${societyId}`),
   create: (data) => api.post('/users', data),
   update: (id, data) => api.put(`/users/${id}`, data),
   delete: (id) => api.delete(`/users/${id}`),
@@ -73,6 +74,16 @@ export const flatApi = {
   create: (data, userId) => api.post(`/flats?userId=${userId}`, data),
   update: (id, data, userId) => api.put(`/flats/${id}?userId=${userId}`, data),
   delete: (id, userId) => api.delete(`/flats/${id}?userId=${userId}`),
+}
+
+// Wing API
+export const wingApi = {
+  getAll: () => api.get('/wings'),
+  getById: (id) => api.get(`/wings/${id}`),
+  getBySociety: (societyId) => api.get(`/wings/society/${societyId}`),
+  create: (data) => api.post('/wings', data),
+  update: (id, data) => api.put(`/wings/${id}`, data),
+  delete: (id) => api.delete(`/wings/${id}`),
 }
 
 // Vendor API
@@ -188,6 +199,7 @@ export const ticketApi = {
 export const complaintApi = {
   getAll: (userId) => api.get(`/complaints?userId=${userId}`),
   getById: (id) => api.get(`/complaints/${id}`),
+  getBySociety: (societyId, userId) => api.get(`/complaints/society/${societyId}?userId=${userId}`),
   getByUser: (targetUserId, userId) => api.get(`/complaints/user/${targetUserId}?userId=${userId}`),
   getByStatus: (status, userId) => api.get(`/complaints/status/${status}?userId=${userId}`),
   create: (data, userId) => api.post(`/complaints?userId=${userId}`, data),

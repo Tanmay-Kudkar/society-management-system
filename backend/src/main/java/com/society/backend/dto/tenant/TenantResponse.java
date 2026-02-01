@@ -12,6 +12,7 @@ public class TenantResponse {
     private Long id;
     private Long flatId;
     private String flatNumber;
+    private Long societyId;
     private String name;
     private String phone;
     private String email;

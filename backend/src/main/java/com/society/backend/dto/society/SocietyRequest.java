@@ -24,4 +24,13 @@ public class SocietyRequest {
     private String email;
 
     private String phone;
+
+    // Total capacity for units
+    private Integer totalFlats;
+
+    private Integer totalShops;
+
+    private Integer totalOffices;
+
+    private Integer totalWings;
 }

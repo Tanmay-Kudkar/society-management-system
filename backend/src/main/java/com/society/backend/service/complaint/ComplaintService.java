@@ -8,7 +8,9 @@ import java.util.List;
 public interface ComplaintService {
     ComplaintResponse create(Long userId, ComplaintRequest request);
 
-    List<ComplaintResponse> getAll();
+    List<ComplaintResponse> getAll(Long userId);
+
+    List<ComplaintResponse> getBySociety(Long societyId);
 
     List<ComplaintResponse> getByUser(Long userId);
 

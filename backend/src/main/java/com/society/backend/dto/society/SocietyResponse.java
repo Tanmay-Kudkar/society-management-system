@@ -19,4 +19,19 @@ public class SocietyResponse {
     private String registrationNumber;
     private String email;
     private String phone;
+
+    // Total capacity for units
+    private Integer totalFlats;
+    private Integer totalShops;
+    private Integer totalOffices;
+    private Integer totalWings;
+
+    // Actual counts (calculated from database)
+    private Long actualFlats;
+    private Long actualShops;
+    private Long actualOffices;
+    private Long actualWings;
+    private Long occupiedFlats;
+    private Long occupiedShops;
+    private Long occupiedOffices;
 }

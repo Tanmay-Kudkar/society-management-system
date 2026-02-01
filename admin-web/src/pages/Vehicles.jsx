@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { vehicleApi, flatApi } from '../api'
 import { Plus, Edit, Trash2, Search, X, Car, Bike } from 'lucide-react'
@@ -7,18 +8,31 @@ import { Plus, Edit, Trash2, Search, X, Car, Bike } from 'lucide-react'
 export default function Vehicles() {
   const { user } = useAuth()
   const queryClient = useQueryClient()
+  const [searchParams] = useSearchParams()
   const [showModal, setShowModal] = useState(false)
   const [editingVehicle, setEditingVehicle] = useState(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [filterType, setFilterType] = useState('')
 
+  // Get society filter from URL (for MASTER_ADMIN viewing specific society)
+  const societyIdFromUrl = searchParams.get('society')
+
   // Check if current user is MASTER_ADMIN
   const isMasterAdmin = user?.role === 'MASTER_ADMIN'
 
-  const { data: vehicles = [], isLoading } = useQuery({
+  // Determine effective society ID for filtering
+  const effectiveSocietyId = isMasterAdmin && societyIdFromUrl ? parseInt(societyIdFromUrl) : user?.societyId
+
+  const { data: allVehicles = [], isLoading } = useQuery({
     queryKey: ['vehicles'],
     queryFn: () => vehicleApi.getAll().then(res => res.data),
   })
+
+  // Filter vehicles by society
+  const vehicles = useMemo(() => {
+    if (!effectiveSocietyId) return allVehicles
+    return allVehicles.filter(v => v.societyId === effectiveSocietyId)
+  }, [allVehicles, effectiveSocietyId])
 
   const { data: flats = [] } = useQuery({
     queryKey: ['flats', user?.id],

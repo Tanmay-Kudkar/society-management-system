@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { complaintApi } from '../api'
 import { Plus, Search, X, AlertTriangle, Clock, CheckCircle, XCircle } from 'lucide-react'
@@ -22,22 +23,27 @@ const statusIcons = {
 export default function Complaints() {
   const { user } = useAuth()
   const queryClient = useQueryClient()
+  const [searchParams] = useSearchParams()
   const [showModal, setShowModal] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
   const [filterStatus, setFilterStatus] = useState('')
+
+  // Get society filter from URL (for MASTER_ADMIN viewing specific society)
+  const societyIdFromUrl = searchParams.get('society')
 
   // Check if current user is MASTER_ADMIN
   const isMasterAdmin = user?.role === 'MASTER_ADMIN'
   const canViewAll = ['MASTER_ADMIN', 'COMMITTEE', 'EMPLOYEE'].includes(user?.role)
 
+  // Determine which societyId to use for filtering
+  const effectiveSocietyId = isMasterAdmin && societyIdFromUrl ? societyIdFromUrl : user?.societyId
+
   const { data: complaints = [], isLoading } = useQuery({
-    queryKey: ['complaints', user?.id, canViewAll ? 'all' : 'user'],
+    queryKey: ['complaints', user?.id, effectiveSocietyId],
     queryFn: () =>
-      (canViewAll
-        ? complaintApi.getAll(user.id)
-        : complaintApi.getByUser(user.id, user.id))
+      complaintApi.getBySociety(effectiveSocietyId, user.id)
         .then(res => res.data),
-    enabled: !!user?.id,
+    enabled: !!user?.id && !!effectiveSocietyId,
   })
 
 
