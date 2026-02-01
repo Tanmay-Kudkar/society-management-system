@@ -160,9 +160,15 @@ export const noticeApi = {
   getAll: () => api.get('/notices'),
   getById: (id) => api.get(`/notices/${id}`),
   getBySociety: (societyId) => api.get(`/notices/society/${societyId}`),
+  getActive: (societyId) => api.get(`/notices/active/${societyId}`),
   create: (data, userId) => api.post(`/notices?userId=${userId}`, data),
   update: (id, data, userId) => api.put(`/notices/${id}?userId=${userId}`, data),
   delete: (id, userId) => api.delete(`/notices/${id}?userId=${userId}`),
+}
+
+// Security Log API
+export const securityLogApi = {
+  getRecent: (societyId, limit = 10) => api.get(`/api/security-logs?societyId=${societyId}&limit=${limit}`),
 }
 
 // Banner API

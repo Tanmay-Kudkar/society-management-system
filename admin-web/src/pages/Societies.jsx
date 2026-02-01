@@ -189,22 +189,30 @@ export default function Societies() {
               <div className="grid grid-cols-4 gap-2 mb-4">
                 <div className="text-center p-2 rounded-lg bg-blue-50 dark:bg-blue-900/20 group/stat hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors">
                   <Home className="w-4 h-4 mx-auto text-blue-600 dark:text-blue-400 mb-1" />
-                  <p className="text-lg font-bold text-blue-600 dark:text-blue-400">{society.actualFlats || 0}</p>
+                  <p className="text-lg font-bold text-blue-600 dark:text-blue-400">
+                    {society.totalFlats || society.actualFlats || 0}
+                  </p>
                   <p className="text-[10px] text-gray-500 dark:text-gray-400">Flats</p>
                 </div>
                 <div className="text-center p-2 rounded-lg bg-green-50 dark:bg-green-900/20 hover:bg-green-100 dark:hover:bg-green-900/40 transition-colors">
                   <Store className="w-4 h-4 mx-auto text-green-600 dark:text-green-400 mb-1" />
-                  <p className="text-lg font-bold text-green-600 dark:text-green-400">{society.actualShops || 0}</p>
+                  <p className="text-lg font-bold text-green-600 dark:text-green-400">
+                    {society.totalShops || society.actualShops || 0}
+                  </p>
                   <p className="text-[10px] text-gray-500 dark:text-gray-400">Shops</p>
                 </div>
                 <div className="text-center p-2 rounded-lg bg-purple-50 dark:bg-purple-900/20 hover:bg-purple-100 dark:hover:bg-purple-900/40 transition-colors">
                   <Briefcase className="w-4 h-4 mx-auto text-purple-600 dark:text-purple-400 mb-1" />
-                  <p className="text-lg font-bold text-purple-600 dark:text-purple-400">{society.actualOffices || 0}</p>
+                  <p className="text-lg font-bold text-purple-600 dark:text-purple-400">
+                    {society.totalOffices || society.actualOffices || 0}
+                  </p>
                   <p className="text-[10px] text-gray-500 dark:text-gray-400">Offices</p>
                 </div>
                 <div className="text-center p-2 rounded-lg bg-amber-50 dark:bg-amber-900/20 hover:bg-amber-100 dark:hover:bg-amber-900/40 transition-colors">
                   <Layers className="w-4 h-4 mx-auto text-amber-600 dark:text-amber-400 mb-1" />
-                  <p className="text-lg font-bold text-amber-600 dark:text-amber-400">{society.actualWings || 0}</p>
+                  <p className="text-lg font-bold text-amber-600 dark:text-amber-400">
+                    {society.totalWings || society.actualWings || 0}
+                  </p>
                   <p className="text-[10px] text-gray-500 dark:text-gray-400">Wings</p>
                 </div>
               </div>
