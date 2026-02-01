@@ -240,3 +240,13 @@ CREATE TABLE notification_preferences (
     email_payments BOOLEAN DEFAULT TRUE,
     email_contracts BOOLEAN DEFAULT TRUE
 );
+
+-- Security Logs table
+CREATE TABLE security_logs (
+    id SERIAL PRIMARY KEY,
+    society_id INT REFERENCES societies(id),
+    type VARCHAR(20) NOT NULL,
+    event VARCHAR(255) NOT NULL,
+    status VARCHAR(20) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
