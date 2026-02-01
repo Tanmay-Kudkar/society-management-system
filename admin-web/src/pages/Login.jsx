@@ -12,13 +12,20 @@ export default function Login() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [isLoaded, setIsLoaded] = useState(false)
-  const { login } = useAuth()
+  const { login, user, loading: authLoading } = useAuth()
   const { isDark, toggleTheme } = useTheme()
   const navigate = useNavigate()
 
   useEffect(() => {
     setIsLoaded(true)
   }, [])
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (!authLoading && user) {
+      navigate('/', { replace: true })
+    }
+  }, [user, authLoading, navigate])
 
   const handleSubmit = async (e) => {
     e.preventDefault()

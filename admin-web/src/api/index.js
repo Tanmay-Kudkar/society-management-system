@@ -7,9 +7,10 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  withCredentials: true, // Enable cookies for cross-origin requests
 })
 
-// Request interceptor to add auth token
+// Request interceptor to add auth token (fallback for header-based auth)
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token')
@@ -40,6 +41,8 @@ export default api
 export const authApi = {
   login: (credentials) => api.post('/auth/login', credentials),
   register: (data) => api.post('/auth/register', data),
+  logout: () => api.post('/auth/logout'),
+  me: () => api.get('/auth/me'),
 }
 
 // Society API - requires userId for create/update/delete (MASTER_ADMIN only)
@@ -59,11 +62,12 @@ export const userApi = {
   update: (id, data) => api.put(`/users/${id}`, data),
   delete: (id) => api.delete(`/users/${id}`),
   getCreatableRoles: () => api.get('/users/creatable-roles'),
+  getUpdatableRoles: () => api.get('/users/updatable-roles'),
 }
 
 // Flat API
 export const flatApi = {
-  getAll: () => api.get('/flats'),
+  getAll: (userId) => api.get(`/flats?userId=${userId}`),
   getById: (id) => api.get(`/flats/${id}`),
   getBySociety: (societyId) => api.get(`/flats/society/${societyId}`),
   create: (data, userId) => api.post(`/flats?userId=${userId}`, data),

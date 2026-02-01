@@ -73,62 +73,86 @@ The Society Management System is a full-stack web application designed to stream
 
 ## 👑 Role-Based Access Control
 
-The system implements a **10-tier role hierarchy** with granular permissions:
+The system implements a **10-tier role hierarchy** based on **real housing society structure**:
+
+### 🏛️ Housing Society Hierarchy (Real-World)
+
+| Role | Authority | Responsibilities |
+|------|-----------|------------------|
+| **CHAIRMAN** | Highest Committee Authority | Presides over meetings, final veto/consent power, primary bank signatory |
+| **SECRETARY** | Administrative Head | Manages documentation, records, day-to-day operations |
+| **TREASURER** | Financial Head | Handles finances, billing, payments, accounts |
+
+### 🔐 Access Control Rules
+
+1. **Parent creates DIRECT CHILDREN only** - No skip-level creation
+2. **Read access flows DOWNWARD** - Parents can read all descendants  
+3. **Update/Delete is LIMITED to direct children** - No skip-level modification
+4. **Grandchildren = READ-ONLY** - Can view but not modify
+5. **EXCEPTION: SOCIETY_ADMIN has FULL CRUD** - Can create/update/delete all roles below
 
 ```
                     ╔══════════════════╗
                     ║   MASTER_ADMIN   ║ ← Platform Owner (You)
-                    ║   (Level 1)      ║   Access to ALL societies
-                    ╚════════╦═════════╝
-                             │ Creates
+                    ║   (Level 1)      ║   Creates ONLY → SOCIETY_ADMIN
+                    ╚════════╦═════════╝   Read access to ALL
+                             │ Creates (Direct Child Only)
                              ▼
                     ╔══════════════════╗
-                    ║  SOCIETY_ADMIN   ║ ← Manages ONE society
-                    ║   (Level 2)      ║   All society permissions
+                    ║  SOCIETY_ADMIN   ║ ← EXCEPTION: Full CRUD below
+                    ║   (Level 2)      ║   Manages ONE society
                     ╚════════╦═════════╝
-                             │ Creates
-              ┌──────────────┼──────────────┐
-              ▼              ▼              ▼
-     ╔═══════════════╗ ╔══════════╗ ╔════════════╗
-     ║   CHAIRMAN    ║ ║SECRETARY ║ ║ TREASURER  ║
-     ║  (Level 3)    ║ ║(Level 4) ║ ║ (Level 5)  ║
-     ╚═══════╦═══════╝ ╚════╦═════╝ ╚═════╦══════╝
-             │              │              │
-             └──────────────┼──────────────┘
-                            ▼
+                             │ Creates (All Below - Exception)
+                             ▼
                     ╔══════════════════╗
-                    ║    COMMITTEE     ║ ← General committee member
-                    ║   (Level 6)      ║
+                    ║    CHAIRMAN      ║ ← Committee HEAD (Highest Authority)
+                    ║   (Level 3)      ║   Creates → SECRETARY, TREASURER
                     ╚════════╦═════════╝
-                             │ Creates
+                             │ Creates (Direct Children)
               ┌──────────────┴──────────────┐
               ▼                             ▼
      ╔═══════════════╗             ╔═══════════════╗
-     ║   EMPLOYEE    ║             ║    MEMBER     ║
-     ║  (Level 7)    ║             ║   (Level 8)   ║
+     ║   SECRETARY   ║             ║   TREASURER   ║
+     ║  (Level 4)    ║             ║   (Level 4)   ║
+     ║  Admin Head   ║             ║ Financial Head║
      ╚═══════╦═══════╝             ╚═══════╦═══════╝
-             │ Creates                      │ Creates
-             ▼                              ▼
-     ╔═══════════════╗             ╔═══════════════╗
-     ║   VISITOR     ║             ║    TENANT     ║
-     ║  (Level 10)   ║             ║   (Level 9)   ║
-     ╚═══════════════╝             ╚═══════════════╝
+             │                             │
+             └──────────┬──────────────────┘
+                        │ Creates (Direct Child)
+                        ▼
+                ╔══════════════════╗
+                ║    COMMITTEE     ║ ← General committee members
+                ║   (Level 5)      ║
+                ╚════════╦═════════╝
+                         │ Creates (Direct Children)
+              ┌──────────┴──────────┐
+              ▼                     ▼
+     ╔═══════════════╗     ╔═══════════════╗
+     ║   EMPLOYEE    ║     ║    MEMBER     ║
+     ║  (Level 6)    ║     ║   (Level 6)   ║
+     ╚═══════╦═══════╝     ╚═══════╦═══════╝
+             │ Creates              │ Creates
+             ▼                      ▼
+     ╔═══════════════╗     ╔═══════════════╗
+     ║   VISITOR     ║     ║    TENANT     ║
+     ║  (Level 7)    ║     ║   (Level 7)   ║
+     ╚═══════════════╝     ╚═══════════════╝
 ```
 
-### User Creation Permissions Matrix
+### User CRUD Permissions Matrix
 
-| Creator Role | Can Create |
-|-------------|------------|
-| `MASTER_ADMIN` | ALL roles (including new SOCIETY_ADMIN) |
-| `SOCIETY_ADMIN` | CHAIRMAN, SECRETARY, TREASURER, COMMITTEE, EMPLOYEE, MEMBER |
-| `CHAIRMAN` | SECRETARY, TREASURER, COMMITTEE, EMPLOYEE, MEMBER |
-| `SECRETARY` | COMMITTEE, EMPLOYEE, MEMBER |
-| `TREASURER` | MEMBER |
-| `COMMITTEE` | MEMBER |
-| `EMPLOYEE` | VISITOR (temporary access) |
-| `MEMBER` | TENANT (for their flat only) |
-| `TENANT` | ❌ Cannot create anyone |
-| `VISITOR` | ❌ Cannot create anyone |
+| Role | Can CREATE | Can UPDATE/DELETE | Can READ |
+|------|------------|-------------------|----------|
+| `MASTER_ADMIN` | SOCIETY_ADMIN only | SOCIETY_ADMIN only | ALL roles |
+| `SOCIETY_ADMIN` | ALL below (exception) | ALL below (exception) | ALL in society |
+| `CHAIRMAN` | SECRETARY, TREASURER | SECRETARY, TREASURER | All below |
+| `SECRETARY` | COMMITTEE only | COMMITTEE only | COMMITTEE and below |
+| `TREASURER` | COMMITTEE only | COMMITTEE only | COMMITTEE and below |
+| `COMMITTEE` | EMPLOYEE, MEMBER | EMPLOYEE, MEMBER | EMPLOYEE, MEMBER and below |
+| `EMPLOYEE` | VISITOR only | VISITOR only | VISITOR |
+| `MEMBER` | TENANT only | TENANT only | TENANT |
+| `TENANT` | ❌ None | ❌ None | Own profile |
+| `VISITOR` | ❌ None | ❌ None | Own profile |
 
 ---
 

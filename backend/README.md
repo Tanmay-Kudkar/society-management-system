@@ -222,21 +222,54 @@ Server runs on `http://localhost:8080`
 
 ## Role-Based Access Control
 
+### 🏛️ Housing Society Hierarchy (Real-World Structure)
+
+| Role | Authority Level | Responsibilities |
+|------|-----------------|------------------|
+| **CHAIRMAN** | Highest Committee Authority | Presides over meetings, final veto/consent power, primary bank signatory |
+| **SECRETARY** | Administrative Head | Manages documentation, records, day-to-day operations |
+| **TREASURER** | Financial Head | Handles finances, billing, payments, accounts |
+
+### 🔐 STRICT Hierarchy Rules
+
+1. **Parent creates DIRECT CHILDREN only** - No skip-level creation
+2. **Read access flows DOWNWARD** - Parents can read all descendants
+3. **Update/Delete LIMITED to direct children** - No skip-level modification
+4. **EXCEPTION: SOCIETY_ADMIN has FULL CRUD** - Can manage all roles below
+
+### User CRUD Permissions
+
+| Role | Can CREATE | Can UPDATE/DELETE | Can READ |
+|------|------------|-------------------|----------|
+| `MASTER_ADMIN` | SOCIETY_ADMIN only | SOCIETY_ADMIN only | ALL roles |
+| `SOCIETY_ADMIN` | ALL below (exception) | ALL below (exception) | ALL in society |
+| `CHAIRMAN` | SECRETARY, TREASURER | SECRETARY, TREASURER | All below |
+| `SECRETARY` | COMMITTEE only | COMMITTEE only | COMMITTEE and below |
+| `TREASURER` | COMMITTEE only | COMMITTEE only | COMMITTEE and below |
+| `COMMITTEE` | EMPLOYEE, MEMBER | EMPLOYEE, MEMBER | EMPLOYEE, MEMBER and below |
+| `EMPLOYEE` | VISITOR only | VISITOR only | VISITOR |
+| `MEMBER` | TENANT only | TENANT only | TENANT |
+| `TENANT` | ❌ None | ❌ None | Own profile |
+| `VISITOR` | ❌ None | ❌ None | Own profile |
+
+### Feature Access Matrix
+
 All write operations require `userId` parameter for role verification:
 
-| Feature | MASTER_ADMIN | COMMITTEE | EMPLOYEE | MEMBER | VISITOR |
-|---------|:------------:|:---------:|:--------:|:------:|:-------:|
-| Manage Societies | ✓ | - | - | - | - |
-| Manage Flats | ✓ | ✓ | - | - | - |
-| Manage Vehicles | ✓ | ✓ | ✓ | ✓ | - |
-| Manage Tenants | ✓ | ✓ | ✓ | ✓ | - |
-| Manage Tickets | ✓ | ✓ | ✓ | ✓ | - |
-| Assign Tickets | ✓ | ✓ | - | - | - |
-| Manage Vendors | ✓ | ✓ | - | - | - |
-| Manage Billing | ✓ | ✓ | - | - | - |
-| Manage Contracts | ✓ | ✓ | - | - | - |
-| Manage Templates | ✓ | - | - | - | - |
-| Manage Banners | ✓ | - | - | - | - |
+| Feature | MASTER_ADMIN | SOCIETY_ADMIN | CHAIRMAN | SECRETARY | TREASURER | COMMITTEE | EMPLOYEE | MEMBER |
+|---------|:------------:|:-------------:|:--------:|:---------:|:---------:|:---------:|:--------:|:------:|
+| Manage Societies | ✓ | - | - | - | - | - | - | - |
+| Manage Users | Direct child | ALL below | Direct child | Direct child | Direct child | Direct child | Direct child | Direct child |
+| Manage Flats | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | - | - |
+| Manage Vehicles | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Manage Tenants | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Manage Tickets | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Assign Tickets | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | - | - |
+| Manage Vendors | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | - | - |
+| Manage Billing | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | - | - |
+| Manage Contracts | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | - | - |
+| Manage Templates | ✓ | - | - | - | - | - | - | - |
+| Manage Banners | ✓ | - | - | - | - | - | - | - |
 
 ## Database Configuration
 

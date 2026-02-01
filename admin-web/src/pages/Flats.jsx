@@ -12,14 +12,19 @@ export default function Flats() {
   const [searchTerm, setSearchTerm] = useState('')
   const [filterSociety, setFilterSociety] = useState('')
 
+  // Check if current user is MASTER_ADMIN
+  const isMasterAdmin = user?.role === 'MASTER_ADMIN'
+
   const { data: flats = [], isLoading } = useQuery({
-    queryKey: ['flats'],
-    queryFn: () => flatApi.getAll().then(res => res.data),
+    queryKey: ['flats', user?.id],
+    queryFn: () => flatApi.getAll(user.id).then(res => res.data),
+    enabled: !!user?.id,
   })
 
   const { data: societies = [] } = useQuery({
     queryKey: ['societies'],
     queryFn: () => societyApi.getAll().then(res => res.data),
+    enabled: isMasterAdmin, // Only fetch if MASTER_ADMIN
   })
 
   const createMutation = useMutation({
@@ -54,8 +59,19 @@ export default function Flats() {
   const handleSubmit = (e) => {
     e.preventDefault()
     const formData = new FormData(e.target)
+    
+    // For non-MASTER_ADMIN, use user's societyId directly
+    const societyId = isMasterAdmin 
+      ? parseInt(formData.get('societyId')) 
+      : user?.societyId
+
+    if (!societyId) {
+      alert('Society ID is required. Please log out and log back in.')
+      return
+    }
+
     const data = {
-      societyId: parseInt(formData.get('societyId')),
+      societyId,
       flatNumber: formData.get('flatNumber'),
       flatType: formData.get('flatType'),
       floor: parseInt(formData.get('floor')) || 0,
@@ -102,16 +118,19 @@ export default function Flats() {
               className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white placeholder:text-gray-400"
             />
           </div>
-          <select
-            value={filterSociety}
-            onChange={(e) => setFilterSociety(e.target.value)}
-            className="px-4 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
-          >
-            <option value="">All Societies</option>
-            {societies.map(s => (
-              <option key={s.id} value={s.id}>{s.name}</option>
-            ))}
-          </select>
+          {/* Only show society filter for MASTER_ADMIN */}
+          {isMasterAdmin && (
+            <select
+              value={filterSociety}
+              onChange={(e) => setFilterSociety(e.target.value)}
+              className="px-4 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
+            >
+              <option value="">All Societies</option>
+              {societies.map(s => (
+                <option key={s.id} value={s.id}>{s.name}</option>
+              ))}
+            </select>
+          )}
         </div>
       </div>
 
@@ -127,7 +146,7 @@ export default function Flats() {
               <thead className="bg-gray-50 dark:bg-slate-700 border-b border-gray-100 dark:border-slate-700">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Flat</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Society</th>
+                  {isMasterAdmin && <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Society</th>}
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Owner</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Type</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Area</th>
@@ -148,7 +167,7 @@ export default function Flats() {
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-gray-600 dark:text-gray-300">{flat.societyName}</td>
+                    {isMasterAdmin && <td className="px-6 py-4 whitespace-nowrap text-gray-600 dark:text-gray-300">{flat.societyName}</td>}
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div>
                         <span className="text-gray-900 dark:text-white">{flat.ownerName || '-'}</span>
@@ -194,20 +213,25 @@ export default function Flats() {
               </button>
             </div>
             <form onSubmit={handleSubmit} className="p-4 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Society</label>
-                <select
-                  name="societyId"
-                  defaultValue={editingFlat?.societyId}
-                  required
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
-                >
-                  <option value="">Select Society</option>
-                  {societies.map(s => (
-                    <option key={s.id} value={s.id}>{s.name}</option>
-                  ))}
-                </select>
-              </div>
+              {/* Society field - only show dropdown for MASTER_ADMIN, auto-set for others */}
+              {isMasterAdmin ? (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Society</label>
+                  <select
+                    name="societyId"
+                    defaultValue={editingFlat?.societyId}
+                    required
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
+                  >
+                    <option value="">Select Society</option>
+                    {societies.map(s => (
+                      <option key={s.id} value={s.id}>{s.name}</option>
+                    ))}
+                  </select>
+                </div>
+              ) : (
+                <input type="hidden" name="societyId" value={user?.societyId || ''} />
+              )}
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Flat Number</label>

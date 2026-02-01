@@ -1,0 +1,18 @@
+/* ============================================
+   MAIN CSS INDEX
+   Import all style modules
+   ============================================ */
+
+/* Base Styles */
+@import './base/variables.css';
+@import './base/typography.css';
+
+/* Component Styles */
+@import './components/cards.css';
+@import './components/buttons.css';
+
+/* Page-Specific Styles */
+@import './pages/society-detail.css';
+
+/* Existing Animations (keep for compatibility) */
+@import './animations.css';

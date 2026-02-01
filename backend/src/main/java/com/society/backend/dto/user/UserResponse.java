@@ -26,4 +26,13 @@ public class UserResponse {
         this.email = email;
         this.role = role;
     }
+
+    // Constructor with societyId (used in /auth/me)
+    public UserResponse(Long id, String name, String email, String role, Long societyId) {
+        this.id = id;
+        this.name = name;
+        this.email = email;
+        this.role = role;
+        this.societyId = societyId;
+    }
 }

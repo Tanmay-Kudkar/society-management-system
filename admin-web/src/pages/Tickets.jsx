@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '../context/AuthContext'
-import { ticketApi, societyApi, userApi, exportApi, downloadBlob } from '../api'
+import { ticketApi, userApi, exportApi, downloadBlob } from '../api'
 import { Plus, Search, X, Ticket, MessageSquare, User, Edit, AlertTriangle, Clock, FileSpreadsheet } from 'lucide-react'
 import clsx from 'clsx'
 
@@ -37,15 +37,15 @@ export default function Tickets() {
   const [filterStatus, setFilterStatus] = useState('')
   const [isExporting, setIsExporting] = useState(false)
 
+  // Check if current user is MASTER_ADMIN
+  const isMasterAdmin = user?.role === 'MASTER_ADMIN'
+
   const { data: tickets = [], isLoading } = useQuery({
     queryKey: ['tickets'],
     queryFn: () => ticketApi.getAll().then(res => res.data),
   })
 
-  const { data: societies = [] } = useQuery({
-    queryKey: ['societies'],
-    queryFn: () => societyApi.getAll().then(res => res.data),
-  })
+
 
   const { data: employees = [] } = useQuery({
     queryKey: ['employees'],
@@ -90,7 +90,7 @@ export default function Tickets() {
     e.preventDefault()
     const formData = new FormData(e.target)
     createMutation.mutate({
-      societyId: parseInt(formData.get('societyId')),
+      societyId: user.societyId,
       title: formData.get('title'),
       description: formData.get('description'),
       type: formData.get('type'),
@@ -110,7 +110,7 @@ export default function Tickets() {
   const handleExport = async () => {
     setIsExporting(true)
     try {
-      const response = await exportApi.allTickets(filterStatus || null)
+      const response = await exportApi.tickets(user.societyId, filterStatus || null)
       downloadBlob(response.data, `tickets_${new Date().toISOString().split('T')[0]}.xlsx`)
     } catch (error) {
       console.error('Export failed:', error)
@@ -249,7 +249,7 @@ export default function Tickets() {
                     
                     <div className="flex items-center gap-4 mt-3 text-xs text-gray-500 dark:text-gray-400">
                       <span>{ticket.type}</span>
-                      <span>{ticket.societyName}</span>
+                      {isMasterAdmin && <span>{ticket.societyName}</span>}
                       <span className="inline-flex items-center gap-1">
                         <Clock size={12} />
                         {ticket.createdAt && new Date(ticket.createdAt).toLocaleDateString()}
@@ -326,13 +326,6 @@ export default function Tickets() {
               </button>
             </div>
             <form onSubmit={handleSubmit} className="p-4 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Society</label>
-                <select name="societyId" required className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
-                  <option value="">Select Society</option>
-                  {societies.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-                </select>
-              </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Title</label>
                 <input type="text" name="title" required className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" />

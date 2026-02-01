@@ -8,6 +8,7 @@ import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
 import Users from './pages/Users'
 import Societies from './pages/Societies'
+import SocietyDetail from './pages/SocietyDetail'
 import Flats from './pages/Flats'
 import Tenants from './pages/Tenants'
 import Vehicles from './pages/Vehicles'
@@ -29,7 +30,7 @@ import About from './pages/footer/About'
 import Privacy from './pages/footer/Privacy'
 import Terms from './pages/footer/Terms'
 import Contact from './pages/footer/Contact'
-import './styles/animations.css'
+import './styles/index.css'
 
 // Protected Route component
 const ProtectedRoute = ({ children }) => {
@@ -72,6 +73,7 @@ function App() {
         <Route index element={<Dashboard />} />
         <Route path="users" element={<Users />} />
         <Route path="societies" element={<Societies />} />
+        <Route path="societies/:id" element={<SocietyDetail />} />
         <Route path="flats" element={<Flats />} />
         <Route path="tenants" element={<Tenants />} />
         <Route path="vehicles" element={<Vehicles />} />

@@ -31,10 +31,11 @@ public class FlatController {
         return ResponseEntity.ok(flatService.create(request));
     }
 
-    // All authenticated users can view
+    // All authenticated users can view (filtered by their society if not
+    // MASTER_ADMIN)
     @GetMapping
-    public ResponseEntity<List<FlatResponse>> getAll() {
-        return ResponseEntity.ok(flatService.getAll());
+    public ResponseEntity<List<FlatResponse>> getAll(@RequestParam Long userId) {
+        return ResponseEntity.ok(flatService.getAll(userId));
     }
 
     @GetMapping("/society/{societyId}")

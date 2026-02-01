@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '../context/AuthContext'
-import { transactionApi, societyApi, exportApi, downloadBlob } from '../api'
+import { transactionApi, exportApi, downloadBlob } from '../api'
 import { Plus, Search, X, TrendingUp, TrendingDown, DollarSign, FileSpreadsheet } from 'lucide-react'
 import clsx from 'clsx'
 
@@ -19,10 +19,7 @@ export default function Transactions() {
     queryFn: () => transactionApi.getAll().then(res => res.data),
   })
 
-  const { data: societies = [] } = useQuery({
-    queryKey: ['societies'],
-    queryFn: () => societyApi.getAll().then(res => res.data),
-  })
+
 
   const createMutation = useMutation({
     mutationFn: (data) => transactionApi.create(data, user.id),
@@ -47,7 +44,7 @@ export default function Transactions() {
     e.preventDefault()
     const formData = new FormData(e.target)
     const data = {
-      societyId: parseInt(formData.get('societyId')),
+      societyId: user.societyId,
       transactionType: formData.get('transactionType'),
       paymentMode: formData.get('paymentMode'),
       amount: parseFloat(formData.get('amount')),
@@ -67,7 +64,7 @@ export default function Transactions() {
       // Export last 30 days by default
       const endDate = new Date().toISOString().split('T')[0]
       const startDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
-      const response = await exportApi.allTransactions(startDate, endDate)
+      const response = await exportApi.transactions(user.societyId, startDate, endDate)
       downloadBlob(response.data, `transactions_${endDate}.xlsx`)
     } catch (error) {
       console.error('Export failed:', error)
@@ -241,13 +238,6 @@ export default function Transactions() {
               </button>
             </div>
             <form onSubmit={handleSubmit} className="p-4 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Society</label>
-                <select name="societyId" required className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
-                  <option value="">Select Society</option>
-                  {societies.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-                </select>
-              </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Type</label>

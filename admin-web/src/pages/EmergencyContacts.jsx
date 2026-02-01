@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '../context/AuthContext'
-import { emergencyContactApi, societyApi } from '../api'
+import { emergencyContactApi } from '../api'
 import { Plus, Search, X, Phone, Edit, Trash2, AlertCircle } from 'lucide-react'
 import clsx from 'clsx'
 
@@ -24,17 +24,16 @@ export default function EmergencyContacts() {
   const [editingContact, setEditingContact] = useState(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [filterCategory, setFilterCategory] = useState('')
-  const [filterSociety, setFilterSociety] = useState('')
+
+  // Check if current user is MASTER_ADMIN
+  const isMasterAdmin = user?.role === 'MASTER_ADMIN'
 
   const { data: contacts = [], isLoading } = useQuery({
     queryKey: ['emergencyContacts'],
     queryFn: () => emergencyContactApi.getAll().then(res => res.data),
   })
 
-  const { data: societies = [] } = useQuery({
-    queryKey: ['societies'],
-    queryFn: () => societyApi.getAll().then(res => res.data),
-  })
+
 
   const createMutation = useMutation({
     mutationFn: (data) => emergencyContactApi.create(data, user.id),
@@ -61,8 +60,7 @@ export default function EmergencyContacts() {
     const matchesSearch = c.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          c.phone?.includes(searchTerm)
     const matchesCategory = !filterCategory || c.contactType === filterCategory
-    const matchesSociety = !filterSociety || c.societyId === parseInt(filterSociety) || !c.societyId
-    return matchesSearch && matchesCategory && matchesSociety
+    return matchesSearch && matchesCategory
   })
 
   const closeModal = () => {
@@ -74,7 +72,7 @@ export default function EmergencyContacts() {
     e.preventDefault()
     const formData = new FormData(e.target)
     const data = {
-      societyId: formData.get('societyId') ? parseInt(formData.get('societyId')) : null,
+      societyId: user.societyId,
       name: formData.get('name'),
       phone: formData.get('phone'),
       alternatePhone: formData.get('alternatePhone') || null,
@@ -142,14 +140,6 @@ export default function EmergencyContacts() {
             <option value="PLUMBER">Plumber</option>
             <option value="OTHER">Other</option>
           </select>
-          <select
-            value={filterSociety}
-            onChange={(e) => setFilterSociety(e.target.value)}
-            className="px-4 py-2 border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-          >
-            <option value="">All Societies</option>
-            {societies.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-          </select>
         </div>
       </div>
 
@@ -194,7 +184,9 @@ export default function EmergencyContacts() {
                           {contact.notes && (
                             <p className="text-sm text-gray-400 dark:text-gray-500 italic mt-1">{contact.notes}</p>
                           )}
-                          <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">{contact.societyName}</p>
+                          {isMasterAdmin && contact.societyName && (
+                            <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">{contact.societyName}</p>
+                          )}
                         </div>
                       </div>
                       <div className="flex gap-1">
@@ -229,53 +221,52 @@ export default function EmergencyContacts() {
       {/* Modal */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-lg">
-            <div className="flex items-center justify-between p-4 border-b border-gray-100">
-              <h3 className="text-lg font-semibold">{editingContact ? 'Edit Contact' : 'Add Emergency Contact'}</h3>
-              <button onClick={closeModal} className="p-1 hover:bg-gray-100 rounded">
+          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-xl w-full max-w-lg">
+            <div className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-slate-700">
+              <h3 className="text-lg font-semibold dark:text-white">{editingContact ? 'Edit Contact' : 'Add Emergency Contact'}</h3>
+              <button onClick={closeModal} className="p-1 hover:bg-gray-100 dark:hover:bg-slate-700 rounded dark:text-gray-400">
                 <X size={20} />
               </button>
             </div>
             <form onSubmit={handleSubmit} className="p-4 space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Name</label>
                 <input
                   type="text"
                   name="name"
                   defaultValue={editingContact?.name || ''}
                   required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 dark:text-white"
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Phone</label>
                   <input
                     type="tel"
                     name="phone"
                     defaultValue={editingContact?.phone || ''}
                     required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 dark:text-white"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Alternate Phone</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Alternate Phone</label>
                   <input
                     type="tel"
                     name="alternatePhone"
                     defaultValue={editingContact?.alternatePhone || ''}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 dark:text-white"
                   />
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Contact Type</label>
+              <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Contact Type</label>
                   <select
                     name="contactType"
                     defaultValue={editingContact?.contactType || 'OTHER'}
                     required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 dark:text-white"
                   >
                     <option value="POLICE">Police</option>
                     <option value="FIRE">Fire</option>
@@ -287,41 +278,28 @@ export default function EmergencyContacts() {
                     <option value="PLUMBER">Plumber</option>
                     <option value="OTHER">Other</option>
                   </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Society</label>
-                  <select
-                    name="societyId"
-                    defaultValue={editingContact?.societyId || ''}
-                    required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                  >
-                    <option value="">Select Society</option>
-                    {societies.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-                  </select>
-                </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Address</label>
                 <textarea
                   name="address"
                   rows={2}
                   defaultValue={editingContact?.address || ''}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 dark:text-white"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Notes</label>
                 <textarea
                   name="notes"
                   rows={2}
                   defaultValue={editingContact?.notes || ''}
                   placeholder="Additional notes..."
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 dark:text-white"
                 />
               </div>
               <div className="flex gap-3 pt-4">
-                <button type="button" onClick={closeModal} className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition">Cancel</button>
+                <button type="button" onClick={closeModal} className="flex-1 px-4 py-2 border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition">Cancel</button>
                 <button type="submit" className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
                   {editingContact ? 'Update' : 'Create'}
                 </button>

@@ -24,11 +24,14 @@ public class UserController {
     }
 
     /**
-     * Create a new user. The current user can only create roles they are permitted
-     * to.
-     * - MASTER_ADMIN → SOCIETY_ADMIN
-     * - SOCIETY_ADMIN → CHAIRMAN, SECRETARY, TREASURER, COMMITTEE, EMPLOYEE, MEMBER
-     * - etc.
+     * Create a new user. The current user can only create DIRECT CHILDREN roles.
+     * HIERARCHY (Direct Children Only):
+     * - MASTER_ADMIN → SOCIETY_ADMIN only
+     * - SOCIETY_ADMIN → All below (exception: full CRUD)
+     * - CHAIRMAN/SECRETARY/TREASURER → COMMITTEE only
+     * - COMMITTEE → EMPLOYEE, MEMBER
+     * - EMPLOYEE → VISITOR
+     * - MEMBER → TENANT
      */
     @PostMapping
     @PreAuthorize("hasAnyRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'EMPLOYEE', 'MEMBER')")
@@ -43,14 +46,14 @@ public class UserController {
      * - Others see only users in their society
      */
     @GetMapping
-    @PreAuthorize("hasAnyRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE')")
+    @PreAuthorize("hasAnyRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'EMPLOYEE', 'MEMBER')")
     public List<UserResponse> getUsers() {
         return userService.getAllUsers();
     }
 
     /**
      * Get the roles that the current user is allowed to create.
-     * Used by frontend to populate the role dropdown.
+     * Used by frontend to populate the role dropdown for creating users.
      */
     @GetMapping("/creatable-roles")
     @PreAuthorize("isAuthenticated()")
@@ -63,19 +66,36 @@ public class UserController {
     }
 
     /**
+     * Get the roles that the current user is allowed to update/delete.
+     * Used by frontend to show/hide edit and delete buttons based on permissions.
+     */
+    @GetMapping("/updatable-roles")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<Set<String>> getUpdatableRoles() {
+        Set<Role> roles = userService.getUpdatableRoles();
+        Set<String> roleNames = roles.stream()
+                .map(Role::name)
+                .collect(Collectors.toSet());
+        return ResponseEntity.ok(roleNames);
+    }
+
+    /**
      * Get user by ID.
      */
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE')")
+    @PreAuthorize("hasAnyRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'EMPLOYEE', 'MEMBER')")
     public ResponseEntity<UserResponse> getUserById(@PathVariable Long id) {
         return ResponseEntity.ok(userService.getUserById(id));
     }
 
     /**
      * Update an existing user.
+     * Permission is checked in service layer based on role hierarchy.
+     * Users can only update their direct children (except SOCIETY_ADMIN who can
+     * update all).
      */
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN')")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<UserResponse> updateUser(
             @PathVariable Long id,
             @Valid @RequestBody UserRequest request) {
@@ -84,9 +104,12 @@ public class UserController {
 
     /**
      * Delete a user.
+     * Permission is checked in service layer based on role hierarchy.
+     * Users can only delete their direct children (except SOCIETY_ADMIN who can
+     * delete all).
      */
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('MASTER_ADMIN', 'SOCIETY_ADMIN')")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
         userService.deleteUser(id);
         return ResponseEntity.noContent().build();

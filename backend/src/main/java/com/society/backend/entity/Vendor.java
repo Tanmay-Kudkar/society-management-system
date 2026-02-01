@@ -62,9 +62,6 @@ public class Vendor {
     @Column(name = "ifsc_code")
     private String ifscCode;
 
-    @Column(name = "is_common")
-    private Boolean isCommon = false; // true = available to all societies
-
     @Column(name = "approval_status")
     private String approvalStatus = "PENDING"; // PENDING, APPROVED, REJECTED
 

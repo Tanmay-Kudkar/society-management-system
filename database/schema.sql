@@ -117,7 +117,6 @@ CREATE TABLE vendors (
     bank_name VARCHAR(100),
     account_number VARCHAR(30),
     ifsc_code VARCHAR(20),
-    is_common BOOLEAN DEFAULT FALSE,
     approval_status VARCHAR(20) DEFAULT 'PENDING' CHECK (approval_status IN ('PENDING', 'APPROVED', 'REJECTED')),
     is_active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP

@@ -157,7 +157,7 @@ public class VendorBillServiceImpl implements VendorBillService {
     @Override
     @Transactional
     public void delete(Long id, Long userId) {
-        roleService.requireMasterAdmin(userId);
+        roleService.requireAdminOrCommittee(userId);
 
         if (!vendorBillRepository.existsById(id)) {
             throw new ApiException(HttpStatus.NOT_FOUND, "Vendor bill not found");

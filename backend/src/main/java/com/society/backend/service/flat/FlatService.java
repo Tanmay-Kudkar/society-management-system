@@ -8,7 +8,7 @@ import java.util.List;
 public interface FlatService {
     FlatResponse create(FlatRequest request);
 
-    List<FlatResponse> getAll();
+    List<FlatResponse> getAll(Long userId);
 
     List<FlatResponse> getBySociety(Long societyId);
 

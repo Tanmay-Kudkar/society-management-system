@@ -1,42 +1,56 @@
 package com.society.backend.entity;
 
 /**
- * Role Hierarchy (highest to lowest):
+ * Role Hierarchy based on Real Housing Society Structure:
  * 
- * 1. MASTER_ADMIN - Platform owner (you), manages all societies
- * - Only receives escalated issues from SOCIETY_ADMIN
- * - Can enable/disable societies
- * - Has access to all societies
+ * HOUSING SOCIETY HIERARCHY:
+ * ──────────────────────────
  * 
- * 2. SOCIETY_ADMIN - Society-level admin
- * - Manages one specific society
- * - Receives all society notifications
- * - Can escalate issues to MASTER_ADMIN
- * - More rights than COMMITTEE
+ * CHAIRMAN (Head/Superintendent):
+ * - Holds overall control and guidance
+ * - Presides over ALL meetings
+ * - Possesses final VETO/CONSENT power on committee decisions
+ * - Primary signatory for bank accounts
+ * - HIGHEST authority in the committee
  * 
- * 3. CHAIRMAN - Head of committee
- * 4. SECRETARY - Society secretary
- * 5. TREASURER - Handles finances
- * 6. COMMITTEE - General committee member
+ * SECRETARY (Administrative Head):
+ * - Manages documentation, records, member details
+ * - Handles day-to-day operations and correspondence
+ * - Acts on decisions authorized by committee/chairman
+ * - Operational executive (not ultimate decision-maker)
  * 
- * 7. EMPLOYEE - Society staff (security, housekeeping, etc.)
+ * TREASURER (Financial Head):
+ * - Handles all finances, billing, payments
+ * - Manages society accounts and financial records
  * 
- * 8. MEMBER - Flat owner/resident
+ * HIERARCHY RULES:
+ * ────────────────
+ * 1. Parent creates DIRECT CHILDREN only (no skip-level creation)
+ * 2. Read access flows DOWNWARD (parents can read all descendants)
+ * 3. Update/Delete access LIMITED to direct children only
+ * 4. EXCEPTION: SOCIETY_ADMIN has FULL CRUD rights to ALL roles below
  * 
- * 9. TENANT - Renter (limited access)
- * 
- * 10. VISITOR - Temporary access
+ * ROLE LEVELS:
+ * ────────────
+ * Level 1: MASTER_ADMIN - Platform owner, manages ALL societies
+ * Level 2: SOCIETY_ADMIN - Society manager (EXCEPTION: full CRUD below)
+ * Level 3: CHAIRMAN - Committee HEAD (highest committee authority)
+ * Level 4: SECRETARY - Administrative head (reports to Chairman)
+ * TREASURER - Financial head (reports to Chairman)
+ * Level 5: COMMITTEE - General committee members
+ * Level 6: EMPLOYEE, MEMBER - Staff & Residents
+ * Level 7: TENANT, VISITOR - Renters & Temporary access
  */
 
 public enum Role {
-    MASTER_ADMIN, // Platform Owner
-    SOCIETY_ADMIN, // Society-level admin
-    CHAIRMAN, // Committee head
-    SECRETARY, // Society secretary
-    TREASURER, // Finance handler
-    COMMITTEE, // General committee member
-    EMPLOYEE, // Society staff
-    MEMBER, // Flat owner
-    TENANT, // Renter
-    VISITOR // Temporary access
+    MASTER_ADMIN, // Level 1: Platform Owner - creates SOCIETY_ADMIN only
+    SOCIETY_ADMIN, // Level 2: Society Admin - FULL CRUD on all below (exception)
+    CHAIRMAN, // Level 3: Committee HEAD - creates SECRETARY, TREASURER
+    SECRETARY, // Level 4: Administrative head - creates COMMITTEE
+    TREASURER, // Level 4: Financial head - creates COMMITTEE
+    COMMITTEE, // Level 5: Committee member - creates EMPLOYEE, MEMBER
+    EMPLOYEE, // Level 6: Society staff - creates VISITOR only
+    MEMBER, // Level 6: Flat owner - creates TENANT only
+    TENANT, // Level 7: Renter - cannot create anyone
+    VISITOR // Level 7: Temporary access - cannot create anyone
 }

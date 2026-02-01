@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '../context/AuthContext'
-import { complaintApi, societyApi } from '../api'
+import { complaintApi } from '../api'
 import { Plus, Search, X, AlertTriangle, Clock, CheckCircle, XCircle } from 'lucide-react'
 import clsx from 'clsx'
 
@@ -26,6 +26,8 @@ export default function Complaints() {
   const [searchTerm, setSearchTerm] = useState('')
   const [filterStatus, setFilterStatus] = useState('')
 
+  // Check if current user is MASTER_ADMIN
+  const isMasterAdmin = user?.role === 'MASTER_ADMIN'
   const canViewAll = ['MASTER_ADMIN', 'COMMITTEE', 'EMPLOYEE'].includes(user?.role)
 
   const { data: complaints = [], isLoading } = useQuery({
@@ -38,10 +40,7 @@ export default function Complaints() {
     enabled: !!user?.id,
   })
 
-  const { data: societies = [] } = useQuery({
-    queryKey: ['societies'],
-    queryFn: () => societyApi.getAll().then(res => res.data),
-  })
+
 
   const createMutation = useMutation({
     mutationFn: (data) => complaintApi.create(data, user.id),
@@ -67,7 +66,7 @@ export default function Complaints() {
     e.preventDefault()
     const formData = new FormData(e.target)
     createMutation.mutate({
-      societyId: parseInt(formData.get('societyId')),
+      societyId: user.societyId,
       subject: formData.get('subject'),
       description: formData.get('description'),
       category: formData.get('category'),
@@ -188,7 +187,7 @@ export default function Complaints() {
                       )}
                       
                       <div className="flex items-center gap-4 mt-2 text-xs text-gray-500 dark:text-gray-400">
-                        <span>{complaint.societyName}</span>
+                        {isMasterAdmin && <span>{complaint.societyName}</span>}
                         <span>By: {complaint.raisedByName || 'N/A'}</span>
                         <span>{complaint.createdAt && new Date(complaint.createdAt).toLocaleDateString()}</span>
                       </div>
@@ -227,13 +226,6 @@ export default function Complaints() {
               </button>
             </div>
             <form onSubmit={handleSubmit} className="p-4 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Society</label>
-                <select name="societyId" required className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
-                  <option value="">Select Society</option>
-                  {societies.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-                </select>
-              </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Subject</label>
                 <input type="text" name="subject" required className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" />

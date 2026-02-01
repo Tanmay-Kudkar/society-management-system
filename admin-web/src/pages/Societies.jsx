@@ -1,11 +1,13 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { societyApi } from '../api'
-import { Plus, Edit, Trash2, Search, X, Building2 } from 'lucide-react'
+import { Plus, Edit, Trash2, Search, X, Building2, Eye, ChevronRight } from 'lucide-react'
 
 export default function Societies() {
   const { user } = useAuth()
+  const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [showModal, setShowModal] = useState(false)
   const [editingSociety, setEditingSociety] = useState(null)
@@ -103,15 +105,26 @@ export default function Societies() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredSocieties.map((society) => (
-            <div key={society.id} className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-6">
+            <div key={society.id} className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-6 hover:shadow-lg hover:border-blue-200 dark:hover:border-blue-800 transition-all duration-300 group">
               <div className="flex items-start justify-between mb-4">
-                <div className="p-3 rounded-lg bg-blue-50 dark:bg-blue-900/30">
+                <div 
+                  className="p-3 rounded-lg bg-blue-50 dark:bg-blue-900/30 cursor-pointer group-hover:bg-blue-100 dark:group-hover:bg-blue-900/50 transition-colors"
+                  onClick={() => navigate(`/societies/${society.id}`)}
+                >
                   <Building2 className="w-6 h-6 text-blue-600 dark:text-blue-400" />
                 </div>
                 <div className="flex gap-1">
                   <button
+                    onClick={() => navigate(`/societies/${society.id}`)}
+                    className="p-1.5 text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded transition"
+                    title="View details"
+                  >
+                    <Eye size={18} />
+                  </button>
+                  <button
                     onClick={() => { setEditingSociety(society); setShowModal(true) }}
-                    className="p-1.5 text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition"
+                    className="p-1.5 text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded transition"
+                    title="Edit society"
                   >
                     <Edit size={18} />
                   </button>
@@ -121,13 +134,19 @@ export default function Societies() {
                         deleteMutation.mutate(society.id)
                       }
                     }}
-                    className="p-1.5 text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition"
+                    className="p-1.5 text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded transition"
+                    title="Delete society"
                   >
                     <Trash2 size={18} />
                   </button>
                 </div>
               </div>
-              <h3 className="font-semibold text-gray-900 dark:text-white mb-2">{society.name}</h3>
+              <h3 
+                className="font-semibold text-gray-900 dark:text-white mb-2 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                onClick={() => navigate(`/societies/${society.id}`)}
+              >
+                {society.name}
+              </h3>
               <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">{society.address}</p>
               <div className="space-y-1 text-sm">
                 <p className="text-gray-500 dark:text-gray-400">
@@ -140,6 +159,14 @@ export default function Societies() {
                   <span className="font-medium text-gray-700 dark:text-gray-300">Reg No:</span> {society.registrationNumber || '-'}
                 </p>
               </div>
+              {/* View Details Link */}
+              <button
+                onClick={() => navigate(`/societies/${society.id}`)}
+                className="mt-4 w-full flex items-center justify-center gap-2 px-4 py-2 text-sm text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition group/btn"
+              >
+                View Details
+                <ChevronRight size={16} className="group-hover/btn:translate-x-1 transition-transform" />
+              </button>
             </div>
           ))}
         </div>

@@ -11,13 +11,25 @@ import org.springframework.stereotype.Component;
  * Initializes the MASTER_ADMIN user on application startup.
  * 
  * MASTER_ADMIN is the only hardcoded user - the platform owner.
- * All other users must be created through the proper hierarchy:
+ * All other users must be created through the STRICT role hierarchy:
  * 
- * - MASTER_ADMIN creates → SOCIETY_ADMIN
- * - SOCIETY_ADMIN creates → CHAIRMAN, SECRETARY, TREASURER, COMMITTEE, EMPLOYEE
- * - SOCIETY_ADMIN/COMMITTEE creates → MEMBER
- * - MEMBER creates → TENANT (for their flat)
- * - EMPLOYEE creates → VISITOR (temporary access)
+ * HIERARCHY RULES:
+ * ────────────────
+ * 1. Parent creates DIRECT CHILDREN only (no skip-level creation)
+ * 2. Read access flows DOWNWARD (parents can read all descendants)
+ * 3. Update/Delete access is LIMITED to direct children only
+ * 4. Grandchildren = READ-ONLY (no create/update/delete)
+ * 
+ * EXCEPTION: SOCIETY_ADMIN has FULL CRUD rights to ALL roles below them
+ * 
+ * CREATION HIERARCHY:
+ * ───────────────────
+ * - MASTER_ADMIN → SOCIETY_ADMIN only (direct child)
+ * - SOCIETY_ADMIN → ALL below (exception: full CRUD rights)
+ * - CHAIRMAN/SECRETARY/TREASURER → COMMITTEE only (direct child)
+ * - COMMITTEE → EMPLOYEE, MEMBER (direct children)
+ * - EMPLOYEE → VISITOR only (direct child)
+ * - MEMBER → TENANT only (direct child, for their flat)
  */
 @Component
 public class DataInitializer implements CommandLineRunner {

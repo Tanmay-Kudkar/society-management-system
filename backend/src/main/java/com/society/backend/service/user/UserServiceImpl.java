@@ -101,15 +101,20 @@ public class UserServiceImpl implements UserService {
                     .toList();
         }
 
-        // SOCIETY_ADMIN and below see only users in their society
+        // SOCIETY_ADMIN and below see only users in their society (excluding
+        // MASTER_ADMIN)
         if (currentUser != null && currentUser.getSociety() != null) {
-            return userRepository.findBySocietyId(currentUser.getSociety().getId())
+            Long societyId = currentUser.getSociety().getId();
+            return userRepository.findBySocietyId(societyId)
                     .stream()
+                    .filter(u -> u.getRole() != Role.MASTER_ADMIN) // Exclude MASTER_ADMIN
+                    .filter(u -> u.getSociety() != null && u.getSociety().getId().equals(societyId)) // Double-check
+                                                                                                     // society match
                     .map(this::mapToResponse)
                     .toList();
         }
 
-        // No society assigned, return current user if available
+        // No society assigned, return current user only if available
         if (currentUser != null) {
             return List.of(mapToResponse(currentUser));
         }
@@ -127,6 +132,15 @@ public class UserServiceImpl implements UserService {
         return RolePermissions.getAllowedRolesToCreate(currentRole);
     }
 
+    /**
+     * Get the roles that the current user can update/delete.
+     */
+    @Override
+    public Set<Role> getUpdatableRoles() {
+        Role currentRole = getCurrentUserRole();
+        return RolePermissions.getAllowedRolesToUpdate(currentRole);
+    }
+
     @Override
     public UserResponse getUserById(Long id) {
         User user = userRepository.findById(id)
@@ -138,6 +152,30 @@ public class UserServiceImpl implements UserService {
     public UserResponse updateUser(Long id, UserRequest request) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "User not found"));
+
+        // Get current user's role and validate UPDATE permission
+        Role currentRole = getCurrentUserRole();
+        Role targetRole = user.getRole();
+
+        // Users can update their own profile (except role change)
+        User currentUser = getCurrentUser();
+        boolean isSelfUpdate = currentUser != null && currentUser.getId().equals(id);
+
+        if (!isSelfUpdate) {
+            // Check if current user can update this target role
+            if (!RolePermissions.canUpdate(currentRole, targetRole)) {
+                throw new ApiException(
+                        HttpStatus.FORBIDDEN,
+                        RolePermissions.getUpdatePermissionDeniedMessage(currentRole, targetRole));
+            }
+
+            // For non-MASTER_ADMIN, verify same society
+            if (currentRole != Role.MASTER_ADMIN && currentUser != null && currentUser.getSociety() != null) {
+                if (user.getSociety() == null || !user.getSociety().getId().equals(currentUser.getSociety().getId())) {
+                    throw new ApiException(HttpStatus.FORBIDDEN, "Cannot update users from different society");
+                }
+            }
+        }
 
         // Check if email is being changed and if it already exists
         if (!user.getEmail().equals(request.getEmail()) &&
@@ -151,8 +189,16 @@ public class UserServiceImpl implements UserService {
             user.setPassword(passwordEncoder.encode(request.getPassword()));
         }
         user.setPhone(request.getPhone());
-        if (request.getRole() != null) {
-            user.setRole(resolveRole(request.getRole()));
+
+        // Role change is only allowed if not self-update and if permitted
+        if (request.getRole() != null && !isSelfUpdate) {
+            Role newRole = resolveRole(request.getRole());
+            // Verify permission to change to new role
+            if (!RolePermissions.canCreate(currentRole, newRole)) {
+                throw new ApiException(HttpStatus.FORBIDDEN,
+                        "Cannot change role to " + newRole + ". You can only assign roles you can create.");
+            }
+            user.setRole(newRole);
         }
 
         // Allow MASTER_ADMIN to update society assignment
@@ -173,6 +219,25 @@ public class UserServiceImpl implements UserService {
         // Prevent deleting MASTER_ADMIN
         if (user.getRole() == Role.MASTER_ADMIN) {
             throw new ApiException(HttpStatus.FORBIDDEN, "Cannot delete MASTER_ADMIN");
+        }
+
+        // Get current user's role and validate DELETE permission
+        Role currentRole = getCurrentUserRole();
+        Role targetRole = user.getRole();
+
+        // Check if current user can delete this target role
+        if (!RolePermissions.canDelete(currentRole, targetRole)) {
+            throw new ApiException(
+                    HttpStatus.FORBIDDEN,
+                    RolePermissions.getDeletePermissionDeniedMessage(currentRole, targetRole));
+        }
+
+        // For non-MASTER_ADMIN, verify same society
+        User currentUser = getCurrentUser();
+        if (currentRole != Role.MASTER_ADMIN && currentUser != null && currentUser.getSociety() != null) {
+            if (user.getSociety() == null || !user.getSociety().getId().equals(currentUser.getSociety().getId())) {
+                throw new ApiException(HttpStatus.FORBIDDEN, "Cannot delete users from different society");
+            }
         }
 
         // Check for related records
@@ -236,7 +301,8 @@ public class UserServiceImpl implements UserService {
         if (auth == null || auth.getName() == null) {
             return null;
         }
-        return userRepository.findByEmail(auth.getName()).orElse(null);
+        // Use the method that eagerly loads the society to avoid lazy loading issues
+        return userRepository.findByEmailWithSociety(auth.getName()).orElse(null);
     }
 
     private UserResponse mapToResponse(User user) {
