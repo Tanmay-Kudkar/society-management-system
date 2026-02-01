@@ -37,19 +37,19 @@ public class WingController {
     }
 
     @PostMapping
-    @PreAuthorize("@securityService.requireAdminOrCommittee()")
+    @PreAuthorize("hasAnyRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE')")
     public ResponseEntity<WingResponse> create(@Valid @RequestBody WingRequest request) {
         return ResponseEntity.ok(wingService.create(request));
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("@securityService.requireAdminOrCommittee()")
+    @PreAuthorize("hasAnyRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE')")
     public ResponseEntity<WingResponse> update(@PathVariable Long id, @Valid @RequestBody WingRequest request) {
         return ResponseEntity.ok(wingService.update(id, request));
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("@securityService.requireAdminOrCommittee()")
+    @PreAuthorize("hasAnyRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE')")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         wingService.delete(id);
         return ResponseEntity.ok().build();
