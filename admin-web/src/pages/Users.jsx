@@ -5,6 +5,7 @@ import { userApi, societyApi } from '../api'
 import { Plus, Edit, Trash2, Search, X, AlertCircle, Shield, Users as UsersIcon, Building2 } from 'lucide-react'
 import clsx from 'clsx'
 import { useNavigate, useSearchParams } from 'react-router-dom'
+import { parseApiError, validateUserForm } from '../utils/validation'
 
 const roleColors = {
   MASTER_ADMIN: 'bg-purple-100 text-purple-800',
@@ -99,7 +100,7 @@ export default function Users() {
       setError('')
     },
     onError: (err) => {
-      setError(err.response?.data?.message || 'Failed to create user')
+      setError(parseApiError(err))
     },
   })
 
@@ -112,7 +113,7 @@ export default function Users() {
       setError('')
     },
     onError: (err) => {
-      setError(err.response?.data?.message || 'Failed to update user')
+      setError(parseApiError(err))
     },
   })
 
@@ -169,6 +170,19 @@ export default function Users() {
       role: roleValue,
       phone: formData.get('phone'),
       societyId: formData.get('societyId') ? parseInt(formData.get('societyId')) : null,
+    }
+
+    // Frontend validation
+    const validation = validateUserForm(data, !editingUser)
+    if (!validation.isValid) {
+      setError(Object.values(validation.errors).join(', '))
+      return
+    }
+
+    // Validate societyId is required for SOCIETY_ADMIN creation by MASTER_ADMIN
+    if (user?.role === 'MASTER_ADMIN' && roleValue === 'SOCIETY_ADMIN' && !data.societyId) {
+      setError('Please select a society for the Society Admin')
+      return
     }
 
     if (editingUser) {

@@ -46,6 +46,11 @@ public class UserServiceImpl implements UserService {
             throw new ApiException(HttpStatus.CONFLICT, "Email already exists");
         }
 
+        // Validate password is provided for new users
+        if (request.getPassword() == null || request.getPassword().trim().isEmpty()) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Password is required for new users");
+        }
+
         // Get the current logged-in user's role
         Role creatorRole = getCurrentUserRole();
         Role targetRole = resolveRole(request.getRole());
@@ -60,6 +65,13 @@ public class UserServiceImpl implements UserService {
         // Prevent creating MASTER_ADMIN - there can only be one (hardcoded)
         if (targetRole == Role.MASTER_ADMIN) {
             throw new ApiException(HttpStatus.FORBIDDEN, "MASTER_ADMIN cannot be created. Only one exists.");
+        }
+
+        // Validate societyId is required when MASTER_ADMIN creates SOCIETY_ADMIN
+        if (creatorRole == Role.MASTER_ADMIN && targetRole == Role.SOCIETY_ADMIN) {
+            if (request.getSocietyId() == null) {
+                throw new ApiException(HttpStatus.BAD_REQUEST, "Society selection is required when creating a Society Admin");
+            }
         }
 
         User user = new User();

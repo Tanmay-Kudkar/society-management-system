@@ -1,7 +1,11 @@
 package com.society.backend.exception;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.stream.Collectors;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -12,26 +16,102 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import com.society.backend.dto.common.ErrorResponse;
 
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
         @ExceptionHandler(MethodArgumentNotValidException.class)
-        public ResponseEntity<ErrorResponse> handleValidation(
+        public ResponseEntity<Map<String, Object>> handleValidation(
                         MethodArgumentNotValidException ex,
                         HttpServletRequest request) {
-                String message = ex.getBindingResult()
+                
+                // Collect all validation errors
+                Map<String, String> fieldErrors = ex.getBindingResult()
+                                .getFieldErrors()
+                                .stream()
+                                .collect(Collectors.toMap(
+                                        FieldError::getField,
+                                        error -> error.getDefaultMessage() != null ? error.getDefaultMessage() : "Invalid value",
+                                        (existing, replacement) -> existing
+                                ));
+                
+                // Get the first error as the main message
+                String mainMessage = ex.getBindingResult()
                                 .getFieldErrors()
                                 .stream()
                                 .findFirst()
                                 .map(FieldError::getDefaultMessage)
                                 .orElse("Validation failed");
 
-                return ResponseEntity.badRequest().body(
+                Map<String, Object> response = new HashMap<>();
+                response.put("timestamp", LocalDateTime.now().toString());
+                response.put("status", 400);
+                response.put("error", "Validation Error");
+                response.put("message", mainMessage);
+                response.put("fieldErrors", fieldErrors);
+                response.put("path", request.getRequestURI());
+
+                return ResponseEntity.badRequest().body(response);
+        }
+
+        @ExceptionHandler(DataIntegrityViolationException.class)
+        public ResponseEntity<ErrorResponse> handleDataIntegrityViolation(
+                        DataIntegrityViolationException ex,
+                        HttpServletRequest request) {
+                
+                String message = "Data integrity error";
+                String cause = ex.getMostSpecificCause().getMessage();
+                
+                // Log the actual cause for debugging
+                log.error("DataIntegrityViolation: {}", cause);
+                
+                // Parse common constraint violations for user-friendly messages
+                if (cause != null) {
+                        String lowerCause = cause.toLowerCase();
+                        
+                        // Check for unique constraint violations first (more specific)
+                        if (lowerCause.contains("duplicate") || lowerCause.contains("unique") || 
+                            lowerCause.contains("already exists") || lowerCause.contains("violates unique constraint")) {
+                                if (lowerCause.contains("email") || lowerCause.contains("users_email")) {
+                                        message = "Email already exists. Please use a different email address.";
+                                } else if ((lowerCause.contains("flat") && lowerCause.contains("number")) || 
+                                           lowerCause.contains("flat_number")) {
+                                        message = "Flat number already exists in this society.";
+                                } else if (lowerCause.contains("phone")) {
+                                        message = "Phone number already registered.";
+                                } else if ((lowerCause.contains("name") && lowerCause.contains("society")) ||
+                                           lowerCause.contains("societies_name")) {
+                                        message = "Society name already exists.";
+                                } else {
+                                        message = "This record already exists. Please check for duplicates.";
+                                }
+                        } 
+                        // Check for foreign key violations (less specific, check after unique)
+                        else if (lowerCause.contains("foreign key") || lowerCause.contains("fk_") || 
+                                 lowerCause.contains("references")) {
+                                if (lowerCause.contains("society_id") || lowerCause.contains("fk_user_society")) {
+                                        message = "Invalid society reference. Please select a valid society.";
+                                } else if (lowerCause.contains("flat_id") || lowerCause.contains("fk_user_flat")) {
+                                        message = "Invalid flat reference. Please select a valid flat.";
+                                } else if (lowerCause.contains("user_id")) {
+                                        message = "Invalid user reference.";
+                                } else {
+                                        message = "Invalid reference. Please check your selections.";
+                                }
+                        }
+                        // Handle not-null constraint violations
+                        else if (lowerCause.contains("not-null") || lowerCause.contains("null value")) {
+                                message = "A required field is missing. Please fill in all required fields.";
+                        }
+                }
+                
+                return ResponseEntity.status(HttpStatus.CONFLICT).body(
                                 new ErrorResponse(
                                                 LocalDateTime.now(),
-                                                400,
-                                                "Validation Error",
+                                                409,
+                                                "Conflict",
                                                 message,
                                                 request.getRequestURI()));
         }
@@ -50,6 +130,32 @@ public class GlobalExceptionHandler {
                                                 request.getRequestURI()));
         }
 
+        @ExceptionHandler(AccessDeniedException.class)
+        public ResponseEntity<ErrorResponse> handleAccessDenied(
+                        AccessDeniedException ex,
+                        HttpServletRequest request) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(
+                                new ErrorResponse(
+                                                LocalDateTime.now(),
+                                                403,
+                                                "Forbidden",
+                                                ex.getMessage(),
+                                                request.getRequestURI()));
+        }
+
+        @ExceptionHandler(IllegalArgumentException.class)
+        public ResponseEntity<ErrorResponse> handleIllegalArgument(
+                        IllegalArgumentException ex,
+                        HttpServletRequest request) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+                                new ErrorResponse(
+                                                LocalDateTime.now(),
+                                                400,
+                                                "Bad Request",
+                                                ex.getMessage(),
+                                                request.getRequestURI()));
+        }
+
         @ExceptionHandler(RuntimeException.class)
         public ResponseEntity<ErrorResponse> handleRuntime(
                         RuntimeException ex,
@@ -61,6 +167,22 @@ public class GlobalExceptionHandler {
                                                 status.value(),
                                                 status.getReasonPhrase(),
                                                 ex.getMessage(),
+                                                request.getRequestURI()));
+        }
+
+        @ExceptionHandler(Exception.class)
+        public ResponseEntity<ErrorResponse> handleGeneral(
+                        Exception ex,
+                        HttpServletRequest request) {
+                // Log the actual error for debugging
+                ex.printStackTrace();
+                
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
+                                new ErrorResponse(
+                                                LocalDateTime.now(),
+                                                500,
+                                                "Internal Server Error",
+                                                "An unexpected error occurred. Please try again later.",
                                                 request.getRequestURI()));
         }
 }

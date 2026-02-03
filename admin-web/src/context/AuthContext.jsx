@@ -104,9 +104,15 @@ export const AuthProvider = ({ children }) => {
   const isSecretary = () => hasRole('SECRETARY')
   const isTreasurer = () => hasRole('TREASURER')
   const isCommittee = () => hasRole('COMMITTEE')
+  const isMember = () => hasRole('MEMBER')
   
   const isAdminLevel = () => hasRole('MASTER_ADMIN', 'SOCIETY_ADMIN')
   const isCommitteeLevel = () => hasRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE')
+  
+  // Permission checks for specific actions
+  const canManageNotices = () => hasRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'EMPLOYEE')
+  const canManageDocuments = () => hasRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'EMPLOYEE')
+  const canViewFinancials = () => hasRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE')
 
   const updateUser = (updatedUser) => {
     setUser(updatedUser)
@@ -126,8 +132,12 @@ export const AuthProvider = ({ children }) => {
     isSecretary,
     isTreasurer,
     isCommittee,
+    isMember,
     isAdminLevel,
     isCommitteeLevel,
+    canManageNotices,
+    canManageDocuments,
+    canViewFinancials,
   }
 
   return (

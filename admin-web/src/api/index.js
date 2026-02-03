@@ -64,6 +64,26 @@ export const userApi = {
   delete: (id) => api.delete(`/users/${id}`),
   getCreatableRoles: () => api.get('/users/creatable-roles'),
   getUpdatableRoles: () => api.get('/users/updatable-roles'),
+  // Bulk import endpoints
+  validateBulkImport: (file, societyId) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('societyId', societyId);
+    return api.post('/users/bulk-import/validate', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
+  processBulkImport: (file, societyId) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('societyId', societyId);
+    return api.post('/users/bulk-import', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
+  downloadImportTemplate: () => api.get('/users/bulk-import/template', {
+    responseType: 'blob',
+  }),
 }
 
 // Flat API

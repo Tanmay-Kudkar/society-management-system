@@ -15,7 +15,7 @@ const templateTypeColors = {
 }
 
 export default function Documents() {
-  const { user } = useAuth()
+  const { user, canManageDocuments } = useAuth()
   const queryClient = useQueryClient()
   const [showModal, setShowModal] = useState(false)
   const [editingDocument, setEditingDocument] = useState(null)
@@ -82,13 +82,15 @@ export default function Documents() {
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Document Templates</h1>
           <p className="text-gray-600 dark:text-gray-400 mt-1">Manage document templates for NOC, certificates, etc.</p>
         </div>
-        <button
-          onClick={() => setShowModal(true)}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-        >
-          <Plus size={20} />
-          Add Template
-        </button>
+        {canManageDocuments() && (
+          <button
+            onClick={() => setShowModal(true)}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+          >
+            <Plus size={20} />
+            Add Template
+          </button>
+        )}
       </div>
 
       {/* Stats */}
@@ -169,21 +171,23 @@ export default function Documents() {
                 <p>Updated: {doc.updatedAt && new Date(doc.updatedAt).toLocaleDateString()}</p>
               </div>
 
-              <div className="flex gap-2 pt-3 border-t border-gray-100 dark:border-slate-700">
-                <button
-                  onClick={() => { setEditingDocument(doc); setShowModal(true) }}
-                  className="flex-1 inline-flex items-center justify-center gap-1 px-3 py-1.5 text-sm bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-slate-600 transition"
-                >
-                  <Edit size={14} />
-                  Edit
-                </button>
-                <button
-                  onClick={() => deleteMutation.mutate(doc.id)}
-                  className="p-1.5 text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg"
-                >
-                  <Trash2 size={16} />
-                </button>
-              </div>
+              {canManageDocuments() && (
+                <div className="flex gap-2 pt-3 border-t border-gray-100 dark:border-slate-700">
+                  <button
+                    onClick={() => { setEditingDocument(doc); setShowModal(true) }}
+                    className="flex-1 inline-flex items-center justify-center gap-1 px-3 py-1.5 text-sm bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-slate-600 transition"
+                  >
+                    <Edit size={14} />
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => deleteMutation.mutate(doc.id)}
+                    className="p-1.5 text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
+              )}
             </div>
           ))}
         </div>
