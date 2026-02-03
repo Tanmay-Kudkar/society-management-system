@@ -149,7 +149,7 @@ const AlertCard = ({ title, items, icon: Icon, color, delay = 0 }) => (
 );
 
 export default function Dashboard() {
-  const { user, isMasterAdmin } = useAuth();
+  const { user, isMasterAdmin, isCommitteeLevel } = useAuth();
 
   const { data: societies = [] } = useQuery({
     queryKey: ["societies"],
@@ -267,14 +267,14 @@ export default function Dashboard() {
     (c) => c.status === "PENDING" || c.status === "IN_PROGRESS",
   );
 
-  // MTD/YTD Report data
+  // MTD/YTD Report data - Only for admin/committee level users
   const { data: dashboardReport } = useQuery({
     queryKey: ["dashboardReport", user?.societyId],
     queryFn: () =>
-      user?.societyId
+      user?.societyId && isCommitteeLevel()
         ? reportApi.getDashboard(user.societyId).then((res) => res.data)
         : null,
-    enabled: !!user?.societyId,
+    enabled: !!user?.societyId && isCommitteeLevel(),
   });
 
   const { data: notices = [] } = useQuery({
@@ -504,8 +504,8 @@ export default function Dashboard() {
         />
       </div>
 
-      {/* MTD/YTD Financial Overview */}
-      {dashboardReport && (
+      {/* MTD/YTD Financial Overview - Only visible to Committee Level and above */}
+      {dashboardReport && isCommitteeLevel() && (
         <div className="mb-8">
           <div className="flex items-center gap-2 mb-6">
             <BarChart3 className="w-5 h-5 text-purple-500" />

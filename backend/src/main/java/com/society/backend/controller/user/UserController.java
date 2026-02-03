@@ -1,13 +1,17 @@
 package com.society.backend.controller.user;
 
+import com.society.backend.dto.user.BulkUserImportResponse;
+import com.society.backend.dto.user.UserImportRow;
 import com.society.backend.dto.user.UserRequest;
 import com.society.backend.dto.user.UserResponse;
 import com.society.backend.entity.Role;
+import com.society.backend.service.user.BulkUserImportService;
 import com.society.backend.service.user.UserService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Set;
@@ -18,9 +22,11 @@ import java.util.stream.Collectors;
 public class UserController {
 
     private final UserService userService;
+    private final BulkUserImportService bulkUserImportService;
 
-    public UserController(UserService userService) {
+    public UserController(UserService userService, BulkUserImportService bulkUserImportService) {
         this.userService = userService;
+        this.bulkUserImportService = bulkUserImportService;
     }
 
     /**
@@ -123,5 +129,64 @@ public class UserController {
     public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
         userService.deleteUser(id);
         return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * Validate bulk user import from Excel file.
+     * Returns parsed data with validation status for preview before actual import.
+     * Only admins can bulk import users.
+     */
+    @PostMapping("/bulk-import/validate")
+    @PreAuthorize("hasAnyRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY')")
+    public ResponseEntity<BulkUserImportResponse> validateBulkImport(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam("societyId") Long societyId) throws java.io.IOException {
+        
+        // Parse and validate the Excel file
+        List<UserImportRow> rows = bulkUserImportService.parseExcelFile(file);
+        BulkUserImportResponse response = bulkUserImportService.validateImportRows(rows, societyId);
+        
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Process bulk user import from Excel file.
+     * Creates users from previously validated data.
+     * Only admins can bulk import users.
+     */
+    @PostMapping("/bulk-import")
+    @PreAuthorize("hasAnyRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY')")
+    public ResponseEntity<BulkUserImportResponse> processBulkImport(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam("societyId") Long societyId) throws java.io.IOException {
+        
+        // Parse, validate, and process the Excel file
+        List<UserImportRow> rows = bulkUserImportService.parseExcelFile(file);
+        BulkUserImportResponse validationResponse = bulkUserImportService.validateImportRows(rows, societyId);
+        
+        // Only process if there are no validation errors
+        if (validationResponse.getFailureCount() > 0) {
+            validationResponse.setMessage("Import failed: Please fix validation errors and try again");
+            return ResponseEntity.badRequest().body(validationResponse);
+        }
+        
+        // Process the import
+        BulkUserImportResponse processResponse = bulkUserImportService.processImport(rows, societyId);
+        
+        return ResponseEntity.ok(processResponse);
+    }
+
+    /**
+     * Download Excel template for bulk user import.
+     */
+    @GetMapping("/bulk-import/template")
+    @PreAuthorize("hasAnyRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY')")
+    public ResponseEntity<byte[]> downloadImportTemplate() {
+        byte[] template = bulkUserImportService.generateTemplate();
+        
+        return ResponseEntity.ok()
+                .header("Content-Disposition", "attachment; filename=user_import_template.xlsx")
+                .header("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+                .body(template);
     }
 }

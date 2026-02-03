@@ -14,7 +14,7 @@ const priorityColors = {
 }
 
 export default function Notices() {
-  const { user } = useAuth()
+  const { user, canManageNotices } = useAuth()
   const queryClient = useQueryClient()
   const [searchParams] = useSearchParams()
   const [showModal, setShowModal] = useState(false)
@@ -95,13 +95,15 @@ export default function Notices() {
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Notices</h1>
           <p className="text-gray-600 dark:text-gray-400 mt-1">Manage society announcements and notices</p>
         </div>
-        <button
-          onClick={() => setShowModal(true)}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-        >
-          <Plus size={20} />
-          Add Notice
-        </button>
+        {canManageNotices() && (
+          <button
+            onClick={() => setShowModal(true)}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+          >
+            <Plus size={20} />
+            Add Notice
+          </button>
+        )}
       </div>
 
       {/* Filters */}
@@ -138,20 +140,22 @@ export default function Notices() {
                     {notice.priority}
                   </span>
                 </div>
-                <div className="flex gap-1">
-                  <button
-                    onClick={() => { setEditingNotice(notice); setShowModal(true) }}
-                    className="p-1.5 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-700 rounded"
-                  >
-                    <Edit size={16} />
-                  </button>
-                  <button
-                    onClick={() => deleteMutation.mutate(notice.id)}
-                    className="p-1.5 text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded"
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                </div>
+                {canManageNotices() && (
+                  <div className="flex gap-1">
+                    <button
+                      onClick={() => { setEditingNotice(notice); setShowModal(true) }}
+                      className="p-1.5 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-700 rounded"
+                    >
+                      <Edit size={16} />
+                    </button>
+                    <button
+                      onClick={() => deleteMutation.mutate(notice.id)}
+                      className="p-1.5 text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+                )}
               </div>
               
               <h3 className="font-semibold text-gray-900 dark:text-white mb-2">{notice.title}</h3>

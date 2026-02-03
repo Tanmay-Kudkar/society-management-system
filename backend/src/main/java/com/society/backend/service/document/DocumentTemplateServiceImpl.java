@@ -25,7 +25,7 @@ public class DocumentTemplateServiceImpl implements DocumentTemplateService {
     @Override
     @Transactional
     public DocumentTemplateResponse create(DocumentTemplateRequest request, Long userId) {
-        roleService.requireMasterAdmin(userId);
+        roleService.canManageDocuments(userId);
 
         DocumentTemplate template = new DocumentTemplate();
         template.setTemplateType(request.getTemplateType());
@@ -61,7 +61,7 @@ public class DocumentTemplateServiceImpl implements DocumentTemplateService {
     @Override
     @Transactional
     public DocumentTemplateResponse update(Long id, DocumentTemplateRequest request, Long userId) {
-        roleService.requireMasterAdmin(userId);
+        roleService.canManageDocuments(userId);
 
         DocumentTemplate template = documentTemplateRepository.findById(id)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Document template not found"));
@@ -80,7 +80,7 @@ public class DocumentTemplateServiceImpl implements DocumentTemplateService {
     @Override
     @Transactional
     public DocumentTemplateResponse deactivate(Long id, Long userId) {
-        roleService.requireMasterAdmin(userId);
+        roleService.canManageDocuments(userId);
 
         DocumentTemplate template = documentTemplateRepository.findById(id)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Document template not found"));
@@ -93,7 +93,7 @@ public class DocumentTemplateServiceImpl implements DocumentTemplateService {
     @Override
     @Transactional
     public void delete(Long id, Long userId) {
-        roleService.requireMasterAdmin(userId);
+        roleService.canManageDocuments(userId);
 
         if (!documentTemplateRepository.existsById(id)) {
             throw new ApiException(HttpStatus.NOT_FOUND, "Document template not found");

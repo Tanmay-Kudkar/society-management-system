@@ -97,6 +97,13 @@ public class RoleService {
     }
 
     /**
+     * Check if user can manage documents (MASTER_ADMIN, COMMITTEE, EMPLOYEE)
+     */
+    public void canManageDocuments(Long userId) {
+        requireStaff(userId);
+    }
+
+    /**
      * Check if user can manage complaints (MASTER_ADMIN, SOCIETY_ADMIN,
      * COMMITTEE, EMPLOYEE for status updates)
      */
