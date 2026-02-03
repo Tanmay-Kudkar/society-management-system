@@ -267,7 +267,7 @@ export default function Login() {
             <button
               type="submit"
               disabled={loading}
-              className="relative w-full py-4 px-6 text-white font-semibold rounded-xl focus:ring-4 transition-all disabled:opacity-50 disabled:cursor-not-allowed overflow-hidden group focus:outline-none"
+              className="relative w-full py-4 px-6 text-white font-semibold rounded-xl focus:ring-4 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed overflow-hidden group focus:outline-none hover:scale-105 hover:shadow-2xl active:scale-95"
               style={{ 
                 background: `linear-gradient(to right, var(--accent-gradient-from), var(--accent-gradient-to))`,
               }}
