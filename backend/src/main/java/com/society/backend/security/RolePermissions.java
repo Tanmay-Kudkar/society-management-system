@@ -78,23 +78,19 @@ public final class RolePermissions {
                 ALLOWED_CREATIONS.put(Role.SOCIETY_ADMIN, EnumSet.of(
                                 Role.CHAIRMAN,
                                 Role.SECRETARY,
-                                Role.TREASURER,
-                                Role.COMMITTEE,
-                                Role.EMPLOYEE,
-                                Role.MEMBER,
-                                Role.TENANT,
-                                Role.VISITOR));
-
-                // CHAIRMAN - Highest committee authority, can create SECRETARY and TREASURER
-                ALLOWED_CREATIONS.put(Role.CHAIRMAN, EnumSet.of(
-                                Role.SECRETARY,
                                 Role.TREASURER));
 
-                // SECRETARY - Administrative head, can create COMMITTEE members
-                ALLOWED_CREATIONS.put(Role.SECRETARY, EnumSet.of(Role.COMMITTEE));
+                // CHAIRMAN - Cannot create anyone (only approves COMMITTEE)
+                ALLOWED_CREATIONS.put(Role.CHAIRMAN, EnumSet.noneOf(Role.class));
 
-                // TREASURER - Financial head, can create COMMITTEE members
-                ALLOWED_CREATIONS.put(Role.TREASURER, EnumSet.of(Role.COMMITTEE));
+                // SECRETARY - Administrative head, can nominate/create COMMITTEE members
+                ALLOWED_CREATIONS.put(Role.SECRETARY, EnumSet.of(
+                                Role.COMMITTEE,
+                                Role.EMPLOYEE,
+                                Role.MEMBER));
+
+                // TREASURER - Financial head, cannot create (only approve/reject COMMITTEE)
+                ALLOWED_CREATIONS.put(Role.TREASURER, EnumSet.noneOf(Role.class));
 
                 // COMMITTEE - Can create EMPLOYEE and MEMBER (direct children)
                 ALLOWED_CREATIONS.put(Role.COMMITTEE, EnumSet.of(
@@ -118,26 +114,24 @@ public final class RolePermissions {
                 // MASTER_ADMIN - Can update/delete SOCIETY_ADMIN only
                 ALLOWED_UPDATES.put(Role.MASTER_ADMIN, EnumSet.of(Role.SOCIETY_ADMIN));
 
-                // SOCIETY_ADMIN - EXCEPTION: Can update/delete all below
+                // SOCIETY_ADMIN - Can update/delete CHAIRMAN, SECRETARY, TREASURER only
                 ALLOWED_UPDATES.put(Role.SOCIETY_ADMIN, EnumSet.of(
                                 Role.CHAIRMAN,
                                 Role.SECRETARY,
-                                Role.TREASURER,
-                                Role.COMMITTEE,
-                                Role.EMPLOYEE,
-                                Role.MEMBER,
-                                Role.TENANT,
-                                Role.VISITOR));
-
-                // CHAIRMAN - Can update/delete SECRETARY and TREASURER
-                ALLOWED_UPDATES.put(Role.CHAIRMAN, EnumSet.of(
-                                Role.SECRETARY,
                                 Role.TREASURER));
 
-                // SECRETARY - Can update/delete COMMITTEE only
-                ALLOWED_UPDATES.put(Role.SECRETARY, EnumSet.of(Role.COMMITTEE));
+                // CHAIRMAN - Can update/delete SECRETARY, TREASURER, and approve/reject
+                // COMMITTEE
+                ALLOWED_UPDATES.put(Role.CHAIRMAN, EnumSet.of(
+                                Role.SECRETARY,
+                                Role.TREASURER,
+                                Role.COMMITTEE));
 
-                // TREASURER - Can update/delete COMMITTEE only
+                // SECRETARY - Cannot update COMMITTEE (only nominates, CHAIRMAN/TREASURER
+                // approve)
+                ALLOWED_UPDATES.put(Role.SECRETARY, EnumSet.noneOf(Role.class));
+
+                // TREASURER - Can approve/reject COMMITTEE only
                 ALLOWED_UPDATES.put(Role.TREASURER, EnumSet.of(Role.COMMITTEE));
 
                 // COMMITTEE - Can update/delete EMPLOYEE and MEMBER

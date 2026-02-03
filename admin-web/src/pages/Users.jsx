@@ -23,7 +23,7 @@ const roleColors = {
 // Role hierarchy descriptions for tooltips
 const roleHierarchyInfo = {
   MASTER_ADMIN: 'Platform Owner - Can only manage SOCIETY_ADMIN',
-  SOCIETY_ADMIN: 'Society Manager - Full control over all roles in society',
+  SOCIETY_ADMIN: 'Society Manager - Can manage CHAIRMAN, SECRETARY, and TREASURER',
   CHAIRMAN: 'Committee Head - Can manage SECRETARY and TREASURER',
   SECRETARY: 'Administrative Head - Can manage COMMITTEE members',
   TREASURER: 'Financial Head - Can manage COMMITTEE members',

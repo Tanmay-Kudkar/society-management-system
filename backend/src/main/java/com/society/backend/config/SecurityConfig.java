@@ -80,8 +80,9 @@ public class SecurityConfig {
                         // ==================== SOCIETY_ADMIN & ABOVE ====================
                         // Society-level management (users, settings, reports)
                         .requestMatchers("/societies/{societyId}/**").hasAnyRole("MASTER_ADMIN", "SOCIETY_ADMIN")
-                        .requestMatchers(HttpMethod.POST, "/users/**").hasAnyRole("MASTER_ADMIN", "SOCIETY_ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/users/**").hasAnyRole("MASTER_ADMIN", "SOCIETY_ADMIN")
+                        // User creation/deletion - roles allowed based on RolePermissions hierarchy
+                        .requestMatchers(HttpMethod.POST, "/users/**").hasAnyRole("MASTER_ADMIN", "SOCIETY_ADMIN", "CHAIRMAN", "SECRETARY", "TREASURER", "COMMITTEE", "EMPLOYEE", "MEMBER")
+                        .requestMatchers(HttpMethod.DELETE, "/users/**").hasAnyRole("MASTER_ADMIN", "SOCIETY_ADMIN", "CHAIRMAN", "SECRETARY", "TREASURER", "COMMITTEE", "EMPLOYEE", "MEMBER")
                         .requestMatchers("/reports/**").hasAnyRole("MASTER_ADMIN", "SOCIETY_ADMIN", "CHAIRMAN")
 
                         // ==================== CHAIRMAN LEVEL ====================
