@@ -12,6 +12,7 @@ export default function Login() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [isLoaded, setIsLoaded] = useState(false)
+  const [shake, setShake] = useState(false)
   const { login, user, loading: authLoading } = useAuth()
   const { isDark, toggleTheme } = useTheme()
   const navigate = useNavigate()
@@ -30,6 +31,7 @@ export default function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
+    setShake(false)
     setLoading(true)
 
     const result = await login(email, password)
@@ -38,6 +40,9 @@ export default function Login() {
       navigate('/')
     } else {
       setError(result.error)
+      setShake(true)
+      // Reset shake after animation completes
+      setTimeout(() => setShake(false), 500)
     }
     setLoading(false)
   }
@@ -188,7 +193,7 @@ export default function Login() {
           )}
 
           {/* Login Form */}
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className={`space-y-6 ${shake ? 'animate-shake' : ''}`}>
             <div>
               <label className={`block text-sm font-semibold mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                 Email Address
