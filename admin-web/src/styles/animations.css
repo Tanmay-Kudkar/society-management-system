@@ -1980,19 +1980,142 @@ button:focus-visible {
   90%, 100% { transform: translateY(-100%); opacity: 0; }
 }
 
-/* Animated Car Entering */
+/* Animated Car Entering - Smooth & Realistic */
 .github-car-enter {
-  animation: carEnter 6s ease-in-out infinite;
+  animation: carEnter 9s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.25));
 }
 
 @keyframes carEnter {
-  0% { transform: translate(-50px, 120px) rotate(0deg); opacity: 0; }
-  10% { opacity: 1; }
-  30% { transform: translate(80px, 45px) rotate(0deg); }
-  40%, 60% { transform: translate(88px, 45px) rotate(0deg); }
-  70% { transform: translate(88px, 45px) rotate(0deg); opacity: 1; }
-  80% { transform: translate(88px, 45px) rotate(0deg); opacity: 0.8; }
-  100% { transform: translate(88px, 45px) rotate(0deg); opacity: 0; }
+  0% { 
+    transform: translate(-70px, 120px); 
+    opacity: 0; 
+  }
+  5% { 
+    opacity: 0.5; 
+    transform: translate(-50px, 100px);
+  }
+  12% { 
+    opacity: 1; 
+    transform: translate(-20px, 75px);
+  }
+  20% { 
+    transform: translate(10px, 60px);
+  }
+  28% { 
+    transform: translate(40px, 50px);
+  }
+  38% { 
+    transform: translate(70px, 45px);
+  }
+  48% { 
+    transform: translate(88px, 45px);
+  }
+  52%, 72% { 
+    transform: translate(88px, 45px);
+    opacity: 1;
+  }
+  80% { 
+    opacity: 0.7;
+  }
+  88% { 
+    opacity: 0.4;
+  }
+  96% { 
+    opacity: 0.1;
+  }
+  100% { 
+    transform: translate(88px, 45px); 
+    opacity: 0; 
+  }
+}
+
+/* Car Headlights */
+.car-headlight {
+  animation: headlightFlicker 9s ease-in-out infinite;
+}
+
+@keyframes headlightFlicker {
+  0%, 4% { opacity: 0; }
+  5% { opacity: 1; }
+  12%, 72% { opacity: 1; }
+  80% { opacity: 0.8; }
+  88% { opacity: 0.5; }
+  96%, 100% { opacity: 0; }
+}
+
+/* Live Indicator Pulse */
+.live-indicator {
+  animation: livePulse 2s ease-in-out infinite;
+}
+
+@keyframes livePulse {
+  0%, 100% { 
+    opacity: 1; 
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7);
+  }
+  50% { 
+    opacity: 0.8; 
+    transform: scale(1.1);
+    box-shadow: 0 0 0 4px rgba(34, 197, 94, 0);
+  }
+}
+
+/* Parking Slot Highlight */
+.parking-slot-highlight {
+  animation: slotHighlight 9s ease-in-out infinite;
+}
+
+@keyframes slotHighlight {
+  0%, 45% { 
+    stroke: #334155; 
+    stroke-width: 2;
+  }
+  48%, 75% { 
+    stroke: #22c55e; 
+    stroke-width: 3;
+  }
+  78%, 100% { 
+    stroke: #334155; 
+    stroke-width: 2;
+  }
+}
+
+/* Parking Guidance Animation */
+.parking-guidance {
+  animation: guidanceShow 9s ease-in-out infinite;
+}
+
+@keyframes guidanceShow {
+  0%, 10% { opacity: 0; transform: translateY(5px); }
+  15%, 45% { opacity: 1; transform: translateY(0); }
+  50%, 100% { opacity: 0; transform: translateY(5px); }
+}
+
+/* Parking Sensors Pulse - Static Position */
+.sensor-pulse {
+  animation: sensorGlow 2s ease-in-out infinite;
+}
+
+@keyframes sensorGlow {
+  0%, 100% { 
+    opacity: 0.6; 
+  }
+  50% { 
+    opacity: 1; 
+  }
+}
+
+/* Counter Live Animation */
+.github-counter-live {
+  animation: counterUpdate 9s steps(1) infinite;
+}
+
+@keyframes counterUpdate {
+  0%, 45% { content: "2"; }
+  48%, 75% { content: "1"; color: #fbbf24; }
+  78%, 100% { content: "2"; }
 }
 
 /* Available Slot Pulsing */
