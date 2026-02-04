@@ -717,20 +717,124 @@ export default function Welcome() {
                       <svg viewBox="0 0 300 150" className="w-full h-full">
                         {/* Parking Lines */}
                         <rect x="20" y="30" width="50" height="80" fill="none" stroke="#334155" strokeWidth="2"/>
-                        <rect x="80" y="30" width="50" height="80" fill="none" stroke="#334155" strokeWidth="2"/>
+                        <rect x="80" y="30" width="50" height="80" fill="none" stroke="#334155" strokeWidth="2" className="parking-slot-highlight"/>
                         <rect x="140" y="30" width="50" height="80" fill="none" stroke="#334155" strokeWidth="2"/>
                         <rect x="200" y="30" width="50" height="80" fill="none" stroke="#334155" strokeWidth="2"/>
                         
-                        {/* Parked Cars */}
-                        <rect x="28" y="45" width="34" height="50" fill="#3b82f6" rx="4"/>
-                        <rect x="148" y="45" width="34" height="50" fill="#22c55e" rx="4"/>
+                        {/* Parking Guidance Lines for Available Slot */}
+                        <g className="parking-guidance">
+                          <line x1="105" y1="25" x2="105" y2="20" stroke="#22c55e" strokeWidth="2" opacity="0.8"/>
+                          <line x1="100" y1="20" x2="110" y2="20" stroke="#22c55e" strokeWidth="2" opacity="0.8"/>
+                          <text x="105" y="17" textAnchor="middle" className="text-[8px] fill-green-400 font-bold">PARK HERE</text>
+                        </g>
                         
-                        {/* Animated Car Entering */}
+                        {/* Parked Cars */}
+                        <g transform="translate(20, 30)">
+                          <rect x="8" y="15" width="34" height="50" fill="#3b82f6" rx="3"/>
+                          <rect x="10" y="20" width="30" height="8" fill="#1e3a8a" opacity="0.6" rx="1"/>
+                          <rect x="10" y="52" width="30" height="8" fill="#1e3a8a" opacity="0.6" rx="1"/>
+                          <rect x="6" y="28" width="4" height="8" fill="#1e293b" rx="1"/>
+                          <rect x="40" y="28" width="4" height="8" fill="#1e293b" rx="1"/>
+                          <rect x="6" y="50" width="4" height="8" fill="#1e293b" rx="1"/>
+                          <rect x="40" y="50" width="4" height="8" fill="#1e293b" rx="1"/>
+                        </g>
+                        
+                        <g transform="translate(140, 30)">
+                          <rect x="8" y="15" width="34" height="50" fill="#22c55e" rx="3"/>
+                          <rect x="10" y="20" width="30" height="8" fill="#1e3a8a" opacity="0.6" rx="1"/>
+                          <rect x="10" y="52" width="30" height="8" fill="#1e3a8a" opacity="0.6" rx="1"/>
+                          <rect x="6" y="28" width="4" height="8" fill="#1e293b" rx="1"/>
+                          <rect x="40" y="28" width="4" height="8" fill="#1e293b" rx="1"/>
+                          <rect x="6" y="50" width="4" height="8" fill="#1e293b" rx="1"/>
+                          <rect x="40" y="50" width="4" height="8" fill="#1e293b" rx="1"/>
+                        </g>
+                        
+                        {/* Realistic Car - Top-Down View (Bird's Eye) */}
+                        <defs>
+                          <linearGradient id="carBodyOrange" x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="0%" stopColor="#fb923c"/>
+                            <stop offset="50%" stopColor="#f97316"/>
+                            <stop offset="100%" stopColor="#fb923c"/>
+                          </linearGradient>
+                        </defs>
+                        
                         <g className="github-car-enter">
-                          <rect x="0" y="0" width="34" height="50" fill="#f97316" rx="4"/>
-                          <rect x="4" y="6" width="26" height="12" fill="#1e293b" rx="2"/>
-                          <circle cx="8" cy="45" r="5" fill="#1e293b"/>
-                          <circle cx="26" cy="45" r="5" fill="#1e293b"/>
+                          {/* Car Shadow */}
+                          <ellipse cx="17" cy="27" rx="13" ry="21" fill="#000000" opacity="0.2"/>
+                          
+                          {/* Main Car Body */}
+                          <rect x="5" y="4" width="24" height="46" fill="url(#carBodyOrange)" rx="3"/>
+                          
+                          {/* Hood (Front) */}
+                          <rect x="7" y="5" width="20" height="10" fill="#ea580c" rx="1.5"/>
+                          <line x1="12" y1="8" x2="22" y2="8" stroke="#dc2626" strokeWidth="0.5" opacity="0.5"/>
+                          <line x1="12" y1="11" x2="22" y2="11" stroke="#dc2626" strokeWidth="0.5" opacity="0.5"/>
+                          
+                          {/* Front Windshield */}
+                          <rect x="8" y="15" width="18" height="6" fill="#1e3a8a" opacity="0.6" rx="1"/>
+                          <rect x="9" y="16" width="16" height="4" fill="#0f172a" opacity="0.4" rx="0.5"/>
+                          <line x1="17" y1="15" x2="17" y2="21" stroke="#1f2937" strokeWidth="0.5"/>
+                          
+                          {/* Roof/Cabin */}
+                          <rect x="6" y="21" width="22" height="12" fill="#ea580c" rx="1"/>
+                          
+                          {/* Side Windows */}
+                          <rect x="7" y="22" width="5" height="10" fill="#1e3a8a" opacity="0.6" rx="0.5"/>
+                          <rect x="22" y="22" width="5" height="10" fill="#1e3a8a" opacity="0.6" rx="0.5"/>
+                          
+                          {/* Door Panels */}
+                          <line x1="7" y1="27" x2="12" y2="27" stroke="#f97316" strokeWidth="1.5"/>
+                          <line x1="22" y1="27" x2="27" y2="27" stroke="#f97316" strokeWidth="1.5"/>
+                          
+                          {/* Rear Windshield */}
+                          <rect x="8" y="33" width="18" height="5" fill="#1e3a8a" opacity="0.6" rx="1"/>
+                          <rect x="9" y="34" width="16" height="3" fill="#0f172a" opacity="0.4" rx="0.5"/>
+                          <line x1="17" y1="33" x2="17" y2="38" stroke="#1f2937" strokeWidth="0.5"/>
+                          
+                          {/* Trunk (Rear) */}
+                          <rect x="7" y="38" width="20" height="10" fill="#ea580c" rx="1.5"/>
+                          <line x1="12" y1="41" x2="22" y2="41" stroke="#dc2626" strokeWidth="0.5" opacity="0.5"/>
+                          <line x1="12" y1="44" x2="22" y2="44" stroke="#dc2626" strokeWidth="0.5" opacity="0.5"/>
+                          
+                          {/* Front Headlights */}
+                          <ellipse cx="9" cy="5.5" rx="2" ry="1.5" fill="#fef3c7" className="car-headlight"/>
+                          <ellipse cx="25" cy="5.5" rx="2" ry="1.5" fill="#fef3c7" className="car-headlight"/>
+                          
+                          {/* Rear Taillights */}
+                          <rect x="8" y="47" width="3" height="2" fill="#dc2626" rx="0.5"/>
+                          <rect x="23" y="47" width="3" height="2" fill="#dc2626" rx="0.5"/>
+                          
+                          {/* Side Mirrors */}
+                          <ellipse cx="3" cy="23" rx="2" ry="2.5" fill="#1f2937"/>
+                          <ellipse cx="31" cy="23" rx="2" ry="2.5" fill="#1f2937"/>
+                          
+                          {/* Wheels - Front Left */}
+                          <rect x="3" y="12" width="4" height="8" fill="#1e293b" rx="1"/>
+                          <rect x="3.5" y="13" width="3" height="6" fill="#0f172a" rx="0.5"/>
+                          
+                          {/* Wheels - Front Right */}
+                          <rect x="27" y="12" width="4" height="8" fill="#1e293b" rx="1"/>
+                          <rect x="27.5" y="13" width="3" height="6" fill="#0f172a" rx="0.5"/>
+                          
+                          {/* Wheels - Rear Left */}
+                          <rect x="3" y="34" width="4" height="8" fill="#1e293b" rx="1"/>
+                          <rect x="3.5" y="35" width="3" height="6" fill="#0f172a" rx="0.5"/>
+                          
+                          {/* Wheels - Rear Right */}
+                          <rect x="27" y="34" width="4" height="8" fill="#1e293b" rx="1"/>
+                          <rect x="27.5" y="35" width="3" height="6" fill="#0f172a" rx="0.5"/>
+                          
+                          {/* Body Shine/Highlights */}
+                          <ellipse cx="17" cy="15" rx="6" ry="2" fill="#ffffff" opacity="0.2"/>
+                          <ellipse cx="17" cy="40" rx="5" ry="1.5" fill="#ffffff" opacity="0.15"/>
+                          <rect x="10" y="25" width="14" height="1" fill="#ffffff" opacity="0.2" rx="0.5"/>
+                        </g>
+                        
+                        {/* Parking Sensors/Distance Indicators */}
+                        <g className="parking-sensors">
+                          <circle cx="75" cy="70" r="3" className="sensor-pulse" fill="#22c55e"/>
+                          <circle cx="115" cy="70" r="3" className="sensor-pulse" fill="#22c55e" style={{animationDelay: '0.3s'}}/>
+                          <circle cx="155" cy="70" r="3" className="sensor-pulse" fill="#22c55e" style={{animationDelay: '0.6s'}}/>
                         </g>
                         
                         {/* Slot Status Indicators */}
@@ -741,15 +845,21 @@ export default function Welcome() {
                         
                         {/* Labels */}
                         <text x="45" y="140" textAnchor="middle" className="text-[10px] fill-gray-500">A1</text>
-                        <text x="105" y="140" textAnchor="middle" className="text-[10px] fill-gray-500">A2</text>
+                        <text x="105" y="140" textAnchor="middle" className="text-[10px] fill-green-400 font-bold">A2</text>
                         <text x="165" y="140" textAnchor="middle" className="text-[10px] fill-gray-500">A3</text>
-                        <text x="225" y="140" textAnchor="middle" className="text-[10px] fill-gray-500">A4</text>
+                        <text x="225" y="140" textAnchor="middle" className="text-[10px] fill-green-400 font-bold">A4</text>
                       </svg>
                       
-                      {/* Live Counter */}
+                      {/* Live Counter with Animation */}
                       <div className="absolute top-3 right-3 bg-slate-800/80 px-3 py-1 rounded-full">
                         <span className="text-xs text-gray-300">Available: </span>
-                        <span className="text-xs text-green-400 font-bold github-counter">2</span>
+                        <span className="text-xs text-green-400 font-bold github-counter-live">2</span>
+                      </div>
+                      
+                      {/* Live Status Indicator */}
+                      <div className="absolute top-3 left-3 flex items-center gap-2 bg-slate-800/80 px-3 py-1 rounded-full">
+                        <span className="w-2 h-2 rounded-full bg-green-400 live-indicator"></span>
+                        <span className="text-xs text-gray-300">LIVE</span>
                       </div>
                     </div>
                     
