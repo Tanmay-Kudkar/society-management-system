@@ -21,8 +21,10 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
 
@@ -46,6 +48,7 @@ public class BulkUserImportService {
         
         try (Workbook workbook = new XSSFWorkbook(file.getInputStream())) {
             Sheet sheet = workbook.getSheetAt(0);
+            Map<String, Integer> headerIndex = resolveHeaderIndex(sheet.getRow(0));
             int rowCount = 0;
             
             for (Row row : sheet) {
@@ -57,20 +60,25 @@ public class BulkUserImportService {
                 importRow.setRowNumber(rowCount);
                 
                 // Column A: Name
-                importRow.setName(getCellValueAsString(row.getCell(0)));
+                importRow.setName(getCellValueAsString(row.getCell(headerIndex.getOrDefault("name", 0))));
                 
                 // Column B: Email
-                importRow.setEmail(getCellValueAsString(row.getCell(1)));
+                importRow.setEmail(getCellValueAsString(row.getCell(headerIndex.getOrDefault("email", 1))));
                 
                 // Column C: Flat Number
-                importRow.setFlatNumber(getCellValueAsString(row.getCell(2)));
+                importRow.setFlatNumber(getCellValueAsString(row.getCell(headerIndex.getOrDefault("flat_number", 2))));
                 
                 // Column D: Phone (optional)
-                importRow.setPhone(getCellValueAsString(row.getCell(3)));
+                importRow.setPhone(getCellValueAsString(row.getCell(headerIndex.getOrDefault("phone", 3))));
                 
                 // Column E: Role (optional, defaults to MEMBER)
-                String roleStr = getCellValueAsString(row.getCell(4));
+                String roleStr = getCellValueAsString(row.getCell(headerIndex.getOrDefault("role", 4)));
                 importRow.setRole(roleStr != null && !roleStr.isEmpty() ? roleStr.toUpperCase() : "MEMBER");
+                
+                // Skip legacy sample row from older templates
+                if (isSampleRow(importRow)) {
+                    continue;
+                }
                 
                 // Skip empty rows
                 if (importRow.getName() == null && importRow.getEmail() == null) {
@@ -270,6 +278,58 @@ public class BulkUserImportService {
         }
     }
 
+    private Map<String, Integer> resolveHeaderIndex(Row headerRow) {
+        Map<String, Integer> headerIndex = new HashMap<>();
+        if (headerRow == null) {
+            return headerIndex;
+        }
+
+        for (Cell cell : headerRow) {
+            String header = getCellValueAsString(cell);
+            if (header == null) continue;
+            String normalized = header.replace("*", "").trim().toLowerCase().replaceAll("\\s+", " ");
+
+            switch (normalized) {
+                case "name":
+                    headerIndex.put("name", cell.getColumnIndex());
+                    break;
+                case "email":
+                    headerIndex.put("email", cell.getColumnIndex());
+                    break;
+                case "flat number":
+                case "flat no":
+                case "flat":
+                    headerIndex.put("flat_number", cell.getColumnIndex());
+                    break;
+                case "phone":
+                case "mobile":
+                    headerIndex.put("phone", cell.getColumnIndex());
+                    break;
+                case "role":
+                    headerIndex.put("role", cell.getColumnIndex());
+                    break;
+                default:
+                    // Ignore extra columns (e.g., Wing Code in older templates)
+            }
+        }
+
+        return headerIndex;
+    }
+
+    private boolean isSampleRow(UserImportRow row) {
+        if (row == null) return false;
+
+        return "john doe".equals(normalize(row.getName()))
+                && "john.doe@example.com".equals(normalize(row.getEmail()))
+                && "101".equals(normalize(row.getFlatNumber()))
+                && "9876543210".equals(normalize(row.getPhone()))
+                && "member".equals(normalize(row.getRole()));
+    }
+
+    private String normalize(String value) {
+        return value == null ? "" : value.trim().toLowerCase();
+    }
+
     /**
      * Generate an Excel template for bulk user import.
      */
@@ -279,7 +339,7 @@ public class BulkUserImportService {
             
             // Create header row
             Row headerRow = sheet.createRow(0);
-            String[] headers = {"Name*", "Email*", "Phone*", "Flat Number*", "Wing Code", "Role"};
+            String[] headers = {"Name*", "Email*", "Flat Number*", "Phone", "Role"};
             
             // Create header style
             CellStyle headerStyle = workbook.createCellStyle();
@@ -296,13 +356,6 @@ public class BulkUserImportService {
                 sheet.setColumnWidth(i, 5000);
             }
             
-            // Add sample data row
-            Row sampleRow = sheet.createRow(1);
-            String[] sampleData = {"John Doe", "john.doe@example.com", "9876543210", "101", "A", "MEMBER"};
-            for (int i = 0; i < sampleData.length; i++) {
-                sampleRow.createCell(i).setCellValue(sampleData[i]);
-            }
-            
             // Add instructions sheet
             Sheet instructionsSheet = workbook.createSheet("Instructions");
             String[][] instructions = {
@@ -311,18 +364,20 @@ public class BulkUserImportService {
                 {"Required Fields (marked with *):"},
                 {"- Name: Full name of the user"},
                 {"- Email: Valid email address (will be used as username)"},
-                {"- Phone: 10-digit phone number"},
                 {"- Flat Number: The flat/unit number"},
                 {""},
                 {"Optional Fields:"},
-                {"- Wing Code: Wing code if applicable"},
+                {"- Phone: 10-digit phone number"},
                 {"- Role: MEMBER (default) or TENANT"},
                 {""},
                 {"Notes:"},
                 {"- Default password will be the flat number"},
                 {"- Users will be prompted to change password on first login"},
                 {"- Duplicate emails will be rejected"},
-                {"- Invalid phone numbers will be flagged"}
+                {"- Invalid phone numbers will be flagged"},
+                {""},
+                {"Example Row (Users sheet):"},
+                {"John Doe | john.doe@example.com | 101 | 9876543210 | MEMBER"}
             };
             
             for (int i = 0; i < instructions.length; i++) {
