@@ -19,7 +19,7 @@ CREATE TABLE societies (
     pincode VARCHAR(10),
     registration_number VARCHAR(50),
     email VARCHAR(100),
-    phone VARCHAR(20),
+    telephone VARCHAR(20),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
