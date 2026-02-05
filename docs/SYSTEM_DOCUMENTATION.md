@@ -1,1130 +1,1004 @@
-# 🏢 Society Management System - Complete Documentation
+<p align="center">
+  <img src="https://img.shields.io/badge/Spring_Boot-3.5.10-6DB33F?style=for-the-badge&logo=spring-boot&logoColor=white" alt="Spring Boot"/>
+  <img src="https://img.shields.io/badge/Java-21-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white" alt="Java"/>
+  <img src="https://img.shields.io/badge/React-19.2.0-61DAFB?style=for-the-badge&logo=react&logoColor=black" alt="React"/>
+  <img src="https://img.shields.io/badge/React_Native-0.81.5-61DAFB?style=for-the-badge&logo=react&logoColor=black" alt="React Native"/>
+  <img src="https://img.shields.io/badge/Expo-54-000020?style=for-the-badge&logo=expo&logoColor=white" alt="Expo"/>
+  <img src="https://img.shields.io/badge/Vite-7.2.4-646CFF?style=for-the-badge&logo=vite&logoColor=white" alt="Vite"/>
+  <img src="https://img.shields.io/badge/Tailwind_CSS-4.1.18-06B6D4?style=for-the-badge&logo=tailwind-css&logoColor=white" alt="Tailwind CSS"/>
+  <img src="https://img.shields.io/badge/PostgreSQL-Latest-336791?style=for-the-badge&logo=postgresql&logoColor=white" alt="PostgreSQL"/>
+</p>
 
-<div align="center">
+<p align="center">
+  <img src="https://img.shields.io/badge/Axios-1.13.3-5A29E4?style=for-the-badge&logo=axios&logoColor=white" alt="Axios"/>
+  <img src="https://img.shields.io/badge/React_Query-5.90.20-FF4154?style=for-the-badge&logo=react-query&logoColor=white" alt="React Query"/>
+  <img src="https://img.shields.io/badge/React_Router-7.13.0-CA4245?style=for-the-badge&logo=react-router&logoColor=white" alt="React Router"/>
+  <img src="https://img.shields.io/badge/JWT-0.12.5-000000?style=for-the-badge&logo=json-web-tokens&logoColor=white" alt="JWT"/>
+  <img src="https://img.shields.io/badge/Apache_POI-5.2.5-A22846?style=for-the-badge&logo=apache&logoColor=white" alt="Apache POI"/>
+  <img src="https://img.shields.io/badge/Lucide_React-0.563.0-F56565?style=for-the-badge&logo=lucide&logoColor=white" alt="Lucide React"/>
+</p>
 
-![Version](https://img.shields.io/badge/Version-1.0.0-blue)
-![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5.10-brightgreen)
-![React](https://img.shields.io/badge/React-18-61DAFB)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Latest-336791)
-![License](https://img.shields.io/badge/License-MIT-yellow)
+<p align="center">
+  <img src="https://img.shields.io/badge/Version-2.0.0-blue?style=for-the-badge" alt="Version"/>
+  <img src="https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge" alt="License"/>
+  <img src="https://img.shields.io/badge/Platform-Web%20%7C%20iOS%20%7C%20Android-green?style=for-the-badge" alt="Platform"/>
+</p>
 
-**A comprehensive platform for managing residential societies with role-based access control, financial tracking, and communication tools.**
+---
 
-</div>
+<h1 align="center">🏢 Society Management System</h1>
+
+<p align="center">
+  <strong>A comprehensive full-stack platform for managing residential housing societies with role-based access control, financial tracking, communication tools, and cross-platform mobile app support.</strong>
+</p>
 
 ---
 
 ## 📑 Table of Contents
 
 1. [System Overview](#-system-overview)
-2. [Architecture](#-architecture)
-3. [Role-Based Access Control](#-role-based-access-control)
-4. [Frontend (admin-web)](#-frontend-admin-web)
-5. [Backend](#-backend)
-6. [Database Schema](#-database-schema)
-7. [API Reference](#-api-reference)
-8. [Scalability Features](#-scalability-features)
+2. [Technology Stack](#-technology-stack)
+3. [Architecture](#-architecture)
+4. [Role-Based Access Control](#-role-based-access-control)
+5. [Frontend - Admin Web Portal](#-frontend---admin-web-portal)
+6. [Mobile Application](#-mobile-application)
+7. [Backend API](#-backend-api)
+8. [Database Schema](#-database-schema)
+9. [API Reference](#-api-reference)
+10. [Features & Capabilities](#-features--capabilities)
+11. [Getting Started](#-getting-started)
+12. [Project Structure](#-project-structure)
 
 ---
 
 ## 🌟 System Overview
 
-The Society Management System is a full-stack web application designed to streamline the administration of residential housing societies. It provides tools for:
+The **Society Management System** is an enterprise-grade, full-stack web and mobile application designed to streamline the administration of residential housing societies. Built with modern technologies and following best practices, it provides a complete suite of tools for:
 
-- 👥 **User Management** - Role-based user hierarchy with 10 different roles
-- 🏠 **Property Management** - Flats, tenants, and vehicle registration
-- 💰 **Financial Management** - Maintenance bills, vendor payments, transactions
-- 📢 **Communication** - Notices, banners, tickets, and complaints
-- 📊 **Reporting** - MTD/YTD financial reports with Excel export
-- 🔐 **Security** - JWT authentication with role-based permissions
+| Category | Features |
+|----------|----------|
+| 👥 **User Management** | 10-tier role hierarchy, bulk import/export, role-based permissions |
+| 🏠 **Property Management** | Units (Flats/Shops/Offices), wings, tenants, vehicle registration |
+| 💰 **Financial Management** | Maintenance bills, vendor payments, transactions, income/expense tracking |
+| 📢 **Communication** | Notices, banners, tickets, complaints, emergency contacts |
+| 📊 **Reporting** | MTD/YTD financial reports, Excel export, dashboard analytics |
+| 🔐 **Security** | JWT authentication with HTTP-only cookies, role-based permissions |
+| 📱 **Mobile App** | Cross-platform React Native app for iOS & Android |
+| 📦 **Bulk Operations** | Import/export for users and units via Excel templates |
+
+---
+
+## 💻 Technology Stack
+
+### Backend Technologies
+
+| Technology | Version | Purpose |
+|------------|---------|---------|
+| **Spring Boot** | 3.5.10 | Main application framework |
+| **Java** | 21 (LTS) | Programming language |
+| **Spring Security** | 6.x | Authentication & authorization |
+| **Spring Data JPA** | 3.x | Database ORM & repositories |
+| **PostgreSQL** | Latest | Relational database |
+| **JWT (jjwt)** | 0.12.5 | Token-based authentication |
+| **Lombok** | 1.18.32 | Boilerplate code reduction |
+| **Apache POI** | 5.2.5 | Excel file generation/parsing |
+| **Spring Mail** | 3.x | Email notifications |
+| **Jakarta Validation** | 3.x | Input validation |
+
+### Frontend Technologies (Admin Web)
+
+| Technology | Version | Purpose |
+|------------|---------|---------|
+| **React** | 19.2.0 | UI library |
+| **Vite** | 7.2.4 | Build tool & dev server |
+| **Tailwind CSS** | 4.1.18 | Utility-first CSS framework |
+| **React Router** | 7.13.0 | Client-side routing |
+| **TanStack React Query** | 5.90.20 | Server state management |
+| **Axios** | 1.13.3 | HTTP client |
+| **Lucide React** | 0.563.0 | Icon library |
+| **clsx** | 2.1.1 | Conditional classnames |
+
+### Mobile Technologies
+
+| Technology | Version | Purpose |
+|------------|---------|---------|
+| **React Native** | 0.81.5 | Cross-platform mobile framework |
+| **Expo** | 54.0.32 | Development platform |
+| **React Navigation** | 7.x | Navigation library |
+| **Expo Notifications** | 0.32.16 | Push notifications |
+| **Expo Secure Store** | 15.0.8 | Secure storage |
+| **React Native Reanimated** | 4.1.1 | Animations |
 
 ---
 
 ## 🏗 Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────────────┐
-│                         CLIENT LAYER                                 │
-├──────────────────────────────┬──────────────────────────────────────┤
-│      Admin Web (React)       │        Mobile App (Future)          │
-│      Port: 5173              │        React Native                 │
-└──────────────────────────────┴──────────────────────────────────────┘
-                                    │
-                                    ▼ HTTP/REST
-┌─────────────────────────────────────────────────────────────────────┐
-│                         API LAYER                                    │
-│                    Spring Boot Backend                               │
-│                       Port: 8080                                     │
-├─────────────────────────────────────────────────────────────────────┤
-│  ┌─────────────┐ ┌─────────────┐ ┌─────────────┐ ┌─────────────┐   │
-│  │ Controllers │ │  Security   │ │  Services   │ │ Schedulers  │   │
-│  └─────────────┘ └─────────────┘ └─────────────┘ └─────────────┘   │
-└─────────────────────────────────────────────────────────────────────┘
-                                    │
-                                    ▼ JPA/Hibernate
-┌─────────────────────────────────────────────────────────────────────┐
-│                       DATA LAYER                                     │
-│                   PostgreSQL Database                                │
-│                       Port: 5432                                     │
-└─────────────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                              CLIENT LAYER                                    │
+├────────────────────────────────┬────────────────────────────────────────────┤
+│     Admin Web (React 19)       │         Mobile App (React Native)          │
+│        Port: 5173              │            Expo SDK 54                      │
+│   Vite 7.2.4 + Tailwind CSS    │       iOS + Android Support                │
+│   TanStack Query + Axios       │     React Navigation + Axios               │
+└────────────────────────────────┴────────────────────────────────────────────┘
+                                        │
+                                        ▼ HTTP/REST + JWT
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                              API LAYER                                       │
+│                     Spring Boot 3.5.10 Backend                               │
+│                           Port: 8080                                         │
+├─────────────────────────────────────────────────────────────────────────────┤
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐    │
+│  │  Controllers │  │   Security   │  │   Services   │  │  Schedulers  │    │
+│  │   22+ REST   │  │  JWT + RBAC  │  │   Business   │  │   Cron Jobs  │    │
+│  │  Endpoints   │  │   Filters    │  │    Logic     │  │   Reminders  │    │
+│  └──────────────┘  └──────────────┘  └──────────────┘  └──────────────┘    │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐    │
+│  │     DTOs     │  │   Entities   │  │ Repositories │  │  Exceptions  │    │
+│  │  Data Xfer   │  │  JPA Models  │  │  Data Access │  │   Handlers   │    │
+│  └──────────────┘  └──────────────┘  └──────────────┘  └──────────────┘    │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                        │
+                                        ▼ JPA/Hibernate
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                             DATA LAYER                                       │
+│                      PostgreSQL Database                                     │
+│                          Port: 5432                                          │
+│  ┌─────────────────────────────────────────────────────────────────────┐    │
+│  │  20 Tables: users, societies, flats, wings, tenants, vehicles,      │    │
+│  │  vendors, vendor_bills, contracts, maintenance_bills, transactions, │    │
+│  │  tickets, complaints, notices, banners, emergency_contacts,         │    │
+│  │  document_templates, notification_preferences, security_logs        │    │
+│  └─────────────────────────────────────────────────────────────────────┘    │
+└─────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
 ## 👑 Role-Based Access Control
 
-The system implements a **10-tier role hierarchy** based on **real housing society structure**:
+The system implements a **10-tier role hierarchy** based on real housing society governance structure:
 
-### 🏛️ Housing Society Hierarchy (Real-World)
-
-| Role | Authority | Responsibilities |
-|------|-----------|------------------|
-| **CHAIRMAN** | Highest Committee Authority | Presides over meetings, final veto/consent power, primary bank signatory |
-| **SECRETARY** | Administrative Head | Manages documentation, records, day-to-day operations |
-| **TREASURER** | Financial Head | Handles finances, billing, payments, accounts |
-
-### 🔐 Access Control Rules
-
-1. **Parent creates DIRECT CHILDREN only** - No skip-level creation
-2. **Read access flows DOWNWARD** - Parents can read all descendants  
-3. **Update/Delete is LIMITED to direct children** - No skip-level modification
-4. **Grandchildren = READ-ONLY** - Can view but not modify
-5. **EXCEPTION: SOCIETY_ADMIN has FULL CRUD** - Can create/update/delete all roles below
+### 🏛️ Role Hierarchy
 
 ```
-                    ╔══════════════════╗
-                    ║   MASTER_ADMIN   ║ ← Platform Owner (You)
-                    ║   (Level 1)      ║   Creates ONLY → SOCIETY_ADMIN
-                    ╚════════╦═════════╝   Read access to ALL
-                             │ Creates (Direct Child Only)
-                             ▼
-                    ╔══════════════════╗
-                    ║  SOCIETY_ADMIN   ║ ← EXCEPTION: Full CRUD below
-                    ║   (Level 2)      ║   Manages ONE society
-                    ╚════════╦═════════╝
-                             │ Creates (All Below - Exception)
-                             ▼
-                    ╔══════════════════╗
-                    ║    CHAIRMAN      ║ ← Committee HEAD (Highest Authority)
-                    ║   (Level 3)      ║   Creates → SECRETARY, TREASURER
-                    ╚════════╦═════════╝
-                             │ Creates (Direct Children)
-              ┌──────────────┴──────────────┐
-              ▼                             ▼
-     ╔═══════════════╗             ╔═══════════════╗
-     ║   SECRETARY   ║             ║   TREASURER   ║
-     ║  (Level 4)    ║             ║   (Level 4)   ║
-     ║  Admin Head   ║             ║ Financial Head║
-     ╚═══════╦═══════╝             ╚═══════╦═══════╝
-             │                             │
-             └──────────┬──────────────────┘
-                        │ Creates (Direct Child)
-                        ▼
-                ╔══════════════════╗
-                ║    COMMITTEE     ║ ← General committee members
-                ║   (Level 5)      ║
-                ╚════════╦═════════╝
-                         │ Creates (Direct Children)
-              ┌──────────┴──────────┐
-              ▼                     ▼
-     ╔═══════════════╗     ╔═══════════════╗
-     ║   EMPLOYEE    ║     ║    MEMBER     ║
-     ║  (Level 6)    ║     ║   (Level 6)   ║
-     ╚═══════╦═══════╝     ╚═══════╦═══════╝
-             │ Creates              │ Creates
-             ▼                      ▼
-     ╔═══════════════╗     ╔═══════════════╗
-     ║   VISITOR     ║     ║    TENANT     ║
-     ║  (Level 7)    ║     ║   (Level 7)   ║
-     ╚═══════════════╝     ╚═══════════════╝
+                         ╔═══════════════════════╗
+                         ║    MASTER_ADMIN       ║  ← Platform Super Admin
+                         ║  (Platform Owner)     ║
+                         ╚═══════════╤═══════════╝
+                                     │
+                         ╔═══════════╧═══════════╗
+                         ║    SOCIETY_ADMIN      ║  ← Society Super Admin
+                         ║  (Society Manager)    ║    Full CRUD on all below
+                         ╚═══════════╤═══════════╝
+              ┌──────────────────────┼──────────────────────┐
+              │                      │                      │
+    ╔═════════╧═════════╗  ╔════════╧════════╗  ╔═════════╧═════════╗
+    ║     CHAIRMAN      ║  ║    SECRETARY    ║  ║    TREASURER      ║
+    ║ (Meeting Chair)   ║  ║ (Admin Head)    ║  ║ (Finance Head)    ║
+    ╚═════════╤═════════╝  ╚════════╤════════╝  ╚═════════╤═════════╝
+              └──────────────────────┼──────────────────────┘
+                         ╔═══════════╧═══════════╗
+                         ║      COMMITTEE        ║  ← Committee Members
+                         ╚═══════════╤═══════════╝
+              ┌──────────────────────┴──────────────────────┐
+              │                                             │
+    ╔═════════╧═════════╗                         ╔═════════╧═════════╗
+    ║     EMPLOYEE      ║                         ║      MEMBER       ║
+    ║   (Staff/Guard)   ║                         ║   (Flat Owner)    ║
+    ╚═════════╤═════════╝                         ╚═════════╤═════════╝
+              │                                             │
+    ╔═════════╧═════════╗                         ╔═════════╧═════════╗
+    ║     VISITOR       ║                         ║      TENANT       ║
+    ╚═══════════════════╝                         ╚═══════════════════╝
 ```
 
-### User CRUD Permissions Matrix
+### 📋 Role Responsibilities
+
+| Role | Authority | Primary Responsibilities |
+|------|-----------|--------------------------|
+| **MASTER_ADMIN** | Platform Owner | Manages all societies, creates SOCIETY_ADMINs |
+| **SOCIETY_ADMIN** | Society Super Admin | Full control over society, all CRUD operations |
+| **CHAIRMAN** | Highest Committee Authority | Presides meetings, final approval, bank signatory |
+| **SECRETARY** | Administrative Head | Documentation, records, day-to-day operations |
+| **TREASURER** | Financial Head | Finances, billing, payments, accounts |
+| **COMMITTEE** | Committee Member | Intermediate management, assigns tasks |
+| **EMPLOYEE** | Staff/Security | Handles visitors, basic operations |
+| **MEMBER** | Flat Owner | Views own data, raises tickets/complaints |
+| **TENANT** | Renter | Limited access to own profile & bills |
+| **VISITOR** | Guest | Minimal access, read-only |
+
+### 🔐 Permission Matrix
 
 | Role | Can CREATE | Can UPDATE/DELETE | Can READ |
 |------|------------|-------------------|----------|
 | `MASTER_ADMIN` | SOCIETY_ADMIN only | SOCIETY_ADMIN only | ALL roles |
-| `SOCIETY_ADMIN` | ALL below (exception) | ALL below (exception) | ALL in society |
+| `SOCIETY_ADMIN` | ALL below (full access) | ALL below (full access) | ALL in society |
 | `CHAIRMAN` | SECRETARY, TREASURER | SECRETARY, TREASURER | All below |
 | `SECRETARY` | COMMITTEE only | COMMITTEE only | COMMITTEE and below |
 | `TREASURER` | COMMITTEE only | COMMITTEE only | COMMITTEE and below |
-| `COMMITTEE` | EMPLOYEE, MEMBER | EMPLOYEE, MEMBER | EMPLOYEE, MEMBER and below |
+| `COMMITTEE` | EMPLOYEE, MEMBER | EMPLOYEE, MEMBER | EMPLOYEE, MEMBER, below |
 | `EMPLOYEE` | VISITOR only | VISITOR only | VISITOR |
 | `MEMBER` | TENANT only | TENANT only | TENANT |
-| `TENANT` | ❌ None | ❌ None | Own profile |
-| `VISITOR` | ❌ None | ❌ None | Own profile |
+| `TENANT` | ❌ None | ❌ None | Own profile only |
+| `VISITOR` | ❌ None | ❌ None | Own profile only |
+
+### 🔑 Access Control Rules
+
+1. **Parent creates DIRECT CHILDREN only** - No skip-level creation
+2. **Read access flows DOWNWARD** - Parents can read all descendants
+3. **Update/Delete LIMITED to direct children** - No skip-level modification
+4. **Grandchildren = READ-ONLY** - Can view but not modify
+5. **EXCEPTION: SOCIETY_ADMIN** - Has full CRUD on all roles below
 
 ---
 
-## 🎨 Frontend (admin-web)
-
-The frontend is built with **React 18** + **Vite** + **Tailwind CSS** with full dark mode support.
+## 🎨 Frontend - Admin Web Portal
 
 ### 📁 Directory Structure
 
 ```
 admin-web/
-├── 📄 index.html           # Entry HTML file
-├── 📄 package.json         # Dependencies & scripts
-├── 📄 vite.config.js       # Vite bundler configuration
-├── 📄 eslint.config.js     # ESLint rules
-├── 📁 public/              # Static assets
-└── 📁 src/                 # Source code
-    ├── 📄 main.jsx         # React entry point
-    ├── 📄 App.jsx          # Main router component
-    ├── 📄 App.css          # Global styles
-    ├── 📄 index.css        # Tailwind imports
-    ├── 📁 api/             # API layer
-    ├── 📁 assets/          # Images, icons
-    ├── 📁 components/      # Reusable components
-    ├── 📁 context/         # React Context providers
-    └── 📁 pages/           # Page components
+├── 📄 index.html                 # HTML entry point
+├── 📄 package.json               # Dependencies (React 19, Vite 7, Tailwind 4)
+├── 📄 vite.config.js             # Vite configuration with API proxy
+├── 📄 eslint.config.js           # ESLint flat config
+└── 📁 src/
+    ├── 📄 main.jsx               # App bootstrap with providers
+    ├── 📄 App.jsx                # Route definitions & protected routes
+    ├── 📄 App.css                # Global styles
+    ├── 📄 index.css              # Tailwind imports
+    ├── 📁 api/
+    │   └── 📄 index.js           # Centralized API layer (Axios)
+    ├── 📁 components/
+    │   ├── 📄 Layout.jsx         # Main layout with responsive sidebar
+    │   ├── 📄 Toggle.jsx         # Toggle switch component
+    │   └── 📄 FormComponents.jsx # Reusable form inputs
+    ├── 📁 context/
+    │   ├── 📄 AuthContext.jsx    # Authentication state & methods
+    │   ├── 📄 SettingsContext.jsx # App settings (theme, preferences)
+    │   ├── 📄 ThemeContext.jsx   # Dark/Light mode management
+    │   └── 📄 ToastContext.jsx   # Toast notification system
+    ├── 📁 pages/                  # 24 page components
+    │   ├── 📄 Login.jsx          # Authentication page
+    │   ├── 📄 Welcome.jsx        # Landing page
+    │   ├── 📄 Dashboard.jsx      # Main dashboard with analytics
+    │   ├── 📄 Users.jsx          # User management CRUD
+    │   ├── 📄 Societies.jsx      # Society management
+    │   ├── 📄 SocietyDetail.jsx  # Individual society view
+    │   ├── 📄 Flats.jsx          # Unit/Flat management
+    │   ├── 📄 Wings.jsx          # Wing/Tower management
+    │   ├── 📄 UnitManagement.jsx # Combined unit operations
+    │   ├── 📄 Tenants.jsx        # Tenant record management
+    │   ├── 📄 Vehicles.jsx       # Vehicle registration
+    │   ├── 📄 Vendors.jsx        # Vendor/Service provider management
+    │   ├── 📄 VendorBills.jsx    # Vendor bill tracking
+    │   ├── 📄 Contracts.jsx      # AMC/Contract management
+    │   ├── 📄 MaintenanceBills.jsx # Maintenance billing
+    │   ├── 📄 Transactions.jsx   # Income/Expense tracking
+    │   ├── 📄 Reports.jsx        # Financial reports (MTD/YTD)
+    │   ├── 📄 Tickets.jsx        # Issue/Request ticketing
+    │   ├── 📄 Complaints.jsx     # Complaint management
+    │   ├── 📄 Notices.jsx        # Notice board
+    │   ├── 📄 Banners.jsx        # Banner management
+    │   ├── 📄 EmergencyContacts.jsx # Emergency contacts
+    │   ├── 📄 Documents.jsx      # Document templates
+    │   ├── 📄 Settings.jsx       # User preferences
+    │   └── 📁 footer/            # Static pages (About, Terms, Privacy)
+    ├── 📁 styles/                # CSS modules & component styles
+    └── 📁 utils/
+        └── 📄 validation.js      # Input validation utilities
 ```
 
----
+### 🔧 Key Features
 
-### 📂 Root Files
+#### API Layer (`api/index.js`)
 
-| File | Purpose | Why It's Needed | Scalability |
-|------|---------|-----------------|-------------|
-| `index.html` | HTML entry point that loads the React app | Required by browsers to start the application | Minimal changes needed; add meta tags for SEO |
-| `package.json` | Defines dependencies, scripts, and project metadata | NPM/Yarn uses this to install packages and run commands | Add new dependencies as features grow; use semantic versioning |
-| `vite.config.js` | Configures Vite bundler (proxy, plugins, build options) | Enables hot reload, optimized builds, API proxying | Add plugins for code splitting, PWA support, bundle analysis |
-| `eslint.config.js` | Defines code linting rules for consistent code style | Enforces best practices across the team | Extend with custom rules as codebase grows |
+```javascript
+// Axios instance with interceptors
+const api = axios.create({
+  baseURL: API_BASE_URL,
+  withCredentials: true,  // HTTP-only cookie support
+})
 
----
+// Auto-attach JWT token
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token')
+  if (token) config.headers.Authorization = `Bearer ${token}`
+  return config
+})
 
-### 📂 src/ Directory Files
+// 401 auto-logout
+api.interceptors.response.use(response => response, (error) => {
+  if (error.response?.status === 401) {
+    localStorage.clear()
+    window.location.href = '/login'
+  }
+  return Promise.reject(error)
+})
+```
 
-#### Entry Files
+#### API Modules Available
 
-| File | Purpose | Why It's Needed | Scalability |
-|------|---------|-----------------|-------------|
-| `main.jsx` | Bootstraps React app, wraps with providers (Router, Auth, Settings) | Entry point that mounts React to DOM and sets up global providers | Add new providers (Redux, Theme, i18n) as wrappers here |
-| `App.jsx` | Defines all routes and protected route logic | Central routing hub connecting URLs to page components | Add new routes easily; supports nested routing for modules |
-| `App.css` | Global CSS styles and animations | App-wide styling not covered by Tailwind | Migrate to CSS modules for component isolation |
-| `index.css` | Tailwind CSS imports and base styles | Loads Tailwind's utility classes | Add custom Tailwind config for design tokens |
+| Module | Endpoints | Features |
+|--------|-----------|----------|
+| `authApi` | login, register, logout, me | JWT authentication |
+| `societyApi` | CRUD operations | Society management |
+| `userApi` | CRUD + bulk import/export | User management with templates |
+| `flatApi` | CRUD + bulk import/export | Unit management |
+| `wingApi` | CRUD by society | Wing/Tower management |
+| `vendorApi` | CRUD + approve/reject | Vendor approval workflow |
+| `vendorBillApi` | CRUD + recordPayment | Partial payment support |
+| `contractApi` | CRUD + getExpiringSoon | Contract reminders |
+| `maintenanceBillApi` | CRUD + generateForSociety | Bulk bill generation |
+| `transactionApi` | CRUD + summaries | Category-wise tracking |
+| `ticketApi` | CRUD + status/assign | Issue tracking |
+| `complaintApi` | CRUD + updateStatus | Complaint resolution |
+| `noticeApi` | CRUD + getActive | Notice board |
+| `bannerApi` | CRUD + getActive | Banner rotation |
+| `emergencyContactApi` | CRUD by society | Emergency directory |
+| `tenantApi` | CRUD + deactivate | Tenant agreements |
+| `vehicleApi` | CRUD by flat | Vehicle registry |
+| `reportApi` | MTD/YTD/Custom/Dashboard | Financial analytics |
+| `exportApi` | Excel downloads | Data export |
+| `notificationPreferenceApi` | get/update | User notifications |
+| `securityLogApi` | getRecent | Activity logs |
 
----
+#### Authentication Context
 
-#### 📂 api/ Folder
+```javascript
+// Role checking utilities
+const hasRole = (...roles) => roles.includes(user.role)
+const isAdminLevel = () => hasRole('MASTER_ADMIN', 'SOCIETY_ADMIN')
+const isCommitteeLevel = () => hasRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 
+  'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE')
+const canManageNotices = () => isCommitteeLevel() || hasRole('EMPLOYEE')
+const canViewFinancials = () => isCommitteeLevel()
+```
 
-| File | Purpose | Why It's Needed | Scalability |
-|------|---------|-----------------|-------------|
-| `index.js` | **Centralized API layer** with Axios instance and all API functions | Single source of truth for all HTTP requests; includes auth interceptors | Add new API modules (auditApi, mobileApi); easy to add caching, retry logic |
+### 🎯 Page Components
 
-**Key Features:**
-- 🔐 **Auto-authentication**: Attaches JWT token to all requests
-- 🔄 **Token refresh handling**: Redirects to login on 401
-- 📦 **Organized API modules**: Separate objects for each resource (userApi, flatApi, etc.)
-- 📊 **Export functionality**: Blob downloads for Excel files
-
----
-
-#### 📂 components/ Folder
-
-| File | Purpose | Why It's Needed | Scalability |
-|------|---------|-----------------|-------------|
-| `Layout.jsx` | Main application layout with sidebar/navbar, responsive design | Provides consistent navigation and structure for all pages | Add new menu groups, notification center, breadcrumbs |
-| `Toggle.jsx` | Reusable toggle switch component | Used for boolean settings (dark mode, notifications) | Extend with sizes, colors, disabled states |
-
-**Layout.jsx Features:**
-- 📱 Responsive design (mobile drawer + desktop navbar)
-- 🎨 Dark mode support with system preference detection
-- 👤 User profile dropdown with logout
-- 🏷️ Role-based menu visibility
-- 📊 Grouped navigation menu structure
-
----
-
-#### 📂 context/ Folder
-
-| File | Purpose | Why It's Needed | Scalability |
-|------|---------|-----------------|-------------|
-| `AuthContext.jsx` | **Authentication state management** - stores user, token, login/logout functions | Provides auth state to entire app via React Context | Add refresh tokens, remember me, multi-tab sync |
-| `SettingsContext.jsx` | **App settings state** - dark mode, accent color, compact mode | Allows users to customize their experience | Add language, timezone, notification preferences |
-
-**AuthContext.jsx Features:**
-- 🔑 `login(email, password)` - Authenticates user
-- 🚪 `logout()` - Clears session
-- 🎭 `hasRole(...roles)` - Check if user has specific role(s)
-- 👔 `isAdminLevel()` - Check if MASTER_ADMIN or SOCIETY_ADMIN
-- 🏛️ `isCommitteeLevel()` - Check if any committee role
-
----
-
-#### 📂 pages/ Folder
-
-| File | Purpose | Features | Scalability |
-|------|---------|----------|-------------|
-| `Login.jsx` | User authentication page | Email/password form, error handling, redirect after login | Add SSO, forgot password, 2FA |
-| `Dashboard.jsx` | Main dashboard with stats overview | Summary cards (flats, members, tickets), MTD/YTD financial stats, recent activities | Add charts, widgets, customizable layout |
-| `Users.jsx` | User management CRUD | Create/edit/delete users, role selection based on permissions, society assignment | Add bulk import, filters, export |
-| `Societies.jsx` | Society management (MASTER_ADMIN only) | Create/edit societies with all details | Add society settings, statistics |
-| `Flats.jsx` | Flat/apartment management | CRUD with owner details, occupancy status, type filtering | Add floor plans, bulk assignment |
-| `Tenants.jsx` | Tenant record management | Agreement dates, rent details, ID proof, active/inactive toggle | Add document upload, reminders |
-| `Vehicles.jsx` | Vehicle registration | Vehicle details, parking slot, flat association | Add parking management, visitor vehicles |
-| `Vendors.jsx` | Vendor/service provider management | Contact info, banking details, service type | Add vendor ratings, contract linking |
-| `VendorBills.jsx` | Vendor bill tracking | Bill status, partial payments, payment recording | Add recurring bills, approval workflow |
-| `Contracts.jsx` | AMC/Contract management | Start/end dates, reminder days, vendor linking | Add renewal alerts, document storage |
-| `MaintenanceBills.jsx` | Maintenance bill generation | Monthly generation for society, payment tracking | Add auto-generation, penalties |
-| `Transactions.jsx` | Income/expense tracking | Category-wise tracking, payment modes, Excel export | Add bank reconciliation, reports |
-| `Reports.jsx` | Financial reports (MTD/YTD) | Summary cards, comparison charts, Excel export | Add custom date ranges, PDF export |
-| `Notices.jsx` | Society notice board | Priority levels, expiry dates, active/inactive | Add push notifications, read receipts |
-| `Banners.jsx` | Banner/promotional content | Image URL, display order, date range | Add image upload, carousel preview |
-| `Tickets.jsx` | Issue/request ticketing | Status workflow, assignment, progress bar, overdue tracking | Add escalation, SLA tracking |
-| `Complaints.jsx` | User complaints | Similar to tickets but user-facing | Add anonymous complaints, ratings |
-| `EmergencyContacts.jsx` | Emergency contact directory | Categorized contacts (doctor, plumber, etc.) | Add quick dial, location integration |
-| `Documents.jsx` | Document templates | Template management for common documents | Add PDF generation, e-signatures |
-| `Settings.jsx` | User preferences | Dark mode, accent color, notification preferences, password change | Add profile photo, language |
+| Page | Route | Features |
+|------|-------|----------|
+| **Dashboard** | `/dashboard` | Stats cards, MTD/YTD graphs, recent activities, quick actions |
+| **Users** | `/users` | CRUD with role-based creation, bulk import/export, society filter |
+| **Societies** | `/societies` | Full society management (MASTER_ADMIN only) |
+| **Flats** | `/units` | Unit management with bulk operations, wing organization |
+| **Wings** | `/wings` | Tower/Building management |
+| **Tenants** | `/tenants` | Agreement tracking, rent details, ID proof |
+| **Vehicles** | `/vehicles` | Vehicle registration with parking slots |
+| **Vendors** | `/vendors` | Vendor approval workflow, banking details |
+| **VendorBills** | `/vendor-bills` | Bill tracking, partial payments |
+| **Contracts** | `/contracts` | AMC management, expiry reminders |
+| **MaintenanceBills** | `/maintenance-bills` | Bulk generation, payment recording |
+| **Transactions** | `/transactions` | Income/Expense with categories, Excel export |
+| **Reports** | `/reports` | MTD/YTD comparison, charts, Excel export |
+| **Tickets** | `/tickets` | Issue tracking with assignment, priority |
+| **Complaints** | `/complaints` | Complaint workflow with resolution |
+| **Notices** | `/notices` | Notice board with priority, expiry |
+| **Banners** | `/banners` | Banner rotation management |
+| **Emergency** | `/emergency-contacts` | Emergency directory |
+| **Documents** | `/documents` | Document template management |
+| **Settings** | `/settings` | User preferences, notifications |
 
 ---
 
-## ⚙️ Backend
+## 📱 Mobile Application
 
-The backend is built with **Spring Boot 3.5.10** + **Java 21** + **PostgreSQL** with layered architecture.
+### 📁 Directory Structure
+
+```
+mobile-app/
+├── 📄 App.js                     # App entry with navigation
+├── 📄 app.json                   # Expo configuration
+├── 📄 babel.config.js            # Babel with Expo preset
+├── 📄 package.json               # Dependencies (Expo 54, RN 0.81)
+└── 📁 src/
+    ├── 📁 components/
+    │   └── 📁 common/            # Reusable UI components
+    │       ├── 📄 Avatar.js      # User avatars
+    │       ├── 📄 Badge.js       # Status badges
+    │       ├── 📄 Button.js      # Styled buttons
+    │       ├── 📄 Card.js        # Card containers
+    │       ├── 📄 EmptyState.js  # Empty list states
+    │       ├── 📄 ErrorState.js  # Error displays
+    │       ├── 📄 Header.js      # Screen headers
+    │       ├── 📄 Input.js       # Form inputs
+    │       ├── 📄 ListItem.js    # List items
+    │       ├── 📄 Loading.js     # Loading indicators
+    │       └── 📄 index.js       # Component exports
+    ├── 📁 constants/
+    │   ├── 📄 Colors.js          # Color palette & themes
+    │   ├── 📄 Layout.js          # Responsive scaling
+    │   └── 📄 index.js           # API config, storage keys, enums
+    ├── 📁 context/
+    │   ├── 📄 AuthContext.js     # Authentication state
+    │   ├── 📄 NotificationContext.js # Push notifications
+    │   └── 📄 ThemeContext.js    # Dark/Light mode
+    ├── 📁 navigation/
+    │   └── 📄 AppNavigator.js    # Stack & Tab navigation
+    ├── 📁 screens/
+    │   ├── 📄 SplashScreen.js    # Animated splash
+    │   ├── 📄 index.js           # Screen exports
+    │   ├── 📁 auth/
+    │   │   ├── 📄 LoginScreen.js
+    │   │   └── 📄 OTPVerificationScreen.js
+    │   ├── 📁 dashboard/
+    │   │   ├── 📄 AdminDashboard.js
+    │   │   ├── 📄 MemberDashboard.js
+    │   │   └── 📄 StaffDashboard.js
+    │   ├── 📁 complaints/
+    │   │   └── 📄 ComplaintsScreen.js
+    │   ├── 📁 notices/
+    │   │   └── 📄 NoticesScreen.js
+    │   ├── 📁 notifications/
+    │   │   └── 📄 NotificationsScreen.js
+    │   ├── 📁 payments/
+    │   │   └── 📄 PaymentHistoryScreen.js
+    │   ├── 📁 profile/
+    │   │   └── 📄 ProfileScreen.js
+    │   ├── 📁 settings/
+    │   │   └── 📄 SettingsScreen.js
+    │   ├── 📁 visitors/
+    │   │   └── 📄 VisitorsScreen.js
+    │   ├── 📁 vehicles/
+    │   ├── 📁 maintenance/
+    │   ├── 📁 documents/
+    │   └── 📁 emergency/
+    └── 📁 services/
+        └── 📄 api.js             # API service layer
+```
+
+### 🔧 Key Features
+
+| Feature | Description |
+|---------|-------------|
+| **Cross-Platform** | Single codebase for iOS & Android |
+| **Role-Based Dashboards** | Admin, Member, Staff specific views |
+| **Push Notifications** | Expo Notifications integration |
+| **Secure Storage** | expo-secure-store for tokens |
+| **Theme Support** | Light/Dark mode with system preference |
+| **Responsive Design** | Device-aware scaling utilities |
+| **Animated Splash** | Linear gradient animated splash screen |
+
+### 📱 Screen Components
+
+| Screen Category | Screens | Features |
+|-----------------|---------|----------|
+| **Auth** | Login, OTP Verification | Secure authentication flow |
+| **Dashboard** | Admin, Member, Staff | Role-specific home screens |
+| **Complaints** | List, Create, Detail | Complaint management |
+| **Notices** | List, Detail | Society announcements |
+| **Payments** | History, Pay | Maintenance bill payments |
+| **Profile** | View, Edit | User profile management |
+| **Settings** | Preferences | Notification & app settings |
+| **Visitors** | Log | Visitor entry management |
+
+---
+
+## ⚙️ Backend API
 
 ### 📁 Directory Structure
 
 ```
 backend/
 ├── 📄 pom.xml                    # Maven dependencies
-├── 📄 mvnw, mvnw.cmd             # Maven wrapper scripts
+├── 📄 mvnw / mvnw.cmd            # Maven wrapper
 └── 📁 src/
     ├── 📁 main/
     │   ├── 📁 java/com/society/backend/
-    │   │   ├── 📄 BackendApplication.java   # Main class
-    │   │   ├── 📄 PasswordHasher.java       # Utility
-    │   │   ├── 📁 config/                   # Configuration classes
-    │   │   ├── 📁 controller/               # REST endpoints
-    │   │   ├── 📁 dto/                      # Data Transfer Objects
-    │   │   ├── 📁 entity/                   # JPA entities
-    │   │   ├── 📁 exception/                # Custom exceptions
-    │   │   ├── 📁 repository/               # JPA repositories
-    │   │   ├── 📁 scheduler/                # Scheduled tasks
-    │   │   ├── 📁 security/                 # JWT & auth
-    │   │   └── 📁 service/                  # Business logic
+    │   │   ├── 📄 BackendApplication.java    # Spring Boot main
+    │   │   ├── 📄 PasswordHasher.java        # CLI utility
+    │   │   ├── 📁 config/                    # Configuration
+    │   │   │   ├── 📄 CorsConfig.java
+    │   │   │   ├── 📄 DataInitializer.java
+    │   │   │   ├── 📄 PasswordConfig.java
+    │   │   │   ├── 📄 SchedulerConfig.java
+    │   │   │   └── 📄 SecurityConfig.java
+    │   │   ├── 📁 security/                  # JWT & Auth
+    │   │   │   ├── 📄 JwtUtils.java
+    │   │   │   ├── 📄 JwtAuthenticationFilter.java
+    │   │   │   ├── 📄 JwtAuthenticationEntryPoint.java
+    │   │   │   ├── 📄 CustomUserDetails.java
+    │   │   │   ├── 📄 CustomUserDetailsService.java
+    │   │   │   └── 📄 RolePermissions.java
+    │   │   ├── 📁 entity/                    # JPA Entities (20)
+    │   │   ├── 📁 dto/                       # Data Transfer Objects
+    │   │   ├── 📁 repository/                # JPA Repositories
+    │   │   ├── 📁 service/                   # Business Logic
+    │   │   ├── 📁 controller/                # REST Controllers (22+)
+    │   │   ├── 📁 scheduler/                 # Scheduled Tasks
+    │   │   └── 📁 exception/                 # Exception Handlers
     │   └── 📁 resources/
-    │       └── 📄 application.properties    # App configuration
-    └── 📁 test/                             # Unit tests
+    │       └── 📄 application.properties
+    └── 📁 test/                              # Unit tests
 ```
 
----
+### 🔧 Configuration Classes
 
-### 📂 Root Files
+| Class | Purpose |
+|-------|---------|
+| `SecurityConfig.java` | Spring Security with JWT filter chain, endpoint protection |
+| `CorsConfig.java` | CORS for frontend (port 5173) & mobile |
+| `DataInitializer.java` | Creates MASTER_ADMIN on first run |
+| `PasswordConfig.java` | BCrypt password encoder bean |
+| `SchedulerConfig.java` | Enables `@Scheduled` annotations |
 
-| File | Purpose | Why It's Needed | Scalability |
-|------|---------|-----------------|-------------|
-| `pom.xml` | Maven project configuration with all dependencies | Manages dependencies, build plugins, project metadata | Add new starters (Redis, Kafka, etc.) as needed |
-| `mvnw` / `mvnw.cmd` | Maven wrapper scripts | Ensures consistent Maven version across environments | No changes needed |
-| `BackendApplication.java` | Spring Boot main class with `@SpringBootApplication` | Entry point that bootstraps the application | Add profile-specific beans |
-| `PasswordHasher.java` | CLI utility to generate BCrypt hashes | Helps create hashed passwords for manual DB entries | Utility - rarely changes |
+### 🔐 Security Classes
 
----
+| Class | Purpose |
+|-------|---------|
+| `JwtUtils.java` | JWT token generation & validation |
+| `JwtAuthenticationFilter.java` | Request filter for JWT extraction |
+| `JwtAuthenticationEntryPoint.java` | 401 error handler |
+| `CustomUserDetails.java` | UserDetails implementation |
+| `CustomUserDetailsService.java` | UserDetailsService for auth |
+| `RolePermissions.java` | Role hierarchy & permission logic |
 
-### 📂 config/ Folder
+### 📦 Entity Classes
 
-| File | Purpose | Why It's Needed | Scalability |
-|------|---------|-----------------|-------------|
-| `CorsConfig.java` | CORS configuration for cross-origin requests | Allows frontend (different port) to call backend APIs | Add production domains |
-| `DataInitializer.java` | Creates MASTER_ADMIN on startup | Ensures platform owner exists on first run | Add more seed data |
-| `PasswordConfig.java` | Configures BCryptPasswordEncoder bean | Standard password hashing | Switch to Argon2 if needed |
-| `SchedulerConfig.java` | Enables scheduled tasks | Required for `@Scheduled` annotations | Configure thread pool size |
-| `SecurityConfig.java` | Spring Security configuration | Defines auth rules, JWT filter chain, endpoint protection | Add OAuth2, 2FA |
+| Entity | Table | Key Fields |
+|--------|-------|------------|
+| `User` | users | id, name, email, password, phone, role, societyId, isActive |
+| `Society` | societies | id, name, address, city, state, pincode, registrationNumber |
+| `Flat` | flats | id, flatNumber, flatType, floor, area, ownerName, wingId |
+| `Wing` | wings | id, name, societyId, description |
+| `Tenant` | tenants | id, flatId, name, agreementStart/End, rentAmount |
+| `Vehicle` | vehicles | id, flatId, vehicleNumber, type, brand, model |
+| `Vendor` | vendors | id, societyId, name, serviceType, approvalStatus |
+| `VendorBill` | vendor_bills | id, vendorId, amount, paidAmount, status |
+| `Contract` | contracts | id, vendorId, startDate, endDate, reminderDays |
+| `MaintenanceBill` | maintenance_bills | id, flatId, billMonth, amount, paidAmount |
+| `Transaction` | transactions | id, societyId, type, category, amount, date |
+| `Ticket` | tickets | id, raisedBy, assignedTo, status, priority |
+| `Complaint` | complaints | id, userId, title, status, resolution |
+| `Notice` | notices | id, societyId, title, content, priority, expiryDate |
+| `Banner` | banners | id, societyId, title, imageUrl, startDate, endDate |
+| `EmergencyContact` | emergency_contacts | id, societyId, contactType, name, phone |
+| `DocumentTemplate` | document_templates | id, templateType, title, content |
+| `NotificationPreference` | notification_preferences | id, userId, emailTickets, etc. |
+| `SecurityLog` | security_logs | id, societyId, type, event, status |
 
----
+### 🎯 Controller Packages
 
-### 📂 security/ Folder
+| Package | Controllers | Endpoints |
+|---------|-------------|-----------|
+| `auth/` | AuthController | POST /auth/login, /auth/logout, GET /auth/me |
+| `user/` | UserController | CRUD /users, bulk import/export |
+| `society/` | SocietyController | CRUD /societies |
+| `flat/` | FlatController | CRUD /flats, bulk import/export |
+| `wing/` | WingController | CRUD /api/wings |
+| `vendor/` | VendorController | CRUD /vendors, approve/reject |
+| `vendor/` | VendorBillController | CRUD /vendor-bills, payment |
+| `contract/` | ContractController | CRUD /contracts, expiring |
+| `maintenance/` | MaintenanceBillController | CRUD, generate for society |
+| `transaction/` | TransactionController | CRUD, summaries, date range |
+| `ticket/` | TicketController | CRUD, assign, status update |
+| `complaint/` | ComplaintController | CRUD, status update |
+| `notice/` | NoticeController | CRUD, active notices |
+| `banner/` | BannerController | CRUD, active banners |
+| `emergency/` | EmergencyContactController | CRUD by society |
+| `document/` | DocumentTemplateController | CRUD by type |
+| `tenant/` | TenantController | CRUD, deactivate |
+| `vehicle/` | VehicleController | CRUD by flat |
+| `notification/` | NotificationPreferenceController | get/update |
+| `report/` | ReportController | MTD/YTD/Custom/Dashboard |
+| `export/` | ExportController | Excel downloads |
+| `health/` | HealthController | API health check |
+| `-` | SecurityLogController | Recent logs |
 
-| File | Purpose | Why It's Needed | Scalability |
-|------|---------|-----------------|-------------|
-| `JwtUtils.java` | JWT token generation and validation | Creates and parses JWT tokens | Add refresh tokens, token blacklist |
-| `JwtAuthenticationFilter.java` | Filter that validates JWT on each request | Extracts user from token for authorization | Add rate limiting |
-| `JwtAuthenticationEntryPoint.java` | Handles unauthorized access (401) | Returns proper JSON error for unauthenticated requests | Customize error format |
-| `CustomUserDetails.java` | Implements UserDetails interface | Bridges our User entity to Spring Security | Add additional fields |
-| `CustomUserDetailsService.java` | Loads user from database for authentication | Required by Spring Security for login | Add caching |
-| `RolePermissions.java` | **Role hierarchy logic** - defines who can create whom | Enforces user creation rules based on role | Central place to modify permissions |
+### 📊 Service Layer Features
 
----
-
-### 📂 entity/ Folder
-
-JPA entities map to database tables. Each uses Lombok for boilerplate reduction.
-
-| File | Database Table | Purpose | Key Fields | Scalability |
-|------|---------------|---------|------------|-------------|
-| `User.java` | `users` | System users | name, email, password, role, society_id | Add profile photo, preferences |
-| `Role.java` | (enum) | Role definitions | 10 roles from MASTER_ADMIN to VISITOR | Add new roles as needed |
-| `Society.java` | `societies` | Housing societies | name, address, city, registration_number | Add GPS coords, settings |
-| `Flat.java` | `flats` | Apartments/units | flat_number, type, floor, owner, society_id | Add amenities, documents |
-| `Tenant.java` | `tenants` | Rental tenants | name, flat_id, agreement dates, rent | Add document storage |
-| `Vehicle.java` | `vehicles` | Registered vehicles | vehicle_number, flat_id, parking_slot | Add RFID, entry logs |
-| `Vendor.java` | `vendors` | Service providers | name, service_type, banking details | Add ratings, contracts |
-| `VendorBill.java` | `vendor_bills` | Vendor invoices | vendor_id, amount, status, due_date | Add approval workflow |
-| `Contract.java` | `contracts` | AMC/insurance contracts | vendor_id, start/end dates, reminder_days | Add document URL |
-| `MaintenanceBill.java` | `maintenance_bills` | Monthly maintenance | flat_id, bill_month, amount, status | Add line items |
-| `Transaction.java` | `transactions` | Income/expense records | society_id, type, amount, category | Add receipt upload |
-| `Notice.java` | `notices` | Society announcements | society_id, title, content, priority | Add attachments |
-| `Banner.java` | `banners` | Promotional banners | image_url, display_order, dates | Add click tracking |
-| `Ticket.java` | `tickets` | Issues/requests | raised_by, assigned_to, status, progress | Add SLA, escalation |
-| `Complaint.java` | `complaints` | User complaints | user_id, title, status | Add escalation |
-| `EmergencyContact.java` | `emergency_contacts` | Emergency directory | society_id, type, name, phone | Add geo-location |
-| `DocumentTemplate.java` | `document_templates` | Document templates | type, title, content | Add PDF generation |
-| `NotificationPreference.java` | `notification_preferences` | Email preferences | user_id, email_tickets, email_payments | Add push preferences |
-
----
-
-### 📂 dto/ Folder
-
-DTOs (Data Transfer Objects) separate API contracts from internal entities.
-
-**Structure per module:**
-```
-dto/
-├── 📁 auth/
-│   ├── LoginRequest.java      # Email + password
-│   ├── LoginResponse.java     # Token + user info
-│   └── RegisterRequest.java   # Registration data
-├── 📁 user/
-│   ├── CreateUserRequest.java
-│   ├── UpdateUserRequest.java
-│   └── UserResponse.java
-├── 📁 flat/
-│   ├── CreateFlatRequest.java
-│   └── FlatResponse.java
-... (similar structure for all modules)
-```
-
-| Why DTOs? |
-|-----------|
-| 🔒 **Security**: Never expose entity directly (hides sensitive fields) |
-| 📝 **Validation**: Add `@NotNull`, `@Size` annotations on DTOs |
-| 🔄 **Versioning**: Change DTO without affecting database |
-| 📊 **Optimization**: Return only needed fields |
-
----
-
-### 📂 repository/ Folder
-
-JPA repositories extend `JpaRepository` for database operations.
-
-| Module | Key Custom Queries | Scalability |
-|--------|-------------------|-------------|
-| `UserRepository` | `findByEmail()`, `findBySocietyId()` | Add specification for dynamic queries |
-| `FlatRepository` | `findBySocietyId()`, `findByOwnerId()` | Add pagination |
-| `TransactionRepository` | `findByDateRange()`, `findBySocietyIdAndType()` | Add aggregation queries |
-| `TicketRepository` | `findByStatus()`, `findByAssignedTo()`, `findOverdue()` | Add full-text search |
-| `MaintenanceBillRepository` | `findByMonth()`, `findPending()` | Add summary queries |
-
----
-
-### 📂 service/ Folder
-
-Services contain business logic. Each module has:
-- `XxxService.java` - Interface
-- `XxxServiceImpl.java` - Implementation
-
-| Service | Key Responsibilities | Scalability |
-|---------|---------------------|-------------|
-| `AuthService` | Login validation, JWT generation | Add OAuth2, LDAP |
-| `UserService` | CRUD + role permission validation | Add bulk operations |
-| `SocietyService` | Society CRUD, admin assignment | Add statistics |
-| `FlatService` | Flat CRUD, occupancy management | Add bulk import |
-| `VendorBillService` | Bill lifecycle, payment recording | Add approval workflow |
-| `MaintenanceBillService` | Bill generation, payment tracking | Add auto-generation |
-| `TransactionService` | Financial records, summaries | Add reconciliation |
-| `TicketService` | Ticket workflow, assignment, progress | Add SLA tracking |
-| `ReportService` | MTD/YTD calculations | Add caching |
-| `ExcelExportService` | Excel file generation | Add PDF export |
-
----
-
-### 📂 controller/ Folder
-
-REST controllers organized by module:
-
-```
-controller/
-├── 📁 auth/
-│   └── AuthController.java        # POST /auth/login, /auth/register
-├── 📁 user/
-│   └── UserController.java        # /users CRUD
-├── 📁 society/
-│   └── SocietyController.java     # /societies CRUD
-├── 📁 flat/
-│   └── FlatController.java        # /flats CRUD
-├── 📁 vendor/
-│   └── VendorController.java      # /vendors CRUD
-│   └── VendorBillController.java  # /vendor-bills CRUD + payments
-├── 📁 maintenance/
-│   └── MaintenanceBillController.java  # /maintenance-bills + generate
-├── 📁 transaction/
-│   └── TransactionController.java # /transactions + summaries
-├── 📁 report/
-│   └── ReportController.java      # /api/reports (MTD/YTD)
-├── 📁 export/
-│   └── ExportController.java      # /api/export (Excel downloads)
-├── 📁 ticket/
-│   └── TicketController.java      # /tickets + assign + progress
-├── 📁 notice/
-│   └── NoticeController.java      # /notices CRUD
-├── 📁 banner/
-│   └── BannerController.java      # /banners CRUD
-├── 📁 emergency/
-│   └── EmergencyContactController.java
-├── 📁 document/
-│   └── DocumentTemplateController.java
-├── 📁 tenant/
-│   └── TenantController.java
-├── 📁 vehicle/
-│   └── VehicleController.java
-├── 📁 health/
-│   └── HealthController.java      # GET /health
-└── 📁 notification/
-    └── NotificationPreferenceController.java
-```
-
----
-
-### 📂 scheduler/ Folder
-
-| File | Purpose | Schedule |
-|------|---------|----------|
-| `ContractReminderScheduler.java` | Sends expiry reminders for contracts | Daily at midnight |
-| `OverdueBillScheduler.java` | Marks bills as overdue | Daily |
-
----
-
-### 📂 exception/ Folder
-
-| File | Purpose |
-|------|---------|
-| `ResourceNotFoundException.java` | Thrown when entity not found (404) |
-| `UnauthorizedException.java` | Thrown for permission issues (403) |
-| `GlobalExceptionHandler.java` | Catches all exceptions, returns consistent JSON |
+| Service | Key Methods |
+|---------|-------------|
+| `UserService` | CRUD with role validation, bulk import/export |
+| `FlatService` | CRUD with wing association, bulk operations |
+| `MaintenanceBillService` | Generate for society, record payments |
+| `VendorBillService` | Partial payment tracking |
+| `TransactionService` | Category summaries, date range queries |
+| `ReportService` | MTD/YTD calculations, dashboard aggregation |
+| `ExportService` | Excel generation via Apache POI |
+| `TicketService` | Assignment, status workflow |
 
 ---
 
 ## 🗄️ Database Schema
 
-The system uses **17 PostgreSQL tables** with carefully designed relationships.
-
----
-
-### 📊 Entity-Relationship Diagram
+### Entity Relationship Overview
 
 ```
-                                    ┌─────────────────┐
-                                    │    SOCIETIES    │
-                                    │─────────────────│
-                                    │ id (PK)         │
-                                    │ name            │
-                                    │ address         │
-                                    │ city, state     │
-                                    │ registration_no │
-                                    └────────┬────────┘
-                                             │
-         ┌───────────────┬───────────────────┼───────────────────┬───────────────┐
-         │               │                   │                   │               │
-         ▼               ▼                   ▼                   ▼               ▼
-┌─────────────────┐ ┌──────────┐    ┌──────────────┐    ┌─────────────┐  ┌──────────────┐
-│     USERS       │ │  FLATS   │    │   NOTICES    │    │  CONTRACTS  │  │ TRANSACTIONS │
-│─────────────────│ │──────────│    │──────────────│    │─────────────│  │──────────────│
-│ id (PK)         │ │ id (PK)  │    │ id (PK)      │    │ id (PK)     │  │ id (PK)      │
-│ society_id (FK)─┼─│society_id│◄───│ society_id   │    │ society_id  │  │ society_id   │
-│ name, email     │ │flat_number│   │ title        │    │ vendor_id   │  │ type (IN/EX) │
-│ role (enum)     │ │ type     │    │ content      │    │ start_date  │  │ amount       │
-│ is_active       │ │ floor    │    │ priority     │    │ end_date    │  │ category     │
-└─────────────────┘ │ owner_*  │    │ expiry_date  │    └─────────────┘  │ payment_mode │
-        │           └────┬─────┘    └──────────────┘           │         └──────────────┘
-        │                │                                     │
-        │                ├──────────────────┐                  │
-        │                │                  │                  │
-        │                ▼                  ▼                  ▼
-        │       ┌──────────────┐   ┌──────────────┐   ┌──────────────┐
-        │       │   TENANTS    │   │   VEHICLES   │   │   VENDORS    │
-        │       │──────────────│   │──────────────│   │──────────────│
-        │       │ id (PK)      │   │ id (PK)      │   │ id (PK)      │
-        │       │ flat_id (FK) │   │ flat_id (FK) │   │ society_id   │
-        │       │ name         │   │ vehicle_no   │   │ name         │
-        │       │ agreement_*  │   │ type         │   │ service_type │
-        │       │ rent_amount  │   │ parking_slot │   │ bank_details │
-        │       └──────────────┘   └──────────────┘   └──────┬───────┘
-        │                                                     │
-        │           ┌────────────────────────────────────────┤
-        │           │                                        │
-        │           ▼                                        ▼
-        │   ┌──────────────────┐                    ┌──────────────┐
-        │   │ MAINTENANCE_BILLS │                   │ VENDOR_BILLS │
-        │   │──────────────────│                    │──────────────│
-        │   │ id (PK)          │                    │ id (PK)      │
-        │   │ flat_id (FK)     │                    │ vendor_id FK │
-        │   │ bill_month       │                    │ society_id   │
-        │   │ amount           │                    │ amount       │
-        │   │ status           │                    │ status       │
-        │   │ due_date         │                    │ due_date     │
-        │   └──────────────────┘                    └──────────────┘
-        │
-        ├───────────────────────────────────┐
-        │                                   │
-        ▼                                   ▼
-┌──────────────┐                   ┌──────────────┐
-│   TICKETS    │                   │  COMPLAINTS  │
-│──────────────│                   │──────────────│
-│ id (PK)      │                   │ id (PK)      │
-│ raised_by FK │                   │ user_id (FK) │
-│ assigned_to  │                   │ title        │
-│ society_id   │                   │ description  │
-│ type         │                   │ status       │
-│ status       │                   └──────────────┘
-│ priority     │
-│ progress_%   │
-└──────────────┘
-
-Other Tables:
-┌──────────────────────┐  ┌─────────────────┐  ┌────────────────────────────┐
-│  EMERGENCY_CONTACTS  │  │     BANNERS     │  │  NOTIFICATION_PREFERENCES  │
-│──────────────────────│  │─────────────────│  │────────────────────────────│
-│ id, society_id       │  │ id, society_id  │  │ id, user_id (FK)           │
-│ contact_type         │  │ title, image_url│  │ email_tickets              │
-│ name, phone          │  │ display_order   │  │ email_complaints           │
-└──────────────────────┘  │ start/end_date  │  │ email_payments             │
-                          └─────────────────┘  └────────────────────────────┘
-
-┌────────────────────────┐
-│   DOCUMENT_TEMPLATES   │
-│────────────────────────│
-│ id (PK)                │
-│ template_type          │
-│ title, content         │
-└────────────────────────┘
+┌─────────────┐     ┌─────────────┐     ┌─────────────┐
+│  societies  │────<│    users    │     │   vendors   │
+└─────────────┘     └─────────────┘     └──────┬──────┘
+       │                   │                    │
+       │            ┌──────┴──────┐            │
+       │            │             │            │
+       ▼            ▼             ▼            ▼
+┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐
+│    wings    │  │   tickets   │  │    flats    │  │vendor_bills │
+└──────┬──────┘  └─────────────┘  └──────┬──────┘  └─────────────┘
+       │                                  │
+       └──────────────┬───────────────────┤
+                      │                   │
+              ┌───────┴────────┐   ┌──────┴──────┐
+              │                │   │             │
+              ▼                ▼   ▼             ▼
+       ┌─────────────┐  ┌─────────────┐  ┌─────────────┐
+       │   tenants   │  │  vehicles   │  │maintenance_ │
+       └─────────────┘  └─────────────┘  │   bills     │
+                                         └─────────────┘
 ```
 
----
-
-### 📋 Complete Table Reference
-
----
-
-#### 1. 👤 `users` - System Users
-
-Stores all users from MASTER_ADMIN to VISITOR with role-based access.
-
-| Column | Type | Nullable | Description |
-|--------|------|----------|-------------|
-| `id` | SERIAL | ❌ PK | Auto-increment primary key |
-| `name` | VARCHAR(100) | ❌ | User's full name |
-| `email` | VARCHAR(100) | ❌ UNIQUE | Login email address |
-| `password` | VARCHAR(255) | ❌ | BCrypt hashed password |
-| `phone` | VARCHAR(20) | ✅ | Contact number |
-| `society_id` | INT | ✅ FK→societies | NULL for MASTER_ADMIN, required for others |
-| `role` | VARCHAR(50) | ❌ | One of 10 roles (MASTER_ADMIN...VISITOR) |
-| `is_active` | BOOLEAN | ❌ | Soft delete flag (default: true) |
-| `created_at` | TIMESTAMP | ❌ | Account creation time |
-
-**Foreign Keys:**
-- `society_id` → `societies(id)` - Links user to their society
-
-**Role-Based Access:**
-- `MASTER_ADMIN` has `society_id = NULL` (access to all)
-- All other roles must have a valid `society_id`
-
----
-
-#### 2. 🏢 `societies` - Housing Societies
-
-Master list of all managed housing societies.
-
-| Column | Type | Nullable | Description |
-|--------|------|----------|-------------|
-| `id` | SERIAL | ❌ PK | Society identifier |
-| `name` | VARCHAR(100) | ❌ | Society name |
-| `address` | TEXT | ✅ | Full address |
-| `city` | VARCHAR(100) | ✅ | City name |
-| `state` | VARCHAR(100) | ✅ | State/province |
-| `pincode` | VARCHAR(10) | ✅ | Postal code |
-| `registration_number` | VARCHAR(50) | ✅ | Official registration ID |
-| `email` | VARCHAR(100) | ✅ | Society contact email |
-| `phone` | VARCHAR(20) | ✅ | Society contact phone |
-| `created_at` | TIMESTAMP | ❌ | When society was onboarded |
-
-**Access Control:**
-- Only `MASTER_ADMIN` can create/edit/delete societies
-- All other roles are restricted to their assigned society
-
----
-
-#### 3. 🏠 `flats` - Apartments/Units
-
-All residential units within societies.
-
-| Column | Type | Nullable | Description |
-|--------|------|----------|-------------|
-| `id` | SERIAL | ❌ PK | Flat identifier |
-| `society_id` | INT | ❌ FK | Which society this belongs to |
-| `flat_number` | VARCHAR(20) | ❌ | Unit number (e.g., "A-101") |
-| `flat_type` | VARCHAR(50) | ✅ | 1BHK, 2BHK, 3BHK, STUDIO, PENTHOUSE |
-| `floor` | INT | ✅ | Floor number (0 = ground) |
-| `area` | DECIMAL(10,2) | ✅ | Area in square feet |
-| `owner_name` | VARCHAR(100) | ✅ | Property owner name |
-| `owner_email` | VARCHAR(100) | ✅ | Owner contact email |
-| `owner_phone` | VARCHAR(20) | ✅ | Owner contact phone |
-| `owner_user_id` | INT | ✅ FK | Link to users table if registered |
-| `is_occupied` | BOOLEAN | ❌ | Whether flat has active tenant |
-
-**Foreign Keys:**
-- `society_id` → `societies(id)`
-- `owner_user_id` → `users(id)` (optional)
-
----
-
-#### 4. 🧾 `complaints` - User Complaints
-
-General complaints raised by society members.
-
-| Column | Type | Nullable | Description |
-|--------|------|----------|-------------|
-| `id` | SERIAL | ❌ PK | Complaint ID |
-| `user_id` | INT | ❌ FK | Who raised the complaint |
-| `title` | VARCHAR(200) | ❌ | Short description |
-| `description` | TEXT | ✅ | Detailed explanation |
-| `status` | VARCHAR(20) | ❌ | PENDING, IN_PROGRESS, RESOLVED, REJECTED |
-| `created_at` | TIMESTAMP | ❌ | When complaint was filed |
-
-**Foreign Keys:**
-- `user_id` → `users(id)`
-
----
-
-#### 5. 📢 `notices` - Society Announcements
-
-Notices and announcements for society members.
-
-| Column | Type | Nullable | Description |
-|--------|------|----------|-------------|
-| `id` | SERIAL | ❌ PK | Notice ID |
-| `society_id` | INT | ❌ FK | Target society |
-| `title` | VARCHAR(200) | ❌ | Notice headline |
-| `content` | TEXT | ✅ | Full notice content |
-| `priority` | VARCHAR(20) | ❌ | LOW, MEDIUM, HIGH, URGENT |
-| `expiry_date` | DATE | ✅ | When notice becomes inactive |
-| `is_active` | BOOLEAN | ❌ | Manual on/off toggle |
-| `created_at` | TIMESTAMP | ❌ | Publication date |
-
-**Foreign Keys:**
-- `society_id` → `societies(id)`
-
----
-
-#### 6. 🚗 `vehicles` - Registered Vehicles
-
-Vehicles registered to flats for parking management.
-
-| Column | Type | Nullable | Description |
-|--------|------|----------|-------------|
-| `id` | SERIAL | ❌ PK | Vehicle record ID |
-| `flat_id` | INT | ❌ FK | Which flat owns this vehicle |
-| `vehicle_type` | VARCHAR(20) | ❌ | TWO_WHEELER, FOUR_WHEELER |
-| `vehicle_number` | VARCHAR(20) | ❌ | License plate number |
-| `brand` | VARCHAR(50) | ✅ | Vehicle manufacturer |
-| `model` | VARCHAR(50) | ✅ | Vehicle model |
-| `color` | VARCHAR(30) | ✅ | Vehicle color |
-| `parking_slot` | VARCHAR(20) | ✅ | Assigned parking space |
-| `created_at` | TIMESTAMP | ❌ | Registration date |
-
-**Foreign Keys:**
-- `flat_id` → `flats(id)` - Links to owning flat
-
----
-
-#### 7. 🏠 `tenants` - Rental Tenants
-
-Tenants renting flats with agreement details.
-
-| Column | Type | Nullable | Description |
-|--------|------|----------|-------------|
-| `id` | SERIAL | ❌ PK | Tenant record ID |
-| `flat_id` | INT | ❌ FK | Which flat they're renting |
-| `name` | VARCHAR(100) | ❌ | Tenant full name |
-| `phone` | VARCHAR(20) | ✅ | Contact number |
-| `email` | VARCHAR(100) | ✅ | Email address |
-| `id_proof_type` | VARCHAR(50) | ✅ | AADHAR, PAN, PASSPORT, etc. |
-| `id_proof_number` | VARCHAR(50) | ✅ | ID document number |
-| `agreement_start_date` | DATE | ✅ | Lease start date |
-| `agreement_end_date` | DATE | ✅ | Lease end date |
-| `rent_amount` | DECIMAL(12,2) | ✅ | Monthly rent |
-| `deposit_amount` | DECIMAL(12,2) | ✅ | Security deposit |
-| `is_active` | BOOLEAN | ❌ | Current tenant status |
-| `created_at` | TIMESTAMP | ❌ | Record creation |
-
-**Foreign Keys:**
-- `flat_id` → `flats(id)`
-
----
-
-#### 8. 🎫 `tickets` - Issue Tracking
-
-Internal ticketing system for complaints, requests, and issues.
-
-| Column | Type | Nullable | Description |
-|--------|------|----------|-------------|
-| `id` | SERIAL | ❌ PK | Ticket ID |
-| `raised_by` | INT | ❌ FK | User who created ticket |
-| `assigned_to` | INT | ✅ FK | Staff assigned to resolve |
-| `society_id` | INT | ❌ FK | Society context |
-| `type` | VARCHAR(20) | ❌ | COMPLAINT, REQUEST, ISSUE |
-| `title` | VARCHAR(200) | ❌ | Brief description |
-| `description` | TEXT | ✅ | Detailed explanation |
-| `status` | VARCHAR(20) | ❌ | PENDING, APPROVED, IN_PROGRESS, COMPLETED, REJECTED |
-| `priority` | VARCHAR(10) | ❌ | LOW, MEDIUM, HIGH, URGENT |
-| `resolution` | TEXT | ✅ | How it was resolved |
-| `progress_percent` | INT | ✅ | 0-100 completion percentage |
-| `created_at` | TIMESTAMP | ❌ | When raised |
-| `updated_at` | TIMESTAMP | ✅ | Last modification |
-| `resolved_at` | TIMESTAMP | ✅ | When marked complete |
-
-**Foreign Keys:**
-- `raised_by` → `users(id)`
-- `assigned_to` → `users(id)` (nullable)
-- `society_id` → `societies(id)`
-
----
-
-#### 9. 🏪 `vendors` - Service Providers
-
-External vendors and service providers.
-
-| Column | Type | Nullable | Description |
-|--------|------|----------|-------------|
-| `id` | SERIAL | ❌ PK | Vendor ID |
-| `society_id` | INT | ✅ FK | Specific society (NULL = common vendor) |
-| `name` | VARCHAR(100) | ❌ | Business/person name |
-| `service_type` | VARCHAR(50) | ❌ | PLUMBER, ELECTRICIAN, SECURITY, etc. |
-| `phone` | VARCHAR(20) | ✅ | Contact number |
-| `email` | VARCHAR(100) | ✅ | Email address |
-| `address` | TEXT | ✅ | Business address |
-| `gst_number` | VARCHAR(20) | ✅ | GST registration |
-| `pan_number` | VARCHAR(20) | ✅ | PAN number |
-| `bank_name` | VARCHAR(100) | ✅ | Bank name for payments |
-| `account_number` | VARCHAR(30) | ✅ | Bank account |
-| `ifsc_code` | VARCHAR(20) | ✅ | IFSC code |
-| `is_common` | BOOLEAN | ❌ | Shared across societies |
-| `is_active` | BOOLEAN | ❌ | Active status |
-| `created_at` | TIMESTAMP | ❌ | Registration date |
-
-**Foreign Keys:**
-- `society_id` → `societies(id)` (nullable for common vendors)
-
----
-
-#### 10. 📃 `vendor_bills` - Vendor Invoices
-
-Bills received from vendors.
-
-| Column | Type | Nullable | Description |
-|--------|------|----------|-------------|
-| `id` | SERIAL | ❌ PK | Bill ID |
-| `vendor_id` | INT | ❌ FK | Which vendor |
-| `society_id` | INT | ❌ FK | Which society |
-| `bill_number` | VARCHAR(50) | ✅ | Vendor's invoice number |
-| `amount` | DECIMAL(12,2) | ❌ | Total bill amount |
-| `paid_amount` | DECIMAL(12,2) | ❌ | Amount paid so far |
-| `status` | VARCHAR(20) | ❌ | PENDING, PARTIAL, PAID |
-| `bill_date` | DATE | ✅ | Invoice date |
-| `due_date` | DATE | ✅ | Payment deadline |
-| `description` | TEXT | ✅ | Bill details |
-| `payment_mode` | VARCHAR(20) | ✅ | CASH, CHEQUE, ONLINE |
-| `reference_number` | VARCHAR(50) | ✅ | Payment reference |
-| `created_at` | TIMESTAMP | ❌ | Record creation |
-| `paid_at` | TIMESTAMP | ✅ | Full payment date |
-
-**Foreign Keys:**
-- `vendor_id` → `vendors(id)`
-- `society_id` → `societies(id)`
-
----
-
-#### 11. 📜 `contracts` - AMC & Contracts
-
-Annual maintenance contracts and insurance policies.
-
-| Column | Type | Nullable | Description |
-|--------|------|----------|-------------|
-| `id` | SERIAL | ❌ PK | Contract ID |
-| `society_id` | INT | ❌ FK | Society |
-| `vendor_id` | INT | ✅ FK | Service provider |
-| `contract_type` | VARCHAR(50) | ❌ | AMC, INSURANCE, PEST_CONTROL, etc. |
-| `title` | VARCHAR(200) | ❌ | Contract name |
-| `description` | TEXT | ✅ | Details |
-| `start_date` | DATE | ❌ | Contract begins |
-| `end_date` | DATE | ❌ | Contract expires |
-| `reminder_days` | INT | ❌ | Days before expiry to remind |
-| `document_url` | VARCHAR(500) | ✅ | Link to contract document |
-| `is_active` | BOOLEAN | ❌ | Active status |
-| `created_at` | TIMESTAMP | ❌ | Created date |
-
-**Foreign Keys:**
-- `society_id` → `societies(id)`
-- `vendor_id` → `vendors(id)` (nullable)
-
----
-
-#### 12. 💳 `maintenance_bills` - Monthly Maintenance
-
-Monthly maintenance charges per flat.
-
-| Column | Type | Nullable | Description |
-|--------|------|----------|-------------|
-| `id` | SERIAL | ❌ PK | Bill ID |
-| `flat_id` | INT | ❌ FK | Target flat |
-| `bill_month` | VARCHAR(7) | ❌ | Format: YYYY-MM (e.g., 2026-01) |
-| `amount` | DECIMAL(12,2) | ❌ | Total due |
-| `paid_amount` | DECIMAL(12,2) | ❌ | Amount received |
-| `due_date` | DATE | ✅ | Payment deadline |
-| `payment_date` | DATE | ✅ | When paid |
-| `status` | VARCHAR(20) | ❌ | PENDING, PARTIAL, PAID, OVERDUE |
-| `payment_mode` | VARCHAR(20) | ✅ | CASH, CHEQUE, ONLINE |
-| `receipt_number` | VARCHAR(50) | ✅ | Receipt for payment |
-| `reference_number` | VARCHAR(50) | ✅ | Transaction reference |
-| `created_at` | TIMESTAMP | ❌ | Bill generation date |
-| `paid_at` | TIMESTAMP | ✅ | Full payment timestamp |
-
-**Foreign Keys:**
-- `flat_id` → `flats(id)` - Which flat owes this bill
-
----
-
-#### 13. 💰 `transactions` - Financial Records
-
-All income and expense transactions.
-
-| Column | Type | Nullable | Description |
-|--------|------|----------|-------------|
-| `id` | SERIAL | ❌ PK | Transaction ID |
-| `society_id` | INT | ❌ FK | Society |
-| `transaction_type` | VARCHAR(10) | ❌ | INCOME or EXPENSE |
-| `payment_mode` | VARCHAR(20) | ❌ | CASH, CHEQUE, ONLINE |
-| `amount` | DECIMAL(12,2) | ❌ | Transaction amount |
-| `category` | VARCHAR(50) | ❌ | MAINTENANCE, VENDOR_PAYMENT, SALARY, etc. |
-| `description` | TEXT | ✅ | Transaction details |
-| `transaction_date` | DATE | ❌ | When it occurred |
-| `reference_number` | VARCHAR(50) | ✅ | Bank reference |
-| `cheque_number` | VARCHAR(30) | ✅ | If paid by cheque |
-| `bank_name` | VARCHAR(100) | ✅ | Bank name |
-| `cheque_date` | DATE | ✅ | Cheque date |
-| `related_bill_id` | INT | ✅ | Link to source bill |
-| `related_bill_type` | VARCHAR(20) | ✅ | MAINTENANCE, VENDOR |
-| `created_at` | TIMESTAMP | ❌ | Record creation |
-
-**Foreign Keys:**
-- `society_id` → `societies(id)`
-
----
-
-#### 14. 🚨 `emergency_contacts` - Emergency Directory
-
-Important contact numbers for emergencies.
-
-| Column | Type | Nullable | Description |
-|--------|------|----------|-------------|
-| `id` | SERIAL | ❌ PK | Contact ID |
-| `society_id` | INT | ❌ FK | Society |
-| `contact_type` | VARCHAR(50) | ❌ | DOCTOR, PLUMBER, ELECTRICIAN, POLICE, etc. |
-| `name` | VARCHAR(100) | ❌ | Contact name |
-| `phone` | VARCHAR(20) | ❌ | Primary phone |
-| `alternate_phone` | VARCHAR(20) | ✅ | Backup number |
-| `address` | TEXT | ✅ | Location |
-| `notes` | TEXT | ✅ | Additional info |
-| `is_active` | BOOLEAN | ❌ | Active flag |
-| `created_at` | TIMESTAMP | ❌ | Added date |
-
-**Foreign Keys:**
-- `society_id` → `societies(id)`
-
----
-
-#### 15. 📄 `document_templates` - Document Templates
-
-Templates for NOC, certificates, and other documents.
-
-| Column | Type | Nullable | Description |
-|--------|------|----------|-------------|
-| `id` | SERIAL | ❌ PK | Template ID |
-| `template_type` | VARCHAR(50) | ❌ | NOC, MEMBERSHIP_CERT, etc. |
-| `title` | VARCHAR(200) | ❌ | Template name |
-| `content` | TEXT | ✅ | Template body with placeholders |
-| `is_active` | BOOLEAN | ❌ | Active status |
-| `created_at` | TIMESTAMP | ❌ | Created date |
-| `updated_at` | TIMESTAMP | ✅ | Last modified |
-
-**No Foreign Keys** - Global templates
-
----
-
-#### 16. 🖼️ `banners` - Promotional Banners
-
-Display banners for announcements and promotions.
-
-| Column | Type | Nullable | Description |
-|--------|------|----------|-------------|
-| `id` | SERIAL | ❌ PK | Banner ID |
-| `society_id` | INT | ✅ FK | Target society (NULL = all) |
-| `title` | VARCHAR(200) | ❌ | Banner title |
-| `image_url` | VARCHAR(500) | ✅ | Image location |
-| `redirect_url` | VARCHAR(500) | ✅ | Click destination |
-| `start_date` | DATE | ✅ | Display start |
-| `end_date` | DATE | ✅ | Display end |
-| `display_order` | INT | ❌ | Sort priority |
-| `is_active` | BOOLEAN | ❌ | Active flag |
-| `created_at` | TIMESTAMP | ❌ | Created date |
-
-**Foreign Keys:**
-- `society_id` → `societies(id)` (nullable for global banners)
-
----
-
-#### 17. 🔔 `notification_preferences` - Email Preferences
-
-User preferences for email notifications.
-
-| Column | Type | Nullable | Description |
-|--------|------|----------|-------------|
-| `id` | SERIAL | ❌ PK | Preference ID |
-| `user_id` | INT | ❌ FK UNIQUE | One preference per user |
-| `email_tickets` | BOOLEAN | ❌ | Receive ticket emails |
-| `email_complaints` | BOOLEAN | ❌ | Receive complaint emails |
-| `email_payments` | BOOLEAN | ❌ | Receive payment emails |
-| `email_contracts` | BOOLEAN | ❌ | Receive contract emails |
-
-**Foreign Keys:**
-- `user_id` → `users(id)` - Links to user
-
----
-
-## 🔗 Foreign Key Relationship Summary
-
+### Table Definitions
+
+#### Core Tables
+
+```sql
+-- Users: 10-tier role system
+CREATE TABLE users (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100),
+    email VARCHAR(100) UNIQUE,
+    password VARCHAR(255),          -- BCrypt hashed
+    phone VARCHAR(20),
+    society_id INT REFERENCES societies(id),
+    role VARCHAR(50) CHECK (role IN (
+        'MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 
+        'SECRETARY', 'TREASURER', 'COMMITTEE', 
+        'EMPLOYEE', 'MEMBER', 'TENANT', 'VISITOR'
+    )),
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Societies: Housing society details
+CREATE TABLE societies (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100),
+    address TEXT,
+    city VARCHAR(100),
+    state VARCHAR(100),
+    pincode VARCHAR(10),
+    registration_number VARCHAR(50),
+    email VARCHAR(100),
+    telephone VARCHAR(20),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Flats: Units with wing organization
+CREATE TABLE flats (
+    id SERIAL PRIMARY KEY,
+    society_id INT REFERENCES societies(id),
+    wing_id INT REFERENCES wings(id),
+    flat_number VARCHAR(20),
+    flat_type VARCHAR(50),          -- 1BHK, 2BHK, SHOP, OFFICE
+    floor INT DEFAULT 0,
+    area DECIMAL(10,2),
+    owner_name VARCHAR(100),
+    owner_email VARCHAR(100),
+    owner_phone VARCHAR(20),
+    is_occupied BOOLEAN DEFAULT FALSE
+);
 ```
-┌────────────────────────────────────────────────────────────────┐
-│                    FOREIGN KEY RELATIONSHIPS                    │
-├────────────────────────────────────────────────────────────────┤
-│                                                                 │
-│  societies (1) ◄──────────┬─────────────► (N) users            │
-│                           │                                     │
-│  societies (1) ◄──────────┼─────────────► (N) flats            │
-│                           │                                     │
-│  societies (1) ◄──────────┼─────────────► (N) notices          │
-│                           │                                     │
-│  societies (1) ◄──────────┼─────────────► (N) tickets          │
-│                           │                                     │
-│  societies (1) ◄──────────┼─────────────► (N) transactions     │
-│                           │                                     │
-│  societies (1) ◄──────────┼─────────────► (N) vendors          │
-│                           │                                     │
-│  societies (1) ◄──────────┼─────────────► (N) vendor_bills     │
-│                           │                                     │
-│  societies (1) ◄──────────┼─────────────► (N) contracts        │
-│                           │                                     │
-│  societies (1) ◄──────────┴─────────────► (N) emergency_contacts│
-│                                                                 │
-│  flats (1) ◄─────────────────────────────► (N) tenants         │
-│                                                                 │
-│  flats (1) ◄─────────────────────────────► (N) vehicles        │
-│                                                                 │
-│  flats (1) ◄─────────────────────────────► (N) maintenance_bills│
-│                                                                 │
-│  users (1) ◄─────────────────────────────► (N) tickets (raised)│
-│                                                                 │
-│  users (1) ◄─────────────────────────────► (N) tickets (assign)│
-│                                                                 │
-│  users (1) ◄─────────────────────────────► (N) complaints      │
-│                                                                 │
-│  users (1) ◄─────────────────────────────► (1) notification_pref│
-│                                                                 │
-│  vendors (1) ◄───────────────────────────► (N) vendor_bills    │
-│                                                                 │
-│  vendors (1) ◄───────────────────────────► (N) contracts       │
-│                                                                 │
-└────────────────────────────────────────────────────────────────┘
+
+#### Financial Tables
+
+```sql
+-- Maintenance Bills: Monthly charges
+CREATE TABLE maintenance_bills (
+    id SERIAL PRIMARY KEY,
+    flat_id INT REFERENCES flats(id),
+    bill_month VARCHAR(7),          -- YYYY-MM format
+    amount DECIMAL(12,2),
+    paid_amount DECIMAL(12,2) DEFAULT 0,
+    due_date DATE,
+    status VARCHAR(20) DEFAULT 'PENDING',
+    payment_mode VARCHAR(20),
+    receipt_number VARCHAR(50),
+    reference_number VARCHAR(50),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    paid_at TIMESTAMP
+);
+
+-- Transactions: Income/Expense ledger
+CREATE TABLE transactions (
+    id SERIAL PRIMARY KEY,
+    society_id INT REFERENCES societies(id),
+    transaction_type VARCHAR(10),   -- INCOME, EXPENSE
+    payment_mode VARCHAR(20),       -- CASH, CHEQUE, ONLINE, UPI
+    amount DECIMAL(12,2),
+    category VARCHAR(50),
+    description TEXT,
+    transaction_date DATE,
+    reference_number VARCHAR(50),
+    cheque_number VARCHAR(30),
+    bank_name VARCHAR(100),
+    cheque_date DATE,
+    related_bill_id INT,
+    related_bill_type VARCHAR(20),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+#### Communication Tables
+
+```sql
+-- Tickets: Issue tracking with assignment
+CREATE TABLE tickets (
+    id SERIAL PRIMARY KEY,
+    raised_by INT REFERENCES users(id),
+    assigned_to INT REFERENCES users(id),
+    society_id INT REFERENCES societies(id),
+    type VARCHAR(20),               -- COMPLAINT, REQUEST, ISSUE
+    title VARCHAR(200),
+    description TEXT,
+    status VARCHAR(20) DEFAULT 'OPEN',
+    priority VARCHAR(10) DEFAULT 'MEDIUM',
+    resolution TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP,
+    resolved_at TIMESTAMP
+);
+
+-- Notices: Society announcements
+CREATE TABLE notices (
+    id SERIAL PRIMARY KEY,
+    society_id INT REFERENCES societies(id),
+    title VARCHAR(200),
+    content TEXT,
+    priority VARCHAR(20) DEFAULT 'MEDIUM',
+    expiry_date DATE,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
 ```
 
 ---
 
 ## 📡 API Reference
 
-### Base URL
-```
-Development: http://localhost:8080
-Production: https://api.yourdomain.com
-```
+### Authentication Endpoints
 
-### Authentication
-All endpoints (except `/auth/login`) require JWT token:
-```
-Authorization: Bearer <token>
-```
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|---------------|
+| POST | `/auth/login` | User login | No |
+| POST | `/auth/logout` | Clear session | Yes |
+| GET | `/auth/me` | Get current user | Yes |
 
-### Main Endpoints
+### User Endpoints
 
-| Module | Endpoints | Methods |
-|--------|-----------|---------|
-| Auth | `/auth/login`, `/auth/register` | POST |
-| Users | `/users`, `/users/{id}` | GET, POST, PUT, DELETE |
-| Societies | `/societies`, `/societies/{id}` | GET, POST, PUT, DELETE |
-| Flats | `/flats`, `/flats/{id}`, `/flats/society/{id}` | GET, POST, PUT, DELETE |
-| Tenants | `/tenants`, `/tenants/flat/{flatId}` | GET, POST, PUT, DELETE |
-| Vehicles | `/vehicles`, `/vehicles/flat/{flatId}` | GET, POST, PUT, DELETE |
-| Vendors | `/vendors`, `/vendors/society/{id}` | GET, POST, PUT, DELETE |
-| Vendor Bills | `/vendor-bills`, `/vendor-bills/{id}/payment` | GET, POST, PUT, DELETE, POST |
-| Contracts | `/contracts`, `/contracts/expiring/{societyId}` | GET, POST, PUT, DELETE |
-| Maintenance Bills | `/maintenance-bills`, `/maintenance-bills/generate` | GET, POST, PUT, DELETE |
-| Transactions | `/transactions`, `/transactions/society/{id}/summary` | GET, POST, PUT, DELETE |
-| Notices | `/notices`, `/notices/society/{id}` | GET, POST, PUT, DELETE |
-| Banners | `/banners`, `/banners/active` | GET, POST, PUT, DELETE |
-| Tickets | `/tickets`, `/tickets/{id}/status`, `/tickets/{id}/progress` | GET, POST, PUT, PATCH, DELETE |
-| Complaints | `/complaints`, `/complaints/{id}/status` | GET, POST, PATCH, DELETE |
-| Emergency | `/emergency-contacts`, `/emergency-contacts/society/{id}` | GET, POST, PUT, DELETE |
-| Documents | `/document-templates`, `/document-templates/type/{type}` | GET, POST, PUT, DELETE |
-| Reports | `/api/reports/mtd/{societyId}`, `/api/reports/ytd/{societyId}` | GET |
-| Export | `/api/export/transactions/{societyId}`, `/api/export/tickets/{societyId}` | GET (blob) |
+| Method | Endpoint | Description | Auth |
+|--------|----------|-------------|------|
+| GET | `/users` | List all accessible users | Yes |
+| GET | `/users/{id}` | Get user by ID | Yes |
+| GET | `/users/society/{societyId}` | Users by society | Yes |
+| POST | `/users` | Create user | Yes |
+| PUT | `/users/{id}` | Update user | Yes |
+| DELETE | `/users/{id}` | Delete user | Yes |
+| GET | `/users/creatable-roles` | Roles current user can create | Yes |
+| POST | `/users/bulk-create/{societyId}` | Create users for units | Yes |
+| POST | `/users/bulk-import/validate` | Validate import file | Yes |
+| POST | `/users/bulk-import` | Process import | Yes |
+| GET | `/users/bulk-import/template` | Download template | Yes |
+
+### Financial Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/reports/mtd/{societyId}` | Month-to-date report |
+| GET | `/api/reports/ytd/{societyId}` | Year-to-date report |
+| GET | `/api/reports/custom/{societyId}` | Custom date range |
+| GET | `/api/reports/dashboard/{societyId}` | Dashboard stats |
+| GET | `/api/export/transactions/{societyId}` | Excel export |
+| POST | `/maintenance-bills/generate` | Generate bulk bills |
+
+### Response Format
+
+```json
+// Success Response
+{
+  "id": 1,
+  "name": "John Doe",
+  "email": "john@example.com",
+  "role": "MEMBER",
+  "societyId": 1
+}
+
+// Error Response
+{
+  "timestamp": "2026-02-05T10:30:00",
+  "status": 400,
+  "error": "Bad Request",
+  "message": "Email already exists",
+  "path": "/users"
+}
+
+// Login Response
+{
+  "token": "eyJhbGciOiJIUzI1NiJ9...",
+  "tokenType": "Bearer",
+  "id": 1,
+  "name": "Admin User",
+  "email": "admin@example.com",
+  "role": "MASTER_ADMIN",
+  "societyId": null
+}
+```
 
 ---
 
-## 🚀 Scalability Features
+## ✨ Features & Capabilities
 
-### Current Architecture Benefits
+### 🏠 Property Management
 
-| Feature | Implementation | Future Enhancement |
-|---------|---------------|-------------------|
-| **Modular Design** | Separate controllers/services per module | Extract to microservices |
-| **Role-Based Access** | Centralized in `RolePermissions.java` | Add ABAC (Attribute-Based) |
-| **DTO Pattern** | Separates API from entities | Add API versioning |
-| **Repository Pattern** | JPA abstraction | Add Redis caching |
-| **Scheduled Tasks** | Spring `@Scheduled` | Add job queue (Quartz) |
-| **Excel Export** | Apache POI | Add async generation |
+- **Multi-Society Support**: Single platform manages multiple housing societies
+- **Wing/Tower Organization**: Flats organized by buildings/towers
+- **Unit Types**: Support for Flats, Shops, Offices with different configurations
+- **Bulk Import/Export**: Excel templates for mass data operations
+- **Tenant Management**: Agreement tracking with automatic reminders
 
-### Recommended Future Improvements
+### 💰 Financial Management
 
-1. **Caching**: Redis for frequently accessed data (societies, flats)
-2. **Message Queue**: RabbitMQ/Kafka for notifications
-3. **File Storage**: AWS S3 for documents and images
-4. **Search**: Elasticsearch for full-text search
-5. **Monitoring**: Prometheus + Grafana
-6. **API Gateway**: Rate limiting, request validation
-7. **Microservices**: Split into auth, billing, tickets services
+- **Maintenance Billing**: Bulk bill generation for all units
+- **Partial Payments**: Track payment progress on bills
+- **Vendor Management**: Approval workflow for service providers
+- **Expense Tracking**: Category-wise income/expense ledger
+- **Financial Reports**: MTD/YTD with comparison charts
+- **Excel Export**: Download reports in Excel format
+
+### 📢 Communication
+
+- **Notice Board**: Priority-based announcements with expiry
+- **Ticket System**: Issue tracking with assignment workflow
+- **Complaint Management**: Resolution workflow with status updates
+- **Banner Management**: Rotating banners for announcements
+- **Emergency Contacts**: Society-wide emergency directory
+
+### 🔐 Security Features
+
+- **JWT Authentication**: Secure token-based auth
+- **HTTP-Only Cookies**: CSRF protection
+- **Role-Based Access**: 10-tier permission system
+- **Password Hashing**: BCrypt encryption
+- **Activity Logging**: Security event tracking
+
+### 📊 Reporting & Analytics
+
+- **Dashboard Analytics**: Real-time statistics
+- **MTD/YTD Reports**: Monthly and yearly comparisons
+- **Custom Date Range**: Flexible reporting periods
+- **Excel Export**: All reports downloadable
+- **Visual Charts**: Graphical data representation
 
 ---
 
-## 📞 Support
+## 🚀 Getting Started
 
-For issues or questions:
-- 📧 Email: support@societymanagement.com
-- 📖 Documentation: `/docs` folder
-- 🐛 Bug Reports: GitHub Issues
+### Prerequisites
+
+```bash
+# Backend
+Java 21+
+Maven 3.8+
+PostgreSQL 14+
+
+# Frontend
+Node.js 18+
+npm 9+
+
+# Mobile
+Node.js 18+
+Expo CLI
+Expo Go app (for testing)
+```
+
+### Backend Setup
+
+```bash
+# Navigate to backend
+cd backend
+
+# Configure database (application.properties)
+spring.datasource.url=jdbc:postgresql://localhost:5432/society_db
+spring.datasource.username=your_username
+spring.datasource.password=your_password
+
+# Run with Maven
+./mvnw spring-boot:run
+```
+
+### Frontend Setup
+
+```bash
+# Navigate to admin-web
+cd admin-web
+
+# Install dependencies
+npm install
+
+# Start dev server (port 5173)
+npm run dev
+```
+
+### Mobile Setup
+
+```bash
+# Navigate to mobile-app
+cd mobile-app
+
+# Install dependencies
+npm install
+
+# Configure API endpoint (src/constants/index.js)
+BASE_URL: 'http://your-backend-url:8080'
+
+# Start Expo
+npm start
+# or
+expo start
+```
 
 ---
 
-<div align="center">
+## 📂 Project Structure
 
-**Built with ❤️ using Spring Boot + React + PostgreSQL**
+```
+society-management-system/
+├── 📁 admin-web/                 # React Admin Portal
+│   ├── 📁 src/
+│   │   ├── 📁 api/               # API layer
+│   │   ├── 📁 components/        # UI components
+│   │   ├── 📁 context/           # React Context
+│   │   ├── 📁 pages/             # Page components (24)
+│   │   ├── 📁 styles/            # CSS modules
+│   │   └── 📁 utils/             # Utilities
+│   └── 📄 package.json
+├── 📁 backend/                   # Spring Boot API
+│   └── 📁 src/main/java/
+│       └── 📁 com/society/backend/
+│           ├── 📁 config/        # Configuration
+│           ├── 📁 controller/    # REST Controllers (22+)
+│           ├── 📁 dto/           # DTOs
+│           ├── 📁 entity/        # JPA Entities (20)
+│           ├── 📁 exception/     # Exception handlers
+│           ├── 📁 repository/    # Repositories
+│           ├── 📁 scheduler/     # Scheduled tasks
+│           ├── 📁 security/      # JWT & Auth
+│           └── 📁 service/       # Business logic
+├── 📁 mobile-app/                # React Native App
+│   └── 📁 src/
+│       ├── 📁 components/        # UI components
+│       ├── 📁 constants/         # Config & constants
+│       ├── 📁 context/           # React Context
+│       ├── 📁 navigation/        # Navigation
+│       ├── 📁 screens/           # Screen components
+│       └── 📁 services/          # API services
+├── 📁 database/                  # SQL scripts
+│   ├── 📄 schema.sql             # Main schema
+│   └── 📄 migration-*.sql        # Migrations
+├── 📁 docs/                      # Documentation
+│   ├── 📄 SYSTEM_DOCUMENTATION.md
+│   ├── 📄 requirements.md
+│   └── 📄 Enhancements.md
+└── 📄 README.md
+```
 
-</div>
+---
+
+## 📜 License
+
+This project is licensed under the **MIT License**.
+
+---
+
+<p align="center">
+  <strong>Built with ❤️ for Modern Housing Society Management</strong>
+</p>
+
+<p align="center">
+  <a href="#-system-overview">Overview</a> •
+  <a href="#-technology-stack">Tech Stack</a> •
+  <a href="#-getting-started">Get Started</a> •
+  <a href="#-api-reference">API Reference</a>
+</p>

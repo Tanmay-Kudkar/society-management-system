@@ -133,7 +133,7 @@ export default function Users() {
     enabled: confirmedIsMember && !!currentUserFlatId,
   })
 
-  // Get available flats based on user role
+  // Get available flats based on user role and selected role for the new user
   const availableFlats = (() => {
     // MEMBER creating TENANT: show only flats owned by this member
     if (confirmedIsMember) {
@@ -151,12 +151,20 @@ export default function Users() {
       // If no flat found, return empty (the form will show auto-assign message)
       return []
     }
-    // Other roles: show unassigned flats (not owned by any user)
+    
+    // For other roles creating users, filter based on selected role's unit type restrictions
+    const targetRole = selectedRole || creatableRoles[0]
+    
     return flats.filter(flat => {
       // Check if flat has an owner assigned (using ownerUserId from backend)
       const hasOwner = flat.ownerUserId != null
       // Allow if not owned, or if editing the current owner
-      return !hasOwner || (editingUser && editingUser.flatId === flat.id)
+      const isAvailable = !hasOwner || (editingUser && editingUser.flatId === flat.id)
+      if (!isAvailable) return false
+      
+      // All unit-assignable roles (MEMBER, TENANT, CHAIRMAN, etc.) can own any unit type
+      // No unit type filtering needed
+      return true
     })
   })()
 
@@ -296,7 +304,7 @@ export default function Users() {
       return
     }
 
-    // Validate flatId is required for MEMBER/TENANT roles
+    // Validate flatId is required for MEMBER/TENANT roles only (they are resident roles)
     // Exception: MEMBER creating TENANT - backend auto-assigns the member's flat
     if (['MEMBER', 'TENANT'].includes(roleValue) && !data.flatId) {
       // Skip validation if MEMBER is creating TENANT (backend will auto-assign)
@@ -304,6 +312,16 @@ export default function Users() {
         setError('Please select a property for the user')
         return
       }
+    }
+
+    // Roles that cannot be assigned to any unit
+    // EMPLOYEE, VISITOR = staff/visitor roles, no unit
+    // MEMBER, CHAIRMAN, SECRETARY, TREASURER, COMMITTEE = can have FLAT
+    // TENANT = can have any unit (FLAT, SHOP, OFFICE)
+    const nonUnitRoles = ['EMPLOYEE', 'VISITOR']
+    if (nonUnitRoles.includes(roleValue) && data.flatId) {
+      setError(`${roleValue} role cannot be assigned to a property. Only MEMBER, TENANT, CHAIRMAN, SECRETARY, TREASURER, and COMMITTEE can occupy units.`)
+      return
     }
 
     // Prevent multiple high-level roles in the same society
@@ -369,8 +387,9 @@ export default function Users() {
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
-          {/* Bulk Actions - only show for society context (not MASTER_ADMIN viewing all societies) */}
-          {!isMasterAdmin || urlSocietyId ? (
+          {/* Bulk Actions - only show for SECRETARY and COMMITTEE (they manage multiple users like MEMBER, EMPLOYEE, etc.) */}
+          {/* SOCIETY_ADMIN only creates unique positions (CHAIRMAN, SECRETARY, TREASURER) - no bulk import needed */}
+          {['SECRETARY', 'COMMITTEE'].includes(user?.role) ? (
             <>
               <button
                 onClick={() => {
@@ -909,7 +928,7 @@ export default function Users() {
                   </select>
                 </div>
               )}
-              {/* Property selection for MEMBER/TENANT roles */}
+              {/* Property selection for MEMBER/TENANT roles - NOT shown for EMPLOYEE */}
               {['MEMBER', 'TENANT'].includes(selectedRole || creatableRoles[0]) && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -1130,7 +1149,7 @@ export default function Users() {
                       </li>
                       <li className="flex items-start gap-2">
                         <span className="inline-flex items-center justify-center w-5 h-5 bg-blue-100 dark:bg-blue-800 text-blue-600 dark:text-blue-300 text-xs font-bold rounded mt-0.5">C</span>
-                        <span><strong>Flat Number</strong> (required) - Used as default password</span>
+                        <span><strong>Flat Number</strong> - Required for unit owners. Supports comma-separated for multiple units (e.g., "A-101, S-001")</span>
                       </li>
                       <li className="flex items-start gap-2">
                         <span className="inline-flex items-center justify-center w-5 h-5 bg-blue-100 dark:bg-blue-800 text-blue-600 dark:text-blue-300 text-xs font-bold rounded mt-0.5">D</span>
@@ -1141,6 +1160,15 @@ export default function Users() {
                         <span><strong>Role</strong> (optional) - Default: MEMBER</span>
                       </li>
                     </ul>
+                    {/* Role-Unit Type Rules */}
+                    <div className="mt-3 pt-3 border-t border-blue-200 dark:border-blue-700">
+                      <p className="text-xs font-semibold text-blue-800 dark:text-blue-200 mb-2">Role & Unit Type Rules:</p>
+                      <ul className="text-xs text-blue-600 dark:text-blue-400 space-y-1">
+                        <li>• <strong>MEMBER, CHAIRMAN, SECRETARY, TREASURER, COMMITTEE, TENANT</strong> → Can own FLAT, SHOP, or OFFICE</li>
+                        <li>• <strong>Multiple units:</strong> Use comma-separated values (e.g., "A-101, S-001") for owners with multiple properties</li>
+                        <li>• <strong>EMPLOYEE, VISITOR</strong> → Cannot be assigned to any unit (leave Flat Number empty)</li>
+                      </ul>
+                    </div>
                   </div>
                 </>
               )}

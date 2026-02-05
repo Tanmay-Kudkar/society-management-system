@@ -135,10 +135,11 @@ public class UserController {
     /**
      * Bulk create users for all units in a society that don't have users.
      * Uses owner email as username and flat number as default password.
-     * Only admins can bulk create users.
+     * Only SECRETARY and COMMITTEE can bulk create users (they manage multiple
+     * users like MEMBER, EMPLOYEE).
      */
     @PostMapping("/bulk-create/{societyId}")
-    @PreAuthorize("hasAnyRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY')")
+    @PreAuthorize("hasAnyRole('SECRETARY', 'COMMITTEE')")
     public ResponseEntity<BulkCreateUsersResponse> bulkCreateUsers(@PathVariable Long societyId) {
         return ResponseEntity.ok(userService.bulkCreateUsersForUnits(societyId));
     }
@@ -146,45 +147,45 @@ public class UserController {
     /**
      * Validate bulk user import from Excel file.
      * Returns parsed data with validation status for preview before actual import.
-     * Only admins can bulk import users.
+     * Only SECRETARY and COMMITTEE can bulk import users.
      */
     @PostMapping("/bulk-import/validate")
-    @PreAuthorize("hasAnyRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY')")
+    @PreAuthorize("hasAnyRole('SECRETARY', 'COMMITTEE')")
     public ResponseEntity<BulkUserImportResponse> validateBulkImport(
             @RequestParam("file") MultipartFile file,
             @RequestParam("societyId") Long societyId) throws java.io.IOException {
-        
+
         // Parse and validate the Excel file
         List<UserImportRow> rows = bulkUserImportService.parseExcelFile(file);
         BulkUserImportResponse response = bulkUserImportService.validateImportRows(rows, societyId);
-        
+
         return ResponseEntity.ok(response);
     }
 
     /**
      * Process bulk user import from Excel file.
      * Creates users from previously validated data.
-     * Only admins can bulk import users.
+     * Only SECRETARY and COMMITTEE can bulk import users.
      */
     @PostMapping("/bulk-import")
-    @PreAuthorize("hasAnyRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY')")
+    @PreAuthorize("hasAnyRole('SECRETARY', 'COMMITTEE')")
     public ResponseEntity<BulkUserImportResponse> processBulkImport(
             @RequestParam("file") MultipartFile file,
             @RequestParam("societyId") Long societyId) throws java.io.IOException {
-        
+
         // Parse, validate, and process the Excel file
         List<UserImportRow> rows = bulkUserImportService.parseExcelFile(file);
         BulkUserImportResponse validationResponse = bulkUserImportService.validateImportRows(rows, societyId);
-        
+
         // Only process if there are no validation errors
         if (validationResponse.getFailureCount() > 0) {
             validationResponse.setMessage("Import failed: Please fix validation errors and try again");
             return ResponseEntity.badRequest().body(validationResponse);
         }
-        
+
         // Process the import
         BulkUserImportResponse processResponse = bulkUserImportService.processImport(rows, societyId);
-        
+
         return ResponseEntity.ok(processResponse);
     }
 
@@ -192,10 +193,10 @@ public class UserController {
      * Download Excel template for bulk user import.
      */
     @GetMapping("/bulk-import/template")
-    @PreAuthorize("hasAnyRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY')")
+    @PreAuthorize("hasAnyRole('SECRETARY', 'COMMITTEE')")
     public ResponseEntity<byte[]> downloadImportTemplate() {
         byte[] template = bulkUserImportService.generateTemplate();
-        
+
         return ResponseEntity.ok()
                 .header("Content-Disposition", "attachment; filename=user_import_template.xlsx")
                 .header("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
