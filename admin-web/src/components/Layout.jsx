@@ -72,8 +72,7 @@ const standardMenuGroups = [
     items: [
       { path: '/users', icon: Users, label: 'Users', roles: ['SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER'] },
       { path: '/wings', icon: Layers, label: 'Wings', roles: ['SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY'] },
-      { path: '/unit-management', icon: Home, label: 'Unit Management', roles: ['SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE'] },
-      { path: '/flats', icon: Home, label: 'Units', roles: ['SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE'] },
+      { path: '/unit-management', icon: Home, label: 'Units', roles: ['SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE'] },
       { path: '/tenants', icon: UserCheck, label: 'Tenants', roles: ['SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'MEMBER'] },
       { path: '/vehicles', icon: Car, label: 'Vehicles', roles: ['SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'EMPLOYEE'] },
     ],

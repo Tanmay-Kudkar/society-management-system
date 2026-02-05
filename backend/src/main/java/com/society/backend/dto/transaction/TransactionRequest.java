@@ -40,4 +40,7 @@ public class TransactionRequest {
     // Related entity
     private Long relatedBillId;
     private String relatedBillType; // MAINTENANCE, VENDOR
+    
+    // For maintenance income - link to flat/unit
+    private Long flatId; // Required for MAINTENANCE income transactions
 }

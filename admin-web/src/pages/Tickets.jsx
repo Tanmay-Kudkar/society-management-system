@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '../context/AuthContext'
+import { useToast } from '../context/ToastContext'
 import { ticketApi, userApi, exportApi, downloadBlob } from '../api'
 import { Plus, Search, X, Ticket, MessageSquare, User, Edit, AlertTriangle, Clock, FileSpreadsheet } from 'lucide-react'
 import clsx from 'clsx'
@@ -29,6 +30,7 @@ const getProgressColor = (progress) => {
 
 export default function Tickets() {
   const { user } = useAuth()
+  const toast = useToast()
   const queryClient = useQueryClient()
   const [showModal, setShowModal] = useState(false)
   const [showAssignModal, setShowAssignModal] = useState(false)
@@ -108,12 +110,20 @@ export default function Tickets() {
   }
 
   const handleExport = async () => {
+    if (!user.societyId && !isMasterAdmin) {
+      toast.error('Unable to export: No society assigned to your account')
+      return
+    }
+    
     setIsExporting(true)
     try {
-      const response = await exportApi.tickets(user.societyId, filterStatus || null)
+      // Use societyId if available, otherwise export all for master admin
+      const response = await exportApi.tickets(user.societyId || null, filterStatus || null)
       downloadBlob(response.data, `tickets_${new Date().toISOString().split('T')[0]}.xlsx`)
+      toast.success('Tickets exported successfully')
     } catch (error) {
       console.error('Export failed:', error)
+      toast.error(error.response?.data?.message || 'Failed to export tickets')
     } finally {
       setIsExporting(false)
     }

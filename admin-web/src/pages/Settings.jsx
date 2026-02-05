@@ -235,6 +235,13 @@ export default function Settings() {
                 </div>
               )}
               
+              {saved && !error && (
+                <div className="p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-400 rounded-lg text-sm flex items-center gap-2">
+                  <Check size={16} />
+                  Profile updated successfully!
+                </div>
+              )}
+              
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-gray-100 dark:border-slate-700">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Full Name</label>
@@ -253,6 +260,17 @@ export default function Settings() {
                     disabled
                     className="w-full px-3 py-2 border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-600 rounded-lg text-gray-500 dark:text-gray-400"
                   />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Phone Number</label>
+                  <input
+                    type="tel"
+                    value={profileData.phone}
+                    onChange={(e) => setProfileData({ ...profileData, phone: e.target.value })}
+                    placeholder="10-digit mobile number"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                  />
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Format: 10-digit mobile (e.g., 9876543210)</p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Role</label>

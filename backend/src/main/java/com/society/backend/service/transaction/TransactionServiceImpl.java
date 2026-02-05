@@ -2,9 +2,11 @@ package com.society.backend.service.transaction;
 
 import com.society.backend.dto.transaction.TransactionRequest;
 import com.society.backend.dto.transaction.TransactionResponse;
+import com.society.backend.entity.Flat;
 import com.society.backend.entity.Society;
 import com.society.backend.entity.Transaction;
 import com.society.backend.exception.ApiException;
+import com.society.backend.repository.flat.FlatRepository;
 import com.society.backend.repository.society.SocietyRepository;
 import com.society.backend.repository.transaction.TransactionRepository;
 import com.society.backend.service.common.RoleService;
@@ -26,6 +28,7 @@ public class TransactionServiceImpl implements TransactionService {
 
     private final TransactionRepository transactionRepository;
     private final SocietyRepository societyRepository;
+    private final FlatRepository flatRepository;
     private final RoleService roleService;
 
     @Override
@@ -35,6 +38,15 @@ public class TransactionServiceImpl implements TransactionService {
 
         Society society = societyRepository.findById(request.getSocietyId())
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Society not found"));
+
+        // Validate: MAINTENANCE income requires flatId
+        if ("INCOME".equalsIgnoreCase(request.getTransactionType()) 
+                && "MAINTENANCE".equalsIgnoreCase(request.getCategory())) {
+            if (request.getFlatId() == null) {
+                throw new ApiException(HttpStatus.BAD_REQUEST, 
+                    "Unit/Flat is required for maintenance income transactions");
+            }
+        }
 
         Transaction transaction = new Transaction();
         transaction.setSociety(society);
@@ -51,6 +63,13 @@ public class TransactionServiceImpl implements TransactionService {
         transaction.setChequeDate(request.getChequeDate());
         transaction.setRelatedBillId(request.getRelatedBillId());
         transaction.setRelatedBillType(request.getRelatedBillType());
+        
+        // Set flat if provided
+        if (request.getFlatId() != null) {
+            Flat flat = flatRepository.findById(request.getFlatId())
+                    .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Unit/Flat not found"));
+            transaction.setFlat(flat);
+        }
 
         Transaction saved = transactionRepository.save(transaction);
         return mapToResponse(saved);
@@ -106,6 +125,23 @@ public class TransactionServiceImpl implements TransactionService {
         Transaction transaction = transactionRepository.findById(id)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Transaction not found"));
 
+        // Determine final values for validation
+        String transactionType = request.getTransactionType() != null 
+                ? request.getTransactionType() : transaction.getTransactionType();
+        String category = request.getCategory() != null 
+                ? request.getCategory() : transaction.getCategory();
+        Long flatId = request.getFlatId() != null 
+                ? request.getFlatId() : (transaction.getFlat() != null ? transaction.getFlat().getId() : null);
+
+        // Validate: MAINTENANCE income requires flatId
+        if ("INCOME".equalsIgnoreCase(transactionType) 
+                && "MAINTENANCE".equalsIgnoreCase(category)) {
+            if (flatId == null) {
+                throw new ApiException(HttpStatus.BAD_REQUEST, 
+                    "Unit/Flat is required for maintenance income transactions");
+            }
+        }
+
         if (request.getTransactionType() != null)
             transaction.setTransactionType(request.getTransactionType());
         if (request.getPaymentMode() != null)
@@ -126,6 +162,13 @@ public class TransactionServiceImpl implements TransactionService {
             transaction.setBankName(request.getBankName());
         if (request.getChequeDate() != null)
             transaction.setChequeDate(request.getChequeDate());
+        
+        // Update flat if provided
+        if (request.getFlatId() != null) {
+            Flat flat = flatRepository.findById(request.getFlatId())
+                    .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Unit/Flat not found"));
+            transaction.setFlat(flat);
+        }
 
         Transaction saved = transactionRepository.save(transaction);
         return mapToResponse(saved);
@@ -184,6 +227,10 @@ public class TransactionServiceImpl implements TransactionService {
         response.setChequeDate(transaction.getChequeDate());
         response.setRelatedBillId(transaction.getRelatedBillId());
         response.setRelatedBillType(transaction.getRelatedBillType());
+        if (transaction.getFlat() != null) {
+            response.setFlatId(transaction.getFlat().getId());
+            response.setFlatNumber(transaction.getFlat().getFlatNumber());
+        }
         response.setCreatedAt(transaction.getCreatedAt());
         return response;
     }

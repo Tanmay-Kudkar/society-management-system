@@ -29,4 +29,6 @@ public class UserRequest {
     private String phone;
 
     private Long societyId; // Required when MASTER_ADMIN creates SOCIETY_ADMIN
+    
+    private Long flatId; // Required for MEMBER and TENANT roles
 }

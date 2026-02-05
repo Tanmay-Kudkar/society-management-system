@@ -64,6 +64,8 @@ export const userApi = {
   delete: (id) => api.delete(`/users/${id}`),
   getCreatableRoles: () => api.get('/users/creatable-roles'),
   getUpdatableRoles: () => api.get('/users/updatable-roles'),
+  // Bulk create users for units without users
+  bulkCreateForUnits: (societyId) => api.post(`/users/bulk-create/${societyId}`),
   // Bulk import endpoints
   validateBulkImport: (file, societyId) => {
     const formData = new FormData();

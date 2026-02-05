@@ -138,12 +138,12 @@ public class SecurityConfig {
                         .requestMatchers("/documents/**")
                         .hasAnyRole("MASTER_ADMIN", "SOCIETY_ADMIN", "CHAIRMAN", "SECRETARY", "TREASURER", "COMMITTEE",
                                 "EMPLOYEE")
-                        .requestMatchers(HttpMethod.POST, "/emergency-contacts/**")
-                        .hasAnyRole("MASTER_ADMIN", "SOCIETY_ADMIN", "CHAIRMAN", "SECRETARY", "COMMITTEE", "EMPLOYEE")
+                        // Emergency contacts - allow any member to create (for their own contacts)
+                        .requestMatchers(HttpMethod.POST, "/emergency-contacts/**").authenticated()
                         .requestMatchers(HttpMethod.PUT, "/emergency-contacts/**")
                         .hasAnyRole("MASTER_ADMIN", "SOCIETY_ADMIN", "CHAIRMAN", "SECRETARY", "COMMITTEE", "EMPLOYEE")
-                        .requestMatchers(HttpMethod.DELETE, "/emergency-contacts/**")
-                        .hasAnyRole("MASTER_ADMIN", "SOCIETY_ADMIN", "CHAIRMAN", "SECRETARY", "COMMITTEE", "EMPLOYEE")
+                        // Allow any authenticated user to delete (service layer checks ownership)
+                        .requestMatchers(HttpMethod.DELETE, "/emergency-contacts/**").authenticated()
 
                         // ==================== MEMBER LEVEL ====================
                         // Tenants, vehicles (for their own flats)
