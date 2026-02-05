@@ -1,9 +1,9 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { flatApi, societyApi, wingApi } from '../api'
-import { Plus, Edit, Trash2, Search, X, Home, Store, Briefcase, Layers } from 'lucide-react'
+import { Plus, Edit, Trash2, Search, X, Home, Store, Briefcase, Layers, AlertCircle } from 'lucide-react'
 
 export default function Flats() {
   const { user } = useAuth()
@@ -13,6 +13,36 @@ export default function Flats() {
   const [editingFlat, setEditingFlat] = useState(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [filterSociety, setFilterSociety] = useState('')
+  const [selectedUnitType, setSelectedUnitType] = useState('FLAT')
+  const [selectedWingId, setSelectedWingId] = useState('')
+  const [selectedFlatType, setSelectedFlatType] = useState('')
+  const [formErrors, setFormErrors] = useState({})
+
+  // Initialize form when editing
+  useEffect(() => {
+    if (editingFlat) {
+      setSelectedUnitType(editingFlat.unitType || 'FLAT')
+      setSelectedWingId(editingFlat.wingId ? String(editingFlat.wingId) : '')
+      setSelectedFlatType(editingFlat.flatType || '')
+    } else {
+      setSelectedUnitType('FLAT')
+      setSelectedWingId('')
+      setSelectedFlatType('')
+    }
+  }, [editingFlat])
+
+  // Update flatType default when unitType changes
+  useEffect(() => {
+    if (!editingFlat) {
+      if (selectedUnitType === 'FLAT') {
+        setSelectedFlatType('2BHK')
+      } else if (selectedUnitType === 'SHOP') {
+        setSelectedFlatType('RETAIL')
+      } else if (selectedUnitType === 'OFFICE') {
+        setSelectedFlatType('STANDARD')
+      }
+    }
+  }, [selectedUnitType, editingFlat])
 
   // Get society filter from URL (for MASTER_ADMIN viewing specific society)
   const societyIdFromUrl = searchParams.get('society')
@@ -92,9 +122,75 @@ export default function Flats() {
     }
   }
 
+  const validateForm = (formData) => {
+    const errors = {}
+    const unitNumber = formData.get('flatNumber')
+    const floor = formData.get('floor')
+    const area = formData.get('area')
+    const ownerEmail = formData.get('ownerEmail')
+    const ownerPhone = formData.get('ownerPhone')
+    const unitType = formData.get('unitType')
+    const wingIdValue = formData.get('wingId')
+
+    // Unit Number validation - alphanumeric with optional dash/slash
+    const unitNumberRegex = /^[A-Za-z0-9][A-Za-z0-9\-\/]*$/
+    if (!unitNumber || !unitNumber.trim()) {
+      errors.flatNumber = 'Unit number is required'
+    } else if (!unitNumberRegex.test(unitNumber)) {
+      errors.flatNumber = 'Invalid format. Use letters, numbers, dash or slash only'
+    } else if (unitNumber.length > 20) {
+      errors.flatNumber = 'Unit number must be max 20 characters'
+    }
+
+    // Floor validation - must be non-negative and within wing limits
+    const floorNum = parseInt(floor)
+    if (floor === '' || isNaN(floorNum)) {
+      errors.floor = 'Floor number is required'
+    } else if (floorNum < 0) {
+      errors.floor = 'Floor must be 0 or greater'
+    } else if (wingIdValue) {
+      const selectedWing = wings.find(w => w.id === parseInt(wingIdValue))
+      if (selectedWing && selectedWing.totalFloors && floorNum > selectedWing.totalFloors) {
+        errors.floor = `Floor cannot exceed ${selectedWing.totalFloors} (wing's max floor)`
+      }
+    }
+
+    // Area validation - must be positive
+    const areaNum = parseFloat(area)
+    if (area && !isNaN(areaNum)) {
+      if (areaNum <= 0) {
+        errors.area = 'Area must be greater than 0'
+      } else if (areaNum > 100000) {
+        errors.area = 'Area seems unrealistic (max 100,000 sq.ft)'
+      }
+    }
+
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (ownerEmail && !emailRegex.test(ownerEmail)) {
+      errors.ownerEmail = 'Invalid email format'
+    }
+
+    // Phone validation - Indian format (10 digits, optionally with +91)
+    const phoneRegex = /^(\+91)?[6-9]\d{9}$/
+    if (ownerPhone && !phoneRegex.test(ownerPhone.replace(/[-\s]/g, ''))) {
+      errors.ownerPhone = 'Invalid phone number. Use 10-digit Indian mobile number'
+    }
+
+    return errors
+  }
+
   const handleSubmit = (e) => {
     e.preventDefault()
     const formData = new FormData(e.target)
+    
+    // Validate form
+    const errors = validateForm(formData)
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors)
+      return
+    }
+    setFormErrors({})
     
     // For non-MASTER_ADMIN, use user's societyId directly
     const societyId = isMasterAdmin 
@@ -128,6 +224,18 @@ export default function Flats() {
     }
   }
 
+  const handleOpenModal = (flat = null) => {
+    setEditingFlat(flat)
+    setFormErrors({})
+    if (!flat) {
+      // Reset to defaults for new unit
+      setSelectedUnitType('FLAT')
+      setSelectedWingId('')
+      setSelectedFlatType('2BHK')
+    }
+    setShowModal(true)
+  }
+
   return (
     <div>
       {/* Header */}
@@ -137,7 +245,7 @@ export default function Flats() {
           <p className="text-gray-600 dark:text-gray-400 mt-1">Manage society flats, shops, and offices</p>
         </div>
         <button
-          onClick={() => { setEditingFlat(null); setShowModal(true) }}
+          onClick={() => handleOpenModal(null)}
           className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
         >
           <Plus size={20} />
@@ -236,7 +344,7 @@ export default function Flats() {
                     <td className="px-6 py-4 whitespace-nowrap text-gray-600 dark:text-gray-300">{flat.area ? `${flat.area} sq.ft` : '-'}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-right">
                       <button
-                        onClick={() => { setEditingFlat(flat); setShowModal(true) }}
+                        onClick={() => handleOpenModal(flat)}
                         className="p-1.5 text-gray-500 dark:text-gray-400 hover:text-blue-600 transition"
                       >
                         <Edit size={18} />
@@ -266,7 +374,7 @@ export default function Flats() {
           <div className="bg-white dark:bg-slate-800 rounded-xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-slate-700 sticky top-0 bg-white dark:bg-slate-800">
               <h3 className="text-lg font-semibold dark:text-white">{editingFlat ? 'Edit Unit' : 'Add Unit'}</h3>
-              <button onClick={() => setShowModal(false)} className="p-1 hover:bg-gray-100 rounded">
+              <button onClick={() => { setShowModal(false); setFormErrors({}); }} className="p-1 hover:bg-gray-100 rounded">
                 <X size={20} />
               </button>
             </div>
@@ -297,7 +405,8 @@ export default function Flats() {
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Unit Type</label>
                   <select
                     name="unitType"
-                    defaultValue={editingFlat?.unitType || 'FLAT'}
+                    value={selectedUnitType}
+                    onChange={(e) => setSelectedUnitType(e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
                   >
                     <option value="FLAT">🏠 Flat</option>
@@ -306,15 +415,20 @@ export default function Flats() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Wing</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Wing {selectedWingId && wings.find(w => w.id === parseInt(selectedWingId))?.totalFloors && 
+                      <span className="text-xs text-gray-500">(Max Floor: {wings.find(w => w.id === parseInt(selectedWingId))?.totalFloors})</span>
+                    }
+                  </label>
                   <select
                     name="wingId"
-                    defaultValue={editingFlat?.wingId || ''}
+                    value={selectedWingId}
+                    onChange={(e) => setSelectedWingId(e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
                   >
                     <option value="">No Wing</option>
                     {wings.map(w => (
-                      <option key={w.id} value={w.id}>{w.name}</option>
+                      <option key={w.id} value={w.id}>{w.name} {w.totalFloors ? `(${w.totalFloors} floors)` : ''}</option>
                     ))}
                   </select>
                 </div>
@@ -322,47 +436,98 @@ export default function Flats() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Unit Number</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Unit Number <span className="text-red-500">*</span>
+                  </label>
                   <input
                     type="text"
                     name="flatNumber"
                     defaultValue={editingFlat?.flatNumber}
                     required
-                    placeholder="e.g., A-101, 201"
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
+                    placeholder={selectedUnitType === 'SHOP' ? 'e.g., S-101' : selectedUnitType === 'OFFICE' ? 'e.g., O-201' : 'e.g., A-101'}
+                    pattern="[A-Za-z0-9][A-Za-z0-9\-\/]*"
+                    maxLength="20"
+                    className={`w-full px-3 py-2 border ${formErrors.flatNumber ? 'border-red-500' : 'border-gray-300 dark:border-slate-600'} rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white`}
                   />
+                  {formErrors.flatNumber && (
+                    <p className="text-xs text-red-600 mt-1 flex items-center gap-1">
+                      <AlertCircle size={12} /> {formErrors.flatNumber}
+                    </p>
+                  )}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Configuration</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    {selectedUnitType === 'FLAT' ? 'Configuration' : selectedUnitType === 'SHOP' ? 'Shop Type' : 'Office Type'}
+                  </label>
                   <select
                     name="flatType"
-                    defaultValue={editingFlat?.flatType || '1BHK'}
+                    value={selectedFlatType}
+                    onChange={(e) => setSelectedFlatType(e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
                   >
-                    <option value="1RK">1 RK</option>
-                    <option value="1BHK">1 BHK</option>
-                    <option value="2BHK">2 BHK</option>
-                    <option value="3BHK">3 BHK</option>
-                    <option value="4BHK">4 BHK</option>
-                    <option value="5BHK">5 BHK</option>
-                    <option value="PENTHOUSE">Penthouse</option>
-                    <option value="DUPLEX">Duplex</option>
-                    <option value="SMALL">Small</option>
-                    <option value="MEDIUM">Medium</option>
-                    <option value="LARGE">Large</option>
+                    {selectedUnitType === 'FLAT' ? (
+                      <>
+                        <option value="1RK">1 RK</option>
+                        <option value="1BHK">1 BHK</option>
+                        <option value="2BHK">2 BHK</option>
+                        <option value="3BHK">3 BHK</option>
+                        <option value="4BHK">4 BHK</option>
+                        <option value="5BHK">5 BHK</option>
+                        <option value="PENTHOUSE">Penthouse</option>
+                        <option value="DUPLEX">Duplex</option>
+                        <option value="STUDIO">Studio</option>
+                      </>
+                    ) : selectedUnitType === 'SHOP' ? (
+                      <>
+                        <option value="RETAIL">Retail Shop</option>
+                        <option value="SHOWROOM">Showroom</option>
+                        <option value="KIOSK">Kiosk</option>
+                        <option value="FOOD">Food Court</option>
+                        <option value="PHARMACY">Pharmacy</option>
+                        <option value="SALON">Salon/Spa</option>
+                        <option value="SMALL">Small Shop</option>
+                        <option value="MEDIUM">Medium Shop</option>
+                        <option value="LARGE">Large Shop</option>
+                      </>
+                    ) : (
+                      <>
+                        <option value="STANDARD">Standard Office</option>
+                        <option value="CABIN">Cabin</option>
+                        <option value="CUBICLE">Cubicle</option>
+                        <option value="SHARED">Shared Space</option>
+                        <option value="COWORKING">Co-working</option>
+                        <option value="EXECUTIVE">Executive Office</option>
+                        <option value="SMALL">Small Office</option>
+                        <option value="MEDIUM">Medium Office</option>
+                        <option value="LARGE">Large Office</option>
+                      </>
+                    )}
                     <option value="OTHER">Other</option>
                   </select>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Floor</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Floor <span className="text-red-500">*</span>
+                    {selectedWingId && wings.find(w => w.id === parseInt(selectedWingId))?.totalFloors && (
+                      <span className="text-xs text-gray-500 ml-1">(0 to {wings.find(w => w.id === parseInt(selectedWingId))?.totalFloors})</span>
+                    )}
+                  </label>
                   <input
                     type="number"
                     name="floor"
                     defaultValue={editingFlat?.floor || 0}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
+                    required
+                    min="0"
+                    max={selectedWingId && wings.find(w => w.id === parseInt(selectedWingId))?.totalFloors || 100}
+                    className={`w-full px-3 py-2 border ${formErrors.floor ? 'border-red-500' : 'border-gray-300 dark:border-slate-600'} rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white`}
                   />
+                  {formErrors.floor && (
+                    <p className="text-xs text-red-600 mt-1 flex items-center gap-1">
+                      <AlertCircle size={12} /> {formErrors.floor}
+                    </p>
+                  )}
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Area (sq.ft)</label>
@@ -370,44 +535,79 @@ export default function Flats() {
                     type="number"
                     name="area"
                     step="0.01"
+                    min="0.01"
+                    max="100000"
                     defaultValue={editingFlat?.area}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
+                    placeholder={selectedUnitType === 'SHOP' ? 'e.g., 500' : selectedUnitType === 'OFFICE' ? 'e.g., 800' : 'e.g., 1200'}
+                    className={`w-full px-3 py-2 border ${formErrors.area ? 'border-red-500' : 'border-gray-300 dark:border-slate-600'} rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white`}
                   />
+                  {formErrors.area && (
+                    <p className="text-xs text-red-600 mt-1 flex items-center gap-1">
+                      <AlertCircle size={12} /> {formErrors.area}
+                    </p>
+                  )}
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Owner Name</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  {selectedUnitType === 'SHOP' ? 'Shop Owner / Tenant Name' : selectedUnitType === 'OFFICE' ? 'Company / Owner Name' : 'Owner Name'}
+                </label>
                 <input
                   type="text"
                   name="ownerName"
                   defaultValue={editingFlat?.ownerName}
+                  maxLength="100"
+                  placeholder={selectedUnitType === 'SHOP' ? 'e.g., ABC Stores Pvt Ltd' : selectedUnitType === 'OFFICE' ? 'e.g., Tech Corp' : 'e.g., John Doe'}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Owner Email</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Contact Email</label>
                   <input
                     type="email"
                     name="ownerEmail"
                     defaultValue={editingFlat?.ownerEmail}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
+                    pattern="[^\s@]+@[^\s@]+\.[^\s@]+"
+                    placeholder="example@email.com"
+                    className={`w-full px-3 py-2 border ${formErrors.ownerEmail ? 'border-red-500' : 'border-gray-300 dark:border-slate-600'} rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white`}
                   />
+                  {formErrors.ownerEmail && (
+                    <p className="text-xs text-red-600 mt-1 flex items-center gap-1">
+                      <AlertCircle size={12} /> {formErrors.ownerEmail}
+                    </p>
+                  )}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Owner Phone</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Contact Phone</label>
                   <input
                     type="tel"
                     name="ownerPhone"
                     defaultValue={editingFlat?.ownerPhone}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
+                    pattern="(\+91)?[6-9]\d{9}"
+                    placeholder="9876543210"
+                    maxLength="13"
+                    className={`w-full px-3 py-2 border ${formErrors.ownerPhone ? 'border-red-500' : 'border-gray-300 dark:border-slate-600'} rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white`}
                   />
+                  {formErrors.ownerPhone && (
+                    <p className="text-xs text-red-600 mt-1 flex items-center gap-1">
+                      <AlertCircle size={12} /> {formErrors.ownerPhone}
+                    </p>
+                  )}
                 </div>
               </div>
+              {Object.keys(formErrors).length > 0 && (
+                <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3">
+                  <div className="flex items-center gap-2 text-red-700 dark:text-red-400 text-sm font-medium">
+                    <AlertCircle size={16} />
+                    Please fix the errors above
+                  </div>
+                </div>
+              )}
               <div className="flex gap-3 pt-4">
                 <button
                   type="button"
-                  onClick={() => setShowModal(false)}
+                  onClick={() => { setShowModal(false); setFormErrors({}); }}
                   className="flex-1 px-4 py-2 border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition"
                 >
                   Cancel
@@ -416,7 +616,7 @@ export default function Flats() {
                   type="submit"
                   className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
                 >
-                  {editingFlat ? 'Update' : 'Create'}
+                  {editingFlat ? 'Update' : 'Create Unit'}
                 </button>
               </div>
             </form>

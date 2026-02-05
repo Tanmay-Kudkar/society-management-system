@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
@@ -677,6 +677,7 @@ export default function UnitManagement() {
         <BulkImportModal
           onClose={() => setShowBulkImportModal(false)}
           societyId={effectiveSocietyId}
+          userId={user?.id}
           onSuccess={() => {
             queryClient.invalidateQueries(['flats'])
             queryClient.invalidateQueries(['users'])
@@ -730,6 +731,27 @@ function StatCard({ label, value, icon: Icon, color }) {
 
 // Unit Form Modal
 function UnitFormModal({ unit, societies, wings, isMasterAdmin, userSocietyId, errors, apiError, onSubmit, onClose, isLoading }) {
+  const [selectedUnitType, setSelectedUnitType] = useState(unit?.unitType || 'FLAT')
+  const [selectedWingId, setSelectedWingId] = useState(unit?.wingId ? String(unit.wingId) : '')
+  const [selectedFlatType, setSelectedFlatType] = useState(unit?.flatType || '')
+
+  // Update flatType when unitType changes
+  useEffect(() => {
+    if (!unit) {
+      if (selectedUnitType === 'FLAT') {
+        setSelectedFlatType('2BHK')
+      } else if (selectedUnitType === 'SHOP') {
+        setSelectedFlatType('RETAIL')
+      } else if (selectedUnitType === 'OFFICE') {
+        setSelectedFlatType('STANDARD')
+      }
+    }
+  }, [selectedUnitType, unit])
+
+  // Get max floor from selected wing
+  const selectedWing = wings.find(w => w.id === parseInt(selectedWingId))
+  const maxFloor = selectedWing?.totalFloors || 100
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
       <div className="bg-white dark:bg-slate-800 rounded-xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
@@ -780,24 +802,31 @@ function UnitFormModal({ unit, societies, wings, isMasterAdmin, userSocietyId, e
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Unit Type</label>
               <select
                 name="unitType"
-                defaultValue={unit?.unitType || 'FLAT'}
+                value={selectedUnitType}
+                onChange={(e) => setSelectedUnitType(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
               >
-                <option value="FLAT">Flat</option>
-                <option value="SHOP">Shop</option>
-                <option value="OFFICE">Office</option>
+                <option value="FLAT">🏠 Flat</option>
+                <option value="SHOP">🏪 Shop</option>
+                <option value="OFFICE">🏢 Office</option>
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Wing</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Wing
+                {selectedWingId && selectedWing?.totalFloors && (
+                  <span className="text-xs text-gray-500 ml-1">(Max Floor: {selectedWing.totalFloors})</span>
+                )}
+              </label>
               <select
                 name="wingId"
-                defaultValue={unit?.wingId || ''}
+                value={selectedWingId}
+                onChange={(e) => setSelectedWingId(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
               >
                 <option value="">No Wing</option>
                 {wings.map(w => (
-                  <option key={w.id} value={w.id}>{w.name}</option>
+                  <option key={w.id} value={w.id}>{w.name} {w.totalFloors ? `(${w.totalFloors} floors)` : ''}</option>
                 ))}
               </select>
             </div>
@@ -814,27 +843,72 @@ function UnitFormModal({ unit, societies, wings, isMasterAdmin, userSocietyId, e
                 name="flatNumber"
                 defaultValue={unit?.flatNumber}
                 required
-                placeholder="e.g., A-101"
+                placeholder={
+                  selectedUnitType === 'SHOP' 
+                    ? 'e.g., S-101' 
+                    : selectedUnitType === 'OFFICE' 
+                    ? 'e.g., O-201' 
+                    : 'e.g., A-101'
+                }
+                pattern="[A-Za-z0-9][A-Za-z0-9\-\/]*"
+                maxLength="20"
                 className={clsx(
-                  'w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white placeholder:text-gray-400',
+                  'w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none',
+                  'focus:border-blue-500 bg-white dark:bg-slate-700 text-gray-900 dark:text-white',
+                  'placeholder:text-gray-400',
                   errors.flatNumber ? 'border-red-500' : 'border-gray-300 dark:border-slate-600'
                 )}
               />
               {errors.flatNumber && <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.flatNumber}</p>}
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Flat Type</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                {selectedUnitType === 'FLAT' ? 'Configuration' : selectedUnitType === 'SHOP' ? 'Shop Type' : 'Office Type'}
+              </label>
               <select
                 name="flatType"
-                defaultValue={unit?.flatType || ''}
+                value={selectedFlatType}
+                onChange={(e) => setSelectedFlatType(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
               >
-                <option value="">Select Type</option>
-                <option value="1BHK">1 BHK</option>
-                <option value="2BHK">2 BHK</option>
-                <option value="3BHK">3 BHK</option>
-                <option value="4BHK">4 BHK</option>
-                <option value="Penthouse">Penthouse</option>
+                {selectedUnitType === 'FLAT' ? (
+                  <>
+                    <option value="1RK">1 RK</option>
+                    <option value="1BHK">1 BHK</option>
+                    <option value="2BHK">2 BHK</option>
+                    <option value="3BHK">3 BHK</option>
+                    <option value="4BHK">4 BHK</option>
+                    <option value="5BHK">5 BHK</option>
+                    <option value="PENTHOUSE">Penthouse</option>
+                    <option value="DUPLEX">Duplex</option>
+                    <option value="STUDIO">Studio</option>
+                  </>
+                ) : selectedUnitType === 'SHOP' ? (
+                  <>
+                    <option value="RETAIL">Retail Shop</option>
+                    <option value="SHOWROOM">Showroom</option>
+                    <option value="KIOSK">Kiosk</option>
+                    <option value="FOOD">Food Court</option>
+                    <option value="PHARMACY">Pharmacy</option>
+                    <option value="SALON">Salon/Spa</option>
+                    <option value="SMALL">Small Shop</option>
+                    <option value="MEDIUM">Medium Shop</option>
+                    <option value="LARGE">Large Shop</option>
+                  </>
+                ) : (
+                  <>
+                    <option value="STANDARD">Standard Office</option>
+                    <option value="CABIN">Cabin</option>
+                    <option value="CUBICLE">Cubicle</option>
+                    <option value="SHARED">Shared Space</option>
+                    <option value="COWORKING">Co-working</option>
+                    <option value="EXECUTIVE">Executive Office</option>
+                    <option value="SMALL">Small Office</option>
+                    <option value="MEDIUM">Medium Office</option>
+                    <option value="LARGE">Large Office</option>
+                  </>
+                )}
+                <option value="OTHER">Other</option>
               </select>
             </div>
           </div>
@@ -842,14 +916,25 @@ function UnitFormModal({ unit, societies, wings, isMasterAdmin, userSocietyId, e
           {/* Floor and Area */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Floor</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Floor <span className="text-red-500">*</span>
+                {selectedWingId && selectedWing?.totalFloors && (
+                  <span className="text-xs text-gray-500 ml-1">(0 to {selectedWing.totalFloors})</span>
+                )}
+              </label>
               <input
                 type="number"
                 name="floor"
                 defaultValue={unit?.floor || 0}
+                required
                 min="0"
-                className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
+                max={maxFloor}
+                className={clsx(
+                  'w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white',
+                  errors.floor ? 'border-red-500' : 'border-gray-300 dark:border-slate-600'
+                )}
               />
+              {errors.floor && <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.floor}</p>}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Area (sq.ft)</label>
@@ -858,7 +943,9 @@ function UnitFormModal({ unit, societies, wings, isMasterAdmin, userSocietyId, e
                 name="area"
                 defaultValue={unit?.area || ''}
                 min="0"
+                max="100000"
                 step="0.01"
+                placeholder={selectedUnitType === 'SHOP' ? 'e.g., 500' : selectedUnitType === 'OFFICE' ? 'e.g., 800' : 'e.g., 1200'}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
               />
             </div>
@@ -1000,7 +1087,7 @@ function UserFormModal({ unit, errors, apiError, onSubmit, onClose, isLoading })
 }
 
 // Bulk Import Modal (placeholder for now)
-function BulkImportModal({ onClose, societyId, onSuccess }) {
+function BulkImportModal({ onClose, societyId, userId, onSuccess }) {
   const [file, setFile] = useState(null)
   const [validationResults, setValidationResults] = useState(null)
   const [importResults, setImportResults] = useState(null)
@@ -1035,11 +1122,11 @@ function BulkImportModal({ onClose, societyId, onSuccess }) {
   }
 
   const handleValidate = async () => {
-    if (!file || !societyId) return
+    if (!file || !societyId || !userId) return
     setIsValidating(true)
     setError('')
     try {
-      const response = await userApi.validateBulkImport(file, societyId)
+      const response = await flatApi.validateBulkImport(file, societyId, userId)
       setValidationResults(response.data)
       setStep('preview')
     } catch (err) {
@@ -1050,18 +1137,18 @@ function BulkImportModal({ onClose, societyId, onSuccess }) {
   }
 
   const handleImport = async () => {
-    if (!file || !societyId) return
+    if (!file || !societyId || !userId) return
     setIsImporting(true)
     setError('')
     try {
-      const response = await userApi.processBulkImport(file, societyId)
+      const response = await flatApi.processBulkImport(file, societyId, userId)
       setImportResults(response.data)
       setStep('results')
       if (response.data.successCount > 0) {
         onSuccess?.()
       }
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to import users')
+      setError(err.response?.data?.message || 'Failed to import units')
     } finally {
       setIsImporting(false)
     }
@@ -1069,11 +1156,11 @@ function BulkImportModal({ onClose, societyId, onSuccess }) {
 
   const downloadTemplate = async () => {
     try {
-      const response = await userApi.downloadImportTemplate()
+      const response = await flatApi.downloadImportTemplate(userId)
       const url = window.URL.createObjectURL(new Blob([response.data]))
       const link = document.createElement('a')
       link.href = url
-      link.setAttribute('download', 'user_import_template.xlsx')
+      link.setAttribute('download', 'unit_import_template.xlsx')
       document.body.appendChild(link)
       link.click()
       link.remove()
@@ -1087,7 +1174,7 @@ function BulkImportModal({ onClose, societyId, onSuccess }) {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
       <div className="bg-white dark:bg-slate-800 rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden">
         <div className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-slate-700">
-          <h3 className="text-lg font-semibold dark:text-white">Bulk Import Users</h3>
+          <h3 className="text-lg font-semibold dark:text-white">Bulk Import Units</h3>
           <button onClick={onClose} className="p-1 hover:bg-gray-100 dark:hover:bg-slate-700 rounded">
             <X size={20} className="text-gray-500 dark:text-gray-400" />
           </button>
@@ -1150,24 +1237,45 @@ function BulkImportModal({ onClose, societyId, onSuccess }) {
                 )}
               </div>
 
-              <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-                <div className="flex items-center justify-between mb-2">
-                  <h4 className="font-medium text-blue-900 dark:text-blue-100">Excel Format Requirements:</h4>
+              <div className="mt-4 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border border-blue-200 dark:border-blue-800 rounded-xl">
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="font-semibold text-blue-900 dark:text-blue-100 flex items-center gap-2">
+                    <span className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></span>
+                    Excel Format Requirements
+                  </h4>
                   <button
                     onClick={downloadTemplate}
-                    className="text-sm text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white text-sm font-medium rounded-lg shadow-md shadow-emerald-500/25 hover:shadow-lg hover:shadow-emerald-500/30 transform hover:-translate-y-0.5 transition-all duration-200"
                   >
-                    <Download size={14} />
+                    <Download size={16} />
                     Download Template
                   </button>
                 </div>
-                <ul className="text-sm text-blue-700 dark:text-blue-300 space-y-1">
-                  <li>• Column A: Name (required)</li>
-                  <li>• Column B: Email (required, becomes username)</li>
-                  <li>• Column C: Phone (required)</li>
-                  <li>• Column D: Flat Number (required, becomes default password)</li>
-                  <li>• Column E: Wing Code (optional)</li>
-                  <li>• Column F: Role (optional, default: MEMBER)</li>
+                <ul className="text-sm text-blue-700 dark:text-blue-300 space-y-2">
+                  <li className="flex items-start gap-2">
+                    <span className="inline-flex items-center justify-center w-5 h-5 bg-blue-100 dark:bg-blue-800 text-blue-600 dark:text-blue-300 text-xs font-bold rounded mt-0.5">A</span>
+                    <span><strong>Unit Type</strong> (required) - FLAT, SHOP, or OFFICE</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="inline-flex items-center justify-center w-5 h-5 bg-blue-100 dark:bg-blue-800 text-blue-600 dark:text-blue-300 text-xs font-bold rounded mt-0.5">B</span>
+                    <span><strong>Wing</strong> (optional) - Wing name/code</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="inline-flex items-center justify-center w-5 h-5 bg-blue-100 dark:bg-blue-800 text-blue-600 dark:text-blue-300 text-xs font-bold rounded mt-0.5">C</span>
+                    <span><strong>Unit Number</strong> (required) - e.g., A-101, S-01</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="inline-flex items-center justify-center w-5 h-5 bg-blue-100 dark:bg-blue-800 text-blue-600 dark:text-blue-300 text-xs font-bold rounded mt-0.5">D</span>
+                    <span><strong>Configuration</strong> (optional) - e.g., 2BHK, RETAIL</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="inline-flex items-center justify-center w-5 h-5 bg-blue-100 dark:bg-blue-800 text-blue-600 dark:text-blue-300 text-xs font-bold rounded mt-0.5">E</span>
+                    <span><strong>Floor</strong> (required) - Floor number</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="inline-flex items-center justify-center w-5 h-5 bg-blue-100 dark:bg-blue-800 text-blue-600 dark:text-blue-300 text-xs font-bold rounded mt-0.5">F</span>
+                    <span><strong>Area</strong> (optional) - Size in sq.ft</span>
+                  </li>
                 </ul>
               </div>
             </>
@@ -1176,41 +1284,73 @@ function BulkImportModal({ onClose, societyId, onSuccess }) {
           {step === 'preview' && validationResults && (
             <>
               <div className="mb-4 flex gap-4">
-                <div className="flex-1 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg text-center">
-                  <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+                <div className={`flex-1 p-4 rounded-xl text-center transition-all duration-300 ${
+                  validationResults.successCount > 0 
+                    ? 'bg-gradient-to-br from-emerald-500 to-green-600 shadow-lg shadow-green-500/30' 
+                    : 'bg-gray-100 dark:bg-slate-700/50 border border-gray-200 dark:border-slate-600'
+                }`}>
+                  <div className={`text-3xl font-bold ${validationResults.successCount > 0 ? 'text-white' : 'text-gray-400'}`}>
                     {validationResults.successCount}
                   </div>
-                  <div className="text-sm text-green-700 dark:text-green-300">Valid</div>
+                  <div className={`text-sm font-medium ${validationResults.successCount > 0 ? 'text-emerald-100' : 'text-gray-500'}`}>
+                    Valid
+                  </div>
                 </div>
-                <div className="flex-1 p-3 bg-red-50 dark:bg-red-900/20 rounded-lg text-center">
-                  <div className="text-2xl font-bold text-red-600 dark:text-red-400">
+                <div className={`flex-1 p-4 rounded-xl text-center transition-all duration-300 ${
+                  validationResults.failureCount > 0 
+                    ? 'bg-gradient-to-br from-rose-500 to-red-600 shadow-lg shadow-red-500/30' 
+                    : 'bg-gray-100 dark:bg-slate-700/50 border border-gray-200 dark:border-slate-600'
+                }`}>
+                  <div className={`text-3xl font-bold ${validationResults.failureCount > 0 ? 'text-white' : 'text-gray-400'}`}>
                     {validationResults.failureCount}
                   </div>
-                  <div className="text-sm text-red-700 dark:text-red-300">Invalid</div>
+                  <div className={`text-sm font-medium ${validationResults.failureCount > 0 ? 'text-rose-100' : 'text-gray-500'}`}>
+                    {validationResults.failureCount > 0 ? 'Needs Fixing' : 'Invalid'}
+                  </div>
                 </div>
               </div>
 
-              <div className="border dark:border-slate-700 rounded-lg overflow-hidden">
+              <div className="border dark:border-slate-700 rounded-xl overflow-hidden shadow-sm">
                 <table className="w-full text-sm">
-                  <thead className="bg-gray-50 dark:bg-slate-700">
+                  <thead className="bg-gradient-to-r from-gray-50 to-slate-50 dark:from-slate-700 dark:to-slate-600">
                     <tr>
-                      <th className="px-3 py-2 text-left dark:text-white">Row</th>
-                      <th className="px-3 py-2 text-left dark:text-white">Name</th>
-                      <th className="px-3 py-2 text-left dark:text-white">Email</th>
-                      <th className="px-3 py-2 text-left dark:text-white">Status</th>
+                      <th className="px-3 py-3 text-left font-semibold dark:text-white">Row</th>
+                      <th className="px-3 py-3 text-left font-semibold dark:text-white">Unit</th>
+                      <th className="px-3 py-3 text-left font-semibold dark:text-white">Type</th>
+                      <th className="px-3 py-3 text-left font-semibold dark:text-white">Wing</th>
+                      <th className="px-3 py-3 text-left font-semibold dark:text-white">Status</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y dark:divide-slate-700">
                     {validationResults.results?.map((result, idx) => (
-                      <tr key={idx} className={result.success ? '' : 'bg-red-50 dark:bg-red-900/10'}>
-                        <td className="px-3 py-2 dark:text-gray-300">{result.rowNumber}</td>
-                        <td className="px-3 py-2 dark:text-gray-300">{result.name}</td>
-                        <td className="px-3 py-2 dark:text-gray-300">{result.email}</td>
-                        <td className="px-3 py-2">
+                      <tr 
+                        key={idx} 
+                        className={`transition-colors duration-200 ${
+                          result.success 
+                            ? 'hover:bg-green-50/50 dark:hover:bg-green-900/10' 
+                            : 'bg-gradient-to-r from-red-50 to-rose-50 dark:from-red-900/20 dark:to-rose-900/20 border-l-4 border-l-red-500'
+                        }`}
+                      >
+                        <td className="px-3 py-3 dark:text-gray-300 font-mono text-xs">{result.rowNumber}</td>
+                        <td className="px-3 py-3 dark:text-gray-300 font-medium">{result.flatNumber}</td>
+                        <td className="px-3 py-3 dark:text-gray-300">
+                          <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                            result.unitType === 'FLAT' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' :
+                            result.unitType === 'SHOP' ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300' :
+                            'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300'
+                          }`}>
+                            {result.unitType}
+                          </span>
+                        </td>
+                        <td className="px-3 py-3 dark:text-gray-300">{result.wingCode || '-'}</td>
+                        <td className="px-3 py-3">
                           {result.success ? (
-                            <span className="text-green-600 dark:text-green-400">✓ Valid</span>
+                            <span className="inline-flex items-center gap-1 text-green-600 dark:text-green-400">
+                              <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                              Valid
+                            </span>
                           ) : (
-                            <span className="text-red-600 dark:text-red-400">{result.errorMessage}</span>
+                            <span className="text-red-600 dark:text-red-400 text-xs font-medium">{result.errorMessage}</span>
                           )}
                         </td>
                       </tr>
@@ -1229,9 +1369,9 @@ function BulkImportModal({ onClose, societyId, onSuccess }) {
                   : 'bg-red-100 dark:bg-red-900/30'
               }`}>
                 {importResults.successCount > 0 ? (
-                  <UserCheck className="w-8 h-8 text-green-600 dark:text-green-400" />
+                  <Home className="w-8 h-8 text-green-600 dark:text-green-400" />
                 ) : (
-                  <UserX className="w-8 h-8 text-red-600 dark:text-red-400" />
+                  <AlertCircle className="w-8 h-8 text-red-600 dark:text-red-400" />
                 )}
               </div>
               <h4 className="text-lg font-semibold dark:text-white mb-2">{importResults.message}</h4>
@@ -1240,7 +1380,7 @@ function BulkImportModal({ onClose, societyId, onSuccess }) {
                   <div className="text-xl font-bold text-green-600 dark:text-green-400">
                     {importResults.successCount}
                   </div>
-                  <div className="text-sm text-green-700 dark:text-green-300">Imported</div>
+                  <div className="text-sm text-green-700 dark:text-green-300">Created</div>
                 </div>
                 <div className="p-3 bg-red-50 dark:bg-red-900/20 rounded-lg">
                   <div className="text-xl font-bold text-red-600 dark:text-red-400">
@@ -1283,36 +1423,107 @@ function BulkImportModal({ onClose, societyId, onSuccess }) {
 
             {step === 'preview' && (
               <>
-                <button
-                  onClick={() => setStep('upload')}
-                  className="flex-1 px-4 py-2 border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition"
-                >
-                  Back
-                </button>
-                <button
-                  onClick={handleImport}
-                  disabled={validationResults?.failureCount > 0 || isImporting}
-                  className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition flex items-center justify-center gap-2"
-                >
-                  {isImporting ? (
-                    <>
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                      Importing...
-                    </>
+                {validationResults?.failureCount > 0 ? (
+                  // Check if this looks like a completely wrong file format
+                  validationResults.failureCount === validationResults.totalRows ? (
+                    // Wrong file format - all rows have errors
+                    <div className="w-full space-y-3">
+                      <div className="p-5 bg-gradient-to-br from-rose-500 to-red-600 dark:from-rose-600 dark:to-red-700 rounded-2xl shadow-xl shadow-red-500/30">
+                        <div className="flex items-start gap-4">
+                          <div className="flex-shrink-0 w-12 h-12 bg-white/20 backdrop-blur rounded-full flex items-center justify-center">
+                            <AlertCircle className="w-6 h-6 text-white" />
+                          </div>
+                          <div className="flex-1">
+                            <h4 className="font-bold text-white text-lg mb-2">
+                              Invalid File Format
+                            </h4>
+                            <p className="text-rose-100 text-sm leading-relaxed">
+                              The uploaded Excel file does not match the required format. Please ensure you are using the correct template with columns: <strong>Unit Type, Wing, Unit Number, Configuration, Floor, Area</strong>.
+                            </p>
+                            <p className="text-rose-200 text-xs mt-2">
+                              Download the template for reference and try again.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => {
+                          setFile(null)
+                          setValidationResults(null)
+                          setStep('upload')
+                        }}
+                        className="w-full px-4 py-3.5 accent-btn rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-center gap-2 font-semibold"
+                      >
+                        <Upload size={18} />
+                        Upload Correct File
+                      </button>
+                    </div>
                   ) : (
-                    <>
-                      <Upload size={18} />
-                      Import {validationResults?.successCount} Users
-                    </>
-                  )}
-                </button>
+                    // Some rows have errors - show fix message
+                    <div className="w-full space-y-3">
+                      <div className="p-5 bg-gradient-to-br from-amber-500 to-orange-500 dark:from-amber-600 dark:to-orange-600 rounded-2xl shadow-xl shadow-orange-500/30">
+                        <div className="flex items-start gap-4">
+                          <div className="flex-shrink-0 w-12 h-12 bg-white/20 backdrop-blur rounded-full flex items-center justify-center animate-bounce-gentle">
+                            <AlertCircle className="w-6 h-6 text-white" />
+                          </div>
+                          <div className="flex-1">
+                            <h4 className="font-bold text-white text-lg mb-2">
+                              Please Fix {validationResults.failureCount} Error{validationResults.failureCount > 1 ? 's' : ''} Before Import
+                            </h4>
+                            <p className="text-amber-100 text-sm leading-relaxed">
+                              All rows must be valid to proceed. Please review the highlighted errors above, correct them in your Excel file, and re-upload.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => {
+                          setFile(null)
+                          setValidationResults(null)
+                          setStep('upload')
+                        }}
+                        className="w-full px-4 py-3.5 accent-btn rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-center gap-2 font-semibold"
+                      >
+                        <Upload size={18} />
+                        Fix & Re-upload Excel
+                      </button>
+                    </div>
+                  )
+                ) : (
+                  // Show normal import button when all rows are valid
+                  <div className="flex gap-3 w-full">
+                    <button
+                      onClick={() => setStep('upload')}
+                      className="flex-1 px-4 py-2 border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition"
+                    >
+                      Back
+                    </button>
+                    <button
+                      onClick={handleImport}
+                      disabled={isImporting}
+                      className="flex-1 px-4 py-3 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white rounded-xl shadow-lg shadow-green-500/25 hover:shadow-xl hover:shadow-green-500/30 transform hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-center gap-2 font-medium disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
+                    >
+                      {isImporting ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          Importing...
+                        </>
+                      ) : (
+                        <>
+                          <Upload size={18} />
+                          Import {validationResults?.successCount} Units
+                        </>
+                      )}
+                    </button>
+                  </div>
+                )}
               </>
             )}
 
             {step === 'results' && (
               <button
                 onClick={onClose}
-                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                className="flex-1 px-4 py-3 accent-btn rounded-xl shadow-lg hover:shadow-xl transition-all font-medium"
               >
                 Done
               </button>

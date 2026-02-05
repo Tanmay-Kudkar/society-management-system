@@ -24,6 +24,7 @@ export default function Wings() {
   const [editingWing, setEditingWing] = useState(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [filterSociety, setFilterSociety] = useState(urlSocietyId || '')
+  const [formErrors, setFormErrors] = useState({})
 
   // Check if user is MASTER_ADMIN
   const isMasterAdmin = user?.role === 'MASTER_ADMIN'
@@ -95,6 +96,29 @@ export default function Wings() {
     e.preventDefault()
     const formData = new FormData(e.target)
     
+    const name = formData.get('name')?.trim()
+    const totalFloors = parseInt(formData.get('totalFloors')) || 0
+    
+    // Validation
+    const errors = {}
+    
+    // Wing name must contain at least one letter
+    if (!name || !/[A-Za-z]/.test(name)) {
+      errors.name = 'Wing name must contain at least one letter (e.g., "A Wing", "Tower 1")'
+    }
+    
+    // Total floors must be at least 1
+    if (totalFloors < 1) {
+      errors.totalFloors = 'Total floors must be at least 1'
+    }
+    
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors)
+      return
+    }
+    
+    setFormErrors({})
+    
     const societyId = isMasterAdmin 
       ? parseInt(formData.get('societyId')) 
       : user?.societyId
@@ -108,8 +132,8 @@ export default function Wings() {
 
     const data = {
       societyId: parseInt(societyId),
-      name: formData.get('name'),
-      totalFloors: parseInt(formData.get('totalFloors')) || 0,
+      name: name,
+      totalFloors: totalFloors,
     }
 
     console.log('Sending wing data:', data)
@@ -130,7 +154,7 @@ export default function Wings() {
           <p className="text-gray-600 dark:text-gray-400 mt-1">Manage society wings and towers</p>
         </div>
         <button
-          onClick={() => { setEditingWing(null); setShowModal(true) }}
+          onClick={() => { setEditingWing(null); setFormErrors({}); setShowModal(true) }}
           className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
         >
           <Plus size={20} />
@@ -227,7 +251,7 @@ export default function Wings() {
               {/* Actions with Better Hover */}
               <div className="px-5 py-4 bg-gray-50 dark:bg-slate-700/50 border-t border-gray-100 dark:border-slate-700 flex justify-end gap-2">
                 <button
-                  onClick={() => { setEditingWing(wing); setShowModal(true) }}
+                  onClick={() => { setEditingWing(wing); setFormErrors({}); setShowModal(true) }}
                   className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-900/50 rounded-lg transition-colors"
                   title="Edit Wing"
                 >
@@ -284,26 +308,45 @@ export default function Wings() {
               )}
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Wing Name</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Wing Name <span className="text-red-500">*</span>
+                </label>
                 <input
                   type="text"
                   name="name"
                   defaultValue={editingWing?.name}
                   required
                   placeholder="e.g., A Wing, Tower 1, Building A"
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
+                  maxLength="50"
+                  onChange={() => setFormErrors(prev => ({ ...prev, name: null }))}
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white ${
+                    formErrors.name ? 'border-red-500' : 'border-gray-300 dark:border-slate-600'
+                  }`}
                 />
+                {formErrors.name && (
+                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">{formErrors.name}</p>
+                )}
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Total Floors</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Total Floors <span className="text-red-500">*</span>
+                </label>
                 <input
                   type="number"
                   name="totalFloors"
-                  defaultValue={editingWing?.totalFloors || 0}
-                  min="0"
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
+                  defaultValue={editingWing?.totalFloors || 1}
+                  min="1"
+                  max="200"
+                  required
+                  onChange={() => setFormErrors(prev => ({ ...prev, totalFloors: null }))}
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white ${
+                    formErrors.totalFloors ? 'border-red-500' : 'border-gray-300 dark:border-slate-600'
+                  }`}
                 />
+                {formErrors.totalFloors && (
+                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">{formErrors.totalFloors}</p>
+                )}
               </div>
 
               <div className="flex gap-3 pt-4">

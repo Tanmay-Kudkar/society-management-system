@@ -96,6 +96,27 @@ export const flatApi = {
   create: (data, userId) => api.post(`/flats?userId=${userId}`, data),
   update: (id, data, userId) => api.put(`/flats/${id}?userId=${userId}`, data),
   delete: (id, userId) => api.delete(`/flats/${id}?userId=${userId}`),
+  
+  // Bulk import endpoints
+  validateBulkImport: (file, societyId, userId) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('societyId', societyId);
+    return api.post(`/flats/bulk-import/validate?userId=${userId}`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
+  processBulkImport: (file, societyId, userId) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('societyId', societyId);
+    return api.post(`/flats/bulk-import?userId=${userId}`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
+  downloadImportTemplate: (userId) => api.get(`/flats/bulk-import/template?userId=${userId}`, {
+    responseType: 'blob',
+  }),
 }
 
 // Wing API
