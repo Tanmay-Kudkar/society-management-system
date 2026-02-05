@@ -56,7 +56,7 @@ export default function Societies() {
       pincode: formData.get('pincode'),
       registrationNumber: formData.get('registrationNumber'),
       email: formData.get('email'),
-      phone: formData.get('phone'),
+      telephone: formData.get('telephone'),
       totalFlats: parseInt(formData.get('totalFlats')) || 0,
       totalShops: parseInt(formData.get('totalShops')) || 0,
       totalOffices: parseInt(formData.get('totalOffices')) || 0,
@@ -223,9 +223,9 @@ export default function Societies() {
                   <span className="font-medium text-gray-700 dark:text-gray-300">📍</span> 
                   {society.city}{society.state ? `, ${society.state}` : ''}
                 </p>
-                {society.phone && (
+                {society.telephone && (
                   <p className="text-gray-500 dark:text-gray-400 flex items-center gap-2">
-                    <span>📞</span> {society.phone}
+                    <span>📞</span> {society.telephone}
                   </p>
                 )}
               </div>
@@ -346,12 +346,12 @@ export default function Societies() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Phone</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Telephone</label>
                     <input
                       type="tel"
-                      name="phone"
-                      defaultValue={editingSociety?.phone}
-                      placeholder="Phone number"
+                      name="telephone"
+                      defaultValue={editingSociety?.telephone}
+                      placeholder="Telephone number"
                       className="w-full px-4 py-2.5 border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
                     />
                   </div>
