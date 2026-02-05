@@ -1,5 +1,6 @@
 package com.society.backend.service.vendor;
 
+import com.society.backend.dto.transaction.TransactionRequest;
 import com.society.backend.dto.vendor.VendorBillRequest;
 import com.society.backend.dto.vendor.VendorBillResponse;
 import com.society.backend.entity.Society;
@@ -10,6 +11,7 @@ import com.society.backend.repository.society.SocietyRepository;
 import com.society.backend.repository.vendor.VendorBillRepository;
 import com.society.backend.repository.vendor.VendorRepository;
 import com.society.backend.service.common.RoleService;
+import com.society.backend.service.transaction.TransactionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -29,6 +31,7 @@ public class VendorBillServiceImpl implements VendorBillService {
     private final VendorRepository vendorRepository;
     private final SocietyRepository societyRepository;
     private final RoleService roleService;
+    private final TransactionService transactionService;
 
     @Override
     @Transactional
@@ -151,7 +154,30 @@ public class VendorBillServiceImpl implements VendorBillService {
         }
 
         VendorBill saved = vendorBillRepository.save(bill);
+        
+        // Auto-create expense transaction for this payment
+        createExpenseTransaction(saved, amount, paymentMode, referenceNumber, userId);
+
         return mapToResponse(saved);
+    }
+    
+    /**
+     * Creates an expense transaction linked to the vendor bill payment
+     */
+    private void createExpenseTransaction(VendorBill bill, BigDecimal amount, String paymentMode, String referenceNumber, Long userId) {
+        TransactionRequest txRequest = new TransactionRequest();
+        txRequest.setSocietyId(bill.getSociety().getId());
+        txRequest.setTransactionType("EXPENSE");
+        txRequest.setPaymentMode(paymentMode != null ? paymentMode : "CASH");
+        txRequest.setAmount(amount);
+        txRequest.setCategory("VENDOR_PAYMENT");
+        txRequest.setDescription("Vendor Bill Payment: " + bill.getBillNumber() + " - " + bill.getVendor().getName());
+        txRequest.setTransactionDate(LocalDate.now());
+        txRequest.setReferenceNumber(referenceNumber);
+        txRequest.setRelatedBillId(bill.getId());
+        txRequest.setRelatedBillType("VENDOR_BILL");
+        
+        transactionService.create(txRequest, userId);
     }
 
     @Override

@@ -12,6 +12,9 @@ public interface FlatRepository extends JpaRepository<Flat, Long> {
     List<Flat> findBySocietyId(Long societyId);
 
     List<Flat> findByWingId(Long wingId);
+    
+    // Find by society and unit type (for filtered bulk billing)
+    List<Flat> findBySocietyIdAndUnitType(Long societyId, String unitType);
 
     // Find by society and flat number (for bulk import linking)
     Optional<Flat> findBySocietyIdAndFlatNumber(Long societyId, String flatNumber);

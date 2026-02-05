@@ -2,18 +2,21 @@ package com.society.backend.service.maintenance;
 
 import com.society.backend.dto.maintenance.MaintenanceBillRequest;
 import com.society.backend.dto.maintenance.MaintenanceBillResponse;
+import com.society.backend.dto.transaction.TransactionRequest;
 import com.society.backend.entity.Flat;
 import com.society.backend.entity.MaintenanceBill;
 import com.society.backend.exception.ApiException;
 import com.society.backend.repository.flat.FlatRepository;
 import com.society.backend.repository.maintenance.MaintenanceBillRepository;
 import com.society.backend.service.common.RoleService;
+import com.society.backend.service.transaction.TransactionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -26,6 +29,7 @@ public class MaintenanceBillServiceImpl implements MaintenanceBillService {
     private final MaintenanceBillRepository maintenanceBillRepository;
     private final FlatRepository flatRepository;
     private final RoleService roleService;
+    private final TransactionService transactionService;
 
     @Override
     @Transactional
@@ -143,15 +147,56 @@ public class MaintenanceBillServiceImpl implements MaintenanceBillService {
         }
 
         MaintenanceBill saved = maintenanceBillRepository.save(bill);
+        
+        // Auto-create income transaction for this payment
+        createIncomeTransaction(saved, amount, paymentMode, referenceNumber, userId);
+
         return mapToResponse(saved);
+    }
+    
+    /**
+     * Creates an income transaction linked to the maintenance bill payment
+     */
+    private void createIncomeTransaction(MaintenanceBill bill, BigDecimal amount, String paymentMode, String referenceNumber, Long userId) {
+        Flat flat = bill.getFlat();
+        if (flat == null || flat.getSociety() == null) {
+            return; // Cannot create transaction without society context
+        }
+        
+        TransactionRequest txRequest = new TransactionRequest();
+        txRequest.setSocietyId(flat.getSociety().getId());
+        txRequest.setTransactionType("INCOME");
+        txRequest.setPaymentMode(paymentMode != null ? paymentMode : "CASH");
+        txRequest.setAmount(amount);
+        txRequest.setCategory("MAINTENANCE");
+        txRequest.setDescription("Maintenance Payment: " + bill.getBillMonth() + " - Unit " + flat.getFlatNumber());
+        txRequest.setTransactionDate(LocalDate.now());
+        txRequest.setReferenceNumber(referenceNumber);
+        txRequest.setRelatedBillId(bill.getId());
+        txRequest.setRelatedBillType("MAINTENANCE_BILL");
+        txRequest.setFlatId(flat.getId());
+        
+        transactionService.create(txRequest, userId);
     }
 
     @Override
     @Transactional
     public void generateBillsForSociety(Long societyId, String billMonth, BigDecimal amount, Long userId) {
+        // Call the overloaded method with no property type filter
+        generateBillsForSociety(societyId, billMonth, amount, null, userId);
+    }
+    
+    @Override
+    @Transactional
+    public void generateBillsForSociety(Long societyId, String billMonth, BigDecimal amount, String propertyType, Long userId) {
         roleService.requireAdminOrCommittee(userId);
 
-        List<Flat> flats = flatRepository.findBySocietyId(societyId);
+        List<Flat> flats;
+        if (propertyType != null && !propertyType.isEmpty() && !"ALL".equalsIgnoreCase(propertyType)) {
+            flats = flatRepository.findBySocietyIdAndUnitType(societyId, propertyType);
+        } else {
+            flats = flatRepository.findBySocietyId(societyId);
+        }
 
         for (Flat flat : flats) {
             // Skip if bill already exists
@@ -168,6 +213,25 @@ public class MaintenanceBillServiceImpl implements MaintenanceBillService {
 
             maintenanceBillRepository.save(bill);
         }
+    }
+    
+    @Override
+    public int getGenerationPreviewCount(Long societyId, String billMonth, String propertyType) {
+        List<Flat> flats;
+        if (propertyType != null && !propertyType.isEmpty() && !"ALL".equalsIgnoreCase(propertyType)) {
+            flats = flatRepository.findBySocietyIdAndUnitType(societyId, propertyType);
+        } else {
+            flats = flatRepository.findBySocietyId(societyId);
+        }
+        
+        // Count only flats that don't already have a bill for this month
+        int count = 0;
+        for (Flat flat : flats) {
+            if (!maintenanceBillRepository.findByFlatIdAndBillMonth(flat.getId(), billMonth).isPresent()) {
+                count++;
+            }
+        }
+        return count;
     }
 
     @Override

@@ -27,6 +27,10 @@ public interface MaintenanceBillService {
             Long userId);
 
     void generateBillsForSociety(Long societyId, String billMonth, BigDecimal amount, Long userId);
+    
+    void generateBillsForSociety(Long societyId, String billMonth, BigDecimal amount, String propertyType, Long userId);
+    
+    int getGenerationPreviewCount(Long societyId, String billMonth, String propertyType);
 
     void delete(Long id, Long userId);
 }

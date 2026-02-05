@@ -7,7 +7,7 @@ import { flatApi, societyApi, wingApi, userApi } from '../api'
 import { 
   Plus, Edit, Trash2, Search, X, Home, Store, Briefcase, Layers, 
   Users, UserPlus, UserCheck, UserX, Upload, Download, AlertCircle,
-  Eye, Link, Unlink, UsersRound
+  Eye, Link, Unlink, UsersRound, UserCog
 } from 'lucide-react'
 import clsx from 'clsx'
 import { validateFlatForm, validateUserForm, parseApiError } from '../utils/validation'
@@ -33,6 +33,7 @@ export default function UnitManagement() {
   // Modal states
   const [showUnitModal, setShowUnitModal] = useState(false)
   const [showUserModal, setShowUserModal] = useState(false)
+  const [showEditUserModal, setShowEditUserModal] = useState(false)
   const [showLinkModal, setShowLinkModal] = useState(false)
   const [showBulkImportModal, setShowBulkImportModal] = useState(false)
   const [showBulkCreateModal, setShowBulkCreateModal] = useState(false)
@@ -40,6 +41,7 @@ export default function UnitManagement() {
   
   // Editing states
   const [editingUnit, setEditingUnit] = useState(null)
+  const [editingUser, setEditingUser] = useState(null)
   const [selectedUnit, setSelectedUnit] = useState(null)
   
   // Filter states
@@ -176,8 +178,11 @@ export default function UnitManagement() {
     onSuccess: () => {
       queryClient.invalidateQueries(['users'])
       setShowUserModal(false)
+      setShowEditUserModal(false)
+      setEditingUser(null)
       setUserFormErrors({})
       setApiError('')
+      showToast('User updated successfully', 'success')
     },
     onError: (err) => {
       setApiError(parseApiError(err))
@@ -261,6 +266,30 @@ export default function UnitManagement() {
     createUserMutation.mutate(data)
   }
 
+  // Handle edit user form submission
+  const handleEditUserSubmit = (e) => {
+    e.preventDefault()
+    const formData = new FormData(e.target)
+    
+    const data = {
+      name: formData.get('name'),
+      email: formData.get('email'),
+      role: formData.get('role') || 'MEMBER',
+      phone: formData.get('phone'),
+      societyId: effectiveSocietyId,
+      flatId: editingUser?.flatId,
+    }
+
+    // Validate (isEditing = true, so no password required)
+    const validation = validateUserForm(data, true)
+    if (!validation.isValid) {
+      setUserFormErrors(validation.errors)
+      return
+    }
+
+    updateUserMutation.mutate({ id: editingUser.id, data })
+  }
+
   const openUnitModal = (unit = null) => {
     setEditingUnit(unit)
     setUnitFormErrors({})
@@ -273,6 +302,14 @@ export default function UnitManagement() {
     setUserFormErrors({})
     setApiError('')
     setShowUserModal(true)
+  }
+
+  const openEditUserModal = (user, unit) => {
+    setEditingUser(user)
+    setSelectedUnit(unit)
+    setUserFormErrors({})
+    setApiError('')
+    setShowEditUserModal(true)
   }
 
   const getUnitIcon = (type) => unitTypeIcons[type] || Home
@@ -490,6 +527,15 @@ export default function UnitManagement() {
                       }`}>
                         {assignedUser.role === 'MEMBER' ? 'Owner' : 'Tenant'}
                       </span>
+                      {isCommitteeLevel() && (
+                        <button
+                          onClick={() => openEditUserModal(assignedUser, unit)}
+                          className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition"
+                          title="Edit User"
+                        >
+                          <Edit size={14} />
+                        </button>
+                      )}
                     </div>
                   ) : (
                     <p className="text-gray-400 dark:text-gray-500 text-sm italic">No user assigned</p>
@@ -613,6 +659,15 @@ export default function UnitManagement() {
                               <UserPlus size={18} />
                             </button>
                           )}
+                          {hasAssignedUser && (
+                            <button
+                              onClick={() => openEditUserModal(assignedUser, unit)}
+                              className="p-1.5 text-gray-500 dark:text-gray-400 hover:text-purple-600 transition ml-1"
+                              title="Edit User"
+                            >
+                              <UserCog size={18} />
+                            </button>
+                          )}
                           <button
                             onClick={() => {
                               if (confirm('Are you sure you want to delete this unit?')) {
@@ -669,6 +724,25 @@ export default function UnitManagement() {
             setApiError('')
           }}
           isLoading={createUserMutation.isPending}
+        />
+      )}
+
+      {/* Edit User Modal */}
+      {showEditUserModal && editingUser && selectedUnit && (
+        <EditUserFormModal
+          user={editingUser}
+          unit={selectedUnit}
+          errors={userFormErrors}
+          apiError={apiError}
+          onSubmit={handleEditUserSubmit}
+          onClose={() => {
+            setShowEditUserModal(false)
+            setEditingUser(null)
+            setSelectedUnit(null)
+            setUserFormErrors({})
+            setApiError('')
+          }}
+          isLoading={updateUserMutation.isPending}
         />
       )}
 
@@ -1078,6 +1152,118 @@ function UserFormModal({ unit, errors, apiError, onSubmit, onClose, isLoading })
               className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
             >
               {isLoading ? 'Creating...' : 'Create User'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  )
+}
+
+// Edit User Form Modal for editing user linked to unit
+function EditUserFormModal({ user, unit, errors, apiError, onSubmit, onClose, isLoading }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+      <div className="bg-white dark:bg-slate-800 rounded-xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-slate-700 sticky top-0 bg-white dark:bg-slate-800">
+          <div>
+            <h3 className="text-lg font-semibold dark:text-white">Edit User</h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400">Unit: {unit.flatNumber}</p>
+          </div>
+          <button onClick={onClose} className="p-1 hover:bg-gray-100 dark:hover:bg-slate-700 rounded">
+            <X size={20} className="text-gray-500 dark:text-gray-400" />
+          </button>
+        </div>
+
+        {apiError && (
+          <div className="mx-4 mt-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-700 dark:text-red-300 text-sm flex items-center gap-2">
+            <AlertCircle size={16} />
+            {apiError}
+          </div>
+        )}
+
+        <form onSubmit={onSubmit} className="p-4 space-y-4">
+          <div className="bg-gray-50 dark:bg-slate-700 rounded-lg p-3 text-sm">
+            <p className="text-gray-600 dark:text-gray-300">User ID: <span className="font-mono text-xs text-gray-500">{user.id}</span></p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Name <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              name="name"
+              defaultValue={user.name}
+              required
+              placeholder="Enter full name"
+              className={clsx(
+                'w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white placeholder:text-gray-400',
+                errors.name ? 'border-red-500' : 'border-gray-300 dark:border-slate-600'
+              )}
+            />
+            {errors.name && <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.name}</p>}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Email <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="email"
+              name="email"
+              defaultValue={user.email}
+              required
+              placeholder="email@example.com"
+              className={clsx(
+                'w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white placeholder:text-gray-400',
+                errors.email ? 'border-red-500' : 'border-gray-300 dark:border-slate-600'
+              )}
+            />
+            {errors.email && <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.email}</p>}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Phone</label>
+            <input
+              type="tel"
+              name="phone"
+              defaultValue={user.phone}
+              placeholder="10-digit number"
+              className={clsx(
+                'w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white placeholder:text-gray-400',
+                errors.phone ? 'border-red-500' : 'border-gray-300 dark:border-slate-600'
+              )}
+            />
+            {errors.phone && <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.phone}</p>}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Role (Ownership Type)</label>
+            <select
+              name="role"
+              defaultValue={user.role}
+              className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
+            >
+              <option value="MEMBER">Member (Owner)</option>
+              <option value="TENANT">Tenant</option>
+            </select>
+          </div>
+
+          <div className="flex gap-3 pt-4 border-t border-gray-100 dark:border-slate-700">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 px-4 py-2 border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
+            >
+              {isLoading ? 'Saving...' : 'Update User'}
             </button>
           </div>
         </form>

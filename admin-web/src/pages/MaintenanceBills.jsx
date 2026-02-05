@@ -1,9 +1,9 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { maintenanceBillApi, flatApi } from '../api'
-import { Plus, Search, X, CreditCard, CheckCircle, Clock, AlertCircle } from 'lucide-react'
+import { Plus, Search, X, CreditCard, CheckCircle, Clock, AlertCircle, Info } from 'lucide-react'
 import clsx from 'clsx'
 
 const statusColors = {
@@ -23,6 +23,12 @@ export default function MaintenanceBills() {
   const [selectedBill, setSelectedBill] = useState(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [filterStatus, setFilterStatus] = useState('')
+  
+  // Bulk generation state
+  const [bulkPropertyType, setBulkPropertyType] = useState('ALL')
+  const [bulkBillMonth, setBulkBillMonth] = useState('')
+  const [previewCount, setPreviewCount] = useState(null)
+  const [isLoadingPreview, setIsLoadingPreview] = useState(false)
 
   // Get society filter from URL (for MASTER_ADMIN viewing specific society)
   const societyIdFromUrl = searchParams.get('society')
@@ -59,11 +65,14 @@ export default function MaintenanceBills() {
   })
 
   const bulkGenerateMutation = useMutation({
-    mutationFn: ({ societyId, billMonth, amount }) => 
-      maintenanceBillApi.generateForSociety(societyId, billMonth, amount, user.id),
+    mutationFn: ({ societyId, billMonth, amount, propertyType }) => 
+      maintenanceBillApi.generateForSociety(societyId, billMonth, amount, user.id, propertyType),
     onSuccess: () => {
       queryClient.invalidateQueries(['maintenanceBills'])
       setShowBulkModal(false)
+      setBulkPropertyType('ALL')
+      setBulkBillMonth('')
+      setPreviewCount(null)
     },
   })
 
@@ -100,11 +109,39 @@ export default function MaintenanceBills() {
     e.preventDefault()
     const formData = new FormData(e.target)
     bulkGenerateMutation.mutate({
-      societyId: user.societyId,
+      societyId: effectiveSocietyId,
       billMonth: formData.get('billMonth'),
       amount: parseFloat(formData.get('amount')),
+      propertyType: bulkPropertyType !== 'ALL' ? bulkPropertyType : null,
     })
   }
+  
+  // Fetch preview count when property type or bill month changes
+  useEffect(() => {
+    const fetchPreview = async () => {
+      if (!showBulkModal || !effectiveSocietyId || !bulkBillMonth) {
+        setPreviewCount(null)
+        return
+      }
+      
+      setIsLoadingPreview(true)
+      try {
+        const response = await maintenanceBillApi.getGenerationPreview(
+          effectiveSocietyId,
+          bulkBillMonth,
+          bulkPropertyType !== 'ALL' ? bulkPropertyType : null
+        )
+        setPreviewCount(response.data)
+      } catch (error) {
+        console.error('Failed to fetch preview count:', error)
+        setPreviewCount(null)
+      } finally {
+        setIsLoadingPreview(false)
+      }
+    }
+    
+    fetchPreview()
+  }, [showBulkModal, effectiveSocietyId, bulkBillMonth, bulkPropertyType])
 
   const handlePayment = (e) => {
     e.preventDefault()
@@ -317,7 +354,12 @@ export default function MaintenanceBills() {
           <div className="bg-white dark:bg-slate-800 rounded-xl shadow-xl w-full max-w-md">
             <div className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-slate-700">
               <h3 className="text-lg font-semibold dark:text-white">Bulk Generate Bills</h3>
-              <button onClick={() => setShowBulkModal(false)} className="p-1 hover:bg-gray-100 dark:hover:bg-slate-700 rounded dark:text-gray-400">
+              <button onClick={() => {
+                setShowBulkModal(false)
+                setBulkPropertyType('ALL')
+                setBulkBillMonth('')
+                setPreviewCount(null)
+              }} className="p-1 hover:bg-gray-100 dark:hover:bg-slate-700 rounded dark:text-gray-400">
                 <X size={20} />
               </button>
             </div>
@@ -329,11 +371,13 @@ export default function MaintenanceBills() {
                     type="month"
                     name="billMonth"
                     required
+                    value={bulkBillMonth}
+                    onChange={(e) => setBulkBillMonth(e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 dark:text-white"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Amount per Flat</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Amount per Unit</label>
                   <input
                     type="number"
                     name="amount"
@@ -343,10 +387,61 @@ export default function MaintenanceBills() {
                   />
                 </div>
               </div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">This will generate bills for all flats in your society.</p>
+              
+              {/* Property Type Filter */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Property Type</label>
+                <select
+                  value={bulkPropertyType}
+                  onChange={(e) => setBulkPropertyType(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 dark:text-white"
+                >
+                  <option value="ALL">All Property Types</option>
+                  <option value="RESIDENTIAL">Residential Only</option>
+                  <option value="COMMERCIAL">Commercial Only</option>
+                  <option value="OFFICE">Office Only</option>
+                  <option value="PARKING">Parking Only</option>
+                </select>
+              </div>
+              
+              {/* Preview Count */}
+              <div className={clsx(
+                'flex items-center gap-2 p-3 rounded-lg text-sm',
+                previewCount !== null && previewCount > 0 
+                  ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300'
+                  : previewCount === 0
+                    ? 'bg-yellow-50 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-300'
+                    : 'bg-gray-50 dark:bg-slate-700 text-gray-600 dark:text-gray-300'
+              )}>
+                <Info size={16} />
+                {isLoadingPreview ? (
+                  <span>Calculating...</span>
+                ) : previewCount !== null ? (
+                  <span>
+                    <strong>{previewCount}</strong> {previewCount === 1 ? 'unit' : 'units'} will receive bills
+                    {bulkPropertyType !== 'ALL' && ` (${bulkPropertyType.toLowerCase()} only)`}
+                  </span>
+                ) : bulkBillMonth ? (
+                  <span>Select options to see preview count</span>
+                ) : (
+                  <span>Select a bill month to see how many units will be billed</span>
+                )}
+              </div>
+              
               <div className="flex gap-3 pt-4">
-                <button type="button" onClick={() => setShowBulkModal(false)} className="flex-1 px-4 py-2 border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition">Cancel</button>
-                <button type="submit" className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">Generate</button>
+                <button type="button" onClick={() => {
+                  setShowBulkModal(false)
+                  setBulkPropertyType('ALL')
+                  setBulkBillMonth('')
+                  setPreviewCount(null)
+                }} className="flex-1 px-4 py-2 border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition">Cancel</button>
+                <button 
+                  type="submit" 
+                  disabled={bulkGenerateMutation.isPending || previewCount === 0}
+                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                >
+                  {bulkGenerateMutation.isPending ? 'Generating...' : 'Generate'}
+                </button>
               </div>
             </form>
           </div>

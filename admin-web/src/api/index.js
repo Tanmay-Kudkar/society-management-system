@@ -177,8 +177,10 @@ export const maintenanceBillApi = {
   update: (id, data, userId) => api.put(`/maintenance-bills/${id}?userId=${userId}`, data),
   recordPayment: (id, amount, paymentMode, referenceNumber, userId) => 
     api.post(`/maintenance-bills/${id}/payment?amount=${amount}&paymentMode=${paymentMode}&referenceNumber=${encodeURIComponent(referenceNumber || '')}&userId=${userId}`),
-  generateForSociety: (societyId, billMonth, amount, userId) => 
-    api.post(`/maintenance-bills/generate?societyId=${societyId}&billMonth=${billMonth}&amount=${amount}&userId=${userId}`),
+  generateForSociety: (societyId, billMonth, amount, userId, propertyType) => 
+    api.post(`/maintenance-bills/generate?societyId=${societyId}&billMonth=${billMonth}&amount=${amount}&userId=${userId}${propertyType ? '&propertyType=' + propertyType : ''}`),
+  getGenerationPreview: (societyId, billMonth, propertyType) =>
+    api.get(`/maintenance-bills/generate/preview?societyId=${societyId}&billMonth=${billMonth}${propertyType ? '&propertyType=' + propertyType : ''}`),
   delete: (id, userId) => api.delete(`/maintenance-bills/${id}?userId=${userId}`),
 }
 

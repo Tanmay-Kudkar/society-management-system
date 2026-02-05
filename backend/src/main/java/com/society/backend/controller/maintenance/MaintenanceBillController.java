@@ -80,9 +80,19 @@ public class MaintenanceBillController {
             @RequestParam Long societyId,
             @RequestParam String billMonth,
             @RequestParam BigDecimal amount,
+            @RequestParam(required = false) String propertyType,
             @RequestParam Long userId) {
-        maintenanceBillService.generateBillsForSociety(societyId, billMonth, amount, userId);
+        maintenanceBillService.generateBillsForSociety(societyId, billMonth, amount, propertyType, userId);
         return ResponseEntity.ok().build();
+    }
+    
+    @GetMapping("/generate/preview")
+    public ResponseEntity<Integer> getGenerationPreviewCount(
+            @RequestParam Long societyId,
+            @RequestParam String billMonth,
+            @RequestParam(required = false) String propertyType) {
+        int count = maintenanceBillService.getGenerationPreviewCount(societyId, billMonth, propertyType);
+        return ResponseEntity.ok(count);
     }
 
     @DeleteMapping("/{id}")
