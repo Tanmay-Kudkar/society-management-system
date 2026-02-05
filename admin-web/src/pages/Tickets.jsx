@@ -37,6 +37,7 @@ export default function Tickets() {
   const [selectedTicket, setSelectedTicket] = useState(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [filterStatus, setFilterStatus] = useState('')
+  const [showOverdueOnly, setShowOverdueOnly] = useState(false)
   const [isExporting, setIsExporting] = useState(false)
 
   // Check if current user is MASTER_ADMIN
@@ -85,7 +86,8 @@ export default function Tickets() {
     const matchesSearch = t.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          t.type?.toLowerCase().includes(searchTerm.toLowerCase())
     const matchesStatus = !filterStatus || t.status === filterStatus
-    return matchesSearch && matchesStatus
+    const matchesOverdue = !showOverdueOnly || t.isOverdue
+    return matchesSearch && matchesStatus && matchesOverdue
   })
 
   const handleSubmit = (e) => {
@@ -204,6 +206,18 @@ export default function Tickets() {
             <option value="RESOLVED">Resolved</option>
             <option value="CLOSED">Closed</option>
           </select>
+          <button
+            onClick={() => setShowOverdueOnly(!showOverdueOnly)}
+            className={clsx(
+              'px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-2',
+              showOverdueOnly
+                ? 'bg-red-600 text-white shadow-lg'
+                : 'bg-gray-200 dark:bg-slate-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-slate-600'
+            )}
+          >
+            <AlertTriangle size={18} />
+            {showOverdueOnly ? 'Showing Overdue' : 'Show Overdue'}
+          </button>
         </div>
       </div>
 
@@ -234,9 +248,16 @@ export default function Tickets() {
                         {ticket.priority}
                       </span>
                       {ticket.isOverdue && (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">
+                        <span className={clsx(
+                          'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium animate-pulse',
+                          ticket.escalationLevel === 2 ? 'bg-red-600 text-white' :
+                          ticket.escalationLevel === 1 ? 'bg-orange-500 text-white' :
+                          'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                        )}>
                           <AlertTriangle size={12} />
-                          Overdue
+                          {ticket.escalationLevel === 2 ? 'CRITICAL' : 
+                           ticket.escalationLevel === 1 ? 'ESCALATED' : 'Overdue'}
+                          {ticket.overdueDays > 0 && ` (${ticket.overdueDays}d)`}
                         </span>
                       )}
                     </div>

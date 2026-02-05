@@ -29,4 +29,11 @@ public interface TicketService {
     TicketResponse updateProgress(Long id, Integer progress, Long userId);
 
     void delete(Long id, Long userId);
+
+    // Overdue tracking methods
+    List<TicketResponse> getOverdue();
+
+    List<TicketResponse> getOverdueBySociety(Long societyId);
+
+    Long getOverdueCount();
 }

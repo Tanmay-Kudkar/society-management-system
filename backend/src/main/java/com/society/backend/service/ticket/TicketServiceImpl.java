@@ -200,6 +200,38 @@ public class TicketServiceImpl implements TicketService {
         ticketRepository.deleteById(id);
     }
 
+    @Override
+    public List<TicketResponse> getOverdue() {
+        return ticketRepository.findAll().stream()
+                .filter(ticket -> {
+                    ticket.updateOverdueStatus();
+                    return ticket.getIsOverdue();
+                })
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<TicketResponse> getOverdueBySociety(Long societyId) {
+        return ticketRepository.findBySocietyId(societyId).stream()
+                .filter(ticket -> {
+                    ticket.updateOverdueStatus();
+                    return ticket.getIsOverdue();
+                })
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public Long getOverdueCount() {
+        return ticketRepository.findAll().stream()
+                .filter(ticket -> {
+                    ticket.updateOverdueStatus();
+                    return ticket.getIsOverdue();
+                })
+                .count();
+    }
+
     private TicketResponse mapToResponse(Ticket ticket) {
         TicketResponse response = new TicketResponse();
         response.setId(ticket.getId());
@@ -221,7 +253,13 @@ public class TicketServiceImpl implements TicketService {
         response.setResolution(ticket.getResolution());
         response.setProgressPercent(ticket.getProgressPercent() != null ? ticket.getProgressPercent() : 0);
         response.setPendingDays(ticket.getPendingDays());
-        response.setIsOverdue(ticket.getPendingDays() != null && ticket.getPendingDays() > 7);
+        
+        // Update and set overdue information
+        ticket.updateOverdueStatus();
+        response.setIsOverdue(ticket.getIsOverdue());
+        response.setOverdueDays(ticket.getOverdueDays());
+        response.setEscalationLevel(ticket.getEscalationLevel());
+        
         response.setCreatedAt(ticket.getCreatedAt());
         response.setUpdatedAt(ticket.getUpdatedAt());
         response.setResolvedAt(ticket.getResolvedAt());

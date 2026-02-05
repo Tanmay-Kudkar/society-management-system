@@ -24,6 +24,8 @@ public class TicketResponse {
     private Integer progressPercent;
     private Integer pendingDays;
     private Boolean isOverdue;
+    private Integer overdueDays;
+    private Integer escalationLevel;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private LocalDateTime resolvedAt;

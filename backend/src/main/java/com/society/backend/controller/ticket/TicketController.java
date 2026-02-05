@@ -95,4 +95,19 @@ public class TicketController {
         ticketService.delete(id, userId);
         return ResponseEntity.noContent().build();
     }
+
+    @GetMapping("/overdue")
+    public ResponseEntity<List<TicketResponse>> getOverdue() {
+        return ResponseEntity.ok(ticketService.getOverdue());
+    }
+
+    @GetMapping("/overdue/society/{societyId}")
+    public ResponseEntity<List<TicketResponse>> getOverdueBySociety(@PathVariable Long societyId) {
+        return ResponseEntity.ok(ticketService.getOverdueBySociety(societyId));
+    }
+
+    @GetMapping("/overdue/count")
+    public ResponseEntity<Long> getOverdueCount() {
+        return ResponseEntity.ok(ticketService.getOverdueCount());
+    }
 }

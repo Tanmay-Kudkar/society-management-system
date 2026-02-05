@@ -586,8 +586,22 @@ export default function Dashboard() {
           color="bg-red-500"
           delay={350}
         />
+        <StatCard          title="Overdue Tickets"
+          value={allTickets.filter(t => t.isOverdue).length}
+          icon={AlertTriangle}
+          gradient="bg-gradient-to-br from-red-500 to-rose-600"
+          subtext={allTickets.filter(t => t.escalationLevel === 2).length > 0 ? `${allTickets.filter(t => t.escalationLevel === 2).length} critical` : undefined}
+          delay={375}
+        />
         <StatCard
-          title="Pending Complaints"
+          title="Overdue Bills"
+          value={overdueBills.length}
+          icon={Clock}
+          gradient="bg-gradient-to-br from-orange-500 to-amber-600"
+          subtext={overdueBills.length > 0 ? `₹${overdueBills.reduce((sum, b) => sum + (b.amount || 0), 0).toLocaleString()}` : 'All clear'}
+          delay={390}
+        />
+        <StatCard          title="Pending Complaints"
           value={pendingComplaints.length}
           icon={AlertTriangle}
           color="bg-amber-500"

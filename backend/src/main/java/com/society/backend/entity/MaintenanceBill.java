@@ -8,6 +8,7 @@ import lombok.Setter;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 
 @Entity
 @Table(name = "maintenance_bills")
@@ -60,5 +61,42 @@ public class MaintenanceBill {
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
+    }
+
+    // NEW METHODS FOR OVERDUE TRACKING
+    @Transient
+    public Boolean getIsOverdue() {
+        if ("PAID".equals(status) || dueDate == null) {
+            return false;
+        }
+        return LocalDate.now().isAfter(dueDate);
+    }
+
+    @Transient
+    public Long getOverdueDays() {
+        if (!getIsOverdue()) {
+            return 0L;
+        }
+        return ChronoUnit.DAYS.between(dueDate, LocalDate.now());
+    }
+
+    @Transient
+    public BigDecimal getPendingAmount() {
+        if (paidAmount == null) {
+            return amount;
+        }
+        return amount.subtract(paidAmount);
+    }
+
+    @Transient
+    public String getOverdueStatus() {
+        if (!getIsOverdue()) {
+            return "ON_TIME";
+        }
+        long days = getOverdueDays();
+        if (days > 90) return "CRITICAL"; // 90+ days
+        if (days > 60) return "SEVERE";   // 60-90 days
+        if (days > 30) return "HIGH";     // 30-60 days
+        return "OVERDUE";                  // 1-30 days
     }
 }
