@@ -69,7 +69,7 @@ public class SocietyServiceImpl implements SocietyService {
         society.setPincode(request.getPincode());
         society.setRegistrationNumber(request.getRegistrationNumber());
         society.setEmail(request.getEmail());
-        society.setPhone(request.getPhone());
+        society.setTelephone(request.getTelephone());
         society.setTotalFlats(request.getTotalFlats() != null ? request.getTotalFlats() : 0);
         society.setTotalShops(request.getTotalShops() != null ? request.getTotalShops() : 0);
         society.setTotalOffices(request.getTotalOffices() != null ? request.getTotalOffices() : 0);
@@ -86,7 +86,7 @@ public class SocietyServiceImpl implements SocietyService {
         response.setPincode(society.getPincode());
         response.setRegistrationNumber(society.getRegistrationNumber());
         response.setEmail(society.getEmail());
-        response.setPhone(society.getPhone());
+        response.setTelephone(society.getTelephone());
 
         // Total capacity
         response.setTotalFlats(society.getTotalFlats());

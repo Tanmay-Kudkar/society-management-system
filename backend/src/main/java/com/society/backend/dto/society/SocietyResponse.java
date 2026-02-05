@@ -18,7 +18,7 @@ public class SocietyResponse {
     private String pincode;
     private String registrationNumber;
     private String email;
-    private String phone;
+    private String telephone;
 
     // Total capacity for units
     private Integer totalFlats;
