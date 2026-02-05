@@ -61,11 +61,11 @@ export const AuthProvider = ({ children }) => {
   const login = async (email, password) => {
     try {
       const response = await authApi.login({ email, password })
-      // Backend returns: { id, name, email, role, societyId, token, tokenType }
+      // Backend returns: { id, name, email, role, societyId, flatId, token, tokenType }
       // Backend also sets HTTP-only cookie with JWT
-      const { token, id, name, email: userEmail, role, societyId } = response.data
+      const { token, id, name, email: userEmail, role, societyId, flatId } = response.data
       
-      const userData = { id, name, email: userEmail, role, societyId }
+      const userData = { id, name, email: userEmail, role, societyId, flatId }
       
       // Store in localStorage as fallback and for quick access
       localStorage.setItem('token', token)

@@ -60,12 +60,29 @@ export default function Users() {
 
   // Check if current user is MASTER_ADMIN
   const isMasterAdmin = user?.role === 'MASTER_ADMIN'
+  
+  // Check if current user is MEMBER (for tenant assignment logic)
+  // Check from session, profile API response, or users list
+  const isMember = user?.role === 'MEMBER'
 
   // Fetch users - include user.id in queryKey to refetch when user changes
   const { data: users = [], isLoading } = useQuery({
     queryKey: ['users', user?.id],
     queryFn: () => userApi.getAll().then(res => res.data).catch(() => []),
   })
+
+  // Fetch current user's full profile to get flatId and verify role (for MEMBER creating TENANT)
+  const { data: currentUserProfile } = useQuery({
+    queryKey: ['current-user-profile', user?.id],
+    queryFn: () => userApi.getById(user.id).then(res => res.data),
+    enabled: !!user?.id,
+  })
+  
+  // Double-check if user is MEMBER from profile data (in case session is stale)
+  const confirmedIsMember = isMember || currentUserProfile?.role === 'MEMBER'
+
+  // Get current user's flatId from multiple sources
+  const currentUserFlatId = user?.flatId || currentUserProfile?.flatId || users.find(u => u.id === user?.id)?.flatId
 
   // Fetch roles that current user can create
   const { data: creatableRoles = [] } = useQuery({
@@ -100,12 +117,39 @@ export default function Users() {
     enabled: !!user?.id,
   })
 
-  // Get available (unassigned) flats - only flats without an assigned user
-  const availableFlats = flats.filter(flat => {
-    // Check if any user is already assigned to this flat
-    const isAssigned = users.some(u => u.flatId === flat.id && u.id !== editingUser?.id)
-    return !isAssigned
+  // Fetch the MEMBER's own flat directly if they have flatId (for tenant assignment)
+  const { data: memberFlat } = useQuery({
+    queryKey: ['member-flat', currentUserFlatId],
+    queryFn: () => flatApi.getById(currentUserFlatId).then(res => res.data),
+    enabled: confirmedIsMember && !!currentUserFlatId,
   })
+
+  // Get available flats based on user role
+  const availableFlats = (() => {
+    // MEMBER creating TENANT: show only flats owned by this member
+    if (confirmedIsMember) {
+      // Filter flats where ownerUserId matches the current user's ID
+      const memberOwnedFlats = flats.filter(flat => flat.ownerUserId === user?.id)
+      if (memberOwnedFlats.length > 0) {
+        return memberOwnedFlats
+      }
+      // Fallback: try using currentUserFlatId
+      if (currentUserFlatId) {
+        const flatFromList = flats.find(flat => flat.id === currentUserFlatId)
+        if (flatFromList) return [flatFromList]
+        if (memberFlat) return [memberFlat]
+      }
+      // If no flat found, return empty (the form will show auto-assign message)
+      return []
+    }
+    // Other roles: show unassigned flats (not owned by any user)
+    return flats.filter(flat => {
+      // Check if flat has an owner assigned (using ownerUserId from backend)
+      const hasOwner = flat.ownerUserId != null
+      // Allow if not owned, or if editing the current owner
+      return !hasOwner || (editingUser && editingUser.flatId === flat.id)
+    })
+  })()
 
   const createMutation = useMutation({
     mutationFn: (data) => userApi.create(data),
@@ -203,9 +247,13 @@ export default function Users() {
     }
 
     // Validate flatId is required for MEMBER/TENANT roles
+    // Exception: MEMBER creating TENANT - backend auto-assigns the member's flat
     if (['MEMBER', 'TENANT'].includes(roleValue) && !data.flatId) {
-      setError('Please select a property for the user')
-      return
+      // Skip validation if MEMBER is creating TENANT (backend will auto-assign)
+      if (!(confirmedIsMember && roleValue === 'TENANT')) {
+        setError('Please select a property for the user')
+        return
+      }
     }
 
     if (editingUser) {
@@ -640,24 +688,44 @@ export default function Users() {
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     <span className="flex items-center gap-1">
                       <Home className="w-4 h-4" />
-                      Property <span className="text-red-500">*</span>
+                      Property {!confirmedIsMember && <span className="text-red-500">*</span>}
                     </span>
                   </label>
-                  <select
-                    name="flatId"
-                    defaultValue={editingUser?.flatId || ''}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
-                    required
-                  >
-                    <option value="">Select Property</option>
-                    {availableFlats.map(flat => (
-                      <option key={flat.id} value={flat.id}>
-                        {flat.flatNumber} {flat.wingName ? `(${flat.wingName})` : ''} - {flat.unitType || 'FLAT'}
-                      </option>
-                    ))}
-                  </select>
-                  {availableFlats.length === 0 && (
-                    <p className="text-xs text-amber-600 mt-1">No available properties. All units are assigned.</p>
+                  {/* MEMBER creating TENANT: auto-assign from member's flat */}
+                  {confirmedIsMember && (selectedRole || creatableRoles[0]) === 'TENANT' ? (
+                    <div className="w-full px-3 py-2 border border-gray-200 dark:border-slate-600 rounded-lg bg-gray-50 dark:bg-slate-700/50 text-gray-900 dark:text-white">
+                      {availableFlats.length > 0 ? (
+                        <>
+                          <input type="hidden" name="flatId" value={availableFlats[0]?.id || ''} />
+                          <span className="flex items-center gap-2">
+                            <Home className="w-4 h-4 text-blue-500" />
+                            {availableFlats[0]?.flatNumber} {availableFlats[0]?.wingName ? `(${availableFlats[0]?.wingName})` : ''}
+                            <span className="text-xs text-gray-500 ml-2">(Your flat - auto-assigned)</span>
+                          </span>
+                        </>
+                      ) : (
+                        <span className="text-gray-500">Your flat will be automatically assigned to the tenant</span>
+                      )}
+                    </div>
+                  ) : (
+                    <>
+                      <select
+                        name="flatId"
+                        defaultValue={editingUser?.flatId || ''}
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
+                        required
+                      >
+                        <option value="">Select Property</option>
+                        {availableFlats.map(flat => (
+                          <option key={flat.id} value={flat.id}>
+                            {flat.flatNumber} {flat.wingName ? `(${flat.wingName})` : ''} - {flat.unitType || 'FLAT'}
+                          </option>
+                        ))}
+                      </select>
+                      {availableFlats.length === 0 && (
+                        <p className="text-xs text-amber-600 mt-1">No available properties. All units are assigned.</p>
+                      )}
+                    </>
                   )}
                 </div>
               )}

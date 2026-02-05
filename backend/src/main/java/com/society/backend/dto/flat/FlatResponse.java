@@ -21,5 +21,6 @@ public class FlatResponse {
     private String ownerName;
     private String ownerEmail;
     private String ownerPhone;
+    private Long ownerUserId; // The user ID of the owner (MEMBER)
     private Boolean isOccupied;
 }

@@ -99,6 +99,8 @@ public class AuthServiceImpl implements AuthService {
 
         // Get societyId if user belongs to a society
         Long societyId = user.getSociety() != null ? user.getSociety().getId() : null;
+        // Get flatId if user has a flat assigned
+        Long flatId = user.getFlat() != null ? user.getFlat().getId() : null;
 
         return new LoginResponse(
                 user.getId(),
@@ -106,6 +108,7 @@ public class AuthServiceImpl implements AuthService {
                 user.getEmail(),
                 user.getRole().name(),
                 societyId,
+                flatId,
                 token);
     }
 
@@ -120,13 +123,17 @@ public class AuthServiceImpl implements AuthService {
                 .orElseThrow(() -> new ApiException(HttpStatus.UNAUTHORIZED, "User not found"));
 
         Long societyId = user.getSociety() != null ? user.getSociety().getId() : null;
+        Long flatId = user.getFlat() != null ? user.getFlat().getId() : null;
 
-        return new UserResponse(
+        UserResponse response = new UserResponse(
                 user.getId(),
                 user.getName(),
                 user.getEmail(),
                 user.getRole().name(),
                 societyId);
+        response.setFlatId(flatId);
+        
+        return response;
     }
 
     private Role resolveRole(String roleValue) {
