@@ -37,7 +37,7 @@ public class Society {
 
     private String email;
 
-    private String phone;
+    private String telephone;
 
     // Total capacity for units (for planning/display purposes)
     @Column(name = "total_flats")

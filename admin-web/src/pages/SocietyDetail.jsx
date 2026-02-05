@@ -255,7 +255,7 @@ export default function SocietyDetail() {
               <div className="society-meta-icon">
                 <Phone size={16} />
               </div>
-              <span>{society.phone || 'No phone'}</span>
+              <span>{society.telephone || 'No telephone'}</span>
             </div>
             <div className="society-meta-item">
               <div className="society-meta-icon">
