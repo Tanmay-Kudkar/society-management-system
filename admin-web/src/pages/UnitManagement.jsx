@@ -94,30 +94,32 @@ export default function UnitManagement() {
     return users.filter(u => ['MEMBER', 'TENANT'].includes(u.role))
   }, [users])
 
-  // Create unit-user mapping
+  // Create unit-user mapping (1 user per unit)
   const unitUserMap = useMemo(() => {
     const map = {}
     flats.forEach(flat => {
+      // Only one user can be assigned per unit - take the first MEMBER, or first TENANT
+      const assignedUser = memberUsers.find(u => u.flatId === flat.id)
       map[flat.id] = {
         flat,
         owner: flat.ownerEmail ? users.find(u => u.email === flat.ownerEmail) : null,
-        members: memberUsers.filter(u => u.flatId === flat.id)
+        member: assignedUser || null
       }
     })
     return map
   }, [flats, users, memberUsers])
 
-  // Filtered data
+  // Filtered data - search includes assigned user name
   const filteredUnits = useMemo(() => {
     return flats.filter(f => {
+      const assignedUser = unitUserMap[f.id]?.member
       const matchesSearch = 
         f.flatNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        f.ownerName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        f.ownerEmail?.toLowerCase().includes(searchTerm.toLowerCase())
+        assignedUser?.name?.toLowerCase().includes(searchTerm.toLowerCase())
       const matchesType = !filterType || f.unitType === filterType
       return matchesSearch && matchesType
     })
-  }, [flats, searchTerm, filterType])
+  }, [flats, searchTerm, filterType, unitUserMap])
 
   // Unit CRUD mutations
   const createUnitMutation = useMutation({
@@ -214,9 +216,7 @@ export default function UnitManagement() {
       flatType: formData.get('flatType'),
       floor: parseInt(formData.get('floor')) || 0,
       area: parseFloat(formData.get('area')) || 0,
-      ownerName: formData.get('ownerName'),
-      ownerEmail: formData.get('ownerEmail'),
-      ownerPhone: formData.get('ownerPhone'),
+      // Owner/user will be added via 'Add User' button after creating the unit
     }
 
     // Validate
@@ -238,10 +238,13 @@ export default function UnitManagement() {
     e.preventDefault()
     const formData = new FormData(e.target)
     
+    // Default password = flat number padded to meet minimum length requirement
+    const defaultPassword = selectedUnit?.flatNumber?.padEnd(6, '123456') || '123456'
+    
     const data = {
       name: formData.get('name'),
       email: formData.get('email'),
-      password: formData.get('password') || selectedUnit?.flatNumber, // Default password = flat number
+      password: formData.get('password') || defaultPassword,
       role: formData.get('role') || 'MEMBER',
       phone: formData.get('phone'),
       societyId: effectiveSocietyId,
@@ -275,16 +278,22 @@ export default function UnitManagement() {
   const getUnitIcon = (type) => unitTypeIcons[type] || Home
   const getUnitColor = (type) => unitTypeColors[type] || unitTypeColors.FLAT
 
-  // Stats
-  const stats = useMemo(() => ({
-    totalUnits: flats.length,
-    flats: flats.filter(f => !f.unitType || f.unitType === 'FLAT').length,
-    shops: flats.filter(f => f.unitType === 'SHOP').length,
-    offices: flats.filter(f => f.unitType === 'OFFICE').length,
-    occupied: flats.filter(f => f.ownerName).length,
-    vacant: flats.filter(f => !f.ownerName).length,
-    linkedUsers: memberUsers.length,
-  }), [flats, memberUsers])
+  // Stats - count units with assigned user as occupied
+  const stats = useMemo(() => {
+    const occupiedUnits = flats.filter(f => {
+      const hasAssignedUser = memberUsers.some(u => u.flatId === f.id)
+      return hasAssignedUser || f.ownerName
+    })
+    return {
+      totalUnits: flats.length,
+      flats: flats.filter(f => !f.unitType || f.unitType === 'FLAT').length,
+      shops: flats.filter(f => f.unitType === 'SHOP').length,
+      offices: flats.filter(f => f.unitType === 'OFFICE').length,
+      occupied: occupiedUnits.length,
+      vacant: flats.length - occupiedUnits.length,
+      assignedUsers: memberUsers.filter(u => u.flatId).length,
+    }
+  }, [flats, memberUsers])
 
   return (
     <div>
@@ -336,7 +345,7 @@ export default function UnitManagement() {
         <StatCard label="Offices" value={stats.offices} icon={Briefcase} color="purple" />
         <StatCard label="Occupied" value={stats.occupied} icon={UserCheck} color="teal" />
         <StatCard label="Vacant" value={stats.vacant} icon={UserX} color="orange" />
-        <StatCard label="Users" value={stats.linkedUsers} icon={Users} color="pink" />
+        <StatCard label="Assigned" value={stats.assignedUsers} icon={Users} color="pink" />
       </div>
 
       {/* API Error Alert */}
@@ -359,7 +368,7 @@ export default function UnitManagement() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
             <input
               type="text"
-              placeholder="Search by unit number, owner name or email..."
+              placeholder="Search by unit number or user name..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white placeholder:text-gray-400"
@@ -414,8 +423,8 @@ export default function UnitManagement() {
           {filteredUnits.map((unit) => {
             const UnitIcon = getUnitIcon(unit.unitType)
             const unitColor = getUnitColor(unit.unitType)
-            const linkedOwner = unitUserMap[unit.id]?.owner
-            const linkedMembers = unitUserMap[unit.id]?.members || []
+            const assignedUser = unitUserMap[unit.id]?.member
+            const hasAssignedUser = !!assignedUser
             
             return (
               <div key={unit.id} className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-5 hover:shadow-md transition">
@@ -440,9 +449,9 @@ export default function UnitManagement() {
                   </div>
                   <span className={clsx(
                     'px-2 py-1 rounded-full text-xs font-medium',
-                    unit.ownerName ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' : 'bg-gray-100 text-gray-600 dark:bg-slate-700 dark:text-gray-400'
+                    hasAssignedUser ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' : 'bg-gray-100 text-gray-600 dark:bg-slate-700 dark:text-gray-400'
                   )}>
-                    {unit.ownerName ? 'Occupied' : 'Vacant'}
+                    {hasAssignedUser ? 'Occupied' : 'Vacant'}
                   </span>
                 </div>
 
@@ -460,51 +469,32 @@ export default function UnitManagement() {
                   )}
                 </div>
 
-                {/* Owner Info */}
+                {/* Assigned User - single user per unit */}
                 <div className="border-t border-gray-100 dark:border-slate-700 pt-4 mb-4">
-                  <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase mb-2">Owner / Member</p>
-                  {unit.ownerName ? (
+                  <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase mb-2">Assigned User</p>
+                  {assignedUser ? (
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
+                      <div className="w-10 h-10 rounded-full flex items-center justify-center bg-gradient-to-br from-blue-500 to-indigo-600">
                         <span className="text-white font-bold text-sm">
-                          {unit.ownerName?.charAt(0)?.toUpperCase()}
+                          {assignedUser.name?.charAt(0)?.toUpperCase()}
                         </span>
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium text-gray-900 dark:text-white truncate">{unit.ownerName}</p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{unit.ownerPhone || unit.ownerEmail}</p>
+                        <p className="font-medium text-gray-900 dark:text-white truncate">{assignedUser.name}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{assignedUser.phone || assignedUser.email}</p>
                       </div>
-                      {linkedOwner && (
-                        <span className="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-full">
-                          Linked
-                        </span>
-                      )}
+                      <span className={`text-xs px-2 py-1 rounded-full ${
+                        assignedUser.role === 'MEMBER' 
+                          ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300' 
+                          : 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300'
+                      }`}>
+                        {assignedUser.role === 'MEMBER' ? 'Owner' : 'Tenant'}
+                      </span>
                     </div>
                   ) : (
-                    <p className="text-gray-400 dark:text-gray-500 text-sm italic">No owner assigned</p>
+                    <p className="text-gray-400 dark:text-gray-500 text-sm italic">No user assigned</p>
                   )}
                 </div>
-
-                {/* Linked Users */}
-                {linkedMembers.length > 0 && (
-                  <div className="border-t border-gray-100 dark:border-slate-700 pt-3 mb-4">
-                    <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase mb-2">
-                      Linked Users ({linkedMembers.length})
-                    </p>
-                    <div className="flex flex-wrap gap-2">
-                      {linkedMembers.slice(0, 3).map(m => (
-                        <span key={m.id} className="text-xs px-2 py-1 bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300 rounded-full">
-                          {m.name}
-                        </span>
-                      ))}
-                      {linkedMembers.length > 3 && (
-                        <span className="text-xs px-2 py-1 bg-gray-100 dark:bg-slate-700 text-gray-500 dark:text-gray-400 rounded-full">
-                          +{linkedMembers.length - 3} more
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                )}
 
                 {/* Actions */}
                 {isCommitteeLevel() && (
@@ -516,13 +506,15 @@ export default function UnitManagement() {
                       <Edit size={14} />
                       Edit
                     </button>
-                    <button
-                      onClick={() => openUserModal(unit)}
-                      className="flex-1 inline-flex items-center justify-center gap-1 px-3 py-2 text-sm bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-900/50 transition"
-                    >
-                      <UserPlus size={14} />
-                      Add User
-                    </button>
+                    {!hasAssignedUser && (
+                      <button
+                        onClick={() => openUserModal(unit)}
+                        className="flex-1 inline-flex items-center justify-center gap-1 px-3 py-2 text-sm bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-900/50 transition"
+                      >
+                        <UserPlus size={14} />
+                        Add User
+                      </button>
+                    )}
                     <button
                       onClick={() => {
                         if (confirm('Are you sure you want to delete this unit?')) {
@@ -549,7 +541,7 @@ export default function UnitManagement() {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Unit</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Wing</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Type</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Owner / Member</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Assigned User</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Contact</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Status</th>
                   {isCommitteeLevel() && (
@@ -560,6 +552,8 @@ export default function UnitManagement() {
               <tbody className="divide-y divide-gray-100 dark:divide-slate-700">
                 {filteredUnits.map((unit) => {
                   const UnitIcon = getUnitIcon(unit.unitType)
+                  const assignedUser = unitUserMap[unit.id]?.member
+                  const hasAssignedUser = !!assignedUser
                   return (
                     <tr key={unit.id} className="hover:bg-gray-50 dark:hover:bg-slate-700">
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -587,20 +581,20 @@ export default function UnitManagement() {
                         <span className="text-gray-600 dark:text-gray-300">{unit.flatType || unit.unitType || 'FLAT'}</span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="text-gray-900 dark:text-white">{unit.ownerName || '-'}</span>
+                        <span className="text-gray-900 dark:text-white">{assignedUser?.name || '-'}</span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm">
-                          <p className="text-gray-600 dark:text-gray-300">{unit.ownerPhone || '-'}</p>
-                          <p className="text-xs text-gray-500 dark:text-gray-400">{unit.ownerEmail || ''}</p>
+                          <p className="text-gray-600 dark:text-gray-300">{assignedUser?.phone || '-'}</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">{assignedUser?.email || ''}</p>
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className={clsx(
                           'px-2 py-1 rounded-full text-xs font-medium',
-                          unit.ownerName ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' : 'bg-gray-100 text-gray-600 dark:bg-slate-700 dark:text-gray-400'
+                          hasAssignedUser ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' : 'bg-gray-100 text-gray-600 dark:bg-slate-700 dark:text-gray-400'
                         )}>
-                          {unit.ownerName ? 'Occupied' : 'Vacant'}
+                          {hasAssignedUser ? 'Occupied' : 'Vacant'}
                         </span>
                       </td>
                       {isCommitteeLevel() && (
@@ -611,12 +605,14 @@ export default function UnitManagement() {
                           >
                             <Edit size={18} />
                           </button>
-                          <button
-                            onClick={() => openUserModal(unit)}
-                            className="p-1.5 text-gray-500 dark:text-gray-400 hover:text-green-600 transition ml-1"
-                          >
-                            <UserPlus size={18} />
-                          </button>
+                          {!hasAssignedUser && (
+                            <button
+                              onClick={() => openUserModal(unit)}
+                              className="p-1.5 text-gray-500 dark:text-gray-400 hover:text-green-600 transition ml-1"
+                            >
+                              <UserPlus size={18} />
+                            </button>
+                          )}
                           <button
                             onClick={() => {
                               if (confirm('Are you sure you want to delete this unit?')) {
@@ -868,52 +864,7 @@ function UnitFormModal({ unit, societies, wings, isMasterAdmin, userSocietyId, e
             </div>
           </div>
 
-          {/* Owner Details */}
-          <div className="border-t border-gray-100 dark:border-slate-700 pt-4">
-            <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Owner / Member Details</h4>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Owner Name</label>
-                <input
-                  type="text"
-                  name="ownerName"
-                  defaultValue={unit?.ownerName || ''}
-                  placeholder="Enter owner name"
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white placeholder:text-gray-400"
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Owner Email</label>
-                  <input
-                    type="email"
-                    name="ownerEmail"
-                    defaultValue={unit?.ownerEmail || ''}
-                    placeholder="email@example.com"
-                    className={clsx(
-                      'w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white placeholder:text-gray-400',
-                      errors.ownerEmail ? 'border-red-500' : 'border-gray-300 dark:border-slate-600'
-                    )}
-                  />
-                  {errors.ownerEmail && <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.ownerEmail}</p>}
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Owner Phone</label>
-                  <input
-                    type="tel"
-                    name="ownerPhone"
-                    defaultValue={unit?.ownerPhone || ''}
-                    placeholder="10-digit number"
-                    className={clsx(
-                      'w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white placeholder:text-gray-400',
-                      errors.ownerPhone ? 'border-red-500' : 'border-gray-300 dark:border-slate-600'
-                    )}
-                  />
-                  {errors.ownerPhone && <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.ownerPhone}</p>}
-                </div>
-              </div>
-            </div>
-          </div>
+          {/* Note: Owner/user will be added via the 'Add User' button after creating the unit */}
 
           {/* Submit Button */}
           <div className="flex gap-3 pt-4 border-t border-gray-100 dark:border-slate-700">
@@ -962,7 +913,7 @@ function UserFormModal({ unit, errors, apiError, onSubmit, onClose, isLoading })
 
         <form onSubmit={onSubmit} className="p-4 space-y-4">
           <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3 text-sm text-blue-700 dark:text-blue-300">
-            <p><strong>Default Password:</strong> {unit.flatNumber}</p>
+            <p><strong>Default Password:</strong> {unit.flatNumber?.padEnd(6, '123456') || '123456'}</p>
             <p className="text-xs mt-1">User can change password after login</p>
           </div>
 

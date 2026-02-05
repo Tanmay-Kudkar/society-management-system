@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '../context/AuthContext'
-import { userApi, societyApi } from '../api'
-import { Plus, Edit, Trash2, Search, X, AlertCircle, Shield, Users as UsersIcon, Building2 } from 'lucide-react'
+import { userApi, societyApi, flatApi } from '../api'
+import { Plus, Edit, Trash2, Search, X, AlertCircle, Shield, Users as UsersIcon, Building2, Home } from 'lucide-react'
 import clsx from 'clsx'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { parseApiError, validateUserForm } from '../utils/validation'
@@ -91,6 +91,22 @@ export default function Users() {
     enabled: isMasterAdmin,
   })
 
+  // Fetch flats for MEMBER/TENANT property assignment
+  const { data: flats = [] } = useQuery({
+    queryKey: ['flats', user?.id, user?.societyId],
+    queryFn: () => user?.societyId 
+      ? flatApi.getBySociety(user.societyId).then(res => res.data)
+      : flatApi.getAll(user.id).then(res => res.data),
+    enabled: !!user?.id,
+  })
+
+  // Get available (unassigned) flats - only flats without an assigned user
+  const availableFlats = flats.filter(flat => {
+    // Check if any user is already assigned to this flat
+    const isAssigned = users.some(u => u.flatId === flat.id && u.id !== editingUser?.id)
+    return !isAssigned
+  })
+
   const createMutation = useMutation({
     mutationFn: (data) => userApi.create(data),
     onSuccess: () => {
@@ -170,6 +186,7 @@ export default function Users() {
       role: roleValue,
       phone: formData.get('phone'),
       societyId: formData.get('societyId') ? parseInt(formData.get('societyId')) : null,
+      flatId: formData.get('flatId') ? parseInt(formData.get('flatId')) : null,
     }
 
     // Frontend validation
@@ -182,6 +199,12 @@ export default function Users() {
     // Validate societyId is required for SOCIETY_ADMIN creation by MASTER_ADMIN
     if (user?.role === 'MASTER_ADMIN' && roleValue === 'SOCIETY_ADMIN' && !data.societyId) {
       setError('Please select a society for the Society Admin')
+      return
+    }
+
+    // Validate flatId is required for MEMBER/TENANT roles
+    if (['MEMBER', 'TENANT'].includes(roleValue) && !data.flatId) {
+      setError('Please select a property for the user')
       return
     }
 
@@ -609,6 +632,33 @@ export default function Users() {
                       <option key={s.id} value={s.id}>{s.name}</option>
                     ))}
                   </select>
+                </div>
+              )}
+              {/* Property selection for MEMBER/TENANT roles */}
+              {['MEMBER', 'TENANT'].includes(selectedRole || creatableRoles[0]) && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    <span className="flex items-center gap-1">
+                      <Home className="w-4 h-4" />
+                      Property <span className="text-red-500">*</span>
+                    </span>
+                  </label>
+                  <select
+                    name="flatId"
+                    defaultValue={editingUser?.flatId || ''}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
+                    required
+                  >
+                    <option value="">Select Property</option>
+                    {availableFlats.map(flat => (
+                      <option key={flat.id} value={flat.id}>
+                        {flat.flatNumber} {flat.wingName ? `(${flat.wingName})` : ''} - {flat.unitType || 'FLAT'}
+                      </option>
+                    ))}
+                  </select>
+                  {availableFlats.length === 0 && (
+                    <p className="text-xs text-amber-600 mt-1">No available properties. All units are assigned.</p>
+                  )}
                 </div>
               )}
               <div>
