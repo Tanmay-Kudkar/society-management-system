@@ -152,6 +152,7 @@ export default function VendorBills() {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Bill #</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Amount</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Paid</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Pending</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Due Date</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Status</th>
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>
@@ -173,6 +174,14 @@ export default function VendorBills() {
                       <td className="px-6 py-4 whitespace-nowrap text-gray-600 dark:text-gray-300">{bill.billNumber}</td>
                       <td className="px-6 py-4 whitespace-nowrap font-medium text-gray-900 dark:text-white">₹{bill.amount?.toLocaleString()}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-gray-600 dark:text-gray-300">₹{bill.paidAmount?.toLocaleString() || 0}</td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={clsx(
+                          'font-medium',
+                          bill.pendingAmount > 0 ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'
+                        )}>
+                          ₹{bill.pendingAmount?.toLocaleString() || 0}
+                        </span>
+                      </td>
                       <td className="px-6 py-4 whitespace-nowrap text-gray-600 dark:text-gray-300">
                         {bill.dueDate ? new Date(bill.dueDate).toLocaleDateString() : '-'}
                       </td>

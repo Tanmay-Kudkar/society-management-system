@@ -3,14 +3,17 @@ package com.society.backend.service.user;
 import com.society.backend.dto.user.BulkUserImportResponse;
 import com.society.backend.dto.user.BulkUserImportResponse.UserImportResult;
 import com.society.backend.dto.user.UserImportRow;
+import com.society.backend.entity.Flat;
 import com.society.backend.entity.Role;
 import com.society.backend.entity.Society;
 import com.society.backend.entity.User;
 import com.society.backend.exception.ApiException;
+import com.society.backend.repository.flat.FlatRepository;
 import com.society.backend.repository.society.SocietyRepository;
 import com.society.backend.repository.user.UserRepository;
 import com.society.backend.service.common.RoleService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.http.HttpStatus;
@@ -21,17 +24,22 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Pattern;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class BulkUserImportService {
 
     private final UserRepository userRepository;
     private final SocietyRepository societyRepository;
+    private final FlatRepository flatRepository;
     private final PasswordEncoder passwordEncoder;
     private final RoleService roleService;
 
@@ -46,6 +54,7 @@ public class BulkUserImportService {
         
         try (Workbook workbook = new XSSFWorkbook(file.getInputStream())) {
             Sheet sheet = workbook.getSheetAt(0);
+            Map<String, Integer> headerIndex = resolveHeaderIndex(sheet.getRow(0));
             int rowCount = 0;
             
             for (Row row : sheet) {
@@ -57,20 +66,25 @@ public class BulkUserImportService {
                 importRow.setRowNumber(rowCount);
                 
                 // Column A: Name
-                importRow.setName(getCellValueAsString(row.getCell(0)));
+                importRow.setName(getCellValueAsString(row.getCell(headerIndex.getOrDefault("name", 0))));
                 
                 // Column B: Email
-                importRow.setEmail(getCellValueAsString(row.getCell(1)));
+                importRow.setEmail(getCellValueAsString(row.getCell(headerIndex.getOrDefault("email", 1))));
                 
                 // Column C: Flat Number
-                importRow.setFlatNumber(getCellValueAsString(row.getCell(2)));
+                importRow.setFlatNumber(getCellValueAsString(row.getCell(headerIndex.getOrDefault("flat_number", 2))));
                 
                 // Column D: Phone (optional)
-                importRow.setPhone(getCellValueAsString(row.getCell(3)));
+                importRow.setPhone(getCellValueAsString(row.getCell(headerIndex.getOrDefault("phone", 3))));
                 
                 // Column E: Role (optional, defaults to MEMBER)
-                String roleStr = getCellValueAsString(row.getCell(4));
+                String roleStr = getCellValueAsString(row.getCell(headerIndex.getOrDefault("role", 4)));
                 importRow.setRole(roleStr != null && !roleStr.isEmpty() ? roleStr.toUpperCase() : "MEMBER");
+                
+                // Skip legacy sample row from older templates
+                if (isSampleRow(importRow)) {
+                    continue;
+                }
                 
                 // Skip empty rows
                 if (importRow.getName() == null && importRow.getEmail() == null) {
@@ -90,6 +104,13 @@ public class BulkUserImportService {
     public BulkUserImportResponse validateImportRows(List<UserImportRow> rows, Long societyId) {
         Set<String> seenEmails = new HashSet<>();
         Set<String> seenFlatNumbers = new HashSet<>();
+        
+        // Pre-fetch all flats for the society for efficient lookup
+        Map<String, Flat> flatMap = new HashMap<>();
+        List<Flat> societyFlats = flatRepository.findBySocietyId(societyId);
+        for (Flat flat : societyFlats) {
+            flatMap.put(flat.getFlatNumber().toUpperCase(), flat);
+        }
         
         BulkUserImportResponse response = new BulkUserImportResponse();
         response.setTotalRows(rows.size());
@@ -126,11 +147,24 @@ public class BulkUserImportService {
             if (row.getFlatNumber() == null || row.getFlatNumber().trim().isEmpty()) {
                 errors.add("Flat number is required");
             } else {
+                String flatNumberUpper = row.getFlatNumber().trim().toUpperCase();
+                
                 // Check for duplicate flat numbers in file
-                if (seenFlatNumbers.contains(row.getFlatNumber().toUpperCase())) {
+                if (seenFlatNumbers.contains(flatNumberUpper)) {
                     errors.add("Duplicate flat number in file");
                 } else {
-                    seenFlatNumbers.add(row.getFlatNumber().toUpperCase());
+                    seenFlatNumbers.add(flatNumberUpper);
+                    
+                    // Check if flat exists in the society
+                    Flat flat = flatMap.get(flatNumberUpper);
+                    if (flat == null) {
+                        errors.add("Flat number '" + row.getFlatNumber() + "' does not exist in this society");
+                    } else {
+                        // Check if flat already has a user assigned
+                        if (userRepository.existsByFlatId(flat.getId())) {
+                            errors.add("Flat already has a user assigned");
+                        }
+                    }
                 }
             }
             
@@ -185,13 +219,21 @@ public class BulkUserImportService {
     }
 
     /**
-     * Process and create users from validated rows
+     * Process and create users from validated rows.
+     * Supports partial success - valid rows are processed even if some fail.
      */
     @Transactional
     public BulkUserImportResponse processImport(List<UserImportRow> rows, Long societyId) {
         // Get the society for the users
         Society society = societyRepository.findById(societyId)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Society not found"));
+        
+        // Pre-fetch all flats for efficient lookup
+        Map<String, Flat> flatMap = new HashMap<>();
+        List<Flat> societyFlats = flatRepository.findBySocietyId(societyId);
+        for (Flat flat : societyFlats) {
+            flatMap.put(flat.getFlatNumber().toUpperCase(), flat);
+        }
         
         BulkUserImportResponse response = new BulkUserImportResponse();
         response.setTotalRows(rows.size());
@@ -210,8 +252,22 @@ public class BulkUserImportService {
                 result.setSuccess(false);
                 result.setErrorMessage(row.getErrorMessage());
                 failureCount++;
+                log.debug("Skipping invalid row {}: {}", row.getRowNumber(), row.getErrorMessage());
             } else {
                 try {
+                    // Find the flat for this user
+                    String flatNumberUpper = row.getFlatNumber().trim().toUpperCase();
+                    Flat flat = flatMap.get(flatNumberUpper);
+                    
+                    if (flat == null) {
+                        throw new IllegalArgumentException("Flat not found: " + row.getFlatNumber());
+                    }
+                    
+                    // Double-check flat doesn't already have a user (safety check)
+                    if (userRepository.existsByFlatId(flat.getId())) {
+                        throw new IllegalArgumentException("Flat already has a user assigned");
+                    }
+                    
                     // Create user
                     User user = new User();
                     user.setName(row.getName().trim());
@@ -219,6 +275,7 @@ public class BulkUserImportService {
                     user.setPassword(passwordEncoder.encode(row.getFlatNumber())); // Flat number as default password
                     user.setRole(Role.valueOf(row.getRole() != null ? row.getRole().toUpperCase() : "MEMBER"));
                     user.setSociety(society);
+                    user.setFlat(flat); // Link user to flat
                     user.setIsActive(true);
                     user.setCreatedAt(java.time.LocalDateTime.now());
                     
@@ -228,6 +285,14 @@ public class BulkUserImportService {
                     
                     User savedUser = userRepository.save(user);
                     
+                    // Update flat as occupied
+                    flat.setIsOccupied(true);
+                    flat.setOwnerEmail(row.getEmail().trim().toLowerCase());
+                    flatRepository.save(flat);
+                    
+                    log.info("Created user {} for flat {} in society {}", 
+                            savedUser.getEmail(), flat.getFlatNumber(), societyId);
+                    
                     result.setSuccess(true);
                     result.setUserId(savedUser.getId());
                     successCount++;
@@ -235,6 +300,7 @@ public class BulkUserImportService {
                     result.setSuccess(false);
                     result.setErrorMessage("Failed to create user: " + e.getMessage());
                     failureCount++;
+                    log.warn("Failed to create user at row {}: {}", row.getRowNumber(), e.getMessage());
                 }
             }
             
@@ -245,6 +311,9 @@ public class BulkUserImportService {
         response.setFailureCount(failureCount);
         response.setMessage(String.format("Import completed: %d successful, %d failed out of %d total", 
                 successCount, failureCount, rows.size()));
+        
+        log.info("Bulk import completed for society {}: {} success, {} failed", 
+                societyId, successCount, failureCount);
         
         return response;
     }
@@ -270,6 +339,58 @@ public class BulkUserImportService {
         }
     }
 
+    private Map<String, Integer> resolveHeaderIndex(Row headerRow) {
+        Map<String, Integer> headerIndex = new HashMap<>();
+        if (headerRow == null) {
+            return headerIndex;
+        }
+
+        for (Cell cell : headerRow) {
+            String header = getCellValueAsString(cell);
+            if (header == null) continue;
+            String normalized = header.replace("*", "").trim().toLowerCase().replaceAll("\\s+", " ");
+
+            switch (normalized) {
+                case "name":
+                    headerIndex.put("name", cell.getColumnIndex());
+                    break;
+                case "email":
+                    headerIndex.put("email", cell.getColumnIndex());
+                    break;
+                case "flat number":
+                case "flat no":
+                case "flat":
+                    headerIndex.put("flat_number", cell.getColumnIndex());
+                    break;
+                case "phone":
+                case "mobile":
+                    headerIndex.put("phone", cell.getColumnIndex());
+                    break;
+                case "role":
+                    headerIndex.put("role", cell.getColumnIndex());
+                    break;
+                default:
+                    // Ignore extra columns (e.g., Wing Code in older templates)
+            }
+        }
+
+        return headerIndex;
+    }
+
+    private boolean isSampleRow(UserImportRow row) {
+        if (row == null) return false;
+
+        return "john doe".equals(normalize(row.getName()))
+                && "john.doe@example.com".equals(normalize(row.getEmail()))
+                && "101".equals(normalize(row.getFlatNumber()))
+                && "9876543210".equals(normalize(row.getPhone()))
+                && "member".equals(normalize(row.getRole()));
+    }
+
+    private String normalize(String value) {
+        return value == null ? "" : value.trim().toLowerCase();
+    }
+
     /**
      * Generate an Excel template for bulk user import.
      */
@@ -279,7 +400,7 @@ public class BulkUserImportService {
             
             // Create header row
             Row headerRow = sheet.createRow(0);
-            String[] headers = {"Name*", "Email*", "Phone*", "Flat Number*", "Wing Code", "Role"};
+            String[] headers = {"Name*", "Email*", "Flat Number*", "Phone", "Role"};
             
             // Create header style
             CellStyle headerStyle = workbook.createCellStyle();
@@ -296,13 +417,6 @@ public class BulkUserImportService {
                 sheet.setColumnWidth(i, 5000);
             }
             
-            // Add sample data row
-            Row sampleRow = sheet.createRow(1);
-            String[] sampleData = {"John Doe", "john.doe@example.com", "9876543210", "101", "A", "MEMBER"};
-            for (int i = 0; i < sampleData.length; i++) {
-                sampleRow.createCell(i).setCellValue(sampleData[i]);
-            }
-            
             // Add instructions sheet
             Sheet instructionsSheet = workbook.createSheet("Instructions");
             String[][] instructions = {
@@ -311,18 +425,20 @@ public class BulkUserImportService {
                 {"Required Fields (marked with *):"},
                 {"- Name: Full name of the user"},
                 {"- Email: Valid email address (will be used as username)"},
-                {"- Phone: 10-digit phone number"},
                 {"- Flat Number: The flat/unit number"},
                 {""},
                 {"Optional Fields:"},
-                {"- Wing Code: Wing code if applicable"},
+                {"- Phone: 10-digit phone number"},
                 {"- Role: MEMBER (default) or TENANT"},
                 {""},
                 {"Notes:"},
                 {"- Default password will be the flat number"},
                 {"- Users will be prompted to change password on first login"},
                 {"- Duplicate emails will be rejected"},
-                {"- Invalid phone numbers will be flagged"}
+                {"- Invalid phone numbers will be flagged"},
+                {""},
+                {"Example Row (Users sheet):"},
+                {"John Doe | john.doe@example.com | 101 | 9876543210 | MEMBER"}
             };
             
             for (int i = 0; i < instructions.length; i++) {

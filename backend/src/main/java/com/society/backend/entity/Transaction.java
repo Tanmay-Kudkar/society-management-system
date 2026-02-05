@@ -57,6 +57,10 @@ public class Transaction {
     @Column(name = "related_bill_type")
     private String relatedBillType;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "flat_id")
+    private Flat flat; // For maintenance income, links to the unit/flat
+
     @Column(name = "transaction_date", nullable = false)
     private LocalDate transactionDate;
 

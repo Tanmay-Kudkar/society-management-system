@@ -12,6 +12,7 @@ export default function Login() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [isLoaded, setIsLoaded] = useState(false)
+  const [shake, setShake] = useState(false)
   const { login, user, loading: authLoading } = useAuth()
   const { isDark, toggleTheme } = useTheme()
   const navigate = useNavigate()
@@ -30,6 +31,7 @@ export default function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
+    setShake(false)
     setLoading(true)
 
     const result = await login(email, password)
@@ -38,6 +40,9 @@ export default function Login() {
       navigate('/')
     } else {
       setError(result.error)
+      setShake(true)
+      // Reset shake after animation completes
+      setTimeout(() => setShake(false), 500)
     }
     setLoading(false)
   }
@@ -188,7 +193,7 @@ export default function Login() {
           )}
 
           {/* Login Form */}
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className={`space-y-6 ${shake ? 'animate-shake' : ''}`}>
             <div>
               <label className={`block text-sm font-semibold mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                 Email Address
@@ -267,7 +272,7 @@ export default function Login() {
             <button
               type="submit"
               disabled={loading}
-              className="relative w-full py-4 px-6 text-white font-semibold rounded-xl focus:ring-4 transition-all disabled:opacity-50 disabled:cursor-not-allowed overflow-hidden group focus:outline-none"
+              className="relative w-full py-4 px-6 text-white font-semibold rounded-xl focus:ring-4 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed overflow-hidden group focus:outline-none hover:scale-105 hover:shadow-2xl active:scale-95"
               style={{ 
                 background: `linear-gradient(to right, var(--accent-gradient-from), var(--accent-gradient-to))`,
               }}

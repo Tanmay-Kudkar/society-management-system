@@ -149,7 +149,10 @@ const AlertCard = ({ title, items, icon: Icon, color, delay = 0 }) => (
 );
 
 export default function Dashboard() {
-  const { user, isMasterAdmin, isCommitteeLevel } = useAuth();
+  const { user, isMasterAdmin, isCommitteeLevel, isMember } = useAuth();
+  
+  // Determine if user is a regular member (MEMBER or TENANT)
+  const isMemberOrTenant = user?.role === 'MEMBER' || user?.role === 'TENANT';
 
   const { data: societies = [] } = useQuery({
     queryKey: ["societies"],
@@ -164,6 +167,7 @@ export default function Dashboard() {
         .getAll()
         .then((res) => res.data)
         .catch(() => []),
+    enabled: !isMemberOrTenant, // Don't fetch all flats for members
   });
 
   const { data: tenants = [] } = useQuery({
@@ -173,6 +177,7 @@ export default function Dashboard() {
         .getAll()
         .then((res) => res.data)
         .catch(() => []),
+    enabled: !isMemberOrTenant,
   });
 
   const { data: vehicles = [] } = useQuery({
@@ -182,6 +187,7 @@ export default function Dashboard() {
         .getAll()
         .then((res) => res.data)
         .catch(() => []),
+    enabled: !isMemberOrTenant,
   });
 
   const { data: contracts = [] } = useQuery({
@@ -191,6 +197,7 @@ export default function Dashboard() {
         .getAll()
         .then((res) => res.data)
         .catch(() => []),
+    enabled: !isMemberOrTenant,
   });
 
   const { data: allTickets = [] } = useQuery({
@@ -337,17 +344,26 @@ export default function Dashboard() {
                   <span className="w-2 h-2 rounded-full bg-green-400 mr-2 animate-ping"></span>
                   System Online
                 </span>
-                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-white/5 backdrop-blur-sm border border-white/10 text-gray-300">
-                  v2.5.0
-                </span>
+                {!isMemberOrTenant && (
+                  <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-white/5 backdrop-blur-sm border border-white/10 text-gray-300">
+                    v2.5.0
+                  </span>
+                )}
+                {isMemberOrTenant && (
+                  <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-white/5 backdrop-blur-sm border border-white/10 text-blue-300">
+                    {user?.role}
+                  </span>
+                )}
               </div>
               <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-white via-blue-100 to-purple-200 drop-shadow-lg flex items-center gap-3">
-                Hello, {user?.name.split(' ')[0]}
+                Hello, {user?.name?.split(' ')[0] || 'User'}
                 <span className="animate-bounce-custom inline-block">👋</span>
               </h1>
               <p className="text-blue-200 mt-2 flex items-center gap-2 font-medium">
                 <Zap className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-                Here's what's happening in your society today.
+                {isMemberOrTenant 
+                  ? "Here's your dashboard overview."
+                  : "Here's what's happening in your society today."}
               </p>
             </div>
 
@@ -418,70 +434,153 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {isMasterAdmin() && (
-          <StatCard
-            title="Total Societies"
-            value={societies.length}
-            icon={Building2}
-            gradient="bg-gradient-to-br from-purple-500 to-purple-700"
-            delay={100}
-          />
-        )}
-        <StatCard
-          title="Total Flats"
-          value={flats.filter(f => !f.unitType || f.unitType === 'FLAT').length}
-          icon={Home}
-          gradient="bg-gradient-to-br from-blue-500 to-blue-700"
-          subtext={`${flats.filter(f => (!f.unitType || f.unitType === 'FLAT') && f.ownerName).length} occupied`}
-          delay={150}
-        />
-        <StatCard
-          title="Total Shops"
-          value={flats.filter(f => f.unitType === 'SHOP').length}
-          icon={Store}
-          gradient="bg-gradient-to-br from-green-500 to-green-700"
-          subtext={`${flats.filter(f => f.unitType === 'SHOP' && f.ownerName).length} occupied`}
-          delay={175}
-        />
-        <StatCard
-          title="Total Offices"
-          value={flats.filter(f => f.unitType === 'OFFICE').length}
-          icon={Briefcase}
-          gradient="bg-gradient-to-br from-amber-500 to-amber-700"
-          subtext={`${flats.filter(f => f.unitType === 'OFFICE' && f.ownerName).length} occupied`}
-          delay={190}
-        />
-        <StatCard
-          title="Active Tenants"
-          value={tenants.filter((t) => t.isActive).length}
-          icon={UserCheck}
-          gradient="bg-gradient-to-br from-teal-500 to-teal-700"
-          subtext={`${expiringTenants.length} expiring soon`}
-          delay={200}
-        />
-        <StatCard
-          title="Vehicles"
-          value={vehicles.length}
-          icon={Car}
-          gradient="bg-gradient-to-br from-indigo-500 to-indigo-700"
-          delay={250}
-        />
-        <StatCard
-          title="Pending Bills"
-          value={pendingBillsCount.length}
-          icon={CreditCard}
-          color="bg-orange-500"
-          subtext={
-            overdueBills.length > 0
-              ? `${overdueBills.length} overdue`
-              : undefined
-          }
-          delay={300}
-        />
-        <StatCard
-          title="Open Tickets"
+      {/* Member/Tenant Dashboard - Simplified View */}
+      {isMemberOrTenant && (
+        <div className="space-y-6 mb-8">
+          {/* Member Quick Stats */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <StatCard
+              title="My Pending Bills"
+              value={pendingBillsCount.length}
+              icon={CreditCard}
+              gradient="bg-gradient-to-br from-orange-500 to-orange-700"
+              subtext={overdueBills.length > 0 ? `${overdueBills.length} overdue` : 'All up to date'}
+              delay={100}
+            />
+            <StatCard
+              title="My Tickets"
+              value={allTickets.filter(t => t.raisedById === user?.id).length}
+              icon={Ticket}
+              gradient="bg-gradient-to-br from-blue-500 to-blue-700"
+              subtext={`${allTickets.filter(t => t.raisedById === user?.id && t.status === 'OPEN').length} open`}
+              delay={150}
+            />
+            <StatCard
+              title="My Complaints"
+              value={complaints.filter(c => c.raisedById === user?.id).length}
+              icon={AlertTriangle}
+              gradient="bg-gradient-to-br from-amber-500 to-amber-700"
+              subtext={`${complaints.filter(c => c.raisedById === user?.id && c.status === 'PENDING').length} pending`}
+              delay={200}
+            />
+          </div>
+
+          {/* Recent Notices for Members */}
+          <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-lg border border-gray-100 dark:border-slate-700 p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-lg text-purple-600 dark:text-purple-400">
+                <Bell className="w-5 h-5" />
+              </div>
+              <h3 className="font-bold text-lg text-gray-900 dark:text-white">Recent Notices</h3>
+            </div>
+            {notices.length === 0 ? (
+              <p className="text-gray-500 dark:text-gray-400 text-center py-6">No recent notices</p>
+            ) : (
+              <ul className="space-y-3">
+                {notices.slice(0, 5).map((notice, idx) => (
+                  <li key={idx} className="p-3 bg-gray-50 dark:bg-slate-700/50 rounded-lg">
+                    <p className="font-medium text-gray-900 dark:text-white">{notice.title || notice.content}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      {notice.createdAt && new Date(notice.createdAt).toLocaleDateString()}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+          {/* My Pending Bills List */}
+          {pendingBillsCount.length > 0 && (
+            <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-lg border border-gray-100 dark:border-slate-700 p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-2 bg-orange-100 dark:bg-orange-900/30 rounded-lg text-orange-600 dark:text-orange-400">
+                  <CreditCard className="w-5 h-5" />
+                </div>
+                <h3 className="font-bold text-lg text-gray-900 dark:text-white">Pending Bills</h3>
+              </div>
+              <ul className="space-y-3">
+                {pendingBillsCount.slice(0, 5).map((bill, idx) => (
+                  <li key={idx} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-slate-700/50 rounded-lg">
+                    <div>
+                      <p className="font-medium text-gray-900 dark:text-white">{bill.billMonth || 'Maintenance'}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">Due: {bill.dueDate && new Date(bill.dueDate).toLocaleDateString()}</p>
+                    </div>
+                    <span className="font-bold text-orange-600 dark:text-orange-400">₹{bill.amount?.toLocaleString()}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Admin/Committee Dashboard - Full View */}
+      {!isMemberOrTenant && (
+        <>
+          {/* Stats Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            {isMasterAdmin() && (
+              <StatCard
+                title="Total Societies"
+                value={societies.length}
+                icon={Building2}
+                gradient="bg-gradient-to-br from-purple-500 to-purple-700"
+                delay={100}
+              />
+            )}
+            <StatCard
+              title="Total Flats"
+              value={flats.filter(f => !f.unitType || f.unitType === 'FLAT').length}
+              icon={Home}
+              gradient="bg-gradient-to-br from-blue-500 to-blue-700"
+              subtext={`${flats.filter(f => (!f.unitType || f.unitType === 'FLAT') && f.ownerName).length} occupied`}
+              delay={150}
+            />
+            <StatCard
+              title="Total Shops"
+              value={flats.filter(f => f.unitType === 'SHOP').length}
+              icon={Store}
+              gradient="bg-gradient-to-br from-green-500 to-green-700"
+              subtext={`${flats.filter(f => f.unitType === 'SHOP' && f.ownerName).length} occupied`}
+              delay={175}
+            />
+            <StatCard
+              title="Total Offices"
+              value={flats.filter(f => f.unitType === 'OFFICE').length}
+              icon={Briefcase}
+              gradient="bg-gradient-to-br from-amber-500 to-amber-700"
+              subtext={`${flats.filter(f => f.unitType === 'OFFICE' && f.ownerName).length} occupied`}
+              delay={190}
+            />
+            <StatCard
+              title="Active Tenants"
+              value={tenants.filter((t) => t.isActive).length}
+              icon={UserCheck}
+              gradient="bg-gradient-to-br from-teal-500 to-teal-700"
+              subtext={`${expiringTenants.length} expiring soon`}
+              delay={200}
+            />
+            <StatCard
+              title="Vehicles"
+              value={vehicles.length}
+              icon={Car}
+              gradient="bg-gradient-to-br from-indigo-500 to-indigo-700"
+              delay={250}
+            />
+            <StatCard
+              title="Pending Bills"
+              value={pendingBillsCount.length}
+              icon={CreditCard}
+              color="bg-orange-500"
+              subtext={
+                overdueBills.length > 0
+                  ? `${overdueBills.length} overdue`
+                  : undefined
+              }
+              delay={300}
+            />
+            <StatCard
+              title="Open Tickets"
           value={openTickets.length}
           icon={Ticket}
           color="bg-red-500"
@@ -784,6 +883,8 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+        </>
+      )}
     </div>
   );
 }

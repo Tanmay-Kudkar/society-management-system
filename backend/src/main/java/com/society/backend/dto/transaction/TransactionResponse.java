@@ -25,5 +25,7 @@ public class TransactionResponse {
     private LocalDate chequeDate;
     private Long relatedBillId;
     private String relatedBillType;
+    private Long flatId;
+    private String flatNumber; // For display
     private LocalDateTime createdAt;
 }

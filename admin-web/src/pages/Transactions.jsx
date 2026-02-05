@@ -1,23 +1,42 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '../context/AuthContext'
-import { transactionApi, exportApi, downloadBlob } from '../api'
-import { Plus, Search, X, TrendingUp, TrendingDown, DollarSign, FileSpreadsheet } from 'lucide-react'
+import { useToast } from '../context/ToastContext'
+import { transactionApi, exportApi, downloadBlob, flatApi } from '../api'
+import { Plus, Search, X, TrendingUp, TrendingDown, DollarSign, FileSpreadsheet, Home } from 'lucide-react'
 import clsx from 'clsx'
 
 export default function Transactions() {
   const { user } = useAuth()
+  const { showToast } = useToast()
   const queryClient = useQueryClient()
   const [showModal, setShowModal] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
   const [filterType, setFilterType] = useState('')
   const [filterMode, setFilterMode] = useState('')
   const [isExporting, setIsExporting] = useState(false)
+  
+  // Form state for conditional flat selector
+  const [formType, setFormType] = useState('INCOME')
+  const [formCategory, setFormCategory] = useState('MAINTENANCE')
+  const [formFlatId, setFormFlatId] = useState('')
 
   const { data: transactions = [], isLoading } = useQuery({
     queryKey: ['transactions'],
     queryFn: () => transactionApi.getAll().then(res => res.data),
   })
+
+  // Fetch flats for the society
+  const { data: flats = [] } = useQuery({
+    queryKey: ['flats', user?.societyId],
+    queryFn: () => user?.societyId 
+      ? flatApi.getBySociety(user.societyId).then(res => res.data)
+      : [],
+    enabled: !!user?.societyId,
+  })
+
+  // Check if flat selector should be shown
+  const showFlatSelector = formType === 'INCOME' && formCategory === 'MAINTENANCE'
 
 
 
@@ -26,12 +45,21 @@ export default function Transactions() {
     onSuccess: () => {
       queryClient.invalidateQueries(['transactions'])
       setShowModal(false)
+      // Reset form state
+      setFormType('INCOME')
+      setFormCategory('MAINTENANCE')
+      setFormFlatId('')
+      showToast('Transaction created successfully', 'success')
+    },
+    onError: (error) => {
+      showToast(error.response?.data?.message || 'Failed to create transaction', 'error')
     },
   })
 
   const filteredTransactions = transactions.filter(t => {
     const matchesSearch = t.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         t.category?.toLowerCase().includes(searchTerm.toLowerCase())
+                         t.category?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         t.flatNumber?.toLowerCase().includes(searchTerm.toLowerCase())
     const matchesType = !filterType || t.transactionType === filterType
     const matchesMode = !filterMode || t.paymentMode === filterMode
     return matchesSearch && matchesType && matchesMode
@@ -43,17 +71,25 @@ export default function Transactions() {
   const handleSubmit = (e) => {
     e.preventDefault()
     const formData = new FormData(e.target)
+    
+    // Validate flat selection for maintenance income
+    if (formType === 'INCOME' && formCategory === 'MAINTENANCE' && !formFlatId) {
+      showToast('Please select a Unit/Flat for maintenance income', 'error')
+      return
+    }
+    
     const data = {
       societyId: user.societyId,
-      transactionType: formData.get('transactionType'),
+      transactionType: formType,
       paymentMode: formData.get('paymentMode'),
       amount: parseFloat(formData.get('amount')),
-      category: formData.get('category'),
+      category: formCategory,
       description: formData.get('description'),
       transactionDate: formData.get('transactionDate'),
       referenceNumber: formData.get('referenceNumber'),
       chequeNumber: formData.get('chequeNumber'),
       bankName: formData.get('bankName'),
+      flatId: formFlatId ? parseInt(formFlatId) : null,
     }
     createMutation.mutate(data)
   }
@@ -188,6 +224,7 @@ export default function Transactions() {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Date</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Type</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Category</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Unit</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Description</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Mode</th>
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Amount</th>
@@ -209,6 +246,14 @@ export default function Transactions() {
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-gray-600 dark:text-gray-300">{t.category}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-gray-600 dark:text-gray-300">
+                      {t.flatNumber ? (
+                        <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 text-xs rounded-full">
+                          <Home size={10} />
+                          {t.flatNumber}
+                        </span>
+                      ) : '-'}
+                    </td>
                     <td className="px-6 py-4 text-gray-600 dark:text-gray-300">{t.description || '-'}</td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className="px-2 py-1 bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300 text-xs rounded-full">{t.paymentMode}</span>
@@ -241,7 +286,13 @@ export default function Transactions() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Type</label>
-                  <select name="transactionType" required className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
+                  <select 
+                    name="transactionType" 
+                    value={formType}
+                    onChange={(e) => setFormType(e.target.value)}
+                    required 
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                  >
                     <option value="INCOME">Income</option>
                     <option value="EXPENSE">Expense</option>
                   </select>
@@ -267,7 +318,13 @@ export default function Transactions() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Category</label>
-                <select name="category" required className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
+                <select 
+                  name="category" 
+                  value={formCategory}
+                  onChange={(e) => setFormCategory(e.target.value)}
+                  required 
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                >
                   <option value="MAINTENANCE">Maintenance</option>
                   <option value="VENDOR_PAYMENT">Vendor Payment</option>
                   <option value="AMC">AMC</option>
@@ -278,6 +335,33 @@ export default function Transactions() {
                   <option value="OTHER">Other</option>
                 </select>
               </div>
+              
+              {/* Unit/Flat selector - shown for maintenance income */}
+              {showFlatSelector && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    <span className="flex items-center gap-1">
+                      <Home size={14} />
+                      Unit/Flat <span className="text-red-500">*</span>
+                    </span>
+                  </label>
+                  <select 
+                    value={formFlatId}
+                    onChange={(e) => setFormFlatId(e.target.value)}
+                    required={showFlatSelector}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                  >
+                    <option value="">Select Unit/Flat</option>
+                    {flats.map(flat => (
+                      <option key={flat.id} value={flat.id}>
+                        {flat.flatNumber} {flat.ownerName ? `- ${flat.ownerName}` : ''}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Required for maintenance income transactions</p>
+                </div>
+              )}
+              
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description</label>
                 <textarea name="description" rows={2} className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" />

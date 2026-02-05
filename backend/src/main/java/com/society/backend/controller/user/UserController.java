@@ -1,5 +1,6 @@
 package com.society.backend.controller.user;
 
+import com.society.backend.dto.user.BulkCreateUsersResponse;
 import com.society.backend.dto.user.BulkUserImportResponse;
 import com.society.backend.dto.user.UserImportRow;
 import com.society.backend.dto.user.UserRequest;
@@ -129,6 +130,17 @@ public class UserController {
     public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
         userService.deleteUser(id);
         return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * Bulk create users for all units in a society that don't have users.
+     * Uses owner email as username and flat number as default password.
+     * Only admins can bulk create users.
+     */
+    @PostMapping("/bulk-create/{societyId}")
+    @PreAuthorize("hasAnyRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY')")
+    public ResponseEntity<BulkCreateUsersResponse> bulkCreateUsers(@PathVariable Long societyId) {
+        return ResponseEntity.ok(userService.bulkCreateUsersForUnits(societyId));
     }
 
     /**

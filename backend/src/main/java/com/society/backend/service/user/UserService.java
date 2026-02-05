@@ -1,5 +1,6 @@
 package com.society.backend.service.user;
 
+import com.society.backend.dto.user.BulkCreateUsersResponse;
 import com.society.backend.dto.user.UserRequest;
 import com.society.backend.dto.user.UserResponse;
 import com.society.backend.entity.Role;
@@ -30,4 +31,10 @@ public interface UserService {
      * Get the roles that the current user can update/delete.
      */
     Set<Role> getUpdatableRoles();
+    
+    /**
+     * Bulk create users for all units in a society that don't have users.
+     * Uses flat number as default password and generates email from owner info.
+     */
+    BulkCreateUsersResponse bulkCreateUsersForUnits(Long societyId);
 }
