@@ -137,6 +137,7 @@ public class FlatServiceImpl implements FlatService {
         response.setOwnerName(flat.getOwnerName());
         response.setOwnerEmail(flat.getOwnerEmail());
         response.setOwnerPhone(flat.getOwnerPhone());
+        response.setOwnerUserId(flat.getOwner() != null ? flat.getOwner().getId() : null);
         response.setIsOccupied(flat.getIsOccupied());
         return response;
     }

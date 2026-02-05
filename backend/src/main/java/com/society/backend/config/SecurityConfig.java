@@ -133,9 +133,10 @@ public class SecurityConfig {
 
                         // ==================== EMPLOYEE LEVEL ====================
                         // Flats, documents, emergency contacts management
+                        // MEMBER needs access to flats for tenant assignment
                         .requestMatchers("/flats/**")
                         .hasAnyRole("MASTER_ADMIN", "SOCIETY_ADMIN", "CHAIRMAN", "SECRETARY", "TREASURER", "COMMITTEE",
-                                "EMPLOYEE")
+                                "EMPLOYEE", "MEMBER")
                         .requestMatchers("/documents/**")
                         .hasAnyRole("MASTER_ADMIN", "SOCIETY_ADMIN", "CHAIRMAN", "SECRETARY", "TREASURER", "COMMITTEE",
                                 "EMPLOYEE")

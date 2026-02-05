@@ -127,9 +127,11 @@ public final class RolePermissions {
                                 Role.TREASURER,
                                 Role.COMMITTEE));
 
-                // SECRETARY - Cannot update COMMITTEE (only nominates, CHAIRMAN/TREASURER
-                // approve)
-                ALLOWED_UPDATES.put(Role.SECRETARY, EnumSet.noneOf(Role.class));
+                // SECRETARY - Can update/delete COMMITTEE, EMPLOYEE, and MEMBER (manages them)
+                ALLOWED_UPDATES.put(Role.SECRETARY, EnumSet.of(
+                                Role.COMMITTEE,
+                                Role.EMPLOYEE,
+                                Role.MEMBER));
 
                 // TREASURER - Can approve/reject COMMITTEE only
                 ALLOWED_UPDATES.put(Role.TREASURER, EnumSet.of(Role.COMMITTEE));

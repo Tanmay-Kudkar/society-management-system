@@ -7,15 +7,17 @@ public class LoginResponse {
     private String email;
     private String role;
     private Long societyId;
+    private Long flatId;
     private String token;
     private String tokenType = "Bearer";
 
-    public LoginResponse(Long id, String name, String email, String role, Long societyId, String token) {
+    public LoginResponse(Long id, String name, String email, String role, Long societyId, Long flatId, String token) {
         this.id = id;
         this.name = name;
         this.email = email;
         this.role = role;
         this.societyId = societyId;
+        this.flatId = flatId;
         this.token = token;
     }
 
@@ -37,6 +39,10 @@ public class LoginResponse {
 
     public Long getSocietyId() {
         return societyId;
+    }
+
+    public Long getFlatId() {
+        return flatId;
     }
 
     public String getToken() {

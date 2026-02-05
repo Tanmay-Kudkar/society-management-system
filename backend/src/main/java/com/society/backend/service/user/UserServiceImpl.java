@@ -110,13 +110,37 @@ public class UserServiceImpl implements UserService {
 
         // Handle flat assignment for MEMBER and TENANT roles
         if (targetRole == Role.MEMBER || targetRole == Role.TENANT) {
+            Flat flat = null;
             if (request.getFlatId() != null) {
-                Flat flat = flatRepository.findById(request.getFlatId())
+                // Use provided flatId
+                flat = flatRepository.findById(request.getFlatId())
                         .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Unit/Flat not found with ID: " + request.getFlatId()));
                 user.setFlat(flat);
                 log.info("Assigned user {} to flat {}", request.getEmail(), flat.getFlatNumber());
+            } else if (targetRole == Role.TENANT && creatorRole == Role.MEMBER && currentUser != null && currentUser.getFlat() != null) {
+                // MEMBER creating TENANT: automatically assign the MEMBER's flat to the TENANT
+                flat = currentUser.getFlat();
+                user.setFlat(flat);
+                log.info("Auto-assigned TENANT {} to MEMBER's flat {}", request.getEmail(), flat.getFlatNumber());
             } else {
                 log.warn("No flatId provided for MEMBER/TENANT user: {}", request.getEmail());
+            }
+            
+            // Update flat ownership for MEMBER role (not TENANT - they don't own the flat)
+            if (flat != null && targetRole == Role.MEMBER) {
+                flat.setOwner(user);
+                flat.setOwnerName(user.getName());
+                flat.setOwnerEmail(user.getEmail());
+                flat.setOwnerPhone(user.getPhone());
+                flat.setIsOccupied(true);
+                flatRepository.save(flat);
+                log.info("Updated flat {} ownership to user {}", flat.getFlatNumber(), user.getEmail());
+            }
+            
+            // Mark flat as occupied for TENANT (but don't change owner)
+            if (flat != null && targetRole == Role.TENANT) {
+                flat.setIsOccupied(true);
+                flatRepository.save(flat);
             }
         }
 
@@ -272,8 +296,10 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserResponse getUserById(Long id) {
-        User user = userRepository.findById(id)
+        // Use query that eagerly loads society and flat to avoid lazy loading issues
+        User user = userRepository.findByIdWithSocietyAndFlat(id)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "User not found"));
+        
         return mapToResponse(user);
     }
 
@@ -430,8 +456,8 @@ public class UserServiceImpl implements UserService {
         if (auth == null || auth.getName() == null) {
             return null;
         }
-        // Use the method that eagerly loads the society to avoid lazy loading issues
-        return userRepository.findByEmailWithSociety(auth.getName()).orElse(null);
+        // Use the method that eagerly loads both society and flat to avoid lazy loading issues
+        return userRepository.findByEmailWithSocietyAndFlat(auth.getName()).orElse(null);
     }
 
     private UserResponse mapToResponse(User user) {
