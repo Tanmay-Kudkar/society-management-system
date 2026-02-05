@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '../context/AuthContext'
+import { useToast } from '../context/ToastContext'
 import { emergencyContactApi } from '../api'
-import { Plus, Search, X, Phone, Edit, Trash2, AlertCircle } from 'lucide-react'
+import { Plus, Search, X, Phone, Edit, Trash2, AlertCircle, CheckCircle } from 'lucide-react'
 import clsx from 'clsx'
 
 const contactTypeColors = {
@@ -18,15 +19,32 @@ const contactTypeColors = {
 }
 
 export default function EmergencyContacts() {
-  const { user } = useAuth()
+  const { user, isCommitteeLevel } = useAuth()
+  const toast = useToast()
   const queryClient = useQueryClient()
   const [showModal, setShowModal] = useState(false)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [contactToDelete, setContactToDelete] = useState(null)
   const [editingContact, setEditingContact] = useState(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [filterCategory, setFilterCategory] = useState('')
 
   // Check if current user is MASTER_ADMIN
   const isMasterAdmin = user?.role === 'MASTER_ADMIN'
+  
+  // Check if user can delete a specific contact
+  const canDelete = (contact) => {
+    // Admin/Committee can delete any contact
+    if (isCommitteeLevel && isCommitteeLevel()) return true
+    // Users can delete contacts they created
+    return contact.createdById && contact.createdById === user?.id
+  }
+  
+  // Check if user can edit a specific contact
+  const canEdit = (contact) => {
+    // Only admin/committee can edit contacts
+    return isCommitteeLevel && isCommitteeLevel()
+  }
 
   const { data: contacts = [], isLoading } = useQuery({
     queryKey: ['emergencyContacts'],
@@ -53,8 +71,34 @@ export default function EmergencyContacts() {
 
   const deleteMutation = useMutation({
     mutationFn: (id) => emergencyContactApi.delete(id, user.id),
-    onSuccess: () => queryClient.invalidateQueries(['emergencyContacts']),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['emergencyContacts'])
+      toast.success('Emergency contact deleted successfully')
+      setShowDeleteModal(false)
+      setContactToDelete(null)
+    },
+    onError: (error) => {
+      toast.error(error.response?.data?.message || 'Failed to delete contact')
+      setShowDeleteModal(false)
+      setContactToDelete(null)
+    },
   })
+
+  const handleDeleteClick = (contact) => {
+    setContactToDelete(contact)
+    setShowDeleteModal(true)
+  }
+
+  const confirmDelete = () => {
+    if (contactToDelete) {
+      deleteMutation.mutate(contactToDelete.id)
+    }
+  }
+
+  const cancelDelete = () => {
+    setShowDeleteModal(false)
+    setContactToDelete(null)
+  }
 
   const filteredContacts = contacts.filter(c => {
     const matchesSearch = c.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -196,18 +240,24 @@ export default function EmergencyContacts() {
                         >
                           <Phone size={18} />
                         </a>
-                        <button
-                          onClick={() => { setEditingContact(contact); setShowModal(true) }}
-                          className="p-2 text-gray-500 hover:bg-gray-100 rounded-lg"
-                        >
-                          <Edit size={18} />
-                        </button>
-                        <button
-                          onClick={() => deleteMutation.mutate(contact.id)}
-                          className="p-2 text-red-500 hover:bg-red-50 rounded-lg"
-                        >
-                          <Trash2 size={18} />
-                        </button>
+                        {canEdit(contact) && (
+                          <button
+                            onClick={() => { setEditingContact(contact); setShowModal(true) }}
+                            className="p-2 text-gray-500 hover:bg-gray-100 rounded-lg"
+                          >
+                            <Edit size={18} />
+                          </button>
+                        )}
+                        {canDelete(contact) && (
+                          <button
+                            onClick={() => handleDeleteClick(contact)}
+                            disabled={deleteMutation.isPending}
+                            className="p-2 text-red-500 hover:bg-red-50 rounded-lg disabled:opacity-50"
+                            title={contact.createdById === user?.id ? 'Delete your contact' : 'Delete contact'}
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -305,6 +355,54 @@ export default function EmergencyContacts() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && contactToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-xl w-full max-w-md">
+            <div className="p-6">
+              <div className="flex items-center justify-center w-12 h-12 mx-auto mb-4 rounded-full bg-red-100 dark:bg-red-900/30">
+                <AlertCircle className="w-6 h-6 text-red-600 dark:text-red-400" />
+              </div>
+              <h3 className="text-lg font-semibold text-center text-gray-900 dark:text-white mb-2">
+                Delete Emergency Contact
+              </h3>
+              <p className="text-center text-gray-600 dark:text-gray-400 mb-6">
+                Are you sure you want to delete <span className="font-medium text-gray-900 dark:text-white">{contactToDelete.name}</span>? 
+                This action cannot be undone.
+              </p>
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={cancelDelete}
+                  disabled={deleteMutation.isPending}
+                  className="flex-1 px-4 py-2 border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={confirmDelete}
+                  disabled={deleteMutation.isPending}
+                  className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {deleteMutation.isPending ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      Deleting...
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 size={18} />
+                      Delete
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

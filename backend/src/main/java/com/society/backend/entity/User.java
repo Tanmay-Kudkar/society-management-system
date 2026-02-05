@@ -43,6 +43,15 @@ public class User {
     @JoinColumn(name = "society_id")
     private Society society;
 
+    /**
+     * Flat/Unit associated with this user.
+     * Required for MEMBER and TENANT roles.
+     * Optional for other roles.
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "flat_id")
+    private Flat flat;
+
     @Column(name = "is_active")
     private Boolean isActive = true;
 

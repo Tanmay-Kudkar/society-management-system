@@ -4,17 +4,22 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.society.backend.dto.user.BulkCreateUsersResponse;
 import com.society.backend.dto.user.UserRequest;
 import com.society.backend.dto.user.UserResponse;
+import com.society.backend.entity.Flat;
 import com.society.backend.entity.Role;
 import com.society.backend.entity.User;
 import com.society.backend.exception.ApiException;
 import com.society.backend.repository.complaint.ComplaintRepository;
+import com.society.backend.repository.flat.FlatRepository;
 import com.society.backend.repository.ticket.TicketRepository;
 import com.society.backend.repository.user.UserRepository;
 import com.society.backend.repository.society.SocietyRepository;
@@ -23,26 +28,33 @@ import com.society.backend.security.RolePermissions;
 @Service
 public class UserServiceImpl implements UserService {
 
+    private static final Logger log = LoggerFactory.getLogger(UserServiceImpl.class);
+
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final ComplaintRepository complaintRepository;
     private final TicketRepository ticketRepository;
     private final SocietyRepository societyRepository;
+    private final FlatRepository flatRepository;
 
     public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder,
             ComplaintRepository complaintRepository, TicketRepository ticketRepository,
-            SocietyRepository societyRepository) {
+            SocietyRepository societyRepository, FlatRepository flatRepository) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.complaintRepository = complaintRepository;
         this.ticketRepository = ticketRepository;
         this.societyRepository = societyRepository;
+        this.flatRepository = flatRepository;
     }
 
     @Override
     public UserResponse createUser(UserRequest request) {
+        log.info("Creating user with email: {}, role: {}", request.getEmail(), request.getRole());
+        
         // Check if email already exists
         if (userRepository.findByEmail(request.getEmail()).isPresent()) {
+            log.warn("Email already exists: {}", request.getEmail());
             throw new ApiException(HttpStatus.CONFLICT, "Email already exists");
         }
 
@@ -96,7 +108,20 @@ public class UserServiceImpl implements UserService {
             user.setSociety(currentUser.getSociety());
         }
 
+        // Handle flat assignment for MEMBER and TENANT roles
+        if (targetRole == Role.MEMBER || targetRole == Role.TENANT) {
+            if (request.getFlatId() != null) {
+                Flat flat = flatRepository.findById(request.getFlatId())
+                        .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Unit/Flat not found with ID: " + request.getFlatId()));
+                user.setFlat(flat);
+                log.info("Assigned user {} to flat {}", request.getEmail(), flat.getFlatNumber());
+            } else {
+                log.warn("No flatId provided for MEMBER/TENANT user: {}", request.getEmail());
+            }
+        }
+
         User saved = userRepository.save(user);
+        log.info("User created successfully with ID: {}", saved.getId());
         return mapToResponse(saved);
     }
 
@@ -160,6 +185,89 @@ public class UserServiceImpl implements UserService {
     public Set<Role> getUpdatableRoles() {
         Role currentRole = getCurrentUserRole();
         return RolePermissions.getAllowedRolesToUpdate(currentRole);
+    }
+
+    @Override
+    public BulkCreateUsersResponse bulkCreateUsersForUnits(Long societyId) {
+        log.info("Starting bulk user creation for society ID: {}", societyId);
+        
+        // Verify society exists
+        var society = societyRepository.findById(societyId)
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Society not found"));
+        
+        // Get all flats in the society
+        List<Flat> flats = flatRepository.findBySocietyId(societyId);
+        
+        BulkCreateUsersResponse response = new BulkCreateUsersResponse();
+        response.setTotalUnits(flats.size());
+        
+        int created = 0;
+        int skipped = 0;
+        int errors = 0;
+        
+        for (Flat flat : flats) {
+            try {
+                // Check if flat already has a user assigned
+                if (userRepository.existsByFlatId(flat.getId())) {
+                    response.getResults().add(BulkCreateUsersResponse.BulkCreateResult.skipped(
+                            flat.getId(), flat.getFlatNumber(), "User already exists for this unit"));
+                    skipped++;
+                    continue;
+                }
+                
+                // Check if flat has owner email (required for creating user)
+                if (flat.getOwnerEmail() == null || flat.getOwnerEmail().trim().isEmpty()) {
+                    response.getResults().add(BulkCreateUsersResponse.BulkCreateResult.skipped(
+                            flat.getId(), flat.getFlatNumber(), "No owner email configured for this unit"));
+                    skipped++;
+                    continue;
+                }
+                
+                // Check if email already exists
+                if (userRepository.findByEmail(flat.getOwnerEmail()).isPresent()) {
+                    response.getResults().add(BulkCreateUsersResponse.BulkCreateResult.skipped(
+                            flat.getId(), flat.getFlatNumber(), "Email already registered: " + flat.getOwnerEmail()));
+                    skipped++;
+                    continue;
+                }
+                
+                // Create user with flat number as default password
+                User user = new User();
+                user.setName(flat.getOwnerName() != null ? flat.getOwnerName() : "Member " + flat.getFlatNumber());
+                user.setEmail(flat.getOwnerEmail().trim().toLowerCase());
+                user.setPassword(passwordEncoder.encode(flat.getFlatNumber())); // Use flat number as password
+                user.setPhone(flat.getOwnerPhone());
+                user.setRole(Role.MEMBER);
+                user.setSociety(society);
+                user.setFlat(flat);
+                user.setIsActive(true);
+                user.setCreatedAt(java.time.LocalDateTime.now());
+                
+                User savedUser = userRepository.save(user);
+                
+                response.getResults().add(BulkCreateUsersResponse.BulkCreateResult.created(
+                        flat.getId(), flat.getFlatNumber(), savedUser.getEmail(), savedUser.getId()));
+                created++;
+                
+                log.info("Created user {} for flat {}", savedUser.getEmail(), flat.getFlatNumber());
+                
+            } catch (Exception e) {
+                log.error("Error creating user for flat {}: {}", flat.getFlatNumber(), e.getMessage());
+                response.getResults().add(BulkCreateUsersResponse.BulkCreateResult.error(
+                        flat.getId(), flat.getFlatNumber(), e.getMessage()));
+                errors++;
+            }
+        }
+        
+        response.setUsersCreated(created);
+        response.setUsersSkipped(skipped);
+        response.setErrors(errors);
+        response.setMessage(String.format("Bulk creation complete: %d created, %d skipped, %d errors out of %d total units",
+                created, skipped, errors, flats.size()));
+        
+        log.info("Bulk user creation completed: {}", response.getMessage());
+        
+        return response;
     }
 
     @Override
@@ -327,7 +435,7 @@ public class UserServiceImpl implements UserService {
     }
 
     private UserResponse mapToResponse(User user) {
-        return new UserResponse(
+        UserResponse response = new UserResponse(
                 user.getId(),
                 user.getName(),
                 user.getEmail(),
@@ -336,5 +444,13 @@ public class UserServiceImpl implements UserService {
                 user.getIsActive(),
                 user.getSociety() != null ? user.getSociety().getId() : null,
                 user.getSociety() != null ? user.getSociety().getName() : null);
+        
+        // Add flat information if available
+        if (user.getFlat() != null) {
+            response.setFlatId(user.getFlat().getId());
+            response.setFlatNumber(user.getFlat().getFlatNumber());
+        }
+        
+        return response;
     }
 }

@@ -2,11 +2,12 @@ import { useState, useMemo } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { useToast } from '../context/ToastContext'
 import { flatApi, societyApi, wingApi, userApi } from '../api'
 import { 
   Plus, Edit, Trash2, Search, X, Home, Store, Briefcase, Layers, 
   Users, UserPlus, UserCheck, UserX, Upload, Download, AlertCircle,
-  Eye, Link, Unlink
+  Eye, Link, Unlink, UsersRound
 } from 'lucide-react'
 import clsx from 'clsx'
 import { validateFlatForm, validateUserForm, parseApiError } from '../utils/validation'
@@ -25,6 +26,7 @@ const unitTypeColors = {
 
 export default function UnitManagement() {
   const { user, isCommitteeLevel, canManageDocuments } = useAuth()
+  const { showToast } = useToast()
   const queryClient = useQueryClient()
   const [searchParams] = useSearchParams()
   
@@ -33,6 +35,8 @@ export default function UnitManagement() {
   const [showUserModal, setShowUserModal] = useState(false)
   const [showLinkModal, setShowLinkModal] = useState(false)
   const [showBulkImportModal, setShowBulkImportModal] = useState(false)
+  const [showBulkCreateModal, setShowBulkCreateModal] = useState(false)
+  const [bulkCreateResults, setBulkCreateResults] = useState(null)
   
   // Editing states
   const [editingUnit, setEditingUnit] = useState(null)
@@ -178,6 +182,21 @@ export default function UnitManagement() {
     },
   })
 
+  // Bulk create users mutation
+  const bulkCreateUsersMutation = useMutation({
+    mutationFn: () => userApi.bulkCreateForUnits(effectiveSocietyId),
+    onSuccess: (response) => {
+      queryClient.invalidateQueries(['users'])
+      queryClient.invalidateQueries(['flats'])
+      setBulkCreateResults(response.data)
+      showToast(`Created ${response.data.usersCreated} users successfully`, 'success')
+    },
+    onError: (err) => {
+      showToast(parseApiError(err), 'error')
+      setShowBulkCreateModal(false)
+    },
+  })
+
   // Handle unit form submission
   const handleUnitSubmit = (e) => {
     e.preventDefault()
@@ -280,9 +299,16 @@ export default function UnitManagement() {
             Manage units and their assigned users in one place
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
           {isCommitteeLevel() && (
             <>
+              <button
+                onClick={() => setShowBulkCreateModal(true)}
+                className="inline-flex items-center gap-2 px-4 py-2 border border-green-300 dark:border-green-700 text-green-700 dark:text-green-300 rounded-lg hover:bg-green-50 dark:hover:bg-green-900/20 transition"
+              >
+                <UsersRound size={18} />
+                Bulk Create Users
+              </button>
               <button
                 onClick={() => setShowBulkImportModal(true)}
                 className="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition"
@@ -659,6 +685,19 @@ export default function UnitManagement() {
             queryClient.invalidateQueries(['flats'])
             queryClient.invalidateQueries(['users'])
             setShowBulkImportModal(false)
+          }}
+        />
+      )}
+
+      {/* Bulk Create Users Modal */}
+      {showBulkCreateModal && (
+        <BulkCreateUsersModal
+          isLoading={bulkCreateUsersMutation.isPending}
+          results={bulkCreateResults}
+          onConfirm={() => bulkCreateUsersMutation.mutate()}
+          onClose={() => {
+            setShowBulkCreateModal(false)
+            setBulkCreateResults(null)
           }}
         />
       )}
@@ -1328,6 +1367,166 @@ function BulkImportModal({ onClose, societyId, onSuccess }) {
               </button>
             )}
           </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// Bulk Create Users Modal
+function BulkCreateUsersModal({ isLoading, results, onConfirm, onClose }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+      <div className="bg-white dark:bg-slate-800 rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden">
+        <div className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-slate-700">
+          <h3 className="text-lg font-semibold dark:text-white">
+            {results ? 'Bulk Create Results' : 'Create Users in Bulk'}
+          </h3>
+          <button onClick={onClose} className="p-1 hover:bg-gray-100 dark:hover:bg-slate-700 rounded">
+            <X size={20} className="text-gray-500 dark:text-gray-400" />
+          </button>
+        </div>
+
+        <div className="p-4 overflow-y-auto max-h-[calc(90vh-120px)]">
+          {!results ? (
+            <>
+              <div className="text-center py-6">
+                <div className="w-16 h-16 mx-auto mb-4 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center">
+                  <UsersRound className="w-8 h-8 text-green-600 dark:text-green-400" />
+                </div>
+                <h4 className="text-lg font-semibold dark:text-white mb-2">Create Users for All Units</h4>
+                <p className="text-gray-600 dark:text-gray-400 mb-4">
+                  This will automatically create user accounts for all units that have an owner email configured but don't have an associated user yet.
+                </p>
+                <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 text-left mb-4">
+                  <h5 className="font-medium text-blue-900 dark:text-blue-100 mb-2">How it works:</h5>
+                  <ul className="text-sm text-blue-700 dark:text-blue-300 space-y-1">
+                    <li>• Email from unit owner details will be used as username</li>
+                    <li>• Flat/Unit number will be used as the default password</li>
+                    <li>• Units without owner email will be skipped</li>
+                    <li>• Units with existing users will be skipped</li>
+                    <li>• All users will be created with MEMBER role</li>
+                  </ul>
+                </div>
+                <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3 text-left">
+                  <p className="text-sm text-yellow-700 dark:text-yellow-300 flex items-center gap-2">
+                    <AlertCircle size={16} />
+                    Users should change their password after first login
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={onClose}
+                  className="flex-1 px-4 py-2 border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={onConfirm}
+                  disabled={isLoading}
+                  className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition flex items-center justify-center gap-2"
+                >
+                  {isLoading ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      Creating Users...
+                    </>
+                  ) : (
+                    <>
+                      <UsersRound size={18} />
+                      Create Users
+                    </>
+                  )}
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="text-center py-4">
+                <div className={`w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center ${
+                  results.usersCreated > 0 
+                    ? 'bg-green-100 dark:bg-green-900/30' 
+                    : 'bg-gray-100 dark:bg-gray-700'
+                }`}>
+                  {results.usersCreated > 0 ? (
+                    <UserCheck className="w-8 h-8 text-green-600 dark:text-green-400" />
+                  ) : (
+                    <UserX className="w-8 h-8 text-gray-600 dark:text-gray-400" />
+                  )}
+                </div>
+                <h4 className="text-lg font-semibold dark:text-white mb-2">{results.message}</h4>
+              </div>
+
+              <div className="grid grid-cols-3 gap-4 mb-4">
+                <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg text-center">
+                  <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+                    {results.usersCreated}
+                  </div>
+                  <div className="text-sm text-green-700 dark:text-green-300">Created</div>
+                </div>
+                <div className="p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg text-center">
+                  <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
+                    {results.usersSkipped}
+                  </div>
+                  <div className="text-sm text-yellow-700 dark:text-yellow-300">Skipped</div>
+                </div>
+                <div className="p-3 bg-red-50 dark:bg-red-900/20 rounded-lg text-center">
+                  <div className="text-2xl font-bold text-red-600 dark:text-red-400">
+                    {results.errors}
+                  </div>
+                  <div className="text-sm text-red-700 dark:text-red-300">Errors</div>
+                </div>
+              </div>
+
+              {results.results && results.results.length > 0 && (
+                <div className="border dark:border-slate-700 rounded-lg overflow-hidden max-h-64 overflow-y-auto">
+                  <table className="w-full text-sm">
+                    <thead className="bg-gray-50 dark:bg-slate-700 sticky top-0">
+                      <tr>
+                        <th className="px-3 py-2 text-left dark:text-white">Unit</th>
+                        <th className="px-3 py-2 text-left dark:text-white">Status</th>
+                        <th className="px-3 py-2 text-left dark:text-white">Details</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y dark:divide-slate-700">
+                      {results.results.map((result, idx) => (
+                        <tr key={idx} className={
+                          result.status === 'CREATED' ? 'bg-green-50/50 dark:bg-green-900/10' :
+                          result.status === 'ERROR' ? 'bg-red-50/50 dark:bg-red-900/10' :
+                          ''
+                        }>
+                          <td className="px-3 py-2 dark:text-gray-300">{result.flatNumber}</td>
+                          <td className="px-3 py-2">
+                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                              result.status === 'CREATED' ? 'bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300' :
+                              result.status === 'SKIPPED' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/50 dark:text-yellow-300' :
+                              'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300'
+                            }`}>
+                              {result.status}
+                            </span>
+                          </td>
+                          <td className="px-3 py-2 dark:text-gray-300 text-xs">
+                            {result.email || result.errorMessage}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              <div className="flex gap-3 mt-4">
+                <button
+                  onClick={onClose}
+                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                >
+                  Done
+                </button>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>

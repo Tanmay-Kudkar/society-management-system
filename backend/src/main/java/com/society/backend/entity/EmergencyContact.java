@@ -22,6 +22,10 @@ public class EmergencyContact {
     @JoinColumn(name = "society_id", nullable = false)
     private Society society;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "created_by_id")
+    private User createdBy;
+
     @Column(name = "contact_type", nullable = false)
     private String contactType; // DOCTOR, PLUMBER, ELECTRICIAN, POLICE, AMBULANCE, FIRE, etc.
 

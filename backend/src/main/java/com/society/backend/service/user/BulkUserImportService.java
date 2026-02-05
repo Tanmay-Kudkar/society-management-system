@@ -3,14 +3,17 @@ package com.society.backend.service.user;
 import com.society.backend.dto.user.BulkUserImportResponse;
 import com.society.backend.dto.user.BulkUserImportResponse.UserImportResult;
 import com.society.backend.dto.user.UserImportRow;
+import com.society.backend.entity.Flat;
 import com.society.backend.entity.Role;
 import com.society.backend.entity.Society;
 import com.society.backend.entity.User;
 import com.society.backend.exception.ApiException;
+import com.society.backend.repository.flat.FlatRepository;
 import com.society.backend.repository.society.SocietyRepository;
 import com.society.backend.repository.user.UserRepository;
 import com.society.backend.service.common.RoleService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.http.HttpStatus;
@@ -25,15 +28,18 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Pattern;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class BulkUserImportService {
 
     private final UserRepository userRepository;
     private final SocietyRepository societyRepository;
+    private final FlatRepository flatRepository;
     private final PasswordEncoder passwordEncoder;
     private final RoleService roleService;
 
@@ -99,6 +105,13 @@ public class BulkUserImportService {
         Set<String> seenEmails = new HashSet<>();
         Set<String> seenFlatNumbers = new HashSet<>();
         
+        // Pre-fetch all flats for the society for efficient lookup
+        Map<String, Flat> flatMap = new HashMap<>();
+        List<Flat> societyFlats = flatRepository.findBySocietyId(societyId);
+        for (Flat flat : societyFlats) {
+            flatMap.put(flat.getFlatNumber().toUpperCase(), flat);
+        }
+        
         BulkUserImportResponse response = new BulkUserImportResponse();
         response.setTotalRows(rows.size());
         int validCount = 0;
@@ -134,11 +147,24 @@ public class BulkUserImportService {
             if (row.getFlatNumber() == null || row.getFlatNumber().trim().isEmpty()) {
                 errors.add("Flat number is required");
             } else {
+                String flatNumberUpper = row.getFlatNumber().trim().toUpperCase();
+                
                 // Check for duplicate flat numbers in file
-                if (seenFlatNumbers.contains(row.getFlatNumber().toUpperCase())) {
+                if (seenFlatNumbers.contains(flatNumberUpper)) {
                     errors.add("Duplicate flat number in file");
                 } else {
-                    seenFlatNumbers.add(row.getFlatNumber().toUpperCase());
+                    seenFlatNumbers.add(flatNumberUpper);
+                    
+                    // Check if flat exists in the society
+                    Flat flat = flatMap.get(flatNumberUpper);
+                    if (flat == null) {
+                        errors.add("Flat number '" + row.getFlatNumber() + "' does not exist in this society");
+                    } else {
+                        // Check if flat already has a user assigned
+                        if (userRepository.existsByFlatId(flat.getId())) {
+                            errors.add("Flat already has a user assigned");
+                        }
+                    }
                 }
             }
             
@@ -193,13 +219,21 @@ public class BulkUserImportService {
     }
 
     /**
-     * Process and create users from validated rows
+     * Process and create users from validated rows.
+     * Supports partial success - valid rows are processed even if some fail.
      */
     @Transactional
     public BulkUserImportResponse processImport(List<UserImportRow> rows, Long societyId) {
         // Get the society for the users
         Society society = societyRepository.findById(societyId)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Society not found"));
+        
+        // Pre-fetch all flats for efficient lookup
+        Map<String, Flat> flatMap = new HashMap<>();
+        List<Flat> societyFlats = flatRepository.findBySocietyId(societyId);
+        for (Flat flat : societyFlats) {
+            flatMap.put(flat.getFlatNumber().toUpperCase(), flat);
+        }
         
         BulkUserImportResponse response = new BulkUserImportResponse();
         response.setTotalRows(rows.size());
@@ -218,8 +252,22 @@ public class BulkUserImportService {
                 result.setSuccess(false);
                 result.setErrorMessage(row.getErrorMessage());
                 failureCount++;
+                log.debug("Skipping invalid row {}: {}", row.getRowNumber(), row.getErrorMessage());
             } else {
                 try {
+                    // Find the flat for this user
+                    String flatNumberUpper = row.getFlatNumber().trim().toUpperCase();
+                    Flat flat = flatMap.get(flatNumberUpper);
+                    
+                    if (flat == null) {
+                        throw new IllegalArgumentException("Flat not found: " + row.getFlatNumber());
+                    }
+                    
+                    // Double-check flat doesn't already have a user (safety check)
+                    if (userRepository.existsByFlatId(flat.getId())) {
+                        throw new IllegalArgumentException("Flat already has a user assigned");
+                    }
+                    
                     // Create user
                     User user = new User();
                     user.setName(row.getName().trim());
@@ -227,6 +275,7 @@ public class BulkUserImportService {
                     user.setPassword(passwordEncoder.encode(row.getFlatNumber())); // Flat number as default password
                     user.setRole(Role.valueOf(row.getRole() != null ? row.getRole().toUpperCase() : "MEMBER"));
                     user.setSociety(society);
+                    user.setFlat(flat); // Link user to flat
                     user.setIsActive(true);
                     user.setCreatedAt(java.time.LocalDateTime.now());
                     
@@ -236,6 +285,14 @@ public class BulkUserImportService {
                     
                     User savedUser = userRepository.save(user);
                     
+                    // Update flat as occupied
+                    flat.setIsOccupied(true);
+                    flat.setOwnerEmail(row.getEmail().trim().toLowerCase());
+                    flatRepository.save(flat);
+                    
+                    log.info("Created user {} for flat {} in society {}", 
+                            savedUser.getEmail(), flat.getFlatNumber(), societyId);
+                    
                     result.setSuccess(true);
                     result.setUserId(savedUser.getId());
                     successCount++;
@@ -243,6 +300,7 @@ public class BulkUserImportService {
                     result.setSuccess(false);
                     result.setErrorMessage("Failed to create user: " + e.getMessage());
                     failureCount++;
+                    log.warn("Failed to create user at row {}: {}", row.getRowNumber(), e.getMessage());
                 }
             }
             
@@ -253,6 +311,9 @@ public class BulkUserImportService {
         response.setFailureCount(failureCount);
         response.setMessage(String.format("Import completed: %d successful, %d failed out of %d total", 
                 successCount, failureCount, rows.size()));
+        
+        log.info("Bulk import completed for society {}: {} success, {} failed", 
+                societyId, successCount, failureCount);
         
         return response;
     }

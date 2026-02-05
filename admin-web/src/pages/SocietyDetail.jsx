@@ -140,7 +140,7 @@ export default function SocietyDetail() {
       count: stats.totalFlats, 
       icon: Home, 
       color: 'bg-blue-500', 
-      href: `/flats?society=${id}`,
+      href: `/unit-management?society=${id}`,
       description: `${stats.occupiedFlats} occupied`
     },
     { 
@@ -148,7 +148,7 @@ export default function SocietyDetail() {
       count: stats.totalShops, 
       icon: Store, 
       color: 'bg-green-500', 
-      href: `/flats?society=${id}&unitType=SHOP`,
+      href: `/unit-management?society=${id}&unitType=SHOP`,
       description: `${stats.occupiedShops} occupied`
     },
     { 
@@ -156,7 +156,7 @@ export default function SocietyDetail() {
       count: stats.totalOffices, 
       icon: Briefcase, 
       color: 'bg-amber-500', 
-      href: `/flats?society=${id}&unitType=OFFICE`,
+      href: `/unit-management?society=${id}&unitType=OFFICE`,
       description: `${stats.occupiedOffices} occupied`
     },
     { 

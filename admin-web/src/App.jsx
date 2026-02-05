@@ -9,7 +9,6 @@ import Dashboard from './pages/Dashboard'
 import Users from './pages/Users'
 import Societies from './pages/Societies'
 import SocietyDetail from './pages/SocietyDetail'
-import Flats from './pages/Flats'
 import UnitManagement from './pages/UnitManagement'
 import Wings from './pages/Wings'
 import Tenants from './pages/Tenants'
@@ -77,7 +76,7 @@ function App() {
         <Route path="societies" element={<Societies />} />
         <Route path="societies/:id" element={<SocietyDetail />} />
         <Route path="wings" element={<Wings />} />
-        <Route path="flats" element={<Flats />} />
+        <Route path="flats" element={<Navigate to="/unit-management" replace />} />
         <Route path="unit-management" element={<UnitManagement />} />
         <Route path="tenants" element={<Tenants />} />
         <Route path="vehicles" element={<Vehicles />} />

@@ -11,6 +11,8 @@ public class EmergencyContactResponse {
     private Long id;
     private Long societyId;
     private String societyName;
+    private Long createdById;
+    private String createdByName;
     private String contactType;
     private String name;
     private String phone;

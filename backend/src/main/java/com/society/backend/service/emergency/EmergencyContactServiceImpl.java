@@ -3,12 +3,16 @@ package com.society.backend.service.emergency;
 import com.society.backend.dto.emergency.EmergencyContactRequest;
 import com.society.backend.dto.emergency.EmergencyContactResponse;
 import com.society.backend.entity.EmergencyContact;
+import com.society.backend.entity.Role;
 import com.society.backend.entity.Society;
+import com.society.backend.entity.User;
+import com.society.backend.exception.AccessDeniedException;
 import com.society.backend.exception.ApiException;
 import com.society.backend.repository.emergency.EmergencyContactRepository;
 import com.society.backend.repository.society.SocietyRepository;
 import com.society.backend.service.common.RoleService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,6 +22,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class EmergencyContactServiceImpl implements EmergencyContactService {
 
     private final EmergencyContactRepository emergencyContactRepository;
@@ -27,13 +32,16 @@ public class EmergencyContactServiceImpl implements EmergencyContactService {
     @Override
     @Transactional
     public EmergencyContactResponse create(EmergencyContactRequest request, Long userId) {
-        roleService.requireAdminOrCommittee(userId);
+        // Allow any registered member to create emergency contacts
+        roleService.requireMember(userId);
+        User user = roleService.getUser(userId);
 
         Society society = societyRepository.findById(request.getSocietyId())
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Society not found"));
 
         EmergencyContact contact = new EmergencyContact();
         contact.setSociety(society);
+        contact.setCreatedBy(user); // Track who created this contact
         contact.setContactType(request.getContactType());
         contact.setName(request.getName());
         contact.setPhone(request.getPhone());
@@ -43,6 +51,7 @@ public class EmergencyContactServiceImpl implements EmergencyContactService {
         contact.setIsActive(true);
 
         EmergencyContact saved = emergencyContactRepository.save(contact);
+        log.info("User {} created emergency contact: {}", userId, saved.getId());
         return mapToResponse(saved);
     }
 
@@ -115,12 +124,35 @@ public class EmergencyContactServiceImpl implements EmergencyContactService {
     @Override
     @Transactional
     public void delete(Long id, Long userId) {
-        roleService.requireMasterAdmin(userId);
+        EmergencyContact contact = emergencyContactRepository.findById(id)
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Emergency contact not found"));
 
-        if (!emergencyContactRepository.existsById(id)) {
-            throw new ApiException(HttpStatus.NOT_FOUND, "Emergency contact not found");
+        User user = roleService.getUser(userId);
+        
+        // Allow deletion if:
+        // 1. User is admin/committee level, OR
+        // 2. User is the creator of this contact
+        boolean isAdminOrCommittee = isAdminOrCommitteeRole(user.getRole());
+        boolean isCreator = contact.getCreatedBy() != null && contact.getCreatedBy().getId().equals(userId);
+        
+        if (!isAdminOrCommittee && !isCreator) {
+            throw new AccessDeniedException("You can only delete emergency contacts you created");
         }
+        
         emergencyContactRepository.deleteById(id);
+        log.info("User {} deleted emergency contact: {}", userId, id);
+    }
+    
+    /**
+     * Check if the role is admin or committee level
+     */
+    private boolean isAdminOrCommitteeRole(Role role) {
+        return role == Role.MASTER_ADMIN || 
+               role == Role.SOCIETY_ADMIN || 
+               role == Role.CHAIRMAN || 
+               role == Role.SECRETARY || 
+               role == Role.TREASURER || 
+               role == Role.COMMITTEE;
     }
 
     private EmergencyContactResponse mapToResponse(EmergencyContact contact) {
@@ -128,6 +160,10 @@ public class EmergencyContactServiceImpl implements EmergencyContactService {
         response.setId(contact.getId());
         response.setSocietyId(contact.getSociety().getId());
         response.setSocietyName(contact.getSociety().getName());
+        if (contact.getCreatedBy() != null) {
+            response.setCreatedById(contact.getCreatedBy().getId());
+            response.setCreatedByName(contact.getCreatedBy().getName());
+        }
         response.setContactType(contact.getContactType());
         response.setName(contact.getName());
         response.setPhone(contact.getPhone());
