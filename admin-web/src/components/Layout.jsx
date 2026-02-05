@@ -156,8 +156,8 @@ function NavDropdown({ group, hasRole }) {
         className={clsx(
           'flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200',
           isActive
-            ? 'accent-bg-light accent-text'
-            : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-700'
+            ? 'accent-bg-light accent-text shadow-md'
+            : 'text-gray-600 dark:text-gray-300 hover:bg-gradient-to-r hover:from-purple-50 hover:to-pink-50 dark:hover:from-slate-700 dark:hover:to-slate-600 hover:text-purple-700 dark:hover:text-purple-300 hover:shadow-md hover:scale-105'
         )}
       >
         <group.icon size={18} />
@@ -177,8 +177,8 @@ function NavDropdown({ group, hasRole }) {
         className={clsx(
           'flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200',
           isActive
-            ? 'accent-bg-light accent-text'
-            : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-700'
+            ? 'accent-bg-light accent-text shadow-md'
+            : 'text-gray-600 dark:text-gray-300 hover:bg-gradient-to-r hover:from-purple-50 hover:to-pink-50 dark:hover:from-slate-700 dark:hover:to-slate-600 hover:text-purple-700 dark:hover:text-purple-300 hover:shadow-md hover:scale-105'
         )}
       >
         <group.icon size={18} />
@@ -258,8 +258,8 @@ function MobileAccordion({ group, hasRole, onNavigate, isOpen, onToggle }) {
         className={clsx(
           'flex items-center gap-3 px-4 py-3 text-base font-medium transition-all duration-200',
           isActiveGroup
-            ? 'accent-bg-light accent-text'
-            : 'text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-700'
+            ? 'accent-bg-light accent-text shadow-md'
+            : 'text-gray-700 dark:text-gray-200 hover:bg-gradient-to-r hover:from-purple-50 hover:to-pink-50 dark:hover:from-slate-700 dark:hover:to-slate-600 hover:text-purple-700 dark:hover:text-purple-300 hover:shadow-lg hover:scale-[1.02] hover:translate-x-1'
         )}
       >
         <group.icon size={20} />
@@ -276,8 +276,8 @@ function MobileAccordion({ group, hasRole, onNavigate, isOpen, onToggle }) {
         className={clsx(
           'w-full flex items-center justify-between px-4 py-3 text-base font-medium transition-all duration-200',
           isActiveGroup
-            ? 'accent-text'
-            : 'text-gray-700 dark:text-gray-200'
+            ? 'accent-text shadow-md bg-gradient-to-r from-purple-50 to-pink-50 dark:from-slate-700 dark:to-slate-600'
+            : 'text-gray-700 dark:text-gray-200 hover:bg-gradient-to-r hover:from-purple-50 hover:to-pink-50 dark:hover:from-slate-700 dark:hover:to-slate-600 hover:text-purple-700 dark:hover:text-purple-300 hover:shadow-md hover:scale-[1.02] hover:translate-x-1'
         )}
       >
         <div className="flex items-center gap-3">
