@@ -8,6 +8,7 @@ import '../styles/animations.css'
 export default function Login() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [rememberMe, setRememberMe] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -17,8 +18,15 @@ export default function Login() {
   const { isDark, toggleTheme } = useTheme()
   const navigate = useNavigate()
 
+  // Load saved credentials on mount
   useEffect(() => {
     setIsLoaded(true)
+    const savedEmail = localStorage.getItem('rememberedEmail')
+    const savedRememberMe = localStorage.getItem('rememberMe') === 'true'
+    if (savedEmail && savedRememberMe) {
+      setEmail(savedEmail)
+      setRememberMe(true)
+    }
   }, [])
 
   // Redirect if already logged in
@@ -37,6 +45,14 @@ export default function Login() {
     const result = await login(email, password)
     
     if (result.success) {
+      // Save or remove email based on remember me checkbox
+      if (rememberMe) {
+        localStorage.setItem('rememberedEmail', email)
+        localStorage.setItem('rememberMe', 'true')
+      } else {
+        localStorage.removeItem('rememberedEmail')
+        localStorage.removeItem('rememberMe')
+      }
       navigate('/')
     } else {
       setError(result.error)
@@ -261,7 +277,12 @@ export default function Login() {
 
             <div className="flex items-center justify-between">
               <label className="flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" className="w-4 h-4 rounded border-gray-300 text-purple-500 focus:ring-purple-500" />
+                <input 
+                  type="checkbox" 
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  className="w-4 h-4 rounded border-gray-300 text-purple-500 focus:ring-purple-500" 
+                />
                 <span className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Remember me</span>
               </label>
               <a href="#" className="text-sm font-medium transition-colors" style={{ color: 'var(--accent-primary)' }}>
