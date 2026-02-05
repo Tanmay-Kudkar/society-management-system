@@ -182,50 +182,57 @@ export default function Wings() {
           filteredWings.map((wing) => (
             <div 
               key={wing.id} 
-              className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 overflow-hidden hover:shadow-md transition-shadow"
+              className="group bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-700 overflow-hidden hover:shadow-xl hover:scale-[1.02] transition-all duration-300"
             >
-              {/* Wing Header */}
-              <div className="bg-gradient-to-br from-indigo-500 to-purple-600 p-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
-                      <Layers className="w-6 h-6 text-white" />
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-bold text-white">{wing.name}</h3>
-                      {isMasterAdmin && (
-                        <p className="text-white/70 text-sm">{wing.societyName}</p>
-                      )}
-                    </div>
+              {/* Wing Header with 3D Effect */}
+              <div className="relative bg-gradient-to-br from-violet-500 via-purple-500 to-indigo-600 p-5">
+                <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmZmZmYiIGZpbGwtb3BhY2l0eT0iMC4wNSI+PHBhdGggZD0iTTM2IDM0djItSDI0di0yaDEyek0zNiAyNHYySDI0di0yaDEyeiIvPjwvZz48L2c+PC9zdmc+')] opacity-30"></div>
+                <div className="relative flex items-start gap-4">
+                  <div className="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center shadow-lg border border-white/30 group-hover:scale-110 transition-transform duration-300">
+                    <Layers className="w-7 h-7 text-white" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-xl font-bold text-white truncate">{wing.name}</h3>
+                    {isMasterAdmin && (
+                      <p className="text-white/80 text-sm mt-0.5 truncate">{wing.societyName}</p>
+                    )}
                   </div>
                 </div>
               </div>
               
-              {/* Wing Body */}
-              <div className="p-4">
+              {/* Wing Body with Stats */}
+              <div className="p-5">
                 {wing.description && (
-                  <p className="text-gray-600 dark:text-gray-400 text-sm mb-4">{wing.description}</p>
+                  <p className="text-gray-600 dark:text-gray-400 text-sm mb-4 line-clamp-2">{wing.description}</p>
                 )}
                 
-                <div className="flex items-center gap-4">
-                  <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                    <Building2 className="w-4 h-4" />
-                    <span>{wing.totalFloors || 0} Floors</span>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl p-3 border border-blue-100 dark:border-blue-800/30">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Building2 className="w-4 h-4 text-blue-500" />
+                      <span className="text-xs font-medium text-blue-600 dark:text-blue-400 uppercase tracking-wide">Floors</span>
+                    </div>
+                    <p className="text-2xl font-bold text-gray-900 dark:text-white">{wing.totalFloors || 0}</p>
                   </div>
-                  <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                    <Hash className="w-4 h-4" />
-                    <span>ID: {wing.id}</span>
+                  <div className="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-xl p-3 border border-purple-100 dark:border-purple-800/30">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Hash className="w-4 h-4 text-purple-500" />
+                      <span className="text-xs font-medium text-purple-600 dark:text-purple-400 uppercase tracking-wide">Wing ID</span>
+                    </div>
+                    <p className="text-2xl font-bold text-gray-900 dark:text-white">{wing.id}</p>
                   </div>
                 </div>
               </div>
 
-              {/* Actions */}
-              <div className="px-4 py-3 border-t border-gray-100 dark:border-slate-700 flex justify-end gap-2">
+              {/* Actions with Better Hover */}
+              <div className="px-5 py-4 bg-gray-50 dark:bg-slate-700/50 border-t border-gray-100 dark:border-slate-700 flex justify-end gap-2">
                 <button
                   onClick={() => { setEditingWing(wing); setShowModal(true) }}
-                  className="p-2 text-gray-500 dark:text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-900/50 rounded-lg transition-colors"
+                  title="Edit Wing"
                 >
-                  <Edit size={18} />
+                  <Edit size={16} />
+                  <span>Edit</span>
                 </button>
                 <button
                   onClick={() => {
@@ -233,9 +240,11 @@ export default function Wings() {
                       deleteMutation.mutate(wing.id)
                     }
                   }}
-                  className="p-2 text-gray-500 dark:text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/30 hover:bg-red-100 dark:hover:bg-red-900/50 rounded-lg transition-colors"
+                  title="Delete Wing"
                 >
-                  <Trash2 size={18} />
+                  <Trash2 size={16} />
+                  <span>Delete</span>
                 </button>
               </div>
             </div>
