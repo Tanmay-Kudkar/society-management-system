@@ -23,7 +23,7 @@ public class SocietyRequest {
 
     private String email;
 
-    private String phone;
+    private String telephone;
 
     // Total capacity for units
     private Integer totalFlats;
