@@ -1,136 +1,170 @@
-############################################################
-# 🚫 GLOBAL IGNORE RULES
-# Applies to entire Society Management System repository
-############################################################
-
-# OS generated files
+######################################################################
+# 🚫 GLOBAL & OS FILES
+######################################################################
 .DS_Store
-Thumbs.db
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
 ehthumbs.db
+Thumbs.db
 desktop.ini
 
-############################################################
-# 🧠 IDE / EDITOR FILES
-############################################################
-
+######################################################################
+# 🧠 IDE & EDITOR CONFIGURATIONS
+######################################################################
 # VS Code
 .vscode/
+*.code-workspace
 .history/
 
-# IntelliJ IDEA
+# IntelliJ / JetBrains
 .idea/
+*.iws
 *.iml
+*.ipr
 out/
 
-# Eclipse / STS
+# Eclipse
 .classpath
 .project
 .settings/
 .springBeans
+bin/
 
-############################################################
-# ☕ JAVA / SPRING BOOT (BACKEND)
-############################################################
+# Generic Editor Backups
+*.swp
+*~
+*.bak
+*.tmp
 
-# Compiled class files
+######################################################################
+# ☕ BACKEND: JAVA & SPRING BOOT
+######################################################################
+# Compiled files
 *.class
-
-# Maven / Gradle build output
 target/
 build/
 
-# Maven wrapper logs
+# Maven
+.mvn/wrapper/maven-wrapper.properties
+.mvn/wrapper/maven-wrapper.jar
+# Do not ignore mvnw scripts, but ignore the log
 .mvn/wrapper/maven-wrapper.log
+dependency-reduced-pom.xml
 
-# Spring Boot runtime files
+# Spring Boot Logs
 logs/
 *.log
+tms.log
+hs_err_pid*
 
-# Application secrets
+# Local Configuration & Secrets (Backend)
 application-local.yml
+application-local.properties
 application-dev.yml
+application-dev.properties
 application-prod.yml
-.env
+application-prod.properties
+application-secret.yml
+application-secret.properties
 
-############################################################
-# 🌐 FRONTEND (REACT / REACT NATIVE)
-############################################################
-
-# Node modules
+######################################################################
+# 🌐 FRONTEND: REACT / VITE
+######################################################################
+# Dependencies
 node_modules/
 
-# Build output
+# Build Output
 dist/
-build/
+dist-ssr/
 
-# Package manager logs
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
+# Temporary / Cache
+.vite/
+.eslintcache
+.cache/
 
-# Expo / React Native
+# Environment Variables (Local overrides)
+.env.local
+.env.*.local
+.env.development.local
+.env.test.local
+.env.production.local
+# Keep .env and .env.example tracked, ignore .env only if it contains secrets
+# (User's choice, often .env is local-only)
+.env
+
+######################################################################
+# 📱 MOBILE: REACT NATIVE / EXPO
+######################################################################
+# Expo
 .expo/
 .expo-shared/
-android/.gradle/
+web-build/
+
+# React Native
+*.jks
+*.keystore
+*.p12
+*.key
+android/app/debug.keystore
+
+# Native Build Outputs
 android/app/build/
+android/.gradle/
 ios/build/
+ios/Pods/
+ios/*.xcworkspace
+ios/*.xcodeproj/project.xcworkspace
+ios/*.xcodeproj/xcuserdata
 
-############################################################
-# 🗄️ DATABASE / DATA FILES
-############################################################
+# Metro
+.metro-health
+metro-file-map-cache/
 
-# Local database files
-*.db
+######################################################################
+# 🗄️ DATABASE & STORAGE
+######################################################################
 *.sqlite
 *.sqlite3
-
-# Dumps / backups
+*.db
+*.db-journal
 *.sql.bak
 *.dump
-*.backup
+schema_backup.sql
 
-############################################################
-# 🔐 ENVIRONMENT & SECRETS
-############################################################
-
-# Environment variables
-.env
-.env.*
-*.key
-*.pem
-*.crt
-
-############################################################
-# 🧪 TEST / TEMP FILES
-############################################################
-
-# Test reports
-coverage/
-*.coverage
-
-# Temporary files
-.vite/
-.vite/deps/
-tmp/
-temp/
-
-############################################################
-# 📦 ARCHIVES
-############################################################
-
+######################################################################
+# 📦 ARCHIVES & PACKAGES
+######################################################################
 *.zip
 *.tar
 *.tar.gz
 *.rar
+*.7z
+*.jar
+*.war
+*.ear
 
-############################################################
-# ✅ KEEP THESE TRACKED (IMPORTANT)
-############################################################
-# DO NOT ignore:
-# - database/schema.sql
-# - docs/
-# - README.md
-# - Rules.md
-# - source code
-############################################################
+######################################################################
+# 🧪 LOGS & COVERAGE
+######################################################################
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+coverage/
+*.lcov
+reports/
+tmp/
+temp/
+
+######################################################################
+# 🔐 CERTIFICATES & KEYS
+######################################################################
+*.pem
+*.crt
+*.cer
+*.key
+id_rsa
+id_rsa.pub
