@@ -8,6 +8,7 @@ import lombok.Setter;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 
 @Entity
 @Table(name = "vendor_bills")
@@ -66,14 +67,16 @@ public class VendorBill {
         createdAt = LocalDateTime.now();
     }
 
+    // ------------------ CALCULATED FIELDS ------------------
+
     public Long getPendingDays() {
-        if (dueDate == null || "PAID".equals(status))
+        if (dueDate == null || "PAID".equals(status)) {
             return 0L;
+        }
         long days = ChronoUnit.DAYS.between(dueDate, LocalDate.now());
-        return days > 0 ? days : 0L;
+        return Math.max(days, 0);
     }
 
-    // NEW METHODS FOR OVERDUE TRACKING
     @Transient
     public Boolean getIsOverdue() {
         if ("PAID".equals(status) || dueDate == null) {
@@ -100,10 +103,11 @@ public class VendorBill {
         if (!getIsOverdue()) {
             return "ON_TIME";
         }
+
         long days = getOverdueDays();
-        if (days > 90) return "CRITICAL"; // 90+ days
-        if (days > 60) return "SEVERE";   // 60-90 days
-        if (days > 30) return "HIGH";     // 30-60 days
-        return "OVERDUE";                  // 1-30 days
+        if (days > 90) return "CRITICAL";
+        if (days > 60) return "SEVERE";
+        if (days > 30) return "HIGH";
+        return "OVERDUE";
     }
 }
