@@ -132,6 +132,7 @@ public class BulkEmergencyContactImportService {
     public BulkEmergencyContactImportResponse processImport(List<EmergencyContactImportRow> rows, Long societyId,
             Long userId) {
         Society society = societyRepository.findById(societyId)
+<<<<<<< HEAD
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Society not found"));
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "User not found"));
@@ -417,6 +418,8 @@ public class BulkEmergencyContactImportService {
     public BulkEmergencyContactImportResponse processImport(List<EmergencyContactImportRow> rows, Long societyId,
             Long userId) {
         Society society = societyRepository.findById(societyId)
+=======
+>>>>>>> 53e86a3 (Added bulk import services for vehicles, vendors, and wings)
                 .orElseThrow(() -> new ApiException("Society not found", HttpStatus.NOT_FOUND));
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ApiException("User not found", HttpStatus.NOT_FOUND));
