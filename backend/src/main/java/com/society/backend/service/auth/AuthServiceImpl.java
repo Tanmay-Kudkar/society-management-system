@@ -1,23 +1,29 @@
 package com.society.backend.service.auth;
 
 import java.time.LocalDateTime;
+import java.util.Set;
+import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.society.backend.dto.auth.LoginRequest;
 import com.society.backend.dto.auth.LoginResponse;
 import com.society.backend.dto.auth.RegisterRequest;
 import com.society.backend.dto.user.UserResponse;
+import com.society.backend.entity.PasswordResetToken;
 import com.society.backend.entity.Role;
 import com.society.backend.entity.User;
 import com.society.backend.exception.ApiException;
+import com.society.backend.repository.PasswordResetTokenRepository;
 import com.society.backend.repository.user.UserRepository;
 import com.society.backend.security.JwtUtils;
 import com.society.backend.security.RolePermissions;
+import com.society.backend.service.common.EmailService;
 
 /**
  * Auth service handles login and public self-registration.
@@ -33,15 +39,32 @@ public class AuthServiceImpl implements AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtUtils jwtUtils;
     private final AuthenticationManager authenticationManager;
+    private final PasswordResetTokenRepository resetTokenRepository;
+    private final EmailService emailService;
+
+    // Portal → allowed roles mapping
+    private static final Set<Role> ADMIN_ROLES = Set.of(
+            Role.PLATFORM_OWNER, Role.ORGANIZATION_OWNER, Role.SOCIETY_ADMIN);
+    private static final Set<Role> MANAGEMENT_ROLES = Set.of(
+            Role.CHAIRMAN, Role.SECRETARY, Role.TREASURER,
+            Role.COMMITTEE, Role.MANAGER, Role.EMPLOYEE);
+    private static final Set<Role> RESIDENT_ROLES = Set.of(
+            Role.MEMBER, Role.TENANT);
+    private static final Set<Role> VISITOR_ROLES = Set.of(
+            Role.VISITOR);
 
     public AuthServiceImpl(UserRepository userRepository,
             PasswordEncoder passwordEncoder,
             JwtUtils jwtUtils,
-            AuthenticationManager authenticationManager) {
+            AuthenticationManager authenticationManager,
+            PasswordResetTokenRepository resetTokenRepository,
+            EmailService emailService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtils = jwtUtils;
         this.authenticationManager = authenticationManager;
+        this.resetTokenRepository = resetTokenRepository;
+        this.emailService = emailService;
     }
 
     @Override
@@ -94,9 +117,15 @@ public class AuthServiceImpl implements AuthService {
             throw new ApiException(HttpStatus.FORBIDDEN, "Account is disabled. Contact your administrator.");
         }
 
-        // Generate JWT token
-        String token = jwtUtils.generateToken(user.getEmail(), user.getRole().name(), user.getId());
+        // Validate portal type against user role (if provided)
+        validatePortalAccess(request.getPortalType(), user.getRole());
 
+        // Generate JWT token (longer expiry if remember me)
+        boolean rememberMe = request.isRememberMe();
+        String token = jwtUtils.generateToken(user.getEmail(), user.getRole().name(), user.getId(), rememberMe);
+
+        // Get organizationId if user belongs to an organization
+        Long organizationId = user.getOrganization() != null ? user.getOrganization().getId() : null;
         // Get societyId if user belongs to a society
         Long societyId = user.getSociety() != null ? user.getSociety().getId() : null;
         // Get flatId if user has a flat assigned
@@ -107,6 +136,8 @@ public class AuthServiceImpl implements AuthService {
                 user.getName(),
                 user.getEmail(),
                 user.getRole().name(),
+                user.getAccountType(),
+                organizationId,
                 societyId,
                 flatId,
                 token);
@@ -122,6 +153,7 @@ public class AuthServiceImpl implements AuthService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new ApiException(HttpStatus.UNAUTHORIZED, "User not found"));
 
+        Long organizationId = user.getOrganization() != null ? user.getOrganization().getId() : null;
         Long societyId = user.getSociety() != null ? user.getSociety().getId() : null;
         Long flatId = user.getFlat() != null ? user.getFlat().getId() : null;
 
@@ -131,9 +163,83 @@ public class AuthServiceImpl implements AuthService {
                 user.getEmail(),
                 user.getRole().name(),
                 societyId);
+        response.setAccountType(user.getAccountType());
+        response.setOrganizationId(organizationId);
         response.setFlatId(flatId);
-        
+
         return response;
+    }
+
+    @Override
+    @Transactional
+    public void forgotPassword(String email) {
+        User user = userRepository.findByEmail(email).orElse(null);
+
+        // Always return success to avoid email enumeration attacks
+        if (user == null || (user.getIsActive() != null && !user.getIsActive())) {
+            return;
+        }
+
+        // Delete any existing reset tokens for this user
+        resetTokenRepository.deleteByUser(user);
+
+        // Generate reset token
+        String token = UUID.randomUUID().toString();
+        PasswordResetToken resetToken = new PasswordResetToken(
+                token,
+                user,
+                LocalDateTime.now().plusMinutes(30) // 30-minute expiry
+        );
+        resetTokenRepository.save(resetToken);
+
+        // Send email
+        try {
+            emailService.sendPasswordResetEmail(user.getEmail(), user.getName(), token);
+        } catch (Exception e) {
+            System.err.println("Failed to send password reset email: " + e.getMessage());
+            // Don't expose email sending failures to the user
+        }
+    }
+
+    @Override
+    @Transactional
+    public void resetPassword(String token, String newPassword) {
+        PasswordResetToken resetToken = resetTokenRepository.findByTokenAndUsedFalse(token)
+                .orElseThrow(() -> new ApiException(HttpStatus.BAD_REQUEST,
+                        "Invalid or expired reset link. Please request a new password reset."));
+
+        if (resetToken.isExpired()) {
+            throw new ApiException(HttpStatus.BAD_REQUEST,
+                    "This reset link has expired. Please request a new password reset.");
+        }
+
+        User user = resetToken.getUser();
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+
+        // Mark token as used
+        resetToken.setUsed(true);
+        resetTokenRepository.save(resetToken);
+    }
+
+    private void validatePortalAccess(String portalType, Role userRole) {
+        if (portalType == null || portalType.isBlank()) {
+            return; // No portal selected, allow any role (backward compatible)
+        }
+
+        Set<Role> allowedRoles = switch (portalType.toLowerCase().trim()) {
+            case "admin" -> ADMIN_ROLES;
+            case "management" -> MANAGEMENT_ROLES;
+            case "resident" -> RESIDENT_ROLES;
+            case "visitor" -> VISITOR_ROLES;
+            default -> null;
+        };
+
+        if (allowedRoles != null && !allowedRoles.contains(userRole)) {
+            String portalLabel = portalType.substring(0, 1).toUpperCase() + portalType.substring(1).toLowerCase();
+            throw new ApiException(HttpStatus.FORBIDDEN,
+                    "Your account doesn't have " + portalLabel + " portal access. Please select the correct portal.");
+        }
     }
 
     private Role resolveRole(String roleValue) {

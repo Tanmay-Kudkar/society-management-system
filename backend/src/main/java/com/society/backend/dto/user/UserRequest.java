@@ -28,7 +28,7 @@ public class UserRequest {
     @Pattern(regexp = "^(\\+91)?[6-9]\\d{9}$|^$", message = "Invalid phone number format. Use 10-digit mobile number")
     private String phone;
 
-    private Long societyId; // Required when MASTER_ADMIN creates SOCIETY_ADMIN
+    private Long societyId; // Required when PLATFORM_OWNER creates SOCIETY_ADMIN
     
     private Long flatId; // Required for MEMBER and TENANT roles
 }

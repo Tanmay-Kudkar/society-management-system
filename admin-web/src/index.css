@@ -158,6 +158,22 @@ html, body {
   overflow-y: auto;
 }
 
+/* Global cursor pointer for all clickable elements */
+button,
+[role="button"],
+a,
+input[type="submit"],
+input[type="button"],
+input[type="reset"],
+input[type="checkbox"],
+input[type="radio"],
+select,
+label[for],
+summary,
+.cursor-pointer {
+  cursor: pointer;
+}
+
 body {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   background-color: var(--background);

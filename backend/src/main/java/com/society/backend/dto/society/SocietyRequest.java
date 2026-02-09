@@ -33,4 +33,7 @@ public class SocietyRequest {
     private Integer totalOffices;
 
     private Integer totalWings;
+
+    // Organization ID (for societies created under an organization)
+    private Long organizationId;
 }

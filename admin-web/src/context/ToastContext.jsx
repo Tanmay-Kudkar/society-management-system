@@ -108,12 +108,13 @@ function Toast({ toast, onClose }) {
         backdrop-blur-sm
         transform transition-all duration-300 ease-out
         ${isExiting 
-          ? 'translate-x-full opacity-0' 
-          : 'translate-x-0 opacity-100 animate-slideInFromRight'
+          ? 'animate-toast-out' 
+          : 'animate-toast-in'
         }
+        ${type === 'error' && !isExiting ? 'animate-error-shake' : ''}
       `}
     >
-      <div className={`flex-shrink-0 ${config.iconColor}`}>
+      <div className={`flex-shrink-0 ${config.iconColor} ${type === 'success' && !isExiting ? 'animate-success-pulse' : ''} ${type === 'error' && !isExiting ? 'animate-error-pulse' : ''}`}>
         <Icon className="w-6 h-6" />
       </div>
       

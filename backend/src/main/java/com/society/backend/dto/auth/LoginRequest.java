@@ -13,4 +13,16 @@ public class LoginRequest {
 
     @NotBlank(message = "Password is required")
     private String password;
+
+    /**
+     * Portal type selected at login: "admin", "management", "resident", "visitor"
+     */
+    private String portalType;
+
+    /** Whether to extend session to 30 days */
+    private Boolean rememberMe;
+
+    public boolean isRememberMe() {
+        return rememberMe != null && rememberMe;
+    }
 }

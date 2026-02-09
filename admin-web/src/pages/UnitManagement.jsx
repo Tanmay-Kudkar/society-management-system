@@ -54,10 +54,10 @@ export default function UnitManagement() {
   const [userFormErrors, setUserFormErrors] = useState({})
   const [apiError, setApiError] = useState('')
 
-  // Get society filter from URL (for MASTER_ADMIN viewing specific society)
+  // Get society filter from URL (for PLATFORM_OWNER viewing specific society)
   const societyIdFromUrl = searchParams.get('society')
-  const isMasterAdmin = user?.role === 'MASTER_ADMIN'
-  const effectiveSocietyId = isMasterAdmin && societyIdFromUrl ? parseInt(societyIdFromUrl) : user?.societyId
+  const isPlatformLevel = user?.role === 'PLATFORM_OWNER' || user?.role === 'ORGANIZATION_OWNER' || user?.role === 'ORGANIZATION_OWNER'
+  const effectiveSocietyId = isPlatformLevel && societyIdFromUrl ? parseInt(societyIdFromUrl) : user?.societyId
 
   // Fetch flats/units
   const { data: flats = [], isLoading: flatsLoading } = useQuery({
@@ -75,11 +75,11 @@ export default function UnitManagement() {
     enabled: !!user?.id,
   })
 
-  // Fetch societies (for MASTER_ADMIN)
+  // Fetch societies (for PLATFORM_OWNER)
   const { data: societies = [] } = useQuery({
     queryKey: ['societies'],
     queryFn: () => societyApi.getAll().then(res => res.data),
-    enabled: isMasterAdmin,
+    enabled: isPlatformLevel,
   })
 
   // Fetch wings
@@ -209,7 +209,7 @@ export default function UnitManagement() {
     e.preventDefault()
     const formData = new FormData(e.target)
     
-    const societyId = isMasterAdmin 
+    const societyId = isPlatformLevel 
       ? parseInt(formData.get('societyId')) 
       : user?.societyId
 
@@ -695,7 +695,7 @@ export default function UnitManagement() {
           unit={editingUnit}
           societies={societies}
           wings={wings}
-          isMasterAdmin={isMasterAdmin}
+          isPlatformLevel={isPlatformLevel}
           userSocietyId={user?.societyId}
           errors={unitFormErrors}
           apiError={apiError}
@@ -804,7 +804,7 @@ function StatCard({ label, value, icon: Icon, color }) {
 }
 
 // Unit Form Modal
-function UnitFormModal({ unit, societies, wings, isMasterAdmin, userSocietyId, errors, apiError, onSubmit, onClose, isLoading }) {
+function UnitFormModal({ unit, societies, wings, isPlatformLevel, userSocietyId, errors, apiError, onSubmit, onClose, isLoading }) {
   const [selectedUnitType, setSelectedUnitType] = useState(unit?.unitType || 'FLAT')
   const [selectedWingId, setSelectedWingId] = useState(unit?.wingId ? String(unit.wingId) : '')
   const [selectedFlatType, setSelectedFlatType] = useState(unit?.flatType || '')
@@ -844,8 +844,8 @@ function UnitFormModal({ unit, societies, wings, isMasterAdmin, userSocietyId, e
         )}
 
         <form onSubmit={onSubmit} className="p-4 space-y-4">
-          {/* Society (MASTER_ADMIN only) */}
-          {isMasterAdmin ? (
+          {/* Society (PLATFORM_OWNER only) */}
+          {isPlatformLevel ? (
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Society <span className="text-red-500">*</span>

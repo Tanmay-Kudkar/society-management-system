@@ -11,15 +11,15 @@ const contractTypes = [
 ]
 
 export default function Contracts() {
-  const { user } = useAuth()
+  const { user, canManageContracts } = useAuth()
   const queryClient = useQueryClient()
   const [showModal, setShowModal] = useState(false)
   const [editingContract, setEditingContract] = useState(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [filterType, setFilterType] = useState('')
 
-  // Check if current user is MASTER_ADMIN
-  const isMasterAdmin = user?.role === 'MASTER_ADMIN'
+  // Check if current user is PLATFORM_OWNER
+  const isPlatformLevel = user?.role === 'PLATFORM_OWNER' || user?.role === 'ORGANIZATION_OWNER' || user?.role === 'ORGANIZATION_OWNER'
 
   const { data: contracts = [], isLoading } = useQuery({
     queryKey: ['contracts'],
@@ -100,13 +100,15 @@ export default function Contracts() {
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Contracts</h1>
           <p className="text-gray-600 dark:text-gray-400 mt-1">Manage AMC and service contracts</p>
         </div>
-        <button
-          onClick={() => { setEditingContract(null); setShowModal(true) }}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-        >
-          <Plus size={20} />
-          Add Contract
-        </button>
+        {canManageContracts() && (
+          <button
+            onClick={() => { setEditingContract(null); setShowModal(true) }}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+          >
+            <Plus size={20} />
+            Add Contract
+          </button>
+        )}
       </div>
 
       {/* Filters */}
@@ -169,7 +171,7 @@ export default function Contracts() {
                           </div>
                           <div>
                             <span className="font-medium text-gray-900 dark:text-white">{contract.title}</span>
-                            {isMasterAdmin && <p className="text-xs text-gray-500 dark:text-gray-400">{contract.societyName}</p>}
+                            {isPlatformLevel && <p className="text-xs text-gray-500 dark:text-gray-400">{contract.societyName}</p>}
                           </div>
                         </div>
                       </td>

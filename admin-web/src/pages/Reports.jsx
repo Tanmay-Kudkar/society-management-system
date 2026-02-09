@@ -41,15 +41,15 @@ export default function Reports() {
   const [customStartDate, setCustomStartDate] = useState('')
   const [customEndDate, setCustomEndDate] = useState('')
 
-  const isMasterAdmin = user?.role === 'MASTER_ADMIN'
+  const isPlatformLevel = user?.role === 'PLATFORM_OWNER' || user?.role === 'ORGANIZATION_OWNER' || user?.role === 'ORGANIZATION_OWNER'
 
   const { data: societies = [] } = useQuery({
     queryKey: ['societies'],
     queryFn: () => societyApi.getAll().then(res => res.data),
-    enabled: isMasterAdmin,
+    enabled: isPlatformLevel,
   })
 
-  const societyId = isMasterAdmin ? selectedSocietyId : user?.societyId
+  const societyId = isPlatformLevel ? selectedSocietyId : user?.societyId
 
   const { data: report, isLoading, refetch } = useQuery({
     queryKey: ['report', reportType, societyId, customStartDate, customEndDate],
@@ -118,7 +118,7 @@ export default function Reports() {
       {/* Filters */}
       <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-4">
         <div className="flex flex-wrap items-center gap-4">
-          {isMasterAdmin && (
+          {isPlatformLevel && (
             <select
               value={selectedSocietyId}
               onChange={(e) => setSelectedSocietyId(e.target.value)}

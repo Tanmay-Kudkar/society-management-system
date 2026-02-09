@@ -35,9 +35,30 @@ public class User {
     private Role role;
 
     /**
+     * Account type selected during signup.
+     * Only applicable for SOCIETY_ADMIN and ORGANIZATION_OWNER roles.
+     * - SOCIETY_ADMIN: Single society management
+     * - ORGANIZATION_OWNER: Multiple society management (subscription-based)
+     */
+    @Column(name = "account_type")
+    private String accountType;
+
+    /**
+     * Organization this user belongs to (for ORGANIZATION_OWNER role).
+     * - PLATFORM_OWNER: null
+     * - ORGANIZATION_OWNER: linked to their organization
+     * - SOCIETY_ADMIN: optionally linked if created by an org owner
+     * - Others: null (they belong to society, not org directly)
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "organization_id")
+    private Organization organization;
+
+    /**
      * Society this user belongs to.
-     * - MASTER_ADMIN: null (has access to all societies)
-     * - SOCIETY_ADMIN, COMMITTEE, EMPLOYEE, MEMBER: linked to specific society
+     * - PLATFORM_OWNER: null (has access to all societies)
+     * - ORGANIZATION_OWNER: null (has access to org's societies)
+     * - SOCIETY_ADMIN and below: linked to specific society
      */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "society_id")
@@ -59,18 +80,40 @@ public class User {
     private LocalDateTime createdAt;
 
     /**
-     * Check if user has society-level admin rights
+     * Check if user is the platform owner (invisible global administrator)
      */
-    public boolean isSocietyAdmin() {
-        return role == Role.SOCIETY_ADMIN || role == Role.MASTER_ADMIN;
+    public boolean isPlatformOwner() {
+        return role == Role.PLATFORM_OWNER;
     }
 
     /**
-     * Check if user is committee member (any committee role)
+     * Check if user is an organization owner (multi-society manager)
+     */
+    public boolean isOrganizationOwner() {
+        return role == Role.ORGANIZATION_OWNER;
+    }
+
+    /**
+     * Check if user has society-level admin rights
+     */
+    public boolean isSocietyAdmin() {
+        return role == Role.SOCIETY_ADMIN || role == Role.PLATFORM_OWNER || role == Role.ORGANIZATION_OWNER;
+    }
+
+    /**
+     * Check if user is committee member (any governing body role)
      */
     public boolean isCommitteeMember() {
         return role == Role.CHAIRMAN || role == Role.SECRETARY ||
                 role == Role.TREASURER || role == Role.COMMITTEE ||
+                role == Role.SOCIETY_ADMIN;
+    }
+
+    /**
+     * Check if user is at management level (can manage operations)
+     */
+    public boolean isManagementLevel() {
+        return role == Role.MANAGER || role == Role.SECRETARY ||
                 role == Role.SOCIETY_ADMIN;
     }
 }

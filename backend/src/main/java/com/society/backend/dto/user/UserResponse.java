@@ -14,8 +14,11 @@ public class UserResponse {
     private String name;
     private String email;
     private String role;
+    private String accountType;
     private String phone;
     private Boolean isActive;
+    private Long organizationId;
+    private String organizationName;
     private Long societyId;
     private String societyName;
     private Long flatId;
@@ -37,10 +40,10 @@ public class UserResponse {
         this.role = role;
         this.societyId = societyId;
     }
-    
+
     // Constructor with all basic fields (used in user service)
-    public UserResponse(Long id, String name, String email, String role, String phone, 
-                       Boolean isActive, Long societyId, String societyName) {
+    public UserResponse(Long id, String name, String email, String role, String phone,
+            Boolean isActive, Long societyId, String societyName) {
         this.id = id;
         this.name = name;
         this.email = email;

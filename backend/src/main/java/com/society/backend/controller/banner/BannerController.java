@@ -7,6 +7,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -14,11 +15,13 @@ import java.util.List;
 @RestController
 @RequestMapping("/banners")
 @RequiredArgsConstructor
+@PreAuthorize("isAuthenticated()")
 public class BannerController {
 
     private final BannerService bannerService;
 
     @PostMapping
+    @PreAuthorize("hasAnyRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'MANAGER')")
     public ResponseEntity<BannerResponse> create(
             @Valid @RequestBody BannerRequest request,
             @RequestParam Long userId) {
@@ -46,6 +49,7 @@ public class BannerController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'MANAGER')")
     public ResponseEntity<BannerResponse> update(
             @PathVariable Long id,
             @Valid @RequestBody BannerRequest request,
@@ -54,6 +58,7 @@ public class BannerController {
     }
 
     @PatchMapping("/{id}/deactivate")
+    @PreAuthorize("hasAnyRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'MANAGER')")
     public ResponseEntity<BannerResponse> deactivate(
             @PathVariable Long id,
             @RequestParam Long userId) {
@@ -61,6 +66,7 @@ public class BannerController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY')")
     public ResponseEntity<Void> delete(
             @PathVariable Long id,
             @RequestParam Long userId) {

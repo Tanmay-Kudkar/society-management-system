@@ -1,149 +1,115 @@
-import { useNavigate } from 'react-router-dom'
 import { useTheme } from '../../context/ThemeContext'
-import { Building2, ArrowLeft, Shield, Sun, Moon, Lock, Eye, Database, Bell, Trash2, Mail } from 'lucide-react'
-import '../../styles/animations.css'
+import { Shield, Eye, Lock, Server, Mail, Database, Clock } from 'lucide-react'
+import PageShell from '../../components/PageShell'
 
 export default function Privacy() {
-  const navigate = useNavigate()
-  const { isDark, toggleTheme } = useTheme()
+  const { isDark } = useTheme()
 
   const sections = [
     {
-      icon: Database,
-      title: 'Information We Collect',
+      icon: Eye, title: 'Information We Collect',
       content: [
-        'Personal identification information (Name, email address, phone number)',
-        'Society and flat details for management purposes',
-        'Payment information for transaction processing',
-        'Usage data and analytics to improve our services',
-        'Device information and IP addresses for security',
+        'Personal information (name, email, phone) provided during registration.',
+        'Society and flat details for management purposes.',
+        'Payment information processed through secure payment gateways.',
+        'Usage data and analytics to improve our services.',
+        'Device information and IP addresses for security purposes.',
       ]
     },
     {
-      icon: Eye,
-      title: 'How We Use Your Information',
+      icon: Database, title: 'How We Use Your Data',
       content: [
-        'To provide and maintain our society management services',
-        'To process payments and send transaction notifications',
-        'To send important updates, notices, and service announcements',
-        'To improve our platform based on usage patterns',
-        'To provide customer support and respond to inquiries',
+        'To provide and maintain our society management services.',
+        'To process billing and payment transactions securely.',
+        'To send important notices and updates about your society.',
+        'To improve our platform based on usage patterns and feedback.',
+        'To ensure security and prevent unauthorized access to your account.',
       ]
     },
     {
-      icon: Lock,
-      title: 'Data Security',
+      icon: Lock, title: 'Data Security',
       content: [
-        'All data is encrypted using industry-standard AES-256 encryption',
-        'Secure HTTPS connections for all data transmissions',
-        'Regular security audits and penetration testing',
-        'Access controls and authentication requirements',
-        'Compliance with data protection regulations',
+        'All data is encrypted in transit using TLS 1.3 encryption.',
+        'Sensitive data is encrypted at rest using AES-256 encryption.',
+        'Regular security audits and penetration testing are conducted.',
+        'Role-based access control ensures only authorized personnel access data.',
+        'We follow industry-standard security practices and compliance frameworks.',
       ]
     },
     {
-      icon: Bell,
-      title: 'Communication Preferences',
+      icon: Mail, title: 'Communications',
       content: [
-        'You can opt-out of promotional emails at any time',
-        'Critical service notifications cannot be disabled',
-        'Push notification preferences can be managed in settings',
-        'SMS alerts can be configured per notification type',
+        'We may send service-related emails that are necessary for operations.',
+        'Marketing communications can be opted out at any time.',
+        'Push notifications for important society updates can be managed in settings.',
+        'We will never share your contact information with third parties for marketing.',
       ]
     },
     {
-      icon: Trash2,
-      title: 'Data Retention & Deletion',
+      icon: Server, title: 'Data Retention',
       content: [
-        'Active account data is retained while your account is active',
-        'You can request data deletion by contacting support',
-        'Some data may be retained for legal compliance',
-        'Backup data is automatically purged after 90 days',
+        'Active account data is retained for the duration of your membership.',
+        'Transaction records are maintained as required by applicable laws.',
+        'You can request data deletion by contacting our support team.',
+        'Backup data is automatically purged after 90 days of account deletion.',
       ]
     },
     {
-      icon: Mail,
-      title: 'Contact Us',
+      icon: Clock, title: 'Your Rights',
       content: [
-        'For privacy-related inquiries: privacy@societyhub.com',
-        'Data Protection Officer: dpo@societyhub.com',
-        'General Support: support@societyhub.com',
-        'Phone: +91 1800-XXX-XXXX (Toll Free)',
+        'Right to access your personal data stored on our platform.',
+        'Right to request correction of inaccurate personal information.',
+        'Right to request deletion of your account and associated data.',
+        'Right to data portability — export your data in standard formats.',
+        'Right to withdraw consent for non-essential data processing.',
       ]
     },
   ]
 
   return (
-    <div className={`min-h-screen transition-colors duration-300 ${isDark ? 'bg-slate-900 text-white' : 'bg-gray-50 text-gray-900'}`}>
-      {/* Navigation */}
-      <nav className={`sticky top-0 z-50 backdrop-blur-xl border-b transition-colors ${isDark ? 'bg-slate-900/90 border-white/10' : 'bg-white/90 border-gray-200'}`}>
-        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-          <button 
-            onClick={() => navigate('/welcome')}
-            className={`flex items-center gap-2 transition-colors group ${isDark ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'}`}
-          >
-            <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
-            Back to Home
-          </button>
-          
-          <div 
-            onClick={() => navigate('/welcome')} 
-            className="flex items-center gap-2 cursor-pointer group"
-          >
-            <div className="p-2 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 group-hover:scale-110 transition-transform">
-              <Building2 className="w-5 h-5 text-white" />
-            </div>
-            <span className="font-bold text-lg">SocietyHub</span>
-          </div>
-
-          <button
-            onClick={toggleTheme}
-            className={`p-2.5 rounded-xl transition-all hover:scale-110 ${isDark ? 'bg-slate-800 hover:bg-slate-700 text-yellow-400' : 'bg-gray-100 hover:bg-gray-200 text-gray-700'}`}
-          >
-            {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-          </button>
-        </div>
-      </nav>
-
+    <PageShell>
       {/* Hero */}
-      <section className="py-20 px-4">
+      <section className="py-16 sm:py-24 px-4">
         <div className="max-w-4xl mx-auto text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-purple-500/10 text-purple-500 mb-6">
-            <Shield className="w-4 h-4" />
-            <span className="text-sm font-medium">Your Privacy Matters</span>
+          <div
+            className={`inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6 animate-fade-in-up ${isDark ? 'bg-white/5' : 'border'}`}
+            style={isDark ? {} : { background: 'color-mix(in srgb, var(--accent-primary) 8%, white)', borderColor: 'color-mix(in srgb, var(--accent-primary) 20%, transparent)' }}
+          >
+            <Shield className="w-4 h-4" style={{ color: 'var(--accent-primary)' }} />
+            <span className="text-sm font-medium" style={{ color: 'var(--accent-primary)' }}>Your Data, Your Rights</span>
           </div>
-          <h1 className="text-4xl md:text-6xl font-black mb-6">
+          <h1 className="text-4xl md:text-6xl font-black mb-6 animate-fade-in-up" style={{ animationDelay: '100ms' }}>
             <span className={isDark ? 'text-white' : 'text-gray-900'}>Privacy </span>
-            <span className="bg-gradient-to-r from-purple-500 to-pink-500 bg-clip-text text-transparent">Policy</span>
+            <span className="bg-clip-text text-transparent" style={{ backgroundImage: `linear-gradient(to right, var(--accent-primary), var(--accent-secondary))` }}>Policy</span>
           </h1>
-          <p className={`text-xl max-w-2xl mx-auto ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-            We take your privacy seriously. This policy explains how we collect, use, and protect your personal information.
-          </p>
-          <p className={`mt-4 text-sm ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
-            Last updated: January 31, 2026
+          <p className={`text-lg max-w-2xl mx-auto animate-fade-in-up ${isDark ? 'text-gray-400' : 'text-gray-600'}`} style={{ animationDelay: '200ms' }}>
+            Last updated: February 2026. We take your privacy seriously. This policy explains how we collect, use, and protect your information.
           </p>
         </div>
       </section>
 
-      {/* Content */}
-      <section className="py-12 px-4">
-        <div className="max-w-4xl mx-auto space-y-8">
+      {/* Sections */}
+      <section className="pb-20 px-4">
+        <div className="max-w-4xl mx-auto space-y-8 stagger-children">
           {sections.map((section, i) => (
-            <div 
+            <div
               key={i}
-              className={`group p-8 rounded-2xl transition-all duration-300 hover:scale-[1.02] ${isDark ? 'bg-slate-800 hover:bg-slate-700' : 'bg-white hover:shadow-xl border border-gray-100'}`}
+              className={`p-6 sm:p-8 rounded-2xl transition-all duration-300 card-accent-hover ${isDark ? 'bg-slate-800' : 'bg-white shadow-sm'}`}
             >
               <div className="flex items-start gap-4">
-                <div className="p-3 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex-shrink-0 group-hover:scale-110 transition-transform">
-                  <section.icon className="w-6 h-6 text-white" />
+                <div
+                  className="w-10 h-10 rounded-xl flex-shrink-0 flex items-center justify-center"
+                  style={{ background: `linear-gradient(to bottom right, var(--accent-primary), var(--accent-secondary))` }}
+                >
+                  <section.icon className="w-5 h-5 text-white" />
                 </div>
                 <div className="flex-1">
-                  <h2 className="text-xl font-bold mb-4">{section.title}</h2>
-                  <ul className={`space-y-3 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+                  <h2 className={`text-xl font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>{section.title}</h2>
+                  <ul className="space-y-3">
                     {section.content.map((item, j) => (
-                      <li key={j} className="flex items-start gap-2">
-                        <span className="w-1.5 h-1.5 rounded-full bg-purple-500 mt-2 flex-shrink-0"></span>
-                        <span>{item}</span>
+                      <li key={j} className={`flex items-start gap-3 text-sm leading-relaxed ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+                        <span className="w-1.5 h-1.5 rounded-full mt-2 flex-shrink-0" style={{ background: 'var(--accent-primary)' }} />
+                        {item}
                       </li>
                     ))}
                   </ul>
@@ -153,15 +119,6 @@ export default function Privacy() {
           ))}
         </div>
       </section>
-
-      {/* Footer */}
-      <footer className={`py-8 px-4 border-t ${isDark ? 'border-white/10' : 'border-gray-200'}`}>
-        <div className="max-w-7xl mx-auto text-center">
-          <p className={isDark ? 'text-gray-500' : 'text-gray-600'}>
-            © 2026 SocietyHub. All rights reserved.
-          </p>
-        </div>
-      </footer>
-    </div>
+    </PageShell>
   )
 }

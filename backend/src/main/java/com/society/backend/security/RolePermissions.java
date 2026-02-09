@@ -10,25 +10,37 @@ import java.util.Set;
 /**
  * Defines the strict role hierarchy for user CRUD permissions.
  * 
- * HOUSING SOCIETY HIERARCHY (Based on real-world structure):
- * ──────────────────────────────────────────────────────────
+ * MULTI-SOCIETY SaaS PLATFORM HIERARCHY:
+ * ──────────────────────────────────────
  * 
- * CHAIRMAN (Head/Superintendent):
- * - Holds overall control and guidance
- * - Presides over meetings
- * - Possesses final veto/consent power on committee decisions
- * - Primary signatory for bank accounts
- * - Can manage SECRETARY, TREASURER, and all below
+ * PLATFORM_OWNER (Global Platform Creator - Invisible):
+ * - Owns source code, infrastructure, pricing
+ * - Creates ORGANIZATION_OWNER and SOCIETY_ADMIN
+ * - Invisible to end clients
+ * 
+ * ORGANIZATION_OWNER (Multi-Society Manager):
+ * - Manages multiple societies via subscription
+ * - Creates SOCIETY_ADMIN for each society
+ * - Views organization-level reports
+ * 
+ * SOCIETY_ADMIN (Single Society Manager):
+ * - Full control within one society
+ * - Creates Chairman, Secretary, Treasurer
+ * 
+ * CHAIRMAN (Governing Body Head):
+ * - Highest authority in committee
+ * - Creates Secretary, Treasurer
  * 
  * SECRETARY (Administrative Head):
- * - Manages documentation, records, member details
- * - Handles day-to-day operations and correspondence
- * - Acts on decisions authorized by committee/chairman
- * - Can manage COMMITTEE and below
+ * - Creates Committee, Manager
  * 
  * TREASURER (Financial Head):
- * - Handles finances, billing, payments
- * - Can manage COMMITTEE and below
+ * - Peer to Secretary, financial oversight
+ * 
+ * COMMITTEE → MEMBER
+ * MANAGER → EMPLOYEE
+ * MEMBER → TENANT
+ * EMPLOYEE → VISITOR
  * 
  * HIERARCHY RULES:
  * ────────────────
@@ -36,29 +48,19 @@ import java.util.Set;
  * 2. Read access flows DOWNWARD (parents can read all descendants)
  * 3. Update/Delete access is LIMITED to direct children only
  * 4. EXCEPTION: SOCIETY_ADMIN has FULL CRUD rights to ALL roles below
+ * 5. Organization data is strictly isolated
  * 
  * ROLE LEVELS:
  * ────────────
- * Level 1: MASTER_ADMIN (Platform Owner)
- * Level 2: SOCIETY_ADMIN (Society Manager - Full CRUD Exception)
- * Level 3: CHAIRMAN (Committee Head - Highest Committee Authority)
+ * Level 0: PLATFORM_OWNER (Invisible Platform Creator)
+ * Level 1: ORGANIZATION_OWNER (Multi-Society Manager)
+ * Level 2: SOCIETY_ADMIN (Single Society Manager)
+ * Level 3: CHAIRMAN (Governing Body Head)
  * Level 4: SECRETARY, TREASURER (Administrative & Financial Heads)
- * Level 5: COMMITTEE (General Committee Members)
+ * Level 5: COMMITTEE, MANAGER (Committee Members & Operations)
  * Level 6: EMPLOYEE, MEMBER (Staff & Residents)
- * Level 7: TENANT, VISITOR (Renters & Temporary Access)
- * 
- * CREATION HIERARCHY (Direct Children Only):
- * ──────────────────────────────────────────
- * MASTER_ADMIN → SOCIETY_ADMIN only
- * SOCIETY_ADMIN → ALL below (exception: full CRUD rights)
- * CHAIRMAN → SECRETARY, TREASURER (direct children - committee leadership)
- * SECRETARY → COMMITTEE (direct child - administrative subordinates)
- * TREASURER → COMMITTEE (direct child - financial subordinates)
- * COMMITTEE → EMPLOYEE, MEMBER (direct children)
- * EMPLOYEE → VISITOR only (direct child)
- * MEMBER → TENANT only (direct child)
- * TENANT → cannot create anyone
- * VISITOR → cannot create anyone
+ * Level 7: TENANT (Renters)
+ * Level 8: VISITOR (Temporary Access)
  */
 public final class RolePermissions {
 
@@ -71,8 +73,13 @@ public final class RolePermissions {
                 // CREATE PERMISSIONS - Direct children only
                 // ═══════════════════════════════════════════════════════════════
 
-                // MASTER_ADMIN - Can ONLY create SOCIETY_ADMIN (direct child)
-                ALLOWED_CREATIONS.put(Role.MASTER_ADMIN, EnumSet.of(Role.SOCIETY_ADMIN));
+                // PLATFORM_OWNER - Creates ORG_OWNER and SOCIETY_ADMIN (both signup paths)
+                ALLOWED_CREATIONS.put(Role.PLATFORM_OWNER, EnumSet.of(
+                                Role.ORGANIZATION_OWNER,
+                                Role.SOCIETY_ADMIN));
+
+                // ORGANIZATION_OWNER - Creates SOCIETY_ADMIN for each of their societies
+                ALLOWED_CREATIONS.put(Role.ORGANIZATION_OWNER, EnumSet.of(Role.SOCIETY_ADMIN));
 
                 // SOCIETY_ADMIN - EXCEPTION: Full CRUD on all roles below (special privilege)
                 ALLOWED_CREATIONS.put(Role.SOCIETY_ADMIN, EnumSet.of(
@@ -80,27 +87,31 @@ public final class RolePermissions {
                                 Role.SECRETARY,
                                 Role.TREASURER));
 
-                // CHAIRMAN - Cannot create anyone (only approves COMMITTEE)
+                // CHAIRMAN - Creates Secretary, Treasurer (governing body appointments)
                 ALLOWED_CREATIONS.put(Role.CHAIRMAN, EnumSet.noneOf(Role.class));
 
-                // SECRETARY - Administrative head, can nominate/create COMMITTEE members
+                // SECRETARY - Administrative head, creates COMMITTEE and MANAGER
                 ALLOWED_CREATIONS.put(Role.SECRETARY, EnumSet.of(
                                 Role.COMMITTEE,
+                                Role.MANAGER,
                                 Role.EMPLOYEE,
                                 Role.MEMBER));
 
-                // TREASURER - Financial head, cannot create (only approve/reject COMMITTEE)
+                // TREASURER - Financial head, cannot create
                 ALLOWED_CREATIONS.put(Role.TREASURER, EnumSet.noneOf(Role.class));
 
-                // COMMITTEE - Can create EMPLOYEE and MEMBER (direct children)
+                // COMMITTEE - Creates MEMBER (flat owners)
                 ALLOWED_CREATIONS.put(Role.COMMITTEE, EnumSet.of(
                                 Role.EMPLOYEE,
                                 Role.MEMBER));
 
-                // EMPLOYEE - Can create VISITOR only (direct child)
+                // MANAGER - Creates EMPLOYEE (operations staff)
+                ALLOWED_CREATIONS.put(Role.MANAGER, EnumSet.of(Role.EMPLOYEE));
+
+                // EMPLOYEE - Creates VISITOR only
                 ALLOWED_CREATIONS.put(Role.EMPLOYEE, EnumSet.of(Role.VISITOR));
 
-                // MEMBER - Can create TENANT only (direct child, for their flat)
+                // MEMBER - Creates TENANT only (for their flat)
                 ALLOWED_CREATIONS.put(Role.MEMBER, EnumSet.of(Role.TENANT));
 
                 // TENANT and VISITOR - Cannot create anyone
@@ -108,43 +119,51 @@ public final class RolePermissions {
                 ALLOWED_CREATIONS.put(Role.VISITOR, EnumSet.noneOf(Role.class));
 
                 // ═══════════════════════════════════════════════════════════════
-                // UPDATE/DELETE PERMISSIONS - Same as create (direct children only)
+                // UPDATE/DELETE PERMISSIONS
                 // ═══════════════════════════════════════════════════════════════
 
-                // MASTER_ADMIN - Can update/delete SOCIETY_ADMIN only
-                ALLOWED_UPDATES.put(Role.MASTER_ADMIN, EnumSet.of(Role.SOCIETY_ADMIN));
+                // PLATFORM_OWNER - Can update/delete ORGANIZATION_OWNER and SOCIETY_ADMIN
+                ALLOWED_UPDATES.put(Role.PLATFORM_OWNER, EnumSet.of(
+                                Role.ORGANIZATION_OWNER,
+                                Role.SOCIETY_ADMIN));
 
-                // SOCIETY_ADMIN - Can update/delete CHAIRMAN, SECRETARY, TREASURER only
+                // ORGANIZATION_OWNER - Can update/delete SOCIETY_ADMIN only
+                ALLOWED_UPDATES.put(Role.ORGANIZATION_OWNER, EnumSet.of(Role.SOCIETY_ADMIN));
+
+                // SOCIETY_ADMIN - Can update/delete governing body
                 ALLOWED_UPDATES.put(Role.SOCIETY_ADMIN, EnumSet.of(
                                 Role.CHAIRMAN,
                                 Role.SECRETARY,
                                 Role.TREASURER));
 
-                // CHAIRMAN - Can update/delete SECRETARY, TREASURER, and approve/reject
-                // COMMITTEE
+                // CHAIRMAN - Can update/delete Secretary, Treasurer, Committee
                 ALLOWED_UPDATES.put(Role.CHAIRMAN, EnumSet.of(
                                 Role.SECRETARY,
                                 Role.TREASURER,
                                 Role.COMMITTEE));
 
-                // SECRETARY - Can update/delete COMMITTEE, EMPLOYEE, and MEMBER (manages them)
+                // SECRETARY - Can update/delete Committee, Manager, Employee, Member
                 ALLOWED_UPDATES.put(Role.SECRETARY, EnumSet.of(
                                 Role.COMMITTEE,
+                                Role.MANAGER,
                                 Role.EMPLOYEE,
                                 Role.MEMBER));
 
-                // TREASURER - Can approve/reject COMMITTEE only
+                // TREASURER - Can approve/reject Committee only
                 ALLOWED_UPDATES.put(Role.TREASURER, EnumSet.of(Role.COMMITTEE));
 
-                // COMMITTEE - Can update/delete EMPLOYEE and MEMBER
+                // COMMITTEE - Can update/delete Employee and Member
                 ALLOWED_UPDATES.put(Role.COMMITTEE, EnumSet.of(
                                 Role.EMPLOYEE,
                                 Role.MEMBER));
 
-                // EMPLOYEE - Can update/delete VISITOR only
+                // MANAGER - Can update/delete Employee
+                ALLOWED_UPDATES.put(Role.MANAGER, EnumSet.of(Role.EMPLOYEE));
+
+                // EMPLOYEE - Can update/delete Visitor only
                 ALLOWED_UPDATES.put(Role.EMPLOYEE, EnumSet.of(Role.VISITOR));
 
-                // MEMBER - Can update/delete TENANT only
+                // MEMBER - Can update/delete Tenant only
                 ALLOWED_UPDATES.put(Role.MEMBER, EnumSet.of(Role.TENANT));
 
                 // TENANT and VISITOR - Cannot update/delete anyone
@@ -155,8 +174,22 @@ public final class RolePermissions {
                 // READ PERMISSIONS - All descendants (downward flow)
                 // ═══════════════════════════════════════════════════════════════
 
-                // MASTER_ADMIN - Can read ALL roles
-                ALLOWED_READS.put(Role.MASTER_ADMIN, EnumSet.allOf(Role.class));
+                // PLATFORM_OWNER - Can read ALL roles
+                ALLOWED_READS.put(Role.PLATFORM_OWNER, EnumSet.allOf(Role.class));
+
+                // ORGANIZATION_OWNER - Can read all below (within their org)
+                ALLOWED_READS.put(Role.ORGANIZATION_OWNER, EnumSet.of(
+                                Role.ORGANIZATION_OWNER,
+                                Role.SOCIETY_ADMIN,
+                                Role.CHAIRMAN,
+                                Role.SECRETARY,
+                                Role.TREASURER,
+                                Role.COMMITTEE,
+                                Role.MANAGER,
+                                Role.EMPLOYEE,
+                                Role.MEMBER,
+                                Role.TENANT,
+                                Role.VISITOR));
 
                 // SOCIETY_ADMIN - Can read all below
                 ALLOWED_READS.put(Role.SOCIETY_ADMIN, EnumSet.of(
@@ -165,41 +198,49 @@ public final class RolePermissions {
                                 Role.SECRETARY,
                                 Role.TREASURER,
                                 Role.COMMITTEE,
+                                Role.MANAGER,
                                 Role.EMPLOYEE,
                                 Role.MEMBER,
                                 Role.TENANT,
                                 Role.VISITOR));
 
-                // CHAIRMAN - Can read SECRETARY, TREASURER and all below (highest committee
-                // authority)
+                // CHAIRMAN - Can read all committee and below
                 ALLOWED_READS.put(Role.CHAIRMAN, EnumSet.of(
                                 Role.CHAIRMAN, Role.SECRETARY, Role.TREASURER,
-                                Role.COMMITTEE, Role.EMPLOYEE, Role.MEMBER,
+                                Role.COMMITTEE, Role.MANAGER, Role.EMPLOYEE, Role.MEMBER,
                                 Role.TENANT, Role.VISITOR));
 
-                // SECRETARY - Can read COMMITTEE and below
+                // SECRETARY - Can read Committee, Manager and below
                 ALLOWED_READS.put(Role.SECRETARY, EnumSet.of(
-                                Role.SECRETARY, Role.COMMITTEE, Role.EMPLOYEE, Role.MEMBER,
+                                Role.SECRETARY, Role.COMMITTEE, Role.MANAGER,
+                                Role.EMPLOYEE, Role.MEMBER,
                                 Role.TENANT, Role.VISITOR));
 
-                // TREASURER - Can read COMMITTEE and below
+                // TREASURER - Can read Committee and below
                 ALLOWED_READS.put(Role.TREASURER, EnumSet.of(
-                                Role.TREASURER, Role.COMMITTEE, Role.EMPLOYEE, Role.MEMBER,
+                                Role.TREASURER, Role.COMMITTEE, Role.MANAGER,
+                                Role.EMPLOYEE, Role.MEMBER,
                                 Role.TENANT, Role.VISITOR));
 
-                // COMMITTEE - Can read EMPLOYEE, MEMBER and below
+                // COMMITTEE - Can read Employee, Member and below
                 ALLOWED_READS.put(Role.COMMITTEE, EnumSet.of(
-                                Role.COMMITTEE, Role.EMPLOYEE, Role.MEMBER,
+                                Role.COMMITTEE, Role.MANAGER, Role.EMPLOYEE, Role.MEMBER,
                                 Role.TENANT, Role.VISITOR));
 
-                // EMPLOYEE - Can read VISITOR
+                // MANAGER - Can read Employee and below
+                ALLOWED_READS.put(Role.MANAGER, EnumSet.of(
+                                Role.MANAGER, Role.EMPLOYEE, Role.VISITOR));
+
+                // EMPLOYEE - Can read Visitor
                 ALLOWED_READS.put(Role.EMPLOYEE, EnumSet.of(Role.EMPLOYEE, Role.VISITOR));
 
-                // MEMBER - Can read TENANT
+                // MEMBER - Can read Tenant
                 ALLOWED_READS.put(Role.MEMBER, EnumSet.of(Role.MEMBER, Role.TENANT));
 
-                // TENANT and VISITOR - Can only read themselves
+                // TENANT - Can only read themselves
                 ALLOWED_READS.put(Role.TENANT, EnumSet.of(Role.TENANT));
+
+                // VISITOR - Can only read themselves
                 ALLOWED_READS.put(Role.VISITOR, EnumSet.of(Role.VISITOR));
         }
 
@@ -209,8 +250,6 @@ public final class RolePermissions {
 
         /**
          * Check if a user with the given role can CREATE a user with the target role.
-         * Only direct children can be created (except SOCIETY_ADMIN who can create
-         * all).
          */
         public static boolean canCreate(Role creatorRole, Role targetRole) {
                 Set<Role> allowed = ALLOWED_CREATIONS.get(creatorRole);
@@ -219,8 +258,6 @@ public final class RolePermissions {
 
         /**
          * Check if a user with the given role can UPDATE a user with the target role.
-         * Only direct children can be updated (except SOCIETY_ADMIN who can update
-         * all).
          */
         public static boolean canUpdate(Role updaterRole, Role targetRole) {
                 Set<Role> allowed = ALLOWED_UPDATES.get(updaterRole);
@@ -229,17 +266,13 @@ public final class RolePermissions {
 
         /**
          * Check if a user with the given role can DELETE a user with the target role.
-         * Only direct children can be deleted (except SOCIETY_ADMIN who can delete
-         * all).
          */
         public static boolean canDelete(Role deleterRole, Role targetRole) {
-                // Delete permissions are same as update permissions
                 return canUpdate(deleterRole, targetRole);
         }
 
         /**
          * Check if a user with the given role can READ a user with the target role.
-         * Parents can read all descendants (downward flow).
          */
         public static boolean canRead(Role readerRole, Role targetRole) {
                 Set<Role> allowed = ALLOWED_READS.get(readerRole);

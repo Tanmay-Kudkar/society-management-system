@@ -7,6 +7,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
@@ -15,11 +16,13 @@ import java.util.List;
 @RestController
 @RequestMapping("/maintenance-bills")
 @RequiredArgsConstructor
+@PreAuthorize("isAuthenticated()")
 public class MaintenanceBillController {
 
     private final MaintenanceBillService maintenanceBillService;
 
     @PostMapping
+    @PreAuthorize("hasAnyRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER')")
     public ResponseEntity<MaintenanceBillResponse> create(
             @Valid @RequestBody MaintenanceBillRequest request,
             @RequestParam Long userId) {
@@ -57,6 +60,7 @@ public class MaintenanceBillController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER')")
     public ResponseEntity<MaintenanceBillResponse> update(
             @PathVariable Long id,
             @Valid @RequestBody MaintenanceBillRequest request,
@@ -76,6 +80,7 @@ public class MaintenanceBillController {
     }
 
     @PostMapping("/generate")
+    @PreAuthorize("hasAnyRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER')")
     public ResponseEntity<Void> generateBillsForSociety(
             @RequestParam Long societyId,
             @RequestParam String billMonth,
@@ -85,7 +90,7 @@ public class MaintenanceBillController {
         maintenanceBillService.generateBillsForSociety(societyId, billMonth, amount, propertyType, userId);
         return ResponseEntity.ok().build();
     }
-    
+
     @GetMapping("/generate/preview")
     public ResponseEntity<Integer> getGenerationPreviewCount(
             @RequestParam Long societyId,
@@ -96,6 +101,7 @@ public class MaintenanceBillController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER')")
     public ResponseEntity<Void> delete(
             @PathVariable Long id,
             @RequestParam Long userId) {

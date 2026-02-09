@@ -7,6 +7,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -15,11 +16,13 @@ import java.util.Map;
 @RestController
 @RequestMapping("/document-templates")
 @RequiredArgsConstructor
+@PreAuthorize("isAuthenticated()")
 public class DocumentTemplateController {
 
     private final DocumentTemplateService documentTemplateService;
 
     @PostMapping
+    @PreAuthorize("hasAnyRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY')")
     public ResponseEntity<DocumentTemplateResponse> create(
             @Valid @RequestBody DocumentTemplateRequest request,
             @RequestParam Long userId) {
@@ -42,6 +45,7 @@ public class DocumentTemplateController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY')")
     public ResponseEntity<DocumentTemplateResponse> update(
             @PathVariable Long id,
             @Valid @RequestBody DocumentTemplateRequest request,
@@ -50,6 +54,7 @@ public class DocumentTemplateController {
     }
 
     @PatchMapping("/{id}/deactivate")
+    @PreAuthorize("hasAnyRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY')")
     public ResponseEntity<DocumentTemplateResponse> deactivate(
             @PathVariable Long id,
             @RequestParam Long userId) {
@@ -57,6 +62,7 @@ public class DocumentTemplateController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY')")
     public ResponseEntity<Void> delete(
             @PathVariable Long id,
             @RequestParam Long userId) {

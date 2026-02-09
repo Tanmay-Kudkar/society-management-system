@@ -58,14 +58,14 @@ export const AuthProvider = ({ children }) => {
     checkAuth()
   }, [])
 
-  const login = async (email, password) => {
+  const login = async (email, password, { portalType, rememberMe } = {}) => {
     try {
-      const response = await authApi.login({ email, password })
-      // Backend returns: { id, name, email, role, societyId, flatId, token, tokenType }
+      const response = await authApi.login({ email, password, portalType, rememberMe })
+      // Backend returns: { id, name, email, role, accountType, organizationId, societyId, flatId, token, tokenType }
       // Backend also sets HTTP-only cookie with JWT
-      const { token, id, name, email: userEmail, role, societyId, flatId } = response.data
+      const { token, id, name, email: userEmail, role, accountType, organizationId, societyId, flatId } = response.data
       
-      const userData = { id, name, email: userEmail, role, societyId, flatId }
+      const userData = { id, name, email: userEmail, role, accountType, organizationId, societyId, flatId }
       
       // Store in localStorage as fallback and for quick access
       localStorage.setItem('token', token)
@@ -98,21 +98,39 @@ export const AuthProvider = ({ children }) => {
     return roles.includes(user.role)
   }
 
-  const isMasterAdmin = () => hasRole('MASTER_ADMIN')
+  const isPlatformOwner = () => hasRole('PLATFORM_OWNER')
+  const isOrganizationOwner = () => hasRole('ORGANIZATION_OWNER')
   const isSocietyAdmin = () => hasRole('SOCIETY_ADMIN')
   const isChairman = () => hasRole('CHAIRMAN')
   const isSecretary = () => hasRole('SECRETARY')
   const isTreasurer = () => hasRole('TREASURER')
   const isCommittee = () => hasRole('COMMITTEE')
+  const isManager = () => hasRole('MANAGER')
   const isMember = () => hasRole('MEMBER')
   
-  const isAdminLevel = () => hasRole('MASTER_ADMIN', 'SOCIETY_ADMIN')
-  const isCommitteeLevel = () => hasRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE')
+  const isAdminLevel = () => hasRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN')
+  const isCommitteeLevel = () => hasRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'MANAGER')
   
   // Permission checks for specific actions
-  const canManageNotices = () => hasRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'EMPLOYEE')
-  const canManageDocuments = () => hasRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'EMPLOYEE')
-  const canViewFinancials = () => hasRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE')
+  const canManageNotices = () => hasRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'MANAGER', 'EMPLOYEE')
+  const canManageDocuments = () => hasRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'MANAGER', 'EMPLOYEE')
+  const canViewFinancials = () => hasRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE')
+  
+  // CRUD Permission helpers aligned with backend @PreAuthorize
+  const canManageBanners = () => hasRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'MANAGER')
+  const canManageContracts = () => hasRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY')
+  const canManageEmergencyContacts = () => hasRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'MANAGER')
+  const canManageMaintenanceBills = () => hasRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER')
+  const canManageTenants = () => hasRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'COMMITTEE', 'MANAGER', 'MEMBER')
+  const canManageTickets = () => hasRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'COMMITTEE', 'MANAGER')
+  const canCreateTickets = () => hasRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'MANAGER', 'EMPLOYEE', 'MEMBER', 'TENANT')
+  const canManageTransactions = () => hasRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER')
+  const canManageVendors = () => hasRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'MANAGER')
+  const canManageVendorBills = () => hasRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER')
+  const canViewSecurityLogs = () => hasRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN')
+  const canExportData = () => hasRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'MANAGER')
+  const canManageSocieties = () => hasRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER')
+  const canManageUsers = () => hasRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'MANAGER', 'EMPLOYEE', 'MEMBER')
 
   const updateUser = (updatedUser) => {
     setUser(updatedUser)
@@ -126,18 +144,34 @@ export const AuthProvider = ({ children }) => {
     logout,
     updateUser,
     hasRole,
-    isMasterAdmin,
+    isPlatformOwner,
+    isOrganizationOwner,
     isSocietyAdmin,
     isChairman,
     isSecretary,
     isTreasurer,
     isCommittee,
+    isManager,
     isMember,
     isAdminLevel,
     isCommitteeLevel,
     canManageNotices,
     canManageDocuments,
     canViewFinancials,
+    canManageBanners,
+    canManageContracts,
+    canManageEmergencyContacts,
+    canManageMaintenanceBills,
+    canManageTenants,
+    canManageTickets,
+    canCreateTickets,
+    canManageTransactions,
+    canManageVendors,
+    canManageVendorBills,
+    canViewSecurityLogs,
+    canExportData,
+    canManageSocieties,
+    canManageUsers,
   }
 
   return (

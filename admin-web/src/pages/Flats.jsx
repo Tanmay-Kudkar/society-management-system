@@ -44,14 +44,14 @@ export default function Flats() {
     }
   }, [selectedUnitType, editingFlat])
 
-  // Get society filter from URL (for MASTER_ADMIN viewing specific society)
+  // Get society filter from URL (for PLATFORM_OWNER viewing specific society)
   const societyIdFromUrl = searchParams.get('society')
 
-  // Check if current user is MASTER_ADMIN
-  const isMasterAdmin = user?.role === 'MASTER_ADMIN'
+  // Check if current user is PLATFORM_OWNER
+  const isPlatformLevel = user?.role === 'PLATFORM_OWNER' || user?.role === 'ORGANIZATION_OWNER' || user?.role === 'ORGANIZATION_OWNER'
 
   // Determine effective society ID for filtering
-  const effectiveSocietyId = isMasterAdmin && societyIdFromUrl ? parseInt(societyIdFromUrl) : user?.societyId
+  const effectiveSocietyId = isPlatformLevel && societyIdFromUrl ? parseInt(societyIdFromUrl) : user?.societyId
 
   const { data: flats = [], isLoading } = useQuery({
     queryKey: ['flats', user?.id, effectiveSocietyId],
@@ -64,7 +64,7 @@ export default function Flats() {
   const { data: societies = [] } = useQuery({
     queryKey: ['societies'],
     queryFn: () => societyApi.getAll().then(res => res.data),
-    enabled: isMasterAdmin, // Only fetch if MASTER_ADMIN
+    enabled: isPlatformLevel, // Only fetch if PLATFORM_OWNER
   })
 
   // Fetch wings for the effective society
@@ -192,8 +192,8 @@ export default function Flats() {
     }
     setFormErrors({})
     
-    // For non-MASTER_ADMIN, use user's societyId directly
-    const societyId = isMasterAdmin 
+    // For non-PLATFORM_OWNER, use user's societyId directly
+    const societyId = isPlatformLevel 
       ? parseInt(formData.get('societyId')) 
       : user?.societyId
 
@@ -266,8 +266,8 @@ export default function Flats() {
               className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white placeholder:text-gray-400"
             />
           </div>
-          {/* Only show society filter for MASTER_ADMIN */}
-          {isMasterAdmin && (
+          {/* Only show society filter for PLATFORM_OWNER */}
+          {isPlatformLevel && (
             <select
               value={filterSociety}
               onChange={(e) => setFilterSociety(e.target.value)}
@@ -295,7 +295,7 @@ export default function Flats() {
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Unit</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Wing</th>
-                  {isMasterAdmin && <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Society</th>}
+                  {isPlatformLevel && <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Society</th>}
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Owner</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Type</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Area</th>
@@ -328,7 +328,7 @@ export default function Flats() {
                         <span className="text-gray-400 dark:text-gray-500">-</span>
                       )}
                     </td>
-                    {isMasterAdmin && <td className="px-6 py-4 whitespace-nowrap text-gray-600 dark:text-gray-300">{flat.societyName}</td>}
+                    {isPlatformLevel && <td className="px-6 py-4 whitespace-nowrap text-gray-600 dark:text-gray-300">{flat.societyName}</td>}
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div>
                         <span className="text-gray-900 dark:text-white">{flat.ownerName || '-'}</span>
@@ -379,8 +379,8 @@ export default function Flats() {
               </button>
             </div>
             <form onSubmit={handleSubmit} className="p-4 space-y-4">
-              {/* Society field - only show dropdown for MASTER_ADMIN, auto-set for others */}
-              {isMasterAdmin ? (
+              {/* Society field - only show dropdown for PLATFORM_OWNER, auto-set for others */}
+              {isPlatformLevel ? (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Society</label>
                   <select

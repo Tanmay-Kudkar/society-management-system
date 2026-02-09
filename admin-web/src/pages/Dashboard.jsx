@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "../context/AuthContext";
 
@@ -53,20 +54,22 @@ const formatCurrency = (amount) => {
 
 const StatCard = ({ title, value, icon: Icon, color, subtext, gradient, delay = 0 }) => (
   <div 
-    className={`relative overflow-hidden rounded-2xl shadow-lg border border-white/10 p-6 transition-all duration-300 hover:scale-[1.05] hover:shadow-2xl group wave-box animate-slide-up ${gradient || 'bg-white dark:bg-slate-800'}`}
+    className={`relative overflow-hidden rounded-2xl shadow-lg border border-white/20 p-6 transition-all duration-300 hover:scale-[1.05] hover:shadow-2xl group wave-box animate-slide-up ${gradient || 'bg-white dark:bg-slate-800'}`}
     style={{ animationDelay: `${delay}ms` }}
   >
-    {/* Water wave background effect - only for gradient cards to simulate liquid */}
-    {gradient && (
-      <>
-        <div className="wave-bg"></div>
-        <div className="wave-bg-revert" style={{ opacity: 0.5 }}></div>
-      </>
+    {/* Ultra-visible Liquid Flow Effect - Synced across all cards */}
+    {(gradient || color) && (
+      <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
+        {/* Unified durations and start times for perfect sync */}
+        <div className="wave-bg opacity-25" style={{ background: 'rgba(255, 255, 255, 0.4)', top: '-80%', left: '-30%', animationDuration: '12s' }}></div>
+        <div className="wave-bg-revert opacity-20" style={{ background: 'rgba(255, 255, 255, 0.3)', top: '-90%', animationDuration: '15s' }}></div>
+        <div className="wave-bg opacity-15" style={{ background: 'linear-gradient(to bottom, rgba(255,255,255,0.5), transparent)', top: '-110%', left: '-40%', animationDuration: '25s' }}></div>
+      </div>
     )}
     
     {/* Animated background glow for non-gradient cards */}
     {!gradient && (
-       <div className={`absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity duration-500 ${color?.replace('text-', 'bg-')}`}></div>
+       <div className={`absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity duration-500 z-0 ${color?.replace('text-', 'bg-')}`}></div>
     )}
     
     <div className="relative z-10 flex items-center justify-between">
@@ -101,14 +104,22 @@ const StatCard = ({ title, value, icon: Icon, color, subtext, gradient, delay = 
 
 const AlertCard = ({ title, items, icon: Icon, color, delay = 0 }) => (
   <div 
-    className="relative overflow-hidden bg-white dark:bg-slate-800 rounded-2xl shadow-lg border border-gray-100 dark:border-slate-700 p-6 transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 animate-slide-up group"
+    className="relative overflow-hidden bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl shadow-lg border border-gray-200 dark:border-slate-700 p-6 transition-all duration-500 hover:shadow-xl hover:-translate-y-1 animate-slide-up group"
     style={{ animationDelay: `${delay}ms` }}
   >
-    <div className={`absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-transparent to-${color.split('-')[1]}-500/10 rounded-bl-full transition-transform duration-500 group-hover:scale-110`}></div>
+    {/* Colored top accent bar */}
+    <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-${color.split('-')[1]}-400 to-${color.split('-')[1]}-600 group-hover:h-1.5 transition-all duration-300`}></div>
+    
+    {/* Animated gradient border overlay */}
+    <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" style={{
+      background: `linear-gradient(135deg, ${color.replace('text-', '').replace('-500', '')}15, transparent)`
+    }}></div>
+    
+    <div className={`absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-transparent to-${color.split('-')[1]}-500/10 rounded-bl-full transition-transform duration-500 group-hover:scale-150 blur-2xl`}></div>
     
     <div className="flex items-center gap-3 mb-5 relative z-10">
-      <div className={`p-2.5 rounded-xl ${color.replace('text-', 'bg-').replace('500', '100')} dark:${color.replace('text-', 'bg-').replace('500', '900/30')} animate-bounce-custom`}>
-        <Icon className={`w-5 h-5 ${color}`} />
+      <div className={`p-2.5 rounded-xl ${color.replace('text-', 'bg-').replace('500', '100')} dark:${color.replace('text-', 'bg-').replace('500', '900/30')} animate-float shadow-lg group-hover:shadow-xl transition-shadow`}>
+        <Icon className={`w-5 h-5 ${color} group-hover:scale-105 transition-transform`} />
       </div>
       <h3 className="font-semibold text-gray-900 dark:text-white">{title}</h3>
       {items.length > 0 && (
@@ -137,7 +148,7 @@ const AlertCard = ({ title, items, icon: Icon, color, delay = 0 }) => (
             <span className="text-gray-700 dark:text-gray-200 font-medium truncate flex-1">
               {item.title}
             </span>
-            <span className="text-gray-500 dark:text-gray-400 text-xs ml-2 flex items-center gap-1 group-hover:text-purple-500 transition-colors">
+            <span className="text-gray-500 dark:text-gray-400 text-xs ml-2 flex items-center gap-1 group-hover:text-[var(--accent-primary)] transition-colors">
               {item.subtitle}
               <ArrowUpRight className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
             </span>
@@ -149,15 +160,25 @@ const AlertCard = ({ title, items, icon: Icon, color, delay = 0 }) => (
 );
 
 export default function Dashboard() {
-  const { user, isMasterAdmin, isCommitteeLevel, isMember } = useAuth();
+  const { user, isCommitteeLevel, isMember } = useAuth();
+  const [currentTime, setCurrentTime] = useState(new Date());
+  const isPlatformLevel = user?.role === 'PLATFORM_OWNER' || user?.role === 'ORGANIZATION_OWNER'
   
   // Determine if user is a regular member (MEMBER or TENANT)
   const isMemberOrTenant = user?.role === 'MEMBER' || user?.role === 'TENANT';
 
+  // Live clock update
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
   const { data: societies = [] } = useQuery({
     queryKey: ["societies"],
     queryFn: () => societyApi.getAll().then((res) => res.data),
-    enabled: isMasterAdmin(),
+    enabled: isPlatformLevel,
   });
 
   const { data: flats = [] } = useQuery({
@@ -328,39 +349,65 @@ export default function Dashboard() {
   return (
     <div className="animate-fadeIn pb-10">
       {/* Dynamic Header */}
-      <div className="relative mb-8 rounded-3xl overflow-hidden shadow-2xl bg-gradient-to-r from-gray-900 via-indigo-900 to-purple-900 text-white animate-slide-down">
+      <div 
+        className="relative mb-8 rounded-3xl overflow-hidden shadow-2xl text-white animate-slide-down wave-box border border-white/10"
+        style={{ 
+          background: `linear-gradient(135deg, 
+            color-mix(in srgb, var(--accent-primary) 80%, #000) 0%, 
+            color-mix(in srgb, var(--accent-primary) 60%, #1e293b) 50%, 
+            color-mix(in srgb, var(--accent-secondary) 70%, #0f172a) 100%)` 
+        }}
+      >
         {/* Animated Background Elements */}
-        <div className="absolute inset-0">
-          <div className="absolute top-0 left-0 w-full h-full bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20"></div>
-          <div className="absolute top-[-50%] left-[-20%] w-[500px] h-[500px] rounded-full bg-purple-600/30 blur-[100px] animate-pulse-custom"></div>
-          <div className="absolute bottom-[-50%] right-[-20%] w-[500px] h-[500px] rounded-full bg-blue-600/30 blur-[100px] animate-pulse-custom" style={{ animationDelay: '1s' }}></div>
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute top-0 left-0 w-full h-full bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-30 z-0 mix-blend-overlay"></div>
+          
+          {/* Permanent Water Flow Animation - More Vibrant */}
+          <div className="wave-bg opacity-40 bg-white/10" style={{ animationDuration: '14s' }}></div>
+          <div className="wave-bg-revert opacity-30 bg-white/5" style={{ animationDuration: '22s' }}></div>
+          <div className="wave-bg opacity-20" style={{ 
+            background: `linear-gradient(to right, var(--accent-primary), transparent)`,
+            top: '-110%', 
+            left: '-40%', 
+            animationDuration: '30s' 
+          }}></div>
+          
+          {/* Glowing Accents */}
+          <div 
+            className="absolute top-[-30%] left-[-10%] w-[600px] h-[600px] rounded-full blur-[120px] opacity-60 animate-pulse-custom"
+            style={{ background: `var(--accent-primary)` }}
+          ></div>
+          <div 
+            className="absolute bottom-[-30%] right-[-10%] w-[600px] h-[600px] rounded-full blur-[120px] opacity-40 animate-pulse-custom" 
+            style={{ animationDelay: '1.5s', background: `var(--accent-secondary)` }}
+          ></div>
         </div>
 
         <div className="relative z-10 p-8">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div>
               <div className="flex items-center gap-3 mb-2">
-                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-white/10 backdrop-blur-md border border-white/20 text-green-300 shadow-[0_0_15px_rgba(74,222,128,0.3)] animate-pulse-custom">
+                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-white/20 backdrop-blur-md border border-white/30 text-white shadow-[0_0_20px_rgba(255,255,255,0.2)] animate-pulse-custom">
                   <span className="w-2 h-2 rounded-full bg-green-400 mr-2 animate-ping"></span>
-                  System Online
+                  SYSTEM ONLINE
                 </span>
                 {!isMemberOrTenant && (
-                  <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-white/5 backdrop-blur-sm border border-white/10 text-gray-300">
+                  <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-black/20 backdrop-blur-sm border border-white/10 text-white/90">
                     v2.5.0
                   </span>
                 )}
                 {isMemberOrTenant && (
-                  <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-white/5 backdrop-blur-sm border border-white/10 text-blue-300">
+                  <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-white/10 backdrop-blur-sm border border-white/10 text-white/90">
                     {user?.role}
                   </span>
                 )}
               </div>
-              <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-white via-blue-100 to-purple-200 drop-shadow-lg flex items-center gap-3">
+              <h1 className="text-4xl lg:text-5xl font-extrabold text-white drop-shadow-[0_2px_10px_rgba(0,0,0,0.3)] flex items-center gap-3 tracking-tight">
                 Hello, {user?.name?.split(' ')[0] || 'User'}
                 <span className="animate-bounce-custom inline-block">👋</span>
               </h1>
-              <p className="text-blue-200 mt-2 flex items-center gap-2 font-medium">
-                <Zap className="w-4 h-4 text-yellow-400 fill-yellow-400" />
+              <p className="text-white/80 mt-2 flex items-center gap-2 font-semibold text-lg drop-shadow-sm">
+                <Zap className="w-5 h-5 text-yellow-400 fill-yellow-400" />
                 {isMemberOrTenant 
                   ? "Here's your dashboard overview."
                   : "Here's what's happening in your society today."}
@@ -370,28 +417,31 @@ export default function Dashboard() {
             {/* Weather & Date Widget */}
             <div className="flex items-center gap-4">
               <div className="hidden lg:block text-right">
-                <p className="text-3xl font-bold">{weather?.current?.temperature_2m ? `${Math.round(weather.current.temperature_2m)}°C` : '...'}</p>
-                <div className="flex items-center justify-end gap-1 text-sm text-blue-200">
-                  <span className="font-medium">{weather?.current?.weather_code !== undefined ? getWeatherDesc(weather.current.weather_code) : 'Loading...'}</span>
+                <p className="text-3xl font-black text-white drop-shadow-md">{weather?.current?.temperature_2m ? `${Math.round(weather.current.temperature_2m)}°C` : '...'}</p>
+                <div className="flex items-center justify-end gap-1 text-sm text-white/90 font-bold uppercase tracking-wide">
+                  <span>{weather?.current?.weather_code !== undefined ? getWeatherDesc(weather.current.weather_code) : 'Loading...'}</span>
                 </div>
               </div>
-              <div className="hidden lg:flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-yellow-400 to-orange-500 shadow-lg shadow-orange-500/30 animate-float">
-                {weather?.current?.weather_code !== undefined ? getWeatherIcon(weather.current.weather_code) : <Sun className="w-10 h-10 text-white animate-sun" />}
+              <div className="hidden lg:flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-yellow-300 via-orange-400 to-orange-600 shadow-[0_10px_30px_rgba(249,115,22,0.4)] animate-float border border-white/20">
+                {weather?.current?.weather_code !== undefined ? getWeatherIcon(weather.current.weather_code) : <Sun className="w-12 h-12 text-white animate-sun" />}
               </div>
               
-              <div className="bg-white/10 backdrop-blur-md border border-white/10 rounded-2xl p-4 min-w-[160px]">
-                 <div className="flex items-center gap-3 mb-1">
-                   <Clock className="w-4 h-4 text-blue-300" />
-                   <span className="text-sm font-medium text-blue-100">
-                     {new Date().toLocaleDateString('en-US', { weekday: 'long' })}
-                   </span>
+              <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-5 min-w-[180px] shadow-xl relative overflow-hidden group">
+                 <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                 <div className="relative z-10">
+                   <div className="flex items-center gap-3 mb-1">
+                     <Clock className="w-4 h-4 text-white" />
+                     <span className="text-sm font-bold text-white uppercase tracking-wider">
+                       {currentTime.toLocaleDateString('en-US', { weekday: 'long' })}
+                     </span>
+                   </div>
+                   <p className="text-3xl font-black text-white tracking-tight drop-shadow-md">
+                     {currentTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                   </p>
+                   <p className="text-xs font-bold text-white/70 mt-1 uppercase tracking-widest">
+                     {currentTime.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                   </p>
                  </div>
-                 <p className="text-2xl font-bold bg-gradient-to-r from-white to-blue-200 bg-clip-text text-transparent">
-                   {new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
-                 </p>
-                 <p className="text-xs text-blue-300 mt-1">
-                   {new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
-                 </p>
               </div>
             </div>
           </div>
@@ -468,7 +518,13 @@ export default function Dashboard() {
           {/* Recent Notices for Members */}
           <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-lg border border-gray-100 dark:border-slate-700 p-6">
             <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-lg text-purple-600 dark:text-purple-400">
+              <div 
+                className="p-2 rounded-lg"
+                style={{ 
+                  background: `color-mix(in srgb, var(--accent-primary) 15%, transparent)`,
+                  color: `var(--accent-primary)`
+                }}
+              >
                 <Bell className="w-5 h-5" />
               </div>
               <h3 className="font-bold text-lg text-gray-900 dark:text-white">Recent Notices</h3>
@@ -519,12 +575,12 @@ export default function Dashboard() {
         <>
           {/* Stats Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            {isMasterAdmin() && (
+            {isPlatformLevel && (
               <StatCard
                 title="Total Societies"
                 value={societies.length}
                 icon={Building2}
-                gradient="bg-gradient-to-br from-purple-500 to-purple-700"
+                gradient="bg-gradient-to-br from-purple-600 via-purple-700 to-purple-800"
                 delay={100}
               />
             )}
@@ -532,7 +588,7 @@ export default function Dashboard() {
               title="Total Flats"
               value={flats.filter(f => !f.unitType || f.unitType === 'FLAT').length}
               icon={Home}
-              gradient="bg-gradient-to-br from-blue-500 to-blue-700"
+              gradient="bg-gradient-to-br from-blue-500 via-blue-600 to-blue-700"
               subtext={`${flats.filter(f => (!f.unitType || f.unitType === 'FLAT') && f.ownerName).length} occupied`}
               delay={150}
             />
@@ -540,7 +596,7 @@ export default function Dashboard() {
               title="Total Shops"
               value={flats.filter(f => f.unitType === 'SHOP').length}
               icon={Store}
-              gradient="bg-gradient-to-br from-green-500 to-green-700"
+              gradient="bg-gradient-to-br from-green-500 via-green-600 to-green-700"
               subtext={`${flats.filter(f => f.unitType === 'SHOP' && f.ownerName).length} occupied`}
               delay={175}
             />
@@ -548,7 +604,7 @@ export default function Dashboard() {
               title="Total Offices"
               value={flats.filter(f => f.unitType === 'OFFICE').length}
               icon={Briefcase}
-              gradient="bg-gradient-to-br from-amber-500 to-amber-700"
+              gradient="bg-gradient-to-br from-teal-500 via-teal-600 to-teal-700"
               subtext={`${flats.filter(f => f.unitType === 'OFFICE' && f.ownerName).length} occupied`}
               delay={190}
             />
@@ -556,7 +612,7 @@ export default function Dashboard() {
               title="Active Tenants"
               value={tenants.filter((t) => t.isActive).length}
               icon={UserCheck}
-              gradient="bg-gradient-to-br from-teal-500 to-teal-700"
+              gradient="bg-gradient-to-br from-cyan-500 via-cyan-600 to-cyan-700"
               subtext={`${expiringTenants.length} expiring soon`}
               delay={200}
             />
@@ -564,14 +620,14 @@ export default function Dashboard() {
               title="Vehicles"
               value={vehicles.length}
               icon={Car}
-              gradient="bg-gradient-to-br from-indigo-500 to-indigo-700"
+              gradient="bg-gradient-to-br from-indigo-500 via-indigo-600 to-indigo-700"
               delay={250}
             />
             <StatCard
               title="Pending Bills"
               value={pendingBillsCount.length}
               icon={CreditCard}
-              color="bg-orange-500"
+              gradient="bg-gradient-to-br from-orange-500 via-orange-600 to-orange-700"
               subtext={
                 overdueBills.length > 0
                   ? `${overdueBills.length} overdue`
@@ -581,15 +637,15 @@ export default function Dashboard() {
             />
             <StatCard
               title="Open Tickets"
-          value={openTickets.length}
-          icon={Ticket}
-          color="bg-red-500"
-          delay={350}
-        />
+              value={openTickets.length}
+              icon={Ticket}
+              gradient="bg-gradient-to-br from-sky-500 via-sky-600 to-sky-700"
+              delay={350}
+            />
         <StatCard          title="Overdue Tickets"
           value={allTickets.filter(t => t.isOverdue).length}
           icon={AlertTriangle}
-          gradient="bg-gradient-to-br from-red-500 to-rose-600"
+          gradient="bg-gradient-to-br from-red-600 via-red-700 to-red-800"
           subtext={allTickets.filter(t => t.escalationLevel === 2).length > 0 ? `${allTickets.filter(t => t.escalationLevel === 2).length} critical` : undefined}
           delay={375}
         />
@@ -597,21 +653,21 @@ export default function Dashboard() {
           title="Overdue Bills"
           value={overdueBills.length}
           icon={Clock}
-          gradient="bg-gradient-to-br from-orange-500 to-amber-600"
+          gradient="bg-gradient-to-br from-amber-500 via-amber-600 to-amber-700"
           subtext={overdueBills.length > 0 ? `₹${overdueBills.reduce((sum, b) => sum + (b.amount || 0), 0).toLocaleString()}` : 'All clear'}
           delay={390}
         />
         <StatCard          title="Pending Complaints"
           value={pendingComplaints.length}
           icon={AlertTriangle}
-          color="bg-amber-500"
+          gradient="bg-gradient-to-br from-yellow-500 via-yellow-600 to-yellow-700"
           delay={400}
         />
         <StatCard
           title="Expiring Contracts"
           value={expiringContracts.length}
           icon={FileText}
-          color="bg-yellow-500"
+          gradient="bg-gradient-to-br from-rose-500 via-rose-600 to-rose-700"
           subtext="Next 30 days"
           delay={450}
         />
@@ -621,13 +677,16 @@ export default function Dashboard() {
       {dashboardReport && isCommitteeLevel() && (
         <div className="mb-8">
           <div className="flex items-center gap-2 mb-6">
-            <BarChart3 className="w-5 h-5 text-purple-500" />
+            <BarChart3 className="w-5 h-5 text-[var(--accent-primary)]" />
             <h2 className="text-xl font-bold text-gray-900 dark:text-white">Financial Overview</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="relative overflow-hidden bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-2xl shadow-lg p-6 text-white group hover:shadow-2xl hover:scale-[1.05] transition-all duration-300 wave-box animate-slide-up" style={{ animationDelay: '500ms' }}>
-              <div className="wave-bg"></div>
-              <div className="wave-bg-revert" style={{ opacity: 0.3 }}></div>
+            <div className="relative overflow-hidden bg-gradient-to-br from-emerald-500 via-emerald-600 to-emerald-700 rounded-2xl shadow-lg p-6 text-white group hover:shadow-2xl hover:scale-[1.05] transition-all duration-300 wave-box animate-slide-up" style={{ animationDelay: '500ms' }}>
+              <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
+                <div className="wave-bg opacity-25" style={{ background: 'rgba(255, 255, 255, 0.4)', top: '-80%', left: '-30%', animationDuration: '12s' }}></div>
+                <div className="wave-bg-revert opacity-20" style={{ background: 'rgba(255, 255, 255, 0.3)', top: '-90%', animationDuration: '15s' }}></div>
+                <div className="wave-bg opacity-15" style={{ background: 'linear-gradient(to bottom, rgba(255,255,255,0.5), transparent)', top: '-110%', left: '-40%', animationDuration: '25s' }}></div>
+              </div>
               <div className="relative z-10">
                 <div className="bg-white/20 w-12 h-12 rounded-xl flex items-center justify-center mb-4 backdrop-blur-sm group-hover:scale-110 transition-transform">
                   <TrendingUp className="w-6 h-6" />
@@ -643,9 +702,12 @@ export default function Dashboard() {
               </div>
             </div>
             
-            <div className="relative overflow-hidden bg-gradient-to-br from-rose-500 to-rose-600 rounded-2xl shadow-lg p-6 text-white group hover:shadow-2xl hover:scale-[1.05] transition-all duration-300 wave-box animate-slide-up" style={{ animationDelay: '600ms' }}>
-              <div className="wave-bg"></div>
-              <div className="wave-bg-revert" style={{ opacity: 0.3 }}></div>
+            <div className="relative overflow-hidden bg-gradient-to-br from-rose-500 via-rose-600 to-rose-700 rounded-2xl shadow-lg p-6 text-white group hover:shadow-2xl hover:scale-[1.05] transition-all duration-300 wave-box animate-slide-up" style={{ animationDelay: '600ms' }}>
+              <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
+                <div className="wave-bg opacity-25" style={{ background: 'rgba(255, 255, 255, 0.4)', top: '-80%', left: '-30%', animationDuration: '12s' }}></div>
+                <div className="wave-bg-revert opacity-20" style={{ background: 'rgba(255, 255, 255, 0.3)', top: '-90%', animationDuration: '15s' }}></div>
+                <div className="wave-bg opacity-15" style={{ background: 'linear-gradient(to bottom, rgba(255,255,255,0.5), transparent)', top: '-110%', left: '-40%', animationDuration: '25s' }}></div>
+              </div>
                <div className="relative z-10">
                 <div className="bg-white/20 w-12 h-12 rounded-xl flex items-center justify-center mb-4 backdrop-blur-sm group-hover:scale-110 transition-transform">
                   <TrendingDown className="w-6 h-6" />
@@ -661,9 +723,12 @@ export default function Dashboard() {
               </div>
             </div>
             
-            <div className="relative overflow-hidden bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl shadow-lg p-6 text-white group hover:shadow-2xl hover:scale-[1.05] transition-all duration-300 wave-box animate-slide-up" style={{ animationDelay: '700ms' }}>
-              <div className="wave-bg"></div>
-              <div className="wave-bg-revert" style={{ opacity: 0.3 }}></div>
+            <div className="relative overflow-hidden bg-gradient-to-br from-blue-500 via-blue-600 to-blue-700 rounded-2xl shadow-lg p-6 text-white group hover:shadow-2xl hover:scale-[1.05] transition-all duration-300 wave-box animate-slide-up" style={{ animationDelay: '700ms' }}>
+              <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
+                <div className="wave-bg opacity-25" style={{ background: 'rgba(255, 255, 255, 0.4)', top: '-80%', left: '-30%', animationDuration: '12s' }}></div>
+                <div className="wave-bg-revert opacity-20" style={{ background: 'rgba(255, 255, 255, 0.3)', top: '-90%', animationDuration: '15s' }}></div>
+                <div className="wave-bg opacity-15" style={{ background: 'linear-gradient(to bottom, rgba(255,255,255,0.5), transparent)', top: '-110%', left: '-40%', animationDuration: '25s' }}></div>
+              </div>
               <div className="relative z-10">
                 <div className="bg-white/20 w-12 h-12 rounded-xl flex items-center justify-center mb-4 backdrop-blur-sm group-hover:scale-110 transition-transform">
                   <BarChart3 className="w-6 h-6" />
@@ -679,9 +744,12 @@ export default function Dashboard() {
               </div>
             </div>
             
-            <div className="relative overflow-hidden bg-gradient-to-br from-violet-500 to-violet-600 rounded-2xl shadow-lg p-6 text-white group hover:shadow-2xl hover:scale-[1.05] transition-all duration-300 wave-box animate-slide-up" style={{ animationDelay: '800ms' }}>
-              <div className="wave-bg"></div>
-              <div className="wave-bg-revert" style={{ opacity: 0.3 }}></div>
+            <div className="relative overflow-hidden bg-gradient-to-br from-violet-500 via-violet-600 to-violet-700 rounded-2xl shadow-lg p-6 text-white group hover:shadow-2xl hover:scale-[1.05] transition-all duration-300 wave-box animate-slide-up" style={{ animationDelay: '800ms' }}>
+              <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
+                <div className="wave-bg opacity-25" style={{ background: 'rgba(255, 255, 255, 0.4)', top: '-80%', left: '-30%', animationDuration: '12s' }}></div>
+                <div className="wave-bg-revert opacity-20" style={{ background: 'rgba(255, 255, 255, 0.3)', top: '-90%', animationDuration: '15s' }}></div>
+                <div className="wave-bg opacity-15" style={{ background: 'linear-gradient(to bottom, rgba(255,255,255,0.5), transparent)', top: '-110%', left: '-40%', animationDuration: '25s' }}></div>
+              </div>
               <div className="relative z-10">
                 <div className="bg-white/20 w-12 h-12 rounded-xl flex items-center justify-center mb-4 backdrop-blur-sm group-hover:scale-110 transition-transform">
                   <DollarSign className="w-6 h-6" />
@@ -737,11 +805,15 @@ export default function Dashboard() {
       {/* Financial Overview & Vehicle Stats */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         {/* Bills Summary Card */}
-        <div className="relative overflow-hidden bg-white dark:bg-slate-800 rounded-2xl shadow-lg border border-gray-100 dark:border-slate-700 p-6 animate-slide-up hover:shadow-2xl transition-all duration-300 group" style={{ animationDelay: '1200ms' }}>
-          <div className="absolute top-0 right-0 w-64 h-64 bg-green-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 group-hover:bg-green-500/10 transition-colors duration-500"></div>
+        <div className="relative overflow-hidden bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl rounded-2xl shadow-xl border border-gray-200/50 dark:border-gray-700/50 p-6 animate-slide-up hover:shadow-2xl transition-all duration-500 group" style={{ animationDelay: '1200ms' }}>
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-green-400 via-green-500 to-green-600 group-hover:h-1.5 transition-all duration-300"></div>
+          <div className="absolute top-0 right-0 w-64 h-64 bg-green-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 group-hover:bg-green-500/20 transition-all duration-500 animate-pulse-custom"></div>
+          
+          {/* Shimmer effect on hover */}
+          <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-12"></div>
           
           <div className="flex items-center gap-3 mb-6 relative z-10">
-            <div className="p-3 bg-green-100 dark:bg-green-900/30 rounded-xl text-green-600 dark:text-green-400">
+            <div className="p-3 bg-gradient-to-br from-green-100 to-emerald-200 dark:from-green-900/30 dark:to-emerald-900/20 rounded-xl text-green-600 dark:text-green-400 shadow-lg group-hover:shadow-xl group-hover:scale-105 transition-all duration-300">
               <DollarSign className="w-6 h-6 animate-pulse-custom" />
             </div>
             <div>
@@ -776,11 +848,15 @@ export default function Dashboard() {
         </div>
 
         {/* Vehicle Stats Card */}
-        <div className="relative overflow-hidden bg-white dark:bg-slate-800 rounded-2xl shadow-lg border border-gray-100 dark:border-slate-700 p-6 animate-slide-up hover:shadow-2xl transition-all duration-300 group" style={{ animationDelay: '1300ms' }}>
-          <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 group-hover:bg-blue-500/10 transition-colors duration-500"></div>
+        <div className="relative overflow-hidden bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl rounded-2xl shadow-xl border border-gray-200/50 dark:border-gray-700/50 p-6 animate-slide-up hover:shadow-2xl transition-all duration-500 group" style={{ animationDelay: '1300ms' }}>
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-400 via-blue-500 to-blue-600 group-hover:h-1.5 transition-all duration-300"></div>
+          <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 group-hover:bg-blue-500/20 transition-all duration-500 animate-pulse-custom"></div>
+
+          {/* Shimmer effect on hover */}
+          <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-12"></div>
 
           <div className="flex items-center gap-3 mb-6 relative z-10">
-            <div className="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-xl text-blue-600 dark:text-blue-400">
+            <div className="p-3 bg-gradient-to-br from-blue-100 to-cyan-200 dark:from-blue-900/30 dark:to-cyan-900/20 rounded-xl text-blue-600 dark:text-blue-400 shadow-lg group-hover:shadow-xl group-hover:scale-105 transition-all duration-300">
               <Car className="w-6 h-6 animate-bounce-custom" />
             </div>
             <div>
@@ -790,32 +866,34 @@ export default function Dashboard() {
           </div>
 
           <div className="flex items-center justify-around py-4 relative z-10">
-            <div className="text-center group/vehicle cursor-pointer">
+            <div className="text-center group/vehicle cursor-pointer hover:-translate-y-1 transition-transform duration-300">
               <div className="relative w-28 h-28 mx-auto mb-3">
-                 <div className="absolute inset-0 rounded-full border-4 border-blue-100 dark:border-blue-900/30 animate-spin" style={{ animationDuration: '3s' }}></div>
-                 <div className="absolute inset-0 rounded-full border-t-4 border-blue-500 animate-spin" style={{ animationDuration: '2s' }}></div>
-                 <div className="absolute inset-2 bg-blue-50 dark:bg-blue-900/20 rounded-full flex items-center justify-center group-hover/vehicle:scale-110 transition-transform duration-300">
-                   <div className="text-center">
-                     <span className="block text-3xl font-bold text-blue-600 dark:text-blue-400">
+                 <div className="absolute inset-0 rounded-full bg-gradient-to-br from-blue-400/20 to-cyan-500/20 animate-pulse-custom"></div>
+                 <div className="absolute inset-0 rounded-full border-4 border-blue-300 dark:border-blue-600 opacity-30 group-hover/vehicle:opacity-50 transition-opacity duration-500"></div>
+                 <div className="absolute -inset-1 rounded-full bg-blue-500/30 blur-xl animate-pulse-custom" style={{ animationDuration: '2s' }}></div>
+                 <div className="absolute inset-2 bg-gradient-to-br from-blue-50 to-cyan-100 dark:from-blue-900/40 dark:to-cyan-900/30 rounded-full flex items-center justify-center group-hover/vehicle:scale-110 transition-all duration-500 shadow-xl shadow-blue-500/30">
+                   <div className="text-center relative z-10">
+                     <span className="block text-3xl font-bold bg-gradient-to-br from-blue-600 to-cyan-600 dark:from-blue-400 dark:to-cyan-400 bg-clip-text text-transparent">
                       {vehicles.filter((v) => v.vehicleType === "FOUR_WHEELER").length}
                      </span>
-                     <Car className="w-4 h-4 mx-auto text-blue-400 mt-1" />
+                     <Car className="w-4 h-4 mx-auto text-blue-500 dark:text-blue-400 mt-1 group-hover/vehicle:scale-125 transition-transform" />
                    </div>
                  </div>
               </div>
               <p className="font-semibold text-gray-700 dark:text-gray-300">Four Wheelers</p>
             </div>
             
-            <div className="text-center group/vehicle cursor-pointer">
+            <div className="text-center group/vehicle cursor-pointer hover:-translate-y-1 transition-transform duration-300">
               <div className="relative w-28 h-28 mx-auto mb-3">
-                 <div className="absolute inset-0 rounded-full border-4 border-green-100 dark:border-green-900/30 animate-spin" style={{ animationDuration: '3s', animationDirection: 'reverse' }}></div>
-                 <div className="absolute inset-0 rounded-full border-t-4 border-green-500 animate-spin" style={{ animationDuration: '2.5s', animationDirection: 'reverse' }}></div>
-                 <div className="absolute inset-2 bg-green-50 dark:bg-green-900/20 rounded-full flex items-center justify-center group-hover/vehicle:scale-110 transition-transform duration-300">
-                   <div className="text-center">
-                     <span className="block text-3xl font-bold text-green-600 dark:text-green-400">
+                 <div className="absolute inset-0 rounded-full bg-gradient-to-br from-green-400/20 to-emerald-500/20 animate-pulse-custom" style={{ animationDelay: '0.5s' }}></div>
+                 <div className="absolute inset-0 rounded-full border-4 border-green-300 dark:border-green-600 opacity-30 group-hover/vehicle:opacity-50 transition-opacity duration-500"></div>
+                 <div className="absolute -inset-1 rounded-full bg-green-500/30 blur-xl animate-pulse-custom" style={{ animationDuration: '2s', animationDelay: '0.5s' }}></div>
+                 <div className="absolute inset-2 bg-gradient-to-br from-green-50 to-emerald-100 dark:from-green-900/40 dark:to-emerald-900/30 rounded-full flex items-center justify-center group-hover/vehicle:scale-110 transition-all duration-500 shadow-xl shadow-green-500/30">
+                   <div className="text-center relative z-10">
+                     <span className="block text-3xl font-bold bg-gradient-to-br from-green-600 to-emerald-600 dark:from-green-400 dark:to-emerald-400 bg-clip-text text-transparent">
                       {vehicles.filter((v) => v.vehicleType === "TWO_WHEELER").length}
                      </span>
-                     <Activity className="w-4 h-4 mx-auto text-green-400 mt-1" />
+                     <Activity className="w-4 h-4 mx-auto text-green-500 dark:text-green-400 mt-1 group-hover/vehicle:scale-125 transition-transform" />
                    </div>
                  </div>
               </div>
@@ -828,10 +906,17 @@ export default function Dashboard() {
       {/* Live Activity & System Health */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
         {/* Live Security Logs */}
-        <div className="lg:col-span-3 bg-white dark:bg-slate-800 rounded-2xl shadow-lg border border-gray-100 dark:border-slate-700 p-6 animate-slide-up group hover:shadow-2xl transition-all duration-300" style={{ animationDelay: '1400ms' }}>
-          <div className="flex items-center justify-between mb-6">
+        <div className="lg:col-span-3 relative overflow-hidden bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl rounded-2xl shadow-xl border border-gray-200/50 dark:border-gray-700/50 p-6 animate-slide-up group hover:shadow-2xl transition-all duration-500" style={{ animationDelay: '1400ms' }}>
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-red-400 via-red-500 to-red-600 rounded-t-2xl group-hover:h-1.5 transition-all duration-300 z-10"></div>
+          
+          {/* Animated background lines */}
+          <div className="absolute inset-0 opacity-5 dark:opacity-10 pointer-events-none z-0">
+            <div className="absolute left-12 top-0 bottom-0 w-0.5 bg-gradient-to-b from-red-500 via-orange-500 to-transparent"></div>
+          </div>
+          
+          <div className="flex items-center justify-between mb-6 relative z-10">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-red-100 dark:bg-red-900/30 rounded-lg text-red-600 dark:text-red-400">
+              <div className="p-2 bg-gradient-to-br from-red-100 to-rose-200 dark:from-red-900/30 dark:to-rose-900/20 rounded-lg text-red-600 dark:text-red-400 shadow-lg animate-pulse-custom">
                 <Activity className="w-5 h-5 animate-pulse" />
               </div>
               <div>
@@ -839,27 +924,36 @@ export default function Dashboard() {
                 <p className="text-xs text-gray-500">Real-time gate and system activity</p>
               </div>
             </div>
-            <span className="flex items-center gap-2 text-xs font-medium text-green-600 bg-green-50 dark:bg-green-900/20 px-3 py-1.5 rounded-full border border-green-100 dark:border-green-900/30">
-              <span className="w-2 h-2 rounded-full bg-green-500 animate-ping"></span>
-              Monitoring Active
+            <span className="flex items-center gap-2 text-xs font-bold text-green-600 bg-gradient-to-r from-green-50 to-emerald-100 dark:from-green-900/20 dark:to-emerald-900/20 px-4 py-2 rounded-full border-2 border-green-400 dark:border-green-600 shadow-lg shadow-green-500/30 animate-pulse-custom">
+              <span className="relative flex items-center justify-center">
+                <span className="w-2 h-2 rounded-full bg-green-500 animate-ping absolute"></span>
+                <span className="w-2 h-2 rounded-full bg-green-500"></span>
+              </span>
+              MONITORING ACTIVE
             </span>
           </div>
           
-          <div className="space-y-4">
+          <div className="space-y-4 relative z-10">
             {(securityLogs.length > 0 ? securityLogs : [
               { createdAt: new Date().toISOString(), event: 'System Initialized', type: 'SYSTEM', status: 'Info' }
             ]).map((log, i) => (
-              <div key={i} className="flex items-center gap-4 p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors border border-transparent hover:border-gray-100 dark:hover:border-slate-600 group/log">
-                <div className="w-20 text-xs text-gray-400 font-mono text-right">
-                  {new Date(log.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              <div key={i} className="relative flex items-center gap-4 p-4 rounded-xl bg-gradient-to-r from-gray-50/50 to-transparent dark:from-slate-700/30 dark:to-transparent hover:from-gray-100 dark:hover:from-slate-700/60 transition-all duration-300 border-l-4 border-transparent hover:border-l-blue-500 group/log hover:shadow-md">
+                {/* Timeline dot with pulse */}
+                <div className="relative">
+                  <div className="w-20 text-xs text-gray-500 dark:text-gray-400 font-mono text-right font-bold">
+                    {new Date(log.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </div>
                 </div>
-                <div className="w-2 h-2 rounded-full bg-gray-300 dark:bg-slate-600 group-hover/log:bg-blue-500 transition-colors"></div>
-                <div className="flex-1 text-sm font-medium text-gray-700 dark:text-gray-300">{log.event}</div>
-                <span className={`text-xs px-2 py-1 rounded-md font-medium border ${
-                  (log.type === 'ALERT' || log.type === 'alert') ? 'bg-red-50 text-red-600 border-red-100 dark:bg-red-900/20 dark:border-red-900/30' :
-                  (log.type === 'SECURITY' || log.type === 'security') ? 'bg-blue-50 text-blue-600 border-blue-100 dark:bg-blue-900/20 dark:border-blue-900/30' :
-                  (log.type === 'MAINTENANCE' || log.type === 'maintenance') ? 'bg-green-50 text-green-600 border-green-100 dark:bg-green-900/20 dark:border-green-900/30' :
-                  'bg-gray-100 text-gray-600 border-gray-200 dark:bg-slate-700 dark:border-slate-600'
+                <div className="relative flex items-center justify-center">
+                  <div className="absolute w-4 h-4 rounded-full bg-blue-500 opacity-25 animate-ping group-hover/log:opacity-50"></div>
+                  <div className="w-3 h-3 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 shadow-lg shadow-blue-500/50 group-hover/log:scale-125 transition-transform"></div>
+                </div>
+                <div className="flex-1 text-sm font-semibold text-gray-700 dark:text-gray-200 group-hover/log:text-gray-900 dark:group-hover/log:text-white transition-colors">{log.event}</div>
+                <span className={`text-xs px-3 py-1.5 rounded-lg font-bold border-2 shadow-sm transition-all duration-300 group-hover/log:scale-105 ${
+                  (log.type === 'ALERT' || log.type === 'alert') ? 'bg-gradient-to-br from-red-50 to-rose-100 text-red-700 border-red-300 dark:from-red-900/20 dark:to-rose-900/20 dark:border-red-700' :
+                  (log.type === 'SECURITY' || log.type === 'security') ? 'bg-gradient-to-br from-blue-50 to-sky-100 text-blue-700 border-blue-300 dark:from-blue-900/20 dark:to-sky-900/20 dark:border-blue-700' :
+                  (log.type === 'MAINTENANCE' || log.type === 'maintenance') ? 'bg-gradient-to-br from-green-50 to-emerald-100 text-green-700 border-green-300 dark:from-green-900/20 dark:to-emerald-900/20 dark:border-green-700' :
+                  'bg-gradient-to-br from-gray-50 to-slate-100 text-gray-700 border-gray-300 dark:from-slate-700 dark:to-slate-800 dark:border-slate-600'
                 }`}>
                   {log.status}
                 </span>
@@ -870,11 +964,16 @@ export default function Dashboard() {
       </div>
 
       {/* Quick Stats Grid */}
-      <div className="bg-white dark:bg-gradient-to-r dark:from-gray-900 dark:to-slate-800 rounded-2xl shadow-lg dark:shadow-xl border border-gray-100 dark:border-slate-700 p-8 mb-8 animate-slide-up text-gray-900 dark:text-white relative overflow-hidden transition-all duration-300" style={{ animationDelay: '1600ms' }}>
-        <div className="absolute inset-0 bg-grid-pattern [mask-image:linear-gradient(0deg,transparent,black)] opacity-50 dark:opacity-40"></div>
+      <div className="bg-gradient-to-br from-white via-gray-50 to-white dark:from-gray-900 dark:via-slate-900 dark:to-gray-900 rounded-2xl shadow-2xl border-2 border-gray-200 dark:border-slate-700 p-8 mb-8 animate-slide-up text-gray-900 dark:text-white relative overflow-hidden transition-all duration-500 hover:shadow-3xl" style={{ animationDelay: '1600ms' }}>
+        {/* Animated gradient mesh background */}
+        <div className="absolute inset-0 opacity-30 dark:opacity-20 pointer-events-none">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(120,119,198,0.3),transparent_50%)] animate-pulse-custom"></div>
+          <div className="absolute inset-0 bg-grid-pattern [mask-image:linear-gradient(0deg,transparent,black)]"></div>
+        </div>
+        
         <div className="relative z-10">
-          <h3 className="font-bold text-xl mb-6 flex items-center gap-2 text-gray-900 dark:text-white">
-            <Sparkles className="w-5 h-5 text-yellow-500 dark:text-yellow-400" />
+          <h3 className="font-bold text-2xl mb-6 flex items-center gap-2 text-gray-900 dark:text-white">
+            <Sparkles className="w-6 h-6 text-yellow-500 dark:text-yellow-400 animate-spin" style={{ animationDuration: '3s' }} />
             Quick Overview
           </h3>
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
@@ -883,15 +982,23 @@ export default function Dashboard() {
               { label: 'Pending Bills', value: pendingBillsCount.length, color: 'text-orange-600 dark:text-orange-400', bg: 'bg-orange-50 dark:bg-orange-500/10 border-orange-100 dark:border-orange-500/20' },
               { label: 'In Progress', value: pendingTickets.filter((t) => t.status === "IN_PROGRESS").length, color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-50 dark:bg-blue-500/10 border-blue-100 dark:border-blue-500/20' },
               { label: 'Active Tenants', value: tenants.filter((t) => t.isActive).length, color: 'text-teal-600 dark:text-teal-400', bg: 'bg-teal-50 dark:bg-teal-500/10 border-teal-100 dark:border-teal-500/20' },
-              { label: 'Active Contracts', value: contracts.filter((c) => c.isActive).length, color: 'text-purple-600 dark:text-purple-400', bg: 'bg-purple-50 dark:bg-purple-500/10 border-purple-100 dark:border-purple-500/20' }
+              { label: 'Active Contracts', value: contracts.filter((c) => c.isActive).length, color: 'text-[var(--accent-primary)]', bg: 'bg-slate-50 dark:bg-slate-800/10 border-[var(--accent-primary)]/10 dark:border-[var(--accent-primary)]/20 shadow-sm' }
             ].map((stat, idx) => (
               <div 
                 key={idx} 
-                className={`text-center p-4 rounded-xl ${stat.bg} backdrop-blur-sm border hover:border-gray-300 dark:hover:border-white/30 transition-all duration-300 hover:scale-105 cursor-default hover:shadow-md`}
-                style={{ animationDelay: `${1500 + (idx * 100)}ms` }}
+                className={`relative text-center p-5 rounded-xl ${stat.bg} backdrop-blur-sm border-2 hover:border-gray-400 dark:hover:border-white/40 transition-all duration-500 hover:scale-105 hover:-translate-y-1 cursor-pointer hover:shadow-xl group/stat overflow-hidden`}
+                style={{ 
+                  animationDelay: `${1500 + (idx * 100)}ms`,
+                  transformStyle: 'preserve-3d'
+                }}
               >
-                <p className={`text-3xl font-bold ${stat.color} mb-1`}>{stat.value}</p>
-                <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider font-medium">{stat.label}</p>
+                {/* Shine effect on hover */}
+                <div className="absolute inset-0 bg-gradient-to-br from-white/50 to-transparent opacity-0 group-hover/stat:opacity-100 transition-opacity duration-500"></div>
+                
+                <div className="relative z-10">
+                  <p className={`text-4xl font-black ${stat.color} mb-2 group-hover/stat:scale-105 transition-transform duration-300`}>{stat.value}</p>
+                  <p className="text-xs text-gray-600 dark:text-gray-300 uppercase tracking-widest font-bold">{stat.label}</p>
+                </div>
               </div>
             ))}
           </div>

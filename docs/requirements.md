@@ -14,7 +14,7 @@ This document maps the client's requirements to the current implementation statu
 - **Ticket Raising** - With priority mask, progress bar of completion
 - **Even manager should be raising ticket**
 - **Website - Admin, Mobile login for Others**
-- **One Master Admin**
+- **Platform Owner (invisible super admin)**
 
 ### Page 1 - Right Side:
 - **Manager allotted, Secretary, Treasurer, Chairman and Committee members should be able to raise tickets**
@@ -364,7 +364,7 @@ Mobile App:
 
 **Current State:**
 - ✅ User management with roles
-- ✅ MASTER_ADMIN can view all users
+- ✅ PLATFORM_OWNER can view all users
 - ❌ No dedicated staff management page
 - ❌ No staff attendance tracking
 - ❌ No staff performance metrics
@@ -390,7 +390,8 @@ Frontend:
 
 **Current State:**
 - ✅ Role-based hierarchy implemented:
-  - MASTER_ADMIN (highest)
+  - PLATFORM_OWNER (highest)
+  - ORGANIZATION_OWNER
   - SOCIETY_ADMIN
   - CHAIRMAN, SECRETARY, TREASURER, COMMITTEE
   - EMPLOYEE
@@ -476,7 +477,7 @@ Frontend:
 
 ### Phase 2: Audit & Logging (1-2 weeks)
 5. **Audit Logs System** - Compliance & tracking
-6. **Staff Management** - For master admin
+6. **Staff Management** - For platform owner
 
 ### Phase 3: Data Import (1 week)
 7. **Excel Import** - Bulk data entry

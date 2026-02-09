@@ -42,26 +42,37 @@ public class RoleService {
     }
 
     /**
-     * Check if user is MASTER_ADMIN
+     * Check if user is PLATFORM_OWNER
      */
     public void requireMasterAdmin(Long userId) {
-        checkRole(userId, Role.MASTER_ADMIN);
+        checkRole(userId, Role.PLATFORM_OWNER);
     }
 
     /**
-     * Check if user is MASTER_ADMIN, SOCIETY_ADMIN, or COMMITTEE
+     * Check if user is PLATFORM_OWNER or ORGANIZATION_OWNER
+     */
+    public void requirePlatformOrOrgOwner(Long userId) {
+        checkRole(userId, Role.PLATFORM_OWNER, Role.ORGANIZATION_OWNER);
+    }
+
+    /**
+     * Check if user is PLATFORM_OWNER, ORGANIZATION_OWNER, SOCIETY_ADMIN, or
+     * COMMITTEE
      */
     public void requireAdminOrCommittee(Long userId) {
-        checkRole(userId, Role.MASTER_ADMIN, Role.SOCIETY_ADMIN, Role.CHAIRMAN, Role.SECRETARY, Role.TREASURER,
-                Role.COMMITTEE);
+        checkRole(userId, Role.PLATFORM_OWNER, Role.ORGANIZATION_OWNER, Role.SOCIETY_ADMIN, Role.CHAIRMAN,
+                Role.SECRETARY, Role.TREASURER,
+                Role.COMMITTEE, Role.MANAGER);
     }
 
     /**
-     * Check if user is MASTER_ADMIN, SOCIETY_ADMIN, COMMITTEE, or EMPLOYEE
+     * Check if user is PLATFORM_OWNER, ORGANIZATION_OWNER, SOCIETY_ADMIN,
+     * COMMITTEE, MANAGER, or EMPLOYEE
      */
     public void requireStaff(Long userId) {
-        checkRole(userId, Role.MASTER_ADMIN, Role.SOCIETY_ADMIN, Role.CHAIRMAN, Role.SECRETARY, Role.TREASURER,
-                Role.COMMITTEE, Role.EMPLOYEE);
+        checkRole(userId, Role.PLATFORM_OWNER, Role.ORGANIZATION_OWNER, Role.SOCIETY_ADMIN, Role.CHAIRMAN,
+                Role.SECRETARY, Role.TREASURER,
+                Role.COMMITTEE, Role.MANAGER, Role.EMPLOYEE);
     }
 
     /**
@@ -76,39 +87,41 @@ public class RoleService {
     }
 
     /**
-     * Check if user can manage societies (MASTER_ADMIN only)
+     * Check if user can manage societies (PLATFORM_OWNER and ORGANIZATION_OWNER)
      */
     public void canManageSocieties(Long userId) {
-        requireMasterAdmin(userId);
+        requirePlatformOrOrgOwner(userId);
     }
 
     /**
-     * Check if user can manage flats (MASTER_ADMIN, COMMITTEE)
+     * Check if user can manage flats (PLATFORM_OWNER, COMMITTEE)
      */
     public void canManageFlats(Long userId) {
         requireAdminOrCommittee(userId);
     }
 
     /**
-     * Check if user can manage notices (MASTER_ADMIN, COMMITTEE, EMPLOYEE)
+     * Check if user can manage notices (PLATFORM_OWNER, COMMITTEE, EMPLOYEE)
      */
     public void canManageNotices(Long userId) {
         requireStaff(userId);
     }
 
     /**
-     * Check if user can manage documents (MASTER_ADMIN, COMMITTEE, EMPLOYEE)
+     * Check if user can manage documents (PLATFORM_OWNER, COMMITTEE, EMPLOYEE)
      */
     public void canManageDocuments(Long userId) {
         requireStaff(userId);
     }
 
     /**
-     * Check if user can manage complaints (MASTER_ADMIN, SOCIETY_ADMIN,
-     * COMMITTEE, EMPLOYEE for status updates)
+     * Check if user can update complaint status (PLATFORM_OWNER,
+     * ORGANIZATION_OWNER, SOCIETY_ADMIN,
+     * COMMITTEE, MANAGER, EMPLOYEE for status updates)
      */
     public void canUpdateComplaintStatus(Long userId) {
-        checkRole(userId, Role.MASTER_ADMIN, Role.SOCIETY_ADMIN, Role.COMMITTEE, Role.EMPLOYEE);
+        checkRole(userId, Role.PLATFORM_OWNER, Role.ORGANIZATION_OWNER, Role.SOCIETY_ADMIN, Role.COMMITTEE,
+                Role.MANAGER, Role.EMPLOYEE);
     }
 
     /**
@@ -119,7 +132,7 @@ public class RoleService {
     }
 
     /**
-     * Check if user can view all data (MASTER_ADMIN, COMMITTEE, EMPLOYEE)
+     * Check if user can view all data (PLATFORM_OWNER, COMMITTEE, EMPLOYEE)
      */
     public void canViewAll(Long userId) {
         requireStaff(userId);

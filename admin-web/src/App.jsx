@@ -5,6 +5,8 @@ import { ThemeProvider } from './context/ThemeContext'
 import Layout from './components/Layout'
 import Welcome from './pages/Welcome'
 import Login from './pages/Login'
+import ForgotPassword from './pages/ForgotPassword'
+import ResetPassword from './pages/ResetPassword'
 import Dashboard from './pages/Dashboard'
 import Users from './pages/Users'
 import Societies from './pages/Societies'
@@ -59,6 +61,8 @@ function App() {
         <Routes>
           <Route path="/welcome" element={<Welcome />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
           
           {/* Footer Pages */}
           <Route path="/about" element={<About />} />

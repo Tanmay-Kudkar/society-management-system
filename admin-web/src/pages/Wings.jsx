@@ -26,17 +26,17 @@ export default function Wings() {
   const [filterSociety, setFilterSociety] = useState(urlSocietyId || '')
   const [formErrors, setFormErrors] = useState({})
 
-  // Check if user is MASTER_ADMIN
-  const isMasterAdmin = user?.role === 'MASTER_ADMIN'
+  // Check if user is PLATFORM_OWNER
+  const isPlatformLevel = user?.role === 'PLATFORM_OWNER' || user?.role === 'ORGANIZATION_OWNER' || user?.role === 'ORGANIZATION_OWNER'
 
   // Determine the effective society ID
-  const effectiveSocietyId = isMasterAdmin ? filterSociety : user?.societyId
+  const effectiveSocietyId = isPlatformLevel ? filterSociety : user?.societyId
 
-  // Fetch societies (for MASTER_ADMIN dropdown)
+  // Fetch societies (for PLATFORM_OWNER dropdown)
   const { data: societies = [] } = useQuery({
     queryKey: ['societies'],
     queryFn: () => societyApi.getAll().then(res => res.data),
-    enabled: isMasterAdmin,
+    enabled: isPlatformLevel,
   })
 
   // Fetch wings
@@ -119,11 +119,11 @@ export default function Wings() {
     
     setFormErrors({})
     
-    const societyId = isMasterAdmin 
+    const societyId = isPlatformLevel 
       ? parseInt(formData.get('societyId')) 
       : user?.societyId
 
-    console.log('Society ID:', societyId, 'User:', user, 'isMasterAdmin:', isMasterAdmin)
+    console.log('Society ID:', societyId, 'User:', user, 'isPlatformLevel:', isPlatformLevel)
 
     if (!societyId) {
       alert('Society ID is required.')
@@ -175,7 +175,7 @@ export default function Wings() {
               className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white placeholder:text-gray-400"
             />
           </div>
-          {isMasterAdmin && (
+          {isPlatformLevel && (
             <select
               value={filterSociety}
               onChange={(e) => setFilterSociety(e.target.value)}
@@ -217,7 +217,7 @@ export default function Wings() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <h3 className="text-xl font-bold text-white truncate">{wing.name}</h3>
-                    {isMasterAdmin && (
+                    {isPlatformLevel && (
                       <p className="text-white/80 text-sm mt-0.5 truncate">{wing.societyName}</p>
                     )}
                   </div>
@@ -287,8 +287,8 @@ export default function Wings() {
               </button>
             </div>
             <form onSubmit={handleSubmit} className="p-4 space-y-4">
-              {/* Society field - only show dropdown for MASTER_ADMIN */}
-              {isMasterAdmin ? (
+              {/* Society field - only show dropdown for PLATFORM_OWNER */}
+              {isPlatformLevel ? (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Society</label>
                   <select

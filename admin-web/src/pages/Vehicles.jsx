@@ -14,14 +14,14 @@ export default function Vehicles() {
   const [searchTerm, setSearchTerm] = useState('')
   const [filterType, setFilterType] = useState('')
 
-  // Get society filter from URL (for MASTER_ADMIN viewing specific society)
+  // Get society filter from URL (for PLATFORM_OWNER viewing specific society)
   const societyIdFromUrl = searchParams.get('society')
 
-  // Check if current user is MASTER_ADMIN
-  const isMasterAdmin = user?.role === 'MASTER_ADMIN'
+  // Check if current user is PLATFORM_OWNER
+  const isPlatformLevel = user?.role === 'PLATFORM_OWNER' || user?.role === 'ORGANIZATION_OWNER' || user?.role === 'ORGANIZATION_OWNER'
 
   // Determine effective society ID for filtering
-  const effectiveSocietyId = isMasterAdmin && societyIdFromUrl ? parseInt(societyIdFromUrl) : user?.societyId
+  const effectiveSocietyId = isPlatformLevel && societyIdFromUrl ? parseInt(societyIdFromUrl) : user?.societyId
 
   const { data: allVehicles = [], isLoading } = useQuery({
     queryKey: ['vehicles'],
@@ -94,8 +94,8 @@ export default function Vehicles() {
   const getFlatDisplay = (flatId) => {
     const flat = flats.find(f => f.id === flatId)
     if (!flat) return 'N/A'
-    // Only show society name for MASTER_ADMIN
-    return isMasterAdmin ? `${flat.flatNumber} - ${flat.societyName || 'N/A'}` : flat.flatNumber
+    // Only show society name for PLATFORM_OWNER
+    return isPlatformLevel ? `${flat.flatNumber} - ${flat.societyName || 'N/A'}` : flat.flatNumber
   }
 
   const VehicleIcon = ({ type }) => {
@@ -310,7 +310,7 @@ export default function Vehicles() {
                     <option value="">Select Flat</option>
                     {flats.map(f => (
                       <option key={f.id} value={f.id}>
-                        {isMasterAdmin ? `${f.flatNumber} - ${f.societyName || 'N/A'}` : f.flatNumber}
+                        {isPlatformLevel ? `${f.flatNumber} - ${f.societyName || 'N/A'}` : f.flatNumber}
                       </option>
                     ))}
                   </select>

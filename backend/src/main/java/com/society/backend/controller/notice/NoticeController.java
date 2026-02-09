@@ -6,12 +6,14 @@ import com.society.backend.service.notice.NoticeService;
 import com.society.backend.service.common.RoleService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/notices")
+@PreAuthorize("isAuthenticated()")
 public class NoticeController {
 
     private final NoticeService noticeService;
@@ -22,7 +24,7 @@ public class NoticeController {
         this.roleService = roleService;
     }
 
-    // MASTER_ADMIN, COMMITTEE, EMPLOYEE can create
+    // PLATFORM_OWNER, COMMITTEE, EMPLOYEE can create
     @PostMapping
     public ResponseEntity<NoticeResponse> create(
             @RequestParam Long userId,
@@ -47,7 +49,7 @@ public class NoticeController {
         return ResponseEntity.ok(noticeService.getBySocietyId(societyId));
     }
 
-    // MASTER_ADMIN, COMMITTEE, EMPLOYEE can update
+    // PLATFORM_OWNER, COMMITTEE, EMPLOYEE can update
     @PutMapping("/{id}")
     public ResponseEntity<NoticeResponse> update(
             @PathVariable Long id,
@@ -57,7 +59,7 @@ public class NoticeController {
         return ResponseEntity.ok(noticeService.update(id, request));
     }
 
-    // MASTER_ADMIN, COMMITTEE, EMPLOYEE can delete
+    // PLATFORM_OWNER, COMMITTEE, EMPLOYEE can delete
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(
             @PathVariable Long id,

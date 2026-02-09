@@ -12,7 +12,7 @@ Spring Boot 3.5.10 REST API for Society Management System with role-based access
 - BCrypt Password Encoding
 
 ## Roles
-- **MASTER_ADMIN** - Full system access
+- **PLATFORM_OWNER** - Full system access
 - **COMMITTEE** - Society management access  
 - **EMPLOYEE** - Task/ticket management access
 - **MEMBER** - Member-level access
@@ -241,7 +241,7 @@ Server runs on `http://localhost:8080`
 
 | Role | Can CREATE | Can UPDATE/DELETE | Can READ |
 |------|------------|-------------------|----------|
-| `MASTER_ADMIN` | SOCIETY_ADMIN only | SOCIETY_ADMIN only | ALL roles |
+| `PLATFORM_OWNER` | SOCIETY_ADMIN only | SOCIETY_ADMIN only | ALL roles |
 | `SOCIETY_ADMIN` | ALL below (exception) | ALL below (exception) | ALL in society |
 | `CHAIRMAN` | SECRETARY, TREASURER | SECRETARY, TREASURER | All below |
 | `SECRETARY` | COMMITTEE only | COMMITTEE only | COMMITTEE and below |
@@ -256,7 +256,7 @@ Server runs on `http://localhost:8080`
 
 All write operations require `userId` parameter for role verification:
 
-| Feature | MASTER_ADMIN | SOCIETY_ADMIN | CHAIRMAN | SECRETARY | TREASURER | COMMITTEE | EMPLOYEE | MEMBER |
+| Feature | PLATFORM_OWNER | SOCIETY_ADMIN | CHAIRMAN | SECRETARY | TREASURER | COMMITTEE | EMPLOYEE | MEMBER |
 |---------|:------------:|:-------------:|:--------:|:---------:|:---------:|:---------:|:--------:|:------:|
 | Manage Societies | ✓ | - | - | - | - | - | - | - |
 | Manage Users | Direct child | ALL below | Direct child | Direct child | Direct child | Direct child | Direct child | Direct child |

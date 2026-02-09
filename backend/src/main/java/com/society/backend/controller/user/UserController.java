@@ -33,15 +33,17 @@ public class UserController {
     /**
      * Create a new user. The current user can only create DIRECT CHILDREN roles.
      * HIERARCHY (Direct Children Only):
-     * - MASTER_ADMIN → SOCIETY_ADMIN only
+     * - PLATFORM_OWNER → ORGANIZATION_OWNER, SOCIETY_ADMIN
+     * - ORGANIZATION_OWNER → SOCIETY_ADMIN
      * - SOCIETY_ADMIN → All below (exception: full CRUD)
-     * - CHAIRMAN/SECRETARY/TREASURER → COMMITTEE only
+     * - CHAIRMAN/SECRETARY/TREASURER → COMMITTEE, MANAGER
      * - COMMITTEE → EMPLOYEE, MEMBER
+     * - MANAGER → EMPLOYEE
      * - EMPLOYEE → VISITOR
      * - MEMBER → TENANT
      */
     @PostMapping
-    @PreAuthorize("hasAnyRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'EMPLOYEE', 'MEMBER')")
+    @PreAuthorize("hasAnyRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'MANAGER', 'EMPLOYEE', 'MEMBER')")
     public ResponseEntity<UserResponse> createUser(
             @Valid @RequestBody UserRequest request) {
         return ResponseEntity.ok(userService.createUser(request));
@@ -49,21 +51,22 @@ public class UserController {
 
     /**
      * Get all users visible to the current user.
-     * - MASTER_ADMIN sees all users
+     * - PLATFORM_OWNER sees all users
+     * - ORGANIZATION_OWNER sees users in their organization's societies
      * - Others see only users in their society
      */
     @GetMapping
-    @PreAuthorize("hasAnyRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'EMPLOYEE', 'MEMBER')")
+    @PreAuthorize("hasAnyRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'MANAGER', 'EMPLOYEE', 'MEMBER')")
     public List<UserResponse> getUsers() {
         return userService.getAllUsers();
     }
 
     /**
      * Get all users for a specific society.
-     * Only MASTER_ADMIN can use this endpoint.
+     * PLATFORM_OWNER and ORGANIZATION_OWNER can use this endpoint.
      */
     @GetMapping("/society/{societyId}")
-    @PreAuthorize("hasRole('MASTER_ADMIN')")
+    @PreAuthorize("hasAnyRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER')")
     public List<UserResponse> getUsersBySociety(@PathVariable Long societyId) {
         return userService.getUsersBySociety(societyId);
     }
@@ -100,7 +103,7 @@ public class UserController {
      * Get user by ID.
      */
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'EMPLOYEE', 'MEMBER')")
+    @PreAuthorize("hasAnyRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'MANAGER', 'EMPLOYEE', 'MEMBER')")
     public ResponseEntity<UserResponse> getUserById(@PathVariable Long id) {
         return ResponseEntity.ok(userService.getUserById(id));
     }
@@ -139,7 +142,7 @@ public class UserController {
      * users like MEMBER, EMPLOYEE).
      */
     @PostMapping("/bulk-create/{societyId}")
-    @PreAuthorize("hasAnyRole('SECRETARY', 'COMMITTEE')")
+    @PreAuthorize("hasAnyRole('SECRETARY', 'COMMITTEE', 'MANAGER')")
     public ResponseEntity<BulkCreateUsersResponse> bulkCreateUsers(@PathVariable Long societyId) {
         return ResponseEntity.ok(userService.bulkCreateUsersForUnits(societyId));
     }
@@ -150,7 +153,7 @@ public class UserController {
      * Only SECRETARY and COMMITTEE can bulk import users.
      */
     @PostMapping("/bulk-import/validate")
-    @PreAuthorize("hasAnyRole('SECRETARY', 'COMMITTEE')")
+    @PreAuthorize("hasAnyRole('SECRETARY', 'COMMITTEE', 'MANAGER')")
     public ResponseEntity<BulkUserImportResponse> validateBulkImport(
             @RequestParam("file") MultipartFile file,
             @RequestParam("societyId") Long societyId) throws java.io.IOException {
@@ -168,7 +171,7 @@ public class UserController {
      * Only SECRETARY and COMMITTEE can bulk import users.
      */
     @PostMapping("/bulk-import")
-    @PreAuthorize("hasAnyRole('SECRETARY', 'COMMITTEE')")
+    @PreAuthorize("hasAnyRole('SECRETARY', 'COMMITTEE', 'MANAGER')")
     public ResponseEntity<BulkUserImportResponse> processBulkImport(
             @RequestParam("file") MultipartFile file,
             @RequestParam("societyId") Long societyId) throws java.io.IOException {
@@ -193,7 +196,7 @@ public class UserController {
      * Download Excel template for bulk user import.
      */
     @GetMapping("/bulk-import/template")
-    @PreAuthorize("hasAnyRole('SECRETARY', 'COMMITTEE')")
+    @PreAuthorize("hasAnyRole('SECRETARY', 'COMMITTEE', 'MANAGER')")
     public ResponseEntity<byte[]> downloadImportTemplate() {
         byte[] template = bulkUserImportService.generateTemplate();
 

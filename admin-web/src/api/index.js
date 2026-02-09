@@ -43,15 +43,27 @@ export const authApi = {
   register: (data) => api.post('/auth/register', data),
   logout: () => api.post('/auth/logout'),
   me: () => api.get('/auth/me'),
+  forgotPassword: (email) => api.post('/auth/forgot-password', { email }),
+  resetPassword: (token, newPassword) => api.post('/auth/reset-password', { token, newPassword }),
 }
 
-// Society API - requires userId for create/update/delete (MASTER_ADMIN only)
+// Society API - requires userId for create/update/delete (PLATFORM_OWNER and ORGANIZATION_OWNER)
 export const societyApi = {
   getAll: () => api.get('/societies'),
   getById: (id) => api.get(`/societies/${id}`),
   create: (data, userId) => api.post(`/societies?userId=${userId}`, data),
   update: (id, data, userId) => api.put(`/societies/${id}?userId=${userId}`, data),
   delete: (id, userId) => api.delete(`/societies/${id}?userId=${userId}`),
+}
+
+// Organization API - PLATFORM_OWNER and ORGANIZATION_OWNER
+export const organizationApi = {
+  getAll: () => api.get('/organizations'),
+  getById: (id) => api.get(`/organizations/${id}`),
+  getByOwnerEmail: (email) => api.get(`/organizations/owner/${email}`),
+  create: (data) => api.post('/organizations', data),
+  update: (id, data) => api.put(`/organizations/${id}`, data),
+  delete: (id) => api.delete(`/organizations/${id}`),
 }
 
 // User API - No userId needed, backend gets user from JWT token

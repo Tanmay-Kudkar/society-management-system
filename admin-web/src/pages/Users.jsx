@@ -8,12 +8,14 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { parseApiError, validateUserForm } from '../utils/validation'
 
 const roleColors = {
-  MASTER_ADMIN: 'bg-purple-100 text-purple-800',
+  PLATFORM_OWNER: 'bg-purple-100 text-purple-800',
+  ORGANIZATION_OWNER: 'bg-violet-100 text-violet-800',
   SOCIETY_ADMIN: 'bg-blue-100 text-blue-800',
   CHAIRMAN: 'bg-indigo-100 text-indigo-800',
   SECRETARY: 'bg-cyan-100 text-cyan-800',
   TREASURER: 'bg-green-100 text-green-800',
   COMMITTEE: 'bg-yellow-100 text-yellow-800',
+  MANAGER: 'bg-amber-100 text-amber-800',
   EMPLOYEE: 'bg-orange-100 text-orange-800',
   MEMBER: 'bg-gray-100 text-gray-800',
   TENANT: 'bg-pink-100 text-pink-800',
@@ -22,14 +24,16 @@ const roleColors = {
 
 // Role hierarchy descriptions for tooltips
 const roleHierarchyInfo = {
-  MASTER_ADMIN: 'Platform Owner - Can only manage SOCIETY_ADMIN',
-  SOCIETY_ADMIN: 'Society Manager - Can manage CHAIRMAN, SECRETARY, and TREASURER',
-  CHAIRMAN: 'Committee Head - Can manage SECRETARY and TREASURER',
-  SECRETARY: 'Administrative Head - Can manage COMMITTEE members',
-  TREASURER: 'Financial Head - Can manage COMMITTEE members',
-  COMMITTEE: 'Committee Member - Can manage EMPLOYEE and MEMBER',
-  EMPLOYEE: 'Society Staff - Can manage VISITOR only',
-  MEMBER: 'Flat Owner - Can manage TENANT only',
+  PLATFORM_OWNER: 'Platform Owner - Manages the entire platform (invisible to others)',
+  ORGANIZATION_OWNER: 'Organization Owner - Manages multiple societies under an organization',
+  SOCIETY_ADMIN: 'Society Admin - Manages a single society with full CRUD rights',
+  CHAIRMAN: 'Chairman - Committee head, manages Secretary and Treasurer',
+  SECRETARY: 'Secretary - Administrative head, manages Committee and Manager',
+  TREASURER: 'Treasurer - Financial head, manages Committee and Manager',
+  COMMITTEE: 'Committee Member - Can manage Employee and Member',
+  MANAGER: 'Manager - Can manage Employee',
+  EMPLOYEE: 'Society Staff - Can manage Visitor only',
+  MEMBER: 'Flat Owner - Can manage Tenant only',
   TENANT: 'Renter - View only access',
   VISITOR: 'Temporary Access - View only access',
 }
@@ -67,8 +71,8 @@ export default function Users() {
     }
   }, [urlRole])
 
-  // Check if current user is MASTER_ADMIN
-  const isMasterAdmin = user?.role === 'MASTER_ADMIN'
+  // Check if current user is PLATFORM_OWNER
+  const isPlatformLevel = user?.role === 'PLATFORM_OWNER' || user?.role === 'ORGANIZATION_OWNER'
   
   // Check if current user is MEMBER (for tenant assignment logic)
   // Check from session, profile API response, or users list
@@ -114,7 +118,7 @@ export default function Users() {
   const { data: societies = [] } = useQuery({
     queryKey: ['societies'],
     queryFn: () => societyApi.getAll().then(res => res.data).catch(() => []),
-    enabled: isMasterAdmin,
+    enabled: isPlatformLevel,
   })
 
   // Fetch flats for MEMBER/TENANT property assignment
@@ -248,7 +252,7 @@ export default function Users() {
     },
   })
 
-  // For MASTER_ADMIN, only show SOCIETY_ADMINs (not all users scattered)
+  // For PLATFORM_OWNER, only show SOCIETY_ADMINs (not all users scattered)
   // UNLESS viewing a specific society from URL - then show all users in that society
   // For others, show all users they can see
   let displayUsers = users
@@ -256,7 +260,7 @@ export default function Users() {
   // Apply society filter from URL if present
   if (urlSocietyId) {
     displayUsers = displayUsers.filter(u => String(u.societyId) === urlSocietyId)
-  } else if (isMasterAdmin) {
+  } else if (isPlatformLevel) {
     // Only apply SOCIETY_ADMIN filter when not viewing a specific society
     displayUsers = displayUsers.filter(u => u.role === 'SOCIETY_ADMIN')
   }
@@ -298,8 +302,8 @@ export default function Users() {
       return
     }
 
-    // Validate societyId is required for SOCIETY_ADMIN creation by MASTER_ADMIN
-    if (user?.role === 'MASTER_ADMIN' && roleValue === 'SOCIETY_ADMIN' && !data.societyId) {
+    // Validate societyId is required for SOCIETY_ADMIN creation by PLATFORM_OWNER
+    if (user?.role === 'PLATFORM_OWNER' && roleValue === 'SOCIETY_ADMIN' && !data.societyId) {
       setError('Please select a society for the Society Admin')
       return
     }
@@ -358,7 +362,7 @@ export default function Users() {
     if (urlSocietyId) {
       return 'Society Users'
     }
-    if (isMasterAdmin) {
+    if (isPlatformLevel) {
       return 'Society Admins'
     }
     return 'Users'
@@ -368,7 +372,7 @@ export default function Users() {
     if (urlSocietyId) {
       return 'View users in this society'
     }
-    if (isMasterAdmin) {
+    if (isPlatformLevel) {
       return 'Manage society administrators'
     }
     return 'Manage system users and roles'
@@ -418,7 +422,7 @@ export default function Users() {
               className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
             >
               <Plus size={20} />
-              {isMasterAdmin && !urlSocietyId ? 'Create Society Admin' : 'Add User'}
+              {isPlatformLevel && !urlSocietyId ? 'Create Society Admin' : 'Add User'}
             </button>
           )}
         </div>
@@ -481,14 +485,14 @@ export default function Users() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
             <input
               type="text"
-              placeholder={isMasterAdmin && !urlSocietyId ? "Search society admins..." : "Search users..."}
+              placeholder={isPlatformLevel && !urlSocietyId ? "Search society admins..." : "Search users..."}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white placeholder:text-gray-400"
             />
           </div>
-          {/* Only show role filter for non-MASTER_ADMIN users (or when viewing specific society), and only show roles they can see */}
-          {(!isMasterAdmin || urlSocietyId) && updatableRoles.length > 0 && (
+          {/* Only show role filter for non-PLATFORM_OWNER users (or when viewing specific society), and only show roles they can see */}
+          {(!isPlatformLevel || urlSocietyId) && updatableRoles.length > 0 && (
             <select
               value={filterRole}
               onChange={(e) => setFilterRole(e.target.value)}
@@ -504,8 +508,8 @@ export default function Users() {
         </div>
       </div>
 
-      {/* MASTER_ADMIN sees Society Admin cards with navigation (unless viewing specific society) */}
-      {isMasterAdmin && !urlSocietyId ? (
+      {/* PLATFORM_OWNER sees Society Admin cards with navigation (unless viewing specific society) */}
+      {isPlatformLevel && !urlSocietyId ? (
         <div className="space-y-4">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
             <UsersIcon className="w-5 h-5" />
@@ -527,7 +531,7 @@ export default function Users() {
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {filteredUsers.map((u) => {
                 const canEdit = updatableRoles.includes(u.role)
-                const canDelete = u.role !== 'MASTER_ADMIN' && updatableRoles.includes(u.role)
+                const canDelete = u.role !== 'PLATFORM_OWNER' && updatableRoles.includes(u.role)
                 const societyName = getSocietyName(u.societyId)
                 
                 return (
@@ -604,7 +608,7 @@ export default function Users() {
           )}
         </div>
       ) : (
-      /* Table view for non-MASTER_ADMIN users */
+      /* Table view for non-PLATFORM_OWNER users */
       <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 overflow-hidden">
         {isLoading ? (
           <div className="p-8 text-center">
@@ -626,7 +630,7 @@ export default function Users() {
                 {filteredUsers.map((u) => {
                   // Check if current user can edit/delete this user
                   const canEdit = u.id === user?.id || updatableRoles.includes(u.role)
-                  const canDelete = u.role !== 'MASTER_ADMIN' && updatableRoles.includes(u.role)
+                  const canDelete = u.role !== 'PLATFORM_OWNER' && updatableRoles.includes(u.role)
                   const isSelf = u.id === user?.id
                   
                   return (
@@ -704,7 +708,7 @@ export default function Users() {
       )}
 
       {/* Property Mappings Section - User to Unit Relationships */}
-      {(!isMasterAdmin || urlSocietyId) && (
+      {(!isPlatformLevel || urlSocietyId) && (
         <div className="mt-6 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 overflow-hidden">
           <div className="p-4 border-b border-gray-100 dark:border-slate-700">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -912,7 +916,7 @@ export default function Users() {
                   <p className="text-xs text-gray-500 mt-1">You don't have permission to create users.</p>
                 )}
               </div>
-              {user?.role === 'MASTER_ADMIN' && (selectedRole || editingUser?.role) === 'SOCIETY_ADMIN' && (
+              {user?.role === 'PLATFORM_OWNER' && (selectedRole || editingUser?.role) === 'SOCIETY_ADMIN' && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Society</label>
                   <select

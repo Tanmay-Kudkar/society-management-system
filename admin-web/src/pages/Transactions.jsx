@@ -7,7 +7,7 @@ import { Plus, Search, X, TrendingUp, TrendingDown, DollarSign, FileSpreadsheet,
 import clsx from 'clsx'
 
 export default function Transactions() {
-  const { user } = useAuth()
+  const { user, canManageTransactions } = useAuth()
   const { showToast } = useToast()
   const queryClient = useQueryClient()
   const [showModal, setShowModal] = useState(false)
@@ -126,13 +126,15 @@ export default function Transactions() {
             <FileSpreadsheet size={20} />
             {isExporting ? 'Exporting...' : 'Export'}
           </button>
-          <button
-            onClick={() => setShowModal(true)}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-          >
-            <Plus size={20} />
-            Add Transaction
-          </button>
+          {canManageTransactions() && (
+            <button
+              onClick={() => setShowModal(true)}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+            >
+              <Plus size={20} />
+              Add Transaction
+            </button>
+          )}
         </div>
       </div>
 

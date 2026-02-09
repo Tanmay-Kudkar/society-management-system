@@ -18,7 +18,7 @@ const statusIcons = {
 }
 
 export default function VendorBills() {
-  const { user } = useAuth()
+  const { user, canManageVendorBills } = useAuth()
   const queryClient = useQueryClient()
   const [showModal, setShowModal] = useState(false)
   const [showPaymentModal, setShowPaymentModal] = useState(false)
@@ -102,13 +102,15 @@ export default function VendorBills() {
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Vendor Bills</h1>
           <p className="text-gray-600 dark:text-gray-400 mt-1">Track vendor invoices and payments</p>
         </div>
-        <button
-          onClick={() => { setEditingBill(null); setShowModal(true) }}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-        >
-          <Plus size={20} />
-          Add Bill
-        </button>
+        {canManageVendorBills() && (
+          <button
+            onClick={() => { setEditingBill(null); setShowModal(true) }}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+          >
+            <Plus size={20} />
+            Add Bill
+          </button>
+        )}
       </div>
 
       {/* Filters */}

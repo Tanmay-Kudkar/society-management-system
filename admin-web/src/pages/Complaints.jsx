@@ -28,15 +28,15 @@ export default function Complaints() {
   const [searchTerm, setSearchTerm] = useState('')
   const [filterStatus, setFilterStatus] = useState('')
 
-  // Get society filter from URL (for MASTER_ADMIN viewing specific society)
+  // Get society filter from URL (for PLATFORM_OWNER viewing specific society)
   const societyIdFromUrl = searchParams.get('society')
 
-  // Check if current user is MASTER_ADMIN
-  const isMasterAdmin = user?.role === 'MASTER_ADMIN'
-  const canViewAll = ['MASTER_ADMIN', 'COMMITTEE', 'EMPLOYEE'].includes(user?.role)
+  // Check if current user is PLATFORM_OWNER
+  const isPlatformLevel = user?.role === 'PLATFORM_OWNER' || user?.role === 'ORGANIZATION_OWNER' || user?.role === 'ORGANIZATION_OWNER'
+  const canViewAll = ['PLATFORM_OWNER', 'COMMITTEE', 'EMPLOYEE'].includes(user?.role)
 
   // Determine which societyId to use for filtering
-  const effectiveSocietyId = isMasterAdmin && societyIdFromUrl ? societyIdFromUrl : user?.societyId
+  const effectiveSocietyId = isPlatformLevel && societyIdFromUrl ? societyIdFromUrl : user?.societyId
 
   const { data: complaints = [], isLoading } = useQuery({
     queryKey: ['complaints', user?.id, effectiveSocietyId],
@@ -193,7 +193,7 @@ export default function Complaints() {
                       )}
                       
                       <div className="flex items-center gap-4 mt-2 text-xs text-gray-500 dark:text-gray-400">
-                        {isMasterAdmin && <span>{complaint.societyName}</span>}
+                        {isPlatformLevel && <span>{complaint.societyName}</span>}
                         <span>By: {complaint.raisedByName || 'N/A'}</span>
                         <span>{complaint.createdAt && new Date(complaint.createdAt).toLocaleDateString()}</span>
                       </div>

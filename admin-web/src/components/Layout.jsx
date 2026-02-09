@@ -29,8 +29,36 @@ import {
 } from 'lucide-react'
 import clsx from 'clsx'
 
-// MASTER_ADMIN specific menu - simplified for platform management
-const masterAdminMenu = [
+// PLATFORM_OWNER specific menu - simplified for platform management
+const platformOwnerMenu = [
+  {
+    id: 'dashboard',
+    label: 'Dashboard',
+    icon: LayoutDashboard,
+    path: '/',
+  },
+  {
+    id: 'societies',
+    label: 'Societies',
+    icon: Building2,
+    path: '/societies',
+  },
+  {
+    id: 'users',
+    label: 'Society Admins',
+    icon: Users,
+    path: '/users',
+  },
+  {
+    id: 'settings',
+    label: 'Settings',
+    icon: Settings,
+    path: '/settings',
+  },
+]
+
+// ORGANIZATION_OWNER specific menu - manages multiple societies
+const orgOwnerMenu = [
   {
     id: 'dashboard',
     label: 'Dashboard',
@@ -70,11 +98,11 @@ const standardMenuGroups = [
     label: 'Management',
     icon: Building2,
     items: [
-      { path: '/users', icon: Users, label: 'Users', roles: ['SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER'] },
-      { path: '/wings', icon: Layers, label: 'Wings', roles: ['SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY'] },
-      { path: '/unit-management', icon: Home, label: 'Units', roles: ['SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE'] },
-      { path: '/tenants', icon: UserCheck, label: 'Tenants', roles: ['SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'MEMBER'] },
-      { path: '/vehicles', icon: Car, label: 'Vehicles', roles: ['SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'EMPLOYEE'] },
+      { path: '/users', icon: Users, label: 'Users', roles: ['SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'MANAGER'] },
+      { path: '/wings', icon: Layers, label: 'Wings', roles: ['SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'MANAGER'] },
+      { path: '/unit-management', icon: Home, label: 'Units', roles: ['SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'MANAGER'] },
+      { path: '/tenants', icon: UserCheck, label: 'Tenants', roles: ['SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'MANAGER', 'MEMBER'] },
+      { path: '/vehicles', icon: Car, label: 'Vehicles', roles: ['SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'MANAGER', 'EMPLOYEE'] },
     ],
   },
   {
@@ -97,7 +125,7 @@ const standardMenuGroups = [
     icon: Megaphone,
     items: [
       { path: '/notices', icon: Megaphone, label: 'Notices' },
-      { path: '/banners', icon: Image, label: 'Banners', roles: ['SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY'] },
+      { path: '/banners', icon: Image, label: 'Banners', roles: ['SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'MANAGER'] },
       { path: '/tickets', icon: Ticket, label: 'Tickets' },
       { path: '/complaints', icon: MessageSquare, label: 'Complaints' },
     ],
@@ -157,7 +185,7 @@ function NavDropdown({ group, hasRole }) {
           'flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200',
           isActive
             ? 'accent-bg-light accent-text shadow-md'
-            : 'text-gray-600 dark:text-gray-300 hover:bg-gradient-to-r hover:from-purple-50 hover:to-pink-50 dark:hover:from-slate-700 dark:hover:to-slate-600 hover:text-purple-700 dark:hover:text-purple-300 hover:shadow-md hover:scale-105'
+            : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700/50 hover:text-[var(--accent-primary)] dark:hover:text-[var(--accent-light)] hover:shadow-md hover:scale-105'
         )}
       >
         <group.icon size={18} />
@@ -178,7 +206,7 @@ function NavDropdown({ group, hasRole }) {
           'flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200',
           isActive
             ? 'accent-bg-light accent-text shadow-md'
-            : 'text-gray-600 dark:text-gray-300 hover:bg-gradient-to-r hover:from-purple-50 hover:to-pink-50 dark:hover:from-slate-700 dark:hover:to-slate-600 hover:text-purple-700 dark:hover:text-purple-300 hover:shadow-md hover:scale-105'
+            : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700/50 hover:text-[var(--accent-primary)] dark:hover:text-[var(--accent-light)] hover:shadow-md hover:scale-105'
         )}
       >
         <group.icon size={18} />
@@ -259,7 +287,7 @@ function MobileAccordion({ group, hasRole, onNavigate, isOpen, onToggle }) {
           'flex items-center gap-3 px-4 py-3 text-base font-medium transition-all duration-200',
           isActiveGroup
             ? 'accent-bg-light accent-text shadow-md'
-            : 'text-gray-700 dark:text-gray-200 hover:bg-gradient-to-r hover:from-purple-50 hover:to-pink-50 dark:hover:from-slate-700 dark:hover:to-slate-600 hover:text-purple-700 dark:hover:text-purple-300 hover:shadow-lg hover:scale-[1.02] hover:translate-x-1'
+            : 'text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-slate-700/50 hover:text-[var(--accent-primary)] dark:hover:text-[var(--accent-light)] hover:shadow-lg hover:scale-[1.02] hover:translate-x-1'
         )}
       >
         <group.icon size={20} />
@@ -276,8 +304,8 @@ function MobileAccordion({ group, hasRole, onNavigate, isOpen, onToggle }) {
         className={clsx(
           'w-full flex items-center justify-between px-4 py-3 text-base font-medium transition-all duration-200',
           isActiveGroup
-            ? 'accent-text shadow-md bg-gradient-to-r from-purple-50 to-pink-50 dark:from-slate-700 dark:to-slate-600'
-            : 'text-gray-700 dark:text-gray-200 hover:bg-gradient-to-r hover:from-purple-50 hover:to-pink-50 dark:hover:from-slate-700 dark:hover:to-slate-600 hover:text-purple-700 dark:hover:text-purple-300 hover:shadow-md hover:scale-[1.02] hover:translate-x-1'
+            ? 'accent-text shadow-md bg-gray-50 dark:bg-slate-700/50'
+            : 'text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-slate-700/50 hover:text-[var(--accent-primary)] dark:hover:text-[var(--accent-light)] hover:shadow-md hover:scale-[1.02] hover:translate-x-1'
         )}
       >
         <div className="flex items-center gap-3">
@@ -323,8 +351,9 @@ export default function Layout() {
   const [openAccordion, setOpenAccordion] = useState(null) // Track which accordion is open
 
   // Determine which menu to show based on user role
-  const isMasterAdmin = user?.role === 'MASTER_ADMIN'
-  const menuGroups = isMasterAdmin ? masterAdminMenu : standardMenuGroups
+  const isPlatformOwner = user?.role === 'PLATFORM_OWNER'
+  const isOrgOwner = user?.role === 'ORGANIZATION_OWNER'
+  const menuGroups = isPlatformOwner ? platformOwnerMenu : (isOrgOwner ? orgOwnerMenu : standardMenuGroups)
 
   const handleLogout = () => {
     logout()
@@ -374,10 +403,21 @@ export default function Layout() {
           {/* Logo */}
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 shadow-lg shadow-purple-500/25">
+              <div 
+                className="p-2 rounded-xl shadow-lg transition-transform hover:scale-105"
+                style={{ 
+                  background: `linear-gradient(to bottom right, var(--accent-primary), var(--accent-secondary))`,
+                  boxShadow: `0 10px 15px -3px color-mix(in srgb, var(--accent-primary) 25%, transparent)`
+                }}
+              >
                 <Building2 size={20} className="text-white" />
               </div>
-              <span className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">SocietyHub</span>
+              <span 
+                className="text-xl font-bold bg-clip-text text-transparent"
+                style={{ backgroundImage: `linear-gradient(to right, var(--accent-primary), var(--accent-secondary))` }}
+              >
+                SocietyHub
+              </span>
             </div>
           </div>
 
@@ -391,14 +431,20 @@ export default function Layout() {
           {/* User section - Desktop */}
           <div className="hidden lg:flex items-center gap-4">
             <div className="flex items-center gap-3 px-3 py-2 rounded-xl bg-gray-50 dark:bg-slate-700/50 border border-gray-100 dark:border-slate-600/50">
-              <div className="w-9 h-9 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center shadow-lg shadow-purple-500/25 transition-transform duration-200 hover:scale-105">
+              <div 
+                className="w-9 h-9 rounded-full flex items-center justify-center transition-transform duration-200 hover:scale-105"
+                style={{ 
+                  background: `linear-gradient(to bottom right, var(--accent-primary), var(--accent-secondary))`,
+                  boxShadow: `0 10px 15px -3px color-mix(in srgb, var(--accent-primary) 25%, transparent)`
+                }}
+              >
                 <span className="text-white font-semibold text-sm">
                   {user?.name?.charAt(0)?.toUpperCase() || 'U'}
                 </span>
               </div>
               <div className="text-right">
                 <p className="text-sm font-semibold text-gray-900 dark:text-white transition-colors duration-200">{user?.name}</p>
-                <p className="text-xs text-gray-500 dark:text-gray-400 transition-colors duration-200">{user?.role?.replace('_', ' ')}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 transition-colors duration-200 font-medium tracking-tight uppercase">{user?.role?.replace('_', ' ')}</p>
               </div>
             </div>
             <button
@@ -459,12 +505,20 @@ export default function Layout() {
           )}
         >
           {/* Mobile Header */}
-          <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200 dark:border-slate-700 bg-gradient-to-r from-purple-500/5 to-pink-500/5">
+          <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200 dark:border-slate-700">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500">
+              <div 
+                className="p-2 rounded-xl"
+                style={{ background: `linear-gradient(to bottom right, var(--accent-primary), var(--accent-secondary))` }}
+              >
                 <Building2 size={18} className="text-white" />
               </div>
-              <span className="text-lg font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">Menu</span>
+              <span 
+                className="text-lg font-bold bg-clip-text text-transparent"
+                style={{ backgroundImage: `linear-gradient(to right, var(--accent-primary), var(--accent-secondary))` }}
+              >
+                Menu
+              </span>
             </div>
             <button
               onClick={closeMobileMenu}
@@ -491,14 +545,20 @@ export default function Layout() {
           {/* Mobile User Section */}
           <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800">
             <div className="flex items-center gap-3 mb-4 p-3 rounded-xl bg-gray-50 dark:bg-slate-700/50">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center shadow-lg shadow-purple-500/25">
+              <div 
+                className="w-10 h-10 rounded-full flex items-center justify-center shadow-lg"
+                style={{ 
+                  background: `linear-gradient(to bottom right, var(--accent-primary), var(--accent-secondary))`,
+                  boxShadow: `0 10px 15px -3px color-mix(in srgb, var(--accent-primary) 25%, transparent)`
+                }}
+              >
                 <span className="text-white font-semibold">
                   {user?.name?.charAt(0)?.toUpperCase() || 'U'}
                 </span>
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">{user?.name}</p>
-                <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{user?.role?.replace('_', ' ')}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 truncate font-medium uppercase tracking-tight">{user?.role?.replace('_', ' ')}</p>
               </div>
             </div>
             <button

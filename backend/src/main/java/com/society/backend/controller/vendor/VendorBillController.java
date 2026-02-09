@@ -7,6 +7,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
@@ -15,11 +16,13 @@ import java.util.List;
 @RestController
 @RequestMapping("/vendor-bills")
 @RequiredArgsConstructor
+@PreAuthorize("isAuthenticated()")
 public class VendorBillController {
 
     private final VendorBillService vendorBillService;
 
     @PostMapping
+    @PreAuthorize("hasAnyRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER')")
     public ResponseEntity<VendorBillResponse> create(
             @Valid @RequestBody VendorBillRequest request,
             @RequestParam Long userId) {
@@ -57,6 +60,7 @@ public class VendorBillController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER')")
     public ResponseEntity<VendorBillResponse> update(
             @PathVariable Long id,
             @Valid @RequestBody VendorBillRequest request,
@@ -65,6 +69,7 @@ public class VendorBillController {
     }
 
     @PostMapping("/{id}/payment")
+    @PreAuthorize("hasAnyRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER')")
     public ResponseEntity<VendorBillResponse> recordPayment(
             @PathVariable Long id,
             @RequestParam BigDecimal amount,
@@ -75,6 +80,7 @@ public class VendorBillController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER')")
     public ResponseEntity<Void> delete(
             @PathVariable Long id,
             @RequestParam Long userId) {

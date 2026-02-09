@@ -6,12 +6,14 @@ import com.society.backend.service.common.RoleService;
 import com.society.backend.service.society.SocietyService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/societies")
+@PreAuthorize("isAuthenticated()")
 public class SocietyController {
 
     private final SocietyService societyService;
@@ -22,7 +24,7 @@ public class SocietyController {
         this.roleService = roleService;
     }
 
-    // MASTER_ADMIN only
+    // PLATFORM_OWNER only
     @PostMapping
     public ResponseEntity<SocietyResponse> create(
             @RequestParam Long userId,
@@ -42,7 +44,7 @@ public class SocietyController {
         return ResponseEntity.ok(societyService.getById(id));
     }
 
-    // MASTER_ADMIN only
+    // PLATFORM_OWNER only
     @PutMapping("/{id}")
     public ResponseEntity<SocietyResponse> update(
             @PathVariable Long id,
@@ -52,7 +54,7 @@ public class SocietyController {
         return ResponseEntity.ok(societyService.update(id, request));
     }
 
-    // MASTER_ADMIN only
+    // PLATFORM_OWNER only
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(
             @PathVariable Long id,

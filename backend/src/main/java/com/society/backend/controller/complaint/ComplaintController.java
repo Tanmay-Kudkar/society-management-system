@@ -6,12 +6,14 @@ import com.society.backend.service.complaint.ComplaintService;
 import com.society.backend.service.common.RoleService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/complaints")
+@PreAuthorize("isAuthenticated()")
 public class ComplaintController {
 
     private final ComplaintService complaintService;
@@ -22,7 +24,7 @@ public class ComplaintController {
         this.roleService = roleService;
     }
 
-    // MASTER_ADMIN, COMMITTEE, EMPLOYEE, MEMBER can create (not VISITOR)
+    // PLATFORM_OWNER, COMMITTEE, EMPLOYEE, MEMBER can create (not VISITOR)
     @PostMapping
     public ResponseEntity<ComplaintResponse> create(
             @RequestParam Long userId,
@@ -31,7 +33,7 @@ public class ComplaintController {
         return ResponseEntity.ok(complaintService.create(userId, request));
     }
 
-    // MASTER_ADMIN, COMMITTEE, EMPLOYEE can view all complaints
+    // PLATFORM_OWNER, COMMITTEE, EMPLOYEE can view all complaints
     @GetMapping
     public ResponseEntity<List<ComplaintResponse>> getAll(@RequestParam Long userId) {
         roleService.canViewAll(userId);
@@ -50,7 +52,7 @@ public class ComplaintController {
         return ResponseEntity.ok(complaintService.getByUser(targetUserId));
     }
 
-    // MASTER_ADMIN, COMMITTEE, EMPLOYEE can filter by status
+    // PLATFORM_OWNER, COMMITTEE, EMPLOYEE can filter by status
     @GetMapping("/status/{status}")
     public ResponseEntity<List<ComplaintResponse>> getByStatus(
             @PathVariable String status,
@@ -73,7 +75,7 @@ public class ComplaintController {
         return ResponseEntity.ok(complaintService.getById(id));
     }
 
-    // MASTER_ADMIN, COMMITTEE can update status
+    // PLATFORM_OWNER, COMMITTEE can update status
     @PatchMapping("/{id}/status")
     public ResponseEntity<ComplaintResponse> updateStatus(
             @PathVariable Long id,
@@ -84,7 +86,7 @@ public class ComplaintController {
         return ResponseEntity.ok(complaintService.updateStatus(id, status, resolution));
     }
 
-    // MASTER_ADMIN, COMMITTEE can delete
+    // PLATFORM_OWNER, COMMITTEE can delete
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(
             @PathVariable Long id,

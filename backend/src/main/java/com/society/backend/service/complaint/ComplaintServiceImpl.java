@@ -58,8 +58,8 @@ public class ComplaintServiceImpl implements ComplaintService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "User not found"));
 
-        // MASTER_ADMIN sees all complaints
-        if (user.getRole().name().equals("MASTER_ADMIN")) {
+        // PLATFORM_OWNER sees all complaints
+        if (user.getRole().name().equals("PLATFORM_OWNER")) {
             return complaintRepository.findAll().stream()
                     .map(this::toResponse)
                     .collect(Collectors.toList());

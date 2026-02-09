@@ -10,6 +10,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 @RestController
 @RequestMapping("/auth")
 public class AuthController {
@@ -18,6 +20,9 @@ public class AuthController {
 
     @Value("${jwt.cookie.max-age:86400}")
     private int cookieMaxAge; // Default 24 hours
+
+    @Value("${jwt.cookie.remember-me-max-age:2592000}")
+    private int cookieRememberMeMaxAge; // Default 30 days
 
     @Value("${jwt.cookie.secure:false}")
     private boolean cookieSecure; // Set to true in production with HTTPS
@@ -38,12 +43,13 @@ public class AuthController {
             HttpServletResponse response) {
         LoginResponse loginResponse = authService.login(request);
 
-        // Set JWT in HTTP-only cookie
+        // Set JWT in HTTP-only cookie (longer expiry if remember me)
+        int maxAge = request.isRememberMe() ? cookieRememberMeMaxAge : cookieMaxAge;
         Cookie jwtCookie = new Cookie("jwt", loginResponse.getToken());
         jwtCookie.setHttpOnly(true);
         jwtCookie.setSecure(cookieSecure);
         jwtCookie.setPath("/");
-        jwtCookie.setMaxAge(cookieMaxAge);
+        jwtCookie.setMaxAge(maxAge);
         jwtCookie.setAttribute("SameSite", "Lax");
         response.addCookie(jwtCookie);
 
@@ -69,5 +75,22 @@ public class AuthController {
             return ResponseEntity.status(401).build();
         }
         return ResponseEntity.ok(authService.getUserFromToken(token));
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<Map<String, String>> forgotPassword(
+            @Valid @RequestBody ForgotPasswordRequest request) {
+        authService.forgotPassword(request.getEmail());
+        // Always return success to prevent email enumeration
+        return ResponseEntity.ok(Map.of(
+                "message", "If an account with that email exists, a password reset link has been sent."));
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<Map<String, String>> resetPassword(
+            @Valid @RequestBody ResetPasswordRequest request) {
+        authService.resetPassword(request.getToken(), request.getNewPassword());
+        return ResponseEntity.ok(Map.of(
+                "message", "Password has been reset successfully. You can now sign in with your new password."));
     }
 }

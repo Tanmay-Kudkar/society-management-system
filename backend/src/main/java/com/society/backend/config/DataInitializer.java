@@ -8,9 +8,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 /**
- * Initializes the MASTER_ADMIN user on application startup.
+ * Initializes the PLATFORM_OWNER user on application startup.
  * 
- * MASTER_ADMIN is the only hardcoded user - the platform owner.
+ * PLATFORM_OWNER is the only hardcoded user - the platform owner.
  * All other users must be created through the STRICT role hierarchy:
  * 
  * HIERARCHY RULES:
@@ -24,7 +24,7 @@ import org.springframework.stereotype.Component;
  * 
  * CREATION HIERARCHY:
  * ───────────────────
- * - MASTER_ADMIN → SOCIETY_ADMIN only (direct child)
+ * - PLATFORM_OWNER → SOCIETY_ADMIN only (direct child)
  * - SOCIETY_ADMIN → ALL below (exception: full CRUD rights)
  * - CHAIRMAN/SECRETARY/TREASURER → COMMITTEE only (direct child)
  * - COMMITTEE → EMPLOYEE, MEMBER (direct children)
@@ -44,25 +44,26 @@ public class DataInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        // Create Master Admin (Platform Owner) if not exists
+        // Create Platform Owner if not exists
         // This is the ONLY hardcoded user - all others are created through dashboard
         if (userRepository.findByEmail("admin@society.com").isEmpty()) {
-            User masterAdmin = new User();
-            masterAdmin.setName("Master Admin");
-            masterAdmin.setEmail("admin@society.com");
-            masterAdmin.setPassword(passwordEncoder.encode("admin123"));
-            masterAdmin.setRole(Role.MASTER_ADMIN);
-            masterAdmin.setPhone("9999999999");
-            masterAdmin.setIsActive(true);
-            userRepository.save(masterAdmin);
+            User platformOwner = new User();
+            platformOwner.setName("Platform Owner");
+            platformOwner.setEmail("admin@society.com");
+            platformOwner.setPassword(passwordEncoder.encode("admin123"));
+            platformOwner.setRole(Role.PLATFORM_OWNER);
+            platformOwner.setPhone("9999999999");
+            platformOwner.setIsActive(true);
+            platformOwner.setAccountType("platform");
+            userRepository.save(platformOwner);
             System.out.println("═══════════════════════════════════════════════════════════════");
-            System.out.println("✅ MASTER ADMIN CREATED (Platform Owner)");
+            System.out.println("✅ PLATFORM OWNER CREATED");
             System.out.println("   Email:    admin@society.com");
             System.out.println("   Password: admin123");
             System.out.println("   ⚠️  Please change this password after first login!");
             System.out.println("═══════════════════════════════════════════════════════════════");
         } else {
-            System.out.println("✓ Master Admin already exists");
+            System.out.println("✓ Platform Owner already exists");
         }
     }
 }

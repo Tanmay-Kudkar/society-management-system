@@ -9,6 +9,7 @@ import com.society.backend.service.flat.FlatService;
 import com.society.backend.service.common.RoleService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -16,6 +17,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/flats")
+@PreAuthorize("isAuthenticated()")
 public class FlatController {
 
     private final FlatService flatService;
@@ -29,7 +31,7 @@ public class FlatController {
         this.bulkFlatImportService = bulkFlatImportService;
     }
 
-    // MASTER_ADMIN, COMMITTEE only
+    // PLATFORM_OWNER, COMMITTEE only
     @PostMapping
     public ResponseEntity<FlatResponse> create(
             @RequestParam Long userId,
@@ -39,7 +41,7 @@ public class FlatController {
     }
 
     // All authenticated users can view (filtered by their society if not
-    // MASTER_ADMIN)
+    // PLATFORM_OWNER)
     @GetMapping
     public ResponseEntity<List<FlatResponse>> getAll(@RequestParam Long userId) {
         return ResponseEntity.ok(flatService.getAll(userId));
@@ -55,7 +57,7 @@ public class FlatController {
         return ResponseEntity.ok(flatService.getById(id));
     }
 
-    // MASTER_ADMIN, COMMITTEE only
+    // PLATFORM_OWNER, COMMITTEE only
     @PutMapping("/{id}")
     public ResponseEntity<FlatResponse> update(
             @PathVariable Long id,
@@ -65,7 +67,7 @@ public class FlatController {
         return ResponseEntity.ok(flatService.update(id, request));
     }
 
-    // MASTER_ADMIN, COMMITTEE only
+    // PLATFORM_OWNER, COMMITTEE only
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(
             @PathVariable Long id,

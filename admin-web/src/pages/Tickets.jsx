@@ -29,7 +29,7 @@ const getProgressColor = (progress) => {
 }
 
 export default function Tickets() {
-  const { user } = useAuth()
+  const { user, canCreateTickets, canManageTickets } = useAuth()
   const toast = useToast()
   const queryClient = useQueryClient()
   const [showModal, setShowModal] = useState(false)
@@ -40,8 +40,8 @@ export default function Tickets() {
   const [showOverdueOnly, setShowOverdueOnly] = useState(false)
   const [isExporting, setIsExporting] = useState(false)
 
-  // Check if current user is MASTER_ADMIN
-  const isMasterAdmin = user?.role === 'MASTER_ADMIN'
+  // Check if current user is PLATFORM_OWNER
+  const isPlatformLevel = user?.role === 'PLATFORM_OWNER' || user?.role === 'ORGANIZATION_OWNER' || user?.role === 'ORGANIZATION_OWNER'
 
   const { data: tickets = [], isLoading } = useQuery({
     queryKey: ['tickets'],
@@ -112,7 +112,7 @@ export default function Tickets() {
   }
 
   const handleExport = async () => {
-    if (!user.societyId && !isMasterAdmin) {
+    if (!user.societyId && !isPlatformLevel) {
       toast.error('Unable to export: No society assigned to your account')
       return
     }
@@ -148,13 +148,15 @@ export default function Tickets() {
             <FileSpreadsheet size={20} />
             {isExporting ? 'Exporting...' : 'Export'}
           </button>
-          <button
-            onClick={() => setShowModal(true)}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-          >
-            <Plus size={20} />
-            Create Ticket
-          </button>
+          {canCreateTickets() && (
+            <button
+              onClick={() => setShowModal(true)}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+            >
+              <Plus size={20} />
+              Create Ticket
+            </button>
+          )}
         </div>
       </div>
 
@@ -280,7 +282,7 @@ export default function Tickets() {
                     
                     <div className="flex items-center gap-4 mt-3 text-xs text-gray-500 dark:text-gray-400">
                       <span>{ticket.type}</span>
-                      {isMasterAdmin && <span>{ticket.societyName}</span>}
+                      {isPlatformLevel && <span>{ticket.societyName}</span>}
                       <span className="inline-flex items-center gap-1">
                         <Clock size={12} />
                         {ticket.createdAt && new Date(ticket.createdAt).toLocaleDateString()}

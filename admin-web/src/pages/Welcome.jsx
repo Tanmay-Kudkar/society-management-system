@@ -206,15 +206,15 @@ export default function Welcome() {
   }
 
   return (
-    <div className={`min-h-screen overflow-hidden transition-colors duration-500 ${isDark ? 'bg-slate-900 text-white' : 'bg-gradient-to-b from-slate-50 via-white to-purple-50 text-gray-900'}`}>
+    <div className={`min-h-screen overflow-hidden transition-colors duration-500 ${isDark ? 'bg-slate-900 text-white' : 'text-gray-900'}`} style={!isDark ? { background: 'linear-gradient(to bottom, #f8fafc, white, color-mix(in srgb, var(--accent-light) 30%, white))' } : {}}>
       {/* Animated Background */}
       <div className="fixed inset-0 z-0">
         {/* Base gradient */}
-        <div className={`absolute inset-0 transition-colors duration-500 ${isDark ? 'bg-gradient-to-br from-slate-900 via-indigo-950/50 to-slate-900' : 'bg-gradient-to-br from-indigo-50 via-white to-purple-100'}`}></div>
+        <div className={`absolute inset-0 transition-colors duration-500 ${isDark ? 'bg-gradient-to-br from-slate-900 via-indigo-950/50 to-slate-900' : ''}`} style={!isDark ? { background: `linear-gradient(to bottom right, color-mix(in srgb, var(--accent-light) 30%, white), white, color-mix(in srgb, var(--accent-light) 40%, white))` } : {}}></div>
         
         {/* Animated gradient mesh */}
         <div className={`absolute inset-0 ${isDark ? 'opacity-30' : 'opacity-50'}`}>
-          <div className={`absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] ${isDark ? 'from-purple-900/40' : 'from-violet-300/40'} via-transparent to-transparent animate-pulse-slow`}></div>
+          <div className={`absolute inset-0 animate-pulse-slow`} style={{ background: isDark ? 'radial-gradient(ellipse at top, color-mix(in srgb, var(--accent-primary) 40%, transparent), transparent, transparent)' : 'radial-gradient(ellipse at top, color-mix(in srgb, var(--accent-light) 40%, transparent), transparent, transparent)' }}></div>
           <div className={`absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,_var(--tw-gradient-stops))] ${isDark ? 'from-blue-900/30' : 'from-fuchsia-300/30'} via-transparent to-transparent animate-pulse-slower`}></div>
         </div>
         
@@ -231,7 +231,7 @@ export default function Welcome() {
         {/* Light mode decorative elements - more vibrant */}
         {!isDark && (
           <>
-            <div className="absolute top-10 left-5 w-96 h-96 bg-gradient-to-br from-violet-400/20 to-fuchsia-400/20 rounded-full blur-3xl animate-float"></div>
+            <div className="absolute top-10 left-5 w-96 h-96 rounded-full blur-3xl animate-float" style={{ background: 'linear-gradient(to bottom right, color-mix(in srgb, var(--accent-primary) 20%, transparent), color-mix(in srgb, var(--accent-secondary) 20%, transparent))' }}></div>
             <div className="absolute bottom-20 right-10 w-[500px] h-[500px] bg-gradient-to-br from-blue-400/15 to-cyan-400/15 rounded-full blur-3xl animate-floatSlow"></div>
             <div className="absolute top-1/3 left-1/2 w-80 h-80 bg-gradient-to-br from-pink-400/15 to-rose-400/15 rounded-full blur-3xl animate-float"></div>
             <div className="absolute bottom-1/3 left-20 w-72 h-72 bg-gradient-to-br from-amber-300/10 to-orange-300/10 rounded-full blur-3xl animate-floatSlow"></div>
@@ -271,12 +271,12 @@ export default function Welcome() {
             >
               {/* Building top design based on type */}
               {building.hasAntenna && (
-                <div className={`absolute -top-6 left-1/2 -translate-x-1/2 w-1 h-6 ${isDark ? 'bg-slate-600' : 'bg-violet-400'}`}>
+                <div className={`absolute -top-6 left-1/2 -translate-x-1/2 w-1 h-6`} style={{ background: isDark ? '#475569' : 'var(--accent-primary)' }}>
                   <div className="absolute top-0 left-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-red-500 animate-pulse"></div>
                 </div>
               )}
               {/* Roof */}
-              <div className={`absolute -top-2 left-0 right-0 h-2 ${isDark ? 'bg-slate-700' : 'bg-violet-300'} rounded-t`}></div>
+              <div className={`absolute -top-2 left-0 right-0 h-2 ${isDark ? 'bg-slate-700' : ''} rounded-t`} style={!isDark ? { background: 'var(--accent-primary)', opacity: 0.6 } : {}}></div>
               {/* Windows grid */}
               <div className={`building-windows-grid ${isDark ? '' : 'building-windows-light'}`} style={{ '--floors': building.floors }}></div>
               {/* Building reflection */}
@@ -284,9 +284,9 @@ export default function Welcome() {
             </div>
           ))}
           {/* Ground with gradient */}
-          <div className={`absolute bottom-0 left-0 right-0 h-4 ${isDark ? 'bg-gradient-to-t from-slate-950 via-slate-900 to-transparent' : 'bg-gradient-to-t from-violet-200 via-purple-100 to-transparent'}`}></div>
+          <div className={`absolute bottom-0 left-0 right-0 h-4 ${isDark ? 'bg-gradient-to-t from-slate-950 via-slate-900 to-transparent' : ''}`} style={!isDark ? { background: `linear-gradient(to top, color-mix(in srgb, var(--accent-light) 50%, white), color-mix(in srgb, var(--accent-light) 25%, white), transparent)` } : {}}></div>
           {/* Road */}
-          <div className={`absolute bottom-0 left-0 right-0 h-2 ${isDark ? 'bg-slate-800' : 'bg-violet-300'}`}>
+          <div className={`absolute bottom-0 left-0 right-0 h-2 ${isDark ? 'bg-slate-800' : ''}`} style={!isDark ? { background: 'var(--accent-primary)', opacity: 0.5 } : {}}>
             <div className={`absolute top-1/2 left-0 right-0 h-0.5 ${isDark ? 'bg-yellow-500/30' : 'bg-amber-400/60'}`} style={{ backgroundImage: 'repeating-linear-gradient(90deg, transparent, transparent 20px, currentColor 20px, currentColor 40px)' }}></div>
           </div>
         </div>
@@ -384,9 +384,10 @@ export default function Welcome() {
                           onClick={() => { resetToSystemTheme(); setThemeMenuOpen(false); }}
                           className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors ${
                             !isManual 
-                              ? (isDark ? 'bg-purple-500/20 text-purple-400' : 'bg-purple-100 text-purple-600') 
+                              ? '' 
                               : (isDark ? 'text-gray-300 hover:bg-slate-700' : 'text-gray-700 hover:bg-gray-100')
                           }`}
+                          style={!isManual ? { background: isDark ? 'color-mix(in srgb, var(--accent-primary) 20%, transparent)' : 'color-mix(in srgb, var(--accent-primary) 10%, white)', color: 'var(--accent-primary)' } : {}}
                         >
                           <Monitor className="w-4 h-4" />
                           <span>System</span>
@@ -396,9 +397,10 @@ export default function Welcome() {
                           onClick={() => { setTheme('light'); setThemeMenuOpen(false); }}
                           className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors ${
                             isManual && theme === 'light' 
-                              ? (isDark ? 'bg-purple-500/20 text-purple-400' : 'bg-purple-100 text-purple-600') 
+                              ? '' 
                               : (isDark ? 'text-gray-300 hover:bg-slate-700' : 'text-gray-700 hover:bg-gray-100')
                           }`}
+                          style={isManual && theme === 'light' ? { background: isDark ? 'color-mix(in srgb, var(--accent-primary) 20%, transparent)' : 'color-mix(in srgb, var(--accent-primary) 10%, white)', color: 'var(--accent-primary)' } : {}}
                         >
                           <Sun className="w-4 h-4" />
                           <span>Light</span>
@@ -408,9 +410,10 @@ export default function Welcome() {
                           onClick={() => { setTheme('dark'); setThemeMenuOpen(false); }}
                           className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors ${
                             isManual && theme === 'dark' 
-                              ? (isDark ? 'bg-purple-500/20 text-purple-400' : 'bg-purple-100 text-purple-600') 
+                              ? '' 
                               : (isDark ? 'text-gray-300 hover:bg-slate-700' : 'text-gray-700 hover:bg-gray-100')
                           }`}
+                          style={isManual && theme === 'dark' ? { background: isDark ? 'color-mix(in srgb, var(--accent-primary) 20%, transparent)' : 'color-mix(in srgb, var(--accent-primary) 10%, white)', color: 'var(--accent-primary)' } : {}}
                         >
                           <Moon className="w-4 h-4" />
                           <span>Dark</span>
@@ -485,7 +488,7 @@ export default function Welcome() {
           <div className="max-w-6xl mx-auto text-center">
             {/* Trust Badge */}
             <div className={`transition-all duration-1000 delay-300 ${isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
-              <div className={`inline-flex items-center gap-3 px-4 sm:px-5 py-2 sm:py-2.5 rounded-full mb-6 sm:mb-8 hover-lift transition-all ${isDark ? 'glass-badge' : 'bg-white/80 shadow-lg shadow-violet-500/10 border border-violet-200/50 backdrop-blur-sm'}`}>
+              <div className={`inline-flex items-center gap-3 px-4 sm:px-5 py-2 sm:py-2.5 rounded-full mb-6 sm:mb-8 hover-lift transition-all ${isDark ? 'glass-badge' : 'bg-white/80 shadow-lg backdrop-blur-sm'}`} style={!isDark ? { borderColor: 'color-mix(in srgb, var(--accent-light) 50%, transparent)', borderWidth: '1px', boxShadow: '0 10px 15px -3px color-mix(in srgb, var(--accent-primary) 10%, transparent)' } : {}}>
                 <div className="flex -space-x-2">
                   {[...Array(3)].map((_, i) => (
                     <div 
@@ -521,7 +524,8 @@ export default function Welcome() {
             <div className={`flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 transition-all duration-1000 delay-900 px-4 ${isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
               <button
                 onClick={() => navigate('/login')}
-                className={`w-full sm:w-auto btn-hero-primary-new group ${isDark ? '' : 'shadow-xl shadow-violet-500/25'}`}
+                className={`w-full sm:w-auto btn-hero-primary-new group ${isDark ? '' : ''}`}
+                style={!isDark ? { boxShadow: '0 20px 25px -5px color-mix(in srgb, var(--accent-primary) 25%, transparent)' } : {}}
               >
                 <span className="relative z-10 flex items-center justify-center gap-3">
                   <Sparkles className="w-5 h-5" />
@@ -531,7 +535,8 @@ export default function Welcome() {
               </button>
               <button 
                 onClick={() => scrollToSection('features')}
-                className={`w-full sm:w-auto btn-hero-secondary-new group ${isDark ? '' : 'border-violet-300 text-violet-700 hover:border-violet-500 hover:bg-violet-50'}`}
+                className={`w-full sm:w-auto btn-hero-secondary-new group`}
+                style={!isDark ? { borderColor: 'var(--accent-primary)', color: 'var(--accent-primary)' } : {}}
               >
                 <Play className="w-5 h-5 group-hover:scale-110 transition-transform" />
                 <span>Watch Demo</span>
@@ -609,7 +614,7 @@ export default function Welcome() {
                     <div className={`feature-icon-new bg-gradient-to-br ${feature.color}`}>
                       <feature.icon className="w-6 h-6 text-white" />
                     </div>
-                    <h3 className={`text-lg font-bold mb-2 transition-colors ${isDark ? 'text-white group-hover:text-purple-300' : 'text-gray-900 group-hover:text-purple-600'}`}>
+                    <h3 className={`text-lg font-bold mb-2 transition-colors ${isDark ? 'text-white' : 'text-gray-900'}`} style={{ '--hover-color': 'var(--accent-primary)' }} onMouseEnter={e => e.currentTarget.style.color = 'var(--accent-primary)'} onMouseLeave={e => e.currentTarget.style.color = ''}>
                       {feature.title}
                     </h3>
                     <p className={`text-sm leading-relaxed ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
@@ -643,7 +648,7 @@ export default function Welcome() {
                   <div className="github-tile-bg"></div>
                   <div className="relative z-10 p-6">
                     <div className="flex items-center gap-3 mb-4">
-                      <div className="p-2 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500">
+                      <div className="p-2 rounded-lg" style={{ background: 'linear-gradient(to bottom right, var(--accent-primary), var(--accent-secondary))' }}>
                         <Users className="w-5 h-5 text-white" />
                       </div>
                       <h3 className="font-bold text-white">Community Connect</h3>
@@ -902,7 +907,7 @@ export default function Welcome() {
                         <text x="60" y="55" textAnchor="middle" className="text-[16px] fill-green-400">✓</text>
                         
                         <circle cx="150" cy="50" r="20" fill="#1e293b" stroke="#8b5cf6" strokeWidth="2" className="github-scan-ring"/>
-                        <text x="150" y="55" textAnchor="middle" className="text-[14px] fill-purple-400">ID</text>
+                        <text x="150" y="55" textAnchor="middle" className="text-[14px]" fill="var(--accent-primary)">ID</text>
                         
                         <circle cx="240" cy="50" r="20" fill="#1e293b" stroke="#3b82f6" strokeWidth="2"/>
                         <text x="240" y="55" textAnchor="middle" className="text-[16px] fill-blue-400">📹</text>
@@ -994,8 +999,9 @@ export default function Welcome() {
                     className={`w-full sm:w-auto group px-8 py-4 rounded-xl font-bold text-lg transition-all duration-300 ${
                       isDark 
                         ? 'bg-white text-slate-900 hover:bg-gray-100 shadow-xl shadow-white/20 hover:shadow-white/30 hover:scale-105' 
-                        : 'bg-white text-violet-700 hover:bg-gray-50 shadow-xl shadow-black/20 hover:shadow-black/30 hover:scale-105'
+                        : 'bg-white shadow-xl shadow-black/20 hover:shadow-black/30 hover:scale-105'
                     }`}
+                    style={!isDark ? { color: 'var(--accent-primary)' } : {}}
                   >
                     <span className="flex items-center justify-center gap-3">
                       Start Now - It's Free
@@ -1022,7 +1028,7 @@ export default function Welcome() {
         </section>
 
         {/* Footer */}
-        <footer id="contact" className={`py-12 sm:py-16 px-4 border-t transition-colors ${isDark ? 'border-white/10 bg-gradient-to-t from-slate-950 to-transparent' : 'border-violet-200/50 bg-gradient-to-t from-violet-100/50 to-transparent'}`}>
+        <footer id="contact" className={`py-12 sm:py-16 px-4 border-t transition-colors ${isDark ? 'border-white/10 bg-gradient-to-t from-slate-950 to-transparent' : ''}`} style={!isDark ? { borderColor: 'color-mix(in srgb, var(--accent-light) 50%, transparent)', background: 'linear-gradient(to top, color-mix(in srgb, var(--accent-light) 25%, transparent), transparent)' } : {}}>
           <div className="max-w-7xl mx-auto">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-8 sm:gap-12 mb-12 sm:mb-16">
               <div className="col-span-2 md:col-span-1">

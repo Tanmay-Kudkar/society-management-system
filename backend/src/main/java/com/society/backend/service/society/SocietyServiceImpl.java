@@ -3,12 +3,17 @@ package com.society.backend.service.society;
 import com.society.backend.dto.society.SocietyRequest;
 import com.society.backend.dto.society.SocietyResponse;
 import com.society.backend.entity.Society;
+import com.society.backend.entity.Role;
+import com.society.backend.entity.User;
 import com.society.backend.exception.ApiException;
 import com.society.backend.repository.WingRepository;
 import com.society.backend.repository.flat.FlatRepository;
+import com.society.backend.repository.organization.OrganizationRepository;
 import com.society.backend.repository.society.SocietyRepository;
+import com.society.backend.repository.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -21,17 +26,68 @@ public class SocietyServiceImpl implements SocietyService {
     private final SocietyRepository societyRepository;
     private final FlatRepository flatRepository;
     private final WingRepository wingRepository;
+    private final OrganizationRepository organizationRepository;
+    private final UserRepository userRepository;
 
     @Override
     public SocietyResponse create(SocietyRequest request) {
         Society society = new Society();
         mapRequestToEntity(request, society);
+
+        // If organizationId is provided, link society to organization
+        if (request.getOrganizationId() != null) {
+            var org = organizationRepository.findById(request.getOrganizationId())
+                    .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Organization not found"));
+            long currentCount = societyRepository.countByOrganizationId(org.getId());
+            if (!org.canCreateMoreSocieties(currentCount)) {
+                throw new ApiException(HttpStatus.FORBIDDEN,
+                        "Organization has reached its maximum number of societies");
+            }
+            society.setOrganization(org);
+        } else {
+            // Check if current user is ORGANIZATION_OWNER - auto-assign their org
+            User currentUser = getCurrentUser();
+            if (currentUser != null && currentUser.getRole() == Role.ORGANIZATION_OWNER
+                    && currentUser.getOrganization() != null) {
+                var org = currentUser.getOrganization();
+                long currentCount = societyRepository.countByOrganizationId(org.getId());
+                if (!org.canCreateMoreSocieties(currentCount)) {
+                    throw new ApiException(HttpStatus.FORBIDDEN,
+                            "Organization has reached its maximum number of societies");
+                }
+                society.setOrganization(org);
+            }
+        }
+
         Society saved = societyRepository.save(society);
         return toResponse(saved);
     }
 
     @Override
     public List<SocietyResponse> getAll() {
+        User currentUser = getCurrentUser();
+
+        // ORGANIZATION_OWNER sees only their organization's societies
+        if (currentUser != null && currentUser.getRole() == Role.ORGANIZATION_OWNER
+                && currentUser.getOrganization() != null) {
+            return societyRepository.findByOrganizationId(currentUser.getOrganization().getId())
+                    .stream()
+                    .map(this::toResponse)
+                    .collect(Collectors.toList());
+        }
+
+        // PLATFORM_OWNER sees all societies
+        if (currentUser != null && currentUser.getRole() == Role.PLATFORM_OWNER) {
+            return societyRepository.findAll().stream()
+                    .map(this::toResponse)
+                    .collect(Collectors.toList());
+        }
+
+        // SOCIETY_ADMIN and below see only their assigned society
+        if (currentUser != null && currentUser.getSociety() != null) {
+            return List.of(toResponse(currentUser.getSociety()));
+        }
+
         return societyRepository.findAll().stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
@@ -106,6 +162,20 @@ public class SocietyServiceImpl implements SocietyService {
         response.setOccupiedShops(flatRepository.countBySocietyIdAndUnitTypeAndIsOccupied(societyId, "SHOP", true));
         response.setOccupiedOffices(flatRepository.countBySocietyIdAndUnitTypeAndIsOccupied(societyId, "OFFICE", true));
 
+        // Organization info
+        if (society.getOrganization() != null) {
+            response.setOrganizationId(society.getOrganization().getId());
+            response.setOrganizationName(society.getOrganization().getName());
+        }
+
         return response;
+    }
+
+    private User getCurrentUser() {
+        var auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || auth.getName() == null) {
+            return null;
+        }
+        return userRepository.findByEmail(auth.getName()).orElse(null);
     }
 }

@@ -18,13 +18,20 @@ export const STORAGE_KEYS = {
   ONBOARDING_COMPLETE: 'onboarding_complete',
 };
 
-// User Roles
+// User Roles - matches backend Role enum
 export const USER_ROLES = {
-  ADMIN: 'admin',
-  MEMBER: 'member',
-  STAFF: 'staff',
-  SECURITY: 'security',
-  MAINTENANCE: 'maintenance',
+  PLATFORM_OWNER: 'PLATFORM_OWNER',
+  ORGANIZATION_OWNER: 'ORGANIZATION_OWNER',
+  SOCIETY_ADMIN: 'SOCIETY_ADMIN',
+  CHAIRMAN: 'CHAIRMAN',
+  SECRETARY: 'SECRETARY',
+  TREASURER: 'TREASURER',
+  COMMITTEE: 'COMMITTEE',
+  MANAGER: 'MANAGER',
+  EMPLOYEE: 'EMPLOYEE',
+  MEMBER: 'MEMBER',
+  TENANT: 'TENANT',
+  VISITOR: 'VISITOR',
 };
 
 // Complaint Status

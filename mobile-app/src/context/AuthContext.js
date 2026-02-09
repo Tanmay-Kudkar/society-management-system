@@ -161,11 +161,16 @@ export const AuthProvider = ({ children }) => {
   };
 
   // Role-based helpers
-  const isAdmin = user?.role === USER_ROLES.ADMIN;
+  const isPlatformOwner = user?.role === USER_ROLES.PLATFORM_OWNER;
+  const isOrganizationOwner = user?.role === USER_ROLES.ORGANIZATION_OWNER;
+  const isSocietyAdmin = user?.role === USER_ROLES.SOCIETY_ADMIN;
+  const isAdmin = [USER_ROLES.PLATFORM_OWNER, USER_ROLES.ORGANIZATION_OWNER, USER_ROLES.SOCIETY_ADMIN].includes(user?.role);
+  const isCommitteeLevel = [USER_ROLES.CHAIRMAN, USER_ROLES.SECRETARY, USER_ROLES.TREASURER, USER_ROLES.COMMITTEE].includes(user?.role);
+  const isManager = user?.role === USER_ROLES.MANAGER;
   const isMember = user?.role === USER_ROLES.MEMBER;
-  const isStaff = [USER_ROLES.STAFF, USER_ROLES.SECURITY, USER_ROLES.MAINTENANCE].includes(user?.role);
-  const isSecurity = user?.role === USER_ROLES.SECURITY;
-  const isMaintenance = user?.role === USER_ROLES.MAINTENANCE;
+  const isStaff = [USER_ROLES.EMPLOYEE, USER_ROLES.MANAGER].includes(user?.role);
+  const isTenant = user?.role === USER_ROLES.TENANT;
+  const isVisitor = user?.role === USER_ROLES.VISITOR;
 
   const hasRole = useCallback((roles) => {
     if (!user?.role) return false;
@@ -187,11 +192,16 @@ export const AuthProvider = ({ children }) => {
     updateUser,
     refreshToken,
     // Role helpers
+    isPlatformOwner,
+    isOrganizationOwner,
+    isSocietyAdmin,
     isAdmin,
+    isCommitteeLevel,
+    isManager,
     isMember,
     isStaff,
-    isSecurity,
-    isMaintenance,
+    isTenant,
+    isVisitor,
     hasRole,
   };
 

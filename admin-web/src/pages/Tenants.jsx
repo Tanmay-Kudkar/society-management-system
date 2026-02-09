@@ -6,7 +6,7 @@ import { tenantApi, flatApi } from '../api'
 import { Plus, Edit, Trash2, Search, X, User, Calendar, Phone, Mail } from 'lucide-react'
 
 export default function Tenants() {
-  const { user } = useAuth()
+  const { user, canManageTenants } = useAuth()
   const queryClient = useQueryClient()
   const [searchParams] = useSearchParams()
   const [showModal, setShowModal] = useState(false)
@@ -14,14 +14,14 @@ export default function Tenants() {
   const [searchTerm, setSearchTerm] = useState('')
   const [filterStatus, setFilterStatus] = useState('')
 
-  // Get society filter from URL (for MASTER_ADMIN viewing specific society)
+  // Get society filter from URL (for PLATFORM_OWNER viewing specific society)
   const societyIdFromUrl = searchParams.get('society')
 
-  // Check if current user is MASTER_ADMIN
-  const isMasterAdmin = user?.role === 'MASTER_ADMIN'
+  // Check if current user is PLATFORM_OWNER
+  const isPlatformLevel = user?.role === 'PLATFORM_OWNER' || user?.role === 'ORGANIZATION_OWNER' || user?.role === 'ORGANIZATION_OWNER'
 
   // Determine effective society ID for filtering
-  const effectiveSocietyId = isMasterAdmin && societyIdFromUrl ? parseInt(societyIdFromUrl) : user?.societyId
+  const effectiveSocietyId = isPlatformLevel && societyIdFromUrl ? parseInt(societyIdFromUrl) : user?.societyId
 
   const { data: allTenants = [], isLoading } = useQuery({
     queryKey: ['tenants'],
@@ -103,8 +103,8 @@ export default function Tenants() {
   const getFlatDisplay = (flatId) => {
     const flat = flats.find(f => f.id === flatId)
     if (!flat) return 'N/A'
-    // Only show society name for MASTER_ADMIN
-    return isMasterAdmin ? `${flat.flatNumber} - ${flat.societyName || 'N/A'}` : flat.flatNumber
+    // Only show society name for PLATFORM_OWNER
+    return isPlatformLevel ? `${flat.flatNumber} - ${flat.societyName || 'N/A'}` : flat.flatNumber
   }
 
   const formatDate = (dateStr) => {
@@ -128,13 +128,15 @@ export default function Tenants() {
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Tenants</h1>
           <p className="text-gray-600 dark:text-gray-400 mt-1">Manage tenant details and agreements</p>
         </div>
-        <button
-          onClick={() => { setEditingTenant(null); setShowModal(true) }}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition cursor-pointer"
-        >
-          <Plus size={20} />
-          Add Tenant
-        </button>
+        {canManageTenants() && (
+          <button
+            onClick={() => { setEditingTenant(null); setShowModal(true) }}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition cursor-pointer"
+          >
+            <Plus size={20} />
+            Add Tenant
+          </button>
+        )}
       </div>
 
       {/* Filters */}
@@ -307,7 +309,7 @@ export default function Tenants() {
                     <option value="">Select Flat</option>
                     {flats.map(f => (
                       <option key={f.id} value={f.id}>
-                        {isMasterAdmin ? `${f.flatNumber} - ${f.societyName || 'N/A'}` : f.flatNumber}
+                        {isPlatformLevel ? `${f.flatNumber} - ${f.societyName || 'N/A'}` : f.flatNumber}
                       </option>
                     ))}
                   </select>

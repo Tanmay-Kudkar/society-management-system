@@ -6,15 +6,15 @@ import { Plus, Search, X, Image, Edit, Trash2, Eye, EyeOff } from 'lucide-react'
 import clsx from 'clsx'
 
 export default function Banners() {
-  const { user } = useAuth()
+  const { user, canManageBanners } = useAuth()
   const queryClient = useQueryClient()
   const [showModal, setShowModal] = useState(false)
   const [editingBanner, setEditingBanner] = useState(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [filterStatus, setFilterStatus] = useState('')
 
-  // Check if current user is MASTER_ADMIN
-  const isMasterAdmin = user?.role === 'MASTER_ADMIN'
+  // Check if current user is PLATFORM_OWNER
+  const isPlatformLevel = user?.role === 'PLATFORM_OWNER' || user?.role === 'ORGANIZATION_OWNER' || user?.role === 'ORGANIZATION_OWNER'
 
   const { data: banners = [], isLoading } = useQuery({
     queryKey: ['banners'],
@@ -89,13 +89,15 @@ export default function Banners() {
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Banners</h1>
           <p className="text-gray-600 dark:text-gray-400 mt-1">Manage promotional banners for mobile app</p>
         </div>
-        <button
-          onClick={() => setShowModal(true)}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-        >
-          <Plus size={20} />
-          Add Banner
-        </button>
+        {canManageBanners() && (
+          <button
+            onClick={() => setShowModal(true)}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+          >
+            <Plus size={20} />
+            Add Banner
+          </button>
+        )}
       </div>
 
       {/* Filters */}
@@ -157,7 +159,7 @@ export default function Banners() {
               {/* Banner Details */}
               <div className="p-4">
                 <h3 className="font-semibold text-gray-900 dark:text-white mb-1">{banner.title}</h3>
-                {isMasterAdmin && <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">{banner.societyName || 'All Societies'}</p>}
+                {isPlatformLevel && <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">{banner.societyName || 'All Societies'}</p>}
                 
                 <div className="text-xs text-gray-500 dark:text-gray-400 space-y-1 mb-4">
                   <p>Start: {banner.startDate && new Date(banner.startDate).toLocaleDateString()}</p>

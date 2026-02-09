@@ -164,7 +164,7 @@ The system implements a **10-tier role hierarchy** based on real housing society
 
 ```
                          ╔═══════════════════════╗
-                         ║    MASTER_ADMIN       ║  ← Platform Super Admin
+                         ║   PLATFORM_OWNER      ║  ← Platform Super Admin
                          ║  (Platform Owner)     ║
                          ╚═══════════╤═══════════╝
                                      │
@@ -198,7 +198,9 @@ The system implements a **10-tier role hierarchy** based on real housing society
 
 | Role | Authority | Primary Responsibilities |
 |------|-----------|--------------------------|
-| **MASTER_ADMIN** | Platform Owner | Manages all societies, creates SOCIETY_ADMINs |
+| **PLATFORM_OWNER** | Platform Owner | Manages all societies and organizations |
+| **ORGANIZATION_OWNER** | Organization Owner | Manages multiple societies under an organization |
+| **MANAGER** | Operational Manager | Handles day-to-day management tasks |
 | **SOCIETY_ADMIN** | Society Super Admin | Full control over society, all CRUD operations |
 | **CHAIRMAN** | Highest Committee Authority | Presides meetings, final approval, bank signatory |
 | **SECRETARY** | Administrative Head | Documentation, records, day-to-day operations |
@@ -213,7 +215,8 @@ The system implements a **10-tier role hierarchy** based on real housing society
 
 | Role | Can CREATE | Can UPDATE/DELETE | Can READ |
 |------|------------|-------------------|----------|
-| `MASTER_ADMIN` | SOCIETY_ADMIN only | SOCIETY_ADMIN only | ALL roles |
+| `PLATFORM_OWNER` | ORGANIZATION_OWNER, SOCIETY_ADMIN | ORGANIZATION_OWNER, SOCIETY_ADMIN | ALL roles |
+| `ORGANIZATION_OWNER` | SOCIETY_ADMIN in own org | SOCIETY_ADMIN in own org | Own org roles |
 | `SOCIETY_ADMIN` | ALL below (full access) | ALL below (full access) | ALL in society |
 | `CHAIRMAN` | SECRETARY, TREASURER | SECRETARY, TREASURER | All below |
 | `SECRETARY` | COMMITTEE only | COMMITTEE only | COMMITTEE and below |
@@ -350,9 +353,9 @@ api.interceptors.response.use(response => response, (error) => {
 ```javascript
 // Role checking utilities
 const hasRole = (...roles) => roles.includes(user.role)
-const isAdminLevel = () => hasRole('MASTER_ADMIN', 'SOCIETY_ADMIN')
-const isCommitteeLevel = () => hasRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 
-  'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE')
+const isAdminLevel = () => hasRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN')
+const isCommitteeLevel = () => hasRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 
+  'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'MANAGER')
 const canManageNotices = () => isCommitteeLevel() || hasRole('EMPLOYEE')
 const canViewFinancials = () => isCommitteeLevel()
 ```
@@ -363,7 +366,7 @@ const canViewFinancials = () => isCommitteeLevel()
 |------|-------|----------|
 | **Dashboard** | `/dashboard` | Stats cards, MTD/YTD graphs, recent activities, quick actions |
 | **Users** | `/users` | CRUD with role-based creation, bulk import/export, society filter |
-| **Societies** | `/societies` | Full society management (MASTER_ADMIN only) |
+| **Societies** | `/societies` | Full society management (PLATFORM_OWNER / ORGANIZATION_OWNER) |
 | **Flats** | `/units` | Unit management with bulk operations, wing organization |
 | **Wings** | `/wings` | Tower/Building management |
 | **Tenants** | `/tenants` | Agreement tracking, rent details, ID proof |
@@ -521,7 +524,7 @@ backend/
 |-------|---------|
 | `SecurityConfig.java` | Spring Security with JWT filter chain, endpoint protection |
 | `CorsConfig.java` | CORS for frontend (port 5173) & mobile |
-| `DataInitializer.java` | Creates MASTER_ADMIN on first run |
+| `DataInitializer.java` | Creates PLATFORM_OWNER on first run |
 | `PasswordConfig.java` | BCrypt password encoder bean |
 | `SchedulerConfig.java` | Enables `@Scheduled` annotations |
 
@@ -644,8 +647,8 @@ CREATE TABLE users (
     phone VARCHAR(20),
     society_id INT REFERENCES societies(id),
     role VARCHAR(50) CHECK (role IN (
-        'MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 
-        'SECRETARY', 'TREASURER', 'COMMITTEE', 
+        'PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 
+        'SECRETARY', 'TREASURER', 'COMMITTEE', 'MANAGER',
         'EMPLOYEE', 'MEMBER', 'TENANT', 'VISITOR'
     )),
     is_active BOOLEAN DEFAULT TRUE,
@@ -821,7 +824,7 @@ CREATE TABLE notices (
   "id": 1,
   "name": "Admin User",
   "email": "admin@example.com",
-  "role": "MASTER_ADMIN",
+  "role": "PLATFORM_OWNER",
   "societyId": null
 }
 ```

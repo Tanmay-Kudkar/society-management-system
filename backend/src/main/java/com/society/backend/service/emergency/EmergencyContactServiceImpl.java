@@ -147,7 +147,7 @@ public class EmergencyContactServiceImpl implements EmergencyContactService {
      * Check if the role is admin or committee level
      */
     private boolean isAdminOrCommitteeRole(Role role) {
-        return role == Role.MASTER_ADMIN || 
+        return role == Role.PLATFORM_OWNER || 
                role == Role.SOCIETY_ADMIN || 
                role == Role.CHAIRMAN || 
                role == Role.SECRETARY || 

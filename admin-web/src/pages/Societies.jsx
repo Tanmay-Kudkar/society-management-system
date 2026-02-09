@@ -6,7 +6,7 @@ import { societyApi } from '../api'
 import { Plus, Edit, Trash2, Search, X, Building2, Eye, ChevronRight, Home, Store, Briefcase, Layers } from 'lucide-react'
 
 export default function Societies() {
-  const { user } = useAuth()
+  const { user, canManageSocieties } = useAuth()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [showModal, setShowModal] = useState(false)
@@ -83,13 +83,15 @@ export default function Societies() {
             </h1>
             <p className="text-blue-100 mt-2">Manage housing societies and their properties</p>
           </div>
-          <button
-            onClick={() => { setEditingSociety(null); setShowModal(true) }}
-            className="inline-flex items-center gap-2 px-5 py-2.5 bg-white/20 backdrop-blur-sm text-white rounded-xl hover:bg-white/30 transition-all duration-300 border border-white/30 shadow-lg hover:shadow-xl hover:scale-105"
-          >
-            <Plus size={20} />
-            Add Society
-          </button>
+          {canManageSocieties() && (
+            <button
+              onClick={() => { setEditingSociety(null); setShowModal(true) }}
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-white/20 backdrop-blur-sm text-white rounded-xl hover:bg-white/30 transition-all duration-300 border border-white/30 shadow-lg hover:shadow-xl hover:scale-105"
+            >
+              <Plus size={20} />
+              Add Society
+            </button>
+          )}
         </div>
       </div>
 

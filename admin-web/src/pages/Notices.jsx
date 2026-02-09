@@ -21,14 +21,14 @@ export default function Notices() {
   const [editingNotice, setEditingNotice] = useState(null)
   const [searchTerm, setSearchTerm] = useState('')
 
-  // Get society filter from URL (for MASTER_ADMIN viewing specific society)
+  // Get society filter from URL (for PLATFORM_OWNER viewing specific society)
   const societyIdFromUrl = searchParams.get('society')
 
-  // Check if current user is MASTER_ADMIN
-  const isMasterAdmin = user?.role === 'MASTER_ADMIN'
+  // Check if current user is PLATFORM_OWNER
+  const isPlatformLevel = user?.role === 'PLATFORM_OWNER' || user?.role === 'ORGANIZATION_OWNER' || user?.role === 'ORGANIZATION_OWNER'
 
   // Determine effective society ID for filtering
-  const effectiveSocietyId = isMasterAdmin && societyIdFromUrl ? parseInt(societyIdFromUrl) : user?.societyId
+  const effectiveSocietyId = isPlatformLevel && societyIdFromUrl ? parseInt(societyIdFromUrl) : user?.societyId
 
   const { data: notices = [], isLoading } = useQuery({
     queryKey: ['notices', effectiveSocietyId],
@@ -162,7 +162,7 @@ export default function Notices() {
               <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-3 mb-3">{notice.content}</p>
               
               <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 pt-3 border-t border-gray-100 dark:border-slate-700">
-                {isMasterAdmin && <span>{notice.societyName || 'All Societies'}</span>}
+                {isPlatformLevel && <span>{notice.societyName || 'All Societies'}</span>}
                 <span>{notice.createdAt && new Date(notice.createdAt).toLocaleDateString()}</span>
               </div>
               

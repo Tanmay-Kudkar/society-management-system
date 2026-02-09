@@ -70,90 +70,90 @@ public class SecurityConfig {
                         .requestMatchers("/error").permitAll()
                         .requestMatchers("/api/test/**").permitAll() // Test endpoints (remove in production)
 
-                        // ==================== MASTER_ADMIN ONLY ====================
+                        // ==================== PLATFORM_OWNER ONLY ====================
                         // Platform-level management (societies, approvals, escalations)
-                        .requestMatchers("/admin/societies/**").hasRole("MASTER_ADMIN")
-                        .requestMatchers("/admin/approvals/**").hasRole("MASTER_ADMIN")
-                        .requestMatchers("/admin/escalations/**").hasRole("MASTER_ADMIN")
-                        .requestMatchers("/admin/platform/**").hasRole("MASTER_ADMIN")
+                        .requestMatchers("/admin/societies/**").hasRole("PLATFORM_OWNER")
+                        .requestMatchers("/admin/approvals/**").hasRole("PLATFORM_OWNER")
+                        .requestMatchers("/admin/escalations/**").hasRole("PLATFORM_OWNER")
+                        .requestMatchers("/admin/platform/**").hasRole("PLATFORM_OWNER")
 
                         // ==================== SOCIETY_ADMIN & ABOVE ====================
                         // Society-level management (users, settings, reports)
-                        .requestMatchers("/societies/{societyId}/**").hasAnyRole("MASTER_ADMIN", "SOCIETY_ADMIN")
+                        .requestMatchers("/societies/{societyId}/**").hasAnyRole("PLATFORM_OWNER", "SOCIETY_ADMIN")
                         // User creation/deletion - roles allowed based on RolePermissions hierarchy
-                        .requestMatchers(HttpMethod.POST, "/users/**").hasAnyRole("MASTER_ADMIN", "SOCIETY_ADMIN", "CHAIRMAN", "SECRETARY", "TREASURER", "COMMITTEE", "EMPLOYEE", "MEMBER")
-                        .requestMatchers(HttpMethod.DELETE, "/users/**").hasAnyRole("MASTER_ADMIN", "SOCIETY_ADMIN", "CHAIRMAN", "SECRETARY", "TREASURER", "COMMITTEE", "EMPLOYEE", "MEMBER")
-                        .requestMatchers("/reports/**").hasAnyRole("MASTER_ADMIN", "SOCIETY_ADMIN", "CHAIRMAN")
+                        .requestMatchers(HttpMethod.POST, "/users/**").hasAnyRole("PLATFORM_OWNER", "SOCIETY_ADMIN", "CHAIRMAN", "SECRETARY", "TREASURER", "COMMITTEE", "EMPLOYEE", "MEMBER")
+                        .requestMatchers(HttpMethod.DELETE, "/users/**").hasAnyRole("PLATFORM_OWNER", "SOCIETY_ADMIN", "CHAIRMAN", "SECRETARY", "TREASURER", "COMMITTEE", "EMPLOYEE", "MEMBER")
+                        .requestMatchers("/reports/**").hasAnyRole("PLATFORM_OWNER", "SOCIETY_ADMIN", "CHAIRMAN")
 
                         // ==================== CHAIRMAN LEVEL ====================
                         // Financial approvals, high-value decisions
                         .requestMatchers(HttpMethod.POST, "/contracts/**")
-                        .hasAnyRole("MASTER_ADMIN", "SOCIETY_ADMIN", "CHAIRMAN")
+                        .hasAnyRole("PLATFORM_OWNER", "SOCIETY_ADMIN", "CHAIRMAN")
                         .requestMatchers(HttpMethod.DELETE, "/contracts/**")
-                        .hasAnyRole("MASTER_ADMIN", "SOCIETY_ADMIN", "CHAIRMAN")
+                        .hasAnyRole("PLATFORM_OWNER", "SOCIETY_ADMIN", "CHAIRMAN")
                         .requestMatchers("/financial-approvals/**")
-                        .hasAnyRole("MASTER_ADMIN", "SOCIETY_ADMIN", "CHAIRMAN")
+                        .hasAnyRole("PLATFORM_OWNER", "SOCIETY_ADMIN", "CHAIRMAN")
 
                         // ==================== SECRETARY LEVEL ====================
                         // Administrative tasks, notices, meetings
                         .requestMatchers(HttpMethod.POST, "/notices/**")
-                        .hasAnyRole("MASTER_ADMIN", "SOCIETY_ADMIN", "CHAIRMAN", "SECRETARY")
+                        .hasAnyRole("PLATFORM_OWNER", "SOCIETY_ADMIN", "CHAIRMAN", "SECRETARY")
                         .requestMatchers(HttpMethod.PUT, "/notices/**")
-                        .hasAnyRole("MASTER_ADMIN", "SOCIETY_ADMIN", "CHAIRMAN", "SECRETARY")
+                        .hasAnyRole("PLATFORM_OWNER", "SOCIETY_ADMIN", "CHAIRMAN", "SECRETARY")
                         .requestMatchers(HttpMethod.DELETE, "/notices/**")
-                        .hasAnyRole("MASTER_ADMIN", "SOCIETY_ADMIN", "CHAIRMAN", "SECRETARY")
+                        .hasAnyRole("PLATFORM_OWNER", "SOCIETY_ADMIN", "CHAIRMAN", "SECRETARY")
                         .requestMatchers("/meetings/**")
-                        .hasAnyRole("MASTER_ADMIN", "SOCIETY_ADMIN", "CHAIRMAN", "SECRETARY")
+                        .hasAnyRole("PLATFORM_OWNER", "SOCIETY_ADMIN", "CHAIRMAN", "SECRETARY")
 
                         // ==================== TREASURER LEVEL ====================
                         // Financial operations, bills, transactions
                         .requestMatchers("/transactions/**")
-                        .hasAnyRole("MASTER_ADMIN", "SOCIETY_ADMIN", "CHAIRMAN", "TREASURER")
+                        .hasAnyRole("PLATFORM_OWNER", "SOCIETY_ADMIN", "CHAIRMAN", "TREASURER")
                         .requestMatchers(HttpMethod.POST, "/maintenance-bills/**")
-                        .hasAnyRole("MASTER_ADMIN", "SOCIETY_ADMIN", "CHAIRMAN", "TREASURER")
+                        .hasAnyRole("PLATFORM_OWNER", "SOCIETY_ADMIN", "CHAIRMAN", "TREASURER")
                         .requestMatchers(HttpMethod.PUT, "/maintenance-bills/**")
-                        .hasAnyRole("MASTER_ADMIN", "SOCIETY_ADMIN", "CHAIRMAN", "TREASURER")
+                        .hasAnyRole("PLATFORM_OWNER", "SOCIETY_ADMIN", "CHAIRMAN", "TREASURER")
                         .requestMatchers(HttpMethod.DELETE, "/maintenance-bills/**")
-                        .hasAnyRole("MASTER_ADMIN", "SOCIETY_ADMIN", "CHAIRMAN", "TREASURER")
+                        .hasAnyRole("PLATFORM_OWNER", "SOCIETY_ADMIN", "CHAIRMAN", "TREASURER")
 
                         // ==================== COMMITTEE LEVEL ====================
                         // Vendors, contracts (view/update), banners, documents
                         .requestMatchers("/vendors/**")
-                        .hasAnyRole("MASTER_ADMIN", "SOCIETY_ADMIN", "CHAIRMAN", "SECRETARY", "TREASURER", "COMMITTEE")
+                        .hasAnyRole("PLATFORM_OWNER", "SOCIETY_ADMIN", "CHAIRMAN", "SECRETARY", "TREASURER", "COMMITTEE")
                         .requestMatchers("/vendor-bills/**")
-                        .hasAnyRole("MASTER_ADMIN", "SOCIETY_ADMIN", "CHAIRMAN", "TREASURER", "COMMITTEE")
+                        .hasAnyRole("PLATFORM_OWNER", "SOCIETY_ADMIN", "CHAIRMAN", "TREASURER", "COMMITTEE")
                         .requestMatchers(HttpMethod.PUT, "/contracts/**")
-                        .hasAnyRole("MASTER_ADMIN", "SOCIETY_ADMIN", "CHAIRMAN", "SECRETARY", "COMMITTEE")
+                        .hasAnyRole("PLATFORM_OWNER", "SOCIETY_ADMIN", "CHAIRMAN", "SECRETARY", "COMMITTEE")
                         .requestMatchers(HttpMethod.GET, "/contracts/**")
-                        .hasAnyRole("MASTER_ADMIN", "SOCIETY_ADMIN", "CHAIRMAN", "SECRETARY", "TREASURER", "COMMITTEE")
+                        .hasAnyRole("PLATFORM_OWNER", "SOCIETY_ADMIN", "CHAIRMAN", "SECRETARY", "TREASURER", "COMMITTEE")
                         .requestMatchers("/banners/**")
-                        .hasAnyRole("MASTER_ADMIN", "SOCIETY_ADMIN", "CHAIRMAN", "SECRETARY", "COMMITTEE")
+                        .hasAnyRole("PLATFORM_OWNER", "SOCIETY_ADMIN", "CHAIRMAN", "SECRETARY", "COMMITTEE")
                         .requestMatchers(HttpMethod.PUT, "/users/**")
-                        .hasAnyRole("MASTER_ADMIN", "SOCIETY_ADMIN", "CHAIRMAN", "SECRETARY", "COMMITTEE")
+                        .hasAnyRole("PLATFORM_OWNER", "SOCIETY_ADMIN", "CHAIRMAN", "SECRETARY", "COMMITTEE")
 
                         // ==================== EMPLOYEE LEVEL ====================
                         // Flats, documents, emergency contacts management
                         // MEMBER needs access to flats for tenant assignment
                         .requestMatchers("/flats/**")
-                        .hasAnyRole("MASTER_ADMIN", "SOCIETY_ADMIN", "CHAIRMAN", "SECRETARY", "TREASURER", "COMMITTEE",
+                        .hasAnyRole("PLATFORM_OWNER", "SOCIETY_ADMIN", "CHAIRMAN", "SECRETARY", "TREASURER", "COMMITTEE",
                                 "EMPLOYEE", "MEMBER")
                         .requestMatchers("/documents/**")
-                        .hasAnyRole("MASTER_ADMIN", "SOCIETY_ADMIN", "CHAIRMAN", "SECRETARY", "TREASURER", "COMMITTEE",
+                        .hasAnyRole("PLATFORM_OWNER", "SOCIETY_ADMIN", "CHAIRMAN", "SECRETARY", "TREASURER", "COMMITTEE",
                                 "EMPLOYEE")
                         // Emergency contacts - allow any member to create (for their own contacts)
                         .requestMatchers(HttpMethod.POST, "/emergency-contacts/**").authenticated()
                         .requestMatchers(HttpMethod.PUT, "/emergency-contacts/**")
-                        .hasAnyRole("MASTER_ADMIN", "SOCIETY_ADMIN", "CHAIRMAN", "SECRETARY", "COMMITTEE", "EMPLOYEE")
+                        .hasAnyRole("PLATFORM_OWNER", "SOCIETY_ADMIN", "CHAIRMAN", "SECRETARY", "COMMITTEE", "EMPLOYEE")
                         // Allow any authenticated user to delete (service layer checks ownership)
                         .requestMatchers(HttpMethod.DELETE, "/emergency-contacts/**").authenticated()
 
                         // ==================== MEMBER LEVEL ====================
                         // Tenants, vehicles (for their own flats)
                         .requestMatchers("/tenants/**")
-                        .hasAnyRole("MASTER_ADMIN", "SOCIETY_ADMIN", "CHAIRMAN", "SECRETARY", "TREASURER", "COMMITTEE",
+                        .hasAnyRole("PLATFORM_OWNER", "SOCIETY_ADMIN", "CHAIRMAN", "SECRETARY", "TREASURER", "COMMITTEE",
                                 "EMPLOYEE", "MEMBER")
                         .requestMatchers("/vehicles/**")
-                        .hasAnyRole("MASTER_ADMIN", "SOCIETY_ADMIN", "CHAIRMAN", "SECRETARY", "TREASURER", "COMMITTEE",
+                        .hasAnyRole("PLATFORM_OWNER", "SOCIETY_ADMIN", "CHAIRMAN", "SECRETARY", "TREASURER", "COMMITTEE",
                                 "EMPLOYEE", "MEMBER")
 
                         // ==================== ALL AUTHENTICATED USERS ====================

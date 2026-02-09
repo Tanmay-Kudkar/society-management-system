@@ -18,18 +18,26 @@ public class JwtUtils {
     @Value("${jwt.expiration-ms}")
     private long jwtExpirationMs;
 
+    @Value("${jwt.remember-me-expiration-ms:2592000000}")
+    private long jwtRememberMeExpirationMs; // Default 30 days
+
     private SecretKey getSigningKey() {
         byte[] keyBytes = Decoders.BASE64.decode(jwtSecret);
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
     public String generateToken(String email, String role, Long userId) {
+        return generateToken(email, role, userId, false);
+    }
+
+    public String generateToken(String email, String role, Long userId, boolean rememberMe) {
+        long expiration = rememberMe ? jwtRememberMeExpirationMs : jwtExpirationMs;
         return Jwts.builder()
                 .subject(email)
                 .claim("role", role)
                 .claim("userId", userId)
                 .issuedAt(new Date())
-                .expiration(new Date(System.currentTimeMillis() + jwtExpirationMs))
+                .expiration(new Date(System.currentTimeMillis() + expiration))
                 .signWith(getSigningKey())
                 .compact();
     }

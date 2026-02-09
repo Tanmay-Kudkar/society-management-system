@@ -19,7 +19,7 @@ const contactTypeColors = {
 }
 
 export default function EmergencyContacts() {
-  const { user, isCommitteeLevel } = useAuth()
+  const { user, isCommitteeLevel, canManageEmergencyContacts } = useAuth()
   const toast = useToast()
   const queryClient = useQueryClient()
   const [showModal, setShowModal] = useState(false)
@@ -29,8 +29,8 @@ export default function EmergencyContacts() {
   const [searchTerm, setSearchTerm] = useState('')
   const [filterCategory, setFilterCategory] = useState('')
 
-  // Check if current user is MASTER_ADMIN
-  const isMasterAdmin = user?.role === 'MASTER_ADMIN'
+  // Check if current user is PLATFORM_OWNER
+  const isPlatformLevel = user?.role === 'PLATFORM_OWNER' || user?.role === 'ORGANIZATION_OWNER' || user?.role === 'ORGANIZATION_OWNER'
   
   // Check if user can delete a specific contact
   const canDelete = (contact) => {
@@ -147,13 +147,15 @@ export default function EmergencyContacts() {
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Emergency Contacts</h1>
           <p className="text-gray-600 dark:text-gray-400 mt-1">Manage emergency contact directory</p>
         </div>
-        <button
-          onClick={() => setShowModal(true)}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-        >
-          <Plus size={20} />
-          Add Contact
-        </button>
+        {canManageEmergencyContacts() && (
+          <button
+            onClick={() => setShowModal(true)}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+          >
+            <Plus size={20} />
+            Add Contact
+          </button>
+        )}
       </div>
 
       {/* Filters */}
@@ -228,7 +230,7 @@ export default function EmergencyContacts() {
                           {contact.notes && (
                             <p className="text-sm text-gray-400 dark:text-gray-500 italic mt-1">{contact.notes}</p>
                           )}
-                          {isMasterAdmin && contact.societyName && (
+                          {isPlatformLevel && contact.societyName && (
                             <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">{contact.societyName}</p>
                           )}
                         </div>

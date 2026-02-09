@@ -5,15 +5,15 @@ import { vendorApi, societyApi } from '../api'
 import { Plus, Edit, Trash2, Search, X, Truck, Phone, Mail, Eye, Building2, CreditCard, Landmark, FileText, User, MapPin } from 'lucide-react'
 
 export default function Vendors() {
-  const { user } = useAuth()
+  const { user, canManageVendors } = useAuth()
   const queryClient = useQueryClient()
   const [showModal, setShowModal] = useState(false)
   const [editingVendor, setEditingVendor] = useState(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [viewingVendor, setViewingVendor] = useState(null)
 
-  // Check if current user is MASTER_ADMIN
-  const isMasterAdmin = user?.role === 'MASTER_ADMIN'
+  // Check if current user is PLATFORM_OWNER
+  const isPlatformLevel = user?.role === 'PLATFORM_OWNER' || user?.role === 'ORGANIZATION_OWNER' || user?.role === 'ORGANIZATION_OWNER'
 
   const { data: vendors = [], isLoading } = useQuery({
     queryKey: ['vendors'],
@@ -23,7 +23,7 @@ export default function Vendors() {
   const { data: societies = [] } = useQuery({
     queryKey: ['societies'],
     queryFn: () => societyApi.getAll().then(res => res.data),
-    enabled: isMasterAdmin,
+    enabled: isPlatformLevel,
   })
 
   const createMutation = useMutation({
@@ -85,8 +85,8 @@ export default function Vendors() {
     e.preventDefault()
     const formData = new FormData(e.target)
     
-    // For non-MASTER_ADMIN, always set societyId to user's society
-    const societyId = isMasterAdmin 
+    // For non-PLATFORM_OWNER, always set societyId to user's society
+    const societyId = isPlatformLevel 
       ? parseInt(formData.get('societyId'))
       : user?.societyId
     
@@ -127,16 +127,18 @@ export default function Vendors() {
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Vendors</h1>
           <p className="text-gray-600 dark:text-gray-400 mt-1">Manage service providers and contractors</p>
         </div>
-        <button
-          onClick={() => { 
-            setEditingVendor(null)
-            setShowModal(true) 
-          }}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-        >
-          <Plus size={20} />
-          Add Vendor
-        </button>
+        {canManageVendors() && (
+          <button
+            onClick={() => { 
+              setEditingVendor(null)
+              setShowModal(true) 
+            }}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+          >
+            <Plus size={20} />
+            Add Vendor
+          </button>
+        )}
       </div>
 
       {/* Search */}
@@ -278,8 +280,8 @@ export default function Vendors() {
                 </select>
               </div>
               
-              {/* Society dropdown - only show for MASTER_ADMIN */}
-              {isMasterAdmin && (
+              {/* Society dropdown - only show for PLATFORM_OWNER */}
+              {isPlatformLevel && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Society</label>
                   <select
@@ -519,8 +521,8 @@ export default function Vendors() {
                   </div>
                 </div>
 
-                {/* Society Info - only show for MASTER_ADMIN */}
-                {isMasterAdmin && viewingVendor.societyName && (
+                {/* Society Info - only show for PLATFORM_OWNER */}
+                {isPlatformLevel && viewingVendor.societyName && (
                   <div className="bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-900/20 dark:to-amber-900/10 rounded-xl p-4 border-2 border-orange-200 dark:border-orange-800/40">
                     <div className="flex items-center gap-3">
                       <div className="p-2 rounded-lg bg-orange-200 dark:bg-orange-800/50">

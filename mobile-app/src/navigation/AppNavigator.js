@@ -276,16 +276,19 @@ const StaffTabNavigator = () => {
 
 // Main Tab Navigator (selects based on role)
 const MainTabNavigator = () => {
-  const { isAdmin, isMember, isStaff } = useAuth();
+  const { isAdmin, isCommitteeLevel, isMember, isStaff, isTenant, isVisitor, isManager } = useAuth();
 
-  if (isAdmin) {
+  // Admin roles (Platform Owner, Org Owner, Society Admin) and Committee level get admin tabs
+  if (isAdmin || isCommitteeLevel) {
     return <AdminTabNavigator />;
   }
   
-  if (isStaff) {
+  // Staff (Employee, Manager) get staff tabs
+  if (isStaff || isManager) {
     return <StaffTabNavigator />;
   }
   
+  // Everyone else (Member, Tenant, Visitor) gets member tabs
   return <MemberTabNavigator />;
 };
 
