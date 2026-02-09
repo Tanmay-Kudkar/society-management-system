@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext'
 import { complaintApi } from '../api'
 import { Plus, Search, X, AlertTriangle, Clock, CheckCircle, XCircle } from 'lucide-react'
 import clsx from 'clsx'
+import { FormInput, SmartSelect, FormTextarea } from '../components/FormComponents'
 
 const statusColors = {
   PENDING: 'bg-yellow-100 text-yellow-800',
@@ -32,7 +33,7 @@ export default function Complaints() {
   const societyIdFromUrl = searchParams.get('society')
 
   // Check if current user is PLATFORM_OWNER
-  const isPlatformLevel = user?.role === 'PLATFORM_OWNER' || user?.role === 'ORGANIZATION_OWNER' || user?.role === 'ORGANIZATION_OWNER'
+  const isPlatformLevel = user?.role === 'PLATFORM_OWNER' || user?.role === 'ORGANIZATION_OWNER'
   const canViewAll = ['PLATFORM_OWNER', 'COMMITTEE', 'EMPLOYEE'].includes(user?.role)
 
   // Determine which societyId to use for filtering
@@ -232,26 +233,32 @@ export default function Complaints() {
               </button>
             </div>
             <form onSubmit={handleSubmit} className="p-4 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Subject</label>
-                <input type="text" name="subject" required className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Category</label>
-                <select name="category" required className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
-                  <option value="NOISE">Noise</option>
-                  <option value="PARKING">Parking</option>
-                  <option value="MAINTENANCE">Maintenance</option>
-                  <option value="SECURITY">Security</option>
-                  <option value="CLEANLINESS">Cleanliness</option>
-                  <option value="NEIGHBOR">Neighbor Issue</option>
-                  <option value="OTHER">Other</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description</label>
-                <textarea name="description" rows={4} required className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" />
-              </div>
+              <FormInput
+                label="Subject"
+                name="subject"
+                required
+              />
+              <SmartSelect
+                label="Category"
+                name="category"
+                required
+                options={[
+                  { value: 'NOISE', label: 'Noise' },
+                  { value: 'PARKING', label: 'Parking' },
+                  { value: 'MAINTENANCE', label: 'Maintenance' },
+                  { value: 'SECURITY', label: 'Security' },
+                  { value: 'CLEANLINESS', label: 'Cleanliness' },
+                  { value: 'NEIGHBOR', label: 'Neighbor Issue' },
+                  { value: 'OTHER', label: 'Other' },
+                ]}
+                placeholder="Select Category"
+              />
+              <FormTextarea
+                label="Description"
+                name="description"
+                rows={4}
+                required
+              />
               <div className="flex gap-3 pt-4">
                 <button type="button" onClick={() => setShowModal(false)} className="flex-1 px-4 py-2 border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition">Cancel</button>
                 <button type="submit" className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">Submit</button>

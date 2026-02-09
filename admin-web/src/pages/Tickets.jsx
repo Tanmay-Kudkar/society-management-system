@@ -41,7 +41,7 @@ export default function Tickets() {
   const [isExporting, setIsExporting] = useState(false)
 
   // Check if current user is PLATFORM_OWNER
-  const isPlatformLevel = user?.role === 'PLATFORM_OWNER' || user?.role === 'ORGANIZATION_OWNER' || user?.role === 'ORGANIZATION_OWNER'
+  const isPlatformLevel = user?.role === 'PLATFORM_OWNER' || user?.role === 'ORGANIZATION_OWNER'
 
   const { data: tickets = [], isLoading } = useQuery({
     queryKey: ['tickets'],

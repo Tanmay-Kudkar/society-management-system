@@ -29,6 +29,10 @@ public class UserRequest {
     private String phone;
 
     private Long societyId; // Required when PLATFORM_OWNER creates SOCIETY_ADMIN
-    
+
     private Long flatId; // Required for MEMBER and TENANT roles
+
+    private Long organizationId; // Optional: assign to existing organization (for ORGANIZATION_OWNER)
+
+    private String organizationName; // Optional: create new organization with this name (for ORGANIZATION_OWNER)
 }

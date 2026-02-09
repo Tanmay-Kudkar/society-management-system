@@ -33,8 +33,8 @@ export default function MaintenanceBills() {
   // Get society filter from URL (for PLATFORM_OWNER viewing specific society)
   const societyIdFromUrl = searchParams.get('society')
 
-  // Check if current user is PLATFORM_OWNER
-  const isPlatformLevel = user?.role === 'PLATFORM_OWNER' || user?.role === 'ORGANIZATION_OWNER' || user?.role === 'ORGANIZATION_OWNER'
+  // Check if current user is PLATFORM_OWNER or ORGANIZATION_OWNER
+  const isPlatformLevel = user?.role === 'PLATFORM_OWNER' || user?.role === 'ORGANIZATION_OWNER'
 
   // Determine effective society ID for filtering
   const effectiveSocietyId = isPlatformLevel && societyIdFromUrl ? parseInt(societyIdFromUrl) : user?.societyId
@@ -51,9 +51,9 @@ export default function MaintenanceBills() {
   }, [allBills, effectiveSocietyId])
 
   const { data: flats = [] } = useQuery({
-    queryKey: ['flats', user?.id],
-    queryFn: () => flatApi.getAll(user.id).then(res => res.data),
-    enabled: !!user?.id,
+    queryKey: ['flats', effectiveSocietyId],
+    queryFn: () => flatApi.getBySociety(effectiveSocietyId).then(res => res.data),
+    enabled: !!effectiveSocietyId,
   })
 
   const createMutation = useMutation({

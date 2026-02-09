@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext'
 import { contractApi, vendorApi } from '../api'
 import { Plus, Edit, Trash2, Search, X, FileText, AlertTriangle, CheckCircle } from 'lucide-react'
 import clsx from 'clsx'
+import { FormInput, SmartSelect, NumberInput, FormTextarea } from '../components/FormComponents'
 
 const contractTypes = [
   'AMC', 'INSURANCE', 'PEST_CONTROL', 'HOUSEKEEPING', 'CCTV', 
@@ -19,7 +20,7 @@ export default function Contracts() {
   const [filterType, setFilterType] = useState('')
 
   // Check if current user is PLATFORM_OWNER
-  const isPlatformLevel = user?.role === 'PLATFORM_OWNER' || user?.role === 'ORGANIZATION_OWNER' || user?.role === 'ORGANIZATION_OWNER'
+  const isPlatformLevel = user?.role === 'PLATFORM_OWNER' || user?.role === 'ORGANIZATION_OWNER'
 
   const { data: contracts = [], isLoading } = useQuery({
     queryKey: ['contracts'],
@@ -237,85 +238,57 @@ export default function Contracts() {
               </button>
             </div>
             <form onSubmit={handleSubmit} className="p-4 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Title</label>
-                <input
-                  type="text"
-                  name="title"
-                  defaultValue={editingContract?.title}
+              <FormInput
+                label="Title"
+                name="title"
+                defaultValue={editingContract?.title}
+                required
+              />
+              <div className="grid grid-cols-2 gap-4">
+                <SmartSelect
+                  label="Type"
+                  name="contractType"
+                  defaultValue={editingContract?.contractType}
                   required
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                  options={contractTypes.map(type => ({ value: type, label: type.replace('_', ' ') }))}
+                  placeholder="Select Type"
+                />
+                <SmartSelect
+                  label="Vendor"
+                  name="vendorId"
+                  defaultValue={editingContract?.vendorId}
+                  options={vendors.map(v => ({ value: v.id, label: v.name }))}
+                  placeholder="None"
+                  emptyMessage="No vendors available"
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Type</label>
-                  <select
-                    name="contractType"
-                    defaultValue={editingContract?.contractType}
-                    required
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                  >
-                    <option value="">Select Type</option>
-                    {contractTypes.map(type => (
-                      <option key={type} value={type}>{type.replace('_', ' ')}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Vendor</label>
-                  <select
-                    name="vendorId"
-                    defaultValue={editingContract?.vendorId}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                  >
-                    <option value="">None</option>
-                    {vendors.map(v => (
-                      <option key={v.id} value={v.id}>{v.name}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Start Date</label>
-                  <input
-                    type="date"
-                    name="startDate"
-                    defaultValue={editingContract?.startDate}
-                    required
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">End Date</label>
-                  <input
-                    type="date"
-                    name="endDate"
-                    defaultValue={editingContract?.endDate}
-                    required
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                  />
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Reminder Days Before Expiry</label>
-                <input
-                  type="number"
-                  name="reminderDays"
-                  defaultValue={editingContract?.reminderDays || 30}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                <FormInput
+                  label="Start Date"
+                  name="startDate"
+                  type="date"
+                  defaultValue={editingContract?.startDate}
+                  required
+                />
+                <FormInput
+                  label="End Date"
+                  name="endDate"
+                  type="date"
+                  defaultValue={editingContract?.endDate}
+                  required
                 />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description</label>
-                <textarea
-                  name="description"
-                  defaultValue={editingContract?.description}
-                  rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                />
-              </div>
+              <NumberInput
+                label="Reminder Days Before Expiry"
+                name="reminderDays"
+                defaultValue={editingContract?.reminderDays || 30}
+              />
+              <FormTextarea
+                label="Description"
+                name="description"
+                defaultValue={editingContract?.description}
+                rows={3}
+              />
               <div className="flex gap-3 pt-4">
                 <button
                   type="button"

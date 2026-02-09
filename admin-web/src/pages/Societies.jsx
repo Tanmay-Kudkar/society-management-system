@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { societyApi } from '../api'
 import { Plus, Edit, Trash2, Search, X, Building2, Eye, ChevronRight, Home, Store, Briefcase, Layers } from 'lucide-react'
+import { FormInput, PhoneInput, PincodeInput, NumberInput, FormTextarea, StateCitySelector } from '../components/FormComponents'
 
 export default function Societies() {
   const { user, canManageSocieties } = useAuth()
@@ -275,88 +276,53 @@ export default function Societies() {
                 </h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Society Name *</label>
-                    <input
-                      type="text"
+                    <FormInput
+                      label="Society Name"
                       name="name"
                       defaultValue={editingSociety?.name}
                       required
                       placeholder="Enter society name"
-                      className="w-full px-4 py-2.5 border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
                     />
                   </div>
                   <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Address *</label>
-                    <textarea
+                    <FormTextarea
+                      label="Address"
                       name="address"
                       defaultValue={editingSociety?.address}
                       rows={2}
                       required
                       placeholder="Full address"
-                      className="w-full px-4 py-2.5 border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
                     />
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">City *</label>
-                    <input
-                      type="text"
-                      name="city"
-                      defaultValue={editingSociety?.city}
-                      required
-                      placeholder="City"
-                      className="w-full px-4 py-2.5 border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                  <div className="md:col-span-2">
+                    <StateCitySelector
+                      stateDefaultValue={editingSociety?.state}
+                      cityDefaultValue={editingSociety?.city}
+                      cityRequired={true}
                     />
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">State</label>
-                    <input
-                      type="text"
-                      name="state"
-                      defaultValue={editingSociety?.state}
-                      placeholder="State"
-                      className="w-full px-4 py-2.5 border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Pincode</label>
-                    <input
-                      type="text"
-                      name="pincode"
-                      defaultValue={editingSociety?.pincode}
-                      placeholder="Pincode"
-                      className="w-full px-4 py-2.5 border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Registration Number</label>
-                    <input
-                      type="text"
-                      name="registrationNumber"
-                      defaultValue={editingSociety?.registrationNumber}
-                      placeholder="Registration number"
-                      className="w-full px-4 py-2.5 border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Email</label>
-                    <input
-                      type="email"
-                      name="email"
-                      defaultValue={editingSociety?.email}
-                      placeholder="Society email"
-                      className="w-full px-4 py-2.5 border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Telephone</label>
-                    <input
-                      type="tel"
-                      name="telephone"
-                      defaultValue={editingSociety?.telephone}
-                      placeholder="Telephone number"
-                      className="w-full px-4 py-2.5 border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-                    />
-                  </div>
+                  <PincodeInput
+                    name="pincode"
+                    defaultValue={editingSociety?.pincode}
+                  />
+                  <FormInput
+                    label="Registration Number"
+                    name="registrationNumber"
+                    defaultValue={editingSociety?.registrationNumber}
+                    placeholder="Registration number"
+                  />
+                  <FormInput
+                    label="Email"
+                    name="email"
+                    type="email"
+                    defaultValue={editingSociety?.email}
+                    placeholder="Society email"
+                  />
+                  <PhoneInput
+                    label="Telephone"
+                    name="telephone"
+                    defaultValue={editingSociety?.telephone}
+                  />
                 </div>
               </div>
 
@@ -370,62 +336,34 @@ export default function Societies() {
                   Set the total capacity for planning purposes. Actual counts are calculated automatically.
                 </p>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div className="relative">
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5 flex items-center gap-2">
-                      <Home size={14} className="text-blue-500" />
-                      Total Flats
-                    </label>
-                    <input
-                      type="number"
-                      name="totalFlats"
-                      min="0"
-                      defaultValue={editingSociety?.totalFlats || 0}
-                      placeholder="0"
-                      className="w-full px-4 py-2.5 border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-                    />
-                  </div>
-                  <div className="relative">
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5 flex items-center gap-2">
-                      <Store size={14} className="text-green-500" />
-                      Total Shops
-                    </label>
-                    <input
-                      type="number"
-                      name="totalShops"
-                      min="0"
-                      defaultValue={editingSociety?.totalShops || 0}
-                      placeholder="0"
-                      className="w-full px-4 py-2.5 border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-                    />
-                  </div>
-                  <div className="relative">
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5 flex items-center gap-2">
-                      <Briefcase size={14} className="text-purple-500" />
-                      Total Offices
-                    </label>
-                    <input
-                      type="number"
-                      name="totalOffices"
-                      min="0"
-                      defaultValue={editingSociety?.totalOffices || 0}
-                      placeholder="0"
-                      className="w-full px-4 py-2.5 border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-                    />
-                  </div>
-                  <div className="relative">
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5 flex items-center gap-2">
-                      <Layers size={14} className="text-amber-500" />
-                      Total Wings
-                    </label>
-                    <input
-                      type="number"
-                      name="totalWings"
-                      min="0"
-                      defaultValue={editingSociety?.totalWings || 0}
-                      placeholder="0"
-                      className="w-full px-4 py-2.5 border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-                    />
-                  </div>
+                  <NumberInput
+                    label="Total Flats"
+                    name="totalFlats"
+                    min={0}
+                    defaultValue={editingSociety?.totalFlats || 0}
+                    icon={Home}
+                  />
+                  <NumberInput
+                    label="Total Shops"
+                    name="totalShops"
+                    min={0}
+                    defaultValue={editingSociety?.totalShops || 0}
+                    icon={Store}
+                  />
+                  <NumberInput
+                    label="Total Offices"
+                    name="totalOffices"
+                    min={0}
+                    defaultValue={editingSociety?.totalOffices || 0}
+                    icon={Briefcase}
+                  />
+                  <NumberInput
+                    label="Total Wings"
+                    name="totalWings"
+                    min={0}
+                    defaultValue={editingSociety?.totalWings || 0}
+                    icon={Layers}
+                  />
                 </div>
               </div>
 

@@ -68,12 +68,15 @@ public class SocietyServiceImpl implements SocietyService {
         User currentUser = getCurrentUser();
 
         // ORGANIZATION_OWNER sees only their organization's societies
-        if (currentUser != null && currentUser.getRole() == Role.ORGANIZATION_OWNER
-                && currentUser.getOrganization() != null) {
-            return societyRepository.findByOrganizationId(currentUser.getOrganization().getId())
-                    .stream()
-                    .map(this::toResponse)
-                    .collect(Collectors.toList());
+        if (currentUser != null && currentUser.getRole() == Role.ORGANIZATION_OWNER) {
+            if (currentUser.getOrganization() != null) {
+                return societyRepository.findByOrganizationId(currentUser.getOrganization().getId())
+                        .stream()
+                        .map(this::toResponse)
+                        .collect(Collectors.toList());
+            }
+            // No organization linked yet - return empty list (not all societies)
+            return List.of();
         }
 
         // PLATFORM_OWNER sees all societies

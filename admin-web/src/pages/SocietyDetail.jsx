@@ -140,7 +140,7 @@ export default function SocietyDetail() {
       count: stats.totalFlats, 
       icon: Home, 
       color: 'bg-blue-500', 
-      href: `/unit-management?society=${id}`,
+      href: `/unit-management?society=${id}&unitType=FLAT`,
       description: `${stats.occupiedFlats} occupied`
     },
     { 

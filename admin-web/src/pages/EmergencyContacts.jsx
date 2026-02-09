@@ -5,6 +5,7 @@ import { useToast } from '../context/ToastContext'
 import { emergencyContactApi } from '../api'
 import { Plus, Search, X, Phone, Edit, Trash2, AlertCircle, CheckCircle } from 'lucide-react'
 import clsx from 'clsx'
+import { FormInput, PhoneInput, SmartSelect } from '../components/FormComponents'
 
 const contactTypeColors = {
   POLICE: 'bg-blue-100 text-blue-800',
@@ -30,7 +31,7 @@ export default function EmergencyContacts() {
   const [filterCategory, setFilterCategory] = useState('')
 
   // Check if current user is PLATFORM_OWNER
-  const isPlatformLevel = user?.role === 'PLATFORM_OWNER' || user?.role === 'ORGANIZATION_OWNER' || user?.role === 'ORGANIZATION_OWNER'
+  const isPlatformLevel = user?.role === 'PLATFORM_OWNER' || user?.role === 'ORGANIZATION_OWNER'
   
   // Check if user can delete a specific contact
   const canDelete = (contact) => {
@@ -281,65 +282,48 @@ export default function EmergencyContacts() {
               </button>
             </div>
             <form onSubmit={handleSubmit} className="p-4 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Name</label>
-                <input
-                  type="text"
-                  name="name"
-                  defaultValue={editingContact?.name || ''}
-                  required
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 dark:text-white"
-                />
-              </div>
+              <FormInput
+                label="Name"
+                name="name"
+                defaultValue={editingContact?.name || ''}
+                required
+              />
               <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Phone</label>
-                  <input
-                    type="tel"
-                    name="phone"
-                    defaultValue={editingContact?.phone || ''}
-                    required
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 dark:text-white"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Alternate Phone</label>
-                  <input
-                    type="tel"
-                    name="alternatePhone"
-                    defaultValue={editingContact?.alternatePhone || ''}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 dark:text-white"
-                  />
-                </div>
-              </div>
-              <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Contact Type</label>
-                  <select
-                    name="contactType"
-                    defaultValue={editingContact?.contactType || 'OTHER'}
-                    required
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 dark:text-white"
-                  >
-                    <option value="POLICE">Police</option>
-                    <option value="FIRE">Fire</option>
-                    <option value="AMBULANCE">Ambulance</option>
-                    <option value="HOSPITAL">Hospital</option>
-                    <option value="DOCTOR">Doctor</option>
-                    <option value="SECURITY">Security</option>
-                    <option value="ELECTRICIAN">Electrician</option>
-                    <option value="PLUMBER">Plumber</option>
-                    <option value="OTHER">Other</option>
-                  </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Address</label>
-                <textarea
-                  name="address"
-                  rows={2}
-                  defaultValue={editingContact?.address || ''}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 dark:text-white"
+                <PhoneInput
+                  label="Phone"
+                  name="phone"
+                  defaultValue={editingContact?.phone || ''}
+                  required
+                />
+                <PhoneInput
+                  label="Alternate Phone"
+                  name="alternatePhone"
+                  defaultValue={editingContact?.alternatePhone || ''}
                 />
               </div>
+              <SmartSelect
+                label="Contact Type"
+                name="contactType"
+                defaultValue={editingContact?.contactType || 'OTHER'}
+                required
+                options={[
+                  { value: 'POLICE', label: 'Police' },
+                  { value: 'FIRE', label: 'Fire' },
+                  { value: 'AMBULANCE', label: 'Ambulance' },
+                  { value: 'HOSPITAL', label: 'Hospital' },
+                  { value: 'DOCTOR', label: 'Doctor' },
+                  { value: 'SECURITY', label: 'Security' },
+                  { value: 'ELECTRICIAN', label: 'Electrician' },
+                  { value: 'PLUMBER', label: 'Plumber' },
+                  { value: 'OTHER', label: 'Other' },
+                ]}
+                placeholder="Select Contact Type"
+              />
+              <FormInput
+                label="Address"
+                name="address"
+                defaultValue={editingContact?.address || ''}
+              />
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Notes</label>
                 <textarea

@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext'
 import { bannerApi } from '../api'
 import { Plus, Search, X, Image, Edit, Trash2, Eye, EyeOff } from 'lucide-react'
 import clsx from 'clsx'
+import { FormInput, SmartSelect, NumberInput, FormTextarea } from '../components/FormComponents'
 
 export default function Banners() {
   const { user, canManageBanners } = useAuth()
@@ -14,7 +15,7 @@ export default function Banners() {
   const [filterStatus, setFilterStatus] = useState('')
 
   // Check if current user is PLATFORM_OWNER
-  const isPlatformLevel = user?.role === 'PLATFORM_OWNER' || user?.role === 'ORGANIZATION_OWNER' || user?.role === 'ORGANIZATION_OWNER'
+  const isPlatformLevel = user?.role === 'PLATFORM_OWNER' || user?.role === 'ORGANIZATION_OWNER'
 
   const { data: banners = [], isLoading } = useQuery({
     queryKey: ['banners'],
@@ -210,81 +211,59 @@ export default function Banners() {
               </button>
             </div>
             <form onSubmit={handleSubmit} className="p-4 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Title</label>
-                <input
-                  type="text"
-                  name="title"
-                  defaultValue={editingBanner?.title || ''}
+              <FormInput
+                label="Title"
+                name="title"
+                defaultValue={editingBanner?.title || ''}
+                required
+              />
+              <FormInput
+                label="Image URL"
+                name="imageUrl"
+                type="url"
+                defaultValue={editingBanner?.imageUrl || ''}
+                required
+                placeholder="https://example.com/image.jpg"
+              />
+              <FormInput
+                label="Redirect URL (Optional)"
+                name="redirectUrl"
+                type="url"
+                defaultValue={editingBanner?.redirectUrl || ''}
+                placeholder="https://example.com"
+              />
+              <div className="grid grid-cols-2 gap-4">
+                <FormInput
+                  label="Start Date"
+                  name="startDate"
+                  type="date"
+                  defaultValue={editingBanner?.startDate || ''}
                   required
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 dark:text-white"
                 />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Image URL</label>
-                <input
-                  type="url"
-                  name="imageUrl"
-                  defaultValue={editingBanner?.imageUrl || ''}
+                <FormInput
+                  label="End Date"
+                  name="endDate"
+                  type="date"
+                  defaultValue={editingBanner?.endDate || ''}
                   required
-                  placeholder="https://example.com/image.jpg"
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 dark:text-white"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Redirect URL (Optional)</label>
-                <input
-                  type="url"
-                  name="redirectUrl"
-                  defaultValue={editingBanner?.redirectUrl || ''}
-                  placeholder="https://example.com"
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 dark:text-white"
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Start Date</label>
-                  <input
-                    type="date"
-                    name="startDate"
-                    defaultValue={editingBanner?.startDate || ''}
-                    required
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 dark:text-white"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">End Date</label>
-                  <input
-                    type="date"
-                    name="endDate"
-                    defaultValue={editingBanner?.endDate || ''}
-                    required
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 dark:text-white"
-                  />
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Display Order</label>
-                  <input
-                    type="number"
-                    name="displayOrder"
-                    defaultValue={editingBanner?.displayOrder || 1}
-                    min="1"
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 dark:text-white"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status</label>
-                  <select
-                    name="isActive"
-                    defaultValue={editingBanner?.isActive?.toString() || 'true'}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 dark:text-white"
-                  >
-                    <option value="true">Active</option>
-                    <option value="false">Inactive</option>
-                  </select>
-                </div>
+                <NumberInput
+                  label="Display Order"
+                  name="displayOrder"
+                  defaultValue={editingBanner?.displayOrder || 1}
+                  min={1}
+                />
+                <SmartSelect
+                  label="Status"
+                  name="isActive"
+                  defaultValue={editingBanner?.isActive?.toString() || 'true'}
+                  options={[
+                    { value: 'true', label: 'Active' },
+                    { value: 'false', label: 'Inactive' },
+                  ]}
+                />
               </div>
               <div className="flex gap-3 pt-4">
                 <button type="button" onClick={closeModal} className="flex-1 px-4 py-2 border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition">Cancel</button>

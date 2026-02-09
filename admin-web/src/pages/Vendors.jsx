@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '../context/AuthContext'
 import { vendorApi, societyApi } from '../api'
 import { Plus, Edit, Trash2, Search, X, Truck, Phone, Mail, Eye, Building2, CreditCard, Landmark, FileText, User, MapPin } from 'lucide-react'
+import { FormInput, PhoneInput, SmartSelect, FormTextarea } from '../components/FormComponents'
 
 export default function Vendors() {
   const { user, canManageVendors } = useAuth()
@@ -13,7 +14,7 @@ export default function Vendors() {
   const [viewingVendor, setViewingVendor] = useState(null)
 
   // Check if current user is PLATFORM_OWNER
-  const isPlatformLevel = user?.role === 'PLATFORM_OWNER' || user?.role === 'ORGANIZATION_OWNER' || user?.role === 'ORGANIZATION_OWNER'
+  const isPlatformLevel = user?.role === 'PLATFORM_OWNER' || user?.role === 'ORGANIZATION_OWNER'
 
   const { data: vendors = [], isLoading } = useQuery({
     queryKey: ['vendors'],
@@ -259,43 +260,37 @@ export default function Vendors() {
               </button>
             </div>
             <form onSubmit={handleSubmit} className="p-4 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Service Type</label>
-                <select
-                  name="serviceType"
-                  defaultValue={editingVendor?.serviceType}
-                  required
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
-                >
-                  <option value="">Select Type</option>
-                  <option value="HOUSEKEEPING">Housekeeping</option>
-                  <option value="SECURITY">Security</option>
-                  <option value="ELECTRICIAN">Electrician</option>
-                  <option value="PLUMBER">Plumber</option>
-                  <option value="PEST_CONTROL">Pest Control</option>
-                  <option value="LIFT_MAINTENANCE">Lift Maintenance</option>
-                  <option value="GENERATOR">Generator</option>
-                  <option value="CCTV">CCTV</option>
-                  <option value="OTHER">Other</option>
-                </select>
-              </div>
+              <SmartSelect
+                label="Service Type"
+                name="serviceType"
+                defaultValue={editingVendor?.serviceType}
+                options={[
+                  { value: 'HOUSEKEEPING', label: 'Housekeeping' },
+                  { value: 'SECURITY', label: 'Security' },
+                  { value: 'ELECTRICIAN', label: 'Electrician' },
+                  { value: 'PLUMBER', label: 'Plumber' },
+                  { value: 'PEST_CONTROL', label: 'Pest Control' },
+                  { value: 'LIFT_MAINTENANCE', label: 'Lift Maintenance' },
+                  { value: 'GENERATOR', label: 'Generator' },
+                  { value: 'CCTV', label: 'CCTV' },
+                  { value: 'OTHER', label: 'Other' },
+                ]}
+                required
+                placeholder="Select Type"
+              />
               
               {/* Society dropdown - only show for PLATFORM_OWNER */}
               {isPlatformLevel && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Society</label>
-                  <select
-                    name="societyId"
-                    defaultValue={editingVendor?.societyId}
-                    required
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
-                  >
-                    <option value="">Select Society</option>
-                    {societies.map(s => (
-                      <option key={s.id} value={s.id}>{s.name}</option>
-                    ))}
-                  </select>
-                </div>
+                <SmartSelect
+                  label="Society"
+                  name="societyId"
+                  defaultValue={editingVendor?.societyId}
+                  options={societies.map(s => ({ value: s.id, label: s.name }))}
+                  required
+                  icon={Building2}
+                  placeholder="Select Society"
+                  emptyMessage="No societies available"
+                />
               )}
               
               {/* Contact Person Section */}
@@ -305,37 +300,25 @@ export default function Vendors() {
                   Contact Person Details
                 </h3>
                 <div className="grid grid-cols-1 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Contact Person Name</label>
-                    <input
-                      type="text"
-                      name="contactPerson"
-                      defaultValue={editingVendor?.contactPerson}
-                      placeholder="e.g., John Doe"
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
-                    />
-                  </div>
+                  <FormInput
+                    label="Contact Person Name"
+                    name="contactPerson"
+                    defaultValue={editingVendor?.contactPerson}
+                    placeholder="e.g., John Doe"
+                  />
                   <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Contact Person Phone</label>
-                      <input
-                        type="tel"
-                        name="contactPersonPhone"
-                        defaultValue={editingVendor?.contactPersonPhone}
-                        placeholder="Contact person's phone"
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Contact Person Email</label>
-                      <input
-                        type="email"
-                        name="contactPersonEmail"
-                        defaultValue={editingVendor?.contactPersonEmail}
-                        placeholder="Contact person's email"
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
-                      />
-                    </div>
+                    <PhoneInput
+                      label="Contact Phone"
+                      name="contactPersonPhone"
+                      defaultValue={editingVendor?.contactPersonPhone}
+                    />
+                    <FormInput
+                      label="Contact Email"
+                      name="contactPersonEmail"
+                      type="email"
+                      defaultValue={editingVendor?.contactPersonEmail}
+                      placeholder="Contact email"
+                    />
                   </div>
                 </div>
               </div>
@@ -347,76 +330,53 @@ export default function Vendors() {
                   Vendor Business Contact
                 </h3>
                 <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Vendor Name</label>
-                    <input
-                      type="text"
-                      name="name"
-                      defaultValue={editingVendor?.name}
-                      required
-                      placeholder="Vendor's business name"
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
-                    />
-                  </div>
+                  <FormInput
+                    label="Vendor Name"
+                    name="name"
+                    defaultValue={editingVendor?.name}
+                    required
+                    placeholder="Vendor's business name"
+                  />
                   <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Business Phone</label>
-                      <input
-                        type="tel"
-                        name="phone"
-                        defaultValue={editingVendor?.phone}
-                        placeholder="Vendor's business phone"
-                        required
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Business Email</label>
-                      <input
-                        type="email"
-                        name="email"
-                        defaultValue={editingVendor?.email}
-                        placeholder="Vendor's business email"
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
-                      />
-                    </div>
+                    <PhoneInput
+                      label="Business Phone"
+                      name="phone"
+                      defaultValue={editingVendor?.phone}
+                      required
+                    />
+                    <FormInput
+                      label="Business Email"
+                      name="email"
+                      type="email"
+                      defaultValue={editingVendor?.email}
+                      placeholder="Vendor's business email"
+                    />
                   </div>
                 </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Address</label>
-                <textarea
-                  name="address"
-                  defaultValue={editingVendor?.address}
-                  rows={2}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
-                />
-              </div>
+              <FormTextarea
+                label="Address"
+                name="address"
+                defaultValue={editingVendor?.address}
+                rows={2}
+              />
 
               {/* Tax Details */}
               <div className="pt-4 border-t border-gray-200 dark:border-slate-700">
                 <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Tax Details</h4>
                 <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">GST Number</label>
-                    <input
-                      type="text"
-                      name="gstNumber"
-                      defaultValue={editingVendor?.gstNumber}
-                      placeholder="22AAAAA0000A1Z5"
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">PAN Number</label>
-                    <input
-                      type="text"
-                      name="panNumber"
-                      defaultValue={editingVendor?.panNumber}
-                      placeholder="AAAAA0000A"
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
-                    />
-                  </div>
+                  <FormInput
+                    label="GST Number"
+                    name="gstNumber"
+                    defaultValue={editingVendor?.gstNumber}
+                    placeholder="22AAAAA0000A1Z5"
+                  />
+                  <FormInput
+                    label="PAN Number"
+                    name="panNumber"
+                    defaultValue={editingVendor?.panNumber}
+                    placeholder="AAAAA0000A"
+                  />
                 </div>
               </div>
 
@@ -424,37 +384,25 @@ export default function Vendors() {
               <div className="pt-4 border-t border-gray-200 dark:border-slate-700">
                 <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Banking Details</h4>
                 <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Bank Name</label>
-                    <input
-                      type="text"
-                      name="bankName"
-                      defaultValue={editingVendor?.bankName}
-                      placeholder="HDFC Bank"
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
-                    />
-                  </div>
+                  <FormInput
+                    label="Bank Name"
+                    name="bankName"
+                    defaultValue={editingVendor?.bankName}
+                    placeholder="HDFC Bank"
+                  />
                   <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Account Number</label>
-                      <input
-                        type="text"
-                        name="accountNumber"
-                        defaultValue={editingVendor?.accountNumber}
-                        placeholder="1234567890"
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">IFSC Code</label>
-                      <input
-                        type="text"
-                        name="ifscCode"
-                        defaultValue={editingVendor?.ifscCode}
-                        placeholder="HDFC0000123"
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
-                      />
-                    </div>
+                    <FormInput
+                      label="Account Number"
+                      name="accountNumber"
+                      defaultValue={editingVendor?.accountNumber}
+                      placeholder="1234567890"
+                    />
+                    <FormInput
+                      label="IFSC Code"
+                      name="ifscCode"
+                      defaultValue={editingVendor?.ifscCode}
+                      placeholder="HDFC0000123"
+                    />
                   </div>
                 </div>
               </div>

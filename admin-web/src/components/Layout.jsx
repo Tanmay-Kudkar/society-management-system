@@ -45,7 +45,7 @@ const platformOwnerMenu = [
   },
   {
     id: 'users',
-    label: 'Society Admins',
+    label: 'Manage Users',
     icon: Users,
     path: '/users',
   },

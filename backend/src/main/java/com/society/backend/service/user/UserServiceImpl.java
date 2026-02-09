@@ -133,6 +133,12 @@ public class UserServiceImpl implements UserService {
                 }
             }
             user.setSociety(society);
+
+            // If this is a Society Admin, also update the society's telephone
+            if (targetRole == Role.SOCIETY_ADMIN) {
+                society.setTelephone(request.getPhone());
+                societyRepository.save(society);
+            }
         }
         // If creator is not PLATFORM_OWNER/ORGANIZATION_OWNER but has a society,
         // inherit it
@@ -140,8 +146,34 @@ public class UserServiceImpl implements UserService {
             user.setSociety(currentUser.getSociety());
         }
 
-        // Inherit organization from creator if applicable
-        if (currentUser != null && currentUser.getOrganization() != null) {
+        // Assign organization based on context
+        if (targetRole == Role.ORGANIZATION_OWNER) {
+            // Creating an ORGANIZATION_OWNER: link to existing org or auto-create one
+            if (request.getOrganizationId() != null) {
+                // Link to existing organization
+                var org = organizationRepository.findById(request.getOrganizationId())
+                        .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Organization not found"));
+                user.setOrganization(org);
+            } else {
+                // Auto-create a new organization for this owner
+                var org = new com.society.backend.entity.Organization();
+                org.setName(request.getOrganizationName() != null && !request.getOrganizationName().isBlank()
+                        ? request.getOrganizationName()
+                        : request.getName() + "'s Organization");
+                org.setOwnerName(request.getName());
+                org.setOwnerEmail(request.getEmail());
+                org.setOwnerPhone(request.getPhone());
+                org.setSubscriptionType("FREE");
+                org.setSubscriptionStatus("ACTIVE");
+                org.setMaxSocieties(1);
+                org.setIsActive(true);
+                org.setCreatedAt(LocalDateTime.now());
+                org = organizationRepository.save(org);
+                user.setOrganization(org);
+                log.info("Auto-created organization '{}' for ORGANIZATION_OWNER {}", org.getName(), request.getEmail());
+            }
+        } else if (currentUser != null && currentUser.getOrganization() != null) {
+            // Inherit organization from creator if applicable
             user.setOrganization(currentUser.getOrganization());
         }
 
@@ -424,6 +456,12 @@ public class UserServiceImpl implements UserService {
             user.setPassword(passwordEncoder.encode(request.getPassword()));
         }
         user.setPhone(request.getPhone());
+
+        // Update society telephone if this is a SOCIETY_ADMIN
+        if (user.getRole() == Role.SOCIETY_ADMIN && user.getSociety() != null) {
+            user.getSociety().setTelephone(request.getPhone());
+            societyRepository.save(user.getSociety());
+        }
 
         // Role change is only allowed if not self-update and if permitted
         if (request.getRole() != null && !isSelfUpdate) {

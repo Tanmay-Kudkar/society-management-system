@@ -111,26 +111,51 @@ export const AuthProvider = ({ children }) => {
   const isAdminLevel = () => hasRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN')
   const isCommitteeLevel = () => hasRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'MANAGER')
   
-  // Permission checks for specific actions
+  // ═══════════════════════════════════════════════════════════════
+  // Module Permission checks - aligned with backend @PreAuthorize
+  // These are MODULE-LEVEL permissions (banners, tickets, etc.)
+  // NOT user CRUD permissions (which are in RolePermissions.java)
+  // ═══════════════════════════════════════════════════════════════
+  
+  // Notices: Staff level (PO → EMPLOYEE can manage)
   const canManageNotices = () => hasRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'MANAGER', 'EMPLOYEE')
+  // Documents: Staff level
   const canManageDocuments = () => hasRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'MANAGER', 'EMPLOYEE')
+  // Financials: Committee level (leadership + financial roles)
   const canViewFinancials = () => hasRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE')
   
-  // CRUD Permission helpers aligned with backend @PreAuthorize
+  // Banners: Operational management
   const canManageBanners = () => hasRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'MANAGER')
+  // Contracts: Administrative + leadership
   const canManageContracts = () => hasRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY')
+  // Emergency Contacts: Operational management
   const canManageEmergencyContacts = () => hasRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'MANAGER')
+  // Maintenance Bills: Financial operations (Treasurer included)
   const canManageMaintenanceBills = () => hasRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER')
+  // Tenants: Module-level tenant management (MANAGER keeps access for day-to-day ops)
   const canManageTenants = () => hasRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'COMMITTEE', 'MANAGER', 'MEMBER')
+  // Tickets: Module-level ticket management
   const canManageTickets = () => hasRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'COMMITTEE', 'MANAGER')
+  // Ticket Creation: Almost everyone can raise tickets
   const canCreateTickets = () => hasRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'MANAGER', 'EMPLOYEE', 'MEMBER', 'TENANT')
+  // Transactions: Financial operations
   const canManageTransactions = () => hasRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER')
+  // Vendors: Operational management
   const canManageVendors = () => hasRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'MANAGER')
+  // Vendor Bills: Financial operations
   const canManageVendorBills = () => hasRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER')
+  // Security Logs: Leadership only
   const canViewSecurityLogs = () => hasRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN')
+  // Data Export: Committee level
   const canExportData = () => hasRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'MANAGER')
+  // Societies: Platform/Org level only
   const canManageSocieties = () => hasRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER')
-  const canManageUsers = () => hasRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'MANAGER', 'EMPLOYEE', 'MEMBER')
+  
+  // ═══════════════════════════════════════════════════════════════
+  // USER CRUD permissions - aligned with Permission Matrix
+  // MANAGER has NO user CRUD rights (not in permission matrix)
+  // ═══════════════════════════════════════════════════════════════
+  const canManageUsers = () => hasRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'EMPLOYEE', 'MEMBER')
 
   const updateUser = (updatedUser) => {
     setUser(updatedUser)

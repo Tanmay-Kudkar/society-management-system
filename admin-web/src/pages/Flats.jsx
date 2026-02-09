@@ -4,6 +4,7 @@ import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { flatApi, societyApi, wingApi } from '../api'
 import { Plus, Edit, Trash2, Search, X, Home, Store, Briefcase, Layers, AlertCircle } from 'lucide-react'
+import { FormInput, PhoneInput, SmartSelect, NumberInput, FormErrorSummary } from '../components/FormComponents'
 
 export default function Flats() {
   const { user } = useAuth()
@@ -47,18 +48,16 @@ export default function Flats() {
   // Get society filter from URL (for PLATFORM_OWNER viewing specific society)
   const societyIdFromUrl = searchParams.get('society')
 
-  // Check if current user is PLATFORM_OWNER
-  const isPlatformLevel = user?.role === 'PLATFORM_OWNER' || user?.role === 'ORGANIZATION_OWNER' || user?.role === 'ORGANIZATION_OWNER'
+  // Check if current user is PLATFORM_OWNER or ORGANIZATION_OWNER
+  const isPlatformLevel = user?.role === 'PLATFORM_OWNER' || user?.role === 'ORGANIZATION_OWNER'
 
   // Determine effective society ID for filtering
   const effectiveSocietyId = isPlatformLevel && societyIdFromUrl ? parseInt(societyIdFromUrl) : user?.societyId
 
   const { data: flats = [], isLoading } = useQuery({
-    queryKey: ['flats', user?.id, effectiveSocietyId],
-    queryFn: () => effectiveSocietyId 
-      ? flatApi.getBySociety(effectiveSocietyId).then(res => res.data)
-      : flatApi.getAll(user.id).then(res => res.data),
-    enabled: !!user?.id,
+    queryKey: ['flats', effectiveSocietyId],
+    queryFn: () => flatApi.getBySociety(effectiveSocietyId).then(res => res.data),
+    enabled: !!effectiveSocietyId,
   })
 
   const { data: societies = [] } = useQuery({
@@ -381,229 +380,129 @@ export default function Flats() {
             <form onSubmit={handleSubmit} className="p-4 space-y-4">
               {/* Society field - only show dropdown for PLATFORM_OWNER, auto-set for others */}
               {isPlatformLevel ? (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Society</label>
-                  <select
-                    name="societyId"
-                    defaultValue={editingFlat?.societyId}
-                    required
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
-                  >
-                    <option value="">Select Society</option>
-                    {societies.map(s => (
-                      <option key={s.id} value={s.id}>{s.name}</option>
-                    ))}
-                  </select>
-                </div>
+                <SmartSelect
+                  label="Society"
+                  name="societyId"
+                  defaultValue={editingFlat?.societyId}
+                  options={societies.map(s => ({ value: s.id, label: s.name }))}
+                  required
+                  icon={Home}
+                  placeholder="Select Society"
+                  emptyMessage="No societies available"
+                />
               ) : (
                 <input type="hidden" name="societyId" value={user?.societyId || ''} />
               )}
               
               {/* Unit Type and Wing Selection */}
               <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Unit Type</label>
-                  <select
-                    name="unitType"
-                    value={selectedUnitType}
-                    onChange={(e) => setSelectedUnitType(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
-                  >
-                    <option value="FLAT">🏠 Flat</option>
-                    <option value="SHOP">🏪 Shop</option>
-                    <option value="OFFICE">🏢 Office</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Wing {selectedWingId && wings.find(w => w.id === parseInt(selectedWingId))?.totalFloors && 
-                      <span className="text-xs text-gray-500">(Max Floor: {wings.find(w => w.id === parseInt(selectedWingId))?.totalFloors})</span>
-                    }
-                  </label>
-                  <select
-                    name="wingId"
-                    value={selectedWingId}
-                    onChange={(e) => setSelectedWingId(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
-                  >
-                    <option value="">No Wing</option>
-                    {wings.map(w => (
-                      <option key={w.id} value={w.id}>{w.name} {w.totalFloors ? `(${w.totalFloors} floors)` : ''}</option>
-                    ))}
-                  </select>
-                </div>
+                <SmartSelect
+                  label="Unit Type"
+                  name="unitType"
+                  value={selectedUnitType}
+                  onChange={(e) => setSelectedUnitType(e.target.value)}
+                  options={[
+                    { value: 'FLAT', label: '🏠 Flat' },
+                    { value: 'SHOP', label: '🏪 Shop' },
+                    { value: 'OFFICE', label: '🏢 Office' },
+                  ]}
+                />
+                <SmartSelect
+                  label={`Wing ${selectedWingId && wings.find(w => w.id === parseInt(selectedWingId))?.totalFloors ? `(Max Floor: ${wings.find(w => w.id === parseInt(selectedWingId))?.totalFloors})` : ''}`}
+                  name="wingId"
+                  value={selectedWingId}
+                  onChange={(e) => setSelectedWingId(e.target.value)}
+                  options={wings.map(w => ({
+                    value: w.id,
+                    label: `${w.name} ${w.totalFloors ? `(${w.totalFloors} floors)` : ''}`
+                  }))}
+                  placeholder="No Wing"
+                />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Unit Number <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="flatNumber"
-                    defaultValue={editingFlat?.flatNumber}
-                    required
-                    placeholder={selectedUnitType === 'SHOP' ? 'e.g., S-101' : selectedUnitType === 'OFFICE' ? 'e.g., O-201' : 'e.g., A-101'}
-                    pattern="[A-Za-z0-9][A-Za-z0-9\-\/]*"
-                    maxLength="20"
-                    className={`w-full px-3 py-2 border ${formErrors.flatNumber ? 'border-red-500' : 'border-gray-300 dark:border-slate-600'} rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white`}
-                  />
-                  {formErrors.flatNumber && (
-                    <p className="text-xs text-red-600 mt-1 flex items-center gap-1">
-                      <AlertCircle size={12} /> {formErrors.flatNumber}
-                    </p>
-                  )}
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    {selectedUnitType === 'FLAT' ? 'Configuration' : selectedUnitType === 'SHOP' ? 'Shop Type' : 'Office Type'}
-                  </label>
-                  <select
-                    name="flatType"
-                    value={selectedFlatType}
-                    onChange={(e) => setSelectedFlatType(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
-                  >
-                    {selectedUnitType === 'FLAT' ? (
-                      <>
-                        <option value="1RK">1 RK</option>
-                        <option value="1BHK">1 BHK</option>
-                        <option value="2BHK">2 BHK</option>
-                        <option value="3BHK">3 BHK</option>
-                        <option value="4BHK">4 BHK</option>
-                        <option value="5BHK">5 BHK</option>
-                        <option value="PENTHOUSE">Penthouse</option>
-                        <option value="DUPLEX">Duplex</option>
-                        <option value="STUDIO">Studio</option>
-                      </>
-                    ) : selectedUnitType === 'SHOP' ? (
-                      <>
-                        <option value="RETAIL">Retail Shop</option>
-                        <option value="SHOWROOM">Showroom</option>
-                        <option value="KIOSK">Kiosk</option>
-                        <option value="FOOD">Food Court</option>
-                        <option value="PHARMACY">Pharmacy</option>
-                        <option value="SALON">Salon/Spa</option>
-                        <option value="SMALL">Small Shop</option>
-                        <option value="MEDIUM">Medium Shop</option>
-                        <option value="LARGE">Large Shop</option>
-                      </>
-                    ) : (
-                      <>
-                        <option value="STANDARD">Standard Office</option>
-                        <option value="CABIN">Cabin</option>
-                        <option value="CUBICLE">Cubicle</option>
-                        <option value="SHARED">Shared Space</option>
-                        <option value="COWORKING">Co-working</option>
-                        <option value="EXECUTIVE">Executive Office</option>
-                        <option value="SMALL">Small Office</option>
-                        <option value="MEDIUM">Medium Office</option>
-                        <option value="LARGE">Large Office</option>
-                      </>
-                    )}
-                    <option value="OTHER">Other</option>
-                  </select>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Floor <span className="text-red-500">*</span>
-                    {selectedWingId && wings.find(w => w.id === parseInt(selectedWingId))?.totalFloors && (
-                      <span className="text-xs text-gray-500 ml-1">(0 to {wings.find(w => w.id === parseInt(selectedWingId))?.totalFloors})</span>
-                    )}
-                  </label>
-                  <input
-                    type="number"
-                    name="floor"
-                    defaultValue={editingFlat?.floor || 0}
-                    required
-                    min="0"
-                    max={selectedWingId && wings.find(w => w.id === parseInt(selectedWingId))?.totalFloors || 100}
-                    className={`w-full px-3 py-2 border ${formErrors.floor ? 'border-red-500' : 'border-gray-300 dark:border-slate-600'} rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white`}
-                  />
-                  {formErrors.floor && (
-                    <p className="text-xs text-red-600 mt-1 flex items-center gap-1">
-                      <AlertCircle size={12} /> {formErrors.floor}
-                    </p>
-                  )}
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Area (sq.ft)</label>
-                  <input
-                    type="number"
-                    name="area"
-                    step="0.01"
-                    min="0.01"
-                    max="100000"
-                    defaultValue={editingFlat?.area}
-                    placeholder={selectedUnitType === 'SHOP' ? 'e.g., 500' : selectedUnitType === 'OFFICE' ? 'e.g., 800' : 'e.g., 1200'}
-                    className={`w-full px-3 py-2 border ${formErrors.area ? 'border-red-500' : 'border-gray-300 dark:border-slate-600'} rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white`}
-                  />
-                  {formErrors.area && (
-                    <p className="text-xs text-red-600 mt-1 flex items-center gap-1">
-                      <AlertCircle size={12} /> {formErrors.area}
-                    </p>
-                  )}
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  {selectedUnitType === 'SHOP' ? 'Shop Owner / Tenant Name' : selectedUnitType === 'OFFICE' ? 'Company / Owner Name' : 'Owner Name'}
-                </label>
-                <input
-                  type="text"
-                  name="ownerName"
-                  defaultValue={editingFlat?.ownerName}
-                  maxLength="100"
-                  placeholder={selectedUnitType === 'SHOP' ? 'e.g., ABC Stores Pvt Ltd' : selectedUnitType === 'OFFICE' ? 'e.g., Tech Corp' : 'e.g., John Doe'}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
+                <FormInput
+                  label="Unit Number"
+                  name="flatNumber"
+                  defaultValue={editingFlat?.flatNumber}
+                  required
+                  placeholder={selectedUnitType === 'SHOP' ? 'e.g., S-101' : selectedUnitType === 'OFFICE' ? 'e.g., O-201' : 'e.g., A-101'}
+                  maxLength={20}
+                  error={formErrors.flatNumber}
+                />
+                <SmartSelect
+                  label={selectedUnitType === 'FLAT' ? 'Configuration' : selectedUnitType === 'SHOP' ? 'Shop Type' : 'Office Type'}
+                  name="flatType"
+                  value={selectedFlatType}
+                  onChange={(e) => setSelectedFlatType(e.target.value)}
+                  options={
+                    selectedUnitType === 'FLAT' ? [
+                      { value: '1RK', label: '1 RK' }, { value: '1BHK', label: '1 BHK' },
+                      { value: '2BHK', label: '2 BHK' }, { value: '3BHK', label: '3 BHK' },
+                      { value: '4BHK', label: '4 BHK' }, { value: '5BHK', label: '5 BHK' },
+                      { value: 'PENTHOUSE', label: 'Penthouse' }, { value: 'DUPLEX', label: 'Duplex' },
+                      { value: 'STUDIO', label: 'Studio' }, { value: 'OTHER', label: 'Other' },
+                    ] : selectedUnitType === 'SHOP' ? [
+                      { value: 'RETAIL', label: 'Retail Shop' }, { value: 'SHOWROOM', label: 'Showroom' },
+                      { value: 'KIOSK', label: 'Kiosk' }, { value: 'FOOD', label: 'Food Court' },
+                      { value: 'PHARMACY', label: 'Pharmacy' }, { value: 'SALON', label: 'Salon/Spa' },
+                      { value: 'SMALL', label: 'Small Shop' }, { value: 'MEDIUM', label: 'Medium Shop' },
+                      { value: 'LARGE', label: 'Large Shop' }, { value: 'OTHER', label: 'Other' },
+                    ] : [
+                      { value: 'STANDARD', label: 'Standard Office' }, { value: 'CABIN', label: 'Cabin' },
+                      { value: 'CUBICLE', label: 'Cubicle' }, { value: 'SHARED', label: 'Shared Space' },
+                      { value: 'COWORKING', label: 'Co-working' }, { value: 'EXECUTIVE', label: 'Executive Office' },
+                      { value: 'SMALL', label: 'Small Office' }, { value: 'MEDIUM', label: 'Medium Office' },
+                      { value: 'LARGE', label: 'Large Office' }, { value: 'OTHER', label: 'Other' },
+                    ]
+                  }
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Contact Email</label>
-                  <input
-                    type="email"
-                    name="ownerEmail"
-                    defaultValue={editingFlat?.ownerEmail}
-                    pattern="[^\s@]+@[^\s@]+\.[^\s@]+"
-                    placeholder="example@email.com"
-                    className={`w-full px-3 py-2 border ${formErrors.ownerEmail ? 'border-red-500' : 'border-gray-300 dark:border-slate-600'} rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white`}
-                  />
-                  {formErrors.ownerEmail && (
-                    <p className="text-xs text-red-600 mt-1 flex items-center gap-1">
-                      <AlertCircle size={12} /> {formErrors.ownerEmail}
-                    </p>
-                  )}
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Contact Phone</label>
-                  <input
-                    type="tel"
-                    name="ownerPhone"
-                    defaultValue={editingFlat?.ownerPhone}
-                    pattern="(\+91)?[6-9]\d{9}"
-                    placeholder="9876543210"
-                    maxLength="13"
-                    className={`w-full px-3 py-2 border ${formErrors.ownerPhone ? 'border-red-500' : 'border-gray-300 dark:border-slate-600'} rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white`}
-                  />
-                  {formErrors.ownerPhone && (
-                    <p className="text-xs text-red-600 mt-1 flex items-center gap-1">
-                      <AlertCircle size={12} /> {formErrors.ownerPhone}
-                    </p>
-                  )}
-                </div>
+                <NumberInput
+                  label={`Floor${selectedWingId && wings.find(w => w.id === parseInt(selectedWingId))?.totalFloors ? ` (0 to ${wings.find(w => w.id === parseInt(selectedWingId))?.totalFloors})` : ''}`}
+                  name="floor"
+                  defaultValue={editingFlat?.floor || 0}
+                  required
+                  min={0}
+                  max={selectedWingId && wings.find(w => w.id === parseInt(selectedWingId))?.totalFloors || 100}
+                  error={formErrors.floor}
+                />
+                <NumberInput
+                  label="Area (sq.ft)"
+                  name="area"
+                  step={0.01}
+                  min={0.01}
+                  max={100000}
+                  defaultValue={editingFlat?.area}
+                  placeholder={selectedUnitType === 'SHOP' ? 'e.g., 500' : selectedUnitType === 'OFFICE' ? 'e.g., 800' : 'e.g., 1200'}
+                  error={formErrors.area}
+                />
               </div>
-              {Object.keys(formErrors).length > 0 && (
-                <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3">
-                  <div className="flex items-center gap-2 text-red-700 dark:text-red-400 text-sm font-medium">
-                    <AlertCircle size={16} />
-                    Please fix the errors above
-                  </div>
-                </div>
-              )}
+              <FormInput
+                label={selectedUnitType === 'SHOP' ? 'Shop Owner / Tenant Name' : selectedUnitType === 'OFFICE' ? 'Company / Owner Name' : 'Owner Name'}
+                name="ownerName"
+                defaultValue={editingFlat?.ownerName}
+                maxLength={100}
+                placeholder={selectedUnitType === 'SHOP' ? 'e.g., ABC Stores Pvt Ltd' : selectedUnitType === 'OFFICE' ? 'e.g., Tech Corp' : 'e.g., John Doe'}
+              />
+              <div className="grid grid-cols-2 gap-4">
+                <FormInput
+                  label="Contact Email"
+                  name="ownerEmail"
+                  type="email"
+                  defaultValue={editingFlat?.ownerEmail}
+                  placeholder="example@email.com"
+                  error={formErrors.ownerEmail}
+                />
+                <PhoneInput
+                  label="Contact Phone"
+                  name="ownerPhone"
+                  defaultValue={editingFlat?.ownerPhone}
+                  error={formErrors.ownerPhone}
+                />
+              </div>
+              <FormErrorSummary errors={formErrors} />
               <div className="flex gap-3 pt-4">
                 <button
                   type="button"

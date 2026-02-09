@@ -6,6 +6,7 @@ import { Plus, Edit, Trash2, Search, X, AlertCircle, Shield, Users as UsersIcon,
 import clsx from 'clsx'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { parseApiError, validateUserForm } from '../utils/validation'
+import { FormInput, PhoneInput, SmartSelect, FormErrorSummary } from '../components/FormComponents'
 
 const roleColors = {
   PLATFORM_OWNER: 'bg-purple-100 text-purple-800',
@@ -22,20 +23,20 @@ const roleColors = {
   VISITOR: 'bg-red-100 text-red-800',
 }
 
-// Role hierarchy descriptions for tooltips
+// Role hierarchy descriptions for tooltips - aligned with Permission Matrix
 const roleHierarchyInfo = {
-  PLATFORM_OWNER: 'Platform Owner - Manages the entire platform (invisible to others)',
+  PLATFORM_OWNER: 'Platform Owner - Manages all societies and organizations',
   ORGANIZATION_OWNER: 'Organization Owner - Manages multiple societies under an organization',
-  SOCIETY_ADMIN: 'Society Admin - Manages a single society with full CRUD rights',
-  CHAIRMAN: 'Chairman - Committee head, manages Secretary and Treasurer',
-  SECRETARY: 'Secretary - Administrative head, manages Committee and Manager',
-  TREASURER: 'Treasurer - Financial head, manages Committee and Manager',
-  COMMITTEE: 'Committee Member - Can manage Employee and Member',
-  MANAGER: 'Manager - Can manage Employee',
-  EMPLOYEE: 'Society Staff - Can manage Visitor only',
-  MEMBER: 'Flat Owner - Can manage Tenant only',
-  TENANT: 'Renter - View only access',
-  VISITOR: 'Temporary Access - View only access',
+  SOCIETY_ADMIN: 'Society Super Admin - Full control over society, all CRUD operations',
+  CHAIRMAN: 'Highest Committee Authority - Presides meetings, final approval, bank signatory',
+  SECRETARY: 'Administrative Head - Documentation, records, day-to-day operations. Creates Committee',
+  TREASURER: 'Financial Head - Finances, billing, payments, accounts. Creates Committee',
+  COMMITTEE: 'Committee Member - Intermediate management, creates Employee and Member',
+  MANAGER: 'Operational Manager - Handles day-to-day management tasks (no user CRUD)',
+  EMPLOYEE: 'Staff/Security - Handles visitors, basic operations. Creates Visitor only',
+  MEMBER: 'Flat Owner - Views own data, raises tickets/complaints. Creates Tenant only',
+  TENANT: 'Renter - Limited access to own profile & bills',
+  VISITOR: 'Guest - Minimal access, read-only',
 }
 
 export default function Users() {
@@ -121,13 +122,15 @@ export default function Users() {
     enabled: isPlatformLevel,
   })
 
+  // Effective society for flat fetching: URL param takes priority, then user's own society
+  const effectiveSocietyIdForFlats = urlSocietyId ? parseInt(urlSocietyId) : user?.societyId
+
   // Fetch flats for MEMBER/TENANT property assignment
+  // PO/OO only need flats when viewing a specific society (via ?society=X)
   const { data: flats = [] } = useQuery({
-    queryKey: ['flats', user?.id, user?.societyId],
-    queryFn: () => user?.societyId 
-      ? flatApi.getBySociety(user.societyId).then(res => res.data)
-      : flatApi.getAll(user.id).then(res => res.data),
-    enabled: !!user?.id,
+    queryKey: ['flats', effectiveSocietyIdForFlats],
+    queryFn: () => flatApi.getBySociety(effectiveSocietyIdForFlats).then(res => res.data),
+    enabled: !!effectiveSocietyIdForFlats,
   })
 
   // Fetch the MEMBER's own flat directly if they have flatId (for tenant assignment)
@@ -252,7 +255,8 @@ export default function Users() {
     },
   })
 
-  // For PLATFORM_OWNER, only show SOCIETY_ADMINs (not all users scattered)
+  // For PLATFORM_OWNER, show ORGANIZATION_OWNER and SOCIETY_ADMIN (their manageable users)
+  // For ORGANIZATION_OWNER, show only SOCIETY_ADMIN users in their org
   // UNLESS viewing a specific society from URL - then show all users in that society
   // For others, show all users they can see
   let displayUsers = users
@@ -260,8 +264,11 @@ export default function Users() {
   // Apply society filter from URL if present
   if (urlSocietyId) {
     displayUsers = displayUsers.filter(u => String(u.societyId) === urlSocietyId)
-  } else if (isPlatformLevel) {
-    // Only apply SOCIETY_ADMIN filter when not viewing a specific society
+  } else if (user?.role === 'PLATFORM_OWNER') {
+    // Platform Owner sees both Organization Owners and Society Admins
+    displayUsers = displayUsers.filter(u => u.role === 'ORGANIZATION_OWNER' || u.role === 'SOCIETY_ADMIN')
+  } else if (user?.role === 'ORGANIZATION_OWNER') {
+    // Organization Owner sees Society Admins in their org
     displayUsers = displayUsers.filter(u => u.role === 'SOCIETY_ADMIN')
   }
 
@@ -293,6 +300,7 @@ export default function Users() {
       phone: formData.get('phone'),
       societyId: formData.get('societyId') ? parseInt(formData.get('societyId')) : null,
       flatId: formData.get('flatId') ? parseInt(formData.get('flatId')) : null,
+      organizationName: formData.get('organizationName') || null,
     }
 
     // Frontend validation - Fix: use !!editingUser instead of !editingUser
@@ -302,8 +310,8 @@ export default function Users() {
       return
     }
 
-    // Validate societyId is required for SOCIETY_ADMIN creation by PLATFORM_OWNER
-    if (user?.role === 'PLATFORM_OWNER' && roleValue === 'SOCIETY_ADMIN' && !data.societyId) {
+    // Validate societyId is required for SOCIETY_ADMIN creation (by PLATFORM_OWNER or ORGANIZATION_OWNER)
+    if ((user?.role === 'PLATFORM_OWNER' || user?.role === 'ORGANIZATION_OWNER') && roleValue === 'SOCIETY_ADMIN' && !data.societyId) {
       setError('Please select a society for the Society Admin')
       return
     }
@@ -362,7 +370,10 @@ export default function Users() {
     if (urlSocietyId) {
       return 'Society Users'
     }
-    if (isPlatformLevel) {
+    if (user?.role === 'PLATFORM_OWNER') {
+      return 'Manage Users'
+    }
+    if (user?.role === 'ORGANIZATION_OWNER') {
       return 'Society Admins'
     }
     return 'Users'
@@ -372,7 +383,10 @@ export default function Users() {
     if (urlSocietyId) {
       return 'View users in this society'
     }
-    if (isPlatformLevel) {
+    if (user?.role === 'PLATFORM_OWNER') {
+      return 'Manage organization owners and society administrators'
+    }
+    if (user?.role === 'ORGANIZATION_OWNER') {
       return 'Manage society administrators'
     }
     return 'Manage system users and roles'
@@ -422,7 +436,7 @@ export default function Users() {
               className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
             >
               <Plus size={20} />
-              {isPlatformLevel && !urlSocietyId ? 'Create Society Admin' : 'Add User'}
+              {isPlatformLevel && !urlSocietyId ? 'Create User' : 'Add User'}
             </button>
           )}
         </div>
@@ -485,14 +499,14 @@ export default function Users() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
             <input
               type="text"
-              placeholder={isPlatformLevel && !urlSocietyId ? "Search society admins..." : "Search users..."}
+              placeholder="Search users..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white placeholder:text-gray-400"
             />
           </div>
-          {/* Only show role filter for non-PLATFORM_OWNER users (or when viewing specific society), and only show roles they can see */}
-          {(!isPlatformLevel || urlSocietyId) && updatableRoles.length > 0 && (
+          {/* Show role filter when there are manageable roles (hide for Organization Owner as they only manage Society Admins) */}
+          {updatableRoles.length > 0 && user?.role !== 'ORGANIZATION_OWNER' && (
             <select
               value={filterRole}
               onChange={(e) => setFilterRole(e.target.value)}
@@ -500,20 +514,22 @@ export default function Users() {
             >
               <option value="">All Roles</option>
               {/* Include current user's role + roles they can manage */}
-              {[user?.role, ...updatableRoles].filter((role, index, arr) => role && arr.indexOf(role) === index).map(role => (
-                <option key={role} value={role}>{role.replace('_', ' ')}</option>
+              {[user?.role, ...updatableRoles]
+                .filter((role, index, arr) => role && arr.indexOf(role) === index)
+                .map(role => (
+                <option key={role} value={role}>{role.replace(/_/g, ' ')}</option>
               ))}
             </select>
           )}
         </div>
       </div>
 
-      {/* PLATFORM_OWNER sees Society Admin cards with navigation (unless viewing specific society) */}
+      {/* PLATFORM_OWNER/ORG_OWNER sees user cards with navigation (unless viewing specific society) */}
       {isPlatformLevel && !urlSocietyId ? (
         <div className="space-y-4">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
             <UsersIcon className="w-5 h-5" />
-            Society Administrators
+            {user?.role === 'PLATFORM_OWNER' ? 'Organization Owners & Society Administrators' : 'Society Administrators'}
             <span className="text-sm font-normal text-gray-500">({filteredUsers.length})</span>
           </h2>
           
@@ -524,8 +540,8 @@ export default function Users() {
           ) : filteredUsers.length === 0 ? (
             <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-8 text-center">
               <UsersIcon className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
-              <p className="text-gray-500 dark:text-gray-400">No Society Admins found</p>
-              <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">Create a new Society Admin to get started</p>
+              <p className="text-gray-500 dark:text-gray-400">No users found</p>
+              <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">{user?.role === 'PLATFORM_OWNER' ? 'Create an Organization Owner or Society Admin to get started' : 'Create a new Society Admin to get started'}</p>
             </div>
           ) : (
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -707,138 +723,6 @@ export default function Users() {
       </div>
       )}
 
-      {/* Property Mappings Section - User to Unit Relationships */}
-      {(!isPlatformLevel || urlSocietyId) && (
-        <div className="mt-6 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 overflow-hidden">
-          <div className="p-4 border-b border-gray-100 dark:border-slate-700">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <div>
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                  <Home className="w-5 h-5 text-blue-600" />
-                  Property Mappings
-                </h2>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                  View user-to-unit assignments across the society
-                </p>
-              </div>
-              <div className="flex items-center gap-3">
-                <span className="text-sm text-gray-500 dark:text-gray-400">
-                  {flats.filter(f => f.ownerUserId).length} assigned / {flats.length} total units
-                </span>
-              </div>
-            </div>
-          </div>
-          
-          {flats.length === 0 ? (
-            <div className="p-8 text-center">
-              <Home className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
-              <p className="text-gray-500 dark:text-gray-400">No units found</p>
-              <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">Go to Unit Management to add units</p>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-50 dark:bg-slate-700">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Unit</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Type</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Assigned User</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Contact</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Status</th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100 dark:divide-slate-700">
-                  {flats.map((flat) => {
-                    const assignedUser = users.find(u => u.id === flat.ownerUserId)
-                    const hasUser = !!assignedUser
-                    
-                    return (
-                      <tr key={flat.id} className="hover:bg-gray-50 dark:hover:bg-slate-700">
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex items-center gap-2">
-                            <Home className="w-4 h-4 text-gray-400" />
-                            <span className="font-medium text-gray-900 dark:text-white">{flat.flatNumber}</span>
-                            {flat.wingName && (
-                              <span className="text-xs text-gray-500 dark:text-gray-400">({flat.wingName})</span>
-                            )}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={clsx(
-                            'px-2 py-1 rounded-full text-xs font-medium',
-                            flat.flatType === 'RESIDENTIAL' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' :
-                            flat.flatType === 'COMMERCIAL' ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300' :
-                            'bg-gray-100 text-gray-700 dark:bg-slate-600 dark:text-gray-300'
-                          )}>
-                            {flat.flatType || 'N/A'}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          {hasUser ? (
-                            <div className="flex items-center gap-2">
-                              <div className="w-7 h-7 rounded-full bg-blue-100 flex items-center justify-center">
-                                <span className="text-blue-600 font-medium text-xs">
-                                  {assignedUser.name?.charAt(0)?.toUpperCase()}
-                                </span>
-                              </div>
-                              <div>
-                                <span className="text-gray-900 dark:text-white text-sm">{assignedUser.name}</span>
-                                <span className={clsx('ml-2 px-2 py-0.5 rounded-full text-xs font-medium', roleColors[assignedUser.role])}>
-                                  {assignedUser.role?.replace('_', ' ')}
-                                </span>
-                              </div>
-                            </div>
-                          ) : (
-                            <span className="text-gray-400 dark:text-gray-500 text-sm italic">Unassigned</span>
-                          )}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          {hasUser ? (
-                            <div className="text-sm">
-                              <p className="text-gray-600 dark:text-gray-300">{assignedUser.phone || '-'}</p>
-                              <p className="text-xs text-gray-500 dark:text-gray-400">{assignedUser.email}</p>
-                            </div>
-                          ) : (
-                            <span className="text-gray-400">-</span>
-                          )}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={clsx(
-                            'px-2 py-1 rounded-full text-xs font-medium',
-                            hasUser ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' : 'bg-gray-100 text-gray-600 dark:bg-slate-700 dark:text-gray-400'
-                          )}>
-                            {hasUser ? 'Occupied' : 'Vacant'}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-right">
-                          {hasUser && (
-                            <button
-                              onClick={() => handleOpenModal(assignedUser)}
-                              className="p-1.5 text-gray-500 dark:text-gray-400 hover:text-blue-600 transition"
-                              title="Edit User"
-                            >
-                              <Edit size={18} />
-                            </button>
-                          )}
-                          <button
-                            onClick={() => navigate('/unit-management')}
-                            className="p-1.5 text-gray-500 dark:text-gray-400 hover:text-blue-600 transition"
-                            title="Manage in Unit Management"
-                          >
-                            <Eye size={18} />
-                          </button>
-                        </td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-      )}
-
       {/* Modal */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
@@ -850,144 +734,114 @@ export default function Users() {
               </button>
             </div>
             <form onSubmit={handleSubmit} className="p-4 space-y-4">
-              {error && (
-                <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
-                  <AlertCircle size={16} />
-                  {error}
-                </div>
-              )}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Name</label>
-                <input
-                  type="text"
-                  name="name"
-                  defaultValue={editingUser?.name}
-                  required
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email</label>
-                <input
-                  type="email"
-                  name="email"
-                  defaultValue={editingUser?.email}
-                  required
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
-                />
-              </div>
+              <FormErrorSummary message={error} />
+              <FormInput
+                label="Name"
+                name="name"
+                defaultValue={editingUser?.name}
+                required
+                placeholder="Full name"
+              />
+              <FormInput
+                label="Email"
+                name="email"
+                type="email"
+                defaultValue={editingUser?.email}
+                required
+                placeholder="user@example.com"
+              />
               {!editingUser && (
+                <FormInput
+                  label="Password"
+                  name="password"
+                  type="password"
+                  required={!editingUser}
+                  placeholder="Min 6 characters"
+                />
+              )}
+              <SmartSelect
+                label="Role"
+                name="role"
+                value={selectedRole || editingUser?.role || creatableRoles[0] || 'MEMBER'}
+                onChange={(e) => setSelectedRole(e.target.value)}
+                options={creatableRoles.map(role => ({ value: role, label: role.replace('_', ' ') }))}
+                required
+                icon={Shield}
+                emptyMessage="No roles available to create"
+              />
+              {user?.role === 'PLATFORM_OWNER' && (selectedRole || editingUser?.role) === 'ORGANIZATION_OWNER' && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Password</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Organization Name</label>
                   <input
-                    type="password"
-                    name="password"
-                    required={!editingUser}
+                    type="text"
+                    name="organizationName"
+                    placeholder="e.g. ABC Housing Group"
                     className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
                   />
+                  <p className="text-xs text-gray-500 mt-1">Leave empty to auto-generate from the owner's name</p>
                 </div>
               )}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Role</label>
-                {creatableRoles.length === 1 && !editingUser ? (
-                  // Single role - show static text instead of dropdown
-                  <div className="w-full px-3 py-2 border border-gray-200 dark:border-slate-600 rounded-lg bg-gray-50 dark:bg-slate-700/50 text-gray-900 dark:text-white flex items-center gap-2">
-                    <Shield className="w-4 h-4 text-blue-500" />
-                    <span className="font-medium">{creatableRoles[0].replace('_', ' ')}</span>
-                  </div>
-                ) : (
-                  // Multiple roles - show dropdown
-                  <select
-                    name="role"
-                    defaultValue={editingUser?.role || (creatableRoles[0] || 'MEMBER')}
-                    onChange={(e) => setSelectedRole(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
-                  >
-                    {creatableRoles.length > 0 ? (
-                      creatableRoles.map(role => (
-                        <option key={role} value={role}>{role.replace('_', ' ')}</option>
-                      ))
-                    ) : (
-                      <option value="" disabled>No roles available to create</option>
-                    )}
-                  </select>
-                )}
-                {creatableRoles.length === 0 && (
-                  <p className="text-xs text-gray-500 mt-1">You don't have permission to create users.</p>
-                )}
-              </div>
-              {user?.role === 'PLATFORM_OWNER' && (selectedRole || editingUser?.role) === 'SOCIETY_ADMIN' && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Society</label>
-                  <select
-                    name="societyId"
-                    defaultValue={editingUser?.societyId || ''}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
-                    required
-                  >
-                    <option value="">Select Society</option>
-                    {societies.map(s => (
-                      <option key={s.id} value={s.id}>{s.name}</option>
-                    ))}
-                  </select>
-                </div>
+              {(user?.role === 'PLATFORM_OWNER' || user?.role === 'ORGANIZATION_OWNER') && (selectedRole || editingUser?.role) === 'SOCIETY_ADMIN' && (
+                <SmartSelect
+                  label="Society"
+                  name="societyId"
+                  defaultValue={editingUser?.societyId || ''}
+                  options={societies.map(s => ({ value: s.id, label: s.name }))}
+                  required
+                  icon={Building2}
+                  placeholder="Select Society"
+                  emptyMessage="No societies available"
+                />
               )}
               {/* Property selection for MEMBER/TENANT roles - NOT shown for EMPLOYEE */}
               {['MEMBER', 'TENANT'].includes(selectedRole || creatableRoles[0]) && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    <span className="flex items-center gap-1">
-                      <Home className="w-4 h-4" />
-                      Property {!confirmedIsMember && <span className="text-red-500">*</span>}
-                    </span>
-                  </label>
                   {/* MEMBER creating TENANT: auto-assign from member's flat */}
                   {confirmedIsMember && (selectedRole || creatableRoles[0]) === 'TENANT' ? (
-                    <div className="w-full px-3 py-2 border border-gray-200 dark:border-slate-600 rounded-lg bg-gray-50 dark:bg-slate-700/50 text-gray-900 dark:text-white">
+                    <div className="form-field-group">
+                      <label className="form-label">
+                        <Home className="w-4 h-4 text-gray-400 dark:text-gray-500" />
+                        Property
+                      </label>
                       {availableFlats.length > 0 ? (
-                        <>
-                          <input type="hidden" name="flatId" value={availableFlats[0]?.id || ''} />
-                          <span className="flex items-center gap-2">
-                            <Home className="w-4 h-4 text-blue-500" />
+                        <div className="smart-select-single">
+                          <Home size={14} className="text-blue-500 dark:text-blue-400 shrink-0" />
+                          <span className="font-medium text-gray-900 dark:text-white">
                             {availableFlats[0]?.flatNumber} {availableFlats[0]?.wingName ? `(${availableFlats[0]?.wingName})` : ''}
-                            <span className="text-xs text-gray-500 ml-2">(Your flat - auto-assigned)</span>
                           </span>
-                        </>
+                          <span className="ml-auto text-[10px] uppercase tracking-wider text-blue-500 dark:text-blue-400 font-semibold">
+                            Your flat
+                          </span>
+                          <input type="hidden" name="flatId" value={availableFlats[0]?.id || ''} />
+                        </div>
                       ) : (
-                        <span className="text-gray-500">Your flat will be automatically assigned to the tenant</span>
+                        <div className="smart-select-empty">
+                          <span>Your flat will be automatically assigned to the tenant</span>
+                        </div>
                       )}
                     </div>
                   ) : (
-                    <>
-                      <select
-                        name="flatId"
-                        defaultValue={editingUser?.flatId || ''}
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
-                        required
-                      >
-                        <option value="">Select Property</option>
-                        {availableFlats.map(flat => (
-                          <option key={flat.id} value={flat.id}>
-                            {flat.flatNumber} {flat.wingName ? `(${flat.wingName})` : ''} - {flat.unitType || 'FLAT'}
-                          </option>
-                        ))}
-                      </select>
-                      {availableFlats.length === 0 && (
-                        <p className="text-xs text-amber-600 mt-1">No available properties. All units are assigned.</p>
-                      )}
-                    </>
+                    <SmartSelect
+                      label="Property"
+                      name="flatId"
+                      defaultValue={editingUser?.flatId || ''}
+                      options={availableFlats.map(flat => ({
+                        value: flat.id,
+                        label: `${flat.flatNumber} ${flat.wingName ? `(${flat.wingName})` : ''} - ${flat.unitType || 'FLAT'}`
+                      }))}
+                      required={!confirmedIsMember}
+                      icon={Home}
+                      placeholder="Select Property"
+                      emptyMessage="No available properties. All units are assigned."
+                    />
                   )}
                 </div>
               )}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Phone</label>
-                <input
-                  type="tel"
-                  name="phone"
-                  defaultValue={editingUser?.phone}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
-                />
-              </div>
+              <PhoneInput
+                label={(selectedRole || editingUser?.role) === 'SOCIETY_ADMIN' ? 'Telephone' : 'Phone'}
+                name="phone"
+                defaultValue={editingUser?.phone}
+              />
               <div className="flex gap-3 pt-4">
                 <button
                   type="button"

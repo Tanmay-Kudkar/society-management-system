@@ -7,10 +7,11 @@ import { flatApi, societyApi, wingApi, userApi } from '../api'
 import { 
   Plus, Edit, Trash2, Search, X, Home, Store, Briefcase, Layers, 
   Users, UserPlus, UserCheck, UserX, Upload, Download, AlertCircle,
-  Eye, Link, Unlink, UsersRound, UserCog
+  Eye, Link, Unlink, UsersRound, UserCog, Building2
 } from 'lucide-react'
 import clsx from 'clsx'
 import { validateFlatForm, validateUserForm, parseApiError } from '../utils/validation'
+import { SmartSelect, FormInput, NumberInput, PhoneInput, FormErrorSummary } from '../components/FormComponents'
 
 const unitTypeIcons = {
   FLAT: Home,
@@ -30,6 +31,15 @@ export default function UnitManagement() {
   const queryClient = useQueryClient()
   const [searchParams] = useSearchParams()
   
+  // Get URL params early (before state init that depends on them)
+  const societyIdFromUrl = searchParams.get('society')
+  const unitTypeFromUrl = searchParams.get('unitType')
+  const isPlatformLevel = user?.role === 'PLATFORM_OWNER' || user?.role === 'ORGANIZATION_OWNER'
+  const effectiveSocietyId = isPlatformLevel && societyIdFromUrl ? parseInt(societyIdFromUrl) : user?.societyId
+
+  // PO/OO are supervisory - they can view but not directly edit units/users within a society
+  const canEditUnits = isCommitteeLevel() && !isPlatformLevel
+
   // Modal states
   const [showUnitModal, setShowUnitModal] = useState(false)
   const [showUserModal, setShowUserModal] = useState(false)
@@ -46,7 +56,7 @@ export default function UnitManagement() {
   
   // Filter states
   const [searchTerm, setSearchTerm] = useState('')
-  const [filterType, setFilterType] = useState('')
+  const [filterType, setFilterType] = useState(unitTypeFromUrl || '')
   const [viewMode, setViewMode] = useState('units') // 'units' or 'table'
   
   // Form states
@@ -54,18 +64,19 @@ export default function UnitManagement() {
   const [userFormErrors, setUserFormErrors] = useState({})
   const [apiError, setApiError] = useState('')
 
-  // Get society filter from URL (for PLATFORM_OWNER viewing specific society)
-  const societyIdFromUrl = searchParams.get('society')
-  const isPlatformLevel = user?.role === 'PLATFORM_OWNER' || user?.role === 'ORGANIZATION_OWNER' || user?.role === 'ORGANIZATION_OWNER'
-  const effectiveSocietyId = isPlatformLevel && societyIdFromUrl ? parseInt(societyIdFromUrl) : user?.societyId
+  // Sync filterType with URL parameter when it changes
+  useEffect(() => {
+    setFilterType(unitTypeFromUrl || '')
+  }, [unitTypeFromUrl])
 
   // Fetch flats/units
+  // PO/OO must have effectiveSocietyId (from URL), otherwise skip
   const { data: flats = [], isLoading: flatsLoading } = useQuery({
-    queryKey: ['flats', user?.id, effectiveSocietyId],
+    queryKey: ['flats', effectiveSocietyId],
     queryFn: () => effectiveSocietyId 
       ? flatApi.getBySociety(effectiveSocietyId).then(res => res.data)
       : flatApi.getAll(user.id).then(res => res.data),
-    enabled: !!user?.id,
+    enabled: !!user?.id && (!!effectiveSocietyId || !isPlatformLevel),
   })
 
   // Fetch users in the society
@@ -80,6 +91,13 @@ export default function UnitManagement() {
     queryKey: ['societies'],
     queryFn: () => societyApi.getAll().then(res => res.data),
     enabled: isPlatformLevel,
+  })
+
+  // Fetch current society details for capacity limits
+  const { data: currentSociety } = useQuery({
+    queryKey: ['society', effectiveSocietyId],
+    queryFn: () => societyApi.getById(effectiveSocietyId).then(res => res.data),
+    enabled: !!effectiveSocietyId,
   })
 
   // Fetch wings
@@ -213,11 +231,13 @@ export default function UnitManagement() {
       ? parseInt(formData.get('societyId')) 
       : user?.societyId
 
+    const unitType = formData.get('unitType') || 'FLAT'
+
     const data = {
       societyId,
       wingId: formData.get('wingId') ? parseInt(formData.get('wingId')) : null,
       flatNumber: formData.get('flatNumber'),
-      unitType: formData.get('unitType') || 'FLAT',
+      unitType: unitType,
       flatType: formData.get('flatType'),
       floor: parseInt(formData.get('floor')) || 0,
       area: parseFloat(formData.get('area')) || 0,
@@ -229,6 +249,27 @@ export default function UnitManagement() {
     if (!validation.isValid) {
       setUnitFormErrors(validation.errors)
       return
+    }
+
+    // Check capacity limits (only for new units)
+    if (!editingUnit && currentSociety) {
+      const currentCount = unitType === 'FLAT' 
+        ? stats.flats 
+        : unitType === 'SHOP' 
+        ? stats.shops 
+        : stats.offices
+      const maxCount = unitType === 'FLAT' 
+        ? stats.maxFlats 
+        : unitType === 'SHOP' 
+        ? stats.maxShops 
+        : stats.maxOffices
+      
+      if (currentCount >= maxCount) {
+        setUnitFormErrors({ 
+          capacity: `Cannot create more ${unitType.toLowerCase()}s. Society capacity: ${currentCount}/${maxCount}` 
+        })
+        return
+      }
     }
 
     if (editingUnit) {
@@ -321,16 +362,23 @@ export default function UnitManagement() {
       const hasAssignedUser = memberUsers.some(u => u.flatId === f.id)
       return hasAssignedUser || f.ownerName
     })
+    const flatCount = flats.filter(f => !f.unitType || f.unitType === 'FLAT').length
+    const shopCount = flats.filter(f => f.unitType === 'SHOP').length
+    const officeCount = flats.filter(f => f.unitType === 'OFFICE').length
     return {
       totalUnits: flats.length,
-      flats: flats.filter(f => !f.unitType || f.unitType === 'FLAT').length,
-      shops: flats.filter(f => f.unitType === 'SHOP').length,
-      offices: flats.filter(f => f.unitType === 'OFFICE').length,
+      flats: flatCount,
+      shops: shopCount,
+      offices: officeCount,
       occupied: occupiedUnits.length,
       vacant: flats.length - occupiedUnits.length,
       assignedUsers: memberUsers.filter(u => u.flatId).length,
+      // Capacity limits from society
+      maxFlats: currentSociety?.totalFlats || 0,
+      maxShops: currentSociety?.totalShops || 0,
+      maxOffices: currentSociety?.totalOffices || 0,
     }
-  }, [flats, memberUsers])
+  }, [flats, memberUsers, currentSociety])
 
   return (
     <div>
@@ -346,7 +394,7 @@ export default function UnitManagement() {
           </p>
         </div>
         <div className="flex gap-2 flex-wrap">
-          {isCommitteeLevel() && (
+          {canEditUnits && (
             <>
               <button
                 onClick={() => setShowBulkCreateModal(true)}
@@ -377,9 +425,9 @@ export default function UnitManagement() {
       {/* Stats Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4 mb-6">
         <StatCard label="Total Units" value={stats.totalUnits} icon={Layers} color="blue" />
-        <StatCard label="Flats" value={stats.flats} icon={Home} color="indigo" />
-        <StatCard label="Shops" value={stats.shops} icon={Store} color="green" />
-        <StatCard label="Offices" value={stats.offices} icon={Briefcase} color="purple" />
+        <StatCard label="Flats" value={`${stats.flats}/${stats.maxFlats}`} icon={Home} color="indigo" />
+        <StatCard label="Shops" value={`${stats.shops}/${stats.maxShops}`} icon={Store} color="green" />
+        <StatCard label="Offices" value={`${stats.offices}/${stats.maxOffices}`} icon={Briefcase} color="purple" />
         <StatCard label="Occupied" value={stats.occupied} icon={UserCheck} color="teal" />
         <StatCard label="Vacant" value={stats.vacant} icon={UserX} color="orange" />
         <StatCard label="Assigned" value={stats.assignedUsers} icon={Users} color="pink" />
@@ -527,7 +575,7 @@ export default function UnitManagement() {
                       }`}>
                         {assignedUser.role === 'MEMBER' ? 'Owner' : 'Tenant'}
                       </span>
-                      {isCommitteeLevel() && (
+                      {canEditUnits && (
                         <button
                           onClick={() => openEditUserModal(assignedUser, unit)}
                           className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition"
@@ -543,7 +591,7 @@ export default function UnitManagement() {
                 </div>
 
                 {/* Actions */}
-                {isCommitteeLevel() && (
+                {canEditUnits && (
                   <div className="flex gap-2 pt-3 border-t border-gray-100 dark:border-slate-700">
                     <button
                       onClick={() => openUnitModal(unit)}
@@ -590,7 +638,7 @@ export default function UnitManagement() {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Assigned User</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Contact</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Status</th>
-                  {isCommitteeLevel() && (
+                  {canEditUnits && (
                     <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>
                   )}
                 </tr>
@@ -643,7 +691,7 @@ export default function UnitManagement() {
                           {hasAssignedUser ? 'Occupied' : 'Vacant'}
                         </span>
                       </td>
-                      {isCommitteeLevel() && (
+                      {canEditUnits && (
                         <td className="px-6 py-4 whitespace-nowrap text-right">
                           <button
                             onClick={() => openUnitModal(unit)}
@@ -836,193 +884,131 @@ function UnitFormModal({ unit, societies, wings, isPlatformLevel, userSocietyId,
           </button>
         </div>
 
-        {apiError && (
-          <div className="mx-4 mt-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-700 dark:text-red-300 text-sm flex items-center gap-2">
-            <AlertCircle size={16} />
-            {apiError}
-          </div>
-        )}
+        {apiError && <div className="mx-4 mt-4"><FormErrorSummary message={apiError} /></div>}
+        {errors.capacity && <div className="mx-4 mt-4"><FormErrorSummary message={errors.capacity} /></div>}
 
         <form onSubmit={onSubmit} className="p-4 space-y-4">
           {/* Society (PLATFORM_OWNER only) */}
           {isPlatformLevel ? (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Society <span className="text-red-500">*</span>
-              </label>
-              <select
-                name="societyId"
-                defaultValue={unit?.societyId}
-                required
-                className={clsx(
-                  'w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white',
-                  errors.societyId ? 'border-red-500' : 'border-gray-300 dark:border-slate-600'
-                )}
-              >
-                <option value="">Select Society</option>
-                {societies.map(s => (
-                  <option key={s.id} value={s.id}>{s.name}</option>
-                ))}
-              </select>
-              {errors.societyId && <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.societyId}</p>}
-            </div>
+            <SmartSelect
+              label="Society"
+              name="societyId"
+              defaultValue={unit?.societyId}
+              required
+              icon={Building2}
+              placeholder="Select Society"
+              options={societies.map(s => ({ value: s.id, label: s.name }))}
+              error={errors.societyId}
+            />
           ) : (
             <input type="hidden" name="societyId" value={userSocietyId || ''} />
           )}
 
           {/* Unit Type and Wing */}
           <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Unit Type</label>
-              <select
-                name="unitType"
-                value={selectedUnitType}
-                onChange={(e) => setSelectedUnitType(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
-              >
-                <option value="FLAT">🏠 Flat</option>
-                <option value="SHOP">🏪 Shop</option>
-                <option value="OFFICE">🏢 Office</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Wing
-                {selectedWingId && selectedWing?.totalFloors && (
-                  <span className="text-xs text-gray-500 ml-1">(Max Floor: {selectedWing.totalFloors})</span>
-                )}
-              </label>
-              <select
-                name="wingId"
-                value={selectedWingId}
-                onChange={(e) => setSelectedWingId(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
-              >
-                <option value="">No Wing</option>
-                {wings.map(w => (
-                  <option key={w.id} value={w.id}>{w.name} {w.totalFloors ? `(${w.totalFloors} floors)` : ''}</option>
-                ))}
-              </select>
-            </div>
+            <SmartSelect
+              label="Unit Type"
+              name="unitType"
+              value={selectedUnitType}
+              onChange={(e) => setSelectedUnitType(e.target.value)}
+              icon={Home}
+              options={[
+                { value: 'FLAT', label: '🏠 Flat' },
+                { value: 'SHOP', label: '🏪 Shop' },
+                { value: 'OFFICE', label: '🏢 Office' },
+              ]}
+            />
+            <SmartSelect
+              label={`Wing${selectedWingId && selectedWing?.totalFloors ? ` (Max Floor: ${selectedWing.totalFloors})` : ''}`}
+              name="wingId"
+              value={selectedWingId}
+              onChange={(e) => setSelectedWingId(e.target.value)}
+              placeholder="No Wing"
+              options={wings.map(w => ({ value: w.id, label: `${w.name}${w.totalFloors ? ` (${w.totalFloors} floors)` : ''}` }))}
+            />
           </div>
 
           {/* Flat Number and Type */}
           <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Unit Number <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                name="flatNumber"
-                defaultValue={unit?.flatNumber}
-                required
-                placeholder={
-                  selectedUnitType === 'SHOP' 
-                    ? 'e.g., S-101' 
-                    : selectedUnitType === 'OFFICE' 
-                    ? 'e.g., O-201' 
-                    : 'e.g., A-101'
-                }
-                pattern="[A-Za-z0-9][A-Za-z0-9\-\/]*"
-                maxLength="20"
-                className={clsx(
-                  'w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none',
-                  'focus:border-blue-500 bg-white dark:bg-slate-700 text-gray-900 dark:text-white',
-                  'placeholder:text-gray-400',
-                  errors.flatNumber ? 'border-red-500' : 'border-gray-300 dark:border-slate-600'
-                )}
-              />
-              {errors.flatNumber && <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.flatNumber}</p>}
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                {selectedUnitType === 'FLAT' ? 'Configuration' : selectedUnitType === 'SHOP' ? 'Shop Type' : 'Office Type'}
-              </label>
-              <select
-                name="flatType"
-                value={selectedFlatType}
-                onChange={(e) => setSelectedFlatType(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
-              >
-                {selectedUnitType === 'FLAT' ? (
-                  <>
-                    <option value="1RK">1 RK</option>
-                    <option value="1BHK">1 BHK</option>
-                    <option value="2BHK">2 BHK</option>
-                    <option value="3BHK">3 BHK</option>
-                    <option value="4BHK">4 BHK</option>
-                    <option value="5BHK">5 BHK</option>
-                    <option value="PENTHOUSE">Penthouse</option>
-                    <option value="DUPLEX">Duplex</option>
-                    <option value="STUDIO">Studio</option>
-                  </>
-                ) : selectedUnitType === 'SHOP' ? (
-                  <>
-                    <option value="RETAIL">Retail Shop</option>
-                    <option value="SHOWROOM">Showroom</option>
-                    <option value="KIOSK">Kiosk</option>
-                    <option value="FOOD">Food Court</option>
-                    <option value="PHARMACY">Pharmacy</option>
-                    <option value="SALON">Salon/Spa</option>
-                    <option value="SMALL">Small Shop</option>
-                    <option value="MEDIUM">Medium Shop</option>
-                    <option value="LARGE">Large Shop</option>
-                  </>
-                ) : (
-                  <>
-                    <option value="STANDARD">Standard Office</option>
-                    <option value="CABIN">Cabin</option>
-                    <option value="CUBICLE">Cubicle</option>
-                    <option value="SHARED">Shared Space</option>
-                    <option value="COWORKING">Co-working</option>
-                    <option value="EXECUTIVE">Executive Office</option>
-                    <option value="SMALL">Small Office</option>
-                    <option value="MEDIUM">Medium Office</option>
-                    <option value="LARGE">Large Office</option>
-                  </>
-                )}
-                <option value="OTHER">Other</option>
-              </select>
-            </div>
+            <FormInput
+              label="Unit Number"
+              name="flatNumber"
+              defaultValue={unit?.flatNumber}
+              required
+              placeholder={
+                selectedUnitType === 'SHOP' 
+                  ? 'e.g., S-101' 
+                  : selectedUnitType === 'OFFICE' 
+                  ? 'e.g., O-201' 
+                  : 'e.g., A-101'
+              }
+              pattern="[A-Za-z0-9][A-Za-z0-9\-\/]*"
+              maxLength="20"
+              error={errors.flatNumber}
+            />
+            <SmartSelect
+              label={selectedUnitType === 'FLAT' ? 'Configuration' : selectedUnitType === 'SHOP' ? 'Shop Type' : 'Office Type'}
+              name="flatType"
+              value={selectedFlatType}
+              onChange={(e) => setSelectedFlatType(e.target.value)}
+              options={[
+                ...(selectedUnitType === 'FLAT' ? [
+                  { value: '1RK', label: '1 RK' },
+                  { value: '1BHK', label: '1 BHK' },
+                  { value: '2BHK', label: '2 BHK' },
+                  { value: '3BHK', label: '3 BHK' },
+                  { value: '4BHK', label: '4 BHK' },
+                  { value: '5BHK', label: '5 BHK' },
+                  { value: 'PENTHOUSE', label: 'Penthouse' },
+                  { value: 'DUPLEX', label: 'Duplex' },
+                  { value: 'STUDIO', label: 'Studio' },
+                ] : selectedUnitType === 'SHOP' ? [
+                  { value: 'RETAIL', label: 'Retail Shop' },
+                  { value: 'SHOWROOM', label: 'Showroom' },
+                  { value: 'KIOSK', label: 'Kiosk' },
+                  { value: 'FOOD', label: 'Food Court' },
+                  { value: 'PHARMACY', label: 'Pharmacy' },
+                  { value: 'SALON', label: 'Salon/Spa' },
+                  { value: 'SMALL', label: 'Small Shop' },
+                  { value: 'MEDIUM', label: 'Medium Shop' },
+                  { value: 'LARGE', label: 'Large Shop' },
+                ] : [
+                  { value: 'STANDARD', label: 'Standard Office' },
+                  { value: 'CABIN', label: 'Cabin' },
+                  { value: 'CUBICLE', label: 'Cubicle' },
+                  { value: 'SHARED', label: 'Shared Space' },
+                  { value: 'COWORKING', label: 'Co-working' },
+                  { value: 'EXECUTIVE', label: 'Executive Office' },
+                  { value: 'SMALL', label: 'Small Office' },
+                  { value: 'MEDIUM', label: 'Medium Office' },
+                  { value: 'LARGE', label: 'Large Office' },
+                ]),
+                { value: 'OTHER', label: 'Other' },
+              ]}
+            />
           </div>
 
           {/* Floor and Area */}
           <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Floor <span className="text-red-500">*</span>
-                {selectedWingId && selectedWing?.totalFloors && (
-                  <span className="text-xs text-gray-500 ml-1">(0 to {selectedWing.totalFloors})</span>
-                )}
-              </label>
-              <input
-                type="number"
-                name="floor"
-                defaultValue={unit?.floor || 0}
-                required
-                min="0"
-                max={maxFloor}
-                className={clsx(
-                  'w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white',
-                  errors.floor ? 'border-red-500' : 'border-gray-300 dark:border-slate-600'
-                )}
-              />
-              {errors.floor && <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.floor}</p>}
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Area (sq.ft)</label>
-              <input
-                type="number"
-                name="area"
-                defaultValue={unit?.area || ''}
-                min="0"
-                max="100000"
-                step="0.01"
-                placeholder={selectedUnitType === 'SHOP' ? 'e.g., 500' : selectedUnitType === 'OFFICE' ? 'e.g., 800' : 'e.g., 1200'}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
-              />
-            </div>
+            <NumberInput
+              label={`Floor${selectedWingId && selectedWing?.totalFloors ? ` (0 to ${selectedWing.totalFloors})` : ''}`}
+              name="floor"
+              defaultValue={unit?.floor || 0}
+              required
+              min={0}
+              max={maxFloor}
+              error={errors.floor}
+              icon={Layers}
+            />
+            <NumberInput
+              label="Area (sq.ft)"
+              name="area"
+              defaultValue={unit?.area || ''}
+              min={0}
+              max={100000}
+              step={0.01}
+              placeholder={selectedUnitType === 'SHOP' ? 'e.g., 500' : selectedUnitType === 'OFFICE' ? 'e.g., 800' : 'e.g., 1200'}
+            />
           </div>
 
           {/* Note: Owner/user will be added via the 'Add User' button after creating the unit */}
@@ -1065,12 +1051,7 @@ function UserFormModal({ unit, errors, apiError, onSubmit, onClose, isLoading })
           </button>
         </div>
 
-        {apiError && (
-          <div className="mx-4 mt-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-700 dark:text-red-300 text-sm flex items-center gap-2">
-            <AlertCircle size={16} />
-            {apiError}
-          </div>
-        )}
+        {apiError && <div className="mx-4 mt-4"><FormErrorSummary message={apiError} /></div>}
 
         <form onSubmit={onSubmit} className="p-4 space-y-4">
           <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3 text-sm text-blue-700 dark:text-blue-300">
@@ -1078,65 +1059,38 @@ function UserFormModal({ unit, errors, apiError, onSubmit, onClose, isLoading })
             <p className="text-xs mt-1">User can change password after login</p>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Name <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              name="name"
-              required
-              placeholder="Enter full name"
-              className={clsx(
-                'w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white placeholder:text-gray-400',
-                errors.name ? 'border-red-500' : 'border-gray-300 dark:border-slate-600'
-              )}
-            />
-            {errors.name && <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.name}</p>}
-          </div>
+          <FormInput
+            label="Name"
+            name="name"
+            required
+            placeholder="Enter full name"
+            error={errors.name}
+          />
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Email <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="email"
-              name="email"
-              required
-              placeholder="email@example.com"
-              className={clsx(
-                'w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white placeholder:text-gray-400',
-                errors.email ? 'border-red-500' : 'border-gray-300 dark:border-slate-600'
-              )}
-            />
-            {errors.email && <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.email}</p>}
-          </div>
+          <FormInput
+            label="Email"
+            name="email"
+            type="email"
+            required
+            placeholder="email@example.com"
+            error={errors.email}
+          />
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Phone</label>
-            <input
-              type="tel"
-              name="phone"
-              placeholder="10-digit number"
-              className={clsx(
-                'w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white placeholder:text-gray-400',
-                errors.phone ? 'border-red-500' : 'border-gray-300 dark:border-slate-600'
-              )}
-            />
-            {errors.phone && <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.phone}</p>}
-          </div>
+          <PhoneInput
+            label="Phone"
+            name="phone"
+            error={errors.phone}
+          />
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Role</label>
-            <select
-              name="role"
-              defaultValue="MEMBER"
-              className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
-            >
-              <option value="MEMBER">Member (Owner)</option>
-              <option value="TENANT">Tenant</option>
-            </select>
-          </div>
+          <SmartSelect
+            label="Role"
+            name="role"
+            defaultValue="MEMBER"
+            options={[
+              { value: 'MEMBER', label: 'Member (Owner)' },
+              { value: 'TENANT', label: 'Tenant' },
+            ]}
+          />
 
           <div className="flex gap-3 pt-4 border-t border-gray-100 dark:border-slate-700">
             <button
@@ -1175,80 +1129,48 @@ function EditUserFormModal({ user, unit, errors, apiError, onSubmit, onClose, is
           </button>
         </div>
 
-        {apiError && (
-          <div className="mx-4 mt-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-700 dark:text-red-300 text-sm flex items-center gap-2">
-            <AlertCircle size={16} />
-            {apiError}
-          </div>
-        )}
+        {apiError && <div className="mx-4 mt-4"><FormErrorSummary message={apiError} /></div>}
 
         <form onSubmit={onSubmit} className="p-4 space-y-4">
           <div className="bg-gray-50 dark:bg-slate-700 rounded-lg p-3 text-sm">
             <p className="text-gray-600 dark:text-gray-300">User ID: <span className="font-mono text-xs text-gray-500">{user.id}</span></p>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Name <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              name="name"
-              defaultValue={user.name}
-              required
-              placeholder="Enter full name"
-              className={clsx(
-                'w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white placeholder:text-gray-400',
-                errors.name ? 'border-red-500' : 'border-gray-300 dark:border-slate-600'
-              )}
-            />
-            {errors.name && <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.name}</p>}
-          </div>
+          <FormInput
+            label="Name"
+            name="name"
+            defaultValue={user.name}
+            required
+            placeholder="Enter full name"
+            error={errors.name}
+          />
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Email <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="email"
-              name="email"
-              defaultValue={user.email}
-              required
-              placeholder="email@example.com"
-              className={clsx(
-                'w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white placeholder:text-gray-400',
-                errors.email ? 'border-red-500' : 'border-gray-300 dark:border-slate-600'
-              )}
-            />
-            {errors.email && <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.email}</p>}
-          </div>
+          <FormInput
+            label="Email"
+            name="email"
+            type="email"
+            defaultValue={user.email}
+            required
+            placeholder="email@example.com"
+            error={errors.email}
+          />
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Phone</label>
-            <input
-              type="tel"
-              name="phone"
-              defaultValue={user.phone}
-              placeholder="10-digit number"
-              className={clsx(
-                'w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white placeholder:text-gray-400',
-                errors.phone ? 'border-red-500' : 'border-gray-300 dark:border-slate-600'
-              )}
-            />
-            {errors.phone && <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.phone}</p>}
-          </div>
+          <PhoneInput
+            label="Phone"
+            name="phone"
+            defaultValue={user.phone}
+            error={errors.phone}
+          />
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Role (Ownership Type)</label>
-            <select
-              name="role"
-              defaultValue={user.role}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
-            >
-              <option value="MEMBER">Member (Owner)</option>
-              <option value="TENANT">Tenant</option>
-            </select>
-          </div>
+          <SmartSelect
+            label="Role (Ownership Type)"
+            name="role"
+            defaultValue={user.role}
+            options={[
+              { value: 'MEMBER', label: 'Member (Owner)' },
+              { value: 'TENANT', label: 'Tenant' },
+            ]}
+          />
 
           <div className="flex gap-3 pt-4 border-t border-gray-100 dark:border-slate-700">
             <button

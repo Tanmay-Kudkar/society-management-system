@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext'
 import { noticeApi } from '../api'
 import { Plus, Search, X, Megaphone, Edit, Trash2 } from 'lucide-react'
 import clsx from 'clsx'
+import { FormInput, SmartSelect, FormTextarea } from '../components/FormComponents'
 
 const priorityColors = {
   LOW: 'bg-gray-100 text-gray-800',
@@ -25,7 +26,7 @@ export default function Notices() {
   const societyIdFromUrl = searchParams.get('society')
 
   // Check if current user is PLATFORM_OWNER
-  const isPlatformLevel = user?.role === 'PLATFORM_OWNER' || user?.role === 'ORGANIZATION_OWNER' || user?.role === 'ORGANIZATION_OWNER'
+  const isPlatformLevel = user?.role === 'PLATFORM_OWNER' || user?.role === 'ORGANIZATION_OWNER'
 
   // Determine effective society ID for filtering
   const effectiveSocietyId = isPlatformLevel && societyIdFromUrl ? parseInt(societyIdFromUrl) : user?.societyId
@@ -187,49 +188,37 @@ export default function Notices() {
               </button>
             </div>
             <form onSubmit={handleSubmit} className="p-4 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Title</label>
-                <input
-                  type="text"
-                  name="title"
-                  defaultValue={editingNotice?.title || ''}
-                  required
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 dark:text-white"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Content</label>
-                <textarea
-                  name="content"
-                  rows={4}
-                  defaultValue={editingNotice?.content || ''}
-                  required
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 dark:text-white"
-                />
-              </div>
+              <FormInput
+                label="Title"
+                name="title"
+                defaultValue={editingNotice?.title || ''}
+                required
+              />
+              <FormTextarea
+                label="Content"
+                name="content"
+                rows={4}
+                defaultValue={editingNotice?.content || ''}
+                required
+              />
               <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Priority</label>
-                  <select
-                    name="priority"
-                    defaultValue={editingNotice?.priority || 'MEDIUM'}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 dark:text-white"
-                  >
-                    <option value="LOW">Low</option>
-                    <option value="MEDIUM">Medium</option>
-                    <option value="HIGH">High</option>
-                    <option value="URGENT">Urgent</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Expiry Date</label>
-                  <input
-                    type="date"
-                    name="expiryDate"
-                    defaultValue={editingNotice?.expiryDate || ''}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 dark:text-white"
-                  />
-                </div>
+                <SmartSelect
+                  label="Priority"
+                  name="priority"
+                  defaultValue={editingNotice?.priority || 'MEDIUM'}
+                  options={[
+                    { value: 'LOW', label: 'Low' },
+                    { value: 'MEDIUM', label: 'Medium' },
+                    { value: 'HIGH', label: 'High' },
+                    { value: 'URGENT', label: 'Urgent' },
+                  ]}
+                />
+                <FormInput
+                  label="Expiry Date"
+                  name="expiryDate"
+                  type="date"
+                  defaultValue={editingNotice?.expiryDate || ''}
+                />
               </div>
               <div className="flex gap-3 pt-4">
                 <button type="button" onClick={closeModal} className="flex-1 px-4 py-2 border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition">Cancel</button>

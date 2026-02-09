@@ -13,6 +13,7 @@ import {
   Building2,
   Hash
 } from 'lucide-react'
+import { FormInput, SmartSelect, NumberInput, FormErrorSummary } from '../components/FormComponents'
 
 export default function Wings() {
   const { user } = useAuth()
@@ -27,7 +28,7 @@ export default function Wings() {
   const [formErrors, setFormErrors] = useState({})
 
   // Check if user is PLATFORM_OWNER
-  const isPlatformLevel = user?.role === 'PLATFORM_OWNER' || user?.role === 'ORGANIZATION_OWNER' || user?.role === 'ORGANIZATION_OWNER'
+  const isPlatformLevel = user?.role === 'PLATFORM_OWNER' || user?.role === 'ORGANIZATION_OWNER'
 
   // Determine the effective society ID
   const effectiveSocietyId = isPlatformLevel ? filterSociety : user?.societyId
@@ -37,6 +38,13 @@ export default function Wings() {
     queryKey: ['societies'],
     queryFn: () => societyApi.getAll().then(res => res.data),
     enabled: isPlatformLevel,
+  })
+
+  // Fetch current society details for capacity limits
+  const { data: currentSociety } = useQuery({
+    queryKey: ['society', effectiveSocietyId],
+    queryFn: () => societyApi.getById(effectiveSocietyId).then(res => res.data),
+    enabled: !!effectiveSocietyId,
   })
 
   // Fetch wings
@@ -112,6 +120,15 @@ export default function Wings() {
       errors.totalFloors = 'Total floors must be at least 1'
     }
     
+    // Check wings capacity limit (only for new wings)
+    if (!editingWing && currentSociety) {
+      const currentWingCount = wings.filter(w => w.societyId === effectiveSocietyId).length
+      const maxWings = currentSociety.totalWings || 0
+      if (currentWingCount >= maxWings) {
+        errors.capacity = `Cannot create more wings. Society capacity: ${currentWingCount}/${maxWings} wings`
+      }
+    }
+    
     if (Object.keys(errors).length > 0) {
       setFormErrors(errors)
       return
@@ -152,6 +169,11 @@ export default function Wings() {
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Wings</h1>
           <p className="text-gray-600 dark:text-gray-400 mt-1">Manage society wings and towers</p>
+          {currentSociety && effectiveSocietyId && (
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+              Capacity: {wings.filter(w => w.societyId === effectiveSocietyId).length}/{currentSociety.totalWings || 0} wings
+            </p>
+          )}
         </div>
         <button
           onClick={() => { setEditingWing(null); setFormErrors({}); setShowModal(true) }}
@@ -287,67 +309,45 @@ export default function Wings() {
               </button>
             </div>
             <form onSubmit={handleSubmit} className="p-4 space-y-4">
+              <FormErrorSummary message={formErrors.capacity} />
+              
               {/* Society field - only show dropdown for PLATFORM_OWNER */}
               {isPlatformLevel ? (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Society</label>
-                  <select
-                    name="societyId"
-                    defaultValue={editingWing?.societyId}
-                    required
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
-                  >
-                    <option value="">Select Society</option>
-                    {societies.map(s => (
-                      <option key={s.id} value={s.id}>{s.name}</option>
-                    ))}
-                  </select>
-                </div>
+                <SmartSelect
+                  label="Society"
+                  name="societyId"
+                  defaultValue={editingWing?.societyId}
+                  options={societies.map(s => ({ value: s.id, label: s.name }))}
+                  required
+                  icon={Building2}
+                  placeholder="Select Society"
+                  emptyMessage="No societies available"
+                />
               ) : (
                 <input type="hidden" name="societyId" value={user?.societyId || ''} />
               )}
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Wing Name <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  name="name"
-                  defaultValue={editingWing?.name}
-                  required
-                  placeholder="e.g., A Wing, Tower 1, Building A"
-                  maxLength="50"
-                  onChange={() => setFormErrors(prev => ({ ...prev, name: null }))}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white ${
-                    formErrors.name ? 'border-red-500' : 'border-gray-300 dark:border-slate-600'
-                  }`}
-                />
-                {formErrors.name && (
-                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">{formErrors.name}</p>
-                )}
-              </div>
+              <FormInput
+                label="Wing Name"
+                name="name"
+                defaultValue={editingWing?.name}
+                required
+                placeholder="e.g., A Wing, Tower 1, Building A"
+                maxLength={50}
+                error={formErrors.name}
+                onChange={() => setFormErrors(prev => ({ ...prev, name: null }))}
+              />
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Total Floors <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="number"
-                  name="totalFloors"
-                  defaultValue={editingWing?.totalFloors || 1}
-                  min="1"
-                  max="200"
-                  required
-                  onChange={() => setFormErrors(prev => ({ ...prev, totalFloors: null }))}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white ${
-                    formErrors.totalFloors ? 'border-red-500' : 'border-gray-300 dark:border-slate-600'
-                  }`}
-                />
-                {formErrors.totalFloors && (
-                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">{formErrors.totalFloors}</p>
-                )}
-              </div>
+              <NumberInput
+                label="Total Floors"
+                name="totalFloors"
+                defaultValue={editingWing?.totalFloors || 1}
+                min={1}
+                max={200}
+                required
+                error={formErrors.totalFloors}
+                onChange={() => setFormErrors(prev => ({ ...prev, totalFloors: null }))}
+              />
 
               <div className="flex gap-3 pt-4">
                 <button

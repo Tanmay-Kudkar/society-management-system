@@ -4,6 +4,7 @@ import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { tenantApi, flatApi } from '../api'
 import { Plus, Edit, Trash2, Search, X, User, Calendar, Phone, Mail } from 'lucide-react'
+import { FormInput, PhoneInput, SmartSelect, NumberInput } from '../components/FormComponents'
 
 export default function Tenants() {
   const { user, canManageTenants } = useAuth()
@@ -17,8 +18,8 @@ export default function Tenants() {
   // Get society filter from URL (for PLATFORM_OWNER viewing specific society)
   const societyIdFromUrl = searchParams.get('society')
 
-  // Check if current user is PLATFORM_OWNER
-  const isPlatformLevel = user?.role === 'PLATFORM_OWNER' || user?.role === 'ORGANIZATION_OWNER' || user?.role === 'ORGANIZATION_OWNER'
+  // Check if current user is PLATFORM_OWNER or ORGANIZATION_OWNER
+  const isPlatformLevel = user?.role === 'PLATFORM_OWNER' || user?.role === 'ORGANIZATION_OWNER'
 
   // Determine effective society ID for filtering
   const effectiveSocietyId = isPlatformLevel && societyIdFromUrl ? parseInt(societyIdFromUrl) : user?.societyId
@@ -35,9 +36,9 @@ export default function Tenants() {
   }, [allTenants, effectiveSocietyId])
 
   const { data: flats = [] } = useQuery({
-    queryKey: ['flats', user?.id],
-    queryFn: () => flatApi.getAll(user.id).then(res => res.data),
-    enabled: !!user?.id,
+    queryKey: ['flats', effectiveSocietyId],
+    queryFn: () => flatApi.getBySociety(effectiveSocietyId).then(res => res.data),
+    enabled: !!effectiveSocietyId,
   })
 
   const createMutation = useMutation({
@@ -298,125 +299,96 @@ export default function Tenants() {
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Flat</label>
-                  <select
-                    name="flatId"
-                    defaultValue={editingTenant?.flatId || ''}
-                    required
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
-                  >
-                    <option value="">Select Flat</option>
-                    {flats.map(f => (
-                      <option key={f.id} value={f.id}>
-                        {isPlatformLevel ? `${f.flatNumber} - ${f.societyName || 'N/A'}` : f.flatNumber}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                <SmartSelect
+                  label="Flat"
+                  name="flatId"
+                  defaultValue={editingTenant?.flatId || ''}
+                  options={flats.map(f => ({
+                    value: f.id,
+                    label: isPlatformLevel ? `${f.flatNumber} - ${f.societyName || 'N/A'}` : f.flatNumber
+                  }))}
+                  required
+                  placeholder="Select Flat"
+                  emptyMessage="No flats available"
+                />
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Tenant Name</label>
-                  <input
-                    type="text"
-                    name="name"
-                    defaultValue={editingTenant?.name || ''}
+                <FormInput
+                  label="Tenant Name"
+                  name="name"
+                  defaultValue={editingTenant?.name || ''}
+                  required
+                  placeholder="Full name"
+                />
+
+                <div className="grid grid-cols-2 gap-4">
+                  <FormInput
+                    label="Email"
+                    name="email"
+                    type="email"
+                    defaultValue={editingTenant?.email || ''}
+                    placeholder="tenant@example.com"
+                  />
+                  <PhoneInput
+                    name="phone"
+                    defaultValue={editingTenant?.phone || ''}
                     required
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
                   />
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email</label>
-                    <input
-                      type="email"
-                      name="email"
-                      defaultValue={editingTenant?.email || ''}
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Phone</label>
-                    <input
-                      type="tel"
-                      name="phone"
-                      defaultValue={editingTenant?.phone || ''}
-                      required
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
-                    />
-                  </div>
+                  <FormInput
+                    label="Agreement Start"
+                    name="agreementStartDate"
+                    type="date"
+                    defaultValue={editingTenant?.agreementStartDate || ''}
+                    required
+                  />
+                  <FormInput
+                    label="Agreement End"
+                    name="agreementEndDate"
+                    type="date"
+                    defaultValue={editingTenant?.agreementEndDate || ''}
+                    required
+                  />
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Agreement Start</label>
-                    <input
-                      type="date"
-                      name="agreementStartDate"
-                      defaultValue={editingTenant?.agreementStartDate || ''}
-                      required
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Agreement End</label>
-                    <input
-                      type="date"
-                      name="agreementEndDate"
-                      defaultValue={editingTenant?.agreementEndDate || ''}
-                      required
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
-                    />
-                  </div>
+                  <NumberInput
+                    label="Monthly Rent (₹)"
+                    name="rentAmount"
+                    defaultValue={editingTenant?.rentAmount || ''}
+                    min={0}
+                    placeholder="0"
+                  />
+                  <NumberInput
+                    label="Deposit (₹)"
+                    name="depositAmount"
+                    defaultValue={editingTenant?.depositAmount || ''}
+                    min={0}
+                    placeholder="0"
+                  />
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Monthly Rent (₹)</label>
-                    <input
-                      type="number"
-                      name="rentAmount"
-                      defaultValue={editingTenant?.rentAmount || ''}
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Deposit (₹)</label>
-                    <input
-                      type="number"
-                      name="depositAmount"
-                      defaultValue={editingTenant?.depositAmount || ''}
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">ID Proof Type</label>
-                    <select
-                      name="idProofType"
-                      defaultValue={editingTenant?.idProofType || ''}
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
-                    >
-                      <option value="">Select Type</option>
-                      <option value="AADHAR">Aadhar Card</option>
-                      <option value="PAN">PAN Card</option>
-                      <option value="PASSPORT">Passport</option>
-                      <option value="DRIVING_LICENSE">Driving License</option>
-                      <option value="VOTER_ID">Voter ID</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">ID Proof Number</label>
-                    <input
-                      type="text"
-                      name="idProofNumber"
-                      defaultValue={editingTenant?.idProofNumber || ''}
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
-                    />
-                  </div>
+                  <SmartSelect
+                    label="ID Proof Type"
+                    name="idProofType"
+                    defaultValue={editingTenant?.idProofType || ''}
+                    options={[
+                      { value: 'AADHAR', label: 'Aadhar Card' },
+                      { value: 'PAN', label: 'PAN Card' },
+                      { value: 'PASSPORT', label: 'Passport' },
+                      { value: 'DRIVING_LICENSE', label: 'Driving License' },
+                      { value: 'VOTER_ID', label: 'Voter ID' },
+                    ]}
+                    placeholder="Select Type"
+                  />
+                  <FormInput
+                    label="ID Proof Number"
+                    name="idProofNumber"
+                    defaultValue={editingTenant?.idProofNumber || ''}
+                    placeholder="ID number"
+                  />
                 </div>
 
                 <div className="flex justify-end gap-3 pt-4">

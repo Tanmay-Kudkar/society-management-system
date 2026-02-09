@@ -4,6 +4,7 @@ import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { vehicleApi, flatApi } from '../api'
 import { Plus, Edit, Trash2, Search, X, Car, Bike } from 'lucide-react'
+import { FormInput, SmartSelect } from '../components/FormComponents'
 
 export default function Vehicles() {
   const { user } = useAuth()
@@ -17,8 +18,8 @@ export default function Vehicles() {
   // Get society filter from URL (for PLATFORM_OWNER viewing specific society)
   const societyIdFromUrl = searchParams.get('society')
 
-  // Check if current user is PLATFORM_OWNER
-  const isPlatformLevel = user?.role === 'PLATFORM_OWNER' || user?.role === 'ORGANIZATION_OWNER' || user?.role === 'ORGANIZATION_OWNER'
+  // Check if current user is PLATFORM_OWNER or ORGANIZATION_OWNER
+  const isPlatformLevel = user?.role === 'PLATFORM_OWNER' || user?.role === 'ORGANIZATION_OWNER'
 
   // Determine effective society ID for filtering
   const effectiveSocietyId = isPlatformLevel && societyIdFromUrl ? parseInt(societyIdFromUrl) : user?.societyId
@@ -35,9 +36,9 @@ export default function Vehicles() {
   }, [allVehicles, effectiveSocietyId])
 
   const { data: flats = [] } = useQuery({
-    queryKey: ['flats', user?.id],
-    queryFn: () => flatApi.getAll(user.id).then(res => res.data),
-    enabled: !!user?.id,
+    queryKey: ['flats', effectiveSocietyId],
+    queryFn: () => flatApi.getBySociety(effectiveSocietyId).then(res => res.data),
+    enabled: !!effectiveSocietyId,
   })
 
   const createMutation = useMutation({
@@ -299,104 +300,71 @@ export default function Vehicles() {
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Flat</label>
-                  <select
-                    name="flatId"
-                    defaultValue={editingVehicle?.flatId || ''}
+                <SmartSelect
+                  label="Flat"
+                  name="flatId"
+                  defaultValue={editingVehicle?.flatId || ''}
+                  required
+                  options={flats.map(f => ({ value: f.id, label: isPlatformLevel ? `${f.flatNumber} - ${f.societyName || 'N/A'}` : f.flatNumber }))}
+                  placeholder="Select Flat"
+                  emptyMessage="No flats available"
+                />
+
+                <div className="grid grid-cols-2 gap-4">
+                  <FormInput
+                    label="Vehicle Number"
+                    name="vehicleNumber"
+                    defaultValue={editingVehicle?.vehicleNumber || ''}
+                    placeholder="MH01AB1234"
                     required
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
-                  >
-                    <option value="">Select Flat</option>
-                    {flats.map(f => (
-                      <option key={f.id} value={f.id}>
-                        {isPlatformLevel ? `${f.flatNumber} - ${f.societyName || 'N/A'}` : f.flatNumber}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Vehicle Number</label>
-                    <input
-                      type="text"
-                      name="vehicleNumber"
-                      defaultValue={editingVehicle?.vehicleNumber || ''}
-                      placeholder="MH01AB1234"
-                      required
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Vehicle Type</label>
-                    <select
-                      name="vehicleType"
-                      defaultValue={editingVehicle?.vehicleType || ''}
-                      required
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
-                    >
-                      <option value="">Select Type</option>
-                      <option value="TWO_WHEELER">Two Wheeler</option>
-                      <option value="FOUR_WHEELER">Four Wheeler</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Brand</label>
-                    <input
-                      type="text"
-                      name="brand"
-                      defaultValue={editingVehicle?.brand || ''}
-                      placeholder="Honda, Maruti, etc."
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Model</label>
-                    <input
-                      type="text"
-                      name="model"
-                      defaultValue={editingVehicle?.model || ''}
-                      placeholder="City, Swift, etc."
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Color</label>
-                    <input
-                      type="text"
-                      name="color"
-                      defaultValue={editingVehicle?.color || ''}
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Parking Slot</label>
-                    <input
-                      type="text"
-                      name="parkingSlot"
-                      defaultValue={editingVehicle?.parkingSlot || ''}
-                      placeholder="A-101"
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Owner Name</label>
-                  <input
-                    type="text"
-                    name="ownerName"
-                    defaultValue={editingVehicle?.ownerName || ''}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
+                  />
+                  <SmartSelect
+                    label="Vehicle Type"
+                    name="vehicleType"
+                    defaultValue={editingVehicle?.vehicleType || ''}
+                    required
+                    options={[
+                      { value: 'TWO_WHEELER', label: 'Two Wheeler' },
+                      { value: 'FOUR_WHEELER', label: 'Four Wheeler' },
+                    ]}
+                    placeholder="Select Type"
                   />
                 </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <FormInput
+                    label="Brand"
+                    name="brand"
+                    defaultValue={editingVehicle?.brand || ''}
+                    placeholder="Honda, Maruti, etc."
+                  />
+                  <FormInput
+                    label="Model"
+                    name="model"
+                    defaultValue={editingVehicle?.model || ''}
+                    placeholder="City, Swift, etc."
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <FormInput
+                    label="Color"
+                    name="color"
+                    defaultValue={editingVehicle?.color || ''}
+                  />
+                  <FormInput
+                    label="Parking Slot"
+                    name="parkingSlot"
+                    defaultValue={editingVehicle?.parkingSlot || ''}
+                    placeholder="A-101"
+                  />
+                </div>
+
+                <FormInput
+                  label="Owner Name"
+                  name="ownerName"
+                  defaultValue={editingVehicle?.ownerName || ''}
+                />
 
                 <div className="flex justify-end gap-3 pt-4">
                   <button

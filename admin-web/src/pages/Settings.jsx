@@ -5,6 +5,7 @@ import { userApi, notificationPreferenceApi } from '../api'
 import { User, Bell, Shield, Palette, Save, Check } from 'lucide-react'
 import clsx from 'clsx'
 import Toggle from '../components/Toggle'
+import { PhoneInput } from '../components/FormComponents'
 
 export default function Settings() {
   const { user, logout, updateUser } = useAuth()
@@ -261,17 +262,12 @@ export default function Settings() {
                     className="w-full px-3 py-2 border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-600 rounded-lg text-gray-500 dark:text-gray-400"
                   />
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Phone Number</label>
-                  <input
-                    type="tel"
-                    value={profileData.phone}
-                    onChange={(e) => setProfileData({ ...profileData, phone: e.target.value })}
-                    placeholder="10-digit mobile number"
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                  />
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Format: 10-digit mobile (e.g., 9876543210)</p>
-                </div>
+                <PhoneInput
+                  label="Phone Number"
+                  name="phone"
+                  value={profileData.phone}
+                  onChange={(e) => setProfileData({ ...profileData, phone: e.target.value })}
+                />
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Role</label>
                   <input
