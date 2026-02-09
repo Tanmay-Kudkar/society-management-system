@@ -1,7 +1,10 @@
 package com.society.backend.controller.vehicle;
 
+import com.society.backend.dto.vehicle.BulkVehicleImportResponse;
+import com.society.backend.dto.vehicle.VehicleImportRow;
 import com.society.backend.dto.vehicle.VehicleRequest;
 import com.society.backend.dto.vehicle.VehicleResponse;
+import com.society.backend.service.vehicle.BulkVehicleImportService;
 import com.society.backend.service.vehicle.VehicleService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -9,6 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -19,6 +23,7 @@ import java.util.List;
 public class VehicleController {
 
     private final VehicleService vehicleService;
+    private final BulkVehicleImportService bulkVehicleImportService;
 
     @PostMapping
     public ResponseEntity<VehicleResponse> create(
@@ -56,5 +61,40 @@ public class VehicleController {
             @RequestParam Long userId) {
         vehicleService.delete(id, userId);
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/bulk-import/validate")
+    @PreAuthorize("hasAnyRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'MANAGER')")
+    public ResponseEntity<BulkVehicleImportResponse> validateBulkImport(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam("societyId") Long societyId) throws java.io.IOException {
+        List<VehicleImportRow> rows = bulkVehicleImportService.parseExcelFile(file);
+        BulkVehicleImportResponse response = bulkVehicleImportService.validateImportRows(rows, societyId);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/bulk-import")
+    @PreAuthorize("hasAnyRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'MANAGER')")
+    public ResponseEntity<BulkVehicleImportResponse> processBulkImport(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam("societyId") Long societyId) throws java.io.IOException {
+        List<VehicleImportRow> rows = bulkVehicleImportService.parseExcelFile(file);
+        BulkVehicleImportResponse validationResponse = bulkVehicleImportService.validateImportRows(rows, societyId);
+        if (validationResponse.getFailureCount() > 0) {
+            validationResponse.setMessage("Import failed: Please fix validation errors and try again");
+            return ResponseEntity.badRequest().body(validationResponse);
+        }
+        BulkVehicleImportResponse processResponse = bulkVehicleImportService.processImport(rows, societyId);
+        return ResponseEntity.ok(processResponse);
+    }
+
+    @GetMapping("/bulk-import/template")
+    @PreAuthorize("hasAnyRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'MANAGER')")
+    public ResponseEntity<byte[]> downloadImportTemplate() {
+        byte[] template = bulkVehicleImportService.generateTemplate();
+        return ResponseEntity.ok()
+                .header("Content-Disposition", "attachment; filename=vehicle_import_template.xlsx")
+                .header("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+                .body(template);
     }
 }

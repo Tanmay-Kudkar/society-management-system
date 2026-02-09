@@ -1,7 +1,10 @@
 package com.society.backend.controller.tenant;
 
+import com.society.backend.dto.tenant.BulkTenantImportResponse;
+import com.society.backend.dto.tenant.TenantImportRow;
 import com.society.backend.dto.tenant.TenantRequest;
 import com.society.backend.dto.tenant.TenantResponse;
+import com.society.backend.service.tenant.BulkTenantImportService;
 import com.society.backend.service.tenant.TenantService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -9,6 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -19,6 +23,7 @@ import java.util.List;
 public class TenantController {
 
     private final TenantService tenantService;
+    private final BulkTenantImportService bulkTenantImportService;
 
     @PostMapping
     @PreAuthorize("hasAnyRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'COMMITTEE', 'MANAGER', 'MEMBER')")
@@ -72,5 +77,40 @@ public class TenantController {
             @RequestParam Long userId) {
         tenantService.delete(id, userId);
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/bulk-import/validate")
+    @PreAuthorize("hasAnyRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'COMMITTEE', 'MANAGER')")
+    public ResponseEntity<BulkTenantImportResponse> validateBulkImport(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam("societyId") Long societyId) throws java.io.IOException {
+        List<TenantImportRow> rows = bulkTenantImportService.parseExcelFile(file);
+        BulkTenantImportResponse response = bulkTenantImportService.validateImportRows(rows, societyId);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/bulk-import")
+    @PreAuthorize("hasAnyRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'COMMITTEE', 'MANAGER')")
+    public ResponseEntity<BulkTenantImportResponse> processBulkImport(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam("societyId") Long societyId) throws java.io.IOException {
+        List<TenantImportRow> rows = bulkTenantImportService.parseExcelFile(file);
+        BulkTenantImportResponse validationResponse = bulkTenantImportService.validateImportRows(rows, societyId);
+        if (validationResponse.getFailureCount() > 0) {
+            validationResponse.setMessage("Import failed: Please fix validation errors and try again");
+            return ResponseEntity.badRequest().body(validationResponse);
+        }
+        BulkTenantImportResponse processResponse = bulkTenantImportService.processImport(rows, societyId);
+        return ResponseEntity.ok(processResponse);
+    }
+
+    @GetMapping("/bulk-import/template")
+    @PreAuthorize("hasAnyRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'COMMITTEE', 'MANAGER')")
+    public ResponseEntity<byte[]> downloadImportTemplate() {
+        byte[] template = bulkTenantImportService.generateTemplate();
+        return ResponseEntity.ok()
+                .header("Content-Disposition", "attachment; filename=tenant_import_template.xlsx")
+                .header("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+                .body(template);
     }
 }

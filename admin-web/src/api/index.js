@@ -139,6 +139,25 @@ export const wingApi = {
   create: (data) => api.post('/api/wings', data),
   update: (id, data) => api.put(`/api/wings/${id}`, data),
   delete: (id) => api.delete(`/api/wings/${id}`),
+  validateBulkImport: (file, societyId) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('societyId', societyId);
+    return api.post('/api/wings/bulk-import/validate', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
+  processBulkImport: (file, societyId) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('societyId', societyId);
+    return api.post('/api/wings/bulk-import', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
+  downloadImportTemplate: () => api.get('/api/wings/bulk-import/template', {
+    responseType: 'blob',
+  }),
 }
 
 // Vendor API
@@ -152,6 +171,25 @@ export const vendorApi = {
   approve: (id, userId) => api.patch(`/vendors/${id}/approve?userId=${userId}`),
   reject: (id, userId) => api.patch(`/vendors/${id}/reject?userId=${userId}`),
   getPending: (societyId) => api.get(`/vendors/pending${societyId ? `?societyId=${societyId}` : ''}`),
+  validateBulkImport: (file, societyId) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('societyId', societyId);
+    return api.post('/vendors/bulk-import/validate', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
+  processBulkImport: (file, societyId) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('societyId', societyId);
+    return api.post('/vendors/bulk-import', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
+  downloadImportTemplate: () => api.get('/vendors/bulk-import/template', {
+    responseType: 'blob',
+  }),
 }
 
 // Vendor Bill API
@@ -282,6 +320,25 @@ export const emergencyContactApi = {
   create: (data, userId) => api.post(`/emergency-contacts?userId=${userId}`, data),
   update: (id, data, userId) => api.put(`/emergency-contacts/${id}?userId=${userId}`, data),
   delete: (id, userId) => api.delete(`/emergency-contacts/${id}?userId=${userId}`),
+  validateBulkImport: (file, societyId) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('societyId', societyId);
+    return api.post('/emergency-contacts/bulk-import/validate', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
+  processBulkImport: (file, societyId, userId) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('societyId', societyId);
+    return api.post(`/emergency-contacts/bulk-import?userId=${userId}`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
+  downloadImportTemplate: () => api.get('/emergency-contacts/bulk-import/template', {
+    responseType: 'blob',
+  }),
 }
 
 // Document Template API
@@ -304,6 +361,25 @@ export const tenantApi = {
   update: (id, data, userId) => api.put(`/tenants/${id}?userId=${userId}`, data),
   deactivate: (id, userId) => api.patch(`/tenants/${id}/deactivate?userId=${userId}`),
   delete: (id, userId) => api.delete(`/tenants/${id}?userId=${userId}`),
+  validateBulkImport: (file, societyId) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('societyId', societyId);
+    return api.post('/tenants/bulk-import/validate', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
+  processBulkImport: (file, societyId) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('societyId', societyId);
+    return api.post('/tenants/bulk-import', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
+  downloadImportTemplate: () => api.get('/tenants/bulk-import/template', {
+    responseType: 'blob',
+  }),
 }
 
 // Vehicle API
@@ -314,6 +390,25 @@ export const vehicleApi = {
   create: (data, userId) => api.post(`/vehicles?userId=${userId}`, data),
   update: (id, data, userId) => api.put(`/vehicles/${id}?userId=${userId}`, data),
   delete: (id, userId) => api.delete(`/vehicles/${id}?userId=${userId}`),
+  validateBulkImport: (file, societyId) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('societyId', societyId);
+    return api.post('/vehicles/bulk-import/validate', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
+  processBulkImport: (file, societyId) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('societyId', societyId);
+    return api.post('/vehicles/bulk-import', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
+  downloadImportTemplate: () => api.get('/vehicles/bulk-import/template', {
+    responseType: 'blob',
+  }),
 }
 
 // Notification Preferences API

@@ -1,7 +1,10 @@
 package com.society.backend.controller.vendor;
 
+import com.society.backend.dto.vendor.BulkVendorImportResponse;
+import com.society.backend.dto.vendor.VendorImportRow;
 import com.society.backend.dto.vendor.VendorRequest;
 import com.society.backend.dto.vendor.VendorResponse;
+import com.society.backend.service.vendor.BulkVendorImportService;
 import com.society.backend.service.vendor.VendorService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -9,6 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -19,6 +23,7 @@ import java.util.List;
 public class VendorController {
 
     private final VendorService vendorService;
+    private final BulkVendorImportService bulkVendorImportService;
 
     @PostMapping
     @PreAuthorize("hasAnyRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'MANAGER')")
@@ -102,5 +107,40 @@ public class VendorController {
             @RequestParam(required = false) Long societyId) {
         List<VendorResponse> vendors = vendorService.getPendingVendors(societyId);
         return ResponseEntity.ok(vendors);
+    }
+
+    @PostMapping("/bulk-import/validate")
+    @PreAuthorize("hasAnyRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'MANAGER')")
+    public ResponseEntity<BulkVendorImportResponse> validateBulkImport(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam("societyId") Long societyId) throws java.io.IOException {
+        List<VendorImportRow> rows = bulkVendorImportService.parseExcelFile(file);
+        BulkVendorImportResponse response = bulkVendorImportService.validateImportRows(rows, societyId);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/bulk-import")
+    @PreAuthorize("hasAnyRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'MANAGER')")
+    public ResponseEntity<BulkVendorImportResponse> processBulkImport(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam("societyId") Long societyId) throws java.io.IOException {
+        List<VendorImportRow> rows = bulkVendorImportService.parseExcelFile(file);
+        BulkVendorImportResponse validationResponse = bulkVendorImportService.validateImportRows(rows, societyId);
+        if (validationResponse.getFailureCount() > 0) {
+            validationResponse.setMessage("Import failed: Please fix validation errors and try again");
+            return ResponseEntity.badRequest().body(validationResponse);
+        }
+        BulkVendorImportResponse processResponse = bulkVendorImportService.processImport(rows, societyId);
+        return ResponseEntity.ok(processResponse);
+    }
+
+    @GetMapping("/bulk-import/template")
+    @PreAuthorize("hasAnyRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'MANAGER')")
+    public ResponseEntity<byte[]> downloadImportTemplate() {
+        byte[] template = bulkVendorImportService.generateTemplate();
+        return ResponseEntity.ok()
+                .header("Content-Disposition", "attachment; filename=vendor_import_template.xlsx")
+                .header("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+                .body(template);
     }
 }
