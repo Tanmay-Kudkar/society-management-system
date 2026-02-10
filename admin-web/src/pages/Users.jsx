@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '../context/AuthContext'
-import { userApi, societyApi, flatApi } from '../api'
+import { userApi, societyApi, flatApi } from '../../../api'
 import { Plus, Edit, Trash2, Search, X, AlertCircle, Shield, Users as UsersIcon, Building2, Home, Upload, Download, UserPlus, FileSpreadsheet, CheckCircle, XCircle, Info, Eye } from 'lucide-react'
 import clsx from 'clsx'
 import { useNavigate, useSearchParams } from 'react-router-dom'
@@ -775,6 +775,7 @@ export default function Users() {
                   <input
                     type="text"
                     name="organizationName"
+                    defaultValue={editingUser?.organizationName || ''}
                     placeholder="e.g. ABC Housing Group"
                     className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
                   />

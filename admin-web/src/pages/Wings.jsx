@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { wingApi, societyApi } from '../api'
+import { wingApi, societyApi } from '../../../api'
 import {
   Plus,
   Search,
@@ -11,9 +11,11 @@ import {
   X,
   Layers,
   Building2,
-  Hash
+  Hash,
+  Upload
 } from 'lucide-react'
 import { FormInput, SmartSelect, NumberInput, FormErrorSummary } from '../components/FormComponents'
+import BulkImportModal from '../components/BulkImportModal'
 
 export default function Wings() {
   const { user } = useAuth()
@@ -22,6 +24,7 @@ export default function Wings() {
   const urlSocietyId = searchParams.get('society')
   
   const [showModal, setShowModal] = useState(false)
+  const [showBulkImport, setShowBulkImport] = useState(false)
   const [editingWing, setEditingWing] = useState(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [filterSociety, setFilterSociety] = useState(urlSocietyId || '')
@@ -175,13 +178,22 @@ export default function Wings() {
             </p>
           )}
         </div>
-        <button
-          onClick={() => { setEditingWing(null); setFormErrors({}); setShowModal(true) }}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-        >
-          <Plus size={20} />
-          Add Wing
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setShowBulkImport(true)}
+            className="inline-flex items-center gap-2 px-4 py-2 border border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition"
+          >
+            <Upload size={20} />
+            Bulk Import
+          </button>
+          <button
+            onClick={() => { setEditingWing(null); setFormErrors({}); setShowModal(true) }}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+          >
+            <Plus size={20} />
+            Add Wing
+          </button>
+        </div>
       </div>
 
       {/* Filters */}
@@ -368,6 +380,30 @@ export default function Wings() {
             </form>
           </div>
         </div>
+      )}
+
+      {/* Bulk Import Modal */}
+      {showBulkImport && (
+        <BulkImportModal
+          title="Bulk Import Wings"
+          entityName="Wings"
+          templateFilename="wing_import_template.xlsx"
+          columns={[
+            { letter: 'A', label: 'Wing Name', required: true, description: 'Name of the wing/tower' },
+            { letter: 'B', label: 'Description', required: false, description: 'Optional description' },
+            { letter: 'C', label: 'Total Floors', required: false, description: 'Number of floors (1-200)' },
+          ]}
+          tableColumns={[
+            { key: 'name', label: 'Wing Name' },
+          ]}
+          apiValidate={wingApi.validateBulkImport}
+          apiProcess={wingApi.processBulkImport}
+          apiTemplate={wingApi.downloadImportTemplate}
+          societyId={effectiveSocietyId}
+          userId={user?.id}
+          onClose={() => setShowBulkImport(false)}
+          onSuccess={() => queryClient.invalidateQueries(['wings'])}
+        />
       )}
     </div>
   )

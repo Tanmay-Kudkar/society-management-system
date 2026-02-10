@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { useSettings, ACCENT_COLORS } from '../context/SettingsContext'
-import { userApi, notificationPreferenceApi } from '../api'
+import { userApi, notificationPreferenceApi } from '../../../api'
 import { User, Bell, Shield, Palette, Save, Check } from 'lucide-react'
 import clsx from 'clsx'
 import Toggle from '../components/Toggle'

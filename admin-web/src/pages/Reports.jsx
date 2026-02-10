@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useQuery, useMutation } from '@tanstack/react-query'
 import { useAuth } from '../context/AuthContext'
-import { reportApi, societyApi, exportApi, downloadBlob } from '../api'
+import { reportApi, societyApi, exportApi, downloadBlob } from '../../../api'
 import {
   TrendingUp,
   TrendingDown,

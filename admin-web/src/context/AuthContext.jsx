@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect, useRef } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
-import { authApi } from '../api'
+import { authApi } from '../../../api'
 
 const AuthContext = createContext(null)
 

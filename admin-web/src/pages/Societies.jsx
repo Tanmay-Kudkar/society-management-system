@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { societyApi } from '../api'
+import { societyApi } from '../../../api'
 import { Plus, Edit, Trash2, Search, X, Building2, Eye, ChevronRight, Home, Store, Briefcase, Layers } from 'lucide-react'
 import { FormInput, PhoneInput, PincodeInput, NumberInput, FormTextarea, StateCitySelector } from '../components/FormComponents'
 

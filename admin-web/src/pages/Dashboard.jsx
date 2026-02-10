@@ -42,7 +42,7 @@ import {
   reportApi,
   noticeApi,
   securityLogApi
-} from "../api";
+} from "../../../api";
 
 const formatCurrency = (amount) => {
   return new Intl.NumberFormat("en-IN", {
@@ -182,13 +182,13 @@ export default function Dashboard() {
   });
 
   const { data: flats = [] } = useQuery({
-    queryKey: ["flats"],
+    queryKey: ["flats", user?.id],
     queryFn: () =>
       flatApi
-        .getAll()
+        .getAll(user?.id)
         .then((res) => res.data)
         .catch(() => []),
-    enabled: !isMemberOrTenant, // Don't fetch all flats for members
+    enabled: !isMemberOrTenant && !!user?.id,
   });
 
   const { data: tenants = [] } = useQuery({
@@ -307,13 +307,13 @@ export default function Dashboard() {
 
   const { data: notices = [] } = useQuery({
     queryKey: ["notices", user?.societyId],
-    queryFn: () => user?.societyId ? noticeApi.getActive(user.societyId).then((res) => res.data) : [],
+    queryFn: () => user?.societyId ? noticeApi.getBySociety(user.societyId).then((res) => res.data).catch(() => []) : [],
     enabled: !!user?.societyId,
   });
 
   const { data: securityLogs = [] } = useQuery({
     queryKey: ["securityLogs", user?.societyId],
-    queryFn: () => user?.societyId ? securityLogApi.getRecent(user.societyId).then((res) => res.data) : [],
+    queryFn: () => user?.societyId ? securityLogApi.getRecent(user.societyId).then((res) => res.data).catch(() => []) : [],
     enabled: !!user?.societyId,
     refetchInterval: 30000, // Refresh every 30s
   });

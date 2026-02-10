@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { flatApi, societyApi, wingApi } from '../api'
+import { flatApi, societyApi, wingApi } from '../../../api'
 import { Plus, Edit, Trash2, Search, X, Home, Store, Briefcase, Layers, AlertCircle } from 'lucide-react'
 import { FormInput, PhoneInput, SmartSelect, NumberInput, FormErrorSummary } from '../components/FormComponents'
 

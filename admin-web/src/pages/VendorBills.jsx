@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '../context/AuthContext'
-import { vendorBillApi, vendorApi } from '../api'
+import { vendorBillApi, vendorApi } from '../../../api'
 import { Plus, Edit, Trash2, Search, X, Receipt, CheckCircle, Clock, AlertCircle } from 'lucide-react'
 import clsx from 'clsx'
 

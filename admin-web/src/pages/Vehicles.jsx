@@ -2,15 +2,17 @@ import { useState, useMemo } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { vehicleApi, flatApi } from '../api'
-import { Plus, Edit, Trash2, Search, X, Car, Bike } from 'lucide-react'
+import { vehicleApi, flatApi } from '../../../api'
+import { Plus, Edit, Trash2, Search, X, Car, Bike, Upload } from 'lucide-react'
 import { FormInput, SmartSelect } from '../components/FormComponents'
+import BulkImportModal from '../components/BulkImportModal'
 
 export default function Vehicles() {
   const { user } = useAuth()
   const queryClient = useQueryClient()
   const [searchParams] = useSearchParams()
   const [showModal, setShowModal] = useState(false)
+  const [showBulkImport, setShowBulkImport] = useState(false)
   const [editingVehicle, setEditingVehicle] = useState(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [filterType, setFilterType] = useState('')
@@ -114,13 +116,22 @@ export default function Vehicles() {
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Vehicles</h1>
           <p className="text-gray-600 dark:text-gray-400 mt-1">Manage resident vehicles and parking</p>
         </div>
-        <button
-          onClick={() => { setEditingVehicle(null); setShowModal(true) }}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition cursor-pointer"
-        >
-          <Plus size={20} />
-          Add Vehicle
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setShowBulkImport(true)}
+            className="inline-flex items-center gap-2 px-4 py-2 border border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition cursor-pointer"
+          >
+            <Upload size={20} />
+            Bulk Import
+          </button>
+          <button
+            onClick={() => { setEditingVehicle(null); setShowModal(true) }}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition cursor-pointer"
+          >
+            <Plus size={20} />
+            Add Vehicle
+          </button>
+        </div>
       </div>
 
       {/* Filters */}
@@ -386,6 +397,36 @@ export default function Vehicles() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Bulk Import Modal */}
+      {showBulkImport && (
+        <BulkImportModal
+          title="Bulk Import Vehicles"
+          entityName="Vehicles"
+          templateFilename="vehicle_import_template.xlsx"
+          columns={[
+            { letter: 'A', label: 'Unit Number', required: true, description: 'Must match an existing unit (e.g., A-101)' },
+            { letter: 'B', label: 'Vehicle Type', required: true, description: 'TWO_WHEELER or FOUR_WHEELER' },
+            { letter: 'C', label: 'Vehicle Number', required: true, description: 'Registration number (e.g., MH02AB1234)' },
+            { letter: 'D', label: 'Brand', required: false, description: 'Vehicle manufacturer' },
+            { letter: 'E', label: 'Model', required: false, description: 'Vehicle model name' },
+            { letter: 'F', label: 'Color', required: false, description: 'Vehicle color' },
+            { letter: 'G', label: 'Owner Name', required: false, description: 'Name of vehicle owner' },
+            { letter: 'H', label: 'Parking Slot', required: false, description: 'Assigned parking slot' },
+          ]}
+          tableColumns={[
+            { key: 'vehicleNumber', label: 'Vehicle No.' },
+            { key: 'flatNumber', label: 'Unit' },
+          ]}
+          apiValidate={vehicleApi.validateBulkImport}
+          apiProcess={vehicleApi.processBulkImport}
+          apiTemplate={vehicleApi.downloadImportTemplate}
+          societyId={effectiveSocietyId}
+          userId={user?.id}
+          onClose={() => setShowBulkImport(false)}
+          onSuccess={() => queryClient.invalidateQueries(['vehicles'])}
+        />
       )}
     </div>
   )

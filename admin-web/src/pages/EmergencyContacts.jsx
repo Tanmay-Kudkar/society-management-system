@@ -2,10 +2,11 @@ import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '../context/AuthContext'
 import { useToast } from '../context/ToastContext'
-import { emergencyContactApi } from '../api'
-import { Plus, Search, X, Phone, Edit, Trash2, AlertCircle, CheckCircle } from 'lucide-react'
+import { emergencyContactApi } from '../../../api'
+import { Plus, Search, X, Phone, Edit, Trash2, AlertCircle, CheckCircle, Upload } from 'lucide-react'
 import clsx from 'clsx'
 import { FormInput, PhoneInput, SmartSelect } from '../components/FormComponents'
+import BulkImportModal from '../components/BulkImportModal'
 
 const contactTypeColors = {
   POLICE: 'bg-blue-100 text-blue-800',
@@ -24,6 +25,7 @@ export default function EmergencyContacts() {
   const toast = useToast()
   const queryClient = useQueryClient()
   const [showModal, setShowModal] = useState(false)
+  const [showBulkImport, setShowBulkImport] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [contactToDelete, setContactToDelete] = useState(null)
   const [editingContact, setEditingContact] = useState(null)
@@ -149,13 +151,22 @@ export default function EmergencyContacts() {
           <p className="text-gray-600 dark:text-gray-400 mt-1">Manage emergency contact directory</p>
         </div>
         {canManageEmergencyContacts() && (
-          <button
-            onClick={() => setShowModal(true)}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-          >
-            <Plus size={20} />
-            Add Contact
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setShowBulkImport(true)}
+              className="inline-flex items-center gap-2 px-4 py-2 border border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition"
+            >
+              <Upload size={20} />
+              Bulk Import
+            </button>
+            <button
+              onClick={() => setShowModal(true)}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+            >
+              <Plus size={20} />
+              Add Contact
+            </button>
+          </div>
         )}
       </div>
 
@@ -391,6 +402,34 @@ export default function EmergencyContacts() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Bulk Import Modal */}
+      {showBulkImport && (
+        <BulkImportModal
+          title="Bulk Import Emergency Contacts"
+          entityName="Contacts"
+          templateFilename="emergency_contact_import_template.xlsx"
+          columns={[
+            { letter: 'A', label: 'Contact Type', required: true, description: 'POLICE, FIRE, AMBULANCE, HOSPITAL, DOCTOR, SECURITY, ELECTRICIAN, PLUMBER, GAS, WATER, or OTHER' },
+            { letter: 'B', label: 'Name', required: true, description: 'Contact name or organization' },
+            { letter: 'C', label: 'Phone', required: true, description: 'Primary phone number' },
+            { letter: 'D', label: 'Alternate Phone', required: false, description: 'Secondary phone number' },
+            { letter: 'E', label: 'Address', required: false, description: 'Contact address' },
+            { letter: 'F', label: 'Notes', required: false, description: 'Additional information' },
+          ]}
+          tableColumns={[
+            { key: 'name', label: 'Name' },
+            { key: 'contactType', label: 'Type' },
+          ]}
+          apiValidate={emergencyContactApi.validateBulkImport}
+          apiProcess={(file, societyId) => emergencyContactApi.processBulkImport(file, societyId, user?.id)}
+          apiTemplate={emergencyContactApi.downloadImportTemplate}
+          societyId={user?.societyId}
+          userId={user?.id}
+          onClose={() => setShowBulkImport(false)}
+          onSuccess={() => queryClient.invalidateQueries(['emergencyContacts'])}
+        />
       )}
     </div>
   )

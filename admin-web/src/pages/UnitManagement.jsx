@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useToast } from '../context/ToastContext'
-import { flatApi, societyApi, wingApi, userApi } from '../api'
+import { flatApi, societyApi, wingApi, userApi } from '../../../api'
 import { 
   Plus, Edit, Trash2, Search, X, Home, Store, Briefcase, Layers, 
   Users, UserPlus, UserCheck, UserX, Upload, Download, AlertCircle,

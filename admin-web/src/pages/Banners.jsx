@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '../context/AuthContext'
-import { bannerApi } from '../api'
+import { bannerApi } from '../../../api'
 import { Plus, Search, X, Image, Edit, Trash2, Eye, EyeOff } from 'lucide-react'
 import clsx from 'clsx'
 import { FormInput, SmartSelect, NumberInput, FormTextarea } from '../components/FormComponents'

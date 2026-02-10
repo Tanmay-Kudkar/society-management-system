@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '../context/AuthContext'
-import { documentTemplateApi } from '../api'
+import { documentTemplateApi } from '../../../api'
 import { Plus, Search, X, FileText, Edit, Trash2 } from 'lucide-react'
 import clsx from 'clsx'
 

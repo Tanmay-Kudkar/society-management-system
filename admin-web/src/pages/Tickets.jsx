@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '../context/AuthContext'
 import { useToast } from '../context/ToastContext'
-import { ticketApi, userApi, exportApi, downloadBlob } from '../api'
+import { ticketApi, userApi, exportApi, downloadBlob } from '../../../api'
 import { Plus, Search, X, Ticket, MessageSquare, User, Edit, AlertTriangle, Clock, FileSpreadsheet } from 'lucide-react'
 import clsx from 'clsx'
 

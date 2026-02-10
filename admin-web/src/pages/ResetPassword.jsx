@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link, useSearchParams, useNavigate } from 'react-router-dom'
 import { useTheme } from '../context/ThemeContext'
-import { authApi } from '../api'
+import { authApi } from '../../../api'
 import { Building2, Lock, ArrowLeft, CheckCircle, AlertCircle, Eye, EyeOff, ShieldCheck } from 'lucide-react'
 import '../styles/animations.css'
 

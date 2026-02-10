@@ -2,15 +2,17 @@ import { useState, useMemo } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { tenantApi, flatApi } from '../api'
-import { Plus, Edit, Trash2, Search, X, User, Calendar, Phone, Mail } from 'lucide-react'
+import { tenantApi, flatApi } from '../../../api'
+import { Plus, Edit, Trash2, Search, X, User, Calendar, Phone, Mail, Upload } from 'lucide-react'
 import { FormInput, PhoneInput, SmartSelect, NumberInput } from '../components/FormComponents'
+import BulkImportModal from '../components/BulkImportModal'
 
 export default function Tenants() {
   const { user, canManageTenants } = useAuth()
   const queryClient = useQueryClient()
   const [searchParams] = useSearchParams()
   const [showModal, setShowModal] = useState(false)
+  const [showBulkImport, setShowBulkImport] = useState(false)
   const [editingTenant, setEditingTenant] = useState(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [filterStatus, setFilterStatus] = useState('')
@@ -130,13 +132,22 @@ export default function Tenants() {
           <p className="text-gray-600 dark:text-gray-400 mt-1">Manage tenant details and agreements</p>
         </div>
         {canManageTenants() && (
-          <button
-            onClick={() => { setEditingTenant(null); setShowModal(true) }}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition cursor-pointer"
-          >
-            <Plus size={20} />
-            Add Tenant
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setShowBulkImport(true)}
+              className="inline-flex items-center gap-2 px-4 py-2 border border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition cursor-pointer"
+            >
+              <Upload size={20} />
+              Bulk Import
+            </button>
+            <button
+              onClick={() => { setEditingTenant(null); setShowModal(true) }}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition cursor-pointer"
+            >
+              <Plus size={20} />
+              Add Tenant
+            </button>
+          </div>
         )}
       </div>
 
@@ -411,6 +422,38 @@ export default function Tenants() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Bulk Import Modal */}
+      {showBulkImport && (
+        <BulkImportModal
+          title="Bulk Import Tenants"
+          entityName="Tenants"
+          templateFilename="tenant_import_template.xlsx"
+          columns={[
+            { letter: 'A', label: 'Unit Number', required: true, description: 'Must match an existing unit (e.g., A-101)' },
+            { letter: 'B', label: 'Tenant Name', required: true, description: 'Full name of the tenant' },
+            { letter: 'C', label: 'Phone', required: false, description: '10-digit phone number' },
+            { letter: 'D', label: 'Email', required: false, description: 'Valid email address' },
+            { letter: 'E', label: 'Agreement Start', required: false, description: 'yyyy-MM-dd format' },
+            { letter: 'F', label: 'Agreement End', required: false, description: 'yyyy-MM-dd format' },
+            { letter: 'G', label: 'Rent Amount', required: false, description: 'Monthly rent amount' },
+            { letter: 'H', label: 'Deposit Amount', required: false, description: 'Security deposit' },
+            { letter: 'I', label: 'ID Proof Type', required: false, description: 'AADHAAR, PAN, PASSPORT, etc.' },
+            { letter: 'J', label: 'ID Proof Number', required: false, description: 'ID proof document number' },
+          ]}
+          tableColumns={[
+            { key: 'name', label: 'Tenant Name' },
+            { key: 'flatNumber', label: 'Unit' },
+          ]}
+          apiValidate={tenantApi.validateBulkImport}
+          apiProcess={tenantApi.processBulkImport}
+          apiTemplate={tenantApi.downloadImportTemplate}
+          societyId={effectiveSocietyId}
+          userId={user?.id}
+          onClose={() => setShowBulkImport(false)}
+          onSuccess={() => queryClient.invalidateQueries(['tenants'])}
+        />
       )}
     </div>
   )

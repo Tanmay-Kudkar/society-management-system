@@ -481,6 +481,14 @@ public class UserServiceImpl implements UserService {
                     .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Society not found")));
         }
 
+        // Allow PLATFORM_OWNER to update organization name for ORGANIZATION_OWNER
+        if (getCurrentUserRole() == Role.PLATFORM_OWNER && user.getRole() == Role.ORGANIZATION_OWNER
+                && user.getOrganization() != null && request.getOrganizationName() != null
+                && !request.getOrganizationName().isBlank()) {
+            user.getOrganization().setName(request.getOrganizationName());
+            organizationRepository.save(user.getOrganization());
+        }
+
         User saved = userRepository.save(user);
         return mapToResponse(saved);
     }

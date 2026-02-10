@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { societyApi, userApi, flatApi, wingApi } from '../api'
+import { societyApi, userApi, flatApi, wingApi } from '../../../api'
 import {
   ArrowLeft,
   Building2,
