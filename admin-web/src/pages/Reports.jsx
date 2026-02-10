@@ -19,6 +19,7 @@ import {
   FileSpreadsheet,
 } from 'lucide-react'
 import clsx from 'clsx'
+import PermissionDenied from '../components/PermissionDenied'
 
 const formatCurrency = (amount) => {
   return new Intl.NumberFormat('en-IN', {
@@ -35,7 +36,12 @@ const formatPercent = (value) => {
 }
 
 export default function Reports() {
-  const { user } = useAuth()
+  const { user, canViewReports } = useAuth()
+  
+  // Permission check
+  if (!canViewReports()) {
+    return <PermissionDenied message="You don't have permission to view financial reports" />
+  }
   const [reportType, setReportType] = useState('MTD')
   const [selectedSocietyId, setSelectedSocietyId] = useState(user?.societyId || '')
   const [customStartDate, setCustomStartDate] = useState('')

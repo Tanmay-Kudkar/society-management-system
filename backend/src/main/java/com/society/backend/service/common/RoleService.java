@@ -137,4 +137,50 @@ public class RoleService {
     public void canViewAll(Long userId) {
         requireStaff(userId);
     }
+
+    /**
+     * Check if user can manage vehicles (PLATFORM_OWNER, SOCIETY_ADMIN, CHAIRMAN,
+     * SECRETARY, TREASURER, COMMITTEE, MANAGER, EMPLOYEE, MEMBER)
+     */
+    public void canManageVehicles(Long userId) {
+        checkRole(userId, Role.PLATFORM_OWNER, Role.ORGANIZATION_OWNER, Role.SOCIETY_ADMIN,
+                Role.CHAIRMAN, Role.SECRETARY, Role.TREASURER, Role.COMMITTEE,
+                Role.MANAGER, Role.EMPLOYEE, Role.MEMBER);
+    }
+
+    /**
+     * Check if user can manage wings (PLATFORM_OWNER, SOCIETY_ADMIN, CHAIRMAN,
+     * SECRETARY, TREASURER, COMMITTEE, MANAGER)
+     */
+    public void canManageWings(Long userId) {
+        requireAdminOrCommittee(userId);
+    }
+
+    /**
+     * Check if user can view financial reports (PLATFORM_OWNER, SOCIETY_ADMIN,
+     * CHAIRMAN, SECRETARY, TREASURER, COMMITTEE, MANAGER)
+     */
+    public void canViewReports(Long userId) {
+        checkRole(userId, Role.PLATFORM_OWNER, Role.ORGANIZATION_OWNER, Role.SOCIETY_ADMIN,
+                Role.CHAIRMAN, Role.SECRETARY, Role.TREASURER, Role.COMMITTEE, Role.MANAGER);
+    }
+
+    /**
+     * Check if user can manage complaints (view all, update status, delete)
+     * (PLATFORM_OWNER, SOCIETY_ADMIN, CHAIRMAN, SECRETARY, TREASURER, COMMITTEE,
+     * MANAGER)
+     */
+    public void canManageComplaints(Long userId) {
+        checkRole(userId, Role.PLATFORM_OWNER, Role.ORGANIZATION_OWNER, Role.SOCIETY_ADMIN,
+                Role.CHAIRMAN, Role.SECRETARY, Role.TREASURER, Role.COMMITTEE, Role.MANAGER);
+    }
+
+    /**
+     * Check if user can raise complaints (all except VISITOR and TENANT)
+     */
+    public void canRaiseComplaints(Long userId) {
+        checkRole(userId, Role.PLATFORM_OWNER, Role.ORGANIZATION_OWNER, Role.SOCIETY_ADMIN,
+                Role.CHAIRMAN, Role.SECRETARY, Role.TREASURER, Role.COMMITTEE,
+                Role.MANAGER, Role.EMPLOYEE, Role.MEMBER, Role.TENANT);
+    }
 }

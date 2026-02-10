@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext'
 import { maintenanceBillApi, flatApi } from '../../../api'
 import { Plus, Search, X, CreditCard, CheckCircle, Clock, AlertCircle, Info } from 'lucide-react'
 import clsx from 'clsx'
+import PermissionDenied from '../components/PermissionDenied'
 
 const statusColors = {
   PENDING: 'bg-yellow-100 text-yellow-800',
@@ -14,8 +15,13 @@ const statusColors = {
 }
 
 export default function MaintenanceBills() {
-  const { user } = useAuth()
+  const { user, canManageMaintenanceBills } = useAuth()
   const queryClient = useQueryClient()
+  
+  // Permission check
+  if (!canManageMaintenanceBills()) {
+    return <PermissionDenied message="You don't have permission to manage maintenance bills" />
+  }
   const [searchParams] = useSearchParams()
   const [showModal, setShowModal] = useState(false)
   const [showPaymentModal, setShowPaymentModal] = useState(false)
@@ -162,21 +168,23 @@ export default function MaintenanceBills() {
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Maintenance Bills</h1>
           <p className="text-gray-600 dark:text-gray-400 mt-1">Generate and track maintenance bills</p>
         </div>
-        <div className="flex gap-2">
-          <button
-            onClick={() => setShowBulkModal(true)}
-            className="inline-flex items-center gap-2 px-4 py-2 border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 transition"
-          >
-            Bulk Generate
-          </button>
-          <button
-            onClick={() => setShowModal(true)}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-          >
-            <Plus size={20} />
-            Add Bill
-          </button>
-        </div>
+        {canManageMaintenanceBills() && (
+          <div className="flex gap-2">
+            <button
+              onClick={() => setShowBulkModal(true)}
+              className="inline-flex items-center gap-2 px-4 py-2 border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 transition"
+            >
+              Bulk Generate
+            </button>
+            <button
+              onClick={() => setShowModal(true)}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+            >
+              <Plus size={20} />
+              Add Bill
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Summary Cards */}

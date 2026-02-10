@@ -24,40 +24,40 @@ public class ComplaintController {
         this.roleService = roleService;
     }
 
-    // PLATFORM_OWNER, COMMITTEE, EMPLOYEE, MEMBER can create (not VISITOR)
+    // All registered users can raise complaints (PLATFORM_OWNER to TENANT)
     @PostMapping
     public ResponseEntity<ComplaintResponse> create(
             @RequestParam Long userId,
             @Valid @RequestBody ComplaintRequest request) {
-        roleService.canCreateComplaint(userId);
+        roleService.canRaiseComplaints(userId);
         return ResponseEntity.ok(complaintService.create(userId, request));
     }
 
-    // PLATFORM_OWNER, COMMITTEE, EMPLOYEE can view all complaints
+    // Only management can view all complaints
     @GetMapping
     public ResponseEntity<List<ComplaintResponse>> getAll(@RequestParam Long userId) {
-        roleService.canViewAll(userId);
+        roleService.canManageComplaints(userId);
         return ResponseEntity.ok(complaintService.getAll(userId));
     }
 
-    // Users can view their own complaints
+    // Users can view their own complaints, management can view anyone's
     @GetMapping("/user/{targetUserId}")
     public ResponseEntity<List<ComplaintResponse>> getByUser(
             @PathVariable Long targetUserId,
             @RequestParam Long userId) {
-        // User can view their own, or staff can view anyone's
+        // User can view their own, or management can view anyone's
         if (!userId.equals(targetUserId)) {
-            roleService.canViewAll(userId);
+            roleService.canManageComplaints(userId);
         }
         return ResponseEntity.ok(complaintService.getByUser(targetUserId));
     }
 
-    // PLATFORM_OWNER, COMMITTEE, EMPLOYEE can filter by status
+    // Management can filter by status
     @GetMapping("/status/{status}")
     public ResponseEntity<List<ComplaintResponse>> getByStatus(
             @PathVariable String status,
             @RequestParam Long userId) {
-        roleService.canViewAll(userId);
+        roleService.canManageComplaints(userId);
         return ResponseEntity.ok(complaintService.getByStatus(status));
     }
 
@@ -66,7 +66,7 @@ public class ComplaintController {
     public ResponseEntity<List<ComplaintResponse>> getBySociety(
             @PathVariable Long societyId,
             @RequestParam Long userId) {
-        roleService.canViewAll(userId);
+        roleService.canManageComplaints(userId);
         return ResponseEntity.ok(complaintService.getBySociety(societyId));
     }
 
@@ -75,23 +75,23 @@ public class ComplaintController {
         return ResponseEntity.ok(complaintService.getById(id));
     }
 
-    // PLATFORM_OWNER, COMMITTEE can update status
+    // Management can update status
     @PatchMapping("/{id}/status")
     public ResponseEntity<ComplaintResponse> updateStatus(
             @PathVariable Long id,
             @RequestParam Long userId,
             @RequestParam String status,
             @RequestParam(required = false) String resolution) {
-        roleService.canUpdateComplaintStatus(userId);
+        roleService.canManageComplaints(userId);
         return ResponseEntity.ok(complaintService.updateStatus(id, status, resolution));
     }
 
-    // PLATFORM_OWNER, COMMITTEE can delete
+    // Management can delete
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(
             @PathVariable Long id,
             @RequestParam Long userId) {
-        roleService.canUpdateComplaintStatus(userId);
+        roleService.canManageComplaints(userId);
         complaintService.delete(id);
         return ResponseEntity.noContent().build();
     }

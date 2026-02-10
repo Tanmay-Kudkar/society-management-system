@@ -5,10 +5,16 @@ import { useToast } from '../context/ToastContext'
 import { transactionApi, exportApi, downloadBlob, flatApi } from '../../../api'
 import { Plus, Search, X, TrendingUp, TrendingDown, DollarSign, FileSpreadsheet, Home } from 'lucide-react'
 import clsx from 'clsx'
+import PermissionDenied from '../components/PermissionDenied'
 
 export default function Transactions() {
   const { user, canManageTransactions } = useAuth()
   const { showToast } = useToast()
+  
+  // Permission check
+  if (!canManageTransactions()) {
+    return <PermissionDenied message="You don't have permission to manage transactions" />
+  }
   const queryClient = useQueryClient()
   const [showModal, setShowModal] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')

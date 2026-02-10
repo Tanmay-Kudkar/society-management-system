@@ -7,6 +7,7 @@ import clsx from 'clsx'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { parseApiError, validateUserForm } from '../utils/validation'
 import { FormInput, PhoneInput, SmartSelect, FormErrorSummary } from '../components/FormComponents'
+import PermissionDenied from '../components/PermissionDenied'
 
 const roleColors = {
   PLATFORM_OWNER: 'bg-purple-100 text-purple-800',
@@ -40,8 +41,13 @@ const roleHierarchyInfo = {
 }
 
 export default function Users() {
-  const { user } = useAuth()
+  const { user, canManageUsers } = useAuth()
   const navigate = useNavigate()
+  
+  // Permission check
+  if (!canManageUsers()) {
+    return <PermissionDenied message="You don't have permission to manage users" />
+  }
   const queryClient = useQueryClient()
   const [searchParams] = useSearchParams()
   

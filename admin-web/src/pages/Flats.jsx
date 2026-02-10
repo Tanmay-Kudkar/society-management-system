@@ -5,10 +5,16 @@ import { useAuth } from '../context/AuthContext'
 import { flatApi, societyApi, wingApi } from '../../../api'
 import { Plus, Edit, Trash2, Search, X, Home, Store, Briefcase, Layers, AlertCircle } from 'lucide-react'
 import { FormInput, PhoneInput, SmartSelect, NumberInput, FormErrorSummary } from '../components/FormComponents'
+import PermissionDenied from '../components/PermissionDenied'
 
 export default function Flats() {
-  const { user } = useAuth()
+  const { user, canManageFlats } = useAuth()
   const queryClient = useQueryClient()
+  
+  // Permission check
+  if (!canManageFlats()) {
+    return <PermissionDenied message="You don't have permission to manage flats/units" />
+  }
   const [searchParams] = useSearchParams()
   const [showModal, setShowModal] = useState(false)
   const [editingFlat, setEditingFlat] = useState(null)

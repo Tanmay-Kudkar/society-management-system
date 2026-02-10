@@ -26,6 +26,7 @@ public class VehicleController {
     private final BulkVehicleImportService bulkVehicleImportService;
 
     @PostMapping
+    @PreAuthorize("hasAnyRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'MANAGER', 'EMPLOYEE', 'MEMBER')")
     public ResponseEntity<VehicleResponse> create(
             @Valid @RequestBody VehicleRequest request,
             @RequestParam Long userId) {
@@ -48,6 +49,7 @@ public class VehicleController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'MANAGER', 'EMPLOYEE', 'MEMBER')")
     public ResponseEntity<VehicleResponse> update(
             @PathVariable Long id,
             @Valid @RequestBody VehicleRequest request,
@@ -56,6 +58,7 @@ public class VehicleController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'MANAGER')")
     public ResponseEntity<Void> delete(
             @PathVariable Long id,
             @RequestParam Long userId) {

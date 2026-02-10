@@ -6,6 +6,7 @@ import { complaintApi } from '../../../api'
 import { Plus, Search, X, AlertTriangle, Clock, CheckCircle, XCircle } from 'lucide-react'
 import clsx from 'clsx'
 import { FormInput, SmartSelect, FormTextarea } from '../components/FormComponents'
+import PermissionDenied from '../components/PermissionDenied'
 
 const statusColors = {
   PENDING: 'bg-yellow-100 text-yellow-800',
@@ -22,8 +23,13 @@ const statusIcons = {
 }
 
 export default function Complaints() {
-  const { user } = useAuth()
+  const { user, canRaiseComplaints, canManageComplaints } = useAuth()
   const queryClient = useQueryClient()
+  
+  // Permission check - users must be able to at least raise complaints
+  if (!canRaiseComplaints()) {
+    return <PermissionDenied message="You don't have permission to access complaints" />
+  }
   const [searchParams] = useSearchParams()
   const [showModal, setShowModal] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
@@ -94,13 +100,15 @@ export default function Complaints() {
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Complaints</h1>
           <p className="text-gray-600 dark:text-gray-400 mt-1">Manage resident complaints</p>
         </div>
-        <button
-          onClick={() => setShowModal(true)}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-        >
-          <Plus size={20} />
-          Log Complaint
-        </button>
+        {canRaiseComplaints() && (
+          <button
+            onClick={() => setShowModal(true)}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+          >
+            <Plus size={20} />
+            Log Complaint
+          </button>
+        )}
       </div>
 
       {/* Summary Cards */}
@@ -202,7 +210,7 @@ export default function Complaints() {
                   </div>
 
                   <div className="flex items-center gap-2 ml-auto">
-                    {complaint.status !== 'RESOLVED' && complaint.status !== 'REJECTED' && (
+                    {canManageComplaints() && complaint.status !== 'RESOLVED' && complaint.status !== 'REJECTED' && (
                       <select
                         value={complaint.status}
                         onChange={(e) => handleStatusChange(complaint, e.target.value)}

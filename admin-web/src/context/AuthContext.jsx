@@ -156,6 +156,26 @@ export const AuthProvider = ({ children }) => {
   // MANAGER has NO user CRUD rights (not in permission matrix)
   // ═══════════════════════════════════════════════════════════════
   const canManageUsers = () => hasRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'EMPLOYEE', 'MEMBER')
+  
+  // ═══════════════════════════════════════════════════════════════
+  // Additional granular permissions for UI components
+  // ═══════════════════════════════════════════════════════════════
+  // Flats/Wings (Property Management) - Committee + Manager
+  const canManageFlats = () => hasRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'MANAGER')
+  const canManageWings = () => hasRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'MANAGER')
+  
+  // Vehicles - Broader access for staff
+  const canManageVehicles = () => hasRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'MANAGER', 'EMPLOYEE', 'MEMBER')
+  
+  // Complaints - Anyone can raise, Committee+ can manage  
+  const canRaiseComplaints = () => hasRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'MANAGER', 'EMPLOYEE', 'MEMBER', 'TENANT')
+  const canManageComplaints = () => hasRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'MANAGER')
+  
+  // Organizations - Platform + Org Owner only
+  const canManageOrganizations = () => hasRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER')
+  
+  // Reports - Financial visibility
+  const canViewReports = () => hasRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'MANAGER')
 
   const updateUser = (updatedUser) => {
     setUser(updatedUser)
@@ -197,6 +217,13 @@ export const AuthProvider = ({ children }) => {
     canExportData,
     canManageSocieties,
     canManageUsers,
+    canManageFlats,
+    canManageWings,
+    canManageVehicles,
+    canRaiseComplaints,
+    canManageComplaints,
+    canManageOrganizations,
+    canViewReports,
   }
 
   return (
