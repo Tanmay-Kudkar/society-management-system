@@ -4,8 +4,8 @@ import { useAuth } from '../context/AuthContext'
 import { vendorApi, societyApi } from '../../../api'
 import { Plus, Edit, Trash2, Search, X, Truck, Phone, Mail, Eye, Building2, CreditCard, Landmark, FileText, User, MapPin, Upload } from 'lucide-react'
 import { FormInput, PhoneInput, SmartSelect, FormTextarea } from '../components/FormComponents'
-<<<<<<< HEAD
 import PermissionDenied from '../components/PermissionDenied'
+<<<<<<< HEAD
 <<<<<<< HEAD
 import BulkImportModal from '../components/BulkImportModal'
 =======
@@ -13,10 +13,17 @@ import BulkImportModal from '../components/BulkImportModal'
 import BulkImportModal from '../components/BulkImportModal'
 >>>>>>> bb22427 (Implemented bulk import services for vehicles, vendors, and wings)
 >>>>>>> 5ada67c (Implemented bulk import services for vehicles, vendors, and wings)
+=======
+>>>>>>> 4e40213 (Added role-based permissions and access denied screen)
 
 export default function Vendors() {
   const { user, canManageVendors } = useAuth()
   const queryClient = useQueryClient()
+  
+  // Permission check
+  if (!canManageVendors()) {
+    return <PermissionDenied message="You don't have permission to manage vendors" />
+  }
   
   // Permission check
   if (!canManageVendors()) {
@@ -201,6 +208,31 @@ export default function Vendors() {
                   >
                     <Eye size={18} />
                   </button>
+                  {canManageVendors() && (
+                    <>
+                      <button
+                        onClick={() => { 
+                          setEditingVendor(vendor)
+                          setShowModal(true) 
+                        }}
+                        className="p-2 text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-all"
+                        title="Edit"
+                      >
+                        <Edit size={18} />
+                      </button>
+                      <button
+                        onClick={() => {
+                          if (confirm('Are you sure you want to delete this vendor?')) {
+                            deleteMutation.mutate(vendor.id)
+                          }
+                        }}
+                        className="p-2 text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all"
+                        title="Delete"
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    </>
+                  )}
                   {canManageVendors() && (
                     <>
                       <button
