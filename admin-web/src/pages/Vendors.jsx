@@ -3,7 +3,10 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '../context/AuthContext'
 import { vendorApi, societyApi } from '../../../api'
 import { Plus, Edit, Trash2, Search, X, Truck, Phone, Mail, Eye, Building2, CreditCard, Landmark, FileText, User, MapPin, Upload } from 'lucide-react'
+import { vendorApi, societyApi } from '../../../api'
+import { Plus, Edit, Trash2, Search, X, Truck, Phone, Mail, Eye, Building2, CreditCard, Landmark, FileText, User, MapPin, Upload } from 'lucide-react'
 import { FormInput, PhoneInput, SmartSelect, FormTextarea } from '../components/FormComponents'
+<<<<<<< HEAD
 import PermissionDenied from '../components/PermissionDenied'
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -15,6 +18,9 @@ import BulkImportModal from '../components/BulkImportModal'
 >>>>>>> 5ada67c (Implemented bulk import services for vehicles, vendors, and wings)
 =======
 >>>>>>> 4e40213 (Added role-based permissions and access denied screen)
+=======
+import BulkImportModal from '../components/BulkImportModal'
+>>>>>>> 9961c5e (Implemented bulk import services for vehicles, vendors, and wings)
 
 export default function Vendors() {
   const { user, canManageVendors } = useAuth()
@@ -30,6 +36,7 @@ export default function Vendors() {
     return <PermissionDenied message="You don't have permission to manage vendors" />
   }
   const [showModal, setShowModal] = useState(false)
+  const [showBulkImport, setShowBulkImport] = useState(false)
   const [showBulkImport, setShowBulkImport] = useState(false)
   const [editingVendor, setEditingVendor] = useState(null)
   const [searchTerm, setSearchTerm] = useState('')
@@ -151,6 +158,25 @@ export default function Vendors() {
           <p className="text-gray-600 dark:text-gray-400 mt-1">Manage service providers and contractors</p>
         </div>
         {canManageVendors() && (
+          <div className="flex gap-2">
+            <button
+              onClick={() => setShowBulkImport(true)}
+              className="inline-flex items-center gap-2 px-4 py-2 border border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition"
+            >
+              <Upload size={20} />
+              Bulk Import
+            </button>
+            <button
+              onClick={() => { 
+                setEditingVendor(null)
+                setShowModal(true) 
+              }}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+            >
+              <Plus size={20} />
+              Add Vendor
+            </button>
+          </div>
           <div className="flex gap-2">
             <button
               onClick={() => setShowBulkImport(true)}
@@ -749,6 +775,36 @@ export default function Vendors() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Bulk Import Modal */}
+      {showBulkImport && (
+        <BulkImportModal
+          title="Bulk Import Vendors"
+          entityName="Vendors"
+          templateFilename="vendor_import_template.xlsx"
+          columns={[
+            { letter: 'A', label: 'Vendor Name', required: true, description: 'Name of the vendor/company' },
+            { letter: 'B', label: 'Service Type', required: true, description: 'PLUMBER, ELECTRICIAN, SECURITY, etc.' },
+            { letter: 'C', label: 'Contact Person', required: false, description: 'Primary contact person name' },
+            { letter: 'D', label: 'Phone', required: false, description: 'Contact phone number' },
+            { letter: 'E', label: 'Email', required: false, description: 'Contact email address' },
+            { letter: 'F', label: 'Address', required: false, description: 'Business address' },
+            { letter: 'G', label: 'GST Number', required: false, description: 'GST registration number' },
+            { letter: 'H', label: 'PAN Number', required: false, description: 'PAN card number' },
+          ]}
+          tableColumns={[
+            { key: 'name', label: 'Vendor Name' },
+            { key: 'serviceType', label: 'Service Type' },
+          ]}
+          apiValidate={vendorApi.validateBulkImport}
+          apiProcess={vendorApi.processBulkImport}
+          apiTemplate={vendorApi.downloadImportTemplate}
+          societyId={user?.societyId}
+          userId={user?.id}
+          onClose={() => setShowBulkImport(false)}
+          onSuccess={() => queryClient.invalidateQueries(['vendors'])}
+        />
       )}
 
       {/* Bulk Import Modal */}
