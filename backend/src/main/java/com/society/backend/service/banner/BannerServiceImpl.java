@@ -36,6 +36,7 @@ public class BannerServiceImpl implements BannerService {
             Society society = societyRepository.findById(request.getSocietyId())
                     .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Society not found"));
             banner.setSociety(society);
+            banner.setOrganization(society.getOrganization());
         }
 
         banner.setTitle(request.getTitle());
@@ -73,7 +74,27 @@ public class BannerServiceImpl implements BannerService {
 
     @Override
     public List<BannerResponse> getAll() {
+        var currentUser = roleService.getCurrentUser();
+        if (currentUser == null) {
+            throw new ApiException(HttpStatus.UNAUTHORIZED, "Not authenticated");
+        }
+
         return bannerRepository.findAll().stream()
+                .filter(b -> {
+                    if (currentUser.getRole() == com.society.backend.entity.Role.PLATFORM_OWNER) {
+                        return true;
+                    }
+                    if (b.getSociety() == null) {
+                        return true;
+                    }
+                    if (currentUser.getRole() == com.society.backend.entity.Role.ORGANIZATION_OWNER
+                            && currentUser.getOrganization() != null) {
+                        return b.getSociety().getOrganization() != null
+                                && b.getSociety().getOrganization().getId().equals(currentUser.getOrganization().getId());
+                    }
+                    return currentUser.getSociety() != null
+                            && b.getSociety().getId().equals(currentUser.getSociety().getId());
+                })
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
@@ -90,6 +111,7 @@ public class BannerServiceImpl implements BannerService {
             Society society = societyRepository.findById(request.getSocietyId())
                     .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Society not found"));
             banner.setSociety(society);
+            banner.setOrganization(society.getOrganization());
         }
 
         if (request.getTitle() != null)

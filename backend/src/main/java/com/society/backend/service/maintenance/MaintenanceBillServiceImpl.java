@@ -47,6 +47,10 @@ public class MaintenanceBillServiceImpl implements MaintenanceBillService {
 
         MaintenanceBill bill = new MaintenanceBill();
         bill.setFlat(flat);
+        bill.setSociety(flat.getSociety());
+        if (flat.getSociety() != null) {
+            bill.setOrganization(flat.getSociety().getOrganization());
+        }
         bill.setBillMonth(request.getBillMonth());
         bill.setAmount(request.getAmount());
         bill.setDueDate(request.getDueDate());
@@ -206,6 +210,10 @@ public class MaintenanceBillServiceImpl implements MaintenanceBillService {
 
             MaintenanceBill bill = new MaintenanceBill();
             bill.setFlat(flat);
+            bill.setSociety(flat.getSociety());
+            if (flat.getSociety() != null) {
+                bill.setOrganization(flat.getSociety().getOrganization());
+            }
             bill.setBillMonth(billMonth);
             bill.setAmount(amount);
             bill.setPaidAmount(BigDecimal.ZERO);

@@ -20,6 +20,14 @@ public class NotificationPreference {
     @JoinColumn(name = "user_id", nullable = false, unique = true)
     private User user;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "society_id")
+    private Society society;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "organization_id")
+    private Organization organization;
+
     @Column(name = "email_tickets", nullable = false)
     private Boolean emailTickets = true;
 

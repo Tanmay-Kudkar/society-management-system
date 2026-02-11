@@ -15,6 +15,7 @@ import com.society.backend.repository.maintenance.MaintenanceBillRepository;
 import com.society.backend.repository.society.SocietyRepository;
 import com.society.backend.repository.transaction.TransactionRepository;
 import com.society.backend.repository.vendor.VendorBillRepository;
+import com.society.backend.service.common.RoleService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -36,6 +37,7 @@ public class ReportServiceImpl implements ReportService {
     private final MaintenanceBillRepository maintenanceBillRepository;
     private final VendorBillRepository vendorBillRepository;
     private final ContractRepository contractRepository;
+        private final RoleService roleService;
 
     @Override
     public FinancialReportResponse getMTDReport(Long societyId) {
@@ -356,7 +358,9 @@ public class ReportServiceImpl implements ReportService {
     }
 
     private Society getSociety(Long societyId) {
-        return societyRepository.findById(societyId)
+        Society society = societyRepository.findById(societyId)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Society not found"));
+        roleService.enforceSocietyScope(roleService.getCurrentUser(), societyId);
+        return society;
     }
 }

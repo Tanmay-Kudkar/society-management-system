@@ -39,6 +39,12 @@ public class OrganizationController {
         return ResponseEntity.ok(organizationService.getById(id));
     }
 
+    @GetMapping("/by-owner")
+    @PreAuthorize("hasAnyRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER')")
+    public ResponseEntity<List<OrganizationResponse>> getByOwnerEmail(@RequestParam String email) {
+        return ResponseEntity.ok(organizationService.getByOwnerEmail(email));
+    }
+
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER')")
     public ResponseEntity<OrganizationResponse> update(

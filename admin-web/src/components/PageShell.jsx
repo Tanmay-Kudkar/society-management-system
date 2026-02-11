@@ -1,4 +1,5 @@
 import { useNavigate, Link } from 'react-router-dom'
+import clsx from 'clsx'
 import { useTheme } from '../context/ThemeContext'
 import { Building2, ArrowLeft, Sun, Moon, Monitor, CheckCircle, Menu, X, Github, Twitter, Linkedin } from 'lucide-react'
 import { useState, useRef, useEffect } from 'react'
@@ -38,49 +39,56 @@ export default function PageShell({ children }) {
   ]
 
   return (
-    <div className={`min-h-screen flex flex-col transition-colors duration-300 ${isDark ? 'bg-slate-900 text-white' : 'bg-gray-50 text-gray-900'}`}>
+    <div className={clsx("page-shell", isDark && "page-shell--dark")}>
       {/* Navbar */}
-      <nav className={`sticky top-0 z-50 transition-all duration-300 ${
-        scrolled
-          ? isDark ? 'bg-slate-900/95 backdrop-blur-xl shadow-lg shadow-black/20 border-b border-white/5' : 'bg-white/95 backdrop-blur-xl shadow-lg shadow-black/5 border-b border-gray-200/80'
-          : isDark ? 'bg-transparent' : 'bg-transparent'
-      }`}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
+      <nav
+        className={clsx(
+          "page-shell__nav",
+          scrolled && "page-shell__nav--scrolled"
+        )}
+      >
+        <div className="page-shell__nav-inner">
           {/* Logo */}
           <Link
             to="/welcome"
-            className="flex items-center gap-2.5 group"
+            className="page-shell__logo"
           >
             <div
-              className="p-2 rounded-xl shadow-lg transition-all duration-300 group-hover:scale-110"
+              className="page-shell__logo-mark"
               style={{
                 background: `linear-gradient(to bottom right, var(--accent-primary), var(--accent-secondary))`,
                 boxShadow: `0 8px 16px -4px color-mix(in srgb, var(--accent-primary) 30%, transparent)`
               }}
             >
-              <Building2 className="w-5 h-5 text-white" />
+              <Building2 className="page-shell__logo-icon" />
             </div>
-            <div className="flex flex-col">
+            <div className="page-shell__logo-text">
               <span
-                className="text-lg font-black tracking-tight bg-clip-text text-transparent"
+                className="page-shell__brand"
                 style={{ backgroundImage: isDark
                   ? `linear-gradient(to right, white, var(--accent-light), var(--accent-secondary))`
                   : `linear-gradient(to right, #111827, var(--accent-primary), var(--accent-secondary))`
                 }}
               >SocietyHub</span>
-              <span className="text-[8px] font-medium -mt-1 tracking-widest uppercase" style={{ color: isDark ? 'color-mix(in srgb, var(--accent-light) 70%, transparent)' : 'color-mix(in srgb, var(--accent-primary) 70%, transparent)' }}>Management System</span>
+              <span
+                className="page-shell__tagline"
+                style={{ color: isDark ? 'color-mix(in srgb, var(--accent-light) 70%, transparent)' : 'color-mix(in srgb, var(--accent-primary) 70%, transparent)' }}
+              >
+                Management System
+              </span>
             </div>
           </Link>
 
           {/* Desktop links */}
-          <div className="hidden md:flex items-center gap-1">
+          <div className="page-shell__links">
             {navLinks.map((l) => (
               <Link
                 key={l.path}
                 to={l.path}
-                className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-                  isDark ? 'text-gray-300 hover:text-white hover:bg-white/5' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-                }`}
+                className={clsx(
+                  "page-shell__link",
+                  location.pathname === l.path && "page-shell__link--active"
+                )}
                 style={location.pathname === l.path ? { color: 'var(--accent-primary)', background: isDark ? 'color-mix(in srgb, var(--accent-primary) 10%, transparent)' : 'color-mix(in srgb, var(--accent-primary) 8%, white)' } : {}}
               >
                 {l.label}
@@ -89,20 +97,18 @@ export default function PageShell({ children }) {
           </div>
 
           {/* Right side */}
-          <div className="flex items-center gap-2 sm:gap-3">
+          <div className="page-shell__actions">
             {/* Theme dropdown */}
-            <div className="relative" ref={themeRef}>
+            <div className="page-shell__theme" ref={themeRef}>
               <button
                 onClick={() => setThemeMenuOpen(!themeMenuOpen)}
-                className={`p-2 sm:p-2.5 rounded-xl transition-all duration-300 hover:scale-110 focus:outline-none ${
-                  isDark ? 'bg-slate-800/80 hover:bg-slate-700 text-yellow-400' : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
-                }`}
+                className={clsx("page-shell__theme-button", isDark && "page-shell__theme-button--dark")}
               >
-                {!isManual ? <Monitor className="w-4 h-4 sm:w-5 sm:h-5" /> : isDark ? <Moon className="w-4 h-4 sm:w-5 sm:h-5" /> : <Sun className="w-4 h-4 sm:w-5 sm:h-5" />}
+                {!isManual ? <Monitor className="page-shell__theme-icon" /> : isDark ? <Moon className="page-shell__theme-icon" /> : <Sun className="page-shell__theme-icon" />}
               </button>
               {themeMenuOpen && (
-                <div className={`absolute right-0 mt-2 w-44 rounded-xl shadow-2xl overflow-hidden z-50 animate-in-down ${isDark ? 'bg-slate-800 border border-white/10' : 'bg-white border border-gray-200'}`}>
-                  <div className="py-1">
+                <div className={clsx("page-shell__theme-menu", isDark && "page-shell__theme-menu--dark")}>
+                  <div className="page-shell__theme-list">
                     {[
                       { label: 'System', icon: Monitor, active: !isManual, action: () => { resetToSystemTheme(); setThemeMenuOpen(false) } },
                       { label: 'Light', icon: Sun, active: isManual && theme === 'light', action: () => { setTheme('light'); setThemeMenuOpen(false) } },
@@ -111,15 +117,15 @@ export default function PageShell({ children }) {
                       <button
                         key={opt.label}
                         onClick={opt.action}
-                        className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors ${
-                          opt.active
-                            ? isDark ? 'bg-[var(--accent-primary)]/20 text-[var(--accent-primary)]' : 'bg-[var(--accent-primary)]/10 text-[var(--accent-primary)]'
-                            : isDark ? 'text-gray-300 hover:bg-slate-700' : 'text-gray-700 hover:bg-gray-100'
-                        }`}
+                        className={clsx(
+                          "page-shell__theme-option",
+                          opt.active && "page-shell__theme-option--active",
+                          isDark && "page-shell__theme-option--dark"
+                        )}
                       >
-                        <opt.icon className="w-4 h-4" />
+                        <opt.icon className="page-shell__theme-option-icon" />
                         <span>{opt.label}</span>
-                        {opt.active && <CheckCircle className="w-4 h-4 ml-auto" />}
+                        {opt.active && <CheckCircle className="page-shell__theme-check" />}
                       </button>
                     ))}
                   </div>
@@ -130,15 +136,15 @@ export default function PageShell({ children }) {
             {/* Mobile toggle */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className={`md:hidden p-2 rounded-xl transition-all focus:outline-none ${isDark ? 'bg-slate-800/80 hover:bg-slate-700' : 'bg-gray-100 hover:bg-gray-200'}`}
+              className={clsx("page-shell__menu-button", isDark && "page-shell__menu-button--dark")}
             >
-              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+              {mobileMenuOpen ? <X className="page-shell__menu-icon" /> : <Menu className="page-shell__menu-icon" />}
             </button>
 
             {/* Login CTA */}
             <Link
               to="/login"
-              className="hidden sm:inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white transition-all duration-300 hover:scale-105 hover:shadow-lg"
+              className="page-shell__login"
               style={{
                 background: `linear-gradient(to right, var(--accent-primary), var(--accent-secondary))`,
                 boxShadow: `0 4px 14px -2px color-mix(in srgb, var(--accent-primary) 40%, transparent)`
@@ -150,16 +156,17 @@ export default function PageShell({ children }) {
         </div>
 
         {/* Mobile menu */}
-        <div className={`md:hidden overflow-hidden transition-all duration-300 ${mobileMenuOpen ? 'max-h-80 opacity-100' : 'max-h-0 opacity-0'}`}>
-          <div className={`mx-4 mb-3 rounded-2xl p-4 space-y-1 ${isDark ? 'bg-slate-800/95 backdrop-blur-xl' : 'bg-white/95 backdrop-blur-xl shadow-lg border border-gray-200'}`}>
+        <div className={clsx("page-shell__mobile", mobileMenuOpen && "page-shell__mobile--open")}>
+          <div className={clsx("page-shell__mobile-inner", isDark && "page-shell__mobile-inner--dark")}>
             {navLinks.map((l) => (
               <Link
                 key={l.path}
                 to={l.path}
                 onClick={() => setMobileMenuOpen(false)}
-                className={`block px-4 py-2.5 rounded-xl text-sm font-medium transition-colors ${
-                  isDark ? 'text-gray-300 hover:bg-slate-700' : 'text-gray-600 hover:bg-gray-100'
-                }`}
+                className={clsx(
+                  "page-shell__mobile-link",
+                  location.pathname === l.path && "page-shell__mobile-link--active"
+                )}
                 style={location.pathname === l.path ? { color: 'var(--accent-primary)', background: isDark ? 'color-mix(in srgb, var(--accent-primary) 10%, transparent)' : 'color-mix(in srgb, var(--accent-primary) 8%, white)' } : {}}
               >
                 {l.label}
@@ -168,7 +175,7 @@ export default function PageShell({ children }) {
             <Link
               to="/login"
               onClick={() => setMobileMenuOpen(false)}
-              className="block w-full text-center py-3 rounded-xl text-white font-semibold mt-2"
+              className="page-shell__mobile-login"
               style={{ background: `linear-gradient(to right, var(--accent-primary), var(--accent-secondary))` }}
             >
               Login
@@ -178,32 +185,32 @@ export default function PageShell({ children }) {
       </nav>
 
       {/* Page content */}
-      <main className="flex-1 animate-fade-in-up">
+      <main className="page-shell__main">
         {children}
       </main>
 
       {/* Footer */}
-      <footer className={`py-12 px-4 border-t transition-colors ${isDark ? 'border-white/10 bg-slate-950/50' : 'border-gray-200 bg-white/50'}`}>
-        <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-10">
+      <footer className={clsx("page-shell__footer", isDark && "page-shell__footer--dark")}>
+        <div className="page-shell__footer-inner">
+          <div className="page-shell__footer-grid">
             {/* Brand */}
-            <div className="col-span-2 md:col-span-1">
-              <Link to="/welcome" className="flex items-center gap-2.5 mb-4 group">
-                <div className="p-2 rounded-xl transition-transform group-hover:scale-110" style={{ background: `linear-gradient(to bottom right, var(--accent-primary), var(--accent-secondary))` }}>
-                  <Building2 className="w-5 h-5 text-white" />
+            <div className="page-shell__footer-brand">
+              <Link to="/welcome" className="page-shell__footer-logo">
+                <div className="page-shell__footer-mark" style={{ background: `linear-gradient(to bottom right, var(--accent-primary), var(--accent-secondary))` }}>
+                  <Building2 className="page-shell__footer-mark-icon" />
                 </div>
-                <span className={`text-lg font-black ${isDark ? 'text-white' : 'text-gray-900'}`}>SocietyHub</span>
+                <span className={clsx("page-shell__footer-name", isDark && "page-shell__footer-name--dark")}>SocietyHub</span>
               </Link>
-              <p className={`text-sm mb-5 leading-relaxed ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+              <p className={clsx("page-shell__footer-text", isDark && "page-shell__footer-text--dark")}>
                 The complete digital solution for modern housing society management.
               </p>
-              <div className="flex items-center gap-3">
+              <div className="page-shell__social">
                 {[
-                  { icon: <Twitter className="w-4 h-4" />, href: '#' },
-                  { icon: <Github className="w-4 h-4" />, href: '#' },
-                  { icon: <Linkedin className="w-4 h-4" />, href: '#' },
+                  { icon: <Twitter className="page-shell__social-icon" />, href: '#' },
+                  { icon: <Github className="page-shell__social-icon" />, href: '#' },
+                  { icon: <Linkedin className="page-shell__social-icon" />, href: '#' },
                 ].map((s, i) => (
-                  <a key={i} href={s.href} className={`p-2.5 rounded-xl transition-all duration-300 hover:scale-110 ${isDark ? 'bg-slate-800 hover:bg-slate-700 text-gray-400 hover:text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-500 hover:text-gray-900'}`}>
+                  <a key={i} href={s.href} className={clsx("page-shell__social-link", isDark && "page-shell__social-link--dark")}>
                     {s.icon}
                   </a>
                 ))}
@@ -228,14 +235,14 @@ export default function PageShell({ children }) {
                 { label: 'Help Center', to: '/contact' },
               ]},
             ].map((section, i) => (
-              <div key={i}>
-                <h4 className={`font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>{section.title}</h4>
-                <ul className="space-y-3">
+              <div key={i} className="page-shell__footer-section">
+                <h4 className={clsx("page-shell__footer-title", isDark && "page-shell__footer-title--dark")}>{section.title}</h4>
+                <ul className="page-shell__footer-links">
                   {section.links.map((link, j) => (
                     <li key={j}>
                       <Link
                         to={link.to}
-                        className={`text-sm transition-colors duration-200 hover:translate-x-1 inline-block ${isDark ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'}`}
+                        className={clsx("page-shell__footer-link", isDark && "page-shell__footer-link--dark")}
                       >
                         {link.label}
                       </Link>
@@ -247,14 +254,14 @@ export default function PageShell({ children }) {
           </div>
 
           {/* Bottom */}
-          <div className={`pt-6 border-t flex flex-col sm:flex-row items-center justify-between gap-4 ${isDark ? 'border-white/10' : 'border-gray-200'}`}>
-            <p className={`text-sm ${isDark ? 'text-gray-500' : 'text-gray-600'}`}>
+          <div className={clsx("page-shell__footer-bottom", isDark && "page-shell__footer-bottom--dark")}>
+            <p className={clsx("page-shell__footer-copy", isDark && "page-shell__footer-copy--dark")}>
               © 2026 SocietyHub. All rights reserved.
             </p>
-            <div className="flex items-center gap-4 text-sm">
-              <Link to="/privacy" className={`transition-colors ${isDark ? 'text-gray-500 hover:text-white' : 'text-gray-500 hover:text-gray-900'}`}>Privacy</Link>
-              <Link to="/terms" className={`transition-colors ${isDark ? 'text-gray-500 hover:text-white' : 'text-gray-500 hover:text-gray-900'}`}>Terms</Link>
-              <Link to="/contact" className={`transition-colors ${isDark ? 'text-gray-500 hover:text-white' : 'text-gray-500 hover:text-gray-900'}`}>Contact</Link>
+            <div className="page-shell__footer-legal">
+              <Link to="/privacy" className={clsx("page-shell__footer-legal-link", isDark && "page-shell__footer-legal-link--dark")}>Privacy</Link>
+              <Link to="/terms" className={clsx("page-shell__footer-legal-link", isDark && "page-shell__footer-legal-link--dark")}>Terms</Link>
+              <Link to="/contact" className={clsx("page-shell__footer-legal-link", isDark && "page-shell__footer-legal-link--dark")}>Contact</Link>
             </div>
           </div>
         </div>

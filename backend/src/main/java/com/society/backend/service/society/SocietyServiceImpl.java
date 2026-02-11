@@ -10,10 +10,9 @@ import com.society.backend.repository.WingRepository;
 import com.society.backend.repository.flat.FlatRepository;
 import com.society.backend.repository.organization.OrganizationRepository;
 import com.society.backend.repository.society.SocietyRepository;
-import com.society.backend.repository.user.UserRepository;
+import com.society.backend.service.common.RoleService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -27,17 +26,22 @@ public class SocietyServiceImpl implements SocietyService {
     private final FlatRepository flatRepository;
     private final WingRepository wingRepository;
     private final OrganizationRepository organizationRepository;
-    private final UserRepository userRepository;
+    private final RoleService roleService;
 
     @Override
     public SocietyResponse create(SocietyRequest request) {
         Society society = new Society();
         mapRequestToEntity(request, society);
 
+        var currentUser = roleService.getCurrentUser();
+
         // If organizationId is provided, link society to organization
         if (request.getOrganizationId() != null) {
             var org = organizationRepository.findById(request.getOrganizationId())
                     .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Organization not found"));
+            if (currentUser != null && currentUser.getRole() == Role.ORGANIZATION_OWNER) {
+                roleService.enforceOrganizationScope(currentUser, org.getId());
+            }
             long currentCount = societyRepository.countByOrganizationId(org.getId());
             if (!org.canCreateMoreSocieties(currentCount)) {
                 throw new ApiException(HttpStatus.FORBIDDEN,
@@ -46,7 +50,6 @@ public class SocietyServiceImpl implements SocietyService {
             society.setOrganization(org);
         } else {
             // Check if current user is ORGANIZATION_OWNER - auto-assign their org
-            User currentUser = getCurrentUser();
             if (currentUser != null && currentUser.getRole() == Role.ORGANIZATION_OWNER
                     && currentUser.getOrganization() != null) {
                 var org = currentUser.getOrganization();
@@ -65,7 +68,7 @@ public class SocietyServiceImpl implements SocietyService {
 
     @Override
     public List<SocietyResponse> getAll() {
-        User currentUser = getCurrentUser();
+        User currentUser = roleService.getCurrentUser();
 
         // ORGANIZATION_OWNER sees only their organization's societies
         if (currentUser != null && currentUser.getRole() == Role.ORGANIZATION_OWNER) {
@@ -98,6 +101,11 @@ public class SocietyServiceImpl implements SocietyService {
 
     @Override
     public SocietyResponse getById(Long id) {
+        var currentUser = roleService.getCurrentUser();
+        if (currentUser != null) {
+            roleService.enforceSocietyScope(currentUser, id);
+        }
+
         Society society = societyRepository.findById(id)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Society not found"));
         return toResponse(society);
@@ -105,6 +113,11 @@ public class SocietyServiceImpl implements SocietyService {
 
     @Override
     public SocietyResponse update(Long id, SocietyRequest request) {
+        var currentUser = roleService.getCurrentUser();
+        if (currentUser != null) {
+            roleService.enforceSocietyScope(currentUser, id);
+        }
+
         Society society = societyRepository.findById(id)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Society not found"));
         mapRequestToEntity(request, society);
@@ -114,6 +127,11 @@ public class SocietyServiceImpl implements SocietyService {
 
     @Override
     public void delete(Long id) {
+        var currentUser = roleService.getCurrentUser();
+        if (currentUser != null) {
+            roleService.enforceSocietyScope(currentUser, id);
+        }
+
         if (!societyRepository.existsById(id)) {
             throw new ApiException(HttpStatus.NOT_FOUND, "Society not found");
         }
@@ -174,11 +192,4 @@ public class SocietyServiceImpl implements SocietyService {
         return response;
     }
 
-    private User getCurrentUser() {
-        var auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || auth.getName() == null) {
-            return null;
-        }
-        return userRepository.findByEmail(auth.getName()).orElse(null);
-    }
 }

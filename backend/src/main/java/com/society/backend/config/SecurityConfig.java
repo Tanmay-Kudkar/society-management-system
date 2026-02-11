@@ -68,19 +68,17 @@ public class SecurityConfig {
                                                 // Public endpoints
                                                 .requestMatchers("/auth/**").permitAll()
                                                 .requestMatchers("/error").permitAll()
+                                                .requestMatchers("/health").permitAll()
                                                 .requestMatchers("/api/test/**").permitAll() // Test endpoints (remove
                                                                                              // in production)
 
                                                 // ==================== PLATFORM_OWNER ONLY ====================
-                                                // Platform-level management (societies, approvals, escalations)
-                                                .requestMatchers("/admin/societies/**").hasRole("PLATFORM_OWNER")
-                                                .requestMatchers("/admin/approvals/**").hasRole("PLATFORM_OWNER")
-                                                .requestMatchers("/admin/escalations/**").hasRole("PLATFORM_OWNER")
-                                                .requestMatchers("/admin/platform/**").hasRole("PLATFORM_OWNER")
+                                                .requestMatchers("/organizations/**")
+                                                .hasAnyRole("PLATFORM_OWNER", "ORGANIZATION_OWNER")
+                                                .requestMatchers("/api/platform/**").hasRole("PLATFORM_OWNER")
 
                                                 // ==================== SOCIETY_ADMIN & ABOVE ====================
-                                                // Society-level management (users, settings, reports)
-                                                .requestMatchers("/societies/{societyId}/**")
+                                                .requestMatchers("/societies/**")
                                                 .hasAnyRole("PLATFORM_OWNER", "ORGANIZATION_OWNER", "SOCIETY_ADMIN")
                                                 // User creation/deletion - roles allowed based on RolePermissions
                                                 // hierarchy
@@ -92,9 +90,12 @@ public class SecurityConfig {
                                                 .hasAnyRole("PLATFORM_OWNER", "ORGANIZATION_OWNER", "SOCIETY_ADMIN",
                                                                 "CHAIRMAN", "SECRETARY", "TREASURER", "COMMITTEE",
                                                                 "EMPLOYEE", "MEMBER")
-                                                .requestMatchers("/reports/**")
+                                                .requestMatchers("/api/reports/**")
                                                 .hasAnyRole("PLATFORM_OWNER", "ORGANIZATION_OWNER", "SOCIETY_ADMIN",
                                                                 "CHAIRMAN")
+                                                .requestMatchers("/api/export/**")
+                                                .hasAnyRole("PLATFORM_OWNER", "ORGANIZATION_OWNER", "SOCIETY_ADMIN",
+                                                                "CHAIRMAN", "TREASURER")
 
                                                 // ==================== CHAIRMAN LEVEL ====================
                                                 // Financial approvals, high-value decisions
@@ -102,9 +103,6 @@ public class SecurityConfig {
                                                 .hasAnyRole("PLATFORM_OWNER", "ORGANIZATION_OWNER", "SOCIETY_ADMIN",
                                                                 "CHAIRMAN")
                                                 .requestMatchers(HttpMethod.DELETE, "/contracts/**")
-                                                .hasAnyRole("PLATFORM_OWNER", "ORGANIZATION_OWNER", "SOCIETY_ADMIN",
-                                                                "CHAIRMAN")
-                                                .requestMatchers("/financial-approvals/**")
                                                 .hasAnyRole("PLATFORM_OWNER", "ORGANIZATION_OWNER", "SOCIETY_ADMIN",
                                                                 "CHAIRMAN")
 
@@ -117,9 +115,6 @@ public class SecurityConfig {
                                                 .hasAnyRole("PLATFORM_OWNER", "ORGANIZATION_OWNER", "SOCIETY_ADMIN",
                                                                 "CHAIRMAN", "SECRETARY")
                                                 .requestMatchers(HttpMethod.DELETE, "/notices/**")
-                                                .hasAnyRole("PLATFORM_OWNER", "ORGANIZATION_OWNER", "SOCIETY_ADMIN",
-                                                                "CHAIRMAN", "SECRETARY")
-                                                .requestMatchers("/meetings/**")
                                                 .hasAnyRole("PLATFORM_OWNER", "ORGANIZATION_OWNER", "SOCIETY_ADMIN",
                                                                 "CHAIRMAN", "SECRETARY")
 
@@ -166,7 +161,11 @@ public class SecurityConfig {
                                                 .hasAnyRole("PLATFORM_OWNER", "ORGANIZATION_OWNER", "SOCIETY_ADMIN",
                                                                 "CHAIRMAN", "SECRETARY", "TREASURER", "COMMITTEE",
                                                                 "EMPLOYEE", "MEMBER")
-                                                .requestMatchers("/documents/**")
+                                                .requestMatchers("/api/wings/**")
+                                                .hasAnyRole("PLATFORM_OWNER", "ORGANIZATION_OWNER", "SOCIETY_ADMIN",
+                                                                "CHAIRMAN", "SECRETARY", "TREASURER", "COMMITTEE",
+                                                                "EMPLOYEE", "MEMBER")
+                                                .requestMatchers("/document-templates/**")
                                                 .hasAnyRole("PLATFORM_OWNER", "ORGANIZATION_OWNER", "SOCIETY_ADMIN",
                                                                 "CHAIRMAN", "SECRETARY", "TREASURER", "COMMITTEE",
                                                                 "EMPLOYEE")

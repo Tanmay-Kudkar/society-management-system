@@ -43,10 +43,12 @@ public class VendorBillServiceImpl implements VendorBillService {
 
         Society society = societyRepository.findById(request.getSocietyId())
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Society not found"));
+        roleService.enforceSocietyScope(roleService.getUser(userId), society.getId());
 
         VendorBill bill = new VendorBill();
         bill.setVendor(vendor);
         bill.setSociety(society);
+        bill.setOrganization(society.getOrganization());
         bill.setBillNumber(request.getBillNumber());
         bill.setAmount(request.getAmount());
         bill.setPaidAmount(request.getPaidAmount() != null ? request.getPaidAmount() : BigDecimal.ZERO);
@@ -66,6 +68,9 @@ public class VendorBillServiceImpl implements VendorBillService {
     public VendorBillResponse getById(Long id) {
         VendorBill bill = vendorBillRepository.findById(id)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Vendor bill not found"));
+        if (bill.getSociety() != null) {
+            roleService.enforceSocietyScope(roleService.getCurrentUser(), bill.getSociety().getId());
+        }
         return mapToResponse(bill);
     }
 
@@ -78,6 +83,7 @@ public class VendorBillServiceImpl implements VendorBillService {
 
     @Override
     public List<VendorBillResponse> getBySocietyId(Long societyId) {
+        roleService.enforceSocietyScope(roleService.getCurrentUser(), societyId);
         return vendorBillRepository.findBySocietyId(societyId).stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
@@ -99,7 +105,24 @@ public class VendorBillServiceImpl implements VendorBillService {
 
     @Override
     public List<VendorBillResponse> getAll() {
+        var currentUser = roleService.getCurrentUser();
+        if (currentUser == null) {
+            throw new ApiException(HttpStatus.UNAUTHORIZED, "Not authenticated");
+        }
+
         return vendorBillRepository.findAll().stream()
+                .filter(b -> {
+                    if (currentUser.getRole() == com.society.backend.entity.Role.PLATFORM_OWNER) {
+                        return true;
+                    }
+                    if (currentUser.getRole() == com.society.backend.entity.Role.ORGANIZATION_OWNER
+                            && currentUser.getOrganization() != null) {
+                        return b.getSociety() != null && b.getSociety().getOrganization() != null
+                                && b.getSociety().getOrganization().getId().equals(currentUser.getOrganization().getId());
+                    }
+                    return b.getSociety() != null && currentUser.getSociety() != null
+                            && b.getSociety().getId().equals(currentUser.getSociety().getId());
+                })
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }

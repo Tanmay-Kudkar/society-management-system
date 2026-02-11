@@ -1,0 +1,52 @@
+/* ============================================
+   BORDER UTILITIES
+   Borders and radius helpers
+   ============================================ */
+
+.border {
+    border-width: 1px;
+    border-style: solid;
+}
+
+.border-0 {
+    border-width: 0;
+}
+
+.border-b {
+    border-bottom-width: 1px;
+    border-bottom-style: solid;
+}
+
+.border-t {
+    border-top-width: 1px;
+    border-top-style: solid;
+}
+
+.border-b-2 {
+    border-bottom-width: 2px;
+    border-bottom-style: solid;
+}
+
+.rounded {
+    border-radius: 0.25rem;
+}
+
+.rounded-lg {
+    border-radius: 0.5rem;
+}
+
+.rounded-xl {
+    border-radius: 0.75rem;
+}
+
+.rounded-2xl {
+    border-radius: 1rem;
+}
+
+.rounded-full {
+    border-radius: 9999px;
+}
+
+.outline-none {
+    outline: none;
+}

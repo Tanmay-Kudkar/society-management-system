@@ -58,6 +58,8 @@ public class NotificationPreferenceService {
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "User not found"));
 
         NotificationPreference pref = new NotificationPreference(user);
+        pref.setSociety(user.getSociety());
+        pref.setOrganization(user.getOrganization());
         return preferenceRepository.save(pref);
     }
 

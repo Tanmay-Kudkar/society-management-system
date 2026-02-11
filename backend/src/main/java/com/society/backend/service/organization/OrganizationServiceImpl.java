@@ -6,6 +6,7 @@ import com.society.backend.entity.Organization;
 import com.society.backend.exception.ApiException;
 import com.society.backend.repository.organization.OrganizationRepository;
 import com.society.backend.repository.society.SocietyRepository;
+import com.society.backend.service.common.RoleService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -19,24 +20,51 @@ public class OrganizationServiceImpl implements OrganizationService {
 
     private final OrganizationRepository organizationRepository;
     private final SocietyRepository societyRepository;
+    private final RoleService roleService;
 
     @Override
     public OrganizationResponse create(OrganizationRequest request) {
+        var currentUser = roleService.getCurrentUser();
+        roleService.requireMasterAdmin(currentUser);
+
         Organization org = new Organization();
-        mapRequestToEntity(request, org);
+        mapRequestToEntity(request, org, true);
         Organization saved = organizationRepository.save(org);
         return toResponse(saved);
     }
 
     @Override
     public List<OrganizationResponse> getAll() {
-        return organizationRepository.findAll().stream()
-                .map(this::toResponse)
-                .collect(Collectors.toList());
+        var currentUser = roleService.getCurrentUser();
+        if (currentUser == null) {
+            throw new ApiException(HttpStatus.UNAUTHORIZED, "Not authenticated");
+        }
+
+        if (currentUser.getRole() == com.society.backend.entity.Role.PLATFORM_OWNER) {
+            return organizationRepository.findAll().stream()
+                    .map(this::toResponse)
+                    .collect(Collectors.toList());
+        }
+
+        if (currentUser.getRole() == com.society.backend.entity.Role.ORGANIZATION_OWNER
+                && currentUser.getOrganization() != null) {
+            return List.of(toResponse(currentUser.getOrganization()));
+        }
+
+        return List.of();
     }
 
     @Override
     public OrganizationResponse getById(Long id) {
+        var currentUser = roleService.getCurrentUser();
+        if (currentUser == null) {
+            throw new ApiException(HttpStatus.UNAUTHORIZED, "Not authenticated");
+        }
+
+        if (currentUser.getRole() == com.society.backend.entity.Role.ORGANIZATION_OWNER) {
+            roleService.enforceOrganizationScope(currentUser, id);
+        }
+
         Organization org = organizationRepository.findById(id)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Organization not found"));
         return toResponse(org);
@@ -44,15 +72,28 @@ public class OrganizationServiceImpl implements OrganizationService {
 
     @Override
     public OrganizationResponse update(Long id, OrganizationRequest request) {
+        var currentUser = roleService.getCurrentUser();
+        if (currentUser == null) {
+            throw new ApiException(HttpStatus.UNAUTHORIZED, "Not authenticated");
+        }
+
+        boolean allowSubscriptionEdit = currentUser.getRole() == com.society.backend.entity.Role.PLATFORM_OWNER;
+        if (!allowSubscriptionEdit) {
+            roleService.enforceOrganizationScope(currentUser, id);
+        }
+
         Organization org = organizationRepository.findById(id)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Organization not found"));
-        mapRequestToEntity(request, org);
+        mapRequestToEntity(request, org, allowSubscriptionEdit);
         Organization saved = organizationRepository.save(org);
         return toResponse(saved);
     }
 
     @Override
     public void delete(Long id) {
+        var currentUser = roleService.getCurrentUser();
+        roleService.requireMasterAdmin(currentUser);
+
         if (!organizationRepository.existsById(id)) {
             throw new ApiException(HttpStatus.NOT_FOUND, "Organization not found");
         }
@@ -61,27 +102,41 @@ public class OrganizationServiceImpl implements OrganizationService {
 
     @Override
     public List<OrganizationResponse> getByOwnerEmail(String email) {
+        var currentUser = roleService.getCurrentUser();
+        if (currentUser == null) {
+            throw new ApiException(HttpStatus.UNAUTHORIZED, "Not authenticated");
+        }
+
+        if (currentUser.getRole() == com.society.backend.entity.Role.ORGANIZATION_OWNER
+                && currentUser.getOrganization() != null) {
+            if (!email.equalsIgnoreCase(currentUser.getOrganization().getOwnerEmail())) {
+                throw new ApiException(HttpStatus.FORBIDDEN, "Cannot access other organizations");
+            }
+        }
+
         return organizationRepository.findByOwnerEmail(email)
                 .map(org -> List.of(toResponse(org)))
                 .orElse(List.of());
     }
 
-    private void mapRequestToEntity(OrganizationRequest request, Organization org) {
+    private void mapRequestToEntity(OrganizationRequest request, Organization org, boolean allowSubscriptionEdit) {
         org.setName(request.getName());
         org.setOwnerName(request.getOwnerName());
         org.setOwnerEmail(request.getOwnerEmail());
         org.setOwnerPhone(request.getOwnerPhone());
-        if (request.getSubscriptionType() != null) {
-            org.setSubscriptionType(request.getSubscriptionType());
-        }
-        if (request.getMaxSocieties() != null) {
-            org.setMaxSocieties(request.getMaxSocieties());
-        }
-        if (request.getIsFoundingMember() != null) {
-            org.setIsFoundingMember(request.getIsFoundingMember());
-            if (request.getIsFoundingMember()) {
-                org.setSubscriptionType("LIFETIME");
-                org.setMaxSocieties(Integer.MAX_VALUE);
+        if (allowSubscriptionEdit) {
+            if (request.getSubscriptionType() != null) {
+                org.setSubscriptionType(request.getSubscriptionType());
+            }
+            if (request.getMaxSocieties() != null) {
+                org.setMaxSocieties(request.getMaxSocieties());
+            }
+            if (request.getIsFoundingMember() != null) {
+                org.setIsFoundingMember(request.getIsFoundingMember());
+                if (request.getIsFoundingMember()) {
+                    org.setSubscriptionType("LIFETIME");
+                    org.setMaxSocieties(Integer.MAX_VALUE);
+                }
             }
         }
     }

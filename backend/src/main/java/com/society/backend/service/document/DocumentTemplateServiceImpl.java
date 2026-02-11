@@ -27,10 +27,14 @@ public class DocumentTemplateServiceImpl implements DocumentTemplateService {
     public DocumentTemplateResponse create(DocumentTemplateRequest request, Long userId) {
         roleService.canManageDocuments(userId);
 
+        var user = roleService.getUser(userId);
+
         DocumentTemplate template = new DocumentTemplate();
         template.setTemplateType(request.getTemplateType());
         template.setTitle(request.getTitle());
         template.setContent(request.getContent());
+        template.setSociety(user.getSociety());
+        template.setOrganization(user.getOrganization());
         template.setIsActive(true);
 
         DocumentTemplate saved = documentTemplateRepository.save(template);

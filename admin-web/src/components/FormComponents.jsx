@@ -4,69 +4,59 @@
  * - Attractive inline validation with animations (no harsh red errors)
  * - Phone number live formatting & digit restriction
  */
-import { useState, useEffect } from 'react'
-import { AlertCircle, Check, ChevronDown, Lock, Info } from 'lucide-react'
-import clsx from 'clsx'
+import { useState, useEffect } from "react";
+import { AlertCircle, Check, ChevronDown, Lock, Info } from "lucide-react";
+import clsx from "clsx";
 
 /* ─── Helper: animated field hint ─── */
-const FieldHint = ({ message, type = 'error' }) => {
-  if (!message) return null
-
-  const styles = {
-    error: 'text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-700',
-    success: 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-700',
-    info: 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-700',
-  }
+const FieldHint = ({ message, type = "error" }) => {
+  if (!message) return null;
 
   const icons = {
-    error: <Info size={13} className="shrink-0 mt-0.5" />,
-    success: <Check size={13} className="shrink-0 mt-0.5" />,
-    info: <Info size={13} className="shrink-0 mt-0.5" />,
-  }
+    error: AlertCircle,
+    success: Check,
+    info: Info,
+  };
+  const Icon = icons[type] || AlertCircle;
 
   return (
-    <div
-      className={clsx(
-        'mt-1.5 px-2.5 py-1.5 text-xs rounded-lg border flex items-start gap-1.5 animate-field-hint',
-        styles[type]
-      )}
-    >
-      {icons[type]}
+    <div className={clsx("field-hint", `field-hint--${type}`)}>
+      <Icon size={14} className="field-hint__icon" />
       <span>{message}</span>
     </div>
-  )
-}
+  );
+};
 
 /* ─── Form Input ─── */
 export const FormInput = ({
   label,
   name,
-  type = 'text',
-  placeholder,
+  type = "text",
   value,
   defaultValue,
   onChange,
+  placeholder,
   error,
   hint,
   required = false,
   disabled = false,
-  className = '',
+  className = "",
   icon: Icon,
   maxLength,
   ...props
 }) => {
-  const [focused, setFocused] = useState(false)
+  const [focused, setFocused] = useState(false);
 
   return (
-    <div className={clsx('form-field-group', className)}>
+    <div className={clsx("form-field-group", className)}>
       {label && (
         <label htmlFor={name} className="form-label">
-          {Icon && <Icon size={14} className="text-gray-400 dark:text-gray-500" />}
+          {Icon && <Icon size={14} className="form-label__icon" />}
           {label}
-          {required && <span className="text-red-500 ml-0.5">*</span>}
+          {required && <span className="form-required">*</span>}
         </label>
       )}
-      <div className="relative">
+      <div className="form-input-wrap">
         <input
           type={type}
           id={name}
@@ -80,10 +70,10 @@ export const FormInput = ({
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
           className={clsx(
-            'form-input',
-            error && !focused && 'form-input-warn',
-            focused && !error && 'form-input-focus',
-            disabled && 'opacity-50 cursor-not-allowed'
+            "form-input",
+            error && !focused && "form-input--warn",
+            focused && !error && "form-input--focus",
+            disabled && "form-input--disabled",
           )}
           {...props}
         />
@@ -91,77 +81,79 @@ export const FormInput = ({
       <FieldHint message={error} type="error" />
       {hint && !error && <FieldHint message={hint} type="info" />}
     </div>
-  )
-}
+  );
+};
 
 /* ─── Phone Input with live digit restriction ─── */
 export const PhoneInput = ({
-  label = 'Phone',
-  name = 'phone',
+  label = "Phone",
+  name = "phone",
   value,
   defaultValue,
   onChange,
   error,
   required = false,
   disabled = false,
-  className = '',
+  className = "",
   ...props
 }) => {
   // Strip +91 prefix if present in initial value
   const stripPrefix = (v) => {
-    if (!v) return ''
-    const s = String(v).replace(/[^0-9]/g, '')
-    return s.startsWith('91') && s.length > 10 ? s.slice(2) : s.slice(0, 10)
-  }
+    if (!v) return "";
+    const s = String(v).replace(/[^0-9]/g, "");
+    return s.startsWith("91") && s.length > 10 ? s.slice(2) : s.slice(0, 10);
+  };
 
-  const [localValue, setLocalValue] = useState(() => stripPrefix(value || defaultValue))
-  const [localError, setLocalError] = useState('')
-  const [focused, setFocused] = useState(false)
-  const [touched, setTouched] = useState(false)
+  const [localValue, setLocalValue] = useState(() =>
+    stripPrefix(value || defaultValue),
+  );
+  const [localError, setLocalError] = useState("");
+  const [focused, setFocused] = useState(false);
+  const [touched, setTouched] = useState(false);
 
   useEffect(() => {
-    if (value !== undefined) setLocalValue(stripPrefix(value))
-  }, [value])
+    if (value !== undefined) setLocalValue(stripPrefix(value));
+  }, [value]);
 
   const handleChange = (e) => {
-    const raw = e.target.value.replace(/[^0-9]/g, '') // only digits
-    if (raw.length > 10) return // max 10 digits
+    const raw = e.target.value.replace(/[^0-9]/g, ""); // only digits
+    if (raw.length > 10) return; // max 10 digits
 
-    setLocalValue(raw)
-    setTouched(true)
-    setLocalError('')
+    setLocalValue(raw);
+    setTouched(true);
+    setLocalError("");
 
     // Live validation hints
     if (raw.length >= 1 && !/^[6-9]/.test(raw)) {
-      setLocalError('First digit must be 6, 7, 8, or 9')
+      setLocalError("First digit must be 6, 7, 8, or 9");
     } else if (raw.length === 10) {
-      setLocalError('') // valid
+      setLocalError(""); // valid
     }
 
     // Propagate
     if (onChange) {
-      const syntheticEvent = { target: { name, value: raw } }
-      onChange(syntheticEvent)
+      const syntheticEvent = { target: { name, value: raw } };
+      onChange(syntheticEvent);
     }
-  }
+  };
 
   // Prefer specific local validation over generic parent error
-  const displayError = localError || (touched || localValue.length > 0 ? error : error)
-  const isValid = localValue.length === 10 && /^[6-9]/.test(localValue) && !localError
+  const displayError =
+    localError || (touched || localValue.length > 0 ? error : error);
+  const isValid =
+    localValue.length === 10 && /^[6-9]/.test(localValue) && !localError;
 
   return (
-    <div className={clsx('form-field-group', className)}>
+    <div className={clsx("form-field-group", className)}>
       {label && (
         <label htmlFor={name} className="form-label">
           {label}
-          {required && <span className="text-red-500 ml-0.5">*</span>}
+          {required && <span className="form-required">*</span>}
         </label>
       )}
-      <div className="flex items-center gap-2">
-        <div className="flex items-center px-3 py-2 bg-gray-100 dark:bg-slate-700 border border-gray-300 dark:border-slate-600 rounded-lg text-gray-600 dark:text-gray-400 text-sm font-medium select-none shrink-0">
-          +91
-        </div>
-        <div className="flex-1 relative">
+      <div className="phone-row">
+        <div className="phone-prefix">+91</div>
+        <div className="phone-input-wrap">
           <input
             type="tel"
             id={name}
@@ -175,30 +167,38 @@ export const PhoneInput = ({
             onFocus={() => setFocused(true)}
             onBlur={() => setFocused(false)}
             className={clsx(
-              'form-input w-full pr-16',
-              displayError && !focused && 'form-input-warn',
-              isValid && 'form-input-valid',
-              focused && !displayError && !isValid && 'form-input-focus',
-              disabled && 'opacity-50 cursor-not-allowed'
+              "form-input phone-input",
+              displayError && !focused && "form-input--warn",
+              isValid && "form-input--valid",
+              focused && !displayError && !isValid && "form-input--focus",
+              disabled && "form-input--disabled",
             )}
             {...props}
           />
           {/* Digit counter — only visible when focused or has input */}
           {(focused || localValue.length > 0) && (
-            <span className={clsx(
-              'absolute right-3 top-1/2 -translate-y-1/2 text-[11px] tabular-nums transition-colors',
-              isValid ? 'text-emerald-500' : localValue.length > 0 ? 'text-blue-400 dark:text-blue-500' : 'text-gray-400 dark:text-gray-500'
-            )}>
+            <span
+              className={clsx(
+                "phone-counter",
+                isValid
+                  ? "phone-counter--valid"
+                  : localValue.length > 0
+                    ? "phone-counter--active"
+                    : null,
+              )}
+            >
               {localValue.length}/10
             </span>
           )}
         </div>
       </div>
       <FieldHint message={displayError} type="error" />
-      {isValid && !displayError && <FieldHint message="Valid phone number" type="success" />}
+      {isValid && !displayError && (
+        <FieldHint message="Valid phone number" type="success" />
+      )}
     </div>
-  )
-}
+  );
+};
 
 /* ─── Smart Select: single option → static badge, multiple → dropdown ─── */
 export const SmartSelect = ({
@@ -211,70 +211,79 @@ export const SmartSelect = ({
   error,
   required = false,
   disabled = false,
-  placeholder = 'Select an option',
-  className = '',
+  placeholder = "Select an option",
+  className = "",
   icon: Icon,
-  emptyMessage = 'No options available',
+  emptyMessage = "No options available",
   ...props
 }) => {
-  const [focused, setFocused] = useState(false)
+  const [focused, setFocused] = useState(false);
 
   // If only 1 option → show as a locked badge
   if (options.length === 1) {
-    const only = options[0]
+    const only = options[0];
     return (
-      <div className={clsx('form-field-group', className)}>
+      <div className={clsx("form-field-group", className)}>
         {label && (
-          <label className="form-label">
-            {Icon && <Icon size={14} className="text-gray-400 dark:text-gray-500" />}
+                <label className="form-label">
+                  {Icon && (
+                    <Icon size={14} className="form-label__icon" />
+                  )}
             {label}
-            {required && <span className="text-red-500 ml-0.5">*</span>}
+                  {required && <span className="form-required">*</span>}
           </label>
         )}
-        <div className="smart-select-single">
-          <Lock size={14} className="text-blue-500 dark:text-blue-400 shrink-0" />
-          <span className="font-medium text-gray-900 dark:text-white">
+              <div className="smart-select-single">
+          <Lock
+            size={14}
+                  className="smart-select-single__icon"
+          />
+              <span className="smart-select-single__value">
             {only.label}
           </span>
-          <span className="ml-auto text-[10px] uppercase tracking-wider text-blue-500 dark:text-blue-400 font-semibold">
+                <span className="smart-select-single__badge">
             Auto-selected
           </span>
         </div>
         {/* Hidden input so form submission picks it up */}
         <input type="hidden" name={name} value={only.value} />
       </div>
-    )
+    );
   }
 
   // No options
   if (options.length === 0) {
     return (
-      <div className={clsx('form-field-group', className)}>
-        {label && (
-          <label className="form-label">
-            {Icon && <Icon size={14} className="text-gray-400 dark:text-gray-500" />}
-            {label}
-          </label>
-        )}
+      <div className={clsx("form-field-group", className)}>
+              {label && (
+                <label className="form-label">
+                  {Icon && (
+                    <Icon size={14} className="form-label__icon" />
+                  )}
+                  {label}
+                </label>
+              )}
         <div className="smart-select-empty">
           <Info size={14} />
           <span>{emptyMessage}</span>
         </div>
       </div>
-    )
+    );
   }
 
   // Multiple options → attractive dropdown
   return (
-    <div className={clsx('form-field-group', className)}>
-      {label && (
-        <label htmlFor={name} className="form-label">
-          {Icon && <Icon size={14} className="text-gray-400 dark:text-gray-500" />}
-          {label}
-          {required && <span className="text-red-500 ml-0.5">*</span>}
-        </label>
-      )}
-      <div className="relative">
+    <div className={clsx("form-field-group", className)}>
+            {label && (
+              <label htmlFor={name} className="form-label">
+                {Icon && (
+                  <Icon size={14} className="form-label__icon" />
+                )}
+                {label}
+                {required && <span className="form-required">*</span>}
+              </label>
+            )}
+      <div className="form-select">
         <select
           id={name}
           name={name}
@@ -285,10 +294,10 @@ export const SmartSelect = ({
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
           className={clsx(
-            'form-input appearance-none pr-10 cursor-pointer',
-            error && !focused && 'form-input-warn',
-            focused && !error && 'form-input-focus',
-            disabled && 'opacity-50 cursor-not-allowed'
+                  "form-input form-select__control",
+                  error && !focused && "form-input--warn",
+                  focused && !error && "form-input--focus",
+                  disabled && "form-input--disabled",
           )}
           {...props}
         >
@@ -301,13 +310,13 @@ export const SmartSelect = ({
         </select>
         <ChevronDown
           size={16}
-          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 pointer-events-none"
+                className="form-select__chevron"
         />
       </div>
       <FieldHint message={error} type="error" />
     </div>
-  )
-}
+  );
+};
 
 /* ─── Regular FormSelect (for backward compat) ─── */
 export const FormSelect = ({
@@ -320,8 +329,8 @@ export const FormSelect = ({
   error,
   required = false,
   disabled = false,
-  placeholder = 'Select...',
-  className = '',
+  placeholder = "Select...",
+  className = "",
   ...props
 }) => {
   return (
@@ -339,8 +348,8 @@ export const FormSelect = ({
       className={className}
       {...props}
     />
-  )
-}
+  );
+};
 
 /* ─── Form Textarea ─── */
 export const FormTextarea = ({
@@ -354,17 +363,17 @@ export const FormTextarea = ({
   required = false,
   disabled = false,
   rows = 3,
-  className = '',
+  className = "",
   ...props
 }) => {
-  const [focused, setFocused] = useState(false)
+  const [focused, setFocused] = useState(false);
 
   return (
-    <div className={clsx('form-field-group', className)}>
+    <div className={clsx("form-field-group", className)}>
       {label && (
         <label htmlFor={name} className="form-label">
           {label}
-          {required && <span className="text-red-500 ml-0.5">*</span>}
+             {required && <span className="form-required">*</span>}
         </label>
       )}
       <textarea
@@ -379,17 +388,17 @@ export const FormTextarea = ({
         onFocus={() => setFocused(true)}
         onBlur={() => setFocused(false)}
         className={clsx(
-          'form-input resize-none',
-          error && !focused && 'form-input-warn',
-          focused && !error && 'form-input-focus',
-          disabled && 'opacity-50 cursor-not-allowed'
+             "form-input form-textarea",
+             error && !focused && "form-input--warn",
+             focused && !error && "form-input--focus",
+             disabled && "form-input--disabled",
         )}
         {...props}
       />
       <FieldHint message={error} type="error" />
     </div>
-  )
-}
+  );
+};
 
 /* ─── Number Input with restrictions ─── */
 export const NumberInput = ({
@@ -404,20 +413,22 @@ export const NumberInput = ({
   min,
   max,
   step,
-  className = '',
-  placeholder = '0',
+  className = "",
+  placeholder = "0",
   icon: Icon,
   ...props
 }) => {
-  const [focused, setFocused] = useState(false)
+  const [focused, setFocused] = useState(false);
 
   return (
-    <div className={clsx('form-field-group', className)}>
+    <div className={clsx("form-field-group", className)}>
       {label && (
         <label htmlFor={name} className="form-label">
-          {Icon && <Icon size={14} className="text-gray-400 dark:text-gray-500" />}
+              {Icon && (
+                <Icon size={14} className="form-label__icon" />
+              )}
           {label}
-          {required && <span className="text-red-500 ml-0.5">*</span>}
+             {required && <span className="form-required">*</span>}
         </label>
       )}
       <input
@@ -435,48 +446,48 @@ export const NumberInput = ({
         onFocus={() => setFocused(true)}
         onBlur={() => setFocused(false)}
         className={clsx(
-          'form-input',
-          error && !focused && 'form-input-warn',
-          focused && !error && 'form-input-focus',
-          disabled && 'opacity-50 cursor-not-allowed'
+          "form-input",
+             error && !focused && "form-input--warn",
+             focused && !error && "form-input--focus",
+             disabled && "form-input--disabled",
         )}
         {...props}
       />
       <FieldHint message={error} type="error" />
     </div>
-  )
-}
+  );
+};
 
 /* ─── Pincode Input (6 digits) ─── */
 export const PincodeInput = ({
-  label = 'Pincode',
-  name = 'pincode',
+  label = "Pincode",
+  name = "pincode",
   value,
   defaultValue,
   onChange,
   error,
   required = false,
-  className = '',
+  className = "",
   ...props
 }) => {
-  const [localValue, setLocalValue] = useState(value || defaultValue || '')
-  const [localError, setLocalError] = useState('')
+  const [localValue, setLocalValue] = useState(value || defaultValue || "");
+  const [localError, setLocalError] = useState("");
 
   useEffect(() => {
-    if (value !== undefined) setLocalValue(value)
-  }, [value])
+    if (value !== undefined) setLocalValue(value);
+  }, [value]);
 
   const handleChange = (e) => {
-    const raw = e.target.value.replace(/[^0-9]/g, '')
-    if (raw.length > 6) return
-    setLocalValue(raw)
+    const raw = e.target.value.replace(/[^0-9]/g, "");
+    if (raw.length > 6) return;
+    setLocalValue(raw);
     if (raw.length > 0 && raw.length < 6) {
-      setLocalError(`${raw.length}/6 digits`)
+      setLocalError(`${raw.length}/6 digits`);
     } else {
-      setLocalError('')
+      setLocalError("");
     }
-    if (onChange) onChange({ target: { name, value: raw } })
-  }
+    if (onChange) onChange({ target: { name, value: raw } });
+  };
 
   return (
     <FormInput
@@ -492,51 +503,482 @@ export const PincodeInput = ({
       className={className}
       {...props}
     />
-  )
-}
+  );
+};
 
 /* ─── State-City Selector (Dependent Dropdowns with Other option) ─── */
 const INDIAN_STATES_CITIES = {
-  'Andhra Pradesh': ['Visakhapatnam', 'Vijayawada', 'Guntur', 'Nellore', 'Kurnool', 'Tirupati', 'Kakinada', 'Rajahmundry', 'Kadapa', 'Anantapur', 'Eluru', 'Ongole', 'Vizianagaram', 'Chittoor'],
-  'Arunachal Pradesh': ['Itanagar', 'Naharlagun', 'Pasighat', 'Tawang', 'Ziro', 'Bomdila', 'Tezu', 'Along', 'Roing'],
-  'Assam': ['Guwahati', 'Silchar', 'Dibrugarh', 'Jorhat', 'Nagaon', 'Tezpur', 'Tinsukia', 'Bongaigaon', 'Karimganj', 'Dhubri', 'Goalpara', 'Barpeta'],
-  'Bihar': ['Patna', 'Gaya', 'Bhagalpur', 'Muzaffarpur', 'Darbhanga', 'Purnia', 'Munger', 'Arrah', 'Begusarai', 'Katihar', 'Chapra', 'Saharsa', 'Sasaram', 'Hajipur'],
-  'Chhattisgarh': ['Raipur', 'Bhilai', 'Bilaspur', 'Korba', 'Durg', 'Rajnandgaon', 'Jagdalpur', 'Raigarh', 'Ambikapur', 'Dhamtari', 'Mahasamund'],
-  'Goa': ['Panaji', 'Margao', 'Vasco da Gama', 'Mapusa', 'Ponda', 'Bicholim', 'Curchorem', 'Sanquelim'],
-  'Gujarat': ['Ahmedabad', 'Surat', 'Vadodara', 'Rajkot', 'Bhavnagar', 'Jamnagar', 'Junagadh', 'Gandhinagar', 'Anand', 'Nadiad', 'Morbi', 'Surendranagar', 'Mehsana', 'Bharuch', 'Vapi', 'Navsari', 'Veraval', 'Porbandar'],
-  'Haryana': ['Gurugram', 'Faridabad', 'Panipat', 'Ambala', 'Karnal', 'Hisar', 'Rohtak', 'Sonipat', 'Panchkula', 'Yamunanagar', 'Bhiwani', 'Sirsa', 'Bahadurgarh', 'Jind', 'Thanesar'],
-  'Himachal Pradesh': ['Shimla', 'Dharamshala', 'Solan', 'Mandi', 'Kullu', 'Manali', 'Hamirpur', 'Bilaspur', 'Kangra', 'Una', 'Chamba', 'Palampur', 'Nahan'],
-  'Jharkhand': ['Ranchi', 'Jamshedpur', 'Dhanbad', 'Bokaro', 'Deoghar', 'Giridih', 'Hazaribagh', 'Ramgarh', 'Medininagar', 'Phusro', 'Chaibasa', 'Dumka'],
-  'Karnataka': ['Bangalore', 'Mysore', 'Hubli', 'Mangalore', 'Belgaum', 'Gulbarga', 'Davangere', 'Bellary', 'Bijapur', 'Shimoga', 'Tumkur', 'Raichur', 'Bidar', 'Hospet', 'Gadag', 'Hassan', 'Udupi', 'Chitradurga'],
-  'Kerala': ['Thiruvananthapuram', 'Kochi', 'Kozhikode', 'Thrissur', 'Kollam', 'Palakkad', 'Alappuzha', 'Kannur', 'Malappuram', 'Kottayam', 'Kasaragod', 'Pathanamthitta', 'Idukki', 'Wayanad'],
-  'Madhya Pradesh': ['Bhopal', 'Indore', 'Gwalior', 'Jabalpur', 'Ujjain', 'Sagar', 'Dewas', 'Satna', 'Ratlam', 'Rewa', 'Murwara', 'Singrauli', 'Burhanpur', 'Khandwa', 'Morena', 'Bhind', 'Chhindwara', 'Guna', 'Shivpuri'],
-  'Maharashtra': ['Mumbai', 'Pune', 'Nagpur', 'Nashik', 'Thane', 'Aurangabad', 'Solapur', 'Kolhapur', 'Amravati', 'Nanded', 'Akola', 'Latur', 'Dhule', 'Ahmednagar', 'Jalgaon', 'Chandrapur', 'Parbhani', 'Ichalkaranji', 'Jalna', 'Bhiwandi', 'Panvel', 'Navi Mumbai'],
-  'Manipur': ['Imphal', 'Thoubal', 'Bishnupur', 'Churachandpur', 'Kakching', 'Ukhrul', 'Senapati'],
-  'Meghalaya': ['Shillong', 'Tura', 'Jowai', 'Nongstoin', 'Baghmara', 'Williamnagar'],
-  'Mizoram': ['Aizawl', 'Lunglei', 'Saiha', 'Champhai', 'Kolasib', 'Serchhip'],
-  'Nagaland': ['Kohima', 'Dimapur', 'Mokokchung', 'Tuensang', 'Wokha', 'Zunheboto', 'Phek'],
-  'Odisha': ['Bhubaneswar', 'Cuttack', 'Rourkela', 'Berhampur', 'Sambalpur', 'Puri', 'Balasore', 'Bhadrak', 'Baripada', 'Jharsuguda', 'Jeypore', 'Bargarh', 'Balangir', 'Rayagada'],
-  'Punjab': ['Chandigarh', 'Ludhiana', 'Amritsar', 'Jalandhar', 'Patiala', 'Bathinda', 'Mohali', 'Pathankot', 'Hoshiarpur', 'Batala', 'Moga', 'Malerkotla', 'Khanna', 'Phagwara', 'Muktsar', 'Barnala', 'Firozpur', 'Faridkot'],
-  'Rajasthan': ['Jaipur', 'Jodhpur', 'Udaipur', 'Kota', 'Ajmer', 'Bikaner', 'Alwar', 'Bharatpur', 'Sikar', 'Bhilwara', 'Pali', 'Sri Ganganagar', 'Kishangarh', 'Tonk', 'Beawar', 'Hanumangarh', 'Churu', 'Jhunjhunu'],
-  'Sikkim': ['Gangtok', 'Namchi', 'Gyalshing', 'Mangan', 'Rangpo', 'Jorethang'],
-  'Tamil Nadu': ['Chennai', 'Coimbatore', 'Madurai', 'Tiruchirappalli', 'Salem', 'Tirunelveli', 'Tiruppur', 'Vellore', 'Erode', 'Thoothukkudi', 'Dindigul', 'Thanjavur', 'Ranipet', 'Sivakasi', 'Karur', 'Udhagamandalam', 'Hosur', 'Nagercoil', 'Kanchipuram', 'Kumbakonam', 'Avadi', 'Tirupathur'],
-  'Telangana': ['Hyderabad', 'Warangal', 'Nizamabad', 'Khammam', 'Karimnagar', 'Mahbubnagar', 'Nalgonda', 'Adilabad', 'Suryapet', 'Siddipet', 'Miryalaguda', 'Jagtial', 'Mancherial', 'Nirmal', 'Sangareddy'],
-  'Tripura': ['Agartala', 'Udaipur', 'Dharmanagar', 'Kailashahar', 'Belonia', 'Khowai', 'Ambassa'],
-  'Uttar Pradesh': ['Lucknow', 'Kanpur', 'Ghaziabad', 'Agra', 'Varanasi', 'Meerut', 'Prayagraj', 'Bareilly', 'Aligarh', 'Moradabad', 'Saharanpur', 'Gorakhpur', 'Noida', 'Firozabad', 'Jhansi', 'Muzaffarnagar', 'Mathura', 'Budaun', 'Rampur', 'Shahjahanpur', 'Farrukhabad', 'Ayodhya', 'Maunath Bhanjan', 'Hapur', 'Etawah', 'Mirzapur', 'Bulandshahr', 'Sambhal', 'Greater Noida'],
-  'Uttarakhand': ['Dehradun', 'Haridwar', 'Roorkee', 'Haldwani', 'Rudrapur', 'Kashipur', 'Rishikesh', 'Pithoragarh', 'Nainital', 'Almora', 'Tehri', 'Kotdwar'],
-  'West Bengal': ['Kolkata', 'Asansol', 'Siliguri', 'Durgapur', 'Bardhaman', 'Malda', 'Baharampur', 'Habra', 'Kharagpur', 'Shantipur', 'Dankuni', 'Dhulian', 'Ranaghat', 'Haldia', 'Raiganj', 'Krishnanagar', 'Nabadwip', 'Medinipur', 'Jalpaiguri', 'Balurghat', 'Basirhat', 'Bankura', 'Darjeeling'],
+  "Andhra Pradesh": [
+    "Visakhapatnam",
+    "Vijayawada",
+    "Guntur",
+    "Nellore",
+    "Kurnool",
+    "Tirupati",
+    "Kakinada",
+    "Rajahmundry",
+    "Kadapa",
+    "Anantapur",
+    "Eluru",
+    "Ongole",
+    "Vizianagaram",
+    "Chittoor",
+  ],
+  "Arunachal Pradesh": [
+    "Itanagar",
+    "Naharlagun",
+    "Pasighat",
+    "Tawang",
+    "Ziro",
+    "Bomdila",
+    "Tezu",
+    "Along",
+    "Roing",
+  ],
+  Assam: [
+    "Guwahati",
+    "Silchar",
+    "Dibrugarh",
+    "Jorhat",
+    "Nagaon",
+    "Tezpur",
+    "Tinsukia",
+    "Bongaigaon",
+    "Karimganj",
+    "Dhubri",
+    "Goalpara",
+    "Barpeta",
+  ],
+  Bihar: [
+    "Patna",
+    "Gaya",
+    "Bhagalpur",
+    "Muzaffarpur",
+    "Darbhanga",
+    "Purnia",
+    "Munger",
+    "Arrah",
+    "Begusarai",
+    "Katihar",
+    "Chapra",
+    "Saharsa",
+    "Sasaram",
+    "Hajipur",
+  ],
+  Chhattisgarh: [
+    "Raipur",
+    "Bhilai",
+    "Bilaspur",
+    "Korba",
+    "Durg",
+    "Rajnandgaon",
+    "Jagdalpur",
+    "Raigarh",
+    "Ambikapur",
+    "Dhamtari",
+    "Mahasamund",
+  ],
+  Goa: [
+    "Panaji",
+    "Margao",
+    "Vasco da Gama",
+    "Mapusa",
+    "Ponda",
+    "Bicholim",
+    "Curchorem",
+    "Sanquelim",
+  ],
+  Gujarat: [
+    "Ahmedabad",
+    "Surat",
+    "Vadodara",
+    "Rajkot",
+    "Bhavnagar",
+    "Jamnagar",
+    "Junagadh",
+    "Gandhinagar",
+    "Anand",
+    "Nadiad",
+    "Morbi",
+    "Surendranagar",
+    "Mehsana",
+    "Bharuch",
+    "Vapi",
+    "Navsari",
+    "Veraval",
+    "Porbandar",
+  ],
+  Haryana: [
+    "Gurugram",
+    "Faridabad",
+    "Panipat",
+    "Ambala",
+    "Karnal",
+    "Hisar",
+    "Rohtak",
+    "Sonipat",
+    "Panchkula",
+    "Yamunanagar",
+    "Bhiwani",
+    "Sirsa",
+    "Bahadurgarh",
+    "Jind",
+    "Thanesar",
+  ],
+  "Himachal Pradesh": [
+    "Shimla",
+    "Dharamshala",
+    "Solan",
+    "Mandi",
+    "Kullu",
+    "Manali",
+    "Hamirpur",
+    "Bilaspur",
+    "Kangra",
+    "Una",
+    "Chamba",
+    "Palampur",
+    "Nahan",
+  ],
+  Jharkhand: [
+    "Ranchi",
+    "Jamshedpur",
+    "Dhanbad",
+    "Bokaro",
+    "Deoghar",
+    "Giridih",
+    "Hazaribagh",
+    "Ramgarh",
+    "Medininagar",
+    "Phusro",
+    "Chaibasa",
+    "Dumka",
+  ],
+  Karnataka: [
+    "Bangalore",
+    "Mysore",
+    "Hubli",
+    "Mangalore",
+    "Belgaum",
+    "Gulbarga",
+    "Davangere",
+    "Bellary",
+    "Bijapur",
+    "Shimoga",
+    "Tumkur",
+    "Raichur",
+    "Bidar",
+    "Hospet",
+    "Gadag",
+    "Hassan",
+    "Udupi",
+    "Chitradurga",
+  ],
+  Kerala: [
+    "Thiruvananthapuram",
+    "Kochi",
+    "Kozhikode",
+    "Thrissur",
+    "Kollam",
+    "Palakkad",
+    "Alappuzha",
+    "Kannur",
+    "Malappuram",
+    "Kottayam",
+    "Kasaragod",
+    "Pathanamthitta",
+    "Idukki",
+    "Wayanad",
+  ],
+  "Madhya Pradesh": [
+    "Bhopal",
+    "Indore",
+    "Gwalior",
+    "Jabalpur",
+    "Ujjain",
+    "Sagar",
+    "Dewas",
+    "Satna",
+    "Ratlam",
+    "Rewa",
+    "Murwara",
+    "Singrauli",
+    "Burhanpur",
+    "Khandwa",
+    "Morena",
+    "Bhind",
+    "Chhindwara",
+    "Guna",
+    "Shivpuri",
+  ],
+  Maharashtra: [
+    "Mumbai",
+    "Pune",
+    "Nagpur",
+    "Nashik",
+    "Thane",
+    "Aurangabad",
+    "Solapur",
+    "Kolhapur",
+    "Amravati",
+    "Nanded",
+    "Akola",
+    "Latur",
+    "Dhule",
+    "Ahmednagar",
+    "Jalgaon",
+    "Chandrapur",
+    "Parbhani",
+    "Ichalkaranji",
+    "Jalna",
+    "Bhiwandi",
+    "Panvel",
+    "Navi Mumbai",
+  ],
+  Manipur: [
+    "Imphal",
+    "Thoubal",
+    "Bishnupur",
+    "Churachandpur",
+    "Kakching",
+    "Ukhrul",
+    "Senapati",
+  ],
+  Meghalaya: [
+    "Shillong",
+    "Tura",
+    "Jowai",
+    "Nongstoin",
+    "Baghmara",
+    "Williamnagar",
+  ],
+  Mizoram: ["Aizawl", "Lunglei", "Saiha", "Champhai", "Kolasib", "Serchhip"],
+  Nagaland: [
+    "Kohima",
+    "Dimapur",
+    "Mokokchung",
+    "Tuensang",
+    "Wokha",
+    "Zunheboto",
+    "Phek",
+  ],
+  Odisha: [
+    "Bhubaneswar",
+    "Cuttack",
+    "Rourkela",
+    "Berhampur",
+    "Sambalpur",
+    "Puri",
+    "Balasore",
+    "Bhadrak",
+    "Baripada",
+    "Jharsuguda",
+    "Jeypore",
+    "Bargarh",
+    "Balangir",
+    "Rayagada",
+  ],
+  Punjab: [
+    "Chandigarh",
+    "Ludhiana",
+    "Amritsar",
+    "Jalandhar",
+    "Patiala",
+    "Bathinda",
+    "Mohali",
+    "Pathankot",
+    "Hoshiarpur",
+    "Batala",
+    "Moga",
+    "Malerkotla",
+    "Khanna",
+    "Phagwara",
+    "Muktsar",
+    "Barnala",
+    "Firozpur",
+    "Faridkot",
+  ],
+  Rajasthan: [
+    "Jaipur",
+    "Jodhpur",
+    "Udaipur",
+    "Kota",
+    "Ajmer",
+    "Bikaner",
+    "Alwar",
+    "Bharatpur",
+    "Sikar",
+    "Bhilwara",
+    "Pali",
+    "Sri Ganganagar",
+    "Kishangarh",
+    "Tonk",
+    "Beawar",
+    "Hanumangarh",
+    "Churu",
+    "Jhunjhunu",
+  ],
+  Sikkim: ["Gangtok", "Namchi", "Gyalshing", "Mangan", "Rangpo", "Jorethang"],
+  "Tamil Nadu": [
+    "Chennai",
+    "Coimbatore",
+    "Madurai",
+    "Tiruchirappalli",
+    "Salem",
+    "Tirunelveli",
+    "Tiruppur",
+    "Vellore",
+    "Erode",
+    "Thoothukkudi",
+    "Dindigul",
+    "Thanjavur",
+    "Ranipet",
+    "Sivakasi",
+    "Karur",
+    "Udhagamandalam",
+    "Hosur",
+    "Nagercoil",
+    "Kanchipuram",
+    "Kumbakonam",
+    "Avadi",
+    "Tirupathur",
+  ],
+  Telangana: [
+    "Hyderabad",
+    "Warangal",
+    "Nizamabad",
+    "Khammam",
+    "Karimnagar",
+    "Mahbubnagar",
+    "Nalgonda",
+    "Adilabad",
+    "Suryapet",
+    "Siddipet",
+    "Miryalaguda",
+    "Jagtial",
+    "Mancherial",
+    "Nirmal",
+    "Sangareddy",
+  ],
+  Tripura: [
+    "Agartala",
+    "Udaipur",
+    "Dharmanagar",
+    "Kailashahar",
+    "Belonia",
+    "Khowai",
+    "Ambassa",
+  ],
+  "Uttar Pradesh": [
+    "Lucknow",
+    "Kanpur",
+    "Ghaziabad",
+    "Agra",
+    "Varanasi",
+    "Meerut",
+    "Prayagraj",
+    "Bareilly",
+    "Aligarh",
+    "Moradabad",
+    "Saharanpur",
+    "Gorakhpur",
+    "Noida",
+    "Firozabad",
+    "Jhansi",
+    "Muzaffarnagar",
+    "Mathura",
+    "Budaun",
+    "Rampur",
+    "Shahjahanpur",
+    "Farrukhabad",
+    "Ayodhya",
+    "Maunath Bhanjan",
+    "Hapur",
+    "Etawah",
+    "Mirzapur",
+    "Bulandshahr",
+    "Sambhal",
+    "Greater Noida",
+  ],
+  Uttarakhand: [
+    "Dehradun",
+    "Haridwar",
+    "Roorkee",
+    "Haldwani",
+    "Rudrapur",
+    "Kashipur",
+    "Rishikesh",
+    "Pithoragarh",
+    "Nainital",
+    "Almora",
+    "Tehri",
+    "Kotdwar",
+  ],
+  "West Bengal": [
+    "Kolkata",
+    "Asansol",
+    "Siliguri",
+    "Durgapur",
+    "Bardhaman",
+    "Malda",
+    "Baharampur",
+    "Habra",
+    "Kharagpur",
+    "Shantipur",
+    "Dankuni",
+    "Dhulian",
+    "Ranaghat",
+    "Haldia",
+    "Raiganj",
+    "Krishnanagar",
+    "Nabadwip",
+    "Medinipur",
+    "Jalpaiguri",
+    "Balurghat",
+    "Basirhat",
+    "Bankura",
+    "Darjeeling",
+  ],
   // Union Territories
-  'Andaman and Nicobar Islands': ['Port Blair', 'Diglipur', 'Rangat', 'Mayabunder', 'Car Nicobar'],
-  'Chandigarh': ['Chandigarh'],
-  'Dadra and Nagar Haveli and Daman and Diu': ['Daman', 'Diu', 'Silvassa'],
-  'Delhi': ['New Delhi', 'Central Delhi', 'North Delhi', 'South Delhi', 'East Delhi', 'West Delhi', 'North East Delhi', 'North West Delhi', 'South East Delhi', 'South West Delhi', 'Shahdara'],
-  'Jammu and Kashmir': ['Srinagar', 'Jammu', 'Anantnag', 'Baramulla', 'Udhampur', 'Kathua', 'Sopore', 'Rajouri', 'Poonch'],
-  'Ladakh': ['Leh', 'Kargil', 'Nubra', 'Zanskar'],
-  'Lakshadweep': ['Kavaratti', 'Agatti', 'Minicoy', 'Amini'],
-  'Puducherry': ['Puducherry', 'Karaikal', 'Mahe', 'Yanam'],
-}
+  "Andaman and Nicobar Islands": [
+    "Port Blair",
+    "Diglipur",
+    "Rangat",
+    "Mayabunder",
+    "Car Nicobar",
+  ],
+  Chandigarh: ["Chandigarh"],
+  "Dadra and Nagar Haveli and Daman and Diu": ["Daman", "Diu", "Silvassa"],
+  Delhi: [
+    "New Delhi",
+    "Central Delhi",
+    "North Delhi",
+    "South Delhi",
+    "East Delhi",
+    "West Delhi",
+    "North East Delhi",
+    "North West Delhi",
+    "South East Delhi",
+    "South West Delhi",
+    "Shahdara",
+  ],
+  "Jammu and Kashmir": [
+    "Srinagar",
+    "Jammu",
+    "Anantnag",
+    "Baramulla",
+    "Udhampur",
+    "Kathua",
+    "Sopore",
+    "Rajouri",
+    "Poonch",
+  ],
+  Ladakh: ["Leh", "Kargil", "Nubra", "Zanskar"],
+  Lakshadweep: ["Kavaratti", "Agatti", "Minicoy", "Amini"],
+  Puducherry: ["Puducherry", "Karaikal", "Mahe", "Yanam"],
+};
 
-const STATE_OPTIONS = Object.keys(INDIAN_STATES_CITIES).sort()
+const STATE_OPTIONS = Object.keys(INDIAN_STATES_CITIES).sort();
 
 export const StateCitySelector = ({
   stateValue,
@@ -549,158 +991,169 @@ export const StateCitySelector = ({
   cityError,
   stateRequired = false,
   cityRequired = false,
-  className = '',
+  className = "",
 }) => {
-  const [selectedState, setSelectedState] = useState(stateValue || stateDefaultValue || '')
-  const [selectedCity, setSelectedCity] = useState(cityValue || cityDefaultValue || '')
-  const [isStateOther, setIsStateOther] = useState(false)
-  const [isCityOther, setIsCityOther] = useState(false)
-  const [customState, setCustomState] = useState('')
-  const [customCity, setCustomCity] = useState('')
+  const [selectedState, setSelectedState] = useState(
+    stateValue || stateDefaultValue || "",
+  );
+  const [selectedCity, setSelectedCity] = useState(
+    cityValue || cityDefaultValue || "",
+  );
+  const [isStateOther, setIsStateOther] = useState(false);
+  const [isCityOther, setIsCityOther] = useState(false);
+  const [customState, setCustomState] = useState("");
+  const [customCity, setCustomCity] = useState("");
 
   // Check if initial values are custom (not in predefined list)
   useEffect(() => {
-    const initialState = stateValue || stateDefaultValue
+    const initialState = stateValue || stateDefaultValue;
     if (initialState && !STATE_OPTIONS.includes(initialState)) {
-      setIsStateOther(true)
-      setCustomState(initialState)
-      setSelectedState('OTHER')
+      setIsStateOther(true);
+      setCustomState(initialState);
+      setSelectedState("OTHER");
     }
-  }, [stateValue, stateDefaultValue])
+  }, [stateValue, stateDefaultValue]);
 
   useEffect(() => {
-    const initialCity = cityValue || cityDefaultValue
-    const currentState = customState || selectedState
-    if (initialCity && currentState && currentState !== 'OTHER') {
-      const cities = INDIAN_STATES_CITIES[currentState] || []
+    const initialCity = cityValue || cityDefaultValue;
+    const currentState = customState || selectedState;
+    if (initialCity && currentState && currentState !== "OTHER") {
+      const cities = INDIAN_STATES_CITIES[currentState] || [];
       if (!cities.includes(initialCity)) {
-        setIsCityOther(true)
-        setCustomCity(initialCity)
-        setSelectedCity('OTHER')
+        setIsCityOther(true);
+        setCustomCity(initialCity);
+        setSelectedCity("OTHER");
       }
     }
-  }, [cityValue, cityDefaultValue, selectedState, customState])
+  }, [cityValue, cityDefaultValue, selectedState, customState]);
 
   useEffect(() => {
     if (stateValue !== undefined) {
       if (!STATE_OPTIONS.includes(stateValue) && stateValue) {
-        setIsStateOther(true)
-        setCustomState(stateValue)
-        setSelectedState('OTHER')
+        setIsStateOther(true);
+        setCustomState(stateValue);
+        setSelectedState("OTHER");
       } else {
-        setSelectedState(stateValue)
+        setSelectedState(stateValue);
       }
     }
-  }, [stateValue])
+  }, [stateValue]);
 
   useEffect(() => {
     if (cityValue !== undefined) {
-      const currentState = customState || selectedState
-      if (currentState && currentState !== 'OTHER') {
-        const cities = INDIAN_STATES_CITIES[currentState] || []
+      const currentState = customState || selectedState;
+      if (currentState && currentState !== "OTHER") {
+        const cities = INDIAN_STATES_CITIES[currentState] || [];
         if (!cities.includes(cityValue) && cityValue) {
-          setIsCityOther(true)
-          setCustomCity(cityValue)
-          setSelectedCity('OTHER')
+          setIsCityOther(true);
+          setCustomCity(cityValue);
+          setSelectedCity("OTHER");
         } else {
-          setSelectedCity(cityValue)
+          setSelectedCity(cityValue);
         }
       }
     }
-  }, [cityValue])
+  }, [cityValue]);
 
   const handleStateChange = (e) => {
-    const value = e.target.value
-    setSelectedState(value)
-    
-    if (value === 'OTHER') {
-      setIsStateOther(true)
-      setCustomState('')
+    const value = e.target.value;
+    setSelectedState(value);
+
+    if (value === "OTHER") {
+      setIsStateOther(true);
+      setCustomState("");
     } else {
-      setIsStateOther(false)
-      setCustomState('')
+      setIsStateOther(false);
+      setCustomState("");
     }
-    
+
     // Reset city when state changes
-    setSelectedCity('')
-    setIsCityOther(false)
-    setCustomCity('')
-    
+    setSelectedCity("");
+    setIsCityOther(false);
+    setCustomCity("");
+
     if (onStateChange) {
-      onStateChange({ target: { name: 'state', value: value === 'OTHER' ? '' : value } })
+      onStateChange({
+        target: { name: "state", value: value === "OTHER" ? "" : value },
+      });
     }
     if (onCityChange) {
-      onCityChange({ target: { name: 'city', value: '' } })
+      onCityChange({ target: { name: "city", value: "" } });
     }
-  }
+  };
 
   const handleCustomStateChange = (e) => {
-    const value = e.target.value
-    setCustomState(value)
+    const value = e.target.value;
+    setCustomState(value);
     if (onStateChange) {
-      onStateChange({ target: { name: 'state', value } })
+      onStateChange({ target: { name: "state", value } });
     }
-  }
+  };
 
   const handleCityChange = (e) => {
-    const value = e.target.value
-    setSelectedCity(value)
-    
-    if (value === 'OTHER') {
-      setIsCityOther(true)
-      setCustomCity('')
+    const value = e.target.value;
+    setSelectedCity(value);
+
+    if (value === "OTHER") {
+      setIsCityOther(true);
+      setCustomCity("");
     } else {
-      setIsCityOther(false)
-      setCustomCity('')
+      setIsCityOther(false);
+      setCustomCity("");
     }
-    
+
     if (onCityChange) {
-      onCityChange({ target: { name: 'city', value: value === 'OTHER' ? '' : value } })
+      onCityChange({
+        target: { name: "city", value: value === "OTHER" ? "" : value },
+      });
     }
-  }
+  };
 
   const handleCustomCityChange = (e) => {
-    const value = e.target.value
-    setCustomCity(value)
+    const value = e.target.value;
+    setCustomCity(value);
     if (onCityChange) {
-      onCityChange({ target: { name: 'city', value } })
+      onCityChange({ target: { name: "city", value } });
     }
-  }
+  };
 
-  const availableCities = selectedState && selectedState !== 'OTHER' 
-    ? INDIAN_STATES_CITIES[selectedState] || [] 
-    : []
+  const availableCities =
+    selectedState && selectedState !== "OTHER"
+      ? INDIAN_STATES_CITIES[selectedState] || []
+      : [];
 
   return (
-    <div className={clsx('grid grid-cols-1 md:grid-cols-2 gap-4', className)}>
+    <div className={clsx("form-grid form-grid--2", className)}>
       {/* State Selection */}
       <div className="form-field-group">
         <label className="form-label">
-          <span className="flex items-center gap-1.5">
-            <span className="text-lg">🗺️</span>
+          <span className="form-label__row">
+            <span className="form-label__emoji">🗺️</span>
             <span>State</span>
           </span>
-          {stateRequired && <span className="text-red-500 ml-0.5">*</span>}
+          {stateRequired && <span className="form-required">*</span>}
         </label>
-        <div className="relative">
+        <div className="form-select">
           <select
             value={selectedState}
             onChange={handleStateChange}
             required={stateRequired && !isStateOther}
             className={clsx(
-              'form-input appearance-none pr-10 cursor-pointer',
-              stateError && 'form-input-warn'
+              "form-input form-select__control",
+              stateError && "form-input--warn",
             )}
           >
             <option value="">Select State</option>
             {STATE_OPTIONS.map((state) => (
-              <option key={state} value={state}>{state}</option>
+              <option key={state} value={state}>
+                {state}
+              </option>
             ))}
             <option value="OTHER">Other (Custom)</option>
           </select>
           <ChevronDown
             size={16}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 pointer-events-none"
+            className="form-select__chevron"
           />
         </div>
         <FieldHint message={stateError} type="error" />
@@ -708,7 +1161,7 @@ export const StateCitySelector = ({
 
       {/* Custom State Input */}
       {isStateOther && (
-        <div className="md:col-span-2">
+        <div className="form-grid__span">
           <FormInput
             label="Custom State Name"
             name="state"
@@ -721,48 +1174,58 @@ export const StateCitySelector = ({
       )}
 
       {/* Hidden state input for predefined states */}
-      {!isStateOther && selectedState && selectedState !== 'OTHER' && (
+      {!isStateOther && selectedState && selectedState !== "OTHER" && (
         <input type="hidden" name="state" value={selectedState} />
       )}
 
       {/* City Selection */}
       <div className="form-field-group">
         <label className="form-label">
-          <span className="flex items-center gap-1.5">
-            <span className="text-lg">🏙️</span>
+          <span className="form-label__row">
+            <span className="form-label__emoji">🏙️</span>
             <span>City</span>
           </span>
-          {cityRequired && <span className="text-red-500 ml-0.5">*</span>}
+          {cityRequired && <span className="form-required">*</span>}
         </label>
-        <div className="relative">
+        <div className="form-select">
           <select
             value={selectedCity}
             onChange={handleCityChange}
-            disabled={!selectedState || (selectedState === 'OTHER' && !customState)}
-            required={cityRequired && !isCityOther && selectedState && selectedState !== 'OTHER'}
+            disabled={
+              !selectedState || (selectedState === "OTHER" && !customState)
+            }
+            required={
+              cityRequired &&
+              !isCityOther &&
+              selectedState &&
+              selectedState !== "OTHER"
+            }
             className={clsx(
-              'form-input appearance-none pr-10 cursor-pointer',
-              cityError && 'form-input-warn',
-              (!selectedState || (selectedState === 'OTHER' && !customState)) && 'opacity-50 cursor-not-allowed'
+              "form-input form-select__control",
+              cityError && "form-input--warn",
+              (!selectedState || (selectedState === "OTHER" && !customState)) &&
+                "form-input--disabled",
             )}
           >
             <option value="">
-              {!selectedState 
-                ? 'Select state first' 
-                : selectedState === 'OTHER' && !customState
-                ? 'Enter custom state first'
-                : 'Select City'}
+              {!selectedState
+                ? "Select state first"
+                : selectedState === "OTHER" && !customState
+                  ? "Enter custom state first"
+                  : "Select City"}
             </option>
             {availableCities.map((city) => (
-              <option key={city} value={city}>{city}</option>
+              <option key={city} value={city}>
+                {city}
+              </option>
             ))}
-            {(selectedState && selectedState !== 'OTHER') && (
+            {selectedState && selectedState !== "OTHER" && (
               <option value="OTHER">Other (Custom)</option>
             )}
           </select>
           <ChevronDown
             size={16}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 pointer-events-none"
+            className="form-select__chevron"
           />
         </div>
         <FieldHint message={cityError} type="error" />
@@ -770,7 +1233,7 @@ export const StateCitySelector = ({
 
       {/* Custom City Input */}
       {isCityOther && (
-        <div className="md:col-span-2">
+        <div className="form-grid__span">
           <FormInput
             label="Custom City Name"
             name="city"
@@ -783,37 +1246,35 @@ export const StateCitySelector = ({
       )}
 
       {/* Hidden city input for predefined cities */}
-      {!isCityOther && selectedCity && selectedCity !== 'OTHER' && (
+      {!isCityOther && selectedCity && selectedCity !== "OTHER" && (
         <input type="hidden" name="city" value={selectedCity} />
       )}
     </div>
-  )
-}
+  );
+};
 
 /* ─── Form Error Summary (gentle toast-style) ─── */
 export const FormErrorSummary = ({ errors, message }) => {
   const errorList = errors
     ? Object.values(errors).filter(Boolean)
     : message
-    ? [message]
-    : []
+      ? [message]
+      : [];
 
-  if (errorList.length === 0) return null
+  if (errorList.length === 0) return null;
 
   return (
-    <div className="form-error-summary animate-field-hint">
-      <div className="flex items-start gap-2.5">
-        <div className="p-1 rounded-full bg-amber-100 dark:bg-amber-900/30 shrink-0">
-          <AlertCircle size={14} className="text-amber-600 dark:text-amber-400" />
+    <div className="form-error-summary">
+      <div className="form-error-summary__row">
+        <div className="form-error-summary__icon">
+          <AlertCircle size={14} />
         </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
-            Please fix the following:
-          </p>
-          <ul className="mt-1 text-xs text-amber-700 dark:text-amber-300 space-y-0.5">
+        <div>
+          <p className="form-error-summary__title">Please fix the following:</p>
+          <ul className="form-error-summary__list">
             {errorList.map((err, i) => (
-              <li key={i} className="flex items-start gap-1.5">
-                <span className="text-amber-400 mt-0.5">›</span>
+              <li key={i} className="form-error-summary__item">
+                <span className="form-error-summary__bullet">›</span>
                 {err}
               </li>
             ))}

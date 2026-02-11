@@ -10,18 +10,18 @@ import { FormInput, PhoneInput, SmartSelect, FormErrorSummary } from '../compone
 import PermissionDenied from '../components/PermissionDenied'
 
 const roleColors = {
-  PLATFORM_OWNER: 'bg-purple-100 text-purple-800',
-  ORGANIZATION_OWNER: 'bg-violet-100 text-violet-800',
-  SOCIETY_ADMIN: 'bg-blue-100 text-blue-800',
-  CHAIRMAN: 'bg-indigo-100 text-indigo-800',
-  SECRETARY: 'bg-cyan-100 text-cyan-800',
-  TREASURER: 'bg-green-100 text-green-800',
-  COMMITTEE: 'bg-yellow-100 text-yellow-800',
-  MANAGER: 'bg-amber-100 text-amber-800',
-  EMPLOYEE: 'bg-orange-100 text-orange-800',
-  MEMBER: 'bg-gray-100 text-gray-800',
-  TENANT: 'bg-pink-100 text-pink-800',
-  VISITOR: 'bg-red-100 text-red-800',
+  PLATFORM_OWNER: 'role-pill role-pill--platform-owner',
+  ORGANIZATION_OWNER: 'role-pill role-pill--organization-owner',
+  SOCIETY_ADMIN: 'role-pill role-pill--society-admin',
+  CHAIRMAN: 'role-pill role-pill--chairman',
+  SECRETARY: 'role-pill role-pill--secretary',
+  TREASURER: 'role-pill role-pill--treasurer',
+  COMMITTEE: 'role-pill role-pill--committee',
+  MANAGER: 'role-pill role-pill--manager',
+  EMPLOYEE: 'role-pill role-pill--employee',
+  MEMBER: 'role-pill role-pill--member',
+  TENANT: 'role-pill role-pill--tenant',
+  VISITOR: 'role-pill role-pill--visitor',
 }
 
 // Role hierarchy descriptions for tooltips - aligned with Permission Matrix
@@ -399,18 +399,18 @@ export default function Users() {
   }
 
   return (
-    <div>
+    <div className="users-page">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+      <div className="users-header">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+          <h1 className="users-title">
             {getPageTitle()}
           </h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">
+          <p className="users-subtitle">
             {getPageDescription()}
           </p>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="users-actions">
           {/* Bulk Actions - only show for SECRETARY and COMMITTEE (they manage multiple users like MEMBER, EMPLOYEE, etc.) */}
           {/* SOCIETY_ADMIN only creates unique positions (CHAIRMAN, SECRETARY, TREASURER) - no bulk import needed */}
           {['SECRETARY', 'COMMITTEE'].includes(user?.role) ? (
@@ -422,14 +422,14 @@ export default function Users() {
                   setBulkImportError('')
                   setShowBulkImportModal(true)
                 }}
-                className="inline-flex items-center gap-2 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition text-sm"
+                className="users-action-btn users-action-btn--success"
               >
                 <Upload size={18} />
                 Import Excel
               </button>
               <button
                 onClick={() => setShowBulkCreateModal(true)}
-                className="inline-flex items-center gap-2 px-3 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition text-sm"
+                className="users-action-btn users-action-btn--purple"
               >
                 <UserPlus size={18} />
                 Auto-Create Users
@@ -439,7 +439,7 @@ export default function Users() {
           {creatableRoles.length > 0 && (
             <button
               onClick={() => handleOpenModal(null)}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+              className="users-action-btn users-action-btn--primary"
             >
               <Plus size={20} />
               {isPlatformLevel && !urlSocietyId ? 'Create User' : 'Add User'}
@@ -449,30 +449,30 @@ export default function Users() {
       </div>
 
       {/* Role Permissions Info */}
-      <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4 mb-6">
-        <div className="flex items-start gap-3">
-          <Shield className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5" />
-          <div className="flex-1">
-            <h3 className="font-medium text-blue-900 dark:text-blue-100">Your Permissions ({user?.role?.replace('_', ' ')})</h3>
-            <p className="text-sm text-blue-700 dark:text-blue-300 mt-1">
+      <div className="users-permissions">
+        <div className="users-permissions__row">
+          <Shield className="users-permissions__icon" size={20} />
+          <div>
+            <h3 className="users-permissions__title">Your Permissions ({user?.role?.replace('_', ' ')})</h3>
+            <p className="users-permissions__text">
               {roleHierarchyInfo[user?.role] || 'View only access'}
             </p>
-            <div className="mt-2 flex flex-wrap gap-2">
+            <div className="users-permissions__meta">
               {creatableRoles.length > 0 && (
-                <div className="text-xs">
-                  <span className="text-blue-600 dark:text-blue-400 font-medium">Can create:</span>{' '}
-                  <span className="text-blue-800 dark:text-blue-200">
+                <div>
+                  <span className="users-permissions__label">Can create:</span>{' '}
+                  <span className="users-permissions__value">
                     {creatableRoles.map(r => r.replace('_', ' ')).join(', ')}
                   </span>
                 </div>
               )}
               {updatableRoles.length > 0 && creatableRoles.length > 0 && (
-                <span className="text-blue-400 dark:text-blue-500">|</span>
+                <span className="users-permissions__divider">|</span>
               )}
               {updatableRoles.length > 0 && (
-                <div className="text-xs">
-                  <span className="text-blue-600 dark:text-blue-400 font-medium">Can edit/delete:</span>{' '}
-                  <span className="text-blue-800 dark:text-blue-200">
+                <div>
+                  <span className="users-permissions__label">Can edit/delete:</span>{' '}
+                  <span className="users-permissions__value">
                     {updatableRoles.map(r => r.replace('_', ' ')).join(', ')}
                   </span>
                 </div>
@@ -484,14 +484,14 @@ export default function Users() {
 
       {/* Delete Error Alert */}
       {deleteError && (
-        <div className="flex items-center justify-between gap-2 p-4 mb-6 bg-red-50 border border-red-200 rounded-xl text-red-700">
-          <div className="flex items-center gap-2">
+        <div className="users-alert">
+          <div className="users-alert__content">
             <AlertCircle size={20} />
             <span>{deleteError}</span>
           </div>
           <button 
             onClick={() => setDeleteError('')}
-            className="p-1 hover:bg-red-100 rounded"
+            className="users-alert__close"
           >
             <X size={18} />
           </button>
@@ -499,16 +499,16 @@ export default function Users() {
       )}
 
       {/* Filters */}
-      <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-4 mb-6">
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+      <div className="users-filters">
+        <div className="users-filters__row">
+          <div className="users-search">
+            <Search className="users-search__icon" size={20} />
             <input
               type="text"
               placeholder="Search users..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white placeholder:text-gray-400"
+              className="users-search__input"
             />
           </div>
           {/* Show role filter when there are manageable roles (hide for Organization Owner as they only manage Society Admins) */}
@@ -516,7 +516,7 @@ export default function Users() {
             <select
               value={filterRole}
               onChange={(e) => setFilterRole(e.target.value)}
-              className="px-4 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
+              className="users-filter-select"
             >
               <option value="">All Roles</option>
               {/* Include current user's role + roles they can manage */}
@@ -532,78 +532,78 @@ export default function Users() {
 
       {/* PLATFORM_OWNER/ORG_OWNER sees user cards with navigation (unless viewing specific society) */}
       {isPlatformLevel && !urlSocietyId ? (
-        <div className="space-y-4">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-            <UsersIcon className="w-5 h-5" />
+        <div className="users-section">
+          <h2 className="users-section__title">
+            <UsersIcon size={20} />
             {user?.role === 'PLATFORM_OWNER' ? 'Organization Owners & Society Administrators' : 'Society Administrators'}
-            <span className="text-sm font-normal text-gray-500">({filteredUsers.length})</span>
+            <span className="users-section__count">({filteredUsers.length})</span>
           </h2>
           
           {isLoading ? (
-            <div className="p-8 text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+            <div className="users-loading">
+              <div className="users-loading__spinner"></div>
             </div>
           ) : filteredUsers.length === 0 ? (
-            <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-8 text-center">
-              <UsersIcon className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
-              <p className="text-gray-500 dark:text-gray-400">No users found</p>
-              <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">{user?.role === 'PLATFORM_OWNER' ? 'Create an Organization Owner or Society Admin to get started' : 'Create a new Society Admin to get started'}</p>
+            <div className="users-empty">
+              <UsersIcon className="users-empty__icon" size={48} />
+              <p className="users-empty__text">No users found</p>
+              <p className="users-empty__subtext">{user?.role === 'PLATFORM_OWNER' ? 'Create an Organization Owner or Society Admin to get started' : 'Create a new Society Admin to get started'}</p>
             </div>
           ) : (
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <div className="user-grid">
               {filteredUsers.map((u) => {
                 const canEdit = updatableRoles.includes(u.role)
                 const canDelete = u.role !== 'PLATFORM_OWNER' && updatableRoles.includes(u.role)
                 const societyName = getSocietyName(u.societyId)
                 
                 return (
-                  <div key={u.id} className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-4 hover:shadow-md transition">
+                  <div key={u.id} className="user-card">
                     {/* Card Header */}
-                    <div className="flex items-start justify-between mb-3">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-linear-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
-                          <span className="text-white font-bold text-sm">
+                    <div className="user-card__header">
+                      <div className="user-card__identity">
+                        <div className="user-card__avatar">
+                          <span>
                             {u.name?.charAt(0)?.toUpperCase()}
                           </span>
                         </div>
                         <div>
-                          <h3 className="font-semibold text-gray-900 dark:text-white">{u.name}</h3>
-                          <p className="text-sm text-gray-500 dark:text-gray-400">{u.email}</p>
+                          <h3 className="user-card__name">{u.name}</h3>
+                          <p className="user-card__email">{u.email}</p>
                         </div>
                       </div>
-                      <span className={clsx('px-2.5 py-1 rounded-full text-xs font-medium', roleColors[u.role])}>
+                      <span className={clsx(roleColors[u.role])}>
                         {u.role?.replace('_', ' ')}
                       </span>
                     </div>
                     
                     {/* Society Info */}
-                    <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 dark:bg-slate-700/50 rounded-lg mb-3">
-                      <Building2 className="w-4 h-4 text-gray-400" />
-                      <span className="text-sm text-gray-700 dark:text-gray-300 flex-1">{societyName}</span>
+                    <div className="user-card__society">
+                      <Building2 size={16} />
+                      <span className="user-card__society-text">{societyName}</span>
                     </div>
                     
                     {/* Phone */}
                     {u.phone && (
-                      <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
+                      <p className="user-card__phone">
                         📞 {u.phone}
                       </p>
                     )}
                     
                     {/* Actions */}
-                    <div className="flex items-center gap-2 pt-3 border-t border-gray-100 dark:border-slate-700">
+                    <div className="user-card__actions">
                       {u.societyId && (
                         <button
                           onClick={() => navigate(`/societies/${u.societyId}`)}
-                          className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-1.5 text-sm text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition"
+                          className="user-card__action user-card__action--view"
                         >
-                          <Building2 className="w-4 h-4" />
+                          <Building2 size={16} />
                           View Society
                         </button>
                       )}
                       {canEdit && (
                         <button
                           onClick={() => handleOpenModal(u)}
-                          className="p-1.5 text-gray-500 dark:text-gray-400 hover:text-blue-600 hover:bg-gray-100 dark:hover:bg-slate-700 rounded transition"
+                          className="user-card__action user-card__action--icon"
                           title="Edit user"
                         >
                           <Edit size={18} />
@@ -616,7 +616,7 @@ export default function Users() {
                               deleteMutation.mutate(u.id)
                             }
                           }}
-                          className="p-1.5 text-gray-500 dark:text-gray-400 hover:text-red-600 hover:bg-gray-100 dark:hover:bg-slate-700 rounded transition"
+                          className="user-card__action user-card__action--icon user-card__action--danger"
                           title="Delete user"
                         >
                           <Trash2 size={18} />
@@ -631,24 +631,24 @@ export default function Users() {
         </div>
       ) : (
       /* Table view for non-PLATFORM_OWNER users */
-      <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 overflow-hidden">
+      <div className="users-table">
         {isLoading ? (
-          <div className="p-8 text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+          <div className="users-loading">
+            <div className="users-loading__spinner"></div>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50 dark:bg-slate-700 border-b border-gray-100 dark:border-slate-700">
+          <div className="users-table__wrap">
+            <table>
+              <thead>
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Name</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Email</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Role</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Phone</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th>Role</th>
+                  <th>Phone</th>
+                  <th className="users-table__actions">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100 dark:divide-slate-700">
+              <tbody>
                 {filteredUsers.map((u) => {
                   // Check if current user can edit/delete this user
                   const canEdit = u.id === user?.id || updatableRoles.includes(u.role)
@@ -656,34 +656,34 @@ export default function Users() {
                   const isSelf = u.id === user?.id
                   
                   return (
-                  <tr key={u.id} className="hover:bg-gray-50 dark:hover:bg-slate-700">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
-                          <span className="text-blue-600 font-medium text-sm">
+                  <tr key={u.id}>
+                    <td>
+                      <div className="users-table__name">
+                        <div className="users-table__avatar">
+                          <span>
                             {u.name?.charAt(0)?.toUpperCase()}
                           </span>
                         </div>
                         <div>
-                          <span className="font-medium text-gray-900 dark:text-white">{u.name}</span>
+                          <span>{u.name}</span>
                           {isSelf && (
-                            <span className="ml-2 text-xs text-blue-600 dark:text-blue-400">(You)</span>
+                            <span className="users-table__self">(You)</span>
                           )}
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-gray-600 dark:text-gray-300">{u.email}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={clsx('px-2.5 py-1 rounded-full text-xs font-medium', roleColors[u.role])}>
+                    <td className="users-table__cell">{u.email}</td>
+                    <td>
+                      <span className={clsx(roleColors[u.role])}>
                         {u.role?.replace('_', ' ')}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-gray-600 dark:text-gray-300">{u.phone || '-'}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right">
+                    <td className="users-table__cell">{u.phone || '-'}</td>
+                    <td className="users-table__actions">
                       {canEdit ? (
                         <button
                           onClick={() => handleOpenModal(u)}
-                          className="p-1.5 text-gray-500 dark:text-gray-400 hover:text-blue-600 transition"
+                          className="users-table__icon-btn"
                           title={isSelf ? 'Edit your profile' : 'Edit user'}
                         >
                           <Edit size={18} />
@@ -691,7 +691,7 @@ export default function Users() {
                       ) : (
                         <button
                           disabled
-                          className="p-1.5 text-gray-300 dark:text-gray-600 cursor-not-allowed"
+                          className="users-table__icon-btn"
                           title="No permission to edit this user"
                         >
                           <Edit size={18} />
@@ -704,7 +704,7 @@ export default function Users() {
                               deleteMutation.mutate(u.id)
                             }
                           }}
-                          className="p-1.5 text-gray-500 dark:text-gray-400 hover:text-red-600 transition ml-2"
+                          className="users-table__icon-btn users-table__icon-btn--danger"
                           title="Delete user"
                         >
                           <Trash2 size={18} />
@@ -712,7 +712,7 @@ export default function Users() {
                       ) : (
                         <button
                           disabled
-                          className="p-1.5 text-gray-300 dark:text-gray-600 cursor-not-allowed ml-2"
+                          className="users-table__icon-btn"
                           title={isSelf ? "Cannot delete yourself" : "No permission to delete this user"}
                         >
                           <Trash2 size={18} />
@@ -731,15 +731,15 @@ export default function Users() {
 
       {/* Modal */}
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-xl w-full max-w-md">
-            <div className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-slate-700">
-              <h3 className="text-lg font-semibold dark:text-white">{editingUser ? 'Edit User' : 'Add User'}</h3>
-              <button onClick={() => { setShowModal(false); setError(''); }} className="p-1 hover:bg-gray-100 rounded">
+        <div className="users-modal">
+          <div className="users-modal__panel">
+            <div className="users-modal__header">
+              <h3 className="users-modal__title">{editingUser ? 'Edit User' : 'Add User'}</h3>
+              <button onClick={() => { setShowModal(false); setError(''); }} className="users-modal__close">
                 <X size={20} />
               </button>
             </div>
-            <form onSubmit={handleSubmit} className="p-4 space-y-4">
+            <form onSubmit={handleSubmit} className="users-modal__form">
               <FormErrorSummary message={error} />
               <FormInput
                 label="Name"
@@ -777,15 +777,15 @@ export default function Users() {
               />
               {user?.role === 'PLATFORM_OWNER' && (selectedRole || editingUser?.role) === 'ORGANIZATION_OWNER' && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Organization Name</label>
+                  <label className="form-label">Organization Name</label>
                   <input
                     type="text"
                     name="organizationName"
                     defaultValue={editingUser?.organizationName || ''}
                     placeholder="e.g. ABC Housing Group"
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
+                    className="form-input"
                   />
-                  <p className="text-xs text-gray-500 mt-1">Leave empty to auto-generate from the owner's name</p>
+                  <p className="form-help">Leave empty to auto-generate from the owner's name</p>
                 </div>
               )}
               {(user?.role === 'PLATFORM_OWNER' || user?.role === 'ORGANIZATION_OWNER') && (selectedRole || editingUser?.role) === 'SOCIETY_ADMIN' && (
@@ -807,16 +807,16 @@ export default function Users() {
                   {confirmedIsMember && (selectedRole || creatableRoles[0]) === 'TENANT' ? (
                     <div className="form-field-group">
                       <label className="form-label">
-                        <Home className="w-4 h-4 text-gray-400 dark:text-gray-500" />
+                        <Home size={16} className="form-label__icon" />
                         Property
                       </label>
                       {availableFlats.length > 0 ? (
                         <div className="smart-select-single">
-                          <Home size={14} className="text-blue-500 dark:text-blue-400 shrink-0" />
-                          <span className="font-medium text-gray-900 dark:text-white">
+                          <Home size={14} className="smart-select__icon" />
+                          <span className="smart-select__value">
                             {availableFlats[0]?.flatNumber} {availableFlats[0]?.wingName ? `(${availableFlats[0]?.wingName})` : ''}
                           </span>
-                          <span className="ml-auto text-[10px] uppercase tracking-wider text-blue-500 dark:text-blue-400 font-semibold">
+                          <span className="smart-select__badge">
                             Your flat
                           </span>
                           <input type="hidden" name="flatId" value={availableFlats[0]?.id || ''} />
@@ -849,18 +849,18 @@ export default function Users() {
                 name="phone"
                 defaultValue={editingUser?.phone}
               />
-              <div className="flex gap-3 pt-4">
+              <div className="users-modal__actions">
                 <button
                   type="button"
                   onClick={() => { setShowModal(false); setError(''); }}
-                  className="flex-1 px-4 py-2 border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition"
+                  className="users-modal__btn users-modal__btn--ghost"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={creatableRoles.length === 0 && !editingUser}
-                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="users-modal__btn users-modal__btn--primary"
                 >
                   {editingUser ? 'Update' : 'Create'}
                 </button>
@@ -872,10 +872,10 @@ export default function Users() {
 
       {/* Bulk Import Modal */}
       {showBulkImportModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden">
-            <div className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-slate-700">
-              <h3 className="text-lg font-semibold dark:text-white">Bulk Import Users</h3>
+        <div className="bulk-modal">
+          <div className="bulk-modal__panel">
+            <div className="bulk-modal__header">
+              <h3 className="bulk-modal__title">Bulk Import Users</h3>
               <button 
                 onClick={() => {
                   setShowBulkImportModal(false)
@@ -883,16 +883,16 @@ export default function Users() {
                   setBulkImportPreview(null)
                   setBulkImportError('')
                 }}
-                className="p-1 hover:bg-gray-100 dark:hover:bg-slate-700 rounded"
+                className="bulk-modal__close"
               >
-                <X size={20} className="text-gray-500 dark:text-gray-400" />
+                <X size={20} />
               </button>
             </div>
             
-            <div className="p-4 overflow-y-auto max-h-[calc(90vh-180px)]">
+            <div className="bulk-modal__body">
               {/* Error Message */}
               {bulkImportError && (
-                <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg flex items-center gap-2 text-red-700 dark:text-red-300">
+                <div className="bulk-error">
                   <AlertCircle size={18} />
                   {bulkImportError}
                 </div>
@@ -903,10 +903,8 @@ export default function Users() {
                 <>
                   <div
                     className={clsx(
-                      'border-2 border-dashed rounded-xl p-8 text-center transition-colors',
-                      isDragOver 
-                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' 
-                        : 'border-gray-300 dark:border-slate-600 hover:border-blue-400'
+                      'bulk-upload',
+                      isDragOver && 'bulk-upload--active'
                     )}
                     onDragOver={(e) => { e.preventDefault(); setIsDragOver(true) }}
                     onDragLeave={() => setIsDragOver(false)}
@@ -923,28 +921,28 @@ export default function Users() {
                     }}
                   >
                     {bulkImportFile ? (
-                      <div className="flex items-center justify-center gap-3">
-                        <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
-                          <FileSpreadsheet className="w-6 h-6 text-green-600 dark:text-green-400" />
+                      <div className="bulk-upload__file">
+                        <div className="bulk-upload__file-icon">
+                          <FileSpreadsheet size={24} />
                         </div>
-                        <div className="text-left">
-                          <p className="font-medium text-gray-900 dark:text-white">{bulkImportFile.name}</p>
-                          <p className="text-sm text-gray-500">{(bulkImportFile.size / 1024).toFixed(1)} KB</p>
+                        <div className="bulk-upload__meta">
+                          <p className="bulk-upload__file-name">{bulkImportFile.name}</p>
+                          <p className="bulk-upload__file-size">{(bulkImportFile.size / 1024).toFixed(1)} KB</p>
                         </div>
                         <button
                           onClick={() => setBulkImportFile(null)}
-                          className="p-1 hover:bg-gray-100 dark:hover:bg-slate-700 rounded"
+                          className="bulk-upload__remove"
                         >
-                          <X size={18} className="text-gray-500" />
+                          <X size={18} />
                         </button>
                       </div>
                     ) : (
                       <>
-                        <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                        <p className="text-gray-600 dark:text-gray-400 mb-2">
+                        <Upload size={48} className="users-empty__icon" />
+                        <p className="bulk-upload__prompt">
                           Drag and drop your Excel file here, or click to browse
                         </p>
-                        <p className="text-sm text-gray-500 mb-4">Supported format: .xlsx, .xls</p>
+                        <p className="bulk-upload__hint">Supported format: .xlsx, .xls</p>
                       </>
                     )}
                     <input
@@ -965,7 +963,7 @@ export default function Users() {
                         <button
                           type="button"
                           onClick={() => fileInputRef.current?.click()}
-                          className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 cursor-pointer transition"
+                          className="bulk-upload__button"
                         >
                           <Upload size={18} />
                           Select File
@@ -975,10 +973,10 @@ export default function Users() {
                   </div>
 
                   {/* Format Requirements with attractive styling */}
-                  <div className="mt-4 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border border-blue-200 dark:border-blue-800 rounded-xl">
-                    <div className="flex items-center justify-between mb-3">
-                      <h4 className="font-semibold text-blue-900 dark:text-blue-100 flex items-center gap-2">
-                        <span className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></span>
+                  <div className="bulk-requirements">
+                    <div className="bulk-requirements__header">
+                      <h4 className="bulk-requirements__title">
+                        <span className="bulk-requirements__dot"></span>
                         Excel Format Requirements
                       </h4>
                       <button
@@ -997,38 +995,38 @@ export default function Users() {
                             })
                             .catch(() => setBulkImportError('Failed to download template'))
                         }}
-                        className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white text-sm font-medium rounded-lg shadow-md shadow-emerald-500/25 hover:shadow-lg hover:shadow-emerald-500/30 transform hover:-translate-y-0.5 transition-all duration-200"
+                        className="bulk-requirements__download"
                       >
                         <Download size={16} />
                         Download Template
                       </button>
                     </div>
-                    <ul className="text-sm text-blue-700 dark:text-blue-300 space-y-2">
-                      <li className="flex items-start gap-2">
-                        <span className="inline-flex items-center justify-center w-5 h-5 bg-blue-100 dark:bg-blue-800 text-blue-600 dark:text-blue-300 text-xs font-bold rounded mt-0.5">A</span>
+                    <ul className="bulk-requirements__list">
+                      <li className="bulk-requirements__item">
+                        <span className="bulk-requirements__badge">A</span>
                         <span><strong>Name</strong> (required) - Full name of the user</span>
                       </li>
-                      <li className="flex items-start gap-2">
-                        <span className="inline-flex items-center justify-center w-5 h-5 bg-blue-100 dark:bg-blue-800 text-blue-600 dark:text-blue-300 text-xs font-bold rounded mt-0.5">B</span>
+                      <li className="bulk-requirements__item">
+                        <span className="bulk-requirements__badge">B</span>
                         <span><strong>Email</strong> (required) - Used as username</span>
                       </li>
-                      <li className="flex items-start gap-2">
-                        <span className="inline-flex items-center justify-center w-5 h-5 bg-blue-100 dark:bg-blue-800 text-blue-600 dark:text-blue-300 text-xs font-bold rounded mt-0.5">C</span>
+                      <li className="bulk-requirements__item">
+                        <span className="bulk-requirements__badge">C</span>
                         <span><strong>Flat Number</strong> - Required for unit owners. Supports comma-separated for multiple units (e.g., "A-101, S-001")</span>
                       </li>
-                      <li className="flex items-start gap-2">
-                        <span className="inline-flex items-center justify-center w-5 h-5 bg-blue-100 dark:bg-blue-800 text-blue-600 dark:text-blue-300 text-xs font-bold rounded mt-0.5">D</span>
+                      <li className="bulk-requirements__item">
+                        <span className="bulk-requirements__badge">D</span>
                         <span><strong>Phone</strong> (optional) - Contact number</span>
                       </li>
-                      <li className="flex items-start gap-2">
-                        <span className="inline-flex items-center justify-center w-5 h-5 bg-blue-100 dark:bg-blue-800 text-blue-600 dark:text-blue-300 text-xs font-bold rounded mt-0.5">E</span>
+                      <li className="bulk-requirements__item">
+                        <span className="bulk-requirements__badge">E</span>
                         <span><strong>Role</strong> (optional) - Default: MEMBER</span>
                       </li>
                     </ul>
                     {/* Role-Unit Type Rules */}
-                    <div className="mt-3 pt-3 border-t border-blue-200 dark:border-blue-700">
-                      <p className="text-xs font-semibold text-blue-800 dark:text-blue-200 mb-2">Role & Unit Type Rules:</p>
-                      <ul className="text-xs text-blue-600 dark:text-blue-400 space-y-1">
+                    <div>
+                      <p className="bulk-requirements__rule-title">Role & Unit Type Rules:</p>
+                      <ul className="bulk-requirements__rules">
                         <li>• <strong>MEMBER, CHAIRMAN, SECRETARY, TREASURER, COMMITTEE, TENANT</strong> → Can own FLAT, SHOP, or OFFICE</li>
                         <li>• <strong>Multiple units:</strong> Use comma-separated values (e.g., "A-101, S-001") for owners with multiple properties</li>
                         <li>• <strong>EMPLOYEE, VISITOR</strong> → Cannot be assigned to any unit (leave Flat Number empty)</li>
@@ -1042,67 +1040,61 @@ export default function Users() {
               {bulkImportPreview && (
                 <>
                   {/* Summary Cards */}
-                  <div className="mb-4 flex gap-4">
-                    <div className={`flex-1 p-4 rounded-xl text-center transition-all duration-300 ${
-                      bulkImportPreview.successCount > 0 
-                        ? 'bg-gradient-to-br from-emerald-500 to-green-600 shadow-lg shadow-green-500/30' 
-                        : 'bg-gray-100 dark:bg-slate-700/50 border border-gray-200 dark:border-slate-600'
-                    }`}>
-                      <div className={`text-3xl font-bold ${bulkImportPreview.successCount > 0 ? 'text-white' : 'text-gray-400'}`}>
+                  <div className="bulk-summary">
+                    <div className={clsx(
+                      'bulk-summary__card',
+                      bulkImportPreview.successCount > 0 && 'bulk-summary__card--valid'
+                    )}>
+                      <div className="bulk-summary__count">
                         {bulkImportPreview.successCount}
                       </div>
-                      <div className={`text-sm font-medium ${bulkImportPreview.successCount > 0 ? 'text-emerald-100' : 'text-gray-500'}`}>
+                      <div className="bulk-summary__label">
                         Valid
                       </div>
                     </div>
-                    <div className={`flex-1 p-4 rounded-xl text-center transition-all duration-300 ${
-                      bulkImportPreview.failureCount > 0 
-                        ? 'bg-gradient-to-br from-rose-500 to-red-600 shadow-lg shadow-red-500/30' 
-                        : 'bg-gray-100 dark:bg-slate-700/50 border border-gray-200 dark:border-slate-600'
-                    }`}>
-                      <div className={`text-3xl font-bold ${bulkImportPreview.failureCount > 0 ? 'text-white' : 'text-gray-400'}`}>
+                    <div className={clsx(
+                      'bulk-summary__card',
+                      bulkImportPreview.failureCount > 0 && 'bulk-summary__card--invalid'
+                    )}>
+                      <div className="bulk-summary__count">
                         {bulkImportPreview.failureCount}
                       </div>
-                      <div className={`text-sm font-medium ${bulkImportPreview.failureCount > 0 ? 'text-rose-100' : 'text-gray-500'}`}>
+                      <div className="bulk-summary__label">
                         {bulkImportPreview.failureCount > 0 ? 'Needs Fixing' : 'Invalid'}
                       </div>
                     </div>
                   </div>
 
                   {/* Results Table */}
-                  <div className="border dark:border-slate-700 rounded-xl overflow-hidden shadow-sm max-h-60 overflow-y-auto">
-                    <table className="w-full text-sm">
-                      <thead className="bg-gradient-to-r from-gray-50 to-slate-50 dark:from-slate-700 dark:to-slate-600 sticky top-0">
+                  <div className="bulk-table">
+                    <table>
+                      <thead>
                         <tr>
-                          <th className="px-3 py-3 text-left font-semibold dark:text-white">Row</th>
-                          <th className="px-3 py-3 text-left font-semibold dark:text-white">Name</th>
-                          <th className="px-3 py-3 text-left font-semibold dark:text-white">Email</th>
-                          <th className="px-3 py-3 text-left font-semibold dark:text-white">Flat</th>
-                          <th className="px-3 py-3 text-left font-semibold dark:text-white">Status</th>
+                          <th>Row</th>
+                          <th>Name</th>
+                          <th>Email</th>
+                          <th>Flat</th>
+                          <th>Status</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y dark:divide-slate-700">
+                      <tbody>
                         {bulkImportPreview.results?.map((row, idx) => (
                           <tr 
                             key={idx}
-                            className={`transition-colors duration-200 ${
-                              row.success 
-                                ? 'hover:bg-green-50/50 dark:hover:bg-green-900/10' 
-                                : 'bg-gradient-to-r from-red-50 to-rose-50 dark:from-red-900/20 dark:to-rose-900/20 border-l-4 border-l-red-500'
-                            }`}
+                            className={clsx(!row.success && 'bulk-table__row--invalid')}
                           >
-                            <td className="px-3 py-3 dark:text-gray-300 font-mono text-xs">{row.rowNumber}</td>
-                            <td className="px-3 py-3 dark:text-gray-300 font-medium">{row.name || '-'}</td>
-                            <td className="px-3 py-3 dark:text-gray-300 text-xs">{row.email || '-'}</td>
-                            <td className="px-3 py-3 dark:text-gray-300">{row.flatNumber || '-'}</td>
-                            <td className="px-3 py-3">
+                            <td>{row.rowNumber}</td>
+                            <td>{row.name || '-'}</td>
+                            <td>{row.email || '-'}</td>
+                            <td>{row.flatNumber || '-'}</td>
+                            <td>
                               {row.success ? (
-                                <span className="inline-flex items-center gap-1 text-green-600 dark:text-green-400">
-                                  <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                                <span className="bulk-table__status bulk-table__status--valid">
+                                  <span className="bulk-requirements__dot"></span>
                                   Valid
                                 </span>
                               ) : (
-                                <span className="text-red-600 dark:text-red-400 text-xs font-medium">{row.errorMessage}</span>
+                                <span className="bulk-table__status bulk-table__status--error">{row.errorMessage}</span>
                               )}
                             </td>
                           </tr>
@@ -1115,7 +1107,7 @@ export default function Users() {
             </div>
 
             {/* Footer */}
-            <div className="flex gap-3 p-4 border-t border-gray-100 dark:border-slate-700">
+            <div className="bulk-footer">
               {!bulkImportPreview ? (
                 <>
                   <button
@@ -1125,7 +1117,7 @@ export default function Users() {
                       setBulkImportPreview(null)
                       setBulkImportError('')
                     }}
-                    className="flex-1 px-4 py-2 border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition"
+                    className="bulk-footer__button bulk-footer__button--ghost"
                   >
                     Cancel
                   </button>
@@ -1143,11 +1135,11 @@ export default function Users() {
                       validateBulkImportMutation.mutate({ file: bulkImportFile, societyId })
                     }}
                     disabled={!bulkImportFile || validateBulkImportMutation.isPending}
-                    className="flex-1 px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 flex items-center justify-center gap-2 font-medium"
+                    className="bulk-footer__button bulk-footer__button--primary"
                   >
                     {validateBulkImportMutation.isPending ? (
                       <>
-                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        <div className="users-loading__spinner"></div>
                         Validating...
                       </>
                     ) : (
@@ -1161,20 +1153,20 @@ export default function Users() {
                 // Show error state with appropriate message
                 bulkImportPreview.failureCount === bulkImportPreview.totalRows ? (
                   // All rows invalid - wrong file format
-                  <div className="w-full space-y-3">
-                    <div className="p-5 bg-gradient-to-br from-rose-500 to-red-600 dark:from-rose-600 dark:to-red-700 rounded-2xl shadow-xl shadow-red-500/30">
-                      <div className="flex items-start gap-4">
-                        <div className="shrink-0 w-12 h-12 bg-white/20 backdrop-blur rounded-full flex items-center justify-center">
-                          <AlertCircle className="w-6 h-6 text-white" />
+                  <div className="bulk-error-stack">
+                    <div className="bulk-error-card bulk-error-card--fatal">
+                      <div className="bulk-error-card__row">
+                        <div className="bulk-error-card__icon">
+                          <AlertCircle size={24} />
                         </div>
-                        <div className="flex-1">
-                          <h4 className="font-bold text-white text-lg mb-2">
+                        <div className="bulk-error-card__content">
+                          <h4 className="bulk-error-card__title">
                             Invalid File Format
                           </h4>
-                          <p className="text-rose-100 text-sm leading-relaxed">
+                          <p className="bulk-error-card__text">
                             The uploaded Excel file does not match the required format. Please ensure you are using the correct template with columns: <strong>Name, Email, Flat Number, Phone, Role</strong>.
                           </p>
-                          <p className="text-rose-200 text-xs mt-2">
+                          <p className="bulk-error-card__text">
                             Download the template for reference and try again.
                           </p>
                         </div>
@@ -1186,7 +1178,7 @@ export default function Users() {
                         setBulkImportPreview(null)
                         setBulkImportError('')
                       }}
-                      className="w-full px-4 py-3.5 accent-btn rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-center gap-2 font-semibold"
+                      className="bulk-error-action"
                     >
                       <Upload size={18} />
                       Upload Correct File
@@ -1194,17 +1186,17 @@ export default function Users() {
                   </div>
                 ) : (
                   // Some rows have errors
-                  <div className="w-full space-y-3">
-                    <div className="p-5 bg-gradient-to-br from-amber-500 to-orange-500 dark:from-amber-600 dark:to-orange-600 rounded-2xl shadow-xl shadow-orange-500/30">
-                      <div className="flex items-start gap-4">
-                        <div className="shrink-0 w-12 h-12 bg-white/20 backdrop-blur rounded-full flex items-center justify-center animate-bounce-gentle">
-                          <AlertCircle className="w-6 h-6 text-white" />
+                  <div className="bulk-error-stack">
+                    <div className="bulk-error-card bulk-error-card--warn">
+                      <div className="bulk-error-card__row">
+                        <div className="bulk-error-card__icon">
+                          <AlertCircle size={24} />
                         </div>
-                        <div className="flex-1">
-                          <h4 className="font-bold text-white text-lg mb-2">
+                        <div className="bulk-error-card__content">
+                          <h4 className="bulk-error-card__title">
                             Please Fix {bulkImportPreview.failureCount} Error{bulkImportPreview.failureCount > 1 ? 's' : ''} Before Import
                           </h4>
-                          <p className="text-amber-100 text-sm leading-relaxed">
+                          <p className="bulk-error-card__text">
                             All rows must be valid to proceed. Please review the highlighted errors above, correct them in your Excel file, and re-upload.
                           </p>
                         </div>
@@ -1216,7 +1208,7 @@ export default function Users() {
                         setBulkImportPreview(null)
                         setBulkImportError('')
                       }}
-                      className="w-full px-4 py-3.5 accent-btn rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-center gap-2 font-semibold"
+                      className="bulk-error-action"
                     >
                       <Upload size={18} />
                       Fix & Re-upload Excel
@@ -1225,14 +1217,14 @@ export default function Users() {
                 )
               ) : (
                 // All valid - show import button
-                <div className="flex gap-3 w-full">
+                <div className="bulk-footer__row">
                   <button
                     onClick={() => {
                       setBulkImportFile(null)
                       setBulkImportPreview(null)
                       setBulkImportError('')
                     }}
-                    className="flex-1 px-4 py-2 border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition"
+                    className="bulk-footer__button bulk-footer__button--ghost"
                   >
                     Back
                   </button>
@@ -1242,11 +1234,11 @@ export default function Users() {
                       processBulkImportMutation.mutate({ file: bulkImportFile, societyId })
                     }}
                     disabled={processBulkImportMutation.isPending}
-                    className="flex-1 px-4 py-3 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white rounded-xl shadow-lg shadow-green-500/25 hover:shadow-xl hover:shadow-green-500/30 transform hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-center gap-2 font-medium disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
+                    className="bulk-footer__button bulk-footer__button--success"
                   >
                     {processBulkImportMutation.isPending ? (
                       <>
-                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        <div className="users-loading__spinner"></div>
                         Importing...
                       </>
                     ) : (
@@ -1265,34 +1257,34 @@ export default function Users() {
 
       {/* Bulk Create from Units Modal */}
       {showBulkCreateModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-xl w-full max-w-md">
-            <div className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-slate-700">
-              <h3 className="text-lg font-semibold dark:text-white">Create Users in Bulk</h3>
+        <div className="bulk-modal">
+          <div className="bulk-modal__panel">
+            <div className="bulk-modal__header">
+              <h3 className="bulk-modal__title">Create Users in Bulk</h3>
               <button 
                 onClick={() => setShowBulkCreateModal(false)}
-                className="p-1 hover:bg-gray-100 dark:hover:bg-slate-700 rounded"
+                className="bulk-modal__close"
               >
-                <X size={20} className="text-gray-500 dark:text-gray-400" />
+                <X size={20} />
               </button>
             </div>
             
-            <div className="p-6 space-y-4">
-              <div className="text-center">
-                <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <UserPlus className="w-8 h-8 text-green-600 dark:text-green-400" />
+            <div className="bulk-create">
+              <div className="bulk-create__hero">
+                <div className="bulk-create__icon">
+                  <UserPlus size={32} />
                 </div>
-                <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                <h4 className="bulk-create__title">
                   Create Users for All Units
                 </h4>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
+                <p className="bulk-create__text">
                   This will automatically create user accounts for all units that have an owner email configured but don't have an associated user yet.
                 </p>
               </div>
 
-              <div className="bg-gray-50 dark:bg-slate-700 rounded-lg p-4">
-                <h5 className="font-medium text-gray-900 dark:text-white mb-2">How it works:</h5>
-                <ul className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
+              <div className="bulk-create__info">
+                <h5>How it works:</h5>
+                <ul>
                   <li>• Email from unit owner details will be used as username</li>
                   <li>• Flat/Unit number will be used as the default password</li>
                   <li>• Units without owner email will be skipped</li>
@@ -1301,19 +1293,19 @@ export default function Users() {
                 </ul>
               </div>
 
-              <div className="flex items-start gap-2 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
-                <Info className="w-5 h-5 text-yellow-600 dark:text-yellow-400 shrink-0 mt-0.5" />
-                <p className="text-sm text-yellow-700 dark:text-yellow-300">
+              <div className="bulk-create__note">
+                <Info size={18} />
+                <p>
                   Users should change their password after first login
                 </p>
               </div>
             </div>
 
-            <div className="flex gap-3 p-4 border-t border-gray-100 dark:border-slate-700">
+            <div className="bulk-footer">
               <button
                 type="button"
                 onClick={() => setShowBulkCreateModal(false)}
-                className="flex-1 px-4 py-2 border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition"
+                className="bulk-footer__button bulk-footer__button--ghost"
               >
                 Cancel
               </button>
@@ -1327,11 +1319,11 @@ export default function Users() {
                   bulkCreateFromUnitsMutation.mutate(societyId)
                 }}
                 disabled={bulkCreateFromUnitsMutation.isPending}
-                className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition disabled:opacity-50 flex items-center justify-center gap-2"
+                className="bulk-footer__button bulk-footer__button--success"
               >
                 {bulkCreateFromUnitsMutation.isPending ? (
                   <>
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <div className="users-loading__spinner"></div>
                     Creating...
                   </>
                 ) : (

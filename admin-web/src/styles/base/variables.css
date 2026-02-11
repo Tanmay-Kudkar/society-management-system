@@ -4,6 +4,22 @@
    ============================================ */
 
 :root {
+  /* Legacy theme aliases (used across pages) */
+  --background: var(--bg-primary);
+  --surface: var(--bg-card);
+
+  --accent-50: #faf5ff;
+  --accent-100: #f3e8ff;
+  --accent-500: #8b5cf6;
+  --accent-600: #7c3aed;
+  --accent-700: #6d28d9;
+
+  --accent-primary: #8b5cf6;
+  --accent-secondary: #a78bfa;
+  --accent-light: #c4b5fd;
+  --accent-gradient-from: #8b5cf6;
+  --accent-gradient-via: #a855f7;
+  --accent-gradient-to: #7c3aed;
   /* Color Palette - Light Mode */
   --color-primary-50: #eff6ff;
   --color-primary-100: #dbeafe;

@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback } from 'react'
+import { createContext, useContext, useState, useCallback, useEffect } from 'react'
 import { CheckCircle, XCircle, AlertTriangle, Info, X } from 'lucide-react'
 import '../styles/animations.css'
 
@@ -45,6 +45,13 @@ export function ToastProvider({ children }) {
   const error = useCallback((message, duration) => addToast(message, 'error', duration), [addToast])
   const warning = useCallback((message, duration) => addToast(message, 'warning', duration), [addToast])
   const info = useCallback((message, duration) => addToast(message, 'info', duration), [addToast])
+
+  // Listen for global mutation errors dispatched from MutationCache
+  useEffect(() => {
+    const handler = (e) => error(e.detail)
+    window.addEventListener('global-mutation-error', handler)
+    return () => window.removeEventListener('global-mutation-error', handler)
+  }, [error])
 
   return (
     <ToastContext.Provider value={{ success, error, warning, info, addToast, removeToast }}>

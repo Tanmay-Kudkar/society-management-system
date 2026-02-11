@@ -38,6 +38,7 @@ public class TransactionServiceImpl implements TransactionService {
 
         Society society = societyRepository.findById(request.getSocietyId())
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Society not found"));
+        roleService.enforceSocietyScope(roleService.getUser(userId), society.getId());
 
         // Validate: MAINTENANCE income requires flatId
         if ("INCOME".equalsIgnoreCase(request.getTransactionType()) 
@@ -50,6 +51,7 @@ public class TransactionServiceImpl implements TransactionService {
 
         Transaction transaction = new Transaction();
         transaction.setSociety(society);
+        transaction.setOrganization(society.getOrganization());
         transaction.setTransactionType(request.getTransactionType());
         transaction.setPaymentMode(request.getPaymentMode());
         transaction.setAmount(request.getAmount());
@@ -79,11 +81,15 @@ public class TransactionServiceImpl implements TransactionService {
     public TransactionResponse getById(Long id) {
         Transaction transaction = transactionRepository.findById(id)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Transaction not found"));
+        if (transaction.getSociety() != null) {
+            roleService.enforceSocietyScope(roleService.getCurrentUser(), transaction.getSociety().getId());
+        }
         return mapToResponse(transaction);
     }
 
     @Override
     public List<TransactionResponse> getBySocietyId(Long societyId) {
+        roleService.enforceSocietyScope(roleService.getCurrentUser(), societyId);
         return transactionRepository.findBySocietyId(societyId).stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
@@ -112,7 +118,24 @@ public class TransactionServiceImpl implements TransactionService {
 
     @Override
     public List<TransactionResponse> getAll() {
+        var currentUser = roleService.getCurrentUser();
+        if (currentUser == null) {
+            throw new ApiException(HttpStatus.UNAUTHORIZED, "Not authenticated");
+        }
+
         return transactionRepository.findAll().stream()
+                .filter(t -> {
+                    if (currentUser.getRole() == com.society.backend.entity.Role.PLATFORM_OWNER) {
+                        return true;
+                    }
+                    if (currentUser.getRole() == com.society.backend.entity.Role.ORGANIZATION_OWNER
+                            && currentUser.getOrganization() != null) {
+                        return t.getSociety() != null && t.getSociety().getOrganization() != null
+                                && t.getSociety().getOrganization().getId().equals(currentUser.getOrganization().getId());
+                    }
+                    return t.getSociety() != null && currentUser.getSociety() != null
+                            && t.getSociety().getId().equals(currentUser.getSociety().getId());
+                })
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }

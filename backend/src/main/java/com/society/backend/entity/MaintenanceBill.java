@@ -25,6 +25,14 @@ public class MaintenanceBill {
     @JoinColumn(name = "flat_id", nullable = false)
     private Flat flat;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "society_id")
+    private Society society;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "organization_id")
+    private Organization organization;
+
     @Column(name = "bill_month", nullable = false)
     private String billMonth; // e.g., "2026-01"
 

@@ -7,8 +7,13 @@
 
 /* Fade animations */
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes fadeInUp {
@@ -16,6 +21,7 @@
     opacity: 0;
     transform: translateY(30px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -27,6 +33,7 @@
     opacity: 0;
     transform: translateY(-30px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -38,6 +45,7 @@
     opacity: 0;
     transform: translateX(-30px);
   }
+
   to {
     opacity: 1;
     transform: translateX(0);
@@ -49,6 +57,7 @@
     opacity: 0;
     transform: translateX(30px);
   }
+
   to {
     opacity: 1;
     transform: translateX(0);
@@ -61,6 +70,7 @@
     opacity: 0;
     transform: scale(0.9);
   }
+
   to {
     opacity: 1;
     transform: scale(1);
@@ -72,12 +82,15 @@
     opacity: 0;
     transform: scale(0.3);
   }
+
   50% {
     transform: scale(1.05);
   }
+
   70% {
     transform: scale(0.95);
   }
+
   100% {
     opacity: 1;
     transform: scale(1);
@@ -90,6 +103,7 @@
     opacity: 0;
     transform: translateY(100%);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -101,6 +115,7 @@
     opacity: 0;
     transform: translateY(-100%);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -112,6 +127,7 @@
     opacity: 0;
     transform: translateX(-100%);
   }
+
   to {
     opacity: 1;
     transform: translateX(0);
@@ -123,6 +139,7 @@
     opacity: 0;
     transform: translateX(100%);
   }
+
   to {
     opacity: 1;
     transform: translateX(0);
@@ -131,18 +148,24 @@
 
 /* Floating animation */
 @keyframes float {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: translateY(0px);
   }
+
   50% {
     transform: translateY(-20px);
   }
 }
 
 @keyframes floatSlow {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: translateY(0px) rotate(0deg);
   }
+
   50% {
     transform: translateY(-10px) rotate(2deg);
   }
@@ -150,28 +173,37 @@
 
 /* Pulse animations */
 @keyframes pulse {
-  0%, 100% {
+
+  0%,
+  100% {
     opacity: 1;
   }
+
   50% {
     opacity: 0.5;
   }
 }
 
 @keyframes pulseScale {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: scale(1);
   }
+
   50% {
     transform: scale(1.05);
   }
 }
 
 @keyframes borderPulse {
-  0%, 100% {
+
+  0%,
+  100% {
     opacity: 0.5;
     filter: brightness(1);
   }
+
   50% {
     opacity: 1;
     filter: brightness(1.2);
@@ -183,6 +215,7 @@
     transform: scale(0.8);
     opacity: 1;
   }
+
   100% {
     transform: scale(2.4);
     opacity: 0;
@@ -191,18 +224,24 @@
 
 /* Glow animation */
 @keyframes glow {
-  0%, 100% {
+
+  0%,
+  100% {
     box-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
   }
+
   50% {
     box-shadow: 0 0 40px rgba(59, 130, 246, 0.8);
   }
 }
 
 @keyframes glowPurple {
-  0%, 100% {
+
+  0%,
+  100% {
     box-shadow: 0 0 20px rgba(139, 92, 246, 0.5);
   }
+
   50% {
     box-shadow: 0 0 40px rgba(139, 92, 246, 0.8);
   }
@@ -213,6 +252,7 @@
   0% {
     background-position: -200% 0;
   }
+
   100% {
     background-position: 200% 0;
   }
@@ -223,9 +263,11 @@
   0% {
     background-position: 0% 50%;
   }
+
   50% {
     background-position: 100% 50%;
   }
+
   100% {
     background-position: 0% 50%;
   }
@@ -236,6 +278,7 @@
   from {
     transform: rotate(0deg);
   }
+
   to {
     transform: rotate(360deg);
   }
@@ -245,6 +288,7 @@
   from {
     transform: rotate(0deg);
   }
+
   to {
     transform: rotate(360deg);
   }
@@ -252,12 +296,19 @@
 
 /* Bounce */
 @keyframes bounce {
-  0%, 20%, 50%, 80%, 100% {
+
+  0%,
+  20%,
+  50%,
+  80%,
+  100% {
     transform: translateY(0);
   }
+
   40% {
     transform: translateY(-15px);
   }
+
   60% {
     transform: translateY(-7px);
   }
@@ -268,13 +319,16 @@
     opacity: 0;
     transform: scale(0.3);
   }
+
   50% {
     opacity: 1;
     transform: scale(1.1);
   }
+
   70% {
     transform: scale(0.9);
   }
+
   100% {
     transform: scale(1);
   }
@@ -282,24 +336,49 @@
 
 /* Shake */
 @keyframes shake {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: translateX(0);
   }
-  10%, 30%, 50%, 70%, 90% {
+
+  10%,
+  30%,
+  50%,
+  70%,
+  90% {
     transform: translateX(-5px);
   }
-  20%, 40%, 60%, 80% {
+
+  20%,
+  40%,
+  60%,
+  80% {
     transform: translateX(5px);
   }
 }
 
 /* Wave */
 @keyframes wave {
-  0% { transform: translateY(0); }
-  25% { transform: translateY(-5px); }
-  50% { transform: translateY(0); }
-  75% { transform: translateY(5px); }
-  100% { transform: translateY(0); }
+  0% {
+    transform: translateY(0);
+  }
+
+  25% {
+    transform: translateY(-5px);
+  }
+
+  50% {
+    transform: translateY(0);
+  }
+
+  75% {
+    transform: translateY(5px);
+  }
+
+  100% {
+    transform: translateY(0);
+  }
 }
 
 /* Toast animations */
@@ -308,6 +387,7 @@
     transform: translateX(100%);
     opacity: 0;
   }
+
   to {
     transform: translateX(0);
     opacity: 1;
@@ -319,6 +399,7 @@
     transform: translateX(0);
     opacity: 1;
   }
+
   to {
     transform: translateX(100%);
     opacity: 0;
@@ -396,12 +477,10 @@
 }
 
 .animate-shimmer {
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(255, 255, 255, 0.4),
-    transparent
-  );
+  background: linear-gradient(90deg,
+      transparent,
+      rgba(255, 255, 255, 0.4),
+      transparent);
   background-size: 200% 100%;
   animation: shimmer 2s infinite;
 }
@@ -436,14 +515,37 @@
 }
 
 /* Staggered animations */
-.stagger-1 { animation-delay: 0.1s; }
-.stagger-2 { animation-delay: 0.2s; }
-.stagger-3 { animation-delay: 0.3s; }
-.stagger-4 { animation-delay: 0.4s; }
-.stagger-5 { animation-delay: 0.5s; }
-.stagger-6 { animation-delay: 0.6s; }
-.stagger-7 { animation-delay: 0.7s; }
-.stagger-8 { animation-delay: 0.8s; }
+.stagger-1 {
+  animation-delay: 0.1s;
+}
+
+.stagger-2 {
+  animation-delay: 0.2s;
+}
+
+.stagger-3 {
+  animation-delay: 0.3s;
+}
+
+.stagger-4 {
+  animation-delay: 0.4s;
+}
+
+.stagger-5 {
+  animation-delay: 0.5s;
+}
+
+.stagger-6 {
+  animation-delay: 0.6s;
+}
+
+.stagger-7 {
+  animation-delay: 0.7s;
+}
+
+.stagger-8 {
+  animation-delay: 0.8s;
+}
 
 /* Initially hidden for animation */
 .animate-on-scroll {
@@ -517,7 +619,7 @@
 }
 
 .gradient-mesh {
-  background: 
+  background:
     radial-gradient(at 40% 20%, hsla(228, 94%, 67%, 0.3) 0px, transparent 50%),
     radial-gradient(at 80% 0%, hsla(189, 100%, 56%, 0.2) 0px, transparent 50%),
     radial-gradient(at 0% 50%, hsla(355, 100%, 93%, 0.2) 0px, transparent 50%),
@@ -625,9 +727,17 @@
   animation: bounce 1.4s ease-in-out infinite both;
 }
 
-.loading-dots span:nth-child(1) { animation-delay: -0.32s; }
-.loading-dots span:nth-child(2) { animation-delay: -0.16s; }
-.loading-dots span:nth-child(3) { animation-delay: 0; }
+.loading-dots span:nth-child(1) {
+  animation-delay: -0.32s;
+}
+
+.loading-dots span:nth-child(2) {
+  animation-delay: -0.16s;
+}
+
+.loading-dots span:nth-child(3) {
+  animation-delay: 0;
+}
 
 /* ============ PARTICLE EFFECTS ============ */
 
@@ -661,18 +771,23 @@
 }
 
 @keyframes particleFloat {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: translateY(0) translateX(0) scale(1);
     opacity: 0.4;
   }
+
   25% {
     transform: translateY(-30px) translateX(15px) scale(1.1);
     opacity: 0.8;
   }
+
   50% {
     transform: translateY(-60px) translateX(-10px) scale(0.9);
     opacity: 0.5;
   }
+
   75% {
     transform: translateY(-30px) translateX(-20px) scale(1.05);
     opacity: 0.7;
@@ -727,26 +842,63 @@
 }
 
 @keyframes orbFloat1 {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  25% { transform: translate(50px, -30px) scale(1.1); }
-  50% { transform: translate(-30px, 50px) scale(0.95); }
-  75% { transform: translate(40px, 20px) scale(1.05); }
+
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+
+  25% {
+    transform: translate(50px, -30px) scale(1.1);
+  }
+
+  50% {
+    transform: translate(-30px, 50px) scale(0.95);
+  }
+
+  75% {
+    transform: translate(40px, 20px) scale(1.05);
+  }
 }
 
 @keyframes orbFloat2 {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  33% { transform: translate(-60px, 40px) scale(1.1); }
-  66% { transform: translate(40px, -50px) scale(0.9); }
+
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+
+  33% {
+    transform: translate(-60px, 40px) scale(1.1);
+  }
+
+  66% {
+    transform: translate(40px, -50px) scale(0.9);
+  }
 }
 
 @keyframes orbFloat3 {
-  0%, 100% { transform: translate(-50%, -50%) scale(1); }
-  50% { transform: translate(-45%, -55%) scale(1.2); }
+
+  0%,
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+  }
+
+  50% {
+    transform: translate(-45%, -55%) scale(1.2);
+  }
 }
 
 @keyframes orbFloat4 {
-  0%, 100% { transform: translate(0, 0); }
-  50% { transform: translate(30px, -40px); }
+
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+
+  50% {
+    transform: translate(30px, -40px);
+  }
 }
 
 /* Building Silhouettes */
@@ -773,7 +925,7 @@
 .building-windows {
   position: absolute;
   inset: 10px;
-  background-image: 
+  background-image:
     linear-gradient(90deg, rgba(251, 191, 36, 0.6) 2px, transparent 2px),
     linear-gradient(rgba(251, 191, 36, 0.6) 2px, transparent 2px);
   background-size: 12px 16px;
@@ -789,8 +941,15 @@
 }
 
 @keyframes windowsFlicker {
-  0%, 100% { opacity: 0.3; }
-  50% { opacity: 0.5; }
+
+  0%,
+  100% {
+    opacity: 0.3;
+  }
+
+  50% {
+    opacity: 0.5;
+  }
 }
 
 /* Navigation Styles */
@@ -882,8 +1041,15 @@
 }
 
 @keyframes buttonGlow {
-  0%, 100% { box-shadow: 0 0 20px rgba(168, 85, 247, 0.3); }
-  50% { box-shadow: 0 0 30px rgba(168, 85, 247, 0.5), 0 0 60px rgba(236, 72, 153, 0.3); }
+
+  0%,
+  100% {
+    box-shadow: 0 0 20px rgba(168, 85, 247, 0.3);
+  }
+
+  50% {
+    box-shadow: 0 0 30px rgba(168, 85, 247, 0.5), 0 0 60px rgba(236, 72, 153, 0.3);
+  }
 }
 
 .btn-hero-primary {
@@ -1008,9 +1174,17 @@
 }
 
 @keyframes gradientFlow {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
+  0% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: 0% 50%;
+  }
 }
 
 /* Hover Lift Effect */
@@ -1039,8 +1213,17 @@
 }
 
 @keyframes scrollBounce {
-  0%, 100% { transform: translateY(0); opacity: 1; }
-  50% { transform: translateY(8px); opacity: 0.6; }
+
+  0%,
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+
+  50% {
+    transform: translateY(8px);
+    opacity: 0.6;
+  }
 }
 
 /* Feature Cards */
@@ -1115,9 +1298,17 @@
 }
 
 @keyframes borderRotate {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
+  0% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: 0% 50%;
+  }
 }
 
 .stat-item {
@@ -1174,13 +1365,20 @@
   position: absolute;
   inset: 0;
   background: radial-gradient(circle at 30% 20%, rgba(168, 85, 247, 0.4), transparent 50%),
-              radial-gradient(circle at 70% 80%, rgba(236, 72, 153, 0.3), transparent 50%);
+    radial-gradient(circle at 70% 80%, rgba(236, 72, 153, 0.3), transparent 50%);
   animation: ctaGlow 6s ease-in-out infinite;
 }
 
 @keyframes ctaGlow {
-  0%, 100% { opacity: 0.5; }
-  50% { opacity: 0.8; }
+
+  0%,
+  100% {
+    opacity: 0.5;
+  }
+
+  50% {
+    opacity: 0.8;
+  }
 }
 
 /* Social Icons */
@@ -1241,8 +1439,17 @@
 }
 
 @keyframes pulseSlow {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.85; transform: scale(1.01); }
+
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 0.85;
+    transform: scale(1.01);
+  }
 }
 
 /* Gentle Bounce Animation */
@@ -1251,8 +1458,15 @@
 }
 
 @keyframes bounceGentle {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-5px); }
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-5px);
+  }
 }
 
 /* Shake Animation for Errors */
@@ -1261,19 +1475,37 @@
 }
 
 @keyframes shake {
-  0%, 100% { transform: translateX(0); }
-  10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
-  20%, 40%, 60%, 80% { transform: translateX(5px); }
+
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+
+  10%,
+  30%,
+  50%,
+  70%,
+  90% {
+    transform: translateX(-5px);
+  }
+
+  20%,
+  40%,
+  60%,
+  80% {
+    transform: translateX(5px);
+  }
 }
 
 /* ============ RESPONSIVE UTILITIES ============ */
 
 @media (max-width: 768px) {
+
   .animate-fadeInLeft,
   .animate-fadeInRight {
     animation-name: fadeInUp;
   }
-  
+
   .hide-mobile {
     display: none !important;
   }
@@ -1307,6 +1539,7 @@
 /* ============ REDUCED MOTION ============ */
 
 @media (prefers-reduced-motion: reduce) {
+
   *,
   *::before,
   *::after {
@@ -1489,6 +1722,7 @@
   border-color: color-mix(in srgb, var(--accent-primary, #a855f7) 50%, transparent);
   transform: translateY(-2px);
 }
+
 /* CTA Buttons - New */
 .btn-cta-primary-new {
   position: relative;
@@ -1552,22 +1786,22 @@
 }
 
 .building-dark {
-  background: linear-gradient(180deg, 
-    rgba(30, 41, 59, 0.95) 0%, 
-    rgba(30, 41, 59, 0.98) 50%, 
-    rgba(15, 23, 42, 1) 100%);
-  box-shadow: 
+  background: linear-gradient(180deg,
+      rgba(30, 41, 59, 0.95) 0%,
+      rgba(30, 41, 59, 0.98) 50%,
+      rgba(15, 23, 42, 1) 100%);
+  box-shadow:
     inset 2px 0 10px rgba(255, 255, 255, 0.03),
     inset -2px 0 10px rgba(0, 0, 0, 0.2),
     0 0 30px rgba(0, 0, 0, 0.3);
 }
 
 .building-light {
-  background: linear-gradient(180deg, 
-    rgba(148, 163, 184, 0.9) 0%, 
-    rgba(100, 116, 139, 0.95) 50%, 
-    rgba(71, 85, 105, 1) 100%);
-  box-shadow: 
+  background: linear-gradient(180deg,
+      rgba(148, 163, 184, 0.9) 0%,
+      rgba(100, 116, 139, 0.95) 50%,
+      rgba(71, 85, 105, 1) 100%);
+  box-shadow:
     inset 2px 0 10px rgba(255, 255, 255, 0.1),
     inset -2px 0 10px rgba(0, 0, 0, 0.1),
     0 0 30px rgba(0, 0, 0, 0.1);
@@ -1575,11 +1809,11 @@
 
 /* New elegant light mode buildings with purple/violet theme */
 .building-light-new {
-  background: linear-gradient(180deg, 
-    rgba(139, 92, 246, 0.85) 0%, 
-    rgba(124, 58, 237, 0.9) 40%,
-    rgba(109, 40, 217, 0.95) 100%);
-  box-shadow: 
+  background: linear-gradient(180deg,
+      rgba(139, 92, 246, 0.85) 0%,
+      rgba(124, 58, 237, 0.9) 40%,
+      rgba(109, 40, 217, 0.95) 100%);
+  box-shadow:
     inset 2px 0 15px rgba(255, 255, 255, 0.2),
     inset -2px 0 10px rgba(91, 33, 182, 0.3),
     0 -5px 30px rgba(139, 92, 246, 0.2),
@@ -1587,25 +1821,21 @@
 }
 
 .building-windows-light::before {
-  background-image: 
-    repeating-linear-gradient(
-      to right,
+  background-image:
+    repeating-linear-gradient(to right,
       transparent 0px,
       transparent 3px,
       rgba(255, 255, 255, 0.7) 3px,
       rgba(255, 255, 255, 0.7) 8px,
       transparent 8px,
-      transparent 12px
-    ),
-    repeating-linear-gradient(
-      to bottom,
+      transparent 12px),
+    repeating-linear-gradient(to bottom,
       transparent 0px,
       transparent 2px,
       rgba(255, 255, 255, 0.7) 2px,
       rgba(255, 255, 255, 0.7) 6px,
       transparent 6px,
-      transparent 10px
-    );
+      transparent 10px);
   opacity: 0.5;
 }
 
@@ -1625,25 +1855,21 @@
   content: '';
   position: absolute;
   inset: 0;
-  background-image: 
-    repeating-linear-gradient(
-      to right,
+  background-image:
+    repeating-linear-gradient(to right,
       transparent 0px,
       transparent 3px,
       rgba(251, 191, 36, 0.4) 3px,
       rgba(251, 191, 36, 0.4) 8px,
       transparent 8px,
-      transparent 12px
-    ),
-    repeating-linear-gradient(
-      to bottom,
+      transparent 12px),
+    repeating-linear-gradient(to bottom,
       transparent 0px,
       transparent 2px,
       rgba(251, 191, 36, 0.4) 2px,
       rgba(251, 191, 36, 0.4) 6px,
       transparent 6px,
-      transparent 10px
-    );
+      transparent 10px);
   opacity: 0.6;
   animation: windowsFlicker 4s ease-in-out infinite;
 }
@@ -1799,8 +2025,8 @@
   padding: 3rem 1.5rem;
   border-radius: 2rem;
   overflow: hidden;
-  box-shadow: 0 25px 80px -20px color-mix(in srgb, var(--accent-primary) 40%, transparent), 
-              0 10px 40px -15px color-mix(in srgb, var(--accent-secondary) 30%, transparent);
+  box-shadow: 0 25px 80px -20px color-mix(in srgb, var(--accent-primary) 40%, transparent),
+    0 10px 40px -15px color-mix(in srgb, var(--accent-secondary) 30%, transparent);
 }
 
 @media (min-width: 640px) {
@@ -1812,10 +2038,10 @@
 .cta-card-bg-new {
   position: absolute;
   inset: 0;
-  background: linear-gradient(135deg, 
-    color-mix(in srgb, var(--accent-primary) 80%, black) 0%, 
-    color-mix(in srgb, var(--accent-secondary) 70%, black) 50%, 
-    color-mix(in srgb, var(--accent-gradient-to, var(--accent-secondary)) 60%, black) 100%);
+  background: linear-gradient(135deg,
+      color-mix(in srgb, var(--accent-primary) 80%, black) 0%,
+      color-mix(in srgb, var(--accent-secondary) 70%, black) 50%,
+      color-mix(in srgb, var(--accent-gradient-to, var(--accent-secondary)) 60%, black) 100%);
   backdrop-filter: blur(20px);
 }
 
@@ -1824,29 +2050,29 @@
   position: absolute;
   inset: 0;
   background: radial-gradient(circle at 30% 20%, rgba(255, 255, 255, 0.2), transparent 50%),
-              radial-gradient(circle at 70% 80%, rgba(255, 255, 255, 0.1), transparent 50%);
+    radial-gradient(circle at 70% 80%, rgba(255, 255, 255, 0.1), transparent 50%);
   animation: ctaGlow 6s ease-in-out infinite;
 }
 
 /* Light mode CTA card - now handled inline with CSS variables */
 .cta-card-light {
-  box-shadow: 0 25px 80px -20px color-mix(in srgb, var(--accent-primary) 40%, transparent), 
-              0 10px 40px -15px color-mix(in srgb, var(--accent-secondary) 30%, transparent);
+  box-shadow: 0 25px 80px -20px color-mix(in srgb, var(--accent-primary) 40%, transparent),
+    0 10px 40px -15px color-mix(in srgb, var(--accent-secondary) 30%, transparent);
 }
 
 .cta-card-bg-light {
-  background: linear-gradient(135deg, 
-    var(--accent-primary) 0%, 
-    var(--accent-secondary) 50%,
-    var(--accent-gradient-to, var(--accent-secondary)) 100%);
+  background: linear-gradient(135deg,
+      var(--accent-primary) 0%,
+      var(--accent-secondary) 50%,
+      var(--accent-gradient-to, var(--accent-secondary)) 100%);
   background-size: 200% 200%;
   animation: gradientShift 8s ease infinite;
 }
 
 .cta-card-bg-light::before {
   background: radial-gradient(circle at 20% 30%, rgba(255, 255, 255, 0.3), transparent 40%),
-              radial-gradient(circle at 80% 70%, rgba(255, 255, 255, 0.2), transparent 40%),
-              radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.1), transparent 60%);
+    radial-gradient(circle at 80% 70%, rgba(255, 255, 255, 0.2), transparent 40%),
+    radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.1), transparent 60%);
 }
 
 /* Social Icons - New */
@@ -1966,10 +2192,26 @@ button:focus-visible {
 }
 
 @keyframes windowFlicker {
-  0%, 100% { fill: #334155; }
-  20%, 40% { fill: #fbbf24; }
-  60%, 80% { fill: #334155; }
-  45%, 55% { fill: #fbbf24; }
+
+  0%,
+  100% {
+    fill: #334155;
+  }
+
+  20%,
+  40% {
+    fill: #fbbf24;
+  }
+
+  60%,
+  80% {
+    fill: #334155;
+  }
+
+  45%,
+  55% {
+    fill: #fbbf24;
+  }
 }
 
 /* Animated People Walking */
@@ -1988,10 +2230,23 @@ button:focus-visible {
 }
 
 @keyframes walkAcross {
-  0% { transform: translateX(-20px); opacity: 0; }
-  5% { opacity: 1; }
-  95% { opacity: 1; }
-  100% { transform: translateX(320px); opacity: 0; }
+  0% {
+    transform: translateX(-20px);
+    opacity: 0;
+  }
+
+  5% {
+    opacity: 1;
+  }
+
+  95% {
+    opacity: 1;
+  }
+
+  100% {
+    transform: translateX(320px);
+    opacity: 0;
+  }
 }
 
 /* Notification Popup */
@@ -2007,9 +2262,24 @@ button:focus-visible {
 }
 
 @keyframes notificationSlide {
-  0%, 10% { transform: translateY(100%); opacity: 0; }
-  15%, 85% { transform: translateY(0); opacity: 1; }
-  90%, 100% { transform: translateY(-100%); opacity: 0; }
+
+  0%,
+  10% {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+
+  15%,
+  85% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+
+  90%,
+  100% {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
 }
 
 /* Animated Car Entering - Smooth & Realistic */
@@ -2019,46 +2289,58 @@ button:focus-visible {
 }
 
 @keyframes carEnter {
-  0% { 
-    transform: translate(-70px, 120px); 
-    opacity: 0; 
+  0% {
+    transform: translate(-70px, 120px);
+    opacity: 0;
   }
-  5% { 
-    opacity: 0.5; 
+
+  5% {
+    opacity: 0.5;
     transform: translate(-50px, 100px);
   }
-  12% { 
-    opacity: 1; 
+
+  12% {
+    opacity: 1;
     transform: translate(-20px, 75px);
   }
-  20% { 
+
+  20% {
     transform: translate(10px, 60px);
   }
-  28% { 
+
+  28% {
     transform: translate(40px, 50px);
   }
-  38% { 
+
+  38% {
     transform: translate(70px, 45px);
   }
-  48% { 
+
+  48% {
     transform: translate(88px, 45px);
   }
-  52%, 72% { 
+
+  52%,
+  72% {
     transform: translate(88px, 45px);
     opacity: 1;
   }
-  80% { 
+
+  80% {
     opacity: 0.7;
   }
-  88% { 
+
+  88% {
     opacity: 0.4;
   }
-  96% { 
+
+  96% {
     opacity: 0.1;
   }
-  100% { 
-    transform: translate(88px, 45px); 
-    opacity: 0; 
+
+  100% {
+    transform: translate(88px, 45px);
+    opacity: 0;
   }
 }
 
@@ -2068,12 +2350,33 @@ button:focus-visible {
 }
 
 @keyframes headlightFlicker {
-  0%, 4% { opacity: 0; }
-  5% { opacity: 1; }
-  12%, 72% { opacity: 1; }
-  80% { opacity: 0.8; }
-  88% { opacity: 0.5; }
-  96%, 100% { opacity: 0; }
+
+  0%,
+  4% {
+    opacity: 0;
+  }
+
+  5% {
+    opacity: 1;
+  }
+
+  12%,
+  72% {
+    opacity: 1;
+  }
+
+  80% {
+    opacity: 0.8;
+  }
+
+  88% {
+    opacity: 0.5;
+  }
+
+  96%,
+  100% {
+    opacity: 0;
+  }
 }
 
 /* Live Indicator Pulse */
@@ -2082,13 +2385,16 @@ button:focus-visible {
 }
 
 @keyframes livePulse {
-  0%, 100% { 
-    opacity: 1; 
+
+  0%,
+  100% {
+    opacity: 1;
     transform: scale(1);
     box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7);
   }
-  50% { 
-    opacity: 0.8; 
+
+  50% {
+    opacity: 0.8;
     transform: scale(1.1);
     box-shadow: 0 0 0 4px rgba(34, 197, 94, 0);
   }
@@ -2100,16 +2406,22 @@ button:focus-visible {
 }
 
 @keyframes slotHighlight {
-  0%, 45% { 
-    stroke: #334155; 
+
+  0%,
+  45% {
+    stroke: #334155;
     stroke-width: 2;
   }
-  48%, 75% { 
-    stroke: #22c55e; 
+
+  48%,
+  75% {
+    stroke: #22c55e;
     stroke-width: 3;
   }
-  78%, 100% { 
-    stroke: #334155; 
+
+  78%,
+  100% {
+    stroke: #334155;
     stroke-width: 2;
   }
 }
@@ -2120,9 +2432,24 @@ button:focus-visible {
 }
 
 @keyframes guidanceShow {
-  0%, 10% { opacity: 0; transform: translateY(5px); }
-  15%, 45% { opacity: 1; transform: translateY(0); }
-  50%, 100% { opacity: 0; transform: translateY(5px); }
+
+  0%,
+  10% {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+
+  15%,
+  45% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  50%,
+  100% {
+    opacity: 0;
+    transform: translateY(5px);
+  }
 }
 
 /* Parking Sensors Pulse - Static Position */
@@ -2131,11 +2458,14 @@ button:focus-visible {
 }
 
 @keyframes sensorGlow {
-  0%, 100% { 
-    opacity: 0.6; 
+
+  0%,
+  100% {
+    opacity: 0.6;
   }
-  50% { 
-    opacity: 1; 
+
+  50% {
+    opacity: 1;
   }
 }
 
@@ -2145,9 +2475,22 @@ button:focus-visible {
 }
 
 @keyframes counterUpdate {
-  0%, 45% { content: "2"; }
-  48%, 75% { content: "1"; color: #fbbf24; }
-  78%, 100% { content: "2"; }
+
+  0%,
+  45% {
+    content: "2";
+  }
+
+  48%,
+  75% {
+    content: "1";
+    color: #fbbf24;
+  }
+
+  78%,
+  100% {
+    content: "2";
+  }
 }
 
 /* Available Slot Pulsing */
@@ -2157,8 +2500,17 @@ button:focus-visible {
 }
 
 @keyframes slotPulse {
-  0%, 100% { fill: #22c55e; transform: scale(1); }
-  50% { fill: #4ade80; transform: scale(1.2); }
+
+  0%,
+  100% {
+    fill: #22c55e;
+    transform: scale(1);
+  }
+
+  50% {
+    fill: #4ade80;
+    transform: scale(1.2);
+  }
 }
 
 /* Counter Animation */
@@ -2167,9 +2519,21 @@ button:focus-visible {
 }
 
 @keyframes counterPulse {
-  0%, 30%, 100% { opacity: 1; }
-  35%, 40% { opacity: 0.5; }
-  45% { opacity: 1; }
+
+  0%,
+  30%,
+  100% {
+    opacity: 1;
+  }
+
+  35%,
+  40% {
+    opacity: 0.5;
+  }
+
+  45% {
+    opacity: 1;
+  }
 }
 
 /* Gate Barrier Animation */
@@ -2179,9 +2543,21 @@ button:focus-visible {
 }
 
 @keyframes gateOpen {
-  0%, 20% { transform: rotate(0deg); }
-  30%, 70% { transform: rotate(-80deg); }
-  80%, 100% { transform: rotate(0deg); }
+
+  0%,
+  20% {
+    transform: rotate(0deg);
+  }
+
+  30%,
+  70% {
+    transform: rotate(-80deg);
+  }
+
+  80%,
+  100% {
+    transform: rotate(0deg);
+  }
 }
 
 /* Scan Ring Animation */
@@ -2190,8 +2566,17 @@ button:focus-visible {
 }
 
 @keyframes scanRing {
-  0%, 100% { stroke-width: 2; stroke-opacity: 1; }
-  50% { stroke-width: 4; stroke-opacity: 0.6; }
+
+  0%,
+  100% {
+    stroke-width: 2;
+    stroke-opacity: 1;
+  }
+
+  50% {
+    stroke-width: 4;
+    stroke-opacity: 0.6;
+  }
 }
 
 /* Arrow Animations */
@@ -2207,10 +2592,23 @@ button:focus-visible {
 }
 
 @keyframes arrowFlow {
-  0% { stroke-dashoffset: 80; opacity: 0; }
-  20% { opacity: 1; }
-  80% { opacity: 1; }
-  100% { stroke-dashoffset: 0; opacity: 0; }
+  0% {
+    stroke-dashoffset: 80;
+    opacity: 0;
+  }
+
+  20% {
+    opacity: 1;
+  }
+
+  80% {
+    opacity: 1;
+  }
+
+  100% {
+    stroke-dashoffset: 0;
+    opacity: 0;
+  }
 }
 
 /* Security Log Animation */
@@ -2229,20 +2627,50 @@ button:focus-visible {
 }
 
 @keyframes logRotate {
-  0%, 20% { content: "Entry approved - A-101"; opacity: 1; }
-  25%, 30% { opacity: 0; }
-  35%, 55% { opacity: 1; }
-  60%, 65% { opacity: 0; }
-  70%, 90% { opacity: 1; }
-  95%, 100% { opacity: 0; }
+
+  0%,
+  20% {
+    content: "Entry approved - A-101";
+    opacity: 1;
+  }
+
+  25%,
+  30% {
+    opacity: 0;
+  }
+
+  35%,
+  55% {
+    opacity: 1;
+  }
+
+  60%,
+  65% {
+    opacity: 0;
+  }
+
+  70%,
+  90% {
+    opacity: 1;
+  }
+
+  95%,
+  100% {
+    opacity: 0;
+  }
 }
 
 /* ============ COOL DASHBOARD ANIMATIONS ============ */
 
 /* Water/Wave Flow Effect */
 @keyframes wave {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .wave-box {
@@ -2279,9 +2707,17 @@ button:focus-visible {
 
 /* Floating Animation */
 @keyframes float-y {
-  0% { transform: translateY(0px); }
-  50% { transform: translateY(-5px); }
-  100% { transform: translateY(0px); }
+  0% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-5px);
+  }
+
+  100% {
+    transform: translateY(0px);
+  }
 }
 
 .animate-float-y {
@@ -2290,8 +2726,13 @@ button:focus-visible {
 
 /* Shimmer Effect */
 @keyframes shimmer {
-  0% { background-position: -1000px 0; }
-  100% { background-position: 1000px 0; }
+  0% {
+    background-position: -1000px 0;
+  }
+
+  100% {
+    background-position: 1000px 0;
+  }
 }
 
 .shimmer-bg {
@@ -2306,20 +2747,23 @@ button:focus-visible {
   left: -100%;
   width: 50%;
   height: 100%;
-  background: linear-gradient(
-    to right,
-    rgba(255, 255, 255, 0) 0%,
-    rgba(255, 255, 255, 0.1) 50%,
-    rgba(255, 255, 255, 0) 100%
-  );
+  background: linear-gradient(to right,
+      rgba(255, 255, 255, 0) 0%,
+      rgba(255, 255, 255, 0.1) 50%,
+      rgba(255, 255, 255, 0) 100%);
   transform: skewX(-25deg);
   animation: shimmer 3s infinite;
 }
 
 /* Infinity Ticker Animation */
 @keyframes ticker {
-  0% { transform: translate3d(0, 0, 0); }
-  100% { transform: translate3d(-50%, 0, 0); }
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+
+  100% {
+    transform: translate3d(-50%, 0, 0);
+  }
 }
 
 .animate-ticker {
@@ -2332,8 +2776,13 @@ button:focus-visible {
 
 /* Weather Icon Animation */
 @keyframes sun-spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .animate-sun {
@@ -2341,9 +2790,17 @@ button:focus-visible {
 }
 
 @keyframes cloud-drift {
-  0% { transform: translateX(0); }
-  50% { transform: translateX(5px); }
-  100% { transform: translateX(0); }
+  0% {
+    transform: translateX(0);
+  }
+
+  50% {
+    transform: translateX(5px);
+  }
+
+  100% {
+    transform: translateX(0);
+  }
 }
 
 .animate-cloud {
@@ -2353,109 +2810,270 @@ button:focus-visible {
 /* ============ GLOBAL PAGE TRANSITION ANIMATIONS ============ */
 
 @keyframes fadeInUpSmooth {
-  from { opacity: 0; transform: translateY(24px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes fadeInDownSmooth {
-  from { opacity: 0; transform: translateY(-16px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-16px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes scaleIn {
-  from { opacity: 0; transform: scale(0.95); }
-  to { opacity: 1; transform: scale(1); }
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 @keyframes slideInRight {
-  from { opacity: 0; transform: translateX(20px); }
-  to { opacity: 1; transform: translateX(0); }
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
 @keyframes slideInLeft {
-  from { opacity: 0; transform: translateX(-20px); }
-  to { opacity: 1; transform: translateX(0); }
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
 @keyframes errorShake {
-  0%, 100% { transform: translateX(0); }
-  10%, 50%, 90% { transform: translateX(-6px); }
-  30%, 70% { transform: translateX(6px); }
+
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+
+  10%,
+  50%,
+  90% {
+    transform: translateX(-6px);
+  }
+
+  30%,
+  70% {
+    transform: translateX(6px);
+  }
 }
 
 @keyframes errorPulse {
-  0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
-  70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+  0% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
+  }
+
+  70% {
+    box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
+  }
+
+  100% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+  }
 }
 
 @keyframes successPulse {
-  0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4); }
-  70% { box-shadow: 0 0 0 10px rgba(34, 197, 94, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+  0% {
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4);
+  }
+
+  70% {
+    box-shadow: 0 0 0 10px rgba(34, 197, 94, 0);
+  }
+
+  100% {
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
+  }
 }
 
 @keyframes toastSlideIn {
-  from { opacity: 0; transform: translateY(-100%) scale(0.95); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
+  from {
+    opacity: 0;
+    transform: translateY(-100%) scale(0.95);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 @keyframes toastSlideOut {
-  from { opacity: 1; transform: translateY(0) scale(1); }
-  to { opacity: 0; transform: translateY(-100%) scale(0.95); }
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+
+  to {
+    opacity: 0;
+    transform: translateY(-100%) scale(0.95);
+  }
 }
 
 @keyframes ripple {
-  to { transform: scale(4); opacity: 0; }
+  to {
+    transform: scale(4);
+    opacity: 0;
+  }
 }
 
 @keyframes staggerFadeIn {
-  from { opacity: 0; transform: translateY(12px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes borderGlow {
-  0%, 100% { border-color: var(--accent-primary); box-shadow: 0 0 8px color-mix(in srgb, var(--accent-primary) 20%, transparent); }
-  50% { border-color: var(--accent-secondary); box-shadow: 0 0 16px color-mix(in srgb, var(--accent-secondary) 30%, transparent); }
+
+  0%,
+  100% {
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 8px color-mix(in srgb, var(--accent-primary) 20%, transparent);
+  }
+
+  50% {
+    border-color: var(--accent-secondary);
+    box-shadow: 0 0 16px color-mix(in srgb, var(--accent-secondary) 30%, transparent);
+  }
 }
 
 @keyframes typewriter {
-  from { width: 0; }
-  to { width: 100%; }
+  from {
+    width: 0;
+  }
+
+  to {
+    width: 100%;
+  }
 }
 
 /* Animation utility classes */
-.animate-fade-in-up { animation: fadeInUpSmooth 0.5s ease-out both; }
+.animate-fade-in-up {
+  animation: fadeInUpSmooth 0.5s ease-out both;
+}
 
-.animate-fade-in-down { animation: fadeInDownSmooth 0.4s ease-out both; }
-.animate-scale-in { animation: scaleIn 0.35s ease-out both; }
-.animate-slide-in-right { animation: slideInRight 0.4s ease-out both; }
-.animate-slide-in-left { animation: slideInLeft 0.4s ease-out both; }
-.animate-error-shake { animation: errorShake 0.5s ease-in-out; }
-.animate-error-pulse { animation: errorPulse 1s ease-in-out; }
-.animate-success-pulse { animation: successPulse 1s ease-in-out; }
-.animate-toast-in { animation: toastSlideIn 0.35s cubic-bezier(0.21, 1.02, 0.73, 1) both; }
-.animate-toast-out { animation: toastSlideOut 0.3s ease-in both; }
-.animate-border-glow { animation: borderGlow 2s ease-in-out infinite; }
-.animate-in-down { animation: fadeInDownSmooth 0.25s ease-out both; }
+.animate-fade-in-down {
+  animation: fadeInDownSmooth 0.4s ease-out both;
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.35s ease-out both;
+}
+
+.animate-slide-in-right {
+  animation: slideInRight 0.4s ease-out both;
+}
+
+.animate-slide-in-left {
+  animation: slideInLeft 0.4s ease-out both;
+}
+
+.animate-error-shake {
+  animation: errorShake 0.5s ease-in-out;
+}
+
+.animate-error-pulse {
+  animation: errorPulse 1s ease-in-out;
+}
+
+.animate-success-pulse {
+  animation: successPulse 1s ease-in-out;
+}
+
+.animate-toast-in {
+  animation: toastSlideIn 0.35s cubic-bezier(0.21, 1.02, 0.73, 1) both;
+}
+
+.animate-toast-out {
+  animation: toastSlideOut 0.3s ease-in both;
+}
+
+.animate-border-glow {
+  animation: borderGlow 2s ease-in-out infinite;
+}
+
+.animate-in-down {
+  animation: fadeInDownSmooth 0.25s ease-out both;
+}
 
 /* Staggered children animation */
-.stagger-children > * {
+.stagger-children>* {
   animation: staggerFadeIn 0.4s ease-out both;
 }
-.stagger-children > *:nth-child(1) { animation-delay: 0ms; }
-.stagger-children > *:nth-child(2) { animation-delay: 60ms; }
-.stagger-children > *:nth-child(3) { animation-delay: 120ms; }
-.stagger-children > *:nth-child(4) { animation-delay: 180ms; }
-.stagger-children > *:nth-child(5) { animation-delay: 240ms; }
-.stagger-children > *:nth-child(6) { animation-delay: 300ms; }
-.stagger-children > *:nth-child(7) { animation-delay: 360ms; }
-.stagger-children > *:nth-child(8) { animation-delay: 420ms; }
+
+.stagger-children>*:nth-child(1) {
+  animation-delay: 0ms;
+}
+
+.stagger-children>*:nth-child(2) {
+  animation-delay: 60ms;
+}
+
+.stagger-children>*:nth-child(3) {
+  animation-delay: 120ms;
+}
+
+.stagger-children>*:nth-child(4) {
+  animation-delay: 180ms;
+}
+
+.stagger-children>*:nth-child(5) {
+  animation-delay: 240ms;
+}
+
+.stagger-children>*:nth-child(6) {
+  animation-delay: 300ms;
+}
+
+.stagger-children>*:nth-child(7) {
+  animation-delay: 360ms;
+}
+
+.stagger-children>*:nth-child(8) {
+  animation-delay: 420ms;
+}
 
 /* Hover lift with accent shadow */
 .hover-lift-accent {
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
+
 .hover-lift-accent:hover {
   transform: translateY(-4px);
   box-shadow: 0 12px 24px -8px color-mix(in srgb, var(--accent-primary) 25%, transparent);
@@ -2466,22 +3084,44 @@ button:focus-visible {
   transition: all 0.3s ease;
   border: 1px solid transparent;
 }
+
 .card-accent-hover:hover {
   border-color: color-mix(in srgb, var(--accent-primary) 30%, transparent);
   box-shadow: 0 0 20px color-mix(in srgb, var(--accent-primary) 10%, transparent);
 }
 
 /* Smooth page transitions */
-.page-transition-enter { opacity: 0; transform: translateY(12px); }
-.page-transition-enter-active { opacity: 1; transform: translateY(0); transition: all 0.3s ease-out; }
-.page-transition-exit { opacity: 1; }
-.page-transition-exit-active { opacity: 0; transition: opacity 0.2s ease-in; }
+.page-transition-enter {
+  opacity: 0;
+  transform: translateY(12px);
+}
+
+.page-transition-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: all 0.3s ease-out;
+}
+
+.page-transition-exit {
+  opacity: 1;
+}
+
+.page-transition-exit-active {
+  opacity: 0;
+  transition: opacity 0.2s ease-in;
+}
 
 /* Loading skeleton with accent */
 @keyframes skeletonShimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
+  0% {
+    background-position: -200% 0;
+  }
+
+  100% {
+    background-position: 200% 0;
+  }
 }
+
 .skeleton-accent {
   background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--accent-primary) 10%, transparent), transparent);
   background-size: 200% 100%;
@@ -2490,6 +3130,7 @@ button:focus-visible {
 
 /* Reduced motion support */
 @media (prefers-reduced-motion: reduce) {
+
   .animate-fade-in-up,
   .animate-fade-in-down,
   .animate-scale-in,
@@ -2499,7 +3140,7 @@ button:focus-visible {
   .animate-toast-in,
   .animate-toast-out,
   .animate-field-hint,
-  .stagger-children > * {
+  .stagger-children>* {
     animation: none !important;
     opacity: 1 !important;
     transform: none !important;
@@ -2517,6 +3158,7 @@ button:focus-visible {
     transform: translateY(-4px);
     max-height: 0;
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -2597,8 +3239,15 @@ button:focus-visible {
 }
 
 @keyframes warnPulse {
-  0%, 100% { box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.12); }
-  50% { box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.18); }
+
+  0%,
+  100% {
+    box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.12);
+  }
+
+  50% {
+    box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.18);
+  }
 }
 
 /* Valid state – green */

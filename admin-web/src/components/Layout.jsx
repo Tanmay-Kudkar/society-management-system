@@ -44,6 +44,18 @@ const platformOwnerMenu = [
     path: '/societies',
   },
   {
+    id: 'organizations',
+    label: 'Organizations',
+    icon: Layers,
+    path: '/organizations',
+  },
+  {
+    id: 'society-admins',
+    label: 'Society Admins',
+    icon: UserCheck,
+    path: '/society-admins',
+  },
+  {
     id: 'users',
     label: 'Manage Users',
     icon: Users,
@@ -54,6 +66,12 @@ const platformOwnerMenu = [
     label: 'Settings',
     icon: Settings,
     path: '/settings',
+  },
+  {
+    id: 'roles-permissions',
+    label: 'Roles & Access',
+    icon: FileCheck,
+    path: '/roles-permissions',
   },
 ]
 
@@ -74,14 +92,20 @@ const orgOwnerMenu = [
   {
     id: 'users',
     label: 'Society Admins',
-    icon: Users,
-    path: '/users',
+    icon: UserCheck,
+    path: '/society-admins',
   },
   {
     id: 'settings',
     label: 'Settings',
     icon: Settings,
     path: '/settings',
+  },
+  {
+    id: 'roles-permissions',
+    label: 'Roles & Access',
+    icon: FileCheck,
+    path: '/roles-permissions',
   },
 ]
 
@@ -181,11 +205,13 @@ function NavDropdown({ group, hasRole }) {
       <NavLink
         to={group.path}
         className={clsx(
-          'flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200',
-          isActive
-            ? 'accent-bg-light accent-text shadow-md'
-            : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700/50 hover:text-[var(--accent-primary)] dark:hover:text-[var(--accent-light)] hover:shadow-md hover:scale-105'
+          'app-nav__link',
+          isActive ? 'app-nav__link--active' : 'app-nav__link--idle'
         )}
+        style={isActive ? { 
+          background: `linear-gradient(135deg, var(--accent-gradient-from), var(--accent-gradient-to))`,
+          boxShadow: `0 4px 12px -2px color-mix(in srgb, var(--accent-primary) 40%, transparent)`
+        } : undefined}
       >
         <group.icon size={18} />
         <span>{group.label}</span>
@@ -196,30 +222,31 @@ function NavDropdown({ group, hasRole }) {
   // Dropdown
   return (
     <div
-      className="relative"
+      className="app-nav__item"
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
       <button
         className={clsx(
-          'flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200',
-          isActive
-            ? 'accent-bg-light accent-text shadow-md'
-            : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700/50 hover:text-[var(--accent-primary)] dark:hover:text-[var(--accent-light)] hover:shadow-md hover:scale-105'
+          'app-nav__trigger',
+          isActive ? 'app-nav__trigger--active' : 'app-nav__trigger--idle'
         )}
+        style={isActive ? { 
+          background: `linear-gradient(135deg, var(--accent-gradient-from), var(--accent-gradient-to))`,
+          boxShadow: `0 4px 12px -2px color-mix(in srgb, var(--accent-primary) 40%, transparent)`
+        } : undefined}
       >
         <group.icon size={18} />
         <span>{group.label}</span>
-        <ChevronDown size={14} className={clsx('transition-transform duration-200', isOpen && 'rotate-180')} />
+        <ChevronDown size={14} className={clsx('app-nav__chevron', isOpen && 'app-nav__chevron--open')} />
       </button>
 
       <div 
         className={clsx(
-          'absolute top-full left-0 mt-1 py-2 bg-white dark:bg-slate-800 rounded-lg shadow-lg border border-gray-200 dark:border-slate-700 min-w-48 z-50 transition-all duration-200 origin-top',
-          isOpen 
-            ? 'opacity-100 scale-100 translate-y-0' 
-            : 'opacity-0 scale-95 -translate-y-2 pointer-events-none'
+          'app-nav__menu',
+          isOpen ? 'app-nav__menu--open' : 'app-nav__menu--closed'
         )}
+        style={isOpen ? { boxShadow: '0 20px 40px -8px rgba(0,0,0,0.12), 0 8px 16px -4px rgba(0,0,0,0.08)' } : undefined}
       >
         {filteredItems.map((item) => (
           <NavLink
@@ -228,10 +255,10 @@ function NavDropdown({ group, hasRole }) {
             onClick={() => setIsOpen(false)}
             className={({ isActive }) =>
               clsx(
-                'flex items-center gap-3 px-4 py-2.5 text-sm transition-all duration-150',
+                'app-nav__menu-link',
                 isActive
-                  ? 'accent-bg-light accent-text'
-                  : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-700'
+                  ? 'app-nav__menu-link--active accent-bg-light accent-text'
+                  : 'app-nav__menu-link--idle'
               )
             }
           >
@@ -283,10 +310,10 @@ function MobileAccordion({ group, hasRole, onNavigate, isOpen, onToggle }) {
         to={group.path}
         onClick={onNavigate}
         className={clsx(
-          'flex items-center gap-3 px-4 py-3 text-base font-medium transition-all duration-200',
+          'app-mobile__link',
           isActiveGroup
-            ? 'accent-bg-light accent-text shadow-md'
-            : 'text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-slate-700/50 hover:text-[var(--accent-primary)] dark:hover:text-[var(--accent-light)] hover:shadow-lg hover:scale-[1.02] hover:translate-x-1'
+            ? 'app-mobile__link--active accent-bg-light accent-text'
+            : 'app-mobile__link--idle'
         )}
       >
         <group.icon size={20} />
@@ -297,28 +324,29 @@ function MobileAccordion({ group, hasRole, onNavigate, isOpen, onToggle }) {
 
   // Accordion
   return (
-    <div className="overflow-hidden">
+    <div className="app-mobile__accordion">
       <button
         onClick={onToggle}
         className={clsx(
-          'w-full flex items-center justify-between px-4 py-3 text-base font-medium transition-all duration-200',
-          isActiveGroup
-            ? 'accent-text shadow-md bg-gray-50 dark:bg-slate-700/50'
-            : 'text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-slate-700/50 hover:text-[var(--accent-primary)] dark:hover:text-[var(--accent-light)] hover:shadow-md hover:scale-[1.02] hover:translate-x-1'
+          'app-mobile__trigger',
+          isActiveGroup ? 'app-mobile__trigger--active' : 'app-mobile__trigger--idle'
         )}
       >
-        <div className="flex items-center gap-3">
+        <div className="app-mobile__trigger-row">
           <group.icon size={20} />
           <span>{group.label}</span>
         </div>
-        <ChevronDown size={18} className={clsx('transition-transform duration-300 ease-out', isOpen && 'rotate-180')} />
+        <ChevronDown
+          size={18}
+          className={clsx('app-mobile__chevron', isOpen && 'app-mobile__chevron--open')}
+        />
       </button>
 
-      <div 
-        className="transition-all duration-300 ease-out overflow-hidden"
+      <div
+        className="app-mobile__panel"
         style={{ height: isOpen ? contentHeight : 0 }}
       >
-        <div ref={contentRef} className="bg-gray-50 dark:bg-slate-900/50">
+        <div ref={contentRef} className="app-mobile__panel-inner">
           {filteredItems.map((item) => (
             <NavLink
               key={item.path}
@@ -326,10 +354,10 @@ function MobileAccordion({ group, hasRole, onNavigate, isOpen, onToggle }) {
               onClick={onNavigate}
               className={({ isActive }) =>
                 clsx(
-                  'flex items-center gap-3 pl-12 pr-4 py-3 text-sm transition-all duration-150',
+                  'app-mobile__sublink',
                   isActive
-                    ? 'accent-bg-light accent-text'
-                    : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-700'
+                    ? 'app-mobile__sublink--active accent-bg-light accent-text'
+                    : 'app-mobile__sublink--idle'
                 )
               }
             >
@@ -395,103 +423,122 @@ export default function Layout() {
   }, [])
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-slate-900 transition-colors duration-300">
+    <div className="app-layout">
       {/* Top Navbar */}
-      <header className="fixed top-0 left-0 right-0 z-40 h-16 bg-white/80 dark:bg-slate-800/80 backdrop-blur-lg border-b border-gray-200/50 dark:border-slate-700/50 transition-colors duration-300">
-        <div className="h-full px-4 flex items-center justify-between">
-          {/* Logo */}
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-3">
-              <div 
-                className="p-2 rounded-xl shadow-lg transition-transform hover:scale-105"
+      <header className="app-layout__header">
+        {/* Accent gradient line at top */}
+        <div
+          className="app-layout__accent"
+          style={{ background: `linear-gradient(to right, var(--accent-gradient-from), var(--accent-gradient-via), var(--accent-gradient-to))` }}
+        />
+        <div className="app-layout__bar">
+          <div className="app-layout__bar-inner">
+            {/* Logo */}
+            <div className="app-layout__logo" onClick={() => navigate('/')}>
+              <div
+                className="app-layout__logo-mark"
                 style={{ 
-                  background: `linear-gradient(to bottom right, var(--accent-primary), var(--accent-secondary))`,
-                  boxShadow: `0 10px 15px -3px color-mix(in srgb, var(--accent-primary) 25%, transparent)`
+                  background: `linear-gradient(135deg, var(--accent-gradient-from), var(--accent-gradient-via), var(--accent-gradient-to))`,
+                  boxShadow: `0 8px 20px -4px color-mix(in srgb, var(--accent-primary) 35%, transparent)`
                 }}
               >
-                <Building2 size={20} className="text-white" />
+                <Building2 size={22} className="app-layout__logo-icon" />
               </div>
-              <span 
-                className="text-xl font-bold bg-clip-text text-transparent"
-                style={{ backgroundImage: `linear-gradient(to right, var(--accent-primary), var(--accent-secondary))` }}
-              >
-                SocietyHub
-              </span>
-            </div>
-          </div>
-
-          {/* Desktop Navigation */}
-          <nav className="hidden lg:flex items-center gap-1">
-            {menuGroups.map((group) => (
-              <NavDropdown key={group.id} group={group} hasRole={hasRole} />
-            ))}
-          </nav>
-
-          {/* User section - Desktop */}
-          <div className="hidden lg:flex items-center gap-4">
-            <div className="flex items-center gap-3 px-3 py-2 rounded-xl bg-gray-50 dark:bg-slate-700/50 border border-gray-100 dark:border-slate-600/50">
-              <div 
-                className="w-9 h-9 rounded-full flex items-center justify-center transition-transform duration-200 hover:scale-105"
-                style={{ 
-                  background: `linear-gradient(to bottom right, var(--accent-primary), var(--accent-secondary))`,
-                  boxShadow: `0 10px 15px -3px color-mix(in srgb, var(--accent-primary) 25%, transparent)`
-                }}
-              >
-                <span className="text-white font-semibold text-sm">
-                  {user?.name?.charAt(0)?.toUpperCase() || 'U'}
+              <div className="app-layout__logo-text">
+                <span
+                  className="app-layout__brand"
+                  style={{ backgroundImage: `linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))` }}
+                >
+                  SocietyHub
                 </span>
-              </div>
-              <div className="text-right">
-                <p className="text-sm font-semibold text-gray-900 dark:text-white transition-colors duration-200">{user?.name}</p>
-                <p className="text-xs text-gray-500 dark:text-gray-400 transition-colors duration-200 font-medium tracking-tight uppercase">{user?.role?.replace('_', ' ')}</p>
+                <span className="app-layout__subtitle">Management Platform</span>
               </div>
             </div>
+
+            {/* Desktop Navigation */}
+            <nav className="app-layout__nav">
+              {menuGroups.map((group) => (
+                <NavDropdown key={group.id} group={group} hasRole={hasRole} />
+              ))}
+            </nav>
+
+            {/* User section - Desktop */}
+            <div className="app-layout__user">
+              <div 
+                className="app-layout__user-card"
+                style={{ 
+                  borderColor: `color-mix(in srgb, var(--accent-primary) 20%, transparent)`,
+                  background: `color-mix(in srgb, var(--accent-50) 50%, transparent)`
+                }}
+              >
+                <div 
+                  className="app-layout__user-avatar"
+                  style={{ 
+                    background: `linear-gradient(135deg, var(--accent-gradient-from), var(--accent-gradient-to))`,
+                    boxShadow: `0 6px 12px -2px color-mix(in srgb, var(--accent-primary) 30%, transparent)`
+                  }}
+                >
+                  <span className="app-layout__user-initial">
+                    {user?.name?.charAt(0)?.toUpperCase() || 'U'}
+                  </span>
+                </div>
+                <div className="app-layout__user-info">
+                  <p className="app-layout__user-name">{user?.name}</p>
+                  <p
+                    className="app-layout__user-role"
+                    style={{ color: 'var(--accent-primary)' }}
+                  >
+                    {user?.role?.replace(/_/g, ' ')}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={handleLogout}
+                title="Logout"
+                className="app-layout__logout"
+              >
+                <LogOut size={18} />
+              </button>
+            </div>
+
+            {/* Hamburger - Mobile */}
             <button
-              onClick={handleLogout}
-              title="Logout"
-              className="p-2.5 text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 bg-gray-50 hover:bg-red-50 dark:bg-slate-700/50 dark:hover:bg-red-900/20 border border-gray-100 dark:border-slate-600/50 rounded-xl transition-all duration-200 cursor-pointer"
+              onClick={toggleMobileMenu}
+              className="app-layout__menu-button"
             >
-              <LogOut size={18} />
+              <div className="app-layout__menu-icon">
+                <Menu
+                  size={24}
+                  className={clsx(
+                    'app-layout__menu-line',
+                    mobileMenuOpen ? 'app-layout__menu-line--hidden' : 'app-layout__menu-line--visible'
+                  )}
+                />
+                <X
+                  size={24}
+                  className={clsx(
+                    'app-layout__menu-line',
+                    mobileMenuOpen ? 'app-layout__menu-line--visible' : 'app-layout__menu-line--hidden-reverse'
+                  )}
+                />
+              </div>
             </button>
           </div>
-
-          {/* Hamburger - Mobile */}
-          <button
-            onClick={toggleMobileMenu}
-            className="lg:hidden p-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-700 transition-all duration-200"
-          >
-            <div className="relative w-6 h-6">
-              <Menu 
-                size={24} 
-                className={clsx(
-                  'absolute inset-0 transition-all duration-300',
-                  mobileMenuOpen ? 'opacity-0 rotate-90 scale-0' : 'opacity-100 rotate-0 scale-100'
-                )}
-              />
-              <X 
-                size={24} 
-                className={clsx(
-                  'absolute inset-0 transition-all duration-300',
-                  mobileMenuOpen ? 'opacity-100 rotate-0 scale-100' : 'opacity-0 -rotate-90 scale-0'
-                )}
-              />
-            </div>
-          </button>
         </div>
       </header>
 
       {/* Mobile Menu Drawer */}
       <div
         className={clsx(
-          'fixed inset-0 z-50 lg:hidden transition-all duration-300',
-          mobileMenuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+          'app-layout__drawer-overlay',
+          mobileMenuOpen ? 'app-layout__drawer-overlay--open' : 'app-layout__drawer-overlay--closed'
         )}
       >
         {/* Backdrop */}
         <div
           className={clsx(
-            'absolute inset-0 bg-black transition-opacity duration-300',
-            mobileMenuOpen ? 'opacity-50' : 'opacity-0'
+            'app-layout__drawer-backdrop',
+            mobileMenuOpen ? 'app-layout__drawer-backdrop--open' : 'app-layout__drawer-backdrop--closed'
           )}
           onClick={closeMobileMenu}
         />
@@ -499,36 +546,39 @@ export default function Layout() {
         {/* Drawer */}
         <aside
           className={clsx(
-            'absolute top-0 right-0 h-full w-80 max-w-[85vw] bg-white dark:bg-slate-800 shadow-xl transition-transform duration-300 ease-out',
-            mobileMenuOpen ? 'translate-x-0' : 'translate-x-full'
+            'app-layout__drawer',
+            mobileMenuOpen ? 'app-layout__drawer--open' : 'app-layout__drawer--closed'
           )}
         >
           {/* Mobile Header */}
-          <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200 dark:border-slate-700">
-            <div className="flex items-center gap-3">
-              <div 
-                className="p-2 rounded-xl"
-                style={{ background: `linear-gradient(to bottom right, var(--accent-primary), var(--accent-secondary))` }}
+          <div className="app-layout__drawer-header">
+            <div className="app-layout__drawer-brand">
+              <div
+                className="app-layout__drawer-mark"
+                style={{ background: `linear-gradient(135deg, var(--accent-gradient-from), var(--accent-gradient-to))` }}
               >
-                <Building2 size={18} className="text-white" />
+                <Building2 size={18} className="app-layout__drawer-icon" />
               </div>
-              <span 
-                className="text-lg font-bold bg-clip-text text-transparent"
-                style={{ backgroundImage: `linear-gradient(to right, var(--accent-primary), var(--accent-secondary))` }}
-              >
-                Menu
-              </span>
+              <div className="app-layout__drawer-text">
+                <span
+                  className="app-layout__drawer-title"
+                  style={{ backgroundImage: `linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))` }}
+                >
+                  Menu
+                </span>
+                <span className="app-layout__drawer-subtitle">Navigation</span>
+              </div>
             </div>
             <button
               onClick={closeMobileMenu}
-              className="p-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-700 transition-all duration-200"
+              className="app-layout__drawer-close"
             >
               <X size={24} />
             </button>
           </div>
 
           {/* Mobile Navigation */}
-          <nav className="flex-1 overflow-y-auto pb-40">
+          <nav className="app-layout__drawer-nav">
             {menuGroups.map((group) => (
               <MobileAccordion
                 key={group.id}
@@ -542,27 +592,38 @@ export default function Layout() {
           </nav>
 
           {/* Mobile User Section */}
-          <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800">
-            <div className="flex items-center gap-3 mb-4 p-3 rounded-xl bg-gray-50 dark:bg-slate-700/50">
-              <div 
-                className="w-10 h-10 rounded-full flex items-center justify-center shadow-lg"
-                style={{ 
-                  background: `linear-gradient(to bottom right, var(--accent-primary), var(--accent-secondary))`,
-                  boxShadow: `0 10px 15px -3px color-mix(in srgb, var(--accent-primary) 25%, transparent)`
+          <div className="app-layout__drawer-user">
+            <div
+              className="app-layout__drawer-user-card"
+              style={{
+                borderColor: `color-mix(in srgb, var(--accent-primary) 20%, transparent)`,
+                background: `color-mix(in srgb, var(--accent-50) 50%, transparent)`
+              }}
+            >
+              <div
+                className="app-layout__drawer-avatar"
+                style={{
+                  background: `linear-gradient(135deg, var(--accent-gradient-from), var(--accent-gradient-to))`,
+                  boxShadow: `0 6px 12px -2px color-mix(in srgb, var(--accent-primary) 30%, transparent)`
                 }}
               >
-                <span className="text-white font-semibold">
+                <span className="app-layout__drawer-initial">
                   {user?.name?.charAt(0)?.toUpperCase() || 'U'}
                 </span>
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">{user?.name}</p>
-                <p className="text-xs text-gray-500 dark:text-gray-400 truncate font-medium uppercase tracking-tight">{user?.role?.replace('_', ' ')}</p>
+              <div className="app-layout__drawer-info">
+                <p className="app-layout__drawer-name">{user?.name}</p>
+                <p
+                  className="app-layout__drawer-role"
+                  style={{ color: 'var(--accent-primary)' }}
+                >
+                  {user?.role?.replace(/_/g, ' ')}
+                </p>
               </div>
             </div>
             <button
               onClick={handleLogout}
-              className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-red-500 to-rose-500 text-white rounded-xl hover:from-red-600 hover:to-rose-600 shadow-lg shadow-red-500/25 transition-all duration-200 cursor-pointer font-medium"
+              className="app-layout__drawer-logout"
             >
               <LogOut size={18} />
               <span>Logout</span>
@@ -572,8 +633,8 @@ export default function Layout() {
       </div>
 
       {/* Main content */}
-      <main className="pt-16 min-h-screen bg-gray-50 dark:bg-slate-900 transition-colors duration-300">
-        <div className="p-4 md:p-6 lg:p-8">
+      <main className="app-layout__main">
+        <div className="app-layout__content">
           <Outlet />
         </div>
       </main>

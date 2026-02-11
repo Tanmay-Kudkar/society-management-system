@@ -80,7 +80,7 @@
 
 /* Mesh gradients */
 .gradient-mesh {
-  background: 
+  background:
     radial-gradient(at 40% 20%, rgba(59, 130, 246, 0.3) 0px, transparent 50%),
     radial-gradient(at 80% 0%, rgba(139, 92, 246, 0.2) 0px, transparent 50%),
     radial-gradient(at 0% 50%, rgba(236, 72, 153, 0.2) 0px, transparent 50%),
@@ -100,9 +100,11 @@
   0% {
     background-position: 0% 50%;
   }
+
   50% {
     background-position: 100% 50%;
   }
+
   100% {
     background-position: 0% 50%;
   }
@@ -126,13 +128,13 @@
 /* Border gradients */
 .border-gradient {
   border: 2px solid transparent;
-  background: 
+  background:
     linear-gradient(white, white) padding-box,
     linear-gradient(135deg, #3b82f6, #8b5cf6, #ec4899) border-box;
 }
 
 .dark .border-gradient {
-  background: 
+  background:
     linear-gradient(#1e293b, #1e293b) padding-box,
     linear-gradient(135deg, #3b82f6, #8b5cf6, #ec4899) border-box;
 }
@@ -148,14 +150,14 @@
 
 /* Grid pattern for backgrounds */
 .bg-grid-pattern {
-  background-image: 
+  background-image:
     linear-gradient(rgba(0, 0, 0, 0.03) 1px, transparent 1px),
     linear-gradient(90deg, rgba(0, 0, 0, 0.03) 1px, transparent 1px);
   background-size: 20px 20px;
 }
 
 .dark .bg-grid-pattern {
-  background-image: 
+  background-image:
     linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
     linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
 }

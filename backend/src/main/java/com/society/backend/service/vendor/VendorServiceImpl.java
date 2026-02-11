@@ -53,9 +53,11 @@ public class VendorServiceImpl implements VendorService {
 
         Society society = societyRepository.findById(request.getSocietyId())
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Society not found"));
+        roleService.enforceSocietyScope(roleService.getUser(userId), society.getId());
 
         Vendor vendor = new Vendor();
         vendor.setSociety(society);
+        vendor.setOrganization(society.getOrganization());
         vendor.setName(request.getName());
         vendor.setServiceType(request.getServiceType());
         vendor.setContactPerson(request.getContactPerson());
@@ -114,6 +116,7 @@ public class VendorServiceImpl implements VendorService {
 
     @Override
     public List<VendorResponse> getBySocietyId(Long societyId) {
+        roleService.enforceSocietyScope(roleService.getCurrentUser(), societyId);
         return vendorRepository.findBySocietyId(societyId).stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
@@ -134,7 +137,24 @@ public class VendorServiceImpl implements VendorService {
 
     @Override
     public List<VendorResponse> getAll() {
+        var currentUser = roleService.getCurrentUser();
+        if (currentUser == null) {
+            throw new ApiException(HttpStatus.UNAUTHORIZED, "Not authenticated");
+        }
+
         return vendorRepository.findAll().stream()
+                .filter(v -> {
+                    if (currentUser.getRole() == com.society.backend.entity.Role.PLATFORM_OWNER) {
+                        return true;
+                    }
+                    if (currentUser.getRole() == com.society.backend.entity.Role.ORGANIZATION_OWNER
+                            && currentUser.getOrganization() != null) {
+                        return v.getSociety() != null && v.getSociety().getOrganization() != null
+                                && v.getSociety().getOrganization().getId().equals(currentUser.getOrganization().getId());
+                    }
+                    return v.getSociety() != null && currentUser.getSociety() != null
+                            && v.getSociety().getId().equals(currentUser.getSociety().getId());
+                })
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
@@ -150,7 +170,9 @@ public class VendorServiceImpl implements VendorService {
         if (request.getSocietyId() != null) {
             Society society = societyRepository.findById(request.getSocietyId())
                     .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Society not found"));
+            roleService.enforceSocietyScope(roleService.getUser(userId), society.getId());
             vendor.setSociety(society);
+            vendor.setOrganization(society.getOrganization());
         }
 
         if (request.getName() != null)

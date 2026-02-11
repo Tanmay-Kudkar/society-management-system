@@ -22,6 +22,14 @@ public class Tenant {
     @JoinColumn(name = "flat_id", nullable = false)
     private Flat flat;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "society_id")
+    private Society society;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "organization_id")
+    private Organization organization;
+
     @Column(nullable = false)
     private String name;
 

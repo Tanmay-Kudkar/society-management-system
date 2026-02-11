@@ -166,29 +166,29 @@ export default function Wings() {
   }
 
   return (
-    <div>
+    <div className="wings-page">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+      <div className="wings-header">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Wings</h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">Manage society wings and towers</p>
+          <h1 className="wings-title">Wings</h1>
+          <p className="wings-subtitle">Manage society wings and towers</p>
           {currentSociety && effectiveSocietyId && (
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+            <p className="wings-capacity">
               Capacity: {wings.filter(w => w.societyId === effectiveSocietyId).length}/{currentSociety.totalWings || 0} wings
             </p>
           )}
         </div>
-        <div className="flex gap-2">
+        <div className="wings-actions">
           <button
             onClick={() => setShowBulkImport(true)}
-            className="inline-flex items-center gap-2 px-4 py-2 border border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition"
+            className="wings-action-btn wings-action-btn--outline"
           >
             <Upload size={20} />
             Bulk Import
           </button>
           <button
             onClick={() => { setEditingWing(null); setFormErrors({}); setShowModal(true) }}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+            className="wings-action-btn wings-action-btn--primary"
           >
             <Plus size={20} />
             Add Wing
@@ -197,23 +197,23 @@ export default function Wings() {
       </div>
 
       {/* Filters */}
-      <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-4 mb-6">
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+      <div className="wings-filters">
+        <div className="wings-filters__row">
+          <div className="wings-search">
+            <Search className="wings-search__icon" size={20} />
             <input
               type="text"
               placeholder="Search wings..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white placeholder:text-gray-400"
+              className="wings-search__input"
             />
           </div>
           {isPlatformLevel && (
             <select
               value={filterSociety}
               onChange={(e) => setFilterSociety(e.target.value)}
-              className="px-4 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
+              className="wings-filter-select"
             >
               <option value="">All Societies</option>
               {societies.map(s => (
@@ -225,68 +225,68 @@ export default function Wings() {
       </div>
 
       {/* Grid View */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+      <div className="wings-grid">
         {isLoading ? (
-          <div className="col-span-full p-8 text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+          <div className="wings-loading">
+            <div className="wings-loading__spinner"></div>
           </div>
         ) : filteredWings.length === 0 ? (
-          <div className="col-span-full p-8 text-center">
-            <Layers className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
-            <p className="text-gray-500 dark:text-gray-400">No wings found</p>
-            <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">Add your first wing to get started</p>
+          <div className="wings-empty">
+            <Layers className="wings-empty__icon" size={48} />
+            <p>No wings found</p>
+            <p className="wings-capacity">Add your first wing to get started</p>
           </div>
         ) : (
           filteredWings.map((wing) => (
             <div 
               key={wing.id} 
-              className="group bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-700 overflow-hidden hover:shadow-xl hover:scale-[1.02] transition-all duration-300"
+              className="wings-card"
             >
               {/* Wing Header with 3D Effect */}
-              <div className="relative bg-gradient-to-br from-violet-500 via-purple-500 to-indigo-600 p-5">
-                <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmZmZmYiIGZpbGwtb3BhY2l0eT0iMC4wNSI+PHBhdGggZD0iTTM2IDM0djItSDI0di0yaDEyek0zNiAyNHYySDI0di0yaDEyeiIvPjwvZz48L2c+PC9zdmc+')] opacity-30"></div>
-                <div className="relative flex items-start gap-4">
-                  <div className="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center shadow-lg border border-white/30 group-hover:scale-110 transition-transform duration-300">
-                    <Layers className="w-7 h-7 text-white" />
+              <div className="wings-card__hero">
+                <div className="wings-card__pattern"></div>
+                <div className="wings-card__top">
+                  <div className="wings-card__icon">
+                    <Layers size={28} />
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-xl font-bold text-white truncate">{wing.name}</h3>
+                  <div>
+                    <h3 className="wings-card__name">{wing.name}</h3>
                     {isPlatformLevel && (
-                      <p className="text-white/80 text-sm mt-0.5 truncate">{wing.societyName}</p>
+                      <p className="wings-card__society">{wing.societyName}</p>
                     )}
                   </div>
                 </div>
               </div>
               
               {/* Wing Body with Stats */}
-              <div className="p-5">
+              <div className="wings-card__body">
                 {wing.description && (
-                  <p className="text-gray-600 dark:text-gray-400 text-sm mb-4 line-clamp-2">{wing.description}</p>
+                  <p className="wings-card__desc">{wing.description}</p>
                 )}
                 
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl p-3 border border-blue-100 dark:border-blue-800/30">
-                    <div className="flex items-center gap-2 mb-1">
-                      <Building2 className="w-4 h-4 text-blue-500" />
-                      <span className="text-xs font-medium text-blue-600 dark:text-blue-400 uppercase tracking-wide">Floors</span>
+                <div className="wings-card__stats">
+                  <div className="wings-stat wings-stat--floors">
+                    <div className="wings-stat__label">
+                      <Building2 size={16} />
+                      <span>Floors</span>
                     </div>
-                    <p className="text-2xl font-bold text-gray-900 dark:text-white">{wing.totalFloors || 0}</p>
+                    <p className="wings-stat__value">{wing.totalFloors || 0}</p>
                   </div>
-                  <div className="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-xl p-3 border border-purple-100 dark:border-purple-800/30">
-                    <div className="flex items-center gap-2 mb-1">
-                      <Hash className="w-4 h-4 text-purple-500" />
-                      <span className="text-xs font-medium text-purple-600 dark:text-purple-400 uppercase tracking-wide">Wing ID</span>
+                  <div className="wings-stat wings-stat--id">
+                    <div className="wings-stat__label wings-stat__label--purple">
+                      <Hash size={16} />
+                      <span>Wing ID</span>
                     </div>
-                    <p className="text-2xl font-bold text-gray-900 dark:text-white">{wing.id}</p>
+                    <p className="wings-stat__value">{wing.id}</p>
                   </div>
                 </div>
               </div>
 
               {/* Actions with Better Hover */}
-              <div className="px-5 py-4 bg-gray-50 dark:bg-slate-700/50 border-t border-gray-100 dark:border-slate-700 flex justify-end gap-2">
+              <div className="wings-card__footer">
                 <button
                   onClick={() => { setEditingWing(wing); setFormErrors({}); setShowModal(true) }}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-900/50 rounded-lg transition-colors"
+                  className="wings-card__btn wings-card__btn--edit"
                   title="Edit Wing"
                 >
                   <Edit size={16} />
@@ -298,7 +298,7 @@ export default function Wings() {
                       deleteMutation.mutate(wing.id)
                     }
                   }}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/30 hover:bg-red-100 dark:hover:bg-red-900/50 rounded-lg transition-colors"
+                  className="wings-card__btn wings-card__btn--delete"
                   title="Delete Wing"
                 >
                   <Trash2 size={16} />
@@ -312,15 +312,15 @@ export default function Wings() {
 
       {/* Modal */}
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-slate-700 sticky top-0 bg-white dark:bg-slate-800">
-              <h3 className="text-lg font-semibold dark:text-white">{editingWing ? 'Edit Wing' : 'Add Wing'}</h3>
-              <button onClick={() => setShowModal(false)} className="p-1 hover:bg-gray-100 dark:hover:bg-slate-700 rounded">
-                <X size={20} className="text-gray-500 dark:text-gray-400" />
+        <div className="wings-modal">
+          <div className="wings-modal__panel">
+            <div className="wings-modal__header">
+              <h3 className="wings-modal__title">{editingWing ? 'Edit Wing' : 'Add Wing'}</h3>
+              <button onClick={() => setShowModal(false)} className="wings-modal__close">
+                <X size={20} />
               </button>
             </div>
-            <form onSubmit={handleSubmit} className="p-4 space-y-4">
+            <form onSubmit={handleSubmit} className="wings-modal__form">
               <FormErrorSummary message={formErrors.capacity} />
               
               {/* Society field - only show dropdown for PLATFORM_OWNER */}
@@ -361,18 +361,18 @@ export default function Wings() {
                 onChange={() => setFormErrors(prev => ({ ...prev, totalFloors: null }))}
               />
 
-              <div className="flex gap-3 pt-4">
+              <div className="wings-modal__actions">
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="flex-1 px-4 py-2 border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition"
+                  className="wings-modal__btn wings-modal__btn--ghost"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={createMutation.isLoading || updateMutation.isLoading}
-                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
+                  className="wings-modal__btn wings-modal__btn--primary"
                 >
                   {createMutation.isLoading || updateMutation.isLoading ? 'Saving...' : 'Save'}
                 </button>

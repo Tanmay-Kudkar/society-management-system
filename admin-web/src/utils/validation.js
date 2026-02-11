@@ -279,7 +279,7 @@ export const parseApiError = (error) => {
     case 401:
       return 'Session expired. Please login again.'
     case 403:
-      return 'You do not have permission to perform this action.'
+      return data?.message || 'You do not have permission to perform this action.'
     case 404:
       return data?.message || 'Requested resource not found.'
     case 409:

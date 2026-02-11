@@ -39,9 +39,12 @@ public class TicketServiceImpl implements TicketService {
         Society society = societyRepository.findById(request.getSocietyId())
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Society not found"));
 
+        roleService.enforceSocietyScope(roleService.getUser(userId), society.getId());
+
         Ticket ticket = new Ticket();
         ticket.setRaisedBy(raisedBy);
         ticket.setSociety(society);
+        ticket.setOrganization(society.getOrganization());
         ticket.setType(request.getType());
         ticket.setTitle(request.getTitle());
         ticket.setDescription(request.getDescription());
@@ -62,11 +65,15 @@ public class TicketServiceImpl implements TicketService {
     public TicketResponse getById(Long id) {
         Ticket ticket = ticketRepository.findById(id)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Ticket not found"));
+        if (ticket.getSociety() != null) {
+            roleService.enforceSocietyScope(roleService.getCurrentUser(), ticket.getSociety().getId());
+        }
         return mapToResponse(ticket);
     }
 
     @Override
     public List<TicketResponse> getBySocietyId(Long societyId) {
+        roleService.enforceSocietyScope(roleService.getCurrentUser(), societyId);
         return ticketRepository.findBySocietyId(societyId).stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
@@ -95,7 +102,24 @@ public class TicketServiceImpl implements TicketService {
 
     @Override
     public List<TicketResponse> getAll() {
+        var currentUser = roleService.getCurrentUser();
+        if (currentUser == null) {
+            throw new ApiException(HttpStatus.UNAUTHORIZED, "Not authenticated");
+        }
+
         return ticketRepository.findAll().stream()
+                .filter(t -> {
+                    if (currentUser.getRole() == com.society.backend.entity.Role.PLATFORM_OWNER) {
+                        return true;
+                    }
+                    if (currentUser.getRole() == com.society.backend.entity.Role.ORGANIZATION_OWNER
+                            && currentUser.getOrganization() != null) {
+                        return t.getSociety() != null && t.getSociety().getOrganization() != null
+                                && t.getSociety().getOrganization().getId().equals(currentUser.getOrganization().getId());
+                    }
+                    return t.getSociety() != null && currentUser.getSociety() != null
+                            && t.getSociety().getId().equals(currentUser.getSociety().getId());
+                })
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }

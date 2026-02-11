@@ -38,9 +38,11 @@ public class EmergencyContactServiceImpl implements EmergencyContactService {
 
         Society society = societyRepository.findById(request.getSocietyId())
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Society not found"));
+        roleService.enforceSocietyScope(user, society.getId());
 
         EmergencyContact contact = new EmergencyContact();
         contact.setSociety(society);
+        contact.setOrganization(society.getOrganization());
         contact.setCreatedBy(user); // Track who created this contact
         contact.setContactType(request.getContactType());
         contact.setName(request.getName());
@@ -59,11 +61,15 @@ public class EmergencyContactServiceImpl implements EmergencyContactService {
     public EmergencyContactResponse getById(Long id) {
         EmergencyContact contact = emergencyContactRepository.findById(id)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Emergency contact not found"));
+        if (contact.getSociety() != null) {
+            roleService.enforceSocietyScope(roleService.getCurrentUser(), contact.getSociety().getId());
+        }
         return mapToResponse(contact);
     }
 
     @Override
     public List<EmergencyContactResponse> getBySocietyId(Long societyId) {
+        roleService.enforceSocietyScope(roleService.getCurrentUser(), societyId);
         return emergencyContactRepository.findBySocietyIdAndIsActiveTrue(societyId).stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
@@ -78,7 +84,24 @@ public class EmergencyContactServiceImpl implements EmergencyContactService {
 
     @Override
     public List<EmergencyContactResponse> getAll() {
+        var currentUser = roleService.getCurrentUser();
+        if (currentUser == null) {
+            throw new ApiException(HttpStatus.UNAUTHORIZED, "Not authenticated");
+        }
+
         return emergencyContactRepository.findAll().stream()
+                .filter(c -> {
+                    if (currentUser.getRole() == Role.PLATFORM_OWNER) {
+                        return true;
+                    }
+                    if (currentUser.getRole() == Role.ORGANIZATION_OWNER
+                            && currentUser.getOrganization() != null) {
+                        return c.getSociety() != null && c.getSociety().getOrganization() != null
+                                && c.getSociety().getOrganization().getId().equals(currentUser.getOrganization().getId());
+                    }
+                    return c.getSociety() != null && currentUser.getSociety() != null
+                            && c.getSociety().getId().equals(currentUser.getSociety().getId());
+                })
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }

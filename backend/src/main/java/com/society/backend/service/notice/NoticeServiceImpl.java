@@ -7,6 +7,7 @@ import com.society.backend.entity.Society;
 import com.society.backend.exception.ApiException;
 import com.society.backend.repository.notice.NoticeRepository;
 import com.society.backend.repository.society.SocietyRepository;
+import com.society.backend.service.common.RoleService;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -18,10 +19,13 @@ public class NoticeServiceImpl implements NoticeService {
 
     private final NoticeRepository noticeRepository;
     private final SocietyRepository societyRepository;
+    private final RoleService roleService;
 
-    public NoticeServiceImpl(NoticeRepository noticeRepository, SocietyRepository societyRepository) {
+    public NoticeServiceImpl(NoticeRepository noticeRepository, SocietyRepository societyRepository,
+            RoleService roleService) {
         this.noticeRepository = noticeRepository;
         this.societyRepository = societyRepository;
+        this.roleService = roleService;
     }
 
     @Override
@@ -29,8 +33,11 @@ public class NoticeServiceImpl implements NoticeService {
         Society society = societyRepository.findById(request.getSocietyId())
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Society not found"));
 
+        roleService.enforceSocietyScope(roleService.getCurrentUser(), society.getId());
+
         Notice notice = new Notice();
         notice.setSociety(society);
+        notice.setOrganization(society.getOrganization());
         notice.setTitle(request.getTitle());
         notice.setContent(request.getContent());
         notice.setPriority(request.getPriority() != null ? request.getPriority() : "MEDIUM");
@@ -43,7 +50,24 @@ public class NoticeServiceImpl implements NoticeService {
 
     @Override
     public List<NoticeResponse> getAll() {
+        var currentUser = roleService.getCurrentUser();
+        if (currentUser == null) {
+            throw new ApiException(HttpStatus.UNAUTHORIZED, "Not authenticated");
+        }
+
         return noticeRepository.findAllByOrderByCreatedAtDesc().stream()
+                .filter(n -> {
+                    if (currentUser.getRole() == com.society.backend.entity.Role.PLATFORM_OWNER) {
+                        return true;
+                    }
+                    if (currentUser.getRole() == com.society.backend.entity.Role.ORGANIZATION_OWNER
+                            && currentUser.getOrganization() != null) {
+                        return n.getSociety() != null && n.getSociety().getOrganization() != null
+                                && n.getSociety().getOrganization().getId().equals(currentUser.getOrganization().getId());
+                    }
+                    return n.getSociety() != null && currentUser.getSociety() != null
+                            && n.getSociety().getId().equals(currentUser.getSociety().getId());
+                })
                 .map(this::toResponse)
                 .collect(Collectors.toList());
     }
@@ -52,6 +76,9 @@ public class NoticeServiceImpl implements NoticeService {
     public NoticeResponse getById(Long id) {
         Notice notice = noticeRepository.findById(id)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Notice not found"));
+        if (notice.getSociety() != null) {
+            roleService.enforceSocietyScope(roleService.getCurrentUser(), notice.getSociety().getId());
+        }
         return toResponse(notice);
     }
 
@@ -60,10 +87,16 @@ public class NoticeServiceImpl implements NoticeService {
         Notice notice = noticeRepository.findById(id)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Notice not found"));
 
+        if (notice.getSociety() != null) {
+            roleService.enforceSocietyScope(roleService.getCurrentUser(), notice.getSociety().getId());
+        }
+
         if (request.getSocietyId() != null) {
             Society society = societyRepository.findById(request.getSocietyId())
                     .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Society not found"));
+            roleService.enforceSocietyScope(roleService.getCurrentUser(), society.getId());
             notice.setSociety(society);
+            notice.setOrganization(society.getOrganization());
         }
 
         notice.setTitle(request.getTitle());
@@ -79,6 +112,11 @@ public class NoticeServiceImpl implements NoticeService {
 
     @Override
     public void delete(Long id) {
+        var notice = noticeRepository.findById(id)
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Notice not found"));
+        if (notice.getSociety() != null) {
+            roleService.enforceSocietyScope(roleService.getCurrentUser(), notice.getSociety().getId());
+        }
         if (!noticeRepository.existsById(id)) {
             throw new ApiException(HttpStatus.NOT_FOUND, "Notice not found");
         }
@@ -87,6 +125,7 @@ public class NoticeServiceImpl implements NoticeService {
 
     @Override
     public List<NoticeResponse> getBySocietyId(Long societyId) {
+        roleService.enforceSocietyScope(roleService.getCurrentUser(), societyId);
         return noticeRepository.findBySocietyIdOrderByCreatedAtDesc(societyId).stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());

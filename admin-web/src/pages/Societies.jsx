@@ -2,7 +2,9 @@ import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { useToast } from '../context/ToastContext'
 import { societyApi } from '../../../api'
+import { parseApiError } from '../utils/validation'
 import { Plus, Edit, Trash2, Search, X, Building2, Eye, ChevronRight, Home, Store, Briefcase, Layers } from 'lucide-react'
 import { FormInput, PhoneInput, PincodeInput, NumberInput, FormTextarea, StateCitySelector } from '../components/FormComponents'
 
@@ -10,9 +12,11 @@ export default function Societies() {
   const { user, canManageSocieties } = useAuth()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
+  const toast = useToast()
   const [showModal, setShowModal] = useState(false)
   const [editingSociety, setEditingSociety] = useState(null)
   const [searchTerm, setSearchTerm] = useState('')
+  const [formError, setFormError] = useState('')
 
   const { data: societies = [], isLoading } = useQuery({
     queryKey: ['societies'],
@@ -24,7 +28,10 @@ export default function Societies() {
     onSuccess: () => {
       queryClient.invalidateQueries(['societies'])
       setShowModal(false)
+      setFormError('')
+      toast.success('Society created successfully')
     },
+    onError: (error) => setFormError(parseApiError(error)),
   })
 
   const updateMutation = useMutation({
@@ -33,12 +40,19 @@ export default function Societies() {
       queryClient.invalidateQueries(['societies'])
       setShowModal(false)
       setEditingSociety(null)
+      setFormError('')
+      toast.success('Society updated successfully')
     },
+    onError: (error) => setFormError(parseApiError(error)),
   })
 
   const deleteMutation = useMutation({
     mutationFn: (id) => societyApi.delete(id, user.id),
-    onSuccess: () => queryClient.invalidateQueries(['societies']),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['societies'])
+      toast.success('Society deleted successfully')
+    },
+    onError: (error) => toast.error(parseApiError(error)),
   })
 
   const filteredSocieties = societies.filter(s =>
@@ -86,7 +100,7 @@ export default function Societies() {
           </div>
           {canManageSocieties() && (
             <button
-              onClick={() => { setEditingSociety(null); setShowModal(true) }}
+              onClick={() => { setEditingSociety(null); setFormError(''); setShowModal(true) }}
               className="inline-flex items-center gap-2 px-5 py-2.5 bg-white/20 backdrop-blur-sm text-white rounded-xl hover:bg-white/30 transition-all duration-300 border border-white/30 shadow-lg hover:shadow-xl hover:scale-105"
             >
               <Plus size={20} />
@@ -126,7 +140,7 @@ export default function Societies() {
           <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">No societies found</h3>
           <p className="text-gray-500 dark:text-gray-400 mb-4">Get started by creating your first society</p>
           <button
-            onClick={() => { setEditingSociety(null); setShowModal(true) }}
+            onClick={() => { setEditingSociety(null); setFormError(''); setShowModal(true) }}
             className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
           >
             <Plus size={20} />
@@ -159,7 +173,7 @@ export default function Societies() {
                     <Eye size={18} />
                   </button>
                   <button
-                    onClick={() => { setEditingSociety(society); setShowModal(true) }}
+                    onClick={() => { setEditingSociety(society); setFormError(''); setShowModal(true) }}
                     className="p-2 text-gray-500 dark:text-gray-400 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/30 rounded-lg transition"
                     title="Edit society"
                   >
@@ -268,6 +282,12 @@ export default function Societies() {
             </div>
 
             <form onSubmit={handleSubmit} className="p-5 space-y-5">
+              {formError && (
+                <div className="p-3 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 text-sm flex items-center gap-2">
+                  <X size={16} className="shrink-0 cursor-pointer hover:text-red-900" onClick={() => setFormError('')} />
+                  {formError}
+                </div>
+              )}
               {/* Basic Information Section */}
               <div className="space-y-4">
                 <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide flex items-center gap-2">

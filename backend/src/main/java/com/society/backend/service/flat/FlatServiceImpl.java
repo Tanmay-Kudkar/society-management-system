@@ -12,6 +12,7 @@ import com.society.backend.repository.WingRepository;
 import com.society.backend.repository.flat.FlatRepository;
 import com.society.backend.repository.society.SocietyRepository;
 import com.society.backend.repository.user.UserRepository;
+import com.society.backend.service.common.RoleService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -29,15 +30,14 @@ public class FlatServiceImpl implements FlatService {
     private final SocietyRepository societyRepository;
     private final UserRepository userRepository;
     private final WingRepository wingRepository;
+    private final RoleService roleService;
 
     @Override
     public FlatResponse create(FlatRequest request) {
         Society society = societyRepository.findById(request.getSocietyId())
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Society not found"));
 
-        // Validate society capacity before creating unit
-        String unitType = request.getUnitType() != null ? request.getUnitType() : "FLAT";
-        validateCapacity(society, unitType, 1);
+        roleService.enforceSocietyScope(roleService.getCurrentUser(), society.getId());
 
         Flat flat = new Flat();
         mapRequestToEntity(request, flat, society);
@@ -64,6 +64,7 @@ public class FlatServiceImpl implements FlatService {
         }
 
         Long societyId = currentUser.getSociety().getId();
+        roleService.enforceSocietyScope(currentUser, societyId);
         return flatRepository.findBySocietyId(societyId).stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
@@ -71,6 +72,7 @@ public class FlatServiceImpl implements FlatService {
 
     @Override
     public List<FlatResponse> getBySociety(Long societyId) {
+        roleService.enforceSocietyScope(roleService.getCurrentUser(), societyId);
         return flatRepository.findBySocietyId(societyId).stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
@@ -80,6 +82,9 @@ public class FlatServiceImpl implements FlatService {
     public FlatResponse getById(Long id) {
         Flat flat = flatRepository.findById(id)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Flat not found"));
+        if (flat.getSociety() != null) {
+            roleService.enforceSocietyScope(roleService.getCurrentUser(), flat.getSociety().getId());
+        }
         return toResponse(flat);
     }
 
@@ -90,6 +95,8 @@ public class FlatServiceImpl implements FlatService {
 
         Society society = societyRepository.findById(request.getSocietyId())
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Society not found"));
+
+        roleService.enforceSocietyScope(roleService.getCurrentUser(), society.getId());
 
         mapRequestToEntity(request, flat, society);
         Flat saved = flatRepository.save(flat);
@@ -105,8 +112,10 @@ public class FlatServiceImpl implements FlatService {
     }
 
     /**
-     * Validate that adding the specified number of units won't exceed society capacity.
-     * Society capacity = maximum number of units allowed per type (totalFlats, totalShops, totalOffices).
+     * Validate that adding the specified number of units won't exceed society
+     * capacity.
+     * Society capacity = maximum number of units allowed per type (totalFlats,
+     * totalShops, totalOffices).
      */
     private void validateCapacity(Society society, String unitType, int countToAdd) {
         Long societyId = society.getId();
@@ -129,6 +138,7 @@ public class FlatServiceImpl implements FlatService {
 
     private void mapRequestToEntity(FlatRequest request, Flat flat, Society society) {
         flat.setSociety(society);
+        flat.setOrganization(society.getOrganization());
         flat.setFlatNumber(request.getFlatNumber());
         flat.setUnitType(request.getUnitType() != null ? request.getUnitType() : "FLAT");
         flat.setFlatType(request.getFlatType());

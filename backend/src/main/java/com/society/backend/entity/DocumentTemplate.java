@@ -21,6 +21,14 @@ public class DocumentTemplate {
     @Column(name = "template_type", nullable = false)
     private String templateType; // NOC, LETTER, MEETING_AGENDA, AGREEMENT, etc.
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "society_id")
+    private Society society;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "organization_id")
+    private Organization organization;
+
     @Column(nullable = false)
     private String title;
 

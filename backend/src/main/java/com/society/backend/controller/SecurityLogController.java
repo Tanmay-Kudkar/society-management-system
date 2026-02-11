@@ -12,7 +12,6 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/security-logs")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
 @PreAuthorize("isAuthenticated()")
 public class SecurityLogController {
     private final SecurityLogService service;

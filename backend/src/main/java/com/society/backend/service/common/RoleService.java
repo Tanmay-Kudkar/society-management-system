@@ -4,7 +4,9 @@ import com.society.backend.entity.Role;
 import com.society.backend.entity.User;
 import com.society.backend.exception.AccessDeniedException;
 import com.society.backend.exception.ApiException;
+import com.society.backend.repository.society.SocietyRepository;
 import com.society.backend.repository.user.UserRepository;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -15,9 +17,11 @@ import java.util.List;
 public class RoleService {
 
     private final UserRepository userRepository;
+    private final SocietyRepository societyRepository;
 
-    public RoleService(UserRepository userRepository) {
+    public RoleService(UserRepository userRepository, SocietyRepository societyRepository) {
         this.userRepository = userRepository;
+        this.societyRepository = societyRepository;
     }
 
     /**
@@ -26,6 +30,75 @@ public class RoleService {
     public User getUser(Long userId) {
         return userRepository.findById(userId)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "User not found"));
+    }
+
+    /**
+     * Get the currently authenticated user with society and organization loaded.
+     */
+    public User getCurrentUser() {
+        var auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || auth.getName() == null) {
+            return null;
+        }
+        return userRepository.findByEmailWithSocietyAndOrganization(auth.getName()).orElse(null);
+    }
+
+    /**
+     * Require PLATFORM_OWNER for sensitive operations.
+     */
+    public void requireMasterAdmin(User user) {
+        if (user == null || user.getRole() != Role.PLATFORM_OWNER) {
+            throw new AccessDeniedException("Access denied. PLATFORM_OWNER only.");
+        }
+    }
+
+    /**
+     * Enforce organization scope for the current user.
+     */
+    public void enforceOrganizationScope(User user, Long organizationId) {
+        if (user == null) {
+            throw new AccessDeniedException("Access denied. Not authenticated.");
+        }
+        if (user.getRole() == Role.PLATFORM_OWNER) {
+            return;
+        }
+        if (organizationId == null) {
+            throw new AccessDeniedException("Access denied. Organization scope required.");
+        }
+        if (user.getOrganization() == null || !organizationId.equals(user.getOrganization().getId())) {
+            throw new AccessDeniedException("Access denied. Organization scope mismatch.");
+        }
+    }
+
+    /**
+     * Enforce society scope for the current user, including org owners.
+     */
+    public void enforceSocietyScope(User user, Long societyId) {
+        if (user == null) {
+            throw new AccessDeniedException("Access denied. Not authenticated.");
+        }
+        if (user.getRole() == Role.PLATFORM_OWNER) {
+            return;
+        }
+        if (societyId == null) {
+            throw new AccessDeniedException("Access denied. Society scope required.");
+        }
+
+        // Organization owner can access any society in their organization
+        if (user.getRole() == Role.ORGANIZATION_OWNER && user.getOrganization() != null) {
+            var society = societyRepository.findById(societyId)
+                    .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Society not found"));
+            if (society.getOrganization() == null
+                    || !society.getOrganization().getId().equals(user.getOrganization().getId())) {
+                throw new AccessDeniedException("Access denied. Society is outside your organization.");
+            }
+            return;
+        }
+
+        // Society-level roles must match their own society
+        if (user.getSociety() == null || !societyId.equals(user.getSociety().getId())) {
+            throw new AccessDeniedException("Access denied. Society scope mismatch.");
+        }
     }
 
     /**

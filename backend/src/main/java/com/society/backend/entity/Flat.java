@@ -23,6 +23,10 @@ public class Flat {
     private Society society;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "organization_id")
+    private Organization organization;
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "wing_id")
     private Wing wing;
 

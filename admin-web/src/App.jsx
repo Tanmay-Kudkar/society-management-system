@@ -10,6 +10,8 @@ import ResetPassword from './pages/ResetPassword'
 import Dashboard from './pages/Dashboard'
 import Users from './pages/Users'
 import Societies from './pages/Societies'
+import Organizations from './pages/Organizations'
+import SocietyAdmins from './pages/SocietyAdmins'
 import SocietyDetail from './pages/SocietyDetail'
 import UnitManagement from './pages/UnitManagement'
 import Wings from './pages/Wings'
@@ -28,12 +30,12 @@ import EmergencyContacts from './pages/EmergencyContacts'
 import Documents from './pages/Documents'
 import Settings from './pages/Settings'
 import Reports from './pages/Reports'
+import RolesPermissions from './pages/RolesPermissions'
 // Footer Pages
 import About from './pages/footer/About'
 import Privacy from './pages/footer/Privacy'
 import Terms from './pages/footer/Terms'
 import Contact from './pages/footer/Contact'
-import './styles/index.css'
 
 // Protected Route component
 const ProtectedRoute = ({ children }) => {
@@ -41,8 +43,8 @@ const ProtectedRoute = ({ children }) => {
   
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-900">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500"></div>
+      <div className="app-loading">
+        <div className="app-loading__spinner"></div>
       </div>
     )
   }
@@ -78,6 +80,8 @@ function App() {
         <Route index element={<Dashboard />} />
         <Route path="users" element={<Users />} />
         <Route path="societies" element={<Societies />} />
+        <Route path="organizations" element={<Organizations />} />
+        <Route path="society-admins" element={<SocietyAdmins />} />
         <Route path="societies/:id" element={<SocietyDetail />} />
         <Route path="wings" element={<Wings />} />
         <Route path="flats" element={<Navigate to="/unit-management" replace />} />
@@ -90,6 +94,7 @@ function App() {
         <Route path="maintenance-bills" element={<MaintenanceBills />} />
         <Route path="transactions" element={<Transactions />} />
         <Route path="reports" element={<Reports />} />
+        <Route path="roles-permissions" element={<RolesPermissions />} />
         <Route path="notices" element={<Notices />} />
         <Route path="banners" element={<Banners />} />
         <Route path="tickets" element={<Tickets />} />
