@@ -1,13 +1,13 @@
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { useSearchParams } from 'react-router-dom'
+import { useSearchParams, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useToast } from '../context/ToastContext'
 import { flatApi, societyApi, wingApi, userApi } from '../../../api'
 import { 
   Plus, Edit, Trash2, Search, X, Home, Store, Briefcase, Layers, 
   Users, UserPlus, UserCheck, UserX, Upload, Download, AlertCircle,
-  Eye, Link, Unlink, UsersRound, UserCog, Building2
+  Eye, Link, Unlink, UsersRound, UserCog, Building2, Shield, FileSpreadsheet, CheckCircle, XCircle, Info
 } from 'lucide-react'
 import clsx from 'clsx'
 import { validateFlatForm, validateUserForm, parseApiError } from '../utils/validation'
@@ -25,20 +25,86 @@ const unitTypeColors = {
   OFFICE: 'bg-purple-50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400'
 }
 
+const roleColors = {
+  PLATFORM_OWNER: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300',
+  ORGANIZATION_OWNER: 'bg-violet-100 text-violet-800 dark:bg-violet-900/30 dark:text-violet-300',
+  SOCIETY_ADMIN: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300',
+  CHAIRMAN: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-300',
+  SECRETARY: 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900/30 dark:text-cyan-300',
+  TREASURER: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
+  COMMITTEE: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300',
+  MANAGER: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300',
+  EMPLOYEE: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300',
+  MEMBER: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300',
+  TENANT: 'bg-pink-100 text-pink-800 dark:bg-pink-900/30 dark:text-pink-300',
+  VISITOR: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300',
+}
+
+const roleHierarchyInfo = {
+  PLATFORM_OWNER: 'Platform Owner - Manages all societies and organizations',
+  ORGANIZATION_OWNER: 'Organization Owner - Manages multiple societies under an organization',
+  SOCIETY_ADMIN: 'Society Super Admin - Full control over society, all CRUD operations',
+  CHAIRMAN: 'Highest Committee Authority - Presides meetings, final approval, bank signatory',
+  SECRETARY: 'Administrative Head - Documentation, records, day-to-day operations',
+  TREASURER: 'Financial Head - Finances, billing, payments, accounts',
+  COMMITTEE: 'Committee Member - Intermediate management',
+  MANAGER: 'Operational Manager - Handles day-to-day management tasks',
+  EMPLOYEE: 'Staff/Security - Handles visitors, basic operations',
+  MEMBER: 'Flat Owner - Views own data, raises tickets/complaints',
+  TENANT: 'Renter - Limited access to own profile & bills',
+  VISITOR: 'Guest - Minimal access, read-only',
+}
+
 export default function UnitManagement() {
   const { user, isCommitteeLevel, canManageDocuments } = useAuth()
   const { showToast } = useToast()
   const queryClient = useQueryClient()
-  const [searchParams] = useSearchParams()
+  const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
   
   // Get URL params early (before state init that depends on them)
   const societyIdFromUrl = searchParams.get('society')
   const unitTypeFromUrl = searchParams.get('unitType')
+  const tabFromUrl = searchParams.get('tab')
   const isPlatformLevel = user?.role === 'PLATFORM_OWNER' || user?.role === 'ORGANIZATION_OWNER'
   const effectiveSocietyId = isPlatformLevel && societyIdFromUrl ? parseInt(societyIdFromUrl) : user?.societyId
 
   // PO/OO are supervisory - they can view but not directly edit units/users within a society
   const canEditUnits = isCommitteeLevel() && !isPlatformLevel
+
+  // Active tab: 'units' or 'users'
+  const [activeTab, setActiveTab] = useState(tabFromUrl === 'users' ? 'users' : 'units')
+
+  // Sync tab with URL parameter
+  useEffect(() => {
+    setActiveTab(tabFromUrl === 'users' ? 'users' : 'units')
+  }, [tabFromUrl])
+
+  const switchTab = (tab) => {
+    setActiveTab(tab)
+    const params = new URLSearchParams(searchParams)
+    if (tab === 'users') {
+      params.set('tab', 'users')
+    } else {
+      params.delete('tab')
+    }
+    setSearchParams(params, { replace: true })
+  }
+
+  // User management state
+  const [showStandaloneUserModal, setShowStandaloneUserModal] = useState(false)
+  const [editingStandaloneUser, setEditingStandaloneUser] = useState(null)
+  const [userSearchTerm, setUserSearchTerm] = useState('')
+  const [filterRole, setFilterRole] = useState('')
+  const [userError, setUserError] = useState('')
+  const [deleteError, setDeleteError] = useState('')
+  const [selectedRole, setSelectedRole] = useState('')
+  const fileInputRef = useRef(null)
+  const [showUserBulkImportModal, setShowUserBulkImportModal] = useState(false)
+  const [bulkImportFile, setBulkImportFile] = useState(null)
+  const [bulkImportPreview, setBulkImportPreview] = useState(null)
+  const [bulkImportError, setBulkImportError] = useState('')
+  const [isDragOver, setIsDragOver] = useState(false)
 
   // Modal states
   const [showUnitModal, setShowUnitModal] = useState(false)
@@ -222,6 +288,175 @@ export default function UnitManagement() {
     },
   })
 
+  // ─── User Management Tab: queries & mutations ─────────────────────────
+
+  // Fetch roles that current user can create/update/delete
+  const { data: creatableRoles = [] } = useQuery({
+    queryKey: ['creatable-roles', user?.id],
+    queryFn: () => userApi.getCreatableRoles().then(res => res.data).catch(() => []),
+    enabled: !!user?.id,
+  })
+  const { data: updatableRoles = [] } = useQuery({
+    queryKey: ['updatable-roles', user?.id],
+    queryFn: () => userApi.getUpdatableRoles().then(res => res.data).catch(() => []),
+    enabled: !!user?.id,
+  })
+
+  // Delete user mutation
+  const deleteUserMutation = useMutation({
+    mutationFn: (id) => userApi.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['users'])
+      queryClient.invalidateQueries(['flats'])
+      setDeleteError('')
+      showToast('User deleted successfully', 'success')
+    },
+    onError: (err) => {
+      const msg = err.response?.data?.message || parseApiError(err)
+      setDeleteError(msg)
+    },
+  })
+
+  // Standalone user create mutation (for Users tab)
+  const standaloneCreateUserMutation = useMutation({
+    mutationFn: (data) => userApi.create(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['users'])
+      queryClient.invalidateQueries(['flats'])
+      setShowStandaloneUserModal(false)
+      setEditingStandaloneUser(null)
+      setUserError('')
+      showToast('User created successfully', 'success')
+    },
+    onError: (err) => {
+      setUserError(parseApiError(err))
+    },
+  })
+
+  // Standalone user update mutation (for Users tab)
+  const standaloneUpdateUserMutation = useMutation({
+    mutationFn: ({ id, data }) => userApi.update(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['users'])
+      queryClient.invalidateQueries(['flats'])
+      setShowStandaloneUserModal(false)
+      setEditingStandaloneUser(null)
+      setUserError('')
+      showToast('User updated successfully', 'success')
+    },
+    onError: (err) => {
+      setUserError(parseApiError(err))
+    },
+  })
+
+  // Bulk validate import mutation (Users tab)
+  const validateBulkImportMutation = useMutation({
+    mutationFn: ({ file, societyId }) => userApi.validateBulkImport(file, societyId),
+    onSuccess: (res) => {
+      setBulkImportPreview(res.data)
+      setBulkImportError('')
+    },
+    onError: (err) => {
+      setBulkImportError(parseApiError(err))
+      setBulkImportPreview(null)
+    },
+  })
+
+  // Bulk process import mutation (Users tab)
+  const processBulkImportMutation = useMutation({
+    mutationFn: ({ file, societyId }) => userApi.processBulkImport(file, societyId),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['users'])
+      setShowUserBulkImportModal(false)
+      setBulkImportFile(null)
+      setBulkImportPreview(null)
+      setBulkImportError('')
+      showToast('Users imported successfully', 'success')
+    },
+    onError: (err) => {
+      setBulkImportError(parseApiError(err))
+    },
+  })
+
+  // Available flats for user assignment
+  const availableFlats = useMemo(() => {
+    return flats.filter(flat => {
+      const hasOwner = flat.ownerUserId != null
+      const isAvailable = !hasOwner || (editingStandaloneUser && editingStandaloneUser.flatId === flat.id)
+      return isAvailable
+    })
+  }, [flats, editingStandaloneUser])
+
+  // Filtered users for Users tab
+  const filteredTabUsers = useMemo(() => {
+    return users.filter(u => {
+      const matchesSearch = u.name?.toLowerCase().includes(userSearchTerm.toLowerCase()) ||
+                           u.email?.toLowerCase().includes(userSearchTerm.toLowerCase())
+      const matchesRole = !filterRole || u.role === filterRole
+      return matchesSearch && matchesRole
+    })
+  }, [users, userSearchTerm, filterRole])
+
+  const handleOpenStandaloneUserModal = (userToEdit = null) => {
+    setEditingStandaloneUser(userToEdit)
+    setSelectedRole(userToEdit?.role || (creatableRoles.length === 1 ? creatableRoles[0] : creatableRoles[0] || 'MEMBER'))
+    setUserError('')
+    setShowStandaloneUserModal(true)
+  }
+
+  // Handle standalone user form submission (Users tab)
+  const handleStandaloneUserSubmit = (e) => {
+    e.preventDefault()
+    const formData = new FormData(e.target)
+    const roleValue = creatableRoles.length === 1 ? creatableRoles[0] : formData.get('role')
+    const data = {
+      name: formData.get('name'),
+      email: formData.get('email'),
+      password: formData.get('password'),
+      role: roleValue,
+      phone: formData.get('phone'),
+      societyId: formData.get('societyId') ? parseInt(formData.get('societyId')) : (user?.societyId || null),
+      flatId: formData.get('flatId') ? parseInt(formData.get('flatId')) : null,
+      organizationName: formData.get('organizationName') || null,
+    }
+
+    // Frontend validation
+    const validation = validateUserForm(data, !!editingStandaloneUser)
+    if (!validation.isValid) {
+      setUserError(Object.values(validation.errors).join(', '))
+      return
+    }
+
+    // Validate flatId for member/tenant
+    if (['MEMBER', 'TENANT'].includes(roleValue) && !data.flatId) {
+      setUserError('Please select a property for the user')
+      return
+    }
+
+    // Prevent duplicate restricted roles
+    const restrictedRoles = ['CHAIRMAN', 'SECRETARY', 'TREASURER']
+    if (restrictedRoles.includes(roleValue)) {
+      const targetSocietyId = data.societyId || user?.societyId
+      const existingRoleUser = users.find(u => 
+        u.role === roleValue && 
+        u.societyId === targetSocietyId &&
+        u.id !== editingStandaloneUser?.id
+      )
+      if (existingRoleUser) {
+        setUserError(`A ${roleValue} already exists in this society: ${existingRoleUser.name}`)
+        return
+      }
+    }
+
+    if (editingStandaloneUser) {
+      standaloneUpdateUserMutation.mutate({ id: editingStandaloneUser.id, data })
+    } else {
+      standaloneCreateUserMutation.mutate(data)
+    }
+  }
+
+  // ─── End User Management Tab ──────────────────────────────────────────
+
   // Handle unit form submission
   const handleUnitSubmit = (e) => {
     e.preventDefault()
@@ -264,9 +499,9 @@ export default function UnitManagement() {
         ? stats.maxShops 
         : stats.maxOffices
       
-      if (currentCount >= maxCount) {
+      if (maxCount > 0 && currentCount >= maxCount) {
         setUnitFormErrors({ 
-          capacity: `Cannot create more ${unitType.toLowerCase()}s. Society capacity: ${currentCount}/${maxCount}` 
+          capacity: `Society capacity limit exceeded. Maximum allowed ${unitType.toLowerCase()} units: ${maxCount}. Current: ${currentCount}` 
         })
         return
       }
@@ -386,15 +621,15 @@ export default function UnitManagement() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-            <Home className="w-7 h-7 text-blue-600" />
-            Unit Management
+            <Building2 className="w-7 h-7 text-blue-600" />
+            Management
           </h1>
           <p className="text-gray-600 dark:text-gray-400 mt-1">
-            Manage units and their assigned users in one place
+            Manage units and users in one place
           </p>
         </div>
         <div className="flex gap-2 flex-wrap">
-          {canEditUnits && (
+          {activeTab === 'units' && canEditUnits && (
             <>
               <button
                 onClick={() => setShowBulkCreateModal(true)}
@@ -408,7 +643,7 @@ export default function UnitManagement() {
                 className="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition"
               >
                 <Upload size={18} />
-                Import
+                Import Units
               </button>
               <button
                 onClick={() => openUnitModal()}
@@ -419,9 +654,78 @@ export default function UnitManagement() {
               </button>
             </>
           )}
+          {activeTab === 'users' && (
+            <>
+              {['SECRETARY', 'COMMITTEE'].includes(user?.role) && (
+                <>
+                  <button
+                    onClick={() => {
+                      setBulkImportFile(null)
+                      setBulkImportPreview(null)
+                      setBulkImportError('')
+                      setShowUserBulkImportModal(true)
+                    }}
+                    className="inline-flex items-center gap-2 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition text-sm"
+                  >
+                    <Upload size={18} />
+                    Import Excel
+                  </button>
+                  <button
+                    onClick={() => setShowBulkCreateModal(true)}
+                    className="inline-flex items-center gap-2 px-3 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition text-sm"
+                  >
+                    <UserPlus size={18} />
+                    Auto-Create
+                  </button>
+                </>
+              )}
+              {creatableRoles.length > 0 && (
+                <button
+                  onClick={() => handleOpenStandaloneUserModal(null)}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                >
+                  <Plus size={20} />
+                  Add User
+                </button>
+              )}
+            </>
+          )}
         </div>
       </div>
 
+      {/* Tabs */}
+      <div className="flex gap-1 mb-6 bg-gray-100 dark:bg-slate-700 rounded-xl p-1">
+        <button
+          onClick={() => switchTab('units')}
+          className={clsx(
+            'flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition',
+            activeTab === 'units'
+              ? 'bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-sm'
+              : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+          )}
+        >
+          <Home size={18} />
+          Units
+          <span className="ml-1 px-2 py-0.5 rounded-full text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400">{flats.length}</span>
+        </button>
+        <button
+          onClick={() => switchTab('users')}
+          className={clsx(
+            'flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition',
+            activeTab === 'users'
+              ? 'bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-sm'
+              : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+          )}
+        >
+          <Users size={18} />
+          Users
+          <span className="ml-1 px-2 py-0.5 rounded-full text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400">{users.length}</span>
+        </button>
+      </div>
+
+      {/* ═══════════════════ UNITS TAB ═══════════════════ */}
+      {activeTab === 'units' && (
+      <>
       {/* Stats Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4 mb-6">
         <StatCard label="Total Units" value={stats.totalUnits} icon={Layers} color="blue" />
@@ -735,6 +1039,388 @@ export default function UnitManagement() {
             </table>
           </div>
         </div>
+      )}
+      </>
+      )}
+
+      {/* ═══════════════════ USERS TAB ═══════════════════ */}
+      {activeTab === 'users' && (
+      <>
+        {/* Role Permissions Info */}
+        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4 mb-6">
+          <div className="flex items-start gap-3">
+            <Shield className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5" />
+            <div className="flex-1">
+              <h3 className="font-medium text-blue-900 dark:text-blue-100">Your Permissions ({user?.role?.replace('_', ' ')})</h3>
+              <p className="text-sm text-blue-700 dark:text-blue-300 mt-1">
+                {roleHierarchyInfo[user?.role] || 'View only access'}
+              </p>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {creatableRoles.length > 0 && (
+                  <div className="text-xs">
+                    <span className="text-blue-600 dark:text-blue-400 font-medium">Can create:</span>{' '}
+                    <span className="text-blue-800 dark:text-blue-200">{creatableRoles.map(r => r.replace('_', ' ')).join(', ')}</span>
+                  </div>
+                )}
+                {updatableRoles.length > 0 && creatableRoles.length > 0 && (
+                  <span className="text-blue-400 dark:text-blue-500">|</span>
+                )}
+                {updatableRoles.length > 0 && (
+                  <div className="text-xs">
+                    <span className="text-blue-600 dark:text-blue-400 font-medium">Can edit/delete:</span>{' '}
+                    <span className="text-blue-800 dark:text-blue-200">{updatableRoles.map(r => r.replace('_', ' ')).join(', ')}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Delete Error Alert */}
+        {deleteError && (
+          <div className="flex items-center justify-between gap-2 p-4 mb-6 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-red-700 dark:text-red-300">
+            <div className="flex items-center gap-2">
+              <AlertCircle size={20} />
+              <span>{deleteError}</span>
+            </div>
+            <button onClick={() => setDeleteError('')} className="p-1 hover:bg-red-100 dark:hover:bg-red-800 rounded">
+              <X size={18} />
+            </button>
+          </div>
+        )}
+
+        {/* User Error Alert */}
+        {userError && !showStandaloneUserModal && (
+          <div className="flex items-center justify-between gap-2 p-4 mb-6 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-red-700 dark:text-red-300">
+            <div className="flex items-center gap-2">
+              <AlertCircle size={20} />
+              <span>{userError}</span>
+            </div>
+            <button onClick={() => setUserError('')} className="p-1 hover:bg-red-100 dark:hover:bg-red-800 rounded">
+              <X size={18} />
+            </button>
+          </div>
+        )}
+
+        {/* User Filters */}
+        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-4 mb-6">
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex-1 relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search by name or email..."
+                value={userSearchTerm}
+                onChange={(e) => setUserSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white placeholder:text-gray-400"
+              />
+            </div>
+            {updatableRoles.length > 0 && (
+              <select
+                value={filterRole}
+                onChange={(e) => setFilterRole(e.target.value)}
+                className="px-4 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
+              >
+                <option value="">All Roles</option>
+                {[user?.role, ...updatableRoles]
+                  .filter((role, index, arr) => role && arr.indexOf(role) === index)
+                  .map(role => (
+                  <option key={role} value={role}>{role.replace(/_/g, ' ')}</option>
+                ))}
+              </select>
+            )}
+          </div>
+        </div>
+
+        {/* Users Table */}
+        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 overflow-hidden">
+          {!users.length ? (
+            <div className="p-8 text-center">
+              <Users className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
+              <p className="text-gray-500 dark:text-gray-400">No users found</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50 dark:bg-slate-700 border-b border-gray-100 dark:border-slate-700">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Name</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Email</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Role</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Property</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Phone</th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100 dark:divide-slate-700">
+                  {filteredTabUsers.map((u) => {
+                    const canEdit = u.id === user?.id || updatableRoles.includes(u.role)
+                    const canDelete = u.role !== 'PLATFORM_OWNER' && u.id !== user?.id && updatableRoles.includes(u.role)
+                    const isSelf = u.id === user?.id
+                    const userFlat = flats.find(f => f.id === u.flatId)
+
+                    return (
+                      <tr key={u.id} className="hover:bg-gray-50 dark:hover:bg-slate-700">
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
+                              <span className="text-white font-medium text-sm">
+                                {u.name?.charAt(0)?.toUpperCase()}
+                              </span>
+                            </div>
+                            <div>
+                              <span className="font-medium text-gray-900 dark:text-white">{u.name}</span>
+                              {isSelf && <span className="ml-2 text-xs text-blue-600 dark:text-blue-400">(You)</span>}
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-gray-600 dark:text-gray-300 text-sm">{u.email}</td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={clsx('px-2.5 py-1 rounded-full text-xs font-medium', roleColors[u.role])}>
+                            {u.role?.replace(/_/g, ' ')}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
+                          {userFlat ? (
+                            <span className="inline-flex items-center gap-1">
+                              <Home className="w-3.5 h-3.5 text-gray-400" />
+                              {userFlat.flatNumber}
+                              {userFlat.wingName && <span className="text-gray-400 text-xs">({userFlat.wingName})</span>}
+                            </span>
+                          ) : (
+                            <span className="text-gray-400">-</span>
+                          )}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-gray-600 dark:text-gray-300 text-sm">{u.phone || '-'}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-right">
+                          <div className="inline-flex items-center gap-1">
+                            {canEdit ? (
+                              <button
+                                onClick={() => handleOpenStandaloneUserModal(u)}
+                                className="p-1.5 text-gray-500 dark:text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition"
+                                title={isSelf ? 'Edit your profile' : 'Edit user'}
+                              >
+                                <Edit size={16} />
+                              </button>
+                            ) : (
+                              <button disabled className="p-1.5 text-gray-300 dark:text-gray-600 cursor-not-allowed" title="No permission to edit">
+                                <Edit size={16} />
+                              </button>
+                            )}
+                            {canDelete ? (
+                              <button
+                                onClick={() => {
+                                  if (confirm(`Are you sure you want to delete "${u.name}"?`)) {
+                                    deleteUserMutation.mutate(u.id)
+                                  }
+                                }}
+                                className="p-1.5 text-gray-500 dark:text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition"
+                                title="Delete user"
+                              >
+                                <Trash2 size={16} />
+                              </button>
+                            ) : (
+                              <button disabled className="p-1.5 text-gray-300 dark:text-gray-600 cursor-not-allowed" title={isSelf ? "Cannot delete yourself" : "No permission"}>
+                                <Trash2 size={16} />
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+
+        {/* Standalone User Modal (Users tab) */}
+        {showStandaloneUserModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+            <div className="bg-white dark:bg-slate-800 rounded-xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+              <div className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-slate-700">
+                <h3 className="text-lg font-semibold dark:text-white">{editingStandaloneUser ? 'Edit User' : 'Add User'}</h3>
+                <button onClick={() => { setShowStandaloneUserModal(false); setUserError(''); }} className="p-1 hover:bg-gray-100 dark:hover:bg-slate-700 rounded">
+                  <X size={20} className="text-gray-500" />
+                </button>
+              </div>
+              <form onSubmit={handleStandaloneUserSubmit} className="p-4 space-y-4">
+                <FormErrorSummary message={userError} />
+                <FormInput label="Name" name="name" defaultValue={editingStandaloneUser?.name} required placeholder="Full name" />
+                <FormInput label="Email" name="email" type="email" defaultValue={editingStandaloneUser?.email} required placeholder="user@example.com" />
+                {!editingStandaloneUser && (
+                  <FormInput label="Password" name="password" type="password" required placeholder="Min 6 characters" />
+                )}
+                <SmartSelect
+                  label="Role"
+                  name="role"
+                  value={selectedRole || editingStandaloneUser?.role || creatableRoles[0] || 'MEMBER'}
+                  onChange={(e) => setSelectedRole(e.target.value)}
+                  options={creatableRoles.map(role => ({ value: role, label: role.replace('_', ' ') }))}
+                  required
+                  icon={Shield}
+                  emptyMessage="No roles available to create"
+                />
+                {/* Property selection for MEMBER/TENANT */}
+                {['MEMBER', 'TENANT'].includes(selectedRole || creatableRoles[0]) && (
+                  <SmartSelect
+                    label="Property"
+                    name="flatId"
+                    defaultValue={editingStandaloneUser?.flatId || ''}
+                    options={availableFlats.map(flat => ({
+                      value: flat.id,
+                      label: `${flat.flatNumber} ${flat.wingName ? `(${flat.wingName})` : ''} - ${flat.unitType || 'FLAT'}`
+                    }))}
+                    required
+                    icon={Home}
+                    placeholder="Select Property"
+                    emptyMessage="No available properties"
+                  />
+                )}
+                <PhoneInput label="Phone" name="phone" defaultValue={editingStandaloneUser?.phone} />
+                <div className="flex gap-3 pt-4">
+                  <button type="button" onClick={() => { setShowStandaloneUserModal(false); setUserError(''); }}
+                    className="flex-1 px-4 py-2 border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition">
+                    Cancel
+                  </button>
+                  <button type="submit"
+                    disabled={standaloneCreateUserMutation.isPending || standaloneUpdateUserMutation.isPending}
+                    className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed">
+                    {(standaloneCreateUserMutation.isPending || standaloneUpdateUserMutation.isPending) ? 'Saving...' : (editingStandaloneUser ? 'Update' : 'Create')}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* User Bulk Import Modal */}
+        {showUserBulkImportModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+            <div className="bg-white dark:bg-slate-800 rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden">
+              <div className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-slate-700">
+                <h3 className="text-lg font-semibold dark:text-white">Bulk Import Users</h3>
+                <button onClick={() => { setShowUserBulkImportModal(false); setBulkImportFile(null); setBulkImportPreview(null); setBulkImportError(''); }}
+                  className="p-1 hover:bg-gray-100 dark:hover:bg-slate-700 rounded">
+                  <X size={20} className="text-gray-500" />
+                </button>
+              </div>
+              <div className="p-4 overflow-y-auto max-h-[calc(90vh-180px)]">
+                {bulkImportError && (
+                  <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg flex items-center gap-2 text-red-700 dark:text-red-300">
+                    <AlertCircle size={18} />{bulkImportError}
+                  </div>
+                )}
+                {!bulkImportPreview ? (
+                  <>
+                    <div
+                      className={clsx(
+                        'border-2 border-dashed rounded-xl p-8 text-center transition-colors',
+                        isDragOver ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' : 'border-gray-300 dark:border-slate-600 hover:border-gray-400'
+                      )}
+                      onDragOver={(e) => { e.preventDefault(); setIsDragOver(true) }}
+                      onDragLeave={() => setIsDragOver(false)}
+                      onDrop={(e) => { e.preventDefault(); setIsDragOver(false); const file = e.dataTransfer.files[0]; if (file) { setBulkImportFile(file); setBulkImportError('') } }}
+                    >
+                      <FileSpreadsheet className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                      <p className="text-gray-600 dark:text-gray-300 mb-2">
+                        {bulkImportFile ? bulkImportFile.name : 'Drag & drop Excel file here'}
+                      </p>
+                      <button type="button" onClick={() => fileInputRef.current?.click()}
+                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm">
+                        {bulkImportFile ? 'Change File' : 'Select File'}
+                      </button>
+                      <input ref={fileInputRef} type="file" accept=".xlsx,.xls" className="hidden"
+                        onChange={(e) => { if (e.target.files[0]) { setBulkImportFile(e.target.files[0]); setBulkImportError('') } }} />
+                    </div>
+                    <div className="mt-4 flex items-center justify-between">
+                      <a href={`/api/users/bulk-import/template?societyId=${effectiveSocietyId}&userId=${user?.id}`}
+                        className="inline-flex items-center gap-2 text-sm text-blue-600 hover:text-blue-700">
+                        <Download size={16} />Download Template
+                      </a>
+                    </div>
+                  </>
+                ) : (
+                  <div>
+                    <div className="grid grid-cols-3 gap-3 mb-4">
+                      <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-3 text-center">
+                        <p className="text-2xl font-bold text-green-600">{bulkImportPreview.validCount || 0}</p>
+                        <p className="text-xs text-green-700 dark:text-green-300">Valid</p>
+                      </div>
+                      <div className="bg-red-50 dark:bg-red-900/20 rounded-lg p-3 text-center">
+                        <p className="text-2xl font-bold text-red-600">{bulkImportPreview.invalidCount || 0}</p>
+                        <p className="text-xs text-red-700 dark:text-red-300">Invalid</p>
+                      </div>
+                      <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3 text-center">
+                        <p className="text-2xl font-bold text-blue-600">{bulkImportPreview.totalRows || 0}</p>
+                        <p className="text-xs text-blue-700 dark:text-blue-300">Total</p>
+                      </div>
+                    </div>
+                    {bulkImportPreview.rows?.length > 0 && (
+                      <div className="border dark:border-slate-700 rounded-lg overflow-hidden max-h-64 overflow-y-auto mb-4">
+                        <table className="w-full text-sm">
+                          <thead className="bg-gray-50 dark:bg-slate-700 sticky top-0">
+                            <tr>
+                              <th className="px-3 py-2 text-left dark:text-white">Row</th>
+                              <th className="px-3 py-2 text-left dark:text-white">Name</th>
+                              <th className="px-3 py-2 text-left dark:text-white">Email</th>
+                              <th className="px-3 py-2 text-left dark:text-white">Role</th>
+                              <th className="px-3 py-2 text-left dark:text-white">Status</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y dark:divide-slate-700">
+                            {bulkImportPreview.rows.map((row, idx) => (
+                              <tr key={idx} className={row.valid === false ? 'bg-red-50/50 dark:bg-red-900/10' : ''}>
+                                <td className="px-3 py-2 dark:text-gray-300">{row.rowNumber || idx + 1}</td>
+                                <td className="px-3 py-2 dark:text-gray-300">{row.name}</td>
+                                <td className="px-3 py-2 dark:text-gray-300">{row.email}</td>
+                                <td className="px-3 py-2 dark:text-gray-300">{row.role}</td>
+                                <td className="px-3 py-2">
+                                  {row.valid === false ? (
+                                    <span className="text-red-600 text-xs">{row.error || 'Invalid'}</span>
+                                  ) : (
+                                    <CheckCircle size={16} className="text-green-500" />
+                                  )}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+              <div className="flex gap-3 p-4 border-t border-gray-100 dark:border-slate-700">
+                {!bulkImportPreview ? (
+                  <button
+                    onClick={() => { if (bulkImportFile) validateBulkImportMutation.mutate({ file: bulkImportFile, societyId: effectiveSocietyId }) }}
+                    disabled={!bulkImportFile || validateBulkImportMutation.isPending}
+                    className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
+                  >
+                    {validateBulkImportMutation.isPending ? 'Validating...' : 'Validate'}
+                  </button>
+                ) : (
+                  <>
+                    <button onClick={() => { setBulkImportPreview(null); setBulkImportFile(null) }}
+                      className="flex-1 px-4 py-2 border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 transition">
+                      Back
+                    </button>
+                    <button
+                      onClick={() => processBulkImportMutation.mutate({ file: bulkImportFile, societyId: effectiveSocietyId })}
+                      disabled={(bulkImportPreview.invalidCount > 0) || processBulkImportMutation.isPending}
+                      className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition disabled:opacity-50"
+                    >
+                      {processBulkImportMutation.isPending ? 'Importing...' : 'Import All'}
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+      </>
       )}
 
       {/* Unit Modal */}

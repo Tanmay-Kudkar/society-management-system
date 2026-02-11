@@ -108,6 +108,10 @@ public class BulkFlatImportService {
      * Validate import rows and return validation results
      */
     public BulkFlatImportResponse validateImportRows(List<FlatImportRow> rows, Long societyId) {
+        // Fetch society for capacity validation
+        Society society = societyRepository.findById(societyId)
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Society not found"));
+
         // Pre-fetch wings for the society (case-sensitive matching)
         Map<String, Wing> wingMap = new HashMap<>();
         List<Wing> societyWings = wingRepository.findBySocietyId(societyId);
@@ -122,6 +126,16 @@ public class BulkFlatImportService {
             existingFlatNumbers.add(flat.getFlatNumber().toUpperCase());
         }
 
+        // Count current units by type for capacity validation
+        long currentFlats = flatRepository.countBySocietyIdAndUnitType(societyId, "FLAT");
+        long currentShops = flatRepository.countBySocietyIdAndUnitType(societyId, "SHOP");
+        long currentOffices = flatRepository.countBySocietyIdAndUnitType(societyId, "OFFICE");
+
+        // Count how many of each type are in the import
+        long importFlats = rows.stream().filter(r -> "FLAT".equals(r.getUnitType())).count();
+        long importShops = rows.stream().filter(r -> "SHOP".equals(r.getUnitType())).count();
+        long importOffices = rows.stream().filter(r -> "OFFICE".equals(r.getUnitType())).count();
+
         // Track flat numbers in the import file for internal duplicate check
         Set<String> seenFlatNumbers = new HashSet<>();
 
@@ -130,8 +144,46 @@ public class BulkFlatImportService {
         int validCount = 0;
         int invalidCount = 0;
 
+        // Check overall capacity before processing rows
+        List<String> capacityWarnings = new ArrayList<>();
+        int maxFlats = society.getTotalFlats() != null ? society.getTotalFlats() : 0;
+        int maxShops = society.getTotalShops() != null ? society.getTotalShops() : 0;
+        int maxOffices = society.getTotalOffices() != null ? society.getTotalOffices() : 0;
+
+        if (maxFlats > 0 && (currentFlats + importFlats) > maxFlats) {
+            capacityWarnings.add(String.format(
+                    "Society capacity limit exceeded. Maximum allowed flat units: %d. Current: %d, Importing: %d",
+                    maxFlats, currentFlats, importFlats));
+        }
+        if (maxShops > 0 && (currentShops + importShops) > maxShops) {
+            capacityWarnings.add(String.format(
+                    "Society capacity limit exceeded. Maximum allowed shop units: %d. Current: %d, Importing: %d",
+                    maxShops, currentShops, importShops));
+        }
+        if (maxOffices > 0 && (currentOffices + importOffices) > maxOffices) {
+            capacityWarnings.add(String.format(
+                    "Society capacity limit exceeded. Maximum allowed office units: %d. Current: %d, Importing: %d",
+                    maxOffices, currentOffices, importOffices));
+        }
+
+        // If capacity exceeded, mark all rows for that type as invalid
+        boolean flatCapacityExceeded = maxFlats > 0 && (currentFlats + importFlats) > maxFlats;
+        boolean shopCapacityExceeded = maxShops > 0 && (currentShops + importShops) > maxShops;
+        boolean officeCapacityExceeded = maxOffices > 0 && (currentOffices + importOffices) > maxOffices;
+
         for (FlatImportRow row : rows) {
             List<String> errors = new ArrayList<>();
+
+            // Check capacity per unit type
+            if ("FLAT".equals(row.getUnitType()) && flatCapacityExceeded) {
+                errors.add(String.format("Society capacity limit exceeded. Maximum allowed flat units: %d", maxFlats));
+            }
+            if ("SHOP".equals(row.getUnitType()) && shopCapacityExceeded) {
+                errors.add(String.format("Society capacity limit exceeded. Maximum allowed shop units: %d", maxShops));
+            }
+            if ("OFFICE".equals(row.getUnitType()) && officeCapacityExceeded) {
+                errors.add(String.format("Society capacity limit exceeded. Maximum allowed office units: %d", maxOffices));
+            }
 
             // Validate unit type
             if (row.getUnitType() == null || !VALID_UNIT_TYPES.contains(row.getUnitType())) {

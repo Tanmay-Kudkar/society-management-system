@@ -27,4 +27,6 @@ public class VendorResponse {
     private String approvalStatus;
     private Boolean isActive;
     private LocalDateTime createdAt;
+    private Long createdByUserId;
+    private String createdByRole;
 }

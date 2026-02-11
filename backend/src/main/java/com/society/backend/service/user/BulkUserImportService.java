@@ -246,8 +246,13 @@ public class BulkUserImportService {
                         errors.add("You can only create: " + allowedRoleNames + ". Role '" + row.getRole()
                                 + "' is not allowed.");
                     }
+                    // Prevent duplicate SOCIETY_ADMIN creation via import
+                    if (targetRole == Role.SOCIETY_ADMIN) {
+                        errors.add("SOCIETY_ADMIN cannot be created via bulk import. Use the user creation form instead.");
+                    }
                 } catch (IllegalArgumentException e) {
-                    errors.add("Invalid role: " + row.getRole());
+                    errors.add("Invalid role in row " + row.getRowNumber() + ": '" + row.getRole()
+                            + "'. Accepted values: SOCIETY_ADMIN, CHAIRMAN, SECRETARY, TREASURER, COMMITTEE, MANAGER, EMPLOYEE, MEMBER, TENANT, VISITOR");
                 }
             }
 
@@ -518,6 +523,7 @@ public class BulkUserImportService {
 
     /**
      * Generate an Excel template for bulk user import.
+     * Includes Role column with accepted values documentation.
      */
     public byte[] generateTemplate() {
         try (Workbook workbook = new XSSFWorkbook()) {
@@ -542,7 +548,22 @@ public class BulkUserImportService {
                 sheet.setColumnWidth(i, 5000);
             }
 
-            // Add instructions sheet
+            // Add sample data rows with Role column
+            String[][] sampleData = {
+                    { "John Doe", "john.doe@example.com", "A-101", "9876543210", "MEMBER" },
+                    { "Jane Smith", "jane.smith@example.com", "A-102", "9876543211", "MEMBER" },
+                    { "Bob Wilson", "bob.wilson@example.com", "", "9876543212", "EMPLOYEE" },
+                    { "Alice Brown", "alice.brown@example.com", "S-01", "9876543213", "TENANT" },
+            };
+
+            for (int i = 0; i < sampleData.length; i++) {
+                Row row = sheet.createRow(i + 1);
+                for (int j = 0; j < sampleData[i].length; j++) {
+                    row.createCell(j).setCellValue(sampleData[i][j]);
+                }
+            }
+
+            // Add instructions sheet with comprehensive Role documentation
             Sheet instructionsSheet = workbook.createSheet("Instructions");
             String[][] instructions = {
                     { "Bulk User Import Instructions" },
@@ -550,20 +571,37 @@ public class BulkUserImportService {
                     { "Required Fields (marked with *):" },
                     { "- Name: Full name of the user" },
                     { "- Email: Valid email address (will be used as username)" },
-                    { "- Flat Number: The flat/unit number" },
+                    { "- Flat Number: The flat/unit number (required for unit-assignable roles)" },
                     { "" },
                     { "Optional Fields:" },
-                    { "- Phone: 10-digit phone number" },
-                    { "- Role: MEMBER (default) or TENANT" },
+                    { "- Phone: 10-digit Indian phone number (starts with 6-9)" },
+                    { "- Role: User role in the system (defaults to MEMBER if empty)" },
+                    { "" },
+                    { "Accepted Role Values:" },
+                    { "- SOCIETY_ADMIN: Full control over society (only by higher roles)" },
+                    { "- CHAIRMAN: Highest committee authority" },
+                    { "- SECRETARY: Administrative head" },
+                    { "- TREASURER: Financial head" },
+                    { "- COMMITTEE: Committee member" },
+                    { "- MANAGER: Operational manager (no user CRUD, no unit assigned)" },
+                    { "- EMPLOYEE: Staff/Security (no unit assigned)" },
+                    { "- MEMBER: Flat/unit owner (requires Flat Number)" },
+                    { "- TENANT: Renter (requires Flat Number)" },
+                    { "- VISITOR: Guest access (no unit assigned)" },
+                    { "" },
+                    { "Role Rules:" },
+                    { "- You can only import users with roles you are allowed to create" },
+                    { "- MEMBER, TENANT, CHAIRMAN, SECRETARY, TREASURER, COMMITTEE require a Flat Number" },
+                    { "- EMPLOYEE, VISITOR, MANAGER should NOT have a Flat Number" },
+                    { "- Invalid roles will show error: 'Invalid role in row X'" },
+                    { "- Duplicate admin creation via import is not allowed unless permitted" },
                     { "" },
                     { "Notes:" },
-                    { "- Default password will be the flat number" },
+                    { "- Default password will be the flat number (or email prefix for non-resident roles)" },
                     { "- Users will be prompted to change password on first login" },
                     { "- Duplicate emails will be rejected" },
                     { "- Invalid phone numbers will be flagged" },
-                    { "" },
-                    { "Example Row (Users sheet):" },
-                    { "John Doe | john.doe@example.com | 101 | 9876543210 | MEMBER" }
+                    { "- Delete sample data rows before adding your data" },
             };
 
             for (int i = 0; i < instructions.length; i++) {
@@ -574,7 +612,7 @@ public class BulkUserImportService {
                     cell.setCellStyle(headerStyle);
                 }
             }
-            instructionsSheet.setColumnWidth(0, 15000);
+            instructionsSheet.setColumnWidth(0, 18000);
 
             // Write to byte array
             java.io.ByteArrayOutputStream outputStream = new java.io.ByteArrayOutputStream();

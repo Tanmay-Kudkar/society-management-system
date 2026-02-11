@@ -13,6 +13,7 @@ import com.society.backend.repository.flat.FlatRepository;
 import com.society.backend.repository.society.SocietyRepository;
 import com.society.backend.repository.user.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -21,6 +22,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class FlatServiceImpl implements FlatService {
 
     private final FlatRepository flatRepository;
@@ -33,9 +35,14 @@ public class FlatServiceImpl implements FlatService {
         Society society = societyRepository.findById(request.getSocietyId())
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Society not found"));
 
+        // Validate society capacity before creating unit
+        String unitType = request.getUnitType() != null ? request.getUnitType() : "FLAT";
+        validateCapacity(society, unitType, 1);
+
         Flat flat = new Flat();
         mapRequestToEntity(request, flat, society);
         Flat saved = flatRepository.save(flat);
+        log.info("Created unit {} (type: {}) in society {}", saved.getFlatNumber(), unitType, society.getId());
         return toResponse(saved);
     }
 
@@ -95,6 +102,29 @@ public class FlatServiceImpl implements FlatService {
             throw new ApiException(HttpStatus.NOT_FOUND, "Flat not found");
         }
         flatRepository.deleteById(id);
+    }
+
+    /**
+     * Validate that adding the specified number of units won't exceed society capacity.
+     * Society capacity = maximum number of units allowed per type (totalFlats, totalShops, totalOffices).
+     */
+    private void validateCapacity(Society society, String unitType, int countToAdd) {
+        Long societyId = society.getId();
+        long currentCount = flatRepository.countBySocietyIdAndUnitType(societyId, unitType);
+
+        int maxAllowed = switch (unitType) {
+            case "FLAT" -> society.getTotalFlats() != null ? society.getTotalFlats() : 0;
+            case "SHOP" -> society.getTotalShops() != null ? society.getTotalShops() : 0;
+            case "OFFICE" -> society.getTotalOffices() != null ? society.getTotalOffices() : 0;
+            default -> 0;
+        };
+
+        // If capacity is 0, it means unlimited (no cap configured)
+        if (maxAllowed > 0 && (currentCount + countToAdd) > maxAllowed) {
+            throw new ApiException(HttpStatus.BAD_REQUEST,
+                    String.format("Society capacity limit exceeded. Maximum allowed %s units: %d. Current: %d",
+                            unitType.toLowerCase(), maxAllowed, currentCount));
+        }
     }
 
     private void mapRequestToEntity(FlatRequest request, Flat flat, Society society) {

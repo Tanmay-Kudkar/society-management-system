@@ -65,6 +65,12 @@ public class Vendor {
     @Column(name = "approval_status")
     private String approvalStatus = "PENDING"; // PENDING, APPROVED, REJECTED
 
+    @Column(name = "created_by_user_id")
+    private Long createdByUserId;
+
+    @Column(name = "created_by_role")
+    private String createdByRole;
+
     @Column(name = "is_active")
     private Boolean isActive = true;
 

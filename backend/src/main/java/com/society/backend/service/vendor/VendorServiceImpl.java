@@ -2,27 +2,44 @@ package com.society.backend.service.vendor;
 
 import com.society.backend.dto.vendor.VendorRequest;
 import com.society.backend.dto.vendor.VendorResponse;
+import com.society.backend.entity.Role;
+import com.society.backend.entity.SecurityLog;
 import com.society.backend.entity.Society;
+import com.society.backend.entity.User;
 import com.society.backend.entity.Vendor;
 import com.society.backend.exception.ApiException;
 import com.society.backend.repository.society.SocietyRepository;
 import com.society.backend.repository.vendor.VendorRepository;
+import com.society.backend.service.SecurityLogService;
 import com.society.backend.service.common.RoleService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class VendorServiceImpl implements VendorService {
 
     private final VendorRepository vendorRepository;
     private final SocietyRepository societyRepository;
     private final RoleService roleService;
+    private final SecurityLogService securityLogService;
+
+    /**
+     * Roles that trigger automatic vendor approval.
+     * Society Admin, Organization Owner, Platform Owner, and other higher authority roles.
+     */
+    private static final Set<Role> AUTO_APPROVE_ROLES = Set.of(
+            Role.PLATFORM_OWNER, Role.ORGANIZATION_OWNER, Role.SOCIETY_ADMIN,
+            Role.CHAIRMAN, Role.SECRETARY
+    );
 
     @Override
     @Transactional
@@ -54,7 +71,37 @@ public class VendorServiceImpl implements VendorService {
         vendor.setIfscCode(request.getIfscCode());
         vendor.setIsActive(true);
 
+        // Auto-approval logic: higher authority roles get auto-approved
+        User creator = roleService.getUser(userId);
+        if (AUTO_APPROVE_ROLES.contains(creator.getRole())) {
+            vendor.setApprovalStatus("APPROVED");
+            log.info("Vendor '{}' auto-approved (created by {} with role {})",
+                    request.getName(), creator.getEmail(), creator.getRole());
+        } else {
+            vendor.setApprovalStatus("PENDING");
+            log.info("Vendor '{}' set to PENDING approval (created by {} with role {})",
+                    request.getName(), creator.getEmail(), creator.getRole());
+        }
+
+        // Track who created the vendor
+        vendor.setCreatedByUserId(creator.getId());
+        vendor.setCreatedByRole(creator.getRole().name());
+
         Vendor saved = vendorRepository.save(vendor);
+
+        // Create audit log entry for vendor creation
+        try {
+            SecurityLog auditLog = new SecurityLog();
+            auditLog.setSocietyId(society.getId());
+            auditLog.setType("SYSTEM");
+            auditLog.setEvent(String.format("Vendor '%s' created by %s (%s). Status: %s",
+                    saved.getName(), creator.getName(), creator.getRole(), saved.getApprovalStatus()));
+            auditLog.setStatus("APPROVED".equals(saved.getApprovalStatus()) ? "Approved" : "Info");
+            securityLogService.createLog(auditLog);
+        } catch (Exception e) {
+            log.warn("Failed to create audit log for vendor creation: {}", e.getMessage());
+        }
+
         return mapToResponse(saved);
     }
 
@@ -230,6 +277,8 @@ public class VendorServiceImpl implements VendorService {
         response.setApprovalStatus(vendor.getApprovalStatus());
         response.setIsActive(vendor.getIsActive());
         response.setCreatedAt(vendor.getCreatedAt());
+        response.setCreatedByUserId(vendor.getCreatedByUserId());
+        response.setCreatedByRole(vendor.getCreatedByRole());
         return response;
     }
 }
