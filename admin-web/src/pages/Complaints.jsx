@@ -9,10 +9,10 @@ import { FormInput, SmartSelect, FormTextarea } from '../components/FormComponen
 import PermissionDenied from '../components/PermissionDenied'
 
 const statusColors = {
-  PENDING: 'bg-yellow-100 text-yellow-800',
-  UNDER_REVIEW: 'bg-blue-100 text-blue-800',
-  RESOLVED: 'bg-green-100 text-green-800',
-  REJECTED: 'bg-red-100 text-red-800',
+  PENDING: 'complaints-status--pending',
+  UNDER_REVIEW: 'complaints-status--review',
+  RESOLVED: 'complaints-status--resolved',
+  REJECTED: 'complaints-status--rejected',
 }
 
 const statusIcons = {
@@ -95,11 +95,12 @@ export default function Complaints() {
   return (
     <div>
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+      <div className="complaints-header">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Complaints</h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">Manage resident complaints</p>
+          <h1 className="complaints-title">Complaints</h1>
+          <p className="complaints-subtitle">Manage resident complaints</p>
         </div>
+<<<<<<< HEAD
         {canRaiseComplaints() && (
           <button
             onClick={() => setShowModal(true)}
@@ -109,45 +110,54 @@ export default function Complaints() {
             Log Complaint
           </button>
         )}
+=======
+        <button
+          onClick={() => setShowModal(true)}
+          className="complaints-action-button"
+        >
+          <Plus size={20} />
+          Log Complaint
+        </button>
+>>>>>>> aab3455 (Added Flyway dependency with version 12.2.0 to backend pom.xml)
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-4">
-          <p className="text-sm text-gray-500 dark:text-gray-400">Pending</p>
-          <p className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">{complaints.filter(c => c.status === 'PENDING').length}</p>
+      <div className="complaints-summary">
+        <div className="complaints-summary-card">
+          <p className="complaints-summary-label">Pending</p>
+          <p className="complaints-summary-value complaints-summary-value--pending">{complaints.filter(c => c.status === 'PENDING').length}</p>
         </div>
-        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-4">
-          <p className="text-sm text-gray-500 dark:text-gray-400">Under Review</p>
-          <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{complaints.filter(c => c.status === 'UNDER_REVIEW').length}</p>
+        <div className="complaints-summary-card">
+          <p className="complaints-summary-label">Under Review</p>
+          <p className="complaints-summary-value complaints-summary-value--review">{complaints.filter(c => c.status === 'UNDER_REVIEW').length}</p>
         </div>
-        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-4">
-          <p className="text-sm text-gray-500 dark:text-gray-400">Resolved</p>
-          <p className="text-2xl font-bold text-green-600 dark:text-green-400">{complaints.filter(c => c.status === 'RESOLVED').length}</p>
+        <div className="complaints-summary-card">
+          <p className="complaints-summary-label">Resolved</p>
+          <p className="complaints-summary-value complaints-summary-value--resolved">{complaints.filter(c => c.status === 'RESOLVED').length}</p>
         </div>
-        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-4">
-          <p className="text-sm text-gray-500 dark:text-gray-400">Total</p>
-          <p className="text-2xl font-bold text-gray-900 dark:text-white">{complaints.length}</p>
+        <div className="complaints-summary-card">
+          <p className="complaints-summary-label">Total</p>
+          <p className="complaints-summary-value complaints-summary-value--total">{complaints.length}</p>
         </div>
       </div>
 
       {/* Filters */}
-      <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-4 mb-6">
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+      <div className="complaints-filters">
+        <div className="complaints-filters-row">
+          <div className="complaints-search">
+            <Search className="complaints-search-icon" />
             <input
               type="text"
               placeholder="Search complaints..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white placeholder:text-gray-400 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+              className="complaints-input"
             />
           </div>
           <select
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
-            className="px-4 py-2 border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+            className="complaints-select"
           >
             <option value="">All Status</option>
             <option value="PENDING">Pending</option>
@@ -160,61 +170,66 @@ export default function Complaints() {
 
       {/* Complaints List */}
       {isLoading ? (
-        <div className="p-8 text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+        <div className="complaints-loading">
+          <div className="complaints-spinner"></div>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="complaints-list">
           {filteredComplaints.map((complaint) => {
             const StatusIcon = statusIcons[complaint.status] || Clock
             return (
-              <div key={complaint.id} className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-5 hover:shadow-md transition">
-                <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
-                  <div className="flex items-start gap-4">
-                    <div className={clsx('p-3 rounded-lg', 
-                      complaint.status === 'PENDING' && 'bg-yellow-50',
-                      complaint.status === 'UNDER_REVIEW' && 'bg-blue-50',
-                      complaint.status === 'RESOLVED' && 'bg-green-50',
-                      complaint.status === 'REJECTED' && 'bg-red-50'
+              <div key={complaint.id} className="complaints-item">
+                <div className="complaints-item-row">
+                  <div className="complaints-item-main">
+                    <div className={clsx('complaints-item-icon', 
+                      complaint.status === 'PENDING' && 'complaints-item-icon--pending',
+                      complaint.status === 'UNDER_REVIEW' && 'complaints-item-icon--review',
+                      complaint.status === 'RESOLVED' && 'complaints-item-icon--resolved',
+                      complaint.status === 'REJECTED' && 'complaints-item-icon--rejected'
                     )}>
-                      <StatusIcon className={clsx('w-5 h-5',
-                        complaint.status === 'PENDING' && 'text-yellow-600',
-                        complaint.status === 'UNDER_REVIEW' && 'text-blue-600',
-                        complaint.status === 'RESOLVED' && 'text-green-600',
-                        complaint.status === 'REJECTED' && 'text-red-600'
+                      <StatusIcon className={clsx('complaints-item-icon-symbol',
+                        complaint.status === 'PENDING' && 'complaints-item-icon-symbol--pending',
+                        complaint.status === 'UNDER_REVIEW' && 'complaints-item-icon-symbol--review',
+                        complaint.status === 'RESOLVED' && 'complaints-item-icon-symbol--resolved',
+                        complaint.status === 'REJECTED' && 'complaints-item-icon-symbol--rejected'
                       )} />
                     </div>
                     <div>
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-sm font-mono text-gray-500 dark:text-gray-400">{complaint.complaintNumber}</span>
-                        <span className={clsx('px-2 py-0.5 rounded-full text-xs font-medium', statusColors[complaint.status])}>
+                      <div className="complaints-item-meta">
+                        <span className="complaints-item-number">{complaint.complaintNumber}</span>
+                        <span className={clsx('complaints-status-badge', statusColors[complaint.status])}>
                           {complaint.status?.replace('_', ' ')}
                         </span>
-                        <span className="px-2 py-0.5 bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300 text-xs rounded-full">{complaint.category}</span>
+                        <span className="complaints-category-badge">{complaint.category}</span>
                       </div>
-                      <h3 className="font-semibold text-gray-900 dark:text-white mt-1">{complaint.subject}</h3>
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 line-clamp-2">{complaint.description}</p>
+                      <h3 className="complaints-item-title">{complaint.subject}</h3>
+                      <p className="complaints-item-description line-clamp-2">{complaint.description}</p>
                       
                       {complaint.resolution && (
-                        <div className="mt-2 p-2 bg-green-50 dark:bg-green-900/30 rounded-lg">
-                          <p className="text-xs text-green-700 dark:text-green-300"><span className="font-medium">Resolution:</span> {complaint.resolution}</p>
+                        <div className="complaints-resolution">
+                          <p className="complaints-resolution-text"><span className="complaints-resolution-label">Resolution:</span> {complaint.resolution}</p>
                         </div>
                       )}
                       
-                      <div className="flex items-center gap-4 mt-2 text-xs text-gray-500 dark:text-gray-400">
-                        {isPlatformLevel && <span>{complaint.societyName}</span>}
-                        <span>By: {complaint.raisedByName || 'N/A'}</span>
-                        <span>{complaint.createdAt && new Date(complaint.createdAt).toLocaleDateString()}</span>
+                      <div className="complaints-item-footer">
+                        {isPlatformLevel && <span className="complaints-item-footer-text">{complaint.societyName}</span>}
+                        <span className="complaints-item-footer-text">By: {complaint.raisedByName || 'N/A'}</span>
+                        <span className="complaints-item-footer-text">{complaint.createdAt && new Date(complaint.createdAt).toLocaleDateString()}</span>
                       </div>
                     </div>
                   </div>
 
+<<<<<<< HEAD
                   <div className="flex items-center gap-2 ml-auto">
                     {canManageComplaints() && complaint.status !== 'RESOLVED' && complaint.status !== 'REJECTED' && (
+=======
+                  <div className="complaints-item-actions">
+                    {complaint.status !== 'RESOLVED' && complaint.status !== 'REJECTED' && (
+>>>>>>> aab3455 (Added Flyway dependency with version 12.2.0 to backend pom.xml)
                       <select
                         value={complaint.status}
                         onChange={(e) => handleStatusChange(complaint, e.target.value)}
-                        className="px-3 py-1.5 text-sm border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                        className="complaints-status-select"
                       >
                         <option value="PENDING">Pending</option>
                         <option value="UNDER_REVIEW">Under Review</option>
@@ -232,15 +247,15 @@ export default function Complaints() {
 
       {/* Create Complaint Modal */}
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-xl w-full max-w-lg">
-            <div className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-slate-700">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Log Complaint</h3>
-              <button onClick={() => setShowModal(false)} className="p-1 hover:bg-gray-100 dark:hover:bg-slate-700 rounded text-gray-500 dark:text-gray-400">
+        <div className="complaints-modal">
+          <div className="complaints-modal-card">
+            <div className="complaints-modal-header">
+              <h3 className="complaints-modal-title">Log Complaint</h3>
+              <button onClick={() => setShowModal(false)} className="complaints-modal-close">
                 <X size={20} />
               </button>
             </div>
-            <form onSubmit={handleSubmit} className="p-4 space-y-4">
+            <form onSubmit={handleSubmit} className="complaints-form">
               <FormInput
                 label="Subject"
                 name="subject"
@@ -267,9 +282,9 @@ export default function Complaints() {
                 rows={4}
                 required
               />
-              <div className="flex gap-3 pt-4">
-                <button type="button" onClick={() => setShowModal(false)} className="flex-1 px-4 py-2 border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition">Cancel</button>
-                <button type="submit" className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">Submit</button>
+              <div className="complaints-form-actions">
+                <button type="button" onClick={() => setShowModal(false)} className="complaints-btn complaints-btn--ghost">Cancel</button>
+                <button type="submit" className="complaints-btn complaints-btn--primary">Submit</button>
               </div>
             </form>
           </div>

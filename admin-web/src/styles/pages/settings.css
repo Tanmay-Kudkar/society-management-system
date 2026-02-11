@@ -1,0 +1,36 @@
+/* ============================================
+   SETTINGS PAGE (ACCENT SWITCH)
+   ============================================ */
+
+.settings-accent__swatch {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  border: 2px solid transparent;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  cursor: pointer;
+}
+
+.settings-accent__swatch:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 0 2px rgba(148, 163, 184, 0.6);
+}
+
+.settings-accent__swatch--active {
+  box-shadow: 0 0 0 2px var(--accent-primary);
+}
+
+.settings-accent__check {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 20px;
+  height: 20px;
+  color: #ffffff;
+  filter: drop-shadow(0 2px 4px rgba(15, 23, 42, 0.35));
+}
+
+.dark .settings-accent__swatch:hover {
+  box-shadow: 0 0 0 2px rgba(148, 163, 184, 0.4);
+}

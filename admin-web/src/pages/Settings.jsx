@@ -469,15 +469,13 @@ export default function Settings() {
                       onClick={() => setAccentColorPreview(key)}
                       title={config.name}
                       className={clsx(
-                        'relative w-10 h-10 rounded-full ring-2 ring-offset-2 dark:ring-offset-slate-800 transition-all duration-200 hover:scale-110',
-                        config.bg,
-                        accentColor === key 
-                          ? config.ring
-                          : 'ring-transparent hover:ring-gray-300 dark:hover:ring-slate-500'
+                        'settings-accent__swatch',
+                        accentColor === key && 'settings-accent__swatch--active'
                       )}
+                      style={{ backgroundColor: config.primary }}
                     >
                       {accentColor === key && (
-                        <Check className="absolute inset-0 m-auto w-5 h-5 text-white drop-shadow-md" />
+                        <Check className="settings-accent__check" />
                       )}
                     </button>
                   ))}

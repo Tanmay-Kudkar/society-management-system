@@ -95,7 +95,7 @@ function AnimatedCounter({ value, suffix = '', duration = 2000 }) {
   }
 
   return (
-    <span ref={ref} className="tabular-nums">
+    <span ref={ref} className="welcome-tabular">
       {formatValue()}
     </span>
   )
@@ -147,14 +147,14 @@ export default function Welcome() {
   }, [])
 
   const features = [
-    { icon: Building2, title: 'Society Management', description: 'Complete admin control for housing societies with real-time insights', color: 'from-blue-500 to-cyan-500' },
-    { icon: Home, title: 'Flat Management', description: 'Track ownership, occupancy, and maintenance for every unit', color: 'from-purple-500 to-pink-500' },
-    { icon: CreditCard, title: 'Bill & Payments', description: 'Automated maintenance bills with online payment integration', color: 'from-green-500 to-emerald-500' },
-    { icon: Users, title: 'Tenant Portal', description: 'Self-service portal for tenants to raise requests and pay bills', color: 'from-orange-500 to-red-500' },
-    { icon: Car, title: 'Vehicle Registry', description: 'Manage parking slots and vehicle registrations digitally', color: 'from-yellow-500 to-orange-500' },
-    { icon: MessageSquare, title: 'Complaints & Tickets', description: 'Streamlined issue resolution with status tracking', color: 'from-indigo-500 to-purple-500' },
-    { icon: Bell, title: 'Notices & Alerts', description: 'Broadcast important updates to all residents instantly', color: 'from-pink-500 to-rose-500' },
-    { icon: Shield, title: 'Security & Access', description: 'Role-based permissions for admins, committees, and residents', color: 'from-teal-500 to-cyan-500' },
+    { icon: Building2, title: 'Society Management', description: 'Complete admin control for housing societies with real-time insights', gradient: 'linear-gradient(135deg, #3b82f6, #22d3ee)' },
+    { icon: Home, title: 'Flat Management', description: 'Track ownership, occupancy, and maintenance for every unit', gradient: 'linear-gradient(135deg, #8b5cf6, #ec4899)' },
+    { icon: CreditCard, title: 'Bill & Payments', description: 'Automated maintenance bills with online payment integration', gradient: 'linear-gradient(135deg, #22c55e, #10b981)' },
+    { icon: Users, title: 'Tenant Portal', description: 'Self-service portal for tenants to raise requests and pay bills', gradient: 'linear-gradient(135deg, #f97316, #ef4444)' },
+    { icon: Car, title: 'Vehicle Registry', description: 'Manage parking slots and vehicle registrations digitally', gradient: 'linear-gradient(135deg, #f59e0b, #f97316)' },
+    { icon: MessageSquare, title: 'Complaints & Tickets', description: 'Streamlined issue resolution with status tracking', gradient: 'linear-gradient(135deg, #6366f1, #8b5cf6)' },
+    { icon: Bell, title: 'Notices & Alerts', description: 'Broadcast important updates to all residents instantly', gradient: 'linear-gradient(135deg, #ec4899, #f43f5e)' },
+    { icon: Shield, title: 'Security & Access', description: 'Role-based permissions for admins, committees, and residents', gradient: 'linear-gradient(135deg, #14b8a6, #22d3ee)' },
   ]
 
   const stats = [
@@ -206,16 +206,31 @@ export default function Welcome() {
   }
 
   return (
-    <div className={`min-h-screen overflow-hidden transition-colors duration-500 ${isDark ? 'bg-slate-900 text-white' : 'text-gray-900'}`} style={!isDark ? { background: 'linear-gradient(to bottom, #f8fafc, white, color-mix(in srgb, var(--accent-light) 30%, white))' } : {}}>
+    <div
+      className={`welcome-page ${isDark ? 'is-dark' : 'is-light'}`}
+      style={!isDark ? { background: 'linear-gradient(to bottom, #f8fafc, white, color-mix(in srgb, var(--accent-light) 30%, white))' } : {}}
+    >
       {/* Animated Background */}
-      <div className="fixed inset-0 z-0">
+      <div className="welcome-background">
         {/* Base gradient */}
-        <div className={`absolute inset-0 transition-colors duration-500 ${isDark ? 'bg-gradient-to-br from-slate-900 via-indigo-950/50 to-slate-900' : ''}`} style={!isDark ? { background: `linear-gradient(to bottom right, color-mix(in srgb, var(--accent-light) 30%, white), white, color-mix(in srgb, var(--accent-light) 40%, white))` } : {}}></div>
+        <div
+          className={`welcome-background-base ${isDark ? 'is-dark' : 'is-light'}`}
+          style={!isDark ? { background: `linear-gradient(to bottom right, color-mix(in srgb, var(--accent-light) 30%, white), white, color-mix(in srgb, var(--accent-light) 40%, white))` } : {}}
+        ></div>
         
         {/* Animated gradient mesh */}
-        <div className={`absolute inset-0 ${isDark ? 'opacity-30' : 'opacity-50'}`}>
-          <div className={`absolute inset-0 animate-pulse-slow`} style={{ background: isDark ? 'radial-gradient(ellipse at top, color-mix(in srgb, var(--accent-primary) 40%, transparent), transparent, transparent)' : 'radial-gradient(ellipse at top, color-mix(in srgb, var(--accent-light) 40%, transparent), transparent, transparent)' }}></div>
-          <div className={`absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,_var(--tw-gradient-stops))] ${isDark ? 'from-blue-900/30' : 'from-fuchsia-300/30'} via-transparent to-transparent animate-pulse-slower`}></div>
+        <div className={`welcome-background-mesh ${isDark ? 'is-dark' : 'is-light'}`}>
+          <div
+            className={`welcome-background-mesh-layer welcome-background-mesh-layer--pulse ${isDark ? 'is-dark' : 'is-light'} animate-pulse-slow`}
+            style={{
+              background: isDark
+                ? 'radial-gradient(ellipse at top, color-mix(in srgb, var(--accent-primary) 40%, transparent), transparent, transparent)'
+                : 'radial-gradient(ellipse at top, color-mix(in srgb, var(--accent-light) 40%, transparent), transparent, transparent)'
+            }}
+          ></div>
+          <div
+            className={`welcome-background-mesh-layer welcome-background-mesh-layer--corner ${isDark ? 'is-dark' : 'is-light'} animate-pulse-slower`}
+          ></div>
         </div>
         
         {/* Floating orbs with improved animation - only show in dark mode */}
@@ -231,10 +246,13 @@ export default function Welcome() {
         {/* Light mode decorative elements - more vibrant */}
         {!isDark && (
           <>
-            <div className="absolute top-10 left-5 w-96 h-96 rounded-full blur-3xl animate-float" style={{ background: 'linear-gradient(to bottom right, color-mix(in srgb, var(--accent-primary) 20%, transparent), color-mix(in srgb, var(--accent-secondary) 20%, transparent))' }}></div>
-            <div className="absolute bottom-20 right-10 w-[500px] h-[500px] bg-gradient-to-br from-blue-400/15 to-cyan-400/15 rounded-full blur-3xl animate-floatSlow"></div>
-            <div className="absolute top-1/3 left-1/2 w-80 h-80 bg-gradient-to-br from-pink-400/15 to-rose-400/15 rounded-full blur-3xl animate-float"></div>
-            <div className="absolute bottom-1/3 left-20 w-72 h-72 bg-gradient-to-br from-amber-300/10 to-orange-300/10 rounded-full blur-3xl animate-floatSlow"></div>
+            <div
+              className="welcome-light-orb welcome-light-orb--one animate-float"
+              style={{ background: 'linear-gradient(to bottom right, color-mix(in srgb, var(--accent-primary) 20%, transparent), color-mix(in srgb, var(--accent-secondary) 20%, transparent))' }}
+            ></div>
+            <div className="welcome-light-orb welcome-light-orb--two animate-floatSlow"></div>
+            <div className="welcome-light-orb welcome-light-orb--three animate-float"></div>
+            <div className="welcome-light-orb welcome-light-orb--four animate-floatSlow"></div>
           </>
         )}
         
@@ -257,7 +275,7 @@ export default function Welcome() {
         </div>
 
         {/* Realistic Building Silhouettes at bottom */}
-        <div className="absolute bottom-0 left-0 right-0 h-64 overflow-hidden pointer-events-none hidden md:block">
+        <div className="welcome-buildings">
           {buildings.map((building, i) => (
             <div
               key={i}
@@ -271,28 +289,44 @@ export default function Welcome() {
             >
               {/* Building top design based on type */}
               {building.hasAntenna && (
-                <div className={`absolute -top-6 left-1/2 -translate-x-1/2 w-1 h-6`} style={{ background: isDark ? '#475569' : 'var(--accent-primary)' }}>
-                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-red-500 animate-pulse"></div>
+                <div
+                  className="welcome-building-antenna"
+                  style={{ background: isDark ? '#475569' : 'var(--accent-primary)' }}
+                >
+                  <div className="welcome-building-antenna-dot animate-pulse"></div>
                 </div>
               )}
               {/* Roof */}
-              <div className={`absolute -top-2 left-0 right-0 h-2 ${isDark ? 'bg-slate-700' : ''} rounded-t`} style={!isDark ? { background: 'var(--accent-primary)', opacity: 0.6 } : {}}></div>
+              <div
+                className={`welcome-building-roof ${isDark ? 'is-dark' : 'is-light'}`}
+                style={!isDark ? { background: 'var(--accent-primary)', opacity: 0.6 } : {}}
+              ></div>
               {/* Windows grid */}
               <div className={`building-windows-grid ${isDark ? '' : 'building-windows-light'}`} style={{ '--floors': building.floors }}></div>
               {/* Building reflection */}
-              <div className={`absolute inset-y-0 right-0 w-1/4 ${isDark ? 'bg-gradient-to-r from-transparent to-slate-700/20' : 'bg-gradient-to-r from-transparent to-white/30'}`}></div>
+              <div className={`welcome-building-reflection ${isDark ? 'is-dark' : 'is-light'}`}></div>
             </div>
           ))}
           {/* Ground with gradient */}
-          <div className={`absolute bottom-0 left-0 right-0 h-4 ${isDark ? 'bg-gradient-to-t from-slate-950 via-slate-900 to-transparent' : ''}`} style={!isDark ? { background: `linear-gradient(to top, color-mix(in srgb, var(--accent-light) 50%, white), color-mix(in srgb, var(--accent-light) 25%, white), transparent)` } : {}}></div>
+          <div
+            className={`welcome-building-ground ${isDark ? 'is-dark' : 'is-light'}`}
+            style={!isDark ? { background: `linear-gradient(to top, color-mix(in srgb, var(--accent-light) 50%, white), color-mix(in srgb, var(--accent-light) 25%, white), transparent)` } : {}}
+          ></div>
           {/* Road */}
-          <div className={`absolute bottom-0 left-0 right-0 h-2 ${isDark ? 'bg-slate-800' : ''}`} style={!isDark ? { background: 'var(--accent-primary)', opacity: 0.5 } : {}}>
-            <div className={`absolute top-1/2 left-0 right-0 h-0.5 ${isDark ? 'bg-yellow-500/30' : 'bg-amber-400/60'}`} style={{ backgroundImage: 'repeating-linear-gradient(90deg, transparent, transparent 20px, currentColor 20px, currentColor 40px)' }}></div>
+          <div
+            className={`welcome-building-road ${isDark ? 'is-dark' : 'is-light'}`}
+            style={!isDark ? { background: 'var(--accent-primary)', opacity: 0.5 } : {}}
+          >
+            <div
+              className={`welcome-building-road-line ${isDark ? 'is-dark' : 'is-light'}`}
+              style={{ backgroundImage: 'repeating-linear-gradient(90deg, transparent, transparent 20px, currentColor 20px, currentColor 40px)' }}
+            ></div>
           </div>
         </div>
 
         {/* Grid overlay */}
-        <div className={`absolute inset-0 ${isDark ? 'opacity-[0.02]' : 'opacity-[0.03]'}`} 
+        <div
+          className={`welcome-grid-overlay ${isDark ? 'is-dark' : 'is-light'}`}
           style={{
             backgroundImage: `linear-gradient(${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'} 1px, transparent 1px),
                               linear-gradient(90deg, ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'} 1px, transparent 1px)`,
@@ -302,45 +336,50 @@ export default function Welcome() {
       </div>
 
       {/* Content */}
-      <div className="relative z-10">
+      <div className="welcome-content">
         {/* Navigation */}
-        <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${isLoaded ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0'}`}>
-          <div className={`mx-2 sm:mx-4 mt-2 sm:mt-4 rounded-2xl px-4 sm:px-6 py-3 sm:py-4 transition-all duration-300 ${
+        <nav className={`welcome-nav ${isLoaded ? 'is-visible' : ''}`}>
+          <div className={`welcome-nav-surface ${
             scrolled 
               ? isDark ? 'nav-glass-scrolled' : 'nav-glass-light-scrolled'
               : isDark ? 'nav-glass' : 'nav-glass-light'
           }`}>
-            <div className="max-w-7xl mx-auto flex items-center justify-between">
+            <div className="welcome-nav-content">
               {/* Logo */}
-              <div className="flex items-center gap-2 sm:gap-3 group cursor-pointer" onClick={() => scrollToSection('hero')}>
-                <div className="relative">
+              <div className="welcome-logo" onClick={() => scrollToSection('hero')}>
+                <div className="welcome-logo-badge">
                   <div 
-                    className="p-2 sm:p-2.5 rounded-xl shadow-lg transition-all duration-300 group-hover:scale-110"
+                    className="welcome-logo-badge-inner"
                     style={{ 
                       background: `linear-gradient(to bottom right, var(--accent-primary), var(--accent-secondary))`,
                       boxShadow: `0 10px 15px -3px color-mix(in srgb, var(--accent-primary) 30%, transparent)`
                     }}
                   >
-                    <Building2 className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                    <Building2 className="welcome-logo-icon" />
                   </div>
                   <div 
-                    className="absolute -inset-1 rounded-xl blur opacity-30 group-hover:opacity-60 transition-opacity"
+                    className="welcome-logo-badge-glow"
                     style={{ background: `linear-gradient(to bottom right, var(--accent-primary), var(--accent-secondary))` }}
                   ></div>
                 </div>
-                <div className="flex flex-col">
+                <div className="welcome-logo-text">
                   <span 
-                    className={`text-lg sm:text-xl font-black tracking-tight bg-clip-text text-transparent`}
+                    className="welcome-logo-title"
                     style={{ backgroundImage: isDark ? `linear-gradient(to right, white, var(--accent-light), var(--accent-secondary))` : `linear-gradient(to right, #111827, var(--accent-primary), var(--accent-secondary))` }}
                   >
                     SocietyHub
                   </span>
-                  <span className="text-[8px] sm:text-[10px] font-medium -mt-1 tracking-widest uppercase" style={{ color: isDark ? `color-mix(in srgb, var(--accent-light) 70%, transparent)` : `color-mix(in srgb, var(--accent-primary) 70%, transparent)` }}>Management System</span>
+                  <span
+                    className="welcome-logo-subtitle"
+                    style={{ color: isDark ? `color-mix(in srgb, var(--accent-light) 70%, transparent)` : `color-mix(in srgb, var(--accent-primary) 70%, transparent)` }}
+                  >
+                    Management System
+                  </span>
                 </div>
               </div>
 
               {/* Nav Links - Desktop */}
-              <div className="hidden md:flex items-center gap-1 sm:gap-2">
+              <div className="welcome-nav-links">
                 {[
                   { id: 'features', label: 'Features' },
                   { id: 'stats', label: 'Stats' },
@@ -349,7 +388,7 @@ export default function Welcome() {
                   <button
                     key={item.id}
                     onClick={() => scrollToSection(item.id)}
-                    className={`nav-link-new ${activeNavItem === item.id ? (isDark ? 'nav-link-active-dark' : 'nav-link-active-light') : ''} ${isDark ? 'text-gray-300 hover:text-white' : 'text-gray-600 hover:text-gray-900'}`}
+                    className={`nav-link-new welcome-nav-link ${activeNavItem === item.id ? (isDark ? 'nav-link-active-dark' : 'nav-link-active-light') : ''} ${isDark ? 'is-dark' : 'is-light'}`}
                   >
                     {item.label}
                   </button>
@@ -357,67 +396,47 @@ export default function Welcome() {
               </div>
 
               {/* Right Actions */}
-              <div className="flex items-center gap-2 sm:gap-3">
+              <div className="welcome-nav-actions">
                 {/* Theme Toggle with Dropdown */}
-                <div className="relative" ref={themeMenuRef}>
+                <div className="welcome-theme-menu" ref={themeMenuRef}>
                   <button
                     onClick={() => setThemeMenuOpen(!themeMenuOpen)}
-                    className={`p-2 sm:p-2.5 rounded-xl transition-all duration-300 hover:scale-110 focus:outline-none focus:ring-0 ${
-                      isDark 
-                        ? 'bg-slate-800/80 hover:bg-slate-700 text-yellow-400' 
-                        : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
-                    }`}
+                    className={`welcome-theme-trigger ${isDark ? 'is-dark' : 'is-light'}`}
                     aria-label="Theme options"
                   >
-                    {!isManual ? <Monitor className="w-4 h-4 sm:w-5 sm:h-5" /> : isDark ? <Moon className="w-4 h-4 sm:w-5 sm:h-5" /> : <Sun className="w-4 h-4 sm:w-5 sm:h-5" />}
+                    {!isManual ? <Monitor className="welcome-theme-icon" /> : isDark ? <Moon className="welcome-theme-icon" /> : <Sun className="welcome-theme-icon" />}
                   </button>
                   
                   {/* Theme Dropdown Menu */}
                   {themeMenuOpen && (
-                    <div className={`absolute right-0 mt-2 w-44 rounded-xl shadow-2xl overflow-hidden z-50 transition-all duration-200 ${
-                      isDark 
-                        ? 'bg-slate-800 border border-white/10' 
-                        : 'bg-white border border-gray-200'
-                    }`}>
-                      <div className="py-1">
+                    <div className={`welcome-theme-dropdown ${isDark ? 'is-dark' : 'is-light'}`}>
+                      <div className="welcome-theme-options">
                         <button
                           onClick={() => { resetToSystemTheme(); setThemeMenuOpen(false); }}
-                          className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors ${
-                            !isManual 
-                              ? '' 
-                              : (isDark ? 'text-gray-300 hover:bg-slate-700' : 'text-gray-700 hover:bg-gray-100')
-                          }`}
+                          className={`welcome-theme-option ${isDark ? 'is-dark' : 'is-light'}`}
                           style={!isManual ? { background: isDark ? 'color-mix(in srgb, var(--accent-primary) 20%, transparent)' : 'color-mix(in srgb, var(--accent-primary) 10%, white)', color: 'var(--accent-primary)' } : {}}
                         >
-                          <Monitor className="w-4 h-4" />
+                          <Monitor className="welcome-theme-option-icon" />
                           <span>System</span>
-                          {!isManual && <CheckCircle className="w-4 h-4 ml-auto" />}
+                          {!isManual && <CheckCircle className="welcome-theme-option-check" />}
                         </button>
                         <button
                           onClick={() => { setTheme('light'); setThemeMenuOpen(false); }}
-                          className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors ${
-                            isManual && theme === 'light' 
-                              ? '' 
-                              : (isDark ? 'text-gray-300 hover:bg-slate-700' : 'text-gray-700 hover:bg-gray-100')
-                          }`}
+                          className={`welcome-theme-option ${isDark ? 'is-dark' : 'is-light'}`}
                           style={isManual && theme === 'light' ? { background: isDark ? 'color-mix(in srgb, var(--accent-primary) 20%, transparent)' : 'color-mix(in srgb, var(--accent-primary) 10%, white)', color: 'var(--accent-primary)' } : {}}
                         >
-                          <Sun className="w-4 h-4" />
+                          <Sun className="welcome-theme-option-icon" />
                           <span>Light</span>
-                          {isManual && theme === 'light' && <CheckCircle className="w-4 h-4 ml-auto" />}
+                          {isManual && theme === 'light' && <CheckCircle className="welcome-theme-option-check" />}
                         </button>
                         <button
                           onClick={() => { setTheme('dark'); setThemeMenuOpen(false); }}
-                          className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors ${
-                            isManual && theme === 'dark' 
-                              ? '' 
-                              : (isDark ? 'text-gray-300 hover:bg-slate-700' : 'text-gray-700 hover:bg-gray-100')
-                          }`}
+                          className={`welcome-theme-option ${isDark ? 'is-dark' : 'is-light'}`}
                           style={isManual && theme === 'dark' ? { background: isDark ? 'color-mix(in srgb, var(--accent-primary) 20%, transparent)' : 'color-mix(in srgb, var(--accent-primary) 10%, white)', color: 'var(--accent-primary)' } : {}}
                         >
-                          <Moon className="w-4 h-4" />
+                          <Moon className="welcome-theme-option-icon" />
                           <span>Dark</span>
-                          {isManual && theme === 'dark' && <CheckCircle className="w-4 h-4 ml-auto" />}
+                          {isManual && theme === 'dark' && <CheckCircle className="welcome-theme-option-check" />}
                         </button>
                       </div>
                     </div>
@@ -427,18 +446,18 @@ export default function Welcome() {
                 {/* Mobile Menu Toggle */}
                 <button
                   onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                  className={`md:hidden p-2 rounded-xl transition-all focus:outline-none focus:ring-0 ${isDark ? 'bg-slate-800/80 hover:bg-slate-700' : 'bg-gray-100 hover:bg-gray-200'}`}
+                  className={`welcome-mobile-toggle ${isDark ? 'is-dark' : 'is-light'}`}
                 >
-                  {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+                  {mobileMenuOpen ? <X className="welcome-mobile-toggle-icon" /> : <Menu className="welcome-mobile-toggle-icon" />}
                 </button>
 
                 {/* CTA Button - Desktop */}
                 <button
                   onClick={() => navigate('/login')}
-                  className={`hidden sm:flex btn-primary-new ${isDark ? 'btn-primary-dark' : 'btn-primary-light'}`}
+                  className={`welcome-nav-cta btn-primary-new ${isDark ? 'btn-primary-dark' : 'btn-primary-light'}`}
                 >
-                  <span className="relative z-10 flex items-center gap-2">
-                    <Key className="w-4 h-4" />
+                  <span className="welcome-nav-cta-content">
+                    <Key className="welcome-nav-cta-icon" />
                     Login
                   </span>
                 </button>
@@ -447,10 +466,8 @@ export default function Welcome() {
           </div>
 
           {/* Mobile Menu */}
-          <div className={`md:hidden mx-2 mt-2 rounded-2xl overflow-hidden transition-all duration-300 ${
-            mobileMenuOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
-          } ${isDark ? 'bg-slate-800/95 backdrop-blur-xl' : 'bg-white/95 backdrop-blur-xl shadow-lg'}`}>
-            <div className="p-4 space-y-2">
+          <div className={`welcome-mobile-menu ${mobileMenuOpen ? 'is-open' : ''} ${isDark ? 'is-dark' : 'is-light'}`}>
+            <div className="welcome-mobile-menu-content">
               {[
                 { id: 'features', label: 'Features', icon: Sparkles },
                 { id: 'stats', label: 'Statistics', icon: Building2 },
@@ -459,24 +476,20 @@ export default function Welcome() {
                 <button
                   key={item.id}
                   onClick={() => scrollToSection(item.id)}
-                  className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all focus:outline-none focus:ring-0 ${
-                    activeNavItem === item.id 
-                      ? '' 
-                      : isDark ? 'hover:bg-slate-700' : 'hover:bg-gray-100'
-                  }`}
+                  className={`welcome-mobile-link ${activeNavItem === item.id ? 'is-active' : ''} ${isDark ? 'is-dark' : 'is-light'}`}
                   style={activeNavItem === item.id ? { background: 'color-mix(in srgb, var(--accent-primary) 20%, transparent)', color: 'var(--accent-primary)' } : {}}
                 >
-                  <item.icon className="w-5 h-5" />
+                  <item.icon className="welcome-mobile-link-icon" />
                   {item.label}
                 </button>
               ))}
-              <hr className={isDark ? 'border-slate-700' : 'border-gray-200'} />
+              <hr className={`welcome-mobile-divider ${isDark ? 'is-dark' : 'is-light'}`} />
               <button
                 onClick={() => { navigate('/login'); setMobileMenuOpen(false) }}
-                className="w-full p-3 rounded-xl text-white font-semibold flex items-center justify-center gap-2"
+                className="welcome-mobile-cta"
                 style={{ background: `linear-gradient(to right, var(--accent-primary), var(--accent-secondary))` }}
               >
-                <Key className="w-5 h-5" />
+                <Key className="welcome-mobile-cta-icon" />
                 Login to Dashboard
               </button>
             </div>
@@ -484,67 +497,72 @@ export default function Welcome() {
         </nav>
 
         {/* Hero Section */}
-        <section id="hero" className="min-h-screen flex items-center justify-center px-4 pt-24">
-          <div className="max-w-6xl mx-auto text-center">
+        <section id="hero" className="welcome-hero">
+          <div className="welcome-hero-inner">
             {/* Trust Badge */}
-            <div className={`transition-all duration-1000 delay-300 ${isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
-              <div className={`inline-flex items-center gap-3 px-4 sm:px-5 py-2 sm:py-2.5 rounded-full mb-6 sm:mb-8 hover-lift transition-all ${isDark ? 'glass-badge' : 'bg-white/80 shadow-lg backdrop-blur-sm'}`} style={!isDark ? { borderColor: 'color-mix(in srgb, var(--accent-light) 50%, transparent)', borderWidth: '1px', boxShadow: '0 10px 15px -3px color-mix(in srgb, var(--accent-primary) 10%, transparent)' } : {}}>
-                <div className="flex -space-x-2">
+            <div className={`welcome-trust ${isLoaded ? 'is-visible' : ''}`}>
+              <div
+                className={`welcome-trust-badge hover-lift ${isDark ? 'is-dark' : 'is-light'}`}
+                style={!isDark ? { borderColor: 'color-mix(in srgb, var(--accent-light) 50%, transparent)', borderWidth: '1px', boxShadow: '0 10px 15px -3px color-mix(in srgb, var(--accent-primary) 10%, transparent)' } : {}}
+              >
+                <div className="welcome-trust-avatars">
                   {[...Array(3)].map((_, i) => (
                     <div 
                       key={i} 
-                      className="w-5 h-5 sm:w-6 sm:h-6 rounded-full border-2 border-slate-900 flex items-center justify-center text-[8px] sm:text-[10px] font-bold text-white"
+                      className="welcome-trust-avatar"
                       style={{ background: `linear-gradient(to bottom right, var(--accent-primary), var(--accent-secondary))` }}
                     >
                       {['S', 'M', 'R'][i]}
                     </div>
                   ))}
                 </div>
-                <div className={`h-4 w-px ${isDark ? 'bg-white/20' : 'bg-gray-300'}`}></div>
-                <Star className="w-4 h-4 text-yellow-400 animate-pulse" />
-                <span className={`text-xs sm:text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>Trusted by <span className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>500+</span> Housing Societies</span>
+                <div className={`welcome-trust-divider ${isDark ? 'is-dark' : 'is-light'}`}></div>
+                <Star className="welcome-trust-star animate-pulse" />
+                <span className={`welcome-trust-text ${isDark ? 'is-dark' : 'is-light'}`}>
+                  Trusted by <span className={`welcome-trust-highlight ${isDark ? 'is-dark' : 'is-light'}`}>500+</span> Housing Societies
+                </span>
               </div>
             </div>
 
             {/* Main Heading */}
-            <h1 className={`text-4xl sm:text-5xl md:text-7xl font-black mb-4 sm:mb-6 transition-all duration-1000 delay-500 ${isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
-              <span className={`block drop-shadow-2xl ${isDark ? 'text-white' : 'text-gray-900'}`}>Your Society,</span>
-              <span className="block hero-gradient-text">
+            <h1 className={`welcome-hero-title ${isLoaded ? 'is-visible' : ''}`}>
+              <span className={`welcome-hero-title-line welcome-hero-title-primary ${isDark ? 'is-dark' : 'is-light'}`}>Your Society,</span>
+              <span className="welcome-hero-title-line hero-gradient-text">
                 Simplified
               </span>
             </h1>
 
             {/* Subheading */}
-            <p className={`text-lg sm:text-xl md:text-2xl max-w-3xl mx-auto mb-8 sm:mb-12 transition-all duration-1000 delay-700 leading-relaxed px-4 ${isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'} ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-              The complete <span className="font-semibold" style={{ color: 'var(--accent-primary)' }}>digital ecosystem</span> for modern housing societies. 
+            <p className={`welcome-hero-subtitle ${isLoaded ? 'is-visible' : ''} ${isDark ? 'is-dark' : 'is-light'}`}>
+              The complete <span className="welcome-hero-subtitle-strong" style={{ color: 'var(--accent-primary)' }}>digital ecosystem</span> for modern housing societies. 
               Manage bills, complaints, notices, and residents — all in one powerful platform.
             </p>
 
             {/* CTA Buttons */}
-            <div className={`flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 transition-all duration-1000 delay-900 px-4 ${isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
+            <div className={`welcome-hero-actions ${isLoaded ? 'is-visible' : ''}`}>
               <button
                 onClick={() => navigate('/login')}
-                className={`w-full sm:w-auto btn-hero-primary-new group ${isDark ? '' : ''}`}
+                className="btn-hero-primary-new welcome-hero-cta"
                 style={!isDark ? { boxShadow: '0 20px 25px -5px color-mix(in srgb, var(--accent-primary) 25%, transparent)' } : {}}
               >
-                <span className="relative z-10 flex items-center justify-center gap-3">
-                  <Sparkles className="w-5 h-5" />
+                <span className="welcome-hero-cta-content">
+                  <Sparkles className="welcome-hero-cta-icon" />
                   Get Started Free
-                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                  <ArrowRight className="welcome-hero-cta-arrow" />
                 </span>
               </button>
               <button 
                 onClick={() => scrollToSection('features')}
-                className={`w-full sm:w-auto btn-hero-secondary-new group`}
+                className="btn-hero-secondary-new welcome-hero-cta welcome-hero-cta--secondary"
                 style={!isDark ? { borderColor: 'var(--accent-primary)', color: 'var(--accent-primary)' } : {}}
               >
-                <Play className="w-5 h-5 group-hover:scale-110 transition-transform" />
-                <span>Watch Demo</span>
+                <Play className="welcome-hero-cta-icon" />
+                <span className="welcome-hero-cta-label">Watch Demo</span>
               </button>
             </div>
 
             {/* Quick Features */}
-            <div className={`mt-12 sm:mt-16 flex flex-wrap justify-center gap-4 sm:gap-6 transition-all duration-1000 delay-1000 px-4 ${isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
+            <div className={`welcome-quick-features ${isLoaded ? 'is-visible' : ''}`}>
               {[
                 { icon: CreditCard, text: 'Online Payments' },
                 { icon: Bell, text: 'Instant Notices' },
@@ -552,30 +570,29 @@ export default function Welcome() {
               ].map((item, i) => (
                 <div 
                   key={i} 
-                  className={`flex items-center gap-2 transition-colors group ${isDark ? 'text-gray-400 hover:text-white' : ''}`}
-                  style={{ color: isDark ? undefined : 'var(--accent-primary)' }}
+                  className={`welcome-quick-feature ${isDark ? 'is-dark' : 'is-light'}`}
                 >
                   <div 
-                    className={`p-1.5 rounded-lg transition-colors ${isDark ? 'bg-white/5 group-hover:bg-[var(--accent-primary)]/20' : ''}`}
+                    className={`welcome-quick-feature-icon ${isDark ? 'is-dark' : 'is-light'}`}
                     style={isDark ? {} : { background: 'color-mix(in srgb, var(--accent-primary) 10%, white)' }}
                   >
-                    <item.icon className="w-4 h-4" />
+                    <item.icon className="welcome-quick-feature-icon-svg" />
                   </div>
-                  <span className="text-sm font-medium">{item.text}</span>
+                  <span className="welcome-quick-feature-text">{item.text}</span>
                 </div>
               ))}
             </div>
 
             {/* Scroll Indicator */}
-            <div className={`mt-16 sm:mt-20 transition-all duration-1000 delay-1000 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}>
+            <div className={`welcome-scroll-prompt ${isLoaded ? 'is-visible' : ''}`}>
               <button 
                 onClick={(e) => { e.currentTarget.blur(); scrollToSection('features'); }} 
-                className={`inline-flex flex-col items-center transition-colors group focus:outline-none focus:ring-0 focus:border-none ${isDark ? 'text-gray-400 hover:text-white' : ''}`}
+                className={`welcome-scroll-button ${isDark ? 'is-dark' : 'is-light'}`}
                 style={{ outline: 'none', border: 'none', color: isDark ? undefined : 'var(--accent-primary)' }}
               >
-                <span className="text-sm mb-2 transition-colors" style={{ color: isDark ? undefined : 'var(--accent-primary)' }}>Explore Features</span>
+                <span className="welcome-scroll-label" style={{ color: isDark ? undefined : 'var(--accent-primary)' }}>Explore Features</span>
                 <div className="scroll-indicator">
-                  <ChevronDown className="w-5 h-5" />
+                  <ChevronDown className="welcome-scroll-icon" />
                 </div>
               </button>
             </div>
@@ -583,41 +600,41 @@ export default function Welcome() {
         </section>
 
         {/* Features Section */}
-        <section id="features" className="py-20 sm:py-32 px-4">
-          <div className="max-w-7xl mx-auto">
-            <div className="text-center mb-12 sm:mb-20">
+        <section id="features" className="welcome-section welcome-section--features">
+          <div className="welcome-section-inner">
+            <div className="welcome-section-header">
               <div 
-                className={`inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6 ${isDark ? 'glass-badge' : 'border'}`}
+                className={`welcome-section-badge ${isDark ? 'is-dark' : 'is-light'} ${isDark ? 'glass-badge' : ''}`}
                 style={isDark ? {} : { background: `linear-gradient(to right, color-mix(in srgb, var(--accent-primary) 10%, white), color-mix(in srgb, var(--accent-secondary) 10%, white))`, borderColor: 'color-mix(in srgb, var(--accent-primary) 20%, transparent)' }}
               >
-                <Sparkles className="w-4 h-4" style={{ color: 'var(--accent-primary)' }} />
-                <span className={`text-sm font-medium ${isDark ? 'text-gray-300' : ''}`} style={{ color: isDark ? undefined : 'var(--accent-primary)' }}>Powerful Features</span>
+                <Sparkles className="welcome-section-badge-icon" style={{ color: 'var(--accent-primary)' }} />
+                <span className={`welcome-section-badge-text ${isDark ? 'is-dark' : 'is-light'}`} style={{ color: isDark ? undefined : 'var(--accent-primary)' }}>Powerful Features</span>
               </div>
-              <h2 className="text-3xl sm:text-4xl md:text-6xl font-black mb-4 sm:mb-6">
-                <span className={isDark ? 'text-white' : 'text-gray-900'}>Everything Your </span>
+              <h2 className="welcome-section-title">
+                <span className={`welcome-section-title-primary ${isDark ? 'is-dark' : 'is-light'}`}>Everything Your </span>
                 <span className="hero-gradient-text">Society Needs</span>
               </h2>
-              <p className={`text-lg sm:text-xl max-w-2xl mx-auto px-4 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+              <p className={`welcome-section-subtitle ${isDark ? 'is-dark' : 'is-light'}`}>
                 A complete suite of tools designed specifically for housing society management
               </p>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+            <div className="welcome-features-grid">
               {features.map((feature, index) => (
                 <div
                   key={index}
-                  className={`feature-card-new group ${isDark ? 'feature-card-dark' : 'feature-card-light'}`}
+                  className={`feature-card-new welcome-feature-card ${isDark ? 'feature-card-dark' : 'feature-card-light'}`}
                   style={{ animationDelay: `${index * 0.1}s` }}
                 >
                   <div className="feature-card-glow-new"></div>
-                  <div className="relative z-10">
-                    <div className={`feature-icon-new bg-gradient-to-br ${feature.color}`}>
-                      <feature.icon className="w-6 h-6 text-white" />
+                  <div className="welcome-feature-card-body">
+                    <div className="feature-icon-new" style={{ background: feature.gradient }}>
+                      <feature.icon className="welcome-feature-icon" />
                     </div>
-                    <h3 className={`text-lg font-bold mb-2 transition-colors ${isDark ? 'text-white' : 'text-gray-900'}`} style={{ '--hover-color': 'var(--accent-primary)' }} onMouseEnter={e => e.currentTarget.style.color = 'var(--accent-primary)'} onMouseLeave={e => e.currentTarget.style.color = ''}>
+                    <h3 className={`welcome-feature-title ${isDark ? 'is-dark' : 'is-light'}`}>
                       {feature.title}
                     </h3>
-                    <p className={`text-sm leading-relaxed ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                    <p className={`welcome-feature-text ${isDark ? 'is-dark' : 'is-light'}`}>
                       {feature.description}
                     </p>
                   </div>
@@ -629,34 +646,34 @@ export default function Welcome() {
 
         {/* GitHub-style Animated Showcase - Dark Mode Only */}
         {isDark && (
-          <section className="py-20 sm:py-32 px-4 relative overflow-hidden">
-            <div className="max-w-7xl mx-auto">
-              <div className="text-center mb-12 sm:mb-16">
-                <h2 className="text-3xl sm:text-4xl md:text-5xl font-black mb-4">
-                  <span className="text-white">See It </span>
+          <section className="welcome-section welcome-section--showcase">
+            <div className="welcome-section-inner">
+              <div className="welcome-section-header">
+                <h2 className="welcome-section-title">
+                  <span className="welcome-section-title-primary is-dark">See It </span>
                   <span className="hero-gradient-text">In Action</span>
                 </h2>
-                <p className="text-lg text-gray-400 max-w-2xl mx-auto">
+                <p className="welcome-section-subtitle is-dark">
                   Watch how SocietyHub transforms daily operations
                 </p>
               </div>
 
               {/* Animated Tiles Container */}
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="welcome-showcase-grid">
                 {/* Community Tile */}
-                <div className="github-tile group">
+                <div className="github-tile">
                   <div className="github-tile-bg"></div>
-                  <div className="relative z-10 p-6">
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="p-2 rounded-lg" style={{ background: 'linear-gradient(to bottom right, var(--accent-primary), var(--accent-secondary))' }}>
-                        <Users className="w-5 h-5 text-white" />
+                  <div className="welcome-showcase-card">
+                    <div className="welcome-showcase-header">
+                      <div className="welcome-showcase-icon-badge" style={{ background: 'linear-gradient(to bottom right, var(--accent-primary), var(--accent-secondary))' }}>
+                        <Users className="welcome-showcase-icon" />
                       </div>
-                      <h3 className="font-bold text-white">Community Connect</h3>
+                      <h3 className="welcome-showcase-title">Community Connect</h3>
                     </div>
                     
                     {/* Animated People */}
-                    <div className="relative h-48 overflow-hidden rounded-lg bg-slate-900/50">
-                      <svg viewBox="0 0 300 150" className="w-full h-full">
+                    <div className="welcome-showcase-canvas">
+                      <svg viewBox="0 0 300 150" className="welcome-showcase-svg">
                         {/* Building Background */}
                         <rect x="20" y="50" width="60" height="100" fill="#1e293b" rx="4"/>
                         <rect x="120" y="30" width="60" height="120" fill="#1e293b" rx="4"/>
@@ -692,34 +709,37 @@ export default function Welcome() {
                       </svg>
                       
                       {/* Status Updates */}
-                      <div className="absolute bottom-3 left-3 right-3 space-y-2">
+                      <div className="welcome-showcase-status welcome-showcase-status--full">
                         <div className="github-notification-popup">
-                          <span className="text-green-400 text-xs">●</span>
-                          <span className="text-xs text-gray-300">New resident moved in</span>
+                          <span className="welcome-showcase-status-dot">●</span>
+                          <span className="welcome-showcase-status-text">New resident moved in</span>
                         </div>
                       </div>
                     </div>
                     
-                    <p className="text-sm text-gray-400 mt-4">
+                    <p className="welcome-showcase-caption">
                       Residents connect, share updates, and build community
                     </p>
                   </div>
                 </div>
 
                 {/* Parking Tile */}
-                <div className="github-tile group">
+                <div className="github-tile">
                   <div className="github-tile-bg"></div>
-                  <div className="relative z-10 p-6">
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="p-2 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-500">
-                        <Car className="w-5 h-5 text-white" />
+                  <div className="welcome-showcase-card">
+                    <div className="welcome-showcase-header">
+                      <div
+                        className="welcome-showcase-icon-badge"
+                        style={{ background: 'linear-gradient(to bottom right, #3b82f6, #22d3ee)' }}
+                      >
+                        <Car className="welcome-showcase-icon" />
                       </div>
-                      <h3 className="font-bold text-white">Smart Parking</h3>
+                      <h3 className="welcome-showcase-title">Smart Parking</h3>
                     </div>
                     
                     {/* Animated Parking Lot */}
-                    <div className="relative h-48 overflow-hidden rounded-lg bg-slate-900/50">
-                      <svg viewBox="0 0 300 150" className="w-full h-full">
+                    <div className="welcome-showcase-canvas">
+                      <svg viewBox="0 0 300 150" className="welcome-showcase-svg">
                         {/* Parking Lines */}
                         <rect x="20" y="30" width="50" height="80" fill="none" stroke="#334155" strokeWidth="2"/>
                         <rect x="80" y="30" width="50" height="80" fill="none" stroke="#334155" strokeWidth="2" className="parking-slot-highlight"/>
@@ -730,7 +750,7 @@ export default function Welcome() {
                         <g className="parking-guidance">
                           <line x1="105" y1="25" x2="105" y2="20" stroke="#22c55e" strokeWidth="2" opacity="0.8"/>
                           <line x1="100" y1="20" x2="110" y2="20" stroke="#22c55e" strokeWidth="2" opacity="0.8"/>
-                          <text x="105" y="17" textAnchor="middle" className="text-[8px] fill-green-400 font-bold">PARK HERE</text>
+                          <text x="105" y="17" textAnchor="middle" className="welcome-svg-label-xs welcome-svg-label-green">PARK HERE</text>
                         </g>
                         
                         {/* Parked Cars */}
@@ -849,45 +869,48 @@ export default function Welcome() {
                         <circle cx="225" cy="120" r="4" className="github-slot-available"/>
                         
                         {/* Labels */}
-                        <text x="45" y="140" textAnchor="middle" className="text-[10px] fill-gray-500">A1</text>
-                        <text x="105" y="140" textAnchor="middle" className="text-[10px] fill-green-400 font-bold">A2</text>
-                        <text x="165" y="140" textAnchor="middle" className="text-[10px] fill-gray-500">A3</text>
-                        <text x="225" y="140" textAnchor="middle" className="text-[10px] fill-green-400 font-bold">A4</text>
+                        <text x="45" y="140" textAnchor="middle" className="welcome-svg-label-sm welcome-svg-label-muted">A1</text>
+                        <text x="105" y="140" textAnchor="middle" className="welcome-svg-label-sm welcome-svg-label-green strong">A2</text>
+                        <text x="165" y="140" textAnchor="middle" className="welcome-svg-label-sm welcome-svg-label-muted">A3</text>
+                        <text x="225" y="140" textAnchor="middle" className="welcome-svg-label-sm welcome-svg-label-green strong">A4</text>
                       </svg>
                       
                       {/* Live Counter with Animation */}
-                      <div className="absolute top-3 right-3 bg-slate-800/80 px-3 py-1 rounded-full">
-                        <span className="text-xs text-gray-300">Available: </span>
-                        <span className="text-xs text-green-400 font-bold github-counter-live">2</span>
+                      <div className="welcome-showcase-status welcome-showcase-status--right">
+                        <span className="welcome-showcase-status-label">Available: </span>
+                        <span className="welcome-showcase-status-value github-counter-live">2</span>
                       </div>
                       
                       {/* Live Status Indicator */}
-                      <div className="absolute top-3 left-3 flex items-center gap-2 bg-slate-800/80 px-3 py-1 rounded-full">
-                        <span className="w-2 h-2 rounded-full bg-green-400 live-indicator"></span>
-                        <span className="text-xs text-gray-300">LIVE</span>
+                      <div className="welcome-showcase-status welcome-showcase-status--left">
+                        <span className="welcome-showcase-live-dot live-indicator"></span>
+                        <span className="welcome-showcase-status-label">LIVE</span>
                       </div>
                     </div>
                     
-                    <p className="text-sm text-gray-400 mt-4">
+                    <p className="welcome-showcase-caption">
                       Real-time parking availability and vehicle tracking
                     </p>
                   </div>
                 </div>
 
                 {/* Security Tile */}
-                <div className="github-tile group">
+                <div className="github-tile">
                   <div className="github-tile-bg"></div>
-                  <div className="relative z-10 p-6">
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="p-2 rounded-lg bg-gradient-to-br from-green-500 to-emerald-500">
-                        <Shield className="w-5 h-5 text-white" />
+                  <div className="welcome-showcase-card">
+                    <div className="welcome-showcase-header">
+                      <div
+                        className="welcome-showcase-icon-badge"
+                        style={{ background: 'linear-gradient(to bottom right, #22c55e, #10b981)' }}
+                      >
+                        <Shield className="welcome-showcase-icon" />
                       </div>
-                      <h3 className="font-bold text-white">Security Center</h3>
+                      <h3 className="welcome-showcase-title">Security Center</h3>
                     </div>
                     
                     {/* Animated Security Dashboard */}
-                    <div className="relative h-48 overflow-hidden rounded-lg bg-slate-900/50">
-                      <svg viewBox="0 0 300 150" className="w-full h-full">
+                    <div className="welcome-showcase-canvas">
+                      <svg viewBox="0 0 300 150" className="welcome-showcase-svg">
                         {/* Security Gate */}
                         <rect x="130" y="100" width="40" height="50" fill="#334155"/>
                         <rect x="125" y="95" width="50" height="8" fill="#475569"/>
@@ -904,25 +927,25 @@ export default function Welcome() {
                         
                         {/* Security Icons */}
                         <circle cx="60" cy="50" r="20" fill="#1e293b" stroke="#22c55e" strokeWidth="2"/>
-                        <text x="60" y="55" textAnchor="middle" className="text-[16px] fill-green-400">✓</text>
+                        <text x="60" y="55" textAnchor="middle" className="welcome-svg-label-lg welcome-svg-label-green">✓</text>
                         
                         <circle cx="150" cy="50" r="20" fill="#1e293b" stroke="#8b5cf6" strokeWidth="2" className="github-scan-ring"/>
-                        <text x="150" y="55" textAnchor="middle" className="text-[14px]" fill="var(--accent-primary)">ID</text>
+                        <text x="150" y="55" textAnchor="middle" className="welcome-svg-label-md welcome-svg-label-accent">ID</text>
                         
                         <circle cx="240" cy="50" r="20" fill="#1e293b" stroke="#3b82f6" strokeWidth="2"/>
-                        <text x="240" y="55" textAnchor="middle" className="text-[16px] fill-blue-400">📹</text>
+                        <text x="240" y="55" textAnchor="middle" className="welcome-svg-label-lg welcome-svg-label-blue">📹</text>
                       </svg>
                       
                       {/* Security Log */}
-                      <div className="absolute bottom-3 left-3 right-3">
+                      <div className="welcome-showcase-status welcome-showcase-status--full">
                         <div className="github-security-log">
-                          <span className="text-xs text-gray-500">Latest:</span>
-                          <span className="text-xs text-green-400 github-log-text">Entry approved - A-101</span>
+                          <span className="welcome-showcase-status-label welcome-showcase-status-label--muted">Latest:</span>
+                          <span className="welcome-showcase-status-value github-log-text">Entry approved - A-101</span>
                         </div>
                       </div>
                     </div>
                     
-                    <p className="text-sm text-gray-400 mt-4">
+                    <p className="welcome-showcase-caption">
                       Secure access control and visitor management
                     </p>
                   </div>
@@ -933,42 +956,42 @@ export default function Welcome() {
         )}
 
         {/* Stats Section */}
-        <section id="stats" className="py-20 sm:py-32 px-4">
-          <div className="max-w-5xl mx-auto">
+        <section id="stats" className="welcome-section welcome-section--stats">
+          <div className="welcome-section-inner">
             <div className={`stats-card-new ${isDark ? 'stats-card-dark' : 'stats-card-light'}`}>
               {/* Animated border */}
               <div className="stats-card-border-new"></div>
               
               {/* Live indicator */}
-              <div className="absolute top-4 sm:top-6 right-4 sm:right-6 flex items-center gap-2 z-10">
-                <span className="relative flex h-3 w-3">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+              <div className="welcome-stats-live">
+                <span className="welcome-stats-live-pulse">
+                  <span className="welcome-stats-live-ring animate-ping"></span>
+                  <span className="welcome-stats-live-dot"></span>
                 </span>
-                <span className="text-xs text-green-500 font-bold tracking-wider">LIVE DATA</span>
+                <span className="welcome-stats-live-text">LIVE DATA</span>
               </div>
 
-              <div className="text-center mb-8 sm:mb-12">
-                <h3 className={`text-xl sm:text-2xl md:text-3xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>Platform Statistics</h3>
-                <p className={isDark ? 'text-gray-400' : 'text-gray-600'}>Real-time numbers that speak for themselves</p>
+              <div className="welcome-stats-header">
+                <h3 className={`welcome-stats-title ${isDark ? 'is-dark' : 'is-light'}`}>Platform Statistics</h3>
+                <p className={`welcome-stats-subtitle ${isDark ? 'is-dark' : 'is-light'}`}>Real-time numbers that speak for themselves</p>
               </div>
               
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8">
+              <div className="welcome-stats-grid">
                 {stats.map((stat, index) => (
-                  <div key={index} className="stat-item-new group">
+                  <div key={index} className="stat-item-new welcome-stat-item">
                     <div 
                       className="stat-icon-wrapper-new"
                       style={{ background: isDark ? 'color-mix(in srgb, var(--accent-primary) 10%, transparent)' : 'color-mix(in srgb, var(--accent-primary) 15%, white)' }}
                     >
                       <stat.icon 
-                        className="w-5 h-5 sm:w-6 sm:h-6 transition-colors" 
+                        className="welcome-stat-icon" 
                         style={{ color: 'var(--accent-primary)' }}
                       />
                     </div>
-                    <div className="text-3xl sm:text-4xl md:text-5xl font-black stat-number-new">
+                    <div className="welcome-stat-number stat-number-new">
                       <AnimatedCounter value={stat.value} duration={2000 + index * 300} />
                     </div>
-                    <div className={`font-medium text-xs sm:text-sm uppercase tracking-wider ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{stat.label}</div>
+                    <div className={`welcome-stat-label ${isDark ? 'is-dark' : 'is-light'}`}>{stat.label}</div>
                   </div>
                 ))}
               </div>
@@ -977,47 +1000,39 @@ export default function Welcome() {
         </section>
 
         {/* CTA Section */}
-        <section className="py-20 sm:py-32 px-4">
-          <div className="max-w-5xl mx-auto">
+        <section className="welcome-section welcome-section--cta">
+          <div className="welcome-section-inner">
             <div className={`cta-card-new ${isDark ? '' : ''}`} style={isDark ? {} : { background: `linear-gradient(135deg, var(--accent-gradient-from), var(--accent-gradient-via), var(--accent-gradient-to))` }}>
               <div className={`cta-card-bg-new ${isDark ? '' : ''}`} style={isDark ? {} : { background: `linear-gradient(135deg, color-mix(in srgb, var(--accent-primary) 95%, white), color-mix(in srgb, var(--accent-secondary) 95%, white), color-mix(in srgb, var(--accent-gradient-to) 95%, white))`, backgroundSize: '200% 200%', animation: 'gradientShift 8s ease infinite' }}></div>
-              <div className="relative z-10 text-center px-4">
-                <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6 sm:mb-8 ${isDark ? 'bg-white/10' : 'bg-white/20 backdrop-blur-sm'}`}>
-                  <CheckCircle className="w-4 h-4 text-green-400" />
-                  <span className="text-sm text-white font-medium">No credit card required</span>
+              <div className="welcome-cta-content">
+                <div className={`welcome-cta-badge ${isDark ? 'is-dark' : 'is-light'}`}>
+                  <CheckCircle className="welcome-cta-badge-icon" />
+                  <span className="welcome-cta-badge-text">No credit card required</span>
                 </div>
-                <h2 className="text-3xl sm:text-4xl md:text-6xl font-black mb-4 sm:mb-6 text-white drop-shadow-lg">
+                <h2 className="welcome-cta-title">
                   Ready to Transform<br />
                   <span className="hero-gradient-text" style={isDark ? {} : { background: 'linear-gradient(135deg, #fff, #fef08a, #fff)', WebkitBackgroundClip: 'text', backgroundClip: 'text' }}>Your Society?</span>
                 </h2>
-                <p className="text-lg sm:text-xl text-white/90 mb-8 sm:mb-10 max-w-2xl mx-auto">
+                <p className="welcome-cta-text">
                   Join thousands of societies already using our platform to streamline their operations
                 </p>
-                <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                <div className="welcome-cta-actions">
                   <button
                     onClick={() => navigate('/login')}
-                    className={`w-full sm:w-auto group px-8 py-4 rounded-xl font-bold text-lg transition-all duration-300 ${
-                      isDark 
-                        ? 'bg-white text-slate-900 hover:bg-gray-100 shadow-xl shadow-white/20 hover:shadow-white/30 hover:scale-105' 
-                        : 'bg-white shadow-xl shadow-black/20 hover:shadow-black/30 hover:scale-105'
-                    }`}
+                    className={`welcome-cta-primary ${isDark ? 'is-dark' : 'is-light'}`}
                     style={!isDark ? { color: 'var(--accent-primary)' } : {}}
                   >
-                    <span className="flex items-center justify-center gap-3">
+                    <span className="welcome-cta-primary-content">
                       Start Now - It's Free
-                      <ArrowRight className="w-5 h-5 sm:w-6 sm:h-6 group-hover:translate-x-2 transition-transform" />
+                      <ArrowRight className="welcome-cta-primary-icon" />
                     </span>
                   </button>
                   <button
                     onClick={() => navigate('/contact')}
-                    className={`w-full sm:w-auto group px-8 py-4 rounded-xl font-semibold text-lg transition-all duration-300 ${
-                      isDark 
-                        ? 'bg-transparent border-2 border-white/30 text-white hover:bg-white/10 hover:border-white/50' 
-                        : 'bg-white/20 backdrop-blur-sm border-2 border-white/40 text-white hover:bg-white/30 hover:border-white/60'
-                    }`}
+                    className={`welcome-cta-secondary ${isDark ? 'is-dark' : 'is-light'}`}
                   >
-                    <span className="flex items-center justify-center gap-3">
-                      <Phone className="w-5 h-5" />
+                    <span className="welcome-cta-secondary-content">
+                      <Phone className="welcome-cta-secondary-icon" />
                       Contact Sales
                     </span>
                   </button>
@@ -1028,27 +1043,31 @@ export default function Welcome() {
         </section>
 
         {/* Footer */}
-        <footer id="contact" className={`py-12 sm:py-16 px-4 border-t transition-colors ${isDark ? 'border-white/10 bg-gradient-to-t from-slate-950 to-transparent' : ''}`} style={!isDark ? { borderColor: 'color-mix(in srgb, var(--accent-light) 50%, transparent)', background: 'linear-gradient(to top, color-mix(in srgb, var(--accent-light) 25%, transparent), transparent)' } : {}}>
-          <div className="max-w-7xl mx-auto">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-8 sm:gap-12 mb-12 sm:mb-16">
-              <div className="col-span-2 md:col-span-1">
-                <div className="flex items-center gap-3 mb-4 sm:mb-6 group cursor-pointer" onClick={() => scrollToSection('hero')}>
+        <footer
+          id="contact"
+          className={`welcome-footer ${isDark ? 'is-dark' : 'is-light'}`}
+          style={!isDark ? { borderColor: 'color-mix(in srgb, var(--accent-light) 50%, transparent)', background: 'linear-gradient(to top, color-mix(in srgb, var(--accent-light) 25%, transparent), transparent)' } : {}}
+        >
+          <div className="welcome-section-inner welcome-footer-inner">
+            <div className="welcome-footer-grid">
+              <div className="welcome-footer-brand">
+                <div className="welcome-footer-logo" onClick={() => scrollToSection('hero')}>
                   <div 
-                    className="p-2.5 rounded-xl group-hover:scale-110 transition-transform"
+                    className="welcome-footer-badge"
                     style={{ background: `linear-gradient(to bottom right, var(--accent-primary), var(--accent-secondary))` }}
                   >
-                    <Building2 className="w-6 h-6 text-white" />
+                    <Building2 className="welcome-footer-badge-icon" />
                   </div>
-                  <span className={`text-xl font-black ${isDark ? 'text-white' : 'text-gray-900'}`}>SocietyHub</span>
+                  <span className={`welcome-footer-brand-name ${isDark ? 'is-dark' : 'is-light'}`}>SocietyHub</span>
                 </div>
-                <p className={`text-sm mb-6 leading-relaxed ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                <p className={`welcome-footer-text ${isDark ? 'is-dark' : 'is-light'}`}>
                   The complete digital solution for modern housing society management. Simplify operations, enhance communication.
                 </p>
-                <div className="flex items-center gap-3">
+                <div className="welcome-footer-socials">
                   {[
-                    { name: 'twitter', icon: <Twitter className="w-4 h-4" /> },
-                    { name: 'github', icon: <Github className="w-4 h-4" /> },
-                    { name: 'linkedin', icon: <Linkedin className="w-4 h-4" /> },
+                    { name: 'twitter', icon: <Twitter className="welcome-footer-social-icon" /> },
+                    { name: 'github', icon: <Github className="welcome-footer-social-icon" /> },
+                    { name: 'linkedin', icon: <Linkedin className="welcome-footer-social-icon" /> },
                   ].map((social) => (
                     <a 
                       key={social.name}
@@ -1082,13 +1101,13 @@ export default function Welcome() {
                 ]},
               ].map((section, i) => (
                 <div key={i}>
-                  <h4 className={`font-bold mb-4 sm:mb-6 ${isDark ? 'text-white' : 'text-gray-900'}`}>{section.title}</h4>
-                  <ul className="space-y-3 sm:space-y-4">
+                  <h4 className={`welcome-footer-title ${isDark ? 'is-dark' : 'is-light'}`}>{section.title}</h4>
+                  <ul className="welcome-footer-links">
                     {section.links.map((link, j) => (
                       <li key={j}>
                         <button 
                           onClick={link.action} 
-                          className={`footer-link-new text-left focus:outline-none focus:ring-0 ${isDark ? 'footer-link-dark' : 'footer-link-light'}`}
+                          className={`footer-link-new welcome-footer-link ${isDark ? 'footer-link-dark' : 'footer-link-light'}`}
                         >
                           {link.label}
                         </button>
@@ -1100,14 +1119,14 @@ export default function Welcome() {
             </div>
 
             {/* Copyright */}
-            <div className={`pt-6 sm:pt-8 border-t flex flex-col sm:flex-row items-center justify-between gap-4 ${isDark ? 'border-white/10' : 'border-gray-200'}`}>
-              <p className={`text-sm text-center sm:text-left ${isDark ? 'text-gray-500' : 'text-gray-600'}`}>
+            <div className={`welcome-footer-bottom ${isDark ? 'is-dark' : 'is-light'}`}>
+              <p className={`welcome-footer-copy ${isDark ? 'is-dark' : 'is-light'}`}>
                 © 2026 SocietyHub. All rights reserved. Made with ❤️ for housing societies.
               </p>
-              <div className="flex items-center gap-4 sm:gap-6 text-sm">
-                <button onClick={() => navigate('/privacy')} className={`transition-colors focus:outline-none focus:ring-0 ${isDark ? 'text-gray-500 hover:text-white' : 'text-gray-500 hover:text-gray-900'}`}>Privacy</button>
-                <button onClick={() => navigate('/terms')} className={`transition-colors focus:outline-none focus:ring-0 ${isDark ? 'text-gray-500 hover:text-white' : 'text-gray-500 hover:text-gray-900'}`}>Terms</button>
-                <button onClick={() => navigate('/contact')} className={`transition-colors focus:outline-none focus:ring-0 ${isDark ? 'text-gray-500 hover:text-white' : 'text-gray-500 hover:text-gray-900'}`}>Contact</button>
+              <div className="welcome-footer-actions">
+                <button onClick={() => navigate('/privacy')} className={`welcome-footer-action ${isDark ? 'is-dark' : 'is-light'}`}>Privacy</button>
+                <button onClick={() => navigate('/terms')} className={`welcome-footer-action ${isDark ? 'is-dark' : 'is-light'}`}>Terms</button>
+                <button onClick={() => navigate('/contact')} className={`welcome-footer-action ${isDark ? 'is-dark' : 'is-light'}`}>Contact</button>
               </div>
             </div>
           </div>

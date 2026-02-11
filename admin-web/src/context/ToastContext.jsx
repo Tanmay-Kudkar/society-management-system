@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useCallback, useEffect } from 'react'
 import { CheckCircle, XCircle, AlertTriangle, Info, X } from 'lucide-react'
+import clsx from 'clsx'
 import '../styles/animations.css'
 
 const ToastContext = createContext()
@@ -63,7 +64,7 @@ export function ToastProvider({ children }) {
 
 function ToastContainer({ toasts, removeToast }) {
   return (
-    <div className="fixed top-4 right-4 z-[9999] flex flex-col gap-3 max-w-sm w-full pointer-events-none">
+    <div className="toast-stack">
       {toasts.map((toast) => (
         <Toast key={toast.id} toast={toast} onClose={() => removeToast(toast.id)} />
       ))}
@@ -77,27 +78,15 @@ function Toast({ toast, onClose }) {
   const configs = {
     success: {
       icon: CheckCircle,
-      bg: 'bg-gradient-to-r from-green-500 to-emerald-500',
-      iconColor: 'text-white',
-      border: 'border-green-400/30',
     },
     error: {
       icon: XCircle,
-      bg: 'bg-gradient-to-r from-red-500 to-rose-500',
-      iconColor: 'text-white',
-      border: 'border-red-400/30',
     },
     warning: {
       icon: AlertTriangle,
-      bg: 'bg-gradient-to-r from-yellow-500 to-orange-500',
-      iconColor: 'text-white',
-      border: 'border-yellow-400/30',
     },
     info: {
       icon: Info,
-      bg: 'bg-gradient-to-r from-blue-500 to-cyan-500',
-      iconColor: 'text-white',
-      border: 'border-blue-400/30',
     },
   }
 
@@ -106,54 +95,40 @@ function Toast({ toast, onClose }) {
 
   return (
     <div
-      className={`
-        pointer-events-auto
-        ${config.bg}
-        rounded-xl p-4 shadow-2xl
-        border ${config.border}
-        flex items-start gap-3
-        backdrop-blur-sm
-        transform transition-all duration-300 ease-out
-        ${isExiting 
-          ? 'animate-toast-out' 
-          : 'animate-toast-in'
-        }
-        ${type === 'error' && !isExiting ? 'animate-error-shake' : ''}
-      `}
+      className={clsx(
+        'toast',
+        `toast--${type}`,
+        isExiting ? 'toast--exit' : 'toast--enter',
+        type === 'error' && !isExiting && 'toast--shake'
+      )}
     >
-      <div className={`flex-shrink-0 ${config.iconColor} ${type === 'success' && !isExiting ? 'animate-success-pulse' : ''} ${type === 'error' && !isExiting ? 'animate-error-pulse' : ''}`}>
-        <Icon className="w-6 h-6" />
+      <div
+        className={clsx(
+          'toast__icon',
+          type === 'success' && !isExiting && 'toast__icon--success',
+          type === 'error' && !isExiting && 'toast__icon--error'
+        )}
+      >
+        <Icon className="toast__icon-svg" />
       </div>
       
-      <div className="flex-1 min-w-0">
-        <p className="text-white font-medium text-sm leading-relaxed">
+      <div className="toast__content">
+        <p className="toast__message">
           {message}
         </p>
       </div>
 
       <button
         onClick={onClose}
-        className="flex-shrink-0 text-white/80 hover:text-white transition-colors p-1 hover:bg-white/10 rounded-lg"
+        className="toast__close"
       >
-        <X className="w-4 h-4" />
+        <X className="toast__close-icon" />
       </button>
 
       {/* Progress bar */}
-      <div className="absolute bottom-0 left-0 right-0 h-1 bg-black/20 rounded-b-xl overflow-hidden">
-        <div 
-          className="h-full bg-white/50 animate-shrink"
-          style={{
-            animation: 'shrink 4s linear forwards',
-          }}
-        />
+      <div className="toast__progress">
+        <div className="toast__progress-bar" />
       </div>
-
-      <style>{`
-        @keyframes shrink {
-          from { width: 100%; }
-          to { width: 0%; }
-        }
-      `}</style>
     </div>
   )
 }

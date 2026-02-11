@@ -3,7 +3,6 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '../context/AuthContext'
 import { contractApi, vendorApi } from '../../../api'
 import { Plus, Edit, Trash2, Search, X, FileText, AlertTriangle, CheckCircle } from 'lucide-react'
-import clsx from 'clsx'
 import { FormInput, SmartSelect, NumberInput, FormTextarea } from '../components/FormComponents'
 
 const contractTypes = [
@@ -96,15 +95,15 @@ export default function Contracts() {
   return (
     <div>
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+      <div className="contracts-header">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Contracts</h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">Manage AMC and service contracts</p>
+          <h1 className="contracts-title">Contracts</h1>
+          <p className="contracts-subtitle">Manage AMC and service contracts</p>
         </div>
         {canManageContracts() && (
           <button
             onClick={() => { setEditingContract(null); setShowModal(true) }}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+            className="contracts-action-button"
           >
             <Plus size={20} />
             Add Contract
@@ -113,22 +112,22 @@ export default function Contracts() {
       </div>
 
       {/* Filters */}
-      <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-4 mb-6">
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+      <div className="contracts-filters">
+        <div className="contracts-filters-row">
+          <div className="contracts-search">
+            <Search className="contracts-search-icon" />
             <input
               type="text"
               placeholder="Search contracts..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white placeholder:text-gray-400 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+              className="contracts-input"
             />
           </div>
           <select
             value={filterType}
             onChange={(e) => setFilterType(e.target.value)}
-            className="px-4 py-2 border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+            className="contracts-select"
           >
             <option value="">All Types</option>
             {contractTypes.map(type => (
@@ -139,71 +138,71 @@ export default function Contracts() {
       </div>
 
       {/* Table */}
-      <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 overflow-hidden">
+      <div className="contracts-table-card">
         {isLoading ? (
-          <div className="p-8 text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+          <div className="contracts-loading">
+            <div className="contracts-spinner"></div>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50 dark:bg-slate-700 border-b border-gray-100 dark:border-slate-700">
+          <div className="contracts-table-scroll">
+            <table className="contracts-table">
+              <thead className="contracts-thead">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Contract</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Type</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Vendor</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Period</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>
+                  <th className="contracts-th">Contract</th>
+                  <th className="contracts-th">Type</th>
+                  <th className="contracts-th">Vendor</th>
+                  <th className="contracts-th">Period</th>
+                  <th className="contracts-th">Status</th>
+                  <th className="contracts-th contracts-th--right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100 dark:divide-slate-700">
+              <tbody className="contracts-tbody">
                 {filteredContracts.map((contract) => {
                   const daysLeft = getDaysUntilExpiry(contract.endDate)
                   const isExpiring = daysLeft !== null && daysLeft <= 30 && daysLeft > 0
                   const isExpired = daysLeft !== null && daysLeft <= 0
                   
                   return (
-                    <tr key={contract.id} className="hover:bg-gray-50 dark:hover:bg-slate-700">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-lg bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center">
-                            <FileText className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                    <tr key={contract.id} className="contracts-row">
+                      <td className="contracts-cell">
+                        <div className="contracts-contract">
+                          <div className="contracts-icon">
+                            <FileText className="contracts-icon-symbol" />
                           </div>
                           <div>
-                            <span className="font-medium text-gray-900 dark:text-white">{contract.title}</span>
-                            {isPlatformLevel && <p className="text-xs text-gray-500 dark:text-gray-400">{contract.societyName}</p>}
+                            <span className="contracts-contract-title">{contract.title}</span>
+                            {isPlatformLevel && <p className="contracts-contract-society">{contract.societyName}</p>}
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="px-2 py-1 bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300 text-xs rounded-full">
+                      <td className="contracts-cell">
+                        <span className="contracts-type-pill">
                           {contract.contractType?.replace('_', ' ')}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-gray-600 dark:text-gray-300">{contract.vendorName || '-'}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
+                      <td className="contracts-cell contracts-cell-muted">{contract.vendorName || '-'}</td>
+                      <td className="contracts-cell contracts-cell-muted">
                         {contract.startDate && new Date(contract.startDate).toLocaleDateString()} - {contract.endDate && new Date(contract.endDate).toLocaleDateString()}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="contracts-cell">
                         {isExpired ? (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300">
+                          <span className="contracts-status contracts-status--expired">
                             <AlertTriangle size={12} /> Expired
                           </span>
                         ) : isExpiring ? (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300">
+                          <span className="contracts-status contracts-status--warning">
                             <AlertTriangle size={12} /> {daysLeft} days left
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300">
+                          <span className="contracts-status contracts-status--active">
                             <CheckCircle size={12} /> Active
                           </span>
                         )}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right">
+                      <td className="contracts-cell contracts-cell--right">
                         <button
                           onClick={() => { setEditingContract(contract); setShowModal(true) }}
-                          className="p-1.5 text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition"
+                          className="contracts-icon-button contracts-icon-button--edit"
                         >
                           <Edit size={18} />
                         </button>
@@ -213,7 +212,7 @@ export default function Contracts() {
                               deleteMutation.mutate(contract.id)
                             }
                           }}
-                          className="p-1.5 text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition ml-2"
+                          className="contracts-icon-button contracts-icon-button--delete"
                         >
                           <Trash2 size={18} />
                         </button>
@@ -229,22 +228,22 @@ export default function Contracts() {
 
       {/* Modal */}
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-slate-700 sticky top-0 bg-white dark:bg-slate-800">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{editingContract ? 'Edit Contract' : 'Add Contract'}</h3>
-              <button onClick={() => setShowModal(false)} className="p-1 hover:bg-gray-100 dark:hover:bg-slate-700 rounded text-gray-500 dark:text-gray-400">
+        <div className="contracts-modal">
+          <div className="contracts-modal-card">
+            <div className="contracts-modal-header">
+              <h3 className="contracts-modal-title">{editingContract ? 'Edit Contract' : 'Add Contract'}</h3>
+              <button onClick={() => setShowModal(false)} className="contracts-modal-close">
                 <X size={20} />
               </button>
             </div>
-            <form onSubmit={handleSubmit} className="p-4 space-y-4">
+            <form onSubmit={handleSubmit} className="contracts-form">
               <FormInput
                 label="Title"
                 name="title"
                 defaultValue={editingContract?.title}
                 required
               />
-              <div className="grid grid-cols-2 gap-4">
+              <div className="contracts-form-grid">
                 <SmartSelect
                   label="Type"
                   name="contractType"
@@ -262,7 +261,7 @@ export default function Contracts() {
                   emptyMessage="No vendors available"
                 />
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="contracts-form-grid">
                 <FormInput
                   label="Start Date"
                   name="startDate"
@@ -289,17 +288,17 @@ export default function Contracts() {
                 defaultValue={editingContract?.description}
                 rows={3}
               />
-              <div className="flex gap-3 pt-4">
+              <div className="contracts-form-actions">
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="flex-1 px-4 py-2 border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition"
+                  className="contracts-btn contracts-btn--ghost"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                  className="contracts-btn contracts-btn--primary"
                 >
                   {editingContract ? 'Update' : 'Create'}
                 </button>
