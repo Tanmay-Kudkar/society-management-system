@@ -358,6 +358,94 @@
   font-weight: 700;
 }
 
+/* ============================================
+   CORPORATE OVERRIDES
+   ============================================ */
+
+.users-page {
+  padding: 24px;
+}
+
+.users-action-btn {
+  border-radius: 8px;
+  padding: 9px 14px;
+  transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.users-action-btn--primary:hover,
+.users-action-btn--success:hover,
+.users-action-btn--purple:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+.users-permissions,
+.users-filters,
+.users-empty,
+.users-table,
+.user-card {
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+}
+
+.users-permissions {
+  padding: 14px;
+}
+
+.users-search__input,
+.users-filter-select {
+  border-radius: 8px;
+}
+
+.users-search__input:focus {
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.12);
+}
+
+.user-grid {
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 14px;
+}
+
+.user-card {
+  padding: 14px;
+  transition: box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.user-card:hover {
+  transform: none;
+  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.1);
+}
+
+.user-card__avatar {
+  background: var(--accent-primary);
+}
+
+.role-pill {
+  letter-spacing: 0.03em;
+}
+
+.user-card__society {
+  border-radius: 8px;
+  margin-bottom: 8px;
+}
+
+.user-card__actions {
+  padding-top: 8px;
+}
+
+.user-card__action {
+  border-radius: 8px;
+}
+
+.user-card__action--view {
+  background: var(--accent-50);
+  color: var(--accent-700);
+}
+
+.user-card__action--view:hover {
+  background: var(--accent-100);
+}
+
 .user-card__email {
   margin: 2px 0 0;
   font-size: 12px;

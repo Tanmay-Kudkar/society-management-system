@@ -420,16 +420,19 @@
   align-items: center;
   justify-content: center;
   padding: 1rem;
-  background: rgba(15, 23, 42, 0.55);
+  background: rgba(0, 0, 0, 0.4);
 }
 
 .emergency-modal-card,
 .emergency-confirm-card {
   width: 100%;
   max-width: 32rem;
-  border-radius: 1.25rem;
+  max-height: calc(100vh - 3rem);
+  display: flex;
+  flex-direction: column;
+  border-radius: 0.75rem;
   background: #fff;
-  box-shadow: 0 30px 60px rgba(2, 6, 23, 0.4);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
 }
 
 .dark .emergency-modal-card,
@@ -477,6 +480,9 @@
   display: grid;
   gap: 1rem;
   padding: 1rem;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
 }
 
 .emergency-form-row {
@@ -515,7 +521,7 @@
 .emergency-submit-button {
   flex: 1;
   padding: 0.5rem 1rem;
-  border-radius: 0.75rem;
+  border-radius: 0.5rem;
   font-weight: 600;
 }
 

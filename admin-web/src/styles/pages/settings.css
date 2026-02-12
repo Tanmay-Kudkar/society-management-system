@@ -524,3 +524,94 @@
 .settings-accent-name {
   font-weight: 500;
 }
+
+/* ============================================
+   CORPORATE OVERRIDES
+   ============================================ */
+
+.settings-page {
+  padding: 24px;
+  min-height: calc(100vh - 68px);
+  background: var(--bg-secondary);
+}
+
+.settings-card {
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+}
+
+.settings-tabs-nav {
+  gap: 0;
+}
+
+.settings-tab {
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  font-family: inherit;
+  padding: 12px 20px;
+}
+
+.settings-tab.is-active {
+  background: color-mix(in srgb, var(--accent-primary) 8%, transparent);
+}
+
+.settings-content {
+  padding: 20px;
+}
+
+.settings-section {
+  max-width: 100%;
+  gap: 1.25rem;
+}
+
+.settings-form {
+  width: 100%;
+  max-width: 560px;
+}
+
+.settings-input,
+.settings-primary-button,
+.settings-danger-button,
+.settings-theme-card {
+  font-family: inherit;
+}
+
+.settings-input {
+  border-radius: 8px;
+}
+
+.settings-input:focus {
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.12);
+}
+
+.settings-primary-button,
+.settings-danger-button {
+  border-radius: 8px;
+}
+
+.settings-primary-button:hover,
+.settings-danger-button:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+.settings-toggle-card,
+.settings-session-card {
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+}
+
+.dark .settings-toggle-card,
+.dark .settings-session-card {
+  border-color: #334155;
+}
+
+.settings-theme-card {
+  border-width: 1px;
+  border-radius: 10px;
+}
+
+.settings-theme-card:hover {
+  transform: none;
+}

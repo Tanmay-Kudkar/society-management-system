@@ -429,20 +429,23 @@
   align-items: center;
   justify-content: center;
   padding: 1rem;
-  background: rgba(15, 23, 42, 0.6);
+  background: rgba(0, 0, 0, 0.4);
 }
 
 .maintenance-modal-card {
   width: 100%;
   max-width: 32rem;
-  border-radius: 1rem;
+  max-height: calc(100vh - 3rem);
+  display: flex;
+  flex-direction: column;
+  border-radius: 0.75rem;
   background: #fff;
   border: 1px solid #e5e7eb;
-  box-shadow: 0 24px 48px rgba(15, 23, 42, 0.2);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
 }
 
 .dark .maintenance-modal-card {
-  background: #0f172a;
+  background: #1e293b;
   border-color: #334155;
 }
 
@@ -452,6 +455,7 @@
   justify-content: space-between;
   padding: 1rem 1.25rem;
   border-bottom: 1px solid #e5e7eb;
+  flex-shrink: 0;
 }
 
 .dark .maintenance-modal-header {
@@ -469,10 +473,10 @@
 }
 
 .maintenance-modal-close {
-  border-radius: 0.65rem;
+  border-radius: 0.375rem;
   padding: 0.25rem;
   color: #64748b;
-  transition: background 0.2s ease, color 0.2s ease;
+  transition: background 0.15s ease, color 0.15s ease;
 }
 
 .maintenance-modal-close:hover {
@@ -489,6 +493,9 @@
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
 }
 
 .maintenance-form-grid {

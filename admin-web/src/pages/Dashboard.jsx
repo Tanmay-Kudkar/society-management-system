@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "../context/AuthContext";
 import {
+  Users,
+  Layers,
   Building2,
   Home,
   CreditCard,
@@ -29,6 +31,8 @@ import {
 import axios from "axios";
 import {
   societyApi,
+  organizationApi,
+  userApi,
   flatApi,
   contractApi,
   ticketApi,
@@ -49,64 +53,48 @@ const formatCurrency = (amount) => {
   }).format(amount || 0);
 };
 
-const StatCard = ({ title, value, icon: Icon, variant = "neutral", subtext, delay = 0 }) => {
-  const isGradient = variant !== "neutral";
+const StatCard = ({ title, value, icon, variant = "neutral", subtext, delay = 0 }) => {
+  const CardIcon = icon;
 
   return (
     <div
-      className={`stat-card stat-card--${variant} ${isGradient ? "stat-card--gradient" : "stat-card--neutral"} wave-box animate-slide-up`}
+      className={`stat-card stat-card--${variant} animate-slide-up`}
       style={{ animationDelay: `${delay}ms` }}
     >
-      {isGradient && (
-        <div className="stat-card__waves">
-          <div className="stat-card__wave stat-card__wave--one"></div>
-          <div className="stat-card__wave stat-card__wave--two"></div>
-          <div className="stat-card__wave stat-card__wave--three"></div>
-        </div>
-      )}
-
-      {!isGradient && <div className="stat-card__glow"></div>}
-
       <div className="stat-card__content">
         <div>
-          <p className={`stat-card__label ${isGradient ? "stat-card__label--light" : ""}`}>
-            {title}
-          </p>
-          <p className={`stat-card__value ${isGradient ? "stat-card__value--light" : ""}`}>
-            {value}
-          </p>
+          <p className="stat-card__label">{title}</p>
+          <p className="stat-card__value">{value}</p>
           {subtext && (
-            <p className={`stat-card__subtext ${isGradient ? "stat-card__subtext--light" : ""}`}>
+            <p className="stat-card__subtext">
               <Activity className="stat-card__subtext-icon" />
               {subtext}
             </p>
           )}
         </div>
-        <div className={`stat-card__icon ${isGradient ? "stat-card__icon--glass" : `stat-card__icon--${variant}`}`}>
-          <Icon className="stat-card__icon-symbol" />
+        <div className={`stat-card__icon stat-card__icon--${variant}`}>
+          <CardIcon className="stat-card__icon-symbol" />
         </div>
       </div>
-
-      <div className="stat-card__shine"></div>
-      {isGradient && <div className="stat-card__particle"></div>}
     </div>
   );
 };
 
-const AlertCard = ({ title, items, icon: Icon, tone = "yellow", delay = 0 }) => (
+const AlertCard = ({ title, items, icon, tone = "yellow", delay = 0 }) => {
+  const AlertIcon = icon;
+
+  return (
   <div className="alert-card animate-slide-up" style={{ animationDelay: `${delay}ms` }}>
     <div className={`alert-card__accent alert-card__accent--${tone}`}></div>
-    <div className={`alert-card__glow alert-card__glow--${tone}`}></div>
-    <div className={`alert-card__corner alert-card__corner--${tone}`}></div>
 
     <div className="alert-card__header">
       <div className={`alert-card__icon alert-card__icon--${tone}`}>
-        <Icon className="alert-card__icon-symbol" />
+        <AlertIcon className="alert-card__icon-symbol" />
       </div>
       <h3 className="alert-card__title">{title}</h3>
       {items.length > 0 && (
         <span className={`alert-card__count alert-card__count--${tone}`}>
-          {items.length} new
+          {items.length}
         </span>
       )}
     </div>
@@ -137,12 +125,15 @@ const AlertCard = ({ title, items, icon: Icon, tone = "yellow", delay = 0 }) => 
       </ul>
     )}
   </div>
-);
+  );
+};
 
 export default function Dashboard() {
-  const { user, isCommitteeLevel } = useAuth();
+  const { user, hasRole, isCommitteeLevel, canViewFinancials, canManageTenants, canManageContracts } = useAuth();
   const [currentTime, setCurrentTime] = useState(new Date());
-  const isPlatformLevel = user?.role === "PLATFORM_OWNER" || user?.role === "ORGANIZATION_OWNER";
+  const isPlatformOwner = hasRole("PLATFORM_OWNER");
+  const isOrgOwner = hasRole("ORGANIZATION_OWNER");
+  const isPlatformLevel = isPlatformOwner || isOrgOwner;
   const isMemberOrTenant = user?.role === "MEMBER" || user?.role === "TENANT";
 
   useEffect(() => {
@@ -155,6 +146,26 @@ export default function Dashboard() {
   const { data: societies = [] } = useQuery({
     queryKey: ["societies"],
     queryFn: () => societyApi.getAll().then((res) => res.data),
+    enabled: isPlatformLevel,
+  });
+
+  const { data: organizations = [] } = useQuery({
+    queryKey: ["organizations"],
+    queryFn: () =>
+      organizationApi
+        .getAll()
+        .then((res) => res.data)
+        .catch(() => []),
+    enabled: isPlatformLevel,
+  });
+
+  const { data: platformUsers = [] } = useQuery({
+    queryKey: ["dashboard-platform-users"],
+    queryFn: () =>
+      userApi
+        .getAll()
+        .then((res) => res.data)
+        .catch(() => []),
     enabled: isPlatformLevel,
   });
 
@@ -266,6 +277,169 @@ export default function Dashboard() {
     (c) => c.status === "PENDING" || c.status === "IN_PROGRESS",
   );
 
+  const societyAdminsCount = platformUsers.filter((u) => u.role === "SOCIETY_ADMIN").length;
+  const canSeeFinancialCards = canViewFinancials();
+  const canSeeTenantCards = canManageTenants();
+  const canSeeContractCards = canManageContracts();
+
+  const adminStatCards = [];
+
+  if (isPlatformOwner) {
+    adminStatCards.push(
+      {
+        key: "total-organizations",
+        title: "Total Organizations",
+        value: organizations.length,
+        icon: Layers,
+        variant: "teal",
+      },
+      {
+        key: "total-societies",
+        title: "Total Societies",
+        value: societies.length,
+        icon: Building2,
+        variant: "blue",
+      },
+      {
+        key: "society-admins",
+        title: "Society Admins",
+        value: societyAdminsCount,
+        icon: UserCheck,
+        variant: "green",
+      },
+      {
+        key: "total-users",
+        title: "Manage Users",
+        value: platformUsers.length,
+        icon: Users,
+        variant: "indigo",
+      },
+    );
+  } else if (isOrgOwner) {
+    adminStatCards.push(
+      {
+        key: "org-societies",
+        title: "Societies",
+        value: societies.length,
+        icon: Building2,
+        variant: "blue",
+      },
+      {
+        key: "org-society-admins",
+        title: "Society Admins",
+        value: societyAdminsCount,
+        icon: UserCheck,
+        variant: "green",
+      },
+      {
+        key: "org-users",
+        title: "Manage Users",
+        value: platformUsers.length,
+        icon: Users,
+        variant: "indigo",
+      },
+    );
+  } else {
+    adminStatCards.push(
+      {
+        key: "total-flats",
+        title: "Total Flats",
+        value: flats.filter((f) => !f.unitType || f.unitType === "FLAT").length,
+        icon: Home,
+        variant: "blue",
+        subtext: `${flats.filter((f) => (!f.unitType || f.unitType === "FLAT") && f.ownerName).length} occupied`,
+      },
+      {
+        key: "total-shops",
+        title: "Total Shops",
+        value: flats.filter((f) => f.unitType === "SHOP").length,
+        icon: Store,
+        variant: "green",
+        subtext: `${flats.filter((f) => f.unitType === "SHOP" && f.ownerName).length} occupied`,
+      },
+      {
+        key: "total-offices",
+        title: "Total Offices",
+        value: flats.filter((f) => f.unitType === "OFFICE").length,
+        icon: Briefcase,
+        variant: "teal",
+        subtext: `${flats.filter((f) => f.unitType === "OFFICE" && f.ownerName).length} occupied`,
+      },
+    );
+
+    if (canSeeTenantCards) {
+      adminStatCards.push({
+        key: "active-tenants",
+        title: "Active Tenants",
+        value: tenants.filter((t) => t.isActive).length,
+        icon: UserCheck,
+        variant: "cyan",
+        subtext: `${expiringTenants.length} expiring soon`,
+      });
+    }
+
+    adminStatCards.push(
+      {
+        key: "vehicles",
+        title: "Vehicles",
+        value: vehicles.length,
+        icon: Car,
+        variant: "indigo",
+      },
+      {
+        key: "open-tickets",
+        title: "Open Tickets",
+        value: openTickets.length,
+        icon: Ticket,
+        variant: "sky",
+      },
+      {
+        key: "pending-complaints",
+        title: "Pending Complaints",
+        value: pendingComplaints.length,
+        icon: AlertTriangle,
+        variant: "yellow",
+      },
+    );
+
+    if (canSeeFinancialCards) {
+      adminStatCards.push(
+        {
+          key: "pending-bills",
+          title: "Pending Bills",
+          value: pendingBillsCount.length,
+          icon: CreditCard,
+          variant: "orange",
+          subtext: overdueBills.length > 0 ? `${overdueBills.length} overdue` : undefined,
+        },
+        {
+          key: "overdue-bills",
+          title: "Overdue Bills",
+          value: overdueBills.length,
+          icon: Clock,
+          variant: "amber",
+          subtext:
+            overdueBills.length > 0
+              ? `₹${overdueBills
+                  .reduce((sum, b) => sum + (b.amount || 0), 0)
+                  .toLocaleString()}`
+              : "All clear",
+        },
+      );
+    }
+
+    if (canSeeContractCards) {
+      adminStatCards.push({
+        key: "expiring-contracts",
+        title: "Expiring Contracts",
+        value: expiringContracts.length,
+        icon: FileText,
+        variant: "rose",
+        subtext: "Next 30 days",
+      });
+    }
+  }
+
   const { data: dashboardReport } = useQuery({
     queryKey: ["dashboardReport", user?.societyId],
     queryFn: () =>
@@ -331,13 +505,7 @@ export default function Dashboard() {
   return (
     <div className="dashboard animate-fadeIn">
       <div
-        className="dashboard-hero wave-box animate-slide-down"
-        style={{
-          background: `linear-gradient(135deg, 
-            color-mix(in srgb, var(--accent-primary) 80%, #000) 0%, 
-            color-mix(in srgb, var(--accent-primary) 60%, #1e293b) 50%, 
-            color-mix(in srgb, var(--accent-secondary) 70%, #0f172a) 100%)`
-        }}
+        className="dashboard-hero animate-slide-down"
       >
         <div className="dashboard-hero__bg">
           <div className="dashboard-hero__noise"></div>
@@ -537,100 +705,17 @@ export default function Dashboard() {
       {!isMemberOrTenant && (
         <>
           <div className="dashboard-admin__stats">
-            {isPlatformLevel && (
+            {adminStatCards.map((card, index) => (
               <StatCard
-                title="Total Societies"
-                value={societies.length}
-                icon={Building2}
-                variant="purple"
-                delay={100}
+                key={card.key}
+                title={card.title}
+                value={card.value}
+                icon={card.icon}
+                variant={card.variant}
+                subtext={card.subtext}
+                delay={100 + index * 40}
               />
-            )}
-            <StatCard
-              title="Total Flats"
-              value={flats.filter(f => !f.unitType || f.unitType === "FLAT").length}
-              icon={Home}
-              variant="blue"
-              subtext={`${flats.filter(f => (!f.unitType || f.unitType === "FLAT") && f.ownerName).length} occupied`}
-              delay={150}
-            />
-            <StatCard
-              title="Total Shops"
-              value={flats.filter(f => f.unitType === "SHOP").length}
-              icon={Store}
-              variant="green"
-              subtext={`${flats.filter(f => f.unitType === "SHOP" && f.ownerName).length} occupied`}
-              delay={175}
-            />
-            <StatCard
-              title="Total Offices"
-              value={flats.filter(f => f.unitType === "OFFICE").length}
-              icon={Briefcase}
-              variant="teal"
-              subtext={`${flats.filter(f => f.unitType === "OFFICE" && f.ownerName).length} occupied`}
-              delay={190}
-            />
-            <StatCard
-              title="Active Tenants"
-              value={tenants.filter((t) => t.isActive).length}
-              icon={UserCheck}
-              variant="cyan"
-              subtext={`${expiringTenants.length} expiring soon`}
-              delay={200}
-            />
-            <StatCard
-              title="Vehicles"
-              value={vehicles.length}
-              icon={Car}
-              variant="indigo"
-              delay={250}
-            />
-            <StatCard
-              title="Pending Bills"
-              value={pendingBillsCount.length}
-              icon={CreditCard}
-              variant="orange"
-              subtext={overdueBills.length > 0 ? `${overdueBills.length} overdue` : undefined}
-              delay={300}
-            />
-            <StatCard
-              title="Open Tickets"
-              value={openTickets.length}
-              icon={Ticket}
-              variant="sky"
-              delay={350}
-            />
-            <StatCard
-              title="Overdue Tickets"
-              value={allTickets.filter(t => t.isOverdue).length}
-              icon={AlertTriangle}
-              variant="red"
-              subtext={allTickets.filter(t => t.escalationLevel === 2).length > 0 ? `${allTickets.filter(t => t.escalationLevel === 2).length} critical` : undefined}
-              delay={375}
-            />
-            <StatCard
-              title="Overdue Bills"
-              value={overdueBills.length}
-              icon={Clock}
-              variant="amber"
-              subtext={overdueBills.length > 0 ? `₹${overdueBills.reduce((sum, b) => sum + (b.amount || 0), 0).toLocaleString()}` : "All clear"}
-              delay={390}
-            />
-            <StatCard
-              title="Pending Complaints"
-              value={pendingComplaints.length}
-              icon={AlertTriangle}
-              variant="yellow"
-              delay={400}
-            />
-            <StatCard
-              title="Expiring Contracts"
-              value={expiringContracts.length}
-              icon={FileText}
-              variant="rose"
-              subtext="Next 30 days"
-              delay={450}
-            />
+            ))}
           </div>
 
           {dashboardReport && isCommitteeLevel() && (

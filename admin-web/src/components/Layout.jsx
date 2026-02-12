@@ -38,12 +38,6 @@ const platformOwnerMenu = [
     path: '/',
   },
   {
-    id: 'societies',
-    label: 'Societies',
-    icon: Building2,
-    path: '/societies',
-  },
-  {
     id: 'organizations',
     label: 'Organizations',
     icon: Layers,
@@ -66,12 +60,6 @@ const platformOwnerMenu = [
     label: 'Settings',
     icon: Settings,
     path: '/settings',
-  },
-  {
-    id: 'roles-permissions',
-    label: 'Roles & Access',
-    icon: FileCheck,
-    path: '/roles-permissions',
   },
 ]
 
@@ -208,10 +196,6 @@ function NavDropdown({ group, hasRole }) {
           'app-nav__link',
           isActive ? 'app-nav__link--active' : 'app-nav__link--idle'
         )}
-        style={isActive ? { 
-          background: `linear-gradient(135deg, var(--accent-gradient-from), var(--accent-gradient-to))`,
-          boxShadow: `0 4px 12px -2px color-mix(in srgb, var(--accent-primary) 40%, transparent)`
-        } : undefined}
       >
         <group.icon size={18} />
         <span>{group.label}</span>
@@ -231,10 +215,6 @@ function NavDropdown({ group, hasRole }) {
           'app-nav__trigger',
           isActive ? 'app-nav__trigger--active' : 'app-nav__trigger--idle'
         )}
-        style={isActive ? { 
-          background: `linear-gradient(135deg, var(--accent-gradient-from), var(--accent-gradient-to))`,
-          boxShadow: `0 4px 12px -2px color-mix(in srgb, var(--accent-primary) 40%, transparent)`
-        } : undefined}
       >
         <group.icon size={18} />
         <span>{group.label}</span>
@@ -246,7 +226,6 @@ function NavDropdown({ group, hasRole }) {
           'app-nav__menu',
           isOpen ? 'app-nav__menu--open' : 'app-nav__menu--closed'
         )}
-        style={isOpen ? { boxShadow: '0 20px 40px -8px rgba(0,0,0,0.12), 0 8px 16px -4px rgba(0,0,0,0.08)' } : undefined}
       >
         {filteredItems.map((item) => (
           <NavLink
@@ -427,28 +406,16 @@ export default function Layout() {
       {/* Top Navbar */}
       <header className="app-layout__header">
         {/* Accent gradient line at top */}
-        <div
-          className="app-layout__accent"
-          style={{ background: `linear-gradient(to right, var(--accent-gradient-from), var(--accent-gradient-via), var(--accent-gradient-to))` }}
-        />
+        <div className="app-layout__accent" />
         <div className="app-layout__bar">
           <div className="app-layout__bar-inner">
             {/* Logo */}
             <div className="app-layout__logo" onClick={() => navigate('/')}>
-              <div
-                className="app-layout__logo-mark"
-                style={{ 
-                  background: `linear-gradient(135deg, var(--accent-gradient-from), var(--accent-gradient-via), var(--accent-gradient-to))`,
-                  boxShadow: `0 8px 20px -4px color-mix(in srgb, var(--accent-primary) 35%, transparent)`
-                }}
-              >
+              <div className="app-layout__logo-mark">
                 <Building2 size={22} className="app-layout__logo-icon" />
               </div>
               <div className="app-layout__logo-text">
-                <span
-                  className="app-layout__brand"
-                  style={{ backgroundImage: `linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))` }}
-                >
+                <span className="app-layout__brand">
                   SocietyHub
                 </span>
                 <span className="app-layout__subtitle">Management Platform</span>
@@ -464,30 +431,15 @@ export default function Layout() {
 
             {/* User section - Desktop */}
             <div className="app-layout__user">
-              <div 
-                className="app-layout__user-card"
-                style={{ 
-                  borderColor: `color-mix(in srgb, var(--accent-primary) 20%, transparent)`,
-                  background: `color-mix(in srgb, var(--accent-50) 50%, transparent)`
-                }}
-              >
-                <div 
-                  className="app-layout__user-avatar"
-                  style={{ 
-                    background: `linear-gradient(135deg, var(--accent-gradient-from), var(--accent-gradient-to))`,
-                    boxShadow: `0 6px 12px -2px color-mix(in srgb, var(--accent-primary) 30%, transparent)`
-                  }}
-                >
+              <div className="app-layout__user-card">
+                <div className="app-layout__user-avatar">
                   <span className="app-layout__user-initial">
                     {user?.name?.charAt(0)?.toUpperCase() || 'U'}
                   </span>
                 </div>
                 <div className="app-layout__user-info">
                   <p className="app-layout__user-name">{user?.name}</p>
-                  <p
-                    className="app-layout__user-role"
-                    style={{ color: 'var(--accent-primary)' }}
-                  >
+                  <p className="app-layout__user-role">
                     {user?.role?.replace(/_/g, ' ')}
                   </p>
                 </div>
@@ -553,17 +505,11 @@ export default function Layout() {
           {/* Mobile Header */}
           <div className="app-layout__drawer-header">
             <div className="app-layout__drawer-brand">
-              <div
-                className="app-layout__drawer-mark"
-                style={{ background: `linear-gradient(135deg, var(--accent-gradient-from), var(--accent-gradient-to))` }}
-              >
+              <div className="app-layout__drawer-mark">
                 <Building2 size={18} className="app-layout__drawer-icon" />
               </div>
               <div className="app-layout__drawer-text">
-                <span
-                  className="app-layout__drawer-title"
-                  style={{ backgroundImage: `linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))` }}
-                >
+                <span className="app-layout__drawer-title">
                   Menu
                 </span>
                 <span className="app-layout__drawer-subtitle">Navigation</span>
@@ -593,30 +539,15 @@ export default function Layout() {
 
           {/* Mobile User Section */}
           <div className="app-layout__drawer-user">
-            <div
-              className="app-layout__drawer-user-card"
-              style={{
-                borderColor: `color-mix(in srgb, var(--accent-primary) 20%, transparent)`,
-                background: `color-mix(in srgb, var(--accent-50) 50%, transparent)`
-              }}
-            >
-              <div
-                className="app-layout__drawer-avatar"
-                style={{
-                  background: `linear-gradient(135deg, var(--accent-gradient-from), var(--accent-gradient-to))`,
-                  boxShadow: `0 6px 12px -2px color-mix(in srgb, var(--accent-primary) 30%, transparent)`
-                }}
-              >
+            <div className="app-layout__drawer-user-card">
+              <div className="app-layout__drawer-avatar">
                 <span className="app-layout__drawer-initial">
                   {user?.name?.charAt(0)?.toUpperCase() || 'U'}
                 </span>
               </div>
               <div className="app-layout__drawer-info">
                 <p className="app-layout__drawer-name">{user?.name}</p>
-                <p
-                  className="app-layout__drawer-role"
-                  style={{ color: 'var(--accent-primary)' }}
-                >
+                <p className="app-layout__drawer-role">
                   {user?.role?.replace(/_/g, ' ')}
                 </p>
               </div>

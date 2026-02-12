@@ -405,23 +405,25 @@
 .tenants-modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.6);
+  background: rgba(0, 0, 0, 0.4);
 }
 
 .tenants-modal-card {
   position: relative;
   width: 100%;
   max-width: 32rem;
-  border-radius: 1rem;
+  max-height: calc(100vh - 3rem);
+  overflow-y: auto;
+  border-radius: 0.75rem;
   background: #fff;
   border: 1px solid #e5e7eb;
-  box-shadow: 0 24px 48px rgba(15, 23, 42, 0.2);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
   padding: 1.5rem;
   z-index: 1;
 }
 
 .dark .tenants-modal-card {
-  background: #0f172a;
+  background: #1e293b;
   border-color: #334155;
 }
 
