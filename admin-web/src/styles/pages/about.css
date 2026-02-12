@@ -1,0 +1,335 @@
+/* Footer: About page */
+
+.about-hero,
+.about-values,
+.about-cta {
+  padding: 4rem 1rem;
+}
+
+@media (min-width: 640px) {
+  .about-hero,
+  .about-values,
+  .about-cta {
+    padding-top: 6rem;
+    padding-bottom: 6rem;
+  }
+}
+
+.about-hero-inner,
+.about-cta-inner {
+  max-width: 56rem;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.about-values-inner,
+.about-team-inner {
+  max-width: 72rem;
+  margin: 0 auto;
+}
+
+.about-story-inner {
+  max-width: 64rem;
+  margin: 0 auto;
+}
+
+.about-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 999px;
+  margin-bottom: 1.5rem;
+  border: 1px solid color-mix(in srgb, var(--accent-primary) 20%, transparent);
+  background: color-mix(in srgb, var(--accent-primary) 8%, var(--bg-primary));
+}
+
+.dark .about-pill {
+  border-color: transparent;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.about-pill-icon {
+  width: 1rem;
+  height: 1rem;
+}
+
+.about-pill-text {
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+
+.about-hero-title {
+  font-size: clamp(2.25rem, 4vw, 3.75rem);
+  line-height: 1.05;
+  font-weight: 900;
+  margin-bottom: 1.5rem;
+  color: var(--text-primary);
+}
+
+.about-hero-title-text {
+  color: var(--text-primary);
+}
+
+.about-hero-title-gradient {
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.about-hero-lead {
+  font-size: 1.25rem;
+  max-width: 42rem;
+  margin: 0 auto;
+  color: var(--text-secondary);
+}
+
+.about-story,
+.about-team {
+  padding: 4rem 1rem;
+  background: var(--bg-primary);
+}
+
+@media (min-width: 640px) {
+  .about-story,
+  .about-team {
+    padding-top: 5rem;
+    padding-bottom: 5rem;
+  }
+}
+
+.dark .about-story,
+.dark .about-team {
+  background: color-mix(in srgb, var(--bg-secondary) 35%, transparent);
+}
+
+.about-story-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 3rem;
+  align-items: center;
+}
+
+@media (min-width: 768px) {
+  .about-story-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.about-section-title {
+  font-size: 1.875rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin-bottom: 1.5rem;
+}
+
+.about-section-head {
+  text-align: center;
+  margin-bottom: 3.5rem;
+}
+
+.about-section-subtitle {
+  color: var(--text-secondary);
+}
+
+.about-story-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  line-height: 1.75;
+  color: var(--text-secondary);
+}
+
+.about-stats-card {
+  padding: 2rem;
+  border-radius: var(--radius-2xl);
+  border: 1px solid color-mix(in srgb, var(--accent-primary) 15%, transparent);
+  background: color-mix(in srgb, var(--accent-primary) 5%, var(--bg-primary));
+}
+
+.dark .about-stats-card {
+  border-color: var(--border-light);
+  background: color-mix(in srgb, var(--bg-secondary) 80%, transparent);
+}
+
+.about-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.5rem;
+  text-align: center;
+}
+
+.about-stat-value {
+  font-size: 2.25rem;
+  font-weight: 900;
+}
+
+.about-stat-label {
+  font-size: var(--text-sm);
+  margin-top: 0.25rem;
+  color: var(--text-secondary);
+}
+
+.about-values-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .about-values-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .about-values-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.about-value-card,
+.about-team-card {
+  padding: 1.5rem;
+  border-radius: var(--radius-2xl);
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.3s ease, background 0.3s ease;
+}
+
+.about-value-card:hover,
+.about-team-card:hover {
+  transform: translateY(-0.5rem);
+}
+
+.about-value-icon {
+  width: 3rem;
+  height: 3rem;
+  border-radius: var(--radius-xl);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1rem;
+  transition: transform 0.3s ease;
+}
+
+.about-value-card:hover .about-value-icon,
+.about-team-card:hover .about-team-avatar {
+  transform: scale(1.1);
+}
+
+.about-value-icon-svg {
+  width: 1.5rem;
+  height: 1.5rem;
+  color: #fff;
+}
+
+.about-card-title {
+  font-weight: 800;
+  font-size: 1.125rem;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+}
+
+.about-card-text {
+  font-size: var(--text-sm);
+  line-height: 1.6;
+  color: var(--text-secondary);
+}
+
+.about-team-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+}
+
+@media (min-width: 768px) {
+  .about-team-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .about-team-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.about-team-avatar {
+  width: 6rem;
+  height: 6rem;
+  margin: 0 auto 1rem;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #fff;
+  transition: transform 0.3s ease;
+}
+
+.about-cta-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 1.5rem;
+  padding: 3rem;
+}
+
+.about-cta-overlay {
+  position: absolute;
+  inset: 0;
+  opacity: 0.1;
+}
+
+.about-cta-content {
+  position: relative;
+  z-index: 1;
+}
+
+.about-cta-award {
+  width: 3rem;
+  height: 3rem;
+  margin: 0 auto 1.5rem;
+  color: #fde047;
+}
+
+.about-cta-title {
+  font-size: 1.875rem;
+  font-weight: 800;
+  margin-bottom: 1rem;
+  color: #fff;
+}
+
+.about-cta-text {
+  color: rgba(255, 255, 255, 0.8);
+  margin: 0 auto 2rem;
+  max-width: 36rem;
+}
+
+.about-cta-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem 2rem;
+  border-radius: var(--radius-xl);
+  background: #fff;
+  font-weight: 800;
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.about-cta-button:hover {
+  background: #f3f4f6;
+  transform: scale(1.05);
+}
+
+.about-cta-arrow {
+  width: 1.25rem;
+  height: 1.25rem;
+  transition: transform 0.2s ease;
+}
+
+.about-cta-button:hover .about-cta-arrow {
+  transform: translateX(0.25rem);
+}

@@ -1,10 +1,8 @@
 import { useState } from 'react'
-import { useTheme } from '../../context/ThemeContext'
 import { Mail, Phone, MapPin, Send, MessageSquare, Clock, CheckCircle } from 'lucide-react'
 import PageShell from '../../components/PageShell'
 
 export default function Contact() {
-  const { isDark } = useTheme()
   const [formData, setFormData] = useState({ name: '', email: '', subject: '', message: '' })
   const [submitted, setSubmitted] = useState(false)
   const [sending, setSending] = useState(false)
@@ -32,43 +30,47 @@ export default function Contact() {
   return (
     <PageShell>
       {/* Hero */}
-      <section className="py-16 sm:py-24 px-4">
-        <div className="max-w-4xl mx-auto text-center">
+      <section className="contact-hero">
+        <div className="contact-hero-inner">
           <div
-            className={`inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6 animate-fade-in-up ${isDark ? 'bg-white/5' : 'border'}`}
-            style={isDark ? {} : { background: 'color-mix(in srgb, var(--accent-primary) 8%, white)', borderColor: 'color-mix(in srgb, var(--accent-primary) 20%, transparent)' }}
+            className="contact-pill animate-fade-in-up"
           >
-            <MessageSquare className="w-4 h-4" style={{ color: 'var(--accent-primary)' }} />
-            <span className="text-sm font-medium" style={{ color: 'var(--accent-primary)' }}>Get in Touch</span>
+            <MessageSquare className="contact-pill-icon" style={{ color: 'var(--accent-primary)' }} />
+            <span className="contact-pill-text" style={{ color: 'var(--accent-primary)' }}>Get in Touch</span>
           </div>
-          <h1 className="text-4xl md:text-6xl font-black mb-6 animate-fade-in-up" style={{ animationDelay: '100ms' }}>
-            <span className={isDark ? 'text-white' : 'text-gray-900'}>Contact </span>
-            <span className="bg-clip-text text-transparent" style={{ backgroundImage: `linear-gradient(to right, var(--accent-primary), var(--accent-secondary))` }}>Us</span>
+          <h1 className="contact-title animate-fade-in-up" style={{ animationDelay: '100ms' }}>
+            <span className="contact-title-text">Contact </span>
+            <span
+              className="contact-title-gradient"
+              style={{ backgroundImage: `linear-gradient(to right, var(--accent-primary), var(--accent-secondary))` }}
+            >
+              Us
+            </span>
           </h1>
-          <p className={`text-xl max-w-2xl mx-auto animate-fade-in-up ${isDark ? 'text-gray-400' : 'text-gray-600'}`} style={{ animationDelay: '200ms' }}>
+          <p className="contact-lead animate-fade-in-up" style={{ animationDelay: '200ms' }}>
             Have questions? We'd love to hear from you. Send us a message and we'll respond as soon as possible.
           </p>
         </div>
       </section>
 
       {/* Contact Methods */}
-      <section className="pb-12 px-4">
-        <div className="max-w-6xl mx-auto">
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 stagger-children">
+      <section className="contact-methods">
+        <div className="contact-methods-inner">
+          <div className="contact-methods-grid stagger-children">
             {contactMethods.map((method, i) => (
               <div
                 key={i}
-                className={`group p-6 rounded-2xl text-center transition-all duration-300 hover:-translate-y-2 card-accent-hover ${isDark ? 'bg-slate-800' : 'bg-white shadow-sm'}`}
+                className="contact-method-card card-accent-hover"
               >
                 <div
-                  className="w-14 h-14 mx-auto rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform"
+                  className="contact-method-icon"
                   style={{ background: `linear-gradient(to bottom right, var(--accent-primary), var(--accent-secondary))` }}
                 >
-                  <method.icon className="w-7 h-7 text-white" />
+                  <method.icon className="contact-method-icon-svg" />
                 </div>
-                <h3 className={`font-bold text-lg mb-1 ${isDark ? 'text-white' : 'text-gray-900'}`}>{method.title}</h3>
-                <p className="font-medium" style={{ color: 'var(--accent-primary)' }}>{method.value}</p>
-                <p className={`text-sm mt-1 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{method.description}</p>
+                <h3 className="contact-method-title">{method.title}</h3>
+                <p className="contact-method-value" style={{ color: 'var(--accent-primary)' }}>{method.value}</p>
+                <p className="contact-method-desc">{method.description}</p>
               </div>
             ))}
           </div>
@@ -76,44 +78,37 @@ export default function Contact() {
       </section>
 
       {/* Contact Form */}
-      <section className="py-12 sm:py-16 px-4">
-        <div className="max-w-2xl mx-auto">
-          <div className={`p-8 md:p-12 rounded-3xl animate-fade-in-up ${isDark ? 'bg-slate-800' : 'bg-white shadow-xl border border-gray-100'}`}>
-            <h2 className={`text-2xl font-bold mb-8 text-center ${isDark ? 'text-white' : 'text-gray-900'}`}>Send us a Message</h2>
+      <section className="contact-form-section">
+        <div className="contact-form-inner">
+          <div className="contact-form-card animate-fade-in-up">
+            <h2 className="contact-form-title">Send us a Message</h2>
 
             {submitted ? (
-              <div className="text-center py-12 animate-scale-in">
+              <div className="contact-success animate-scale-in">
                 <div
-                  className="w-16 h-16 mx-auto rounded-full flex items-center justify-center mb-4 animate-success-pulse"
+                  className="contact-success-icon animate-success-pulse"
                   style={{ background: 'color-mix(in srgb, #22c55e 15%, transparent)' }}
                 >
-                  <CheckCircle className="w-8 h-8 text-green-500" />
+                  <CheckCircle className="contact-success-icon-svg" />
                 </div>
-                <h3 className={`text-xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>Message Sent!</h3>
-                <p className={isDark ? 'text-gray-400' : 'text-gray-600'}>We'll get back to you within 24 hours.</p>
+                <h3 className="contact-success-title">Message Sent!</h3>
+                <p className="contact-success-text">We'll get back to you within 24 hours.</p>
               </div>
             ) : (
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="grid md:grid-cols-2 gap-6">
+              <form onSubmit={handleSubmit} className="contact-form">
+                <div className="contact-form-grid">
                   {[
                     { label: 'Your Name', key: 'name', type: 'text', placeholder: 'John Doe' },
                     { label: 'Email Address', key: 'email', type: 'email', placeholder: 'john@example.com' },
                   ].map((field) => (
                     <div key={field.key}>
-                      <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>{field.label}</label>
+                      <label className="contact-label">{field.label}</label>
                       <input
                         type={field.type}
                         required
                         value={formData[field.key]}
                         onChange={(e) => setFormData({ ...formData, [field.key]: e.target.value })}
-                        className={`w-full px-4 py-3 rounded-xl border-2 transition-all outline-none focus:ring-2 ${
-                          isDark
-                            ? 'bg-slate-700 border-slate-600 text-white placeholder:text-gray-400'
-                            : 'bg-white border-gray-200 text-gray-900 placeholder:text-gray-400'
-                        }`}
-                        style={{ '--tw-ring-color': 'color-mix(in srgb, var(--accent-primary) 20%, transparent)' }}
-                        onFocus={(e) => e.target.style.borderColor = 'var(--accent-primary)'}
-                        onBlur={(e) => e.target.style.borderColor = ''}
+                        className="contact-input"
                         placeholder={field.placeholder}
                       />
                     </div>
@@ -121,29 +116,25 @@ export default function Contact() {
                 </div>
 
                 <div>
-                  <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Subject</label>
+                  <label className="contact-label">Subject</label>
                   <input
                     type="text"
                     required
                     value={formData.subject}
                     onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
-                    className={`w-full px-4 py-3 rounded-xl border-2 transition-all outline-none ${isDark ? 'bg-slate-700 border-slate-600 text-white placeholder:text-gray-400' : 'bg-white border-gray-200 text-gray-900 placeholder:text-gray-400'}`}
-                    onFocus={(e) => e.target.style.borderColor = 'var(--accent-primary)'}
-                    onBlur={(e) => e.target.style.borderColor = ''}
+                    className="contact-input"
                     placeholder="How can we help?"
                   />
                 </div>
 
                 <div>
-                  <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Message</label>
+                  <label className="contact-label">Message</label>
                   <textarea
                     required
                     rows={5}
                     value={formData.message}
                     onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                    className={`w-full px-4 py-3 rounded-xl border-2 transition-all outline-none resize-none ${isDark ? 'bg-slate-700 border-slate-600 text-white placeholder:text-gray-400' : 'bg-white border-gray-200 text-gray-900 placeholder:text-gray-400'}`}
-                    onFocus={(e) => e.target.style.borderColor = 'var(--accent-primary)'}
-                    onBlur={(e) => e.target.style.borderColor = ''}
+                    className="contact-textarea"
                     placeholder="Tell us more about your inquiry..."
                   />
                 </div>
@@ -151,21 +142,21 @@ export default function Contact() {
                 <button
                   type="submit"
                   disabled={sending}
-                  className="w-full py-4 px-6 text-white font-bold rounded-xl transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2 group relative overflow-hidden"
+                  className="contact-submit"
                   style={{ background: `linear-gradient(to right, var(--accent-primary), var(--accent-secondary))` }}
                 >
                   {sending ? (
                     <>
-                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      <div className="contact-submit-spinner" />
                       Sending...
                     </>
                   ) : (
                     <>
-                      <Send className="w-5 h-5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                      <Send className="contact-submit-icon" />
                       Send Message
                     </>
                   )}
-                  <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+                  <div className="contact-submit-sheen" />
                 </button>
               </form>
             )}

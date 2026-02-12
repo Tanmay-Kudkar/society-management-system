@@ -1,10 +1,7 @@
-import { useTheme } from '../../context/ThemeContext'
 import { FileText, AlertTriangle, CreditCard, ShieldAlert, Gavel, HandshakeIcon, UserCheck } from 'lucide-react'
 import PageShell from '../../components/PageShell'
 
 export default function Terms() {
-  const { isDark } = useTheme()
-
   const sections = [
     {
       icon: UserCheck, title: '1. Acceptance of Terms',
@@ -39,43 +36,47 @@ export default function Terms() {
   return (
     <PageShell>
       {/* Hero */}
-      <section className="py-16 sm:py-24 px-4">
-        <div className="max-w-4xl mx-auto text-center">
+      <section className="terms-hero">
+        <div className="terms-hero-inner">
           <div
-            className={`inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6 animate-fade-in-up ${isDark ? 'bg-white/5' : 'border'}`}
-            style={isDark ? {} : { background: 'color-mix(in srgb, var(--accent-primary) 8%, white)', borderColor: 'color-mix(in srgb, var(--accent-primary) 20%, transparent)' }}
+            className="terms-pill animate-fade-in-up"
           >
-            <FileText className="w-4 h-4" style={{ color: 'var(--accent-primary)' }} />
-            <span className="text-sm font-medium" style={{ color: 'var(--accent-primary)' }}>Legal Agreement</span>
+            <FileText className="terms-pill-icon" style={{ color: 'var(--accent-primary)' }} />
+            <span className="terms-pill-text" style={{ color: 'var(--accent-primary)' }}>Legal Agreement</span>
           </div>
-          <h1 className="text-4xl md:text-6xl font-black mb-6 animate-fade-in-up" style={{ animationDelay: '100ms' }}>
-            <span className={isDark ? 'text-white' : 'text-gray-900'}>Terms of </span>
-            <span className="bg-clip-text text-transparent" style={{ backgroundImage: `linear-gradient(to right, var(--accent-primary), var(--accent-secondary))` }}>Service</span>
+          <h1 className="terms-title animate-fade-in-up" style={{ animationDelay: '100ms' }}>
+            <span className="terms-title-text">Terms of </span>
+            <span
+              className="terms-title-gradient"
+              style={{ backgroundImage: `linear-gradient(to right, var(--accent-primary), var(--accent-secondary))` }}
+            >
+              Service
+            </span>
           </h1>
-          <p className={`text-lg max-w-2xl mx-auto animate-fade-in-up ${isDark ? 'text-gray-400' : 'text-gray-600'}`} style={{ animationDelay: '200ms' }}>
+          <p className="terms-lead animate-fade-in-up" style={{ animationDelay: '200ms' }}>
             Last updated: February 2026. Please read these terms carefully before using our platform.
           </p>
         </div>
       </section>
 
       {/* Sections */}
-      <section className="pb-20 px-4">
-        <div className="max-w-4xl mx-auto space-y-6 stagger-children">
+      <section className="terms-sections">
+        <div className="terms-sections-inner stagger-children">
           {sections.map((section, i) => (
             <div
               key={i}
-              className={`p-6 sm:p-8 rounded-2xl transition-all duration-300 card-accent-hover ${isDark ? 'bg-slate-800' : 'bg-white shadow-sm'}`}
+              className="terms-card card-accent-hover"
             >
-              <div className="flex items-start gap-4">
+              <div className="terms-card-row">
                 <div
-                  className="w-10 h-10 rounded-xl flex-shrink-0 flex items-center justify-center"
+                  className="terms-card-icon"
                   style={{ background: `linear-gradient(to bottom right, var(--accent-primary), var(--accent-secondary))` }}
                 >
-                  <section.icon className="w-5 h-5 text-white" />
+                  <section.icon className="terms-card-icon-svg" />
                 </div>
-                <div className="flex-1">
-                  <h2 className={`text-xl font-bold mb-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>{section.title}</h2>
-                  <p className={`text-sm leading-relaxed ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>{section.content}</p>
+                <div className="terms-card-body">
+                  <h2 className="terms-card-title">{section.title}</h2>
+                  <p className="terms-card-text">{section.content}</p>
                 </div>
               </div>
             </div>

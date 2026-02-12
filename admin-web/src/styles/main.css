@@ -49,6 +49,10 @@
 @import "./pages/societies.css";
 @import "./pages/unit-management.css";
 @import "./pages/vehicles.css";
+@import "./pages/about.css";
+@import "./pages/contact.css";
+@import "./pages/terms.css";
+@import "./pages/privacy.css";
 
 /* Utility replacements for Tailwind classes */
 @import "./utils/layout.css";

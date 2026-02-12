@@ -1,0 +1,140 @@
+/* Footer: Terms page */
+
+.terms-hero {
+  padding: 4rem 1rem;
+}
+
+@media (min-width: 640px) {
+  .terms-hero {
+    padding-top: 6rem;
+    padding-bottom: 6rem;
+  }
+}
+
+.terms-hero-inner {
+  max-width: 56rem;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.terms-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 999px;
+  margin-bottom: 1.5rem;
+  border: 1px solid color-mix(in srgb, var(--accent-primary) 20%, transparent);
+  background: color-mix(in srgb, var(--accent-primary) 8%, var(--bg-primary));
+}
+
+.dark .terms-pill {
+  border-color: transparent;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.terms-pill-icon {
+  width: 1rem;
+  height: 1rem;
+}
+
+.terms-pill-text {
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+
+.terms-title {
+  font-size: clamp(2.25rem, 4vw, 3.75rem);
+  line-height: 1.05;
+  font-weight: 900;
+  margin-bottom: 1.5rem;
+  color: var(--text-primary);
+}
+
+.terms-title-text {
+  color: var(--text-primary);
+}
+
+.terms-title-gradient {
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.terms-lead {
+  font-size: 1.125rem;
+  max-width: 42rem;
+  margin: 0 auto;
+  color: var(--text-secondary);
+}
+
+.terms-sections {
+  padding: 0 1rem 5rem;
+}
+
+.terms-sections-inner {
+  max-width: 56rem;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.terms-card {
+  padding: 1.5rem;
+  border-radius: var(--radius-2xl);
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.3s ease;
+}
+
+@media (min-width: 640px) {
+  .terms-card {
+    padding: 2rem;
+  }
+}
+
+.terms-card:hover {
+  transform: translateY(-2px);
+}
+
+.terms-card-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.terms-card-icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: var(--radius-xl);
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.terms-card-icon-svg {
+  width: 1.25rem;
+  height: 1.25rem;
+  color: #fff;
+}
+
+.terms-card-body {
+  min-width: 0;
+  flex: 1;
+}
+
+.terms-card-title {
+  font-size: 1.25rem;
+  font-weight: 800;
+  margin-bottom: 0.75rem;
+  color: var(--text-primary);
+}
+
+.terms-card-text {
+  font-size: var(--text-sm);
+  line-height: 1.7;
+  color: var(--text-secondary);
+}
