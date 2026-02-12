@@ -98,6 +98,90 @@
   justify-content: center;
 }
 
+.society-address-icon {
+  display: inline-block;
+  width: 1rem;
+  height: 1rem;
+  margin-right: 0.25rem;
+  vertical-align: middle;
+}
+
+.society-bottom-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+@media (min-width: 1024px) {
+  .society-bottom-grid {
+    grid-template-columns: 1fr 2fr;
+  }
+}
+
+.society-bottom-main {
+  min-width: 0;
+}
+
+/* Loading and error states */
+.society-state {
+  min-height: 400px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: var(--spacing-md);
+}
+
+.society-spinner {
+  width: 48px;
+  height: 48px;
+  border-radius: 999px;
+  border: 3px solid rgba(37, 99, 235, 0.2);
+  border-top-color: #2563eb;
+  animation: societySpin 1s linear infinite;
+}
+
+@keyframes societySpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.society-error-icon {
+  width: 64px;
+  height: 64px;
+  color: #f87171;
+}
+
+.society-error-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.society-error-text {
+  color: var(--text-tertiary);
+  margin-bottom: var(--spacing-md);
+}
+
+.society-error-button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: 0.5rem 1rem;
+  border-radius: 0.75rem;
+  background: #2563eb;
+  color: #fff;
+  font-weight: 600;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.society-error-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 20px rgba(37, 99, 235, 0.25);
+}
+
 /* Quick Stats Row */
 .society-stats {
   display: grid;

@@ -28,57 +28,53 @@ export default function ForgotPassword() {
   }
 
   return (
-    <div className={`min-h-screen flex items-center justify-center px-4 py-12 transition-colors ${isDark ? 'bg-slate-900' : 'bg-gray-50'}`}>
-      <div className="w-full max-w-md">
+    <div className={`forgot-page ${isDark ? 'is-dark' : 'is-light'}`}>
+      <div className="forgot-panel">
         {/* Logo */}
-        <div className="text-center mb-8">
-          <Link to="/welcome" className="inline-flex items-center gap-3 mb-6">
-            <div className="p-3 rounded-xl" style={{ background: `linear-gradient(to bottom right, var(--accent-primary), var(--accent-secondary))` }}>
-              <Building2 className="w-7 h-7 text-white" />
+        <div className="forgot-logo">
+          <Link to="/welcome" className="forgot-logo-link">
+            <div className="forgot-logo-badge" style={{ background: `linear-gradient(to bottom right, var(--accent-primary), var(--accent-secondary))` }}>
+              <Building2 className="forgot-logo-icon" />
             </div>
-            <span className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>SocietyHub</span>
+            <span className="forgot-brand">SocietyHub</span>
           </Link>
         </div>
 
         {/* Card */}
-        <div className={`rounded-2xl border p-8 transition-all ${isDark ? 'bg-slate-800/60 border-slate-700' : 'bg-white border-gray-200 shadow-lg'}`}>
+        <div className="forgot-card">
           {!sent ? (
             <>
-              <div className="text-center mb-6">
-                <div className="mx-auto w-14 h-14 rounded-xl flex items-center justify-center mb-4"
+              <div className="forgot-card-header">
+                <div className="forgot-card-icon"
                   style={{ background: isDark ? 'color-mix(in srgb, var(--accent-primary) 15%, #1e293b)' : 'color-mix(in srgb, var(--accent-primary) 10%, white)' }}
                 >
-                  <Mail className="w-7 h-7" style={{ color: 'var(--accent-primary)' }} />
+                  <Mail className="forgot-card-icon-svg" style={{ color: 'var(--accent-primary)' }} />
                 </div>
-                <h2 className={`text-2xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>Forgot Password?</h2>
-                <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                <h2 className="forgot-card-title">Forgot Password?</h2>
+                <p className="forgot-card-subtitle">
                   Enter your email address and we'll send you a link to reset your password.
                 </p>
               </div>
 
               {error && (
-                <div className={`mb-4 p-3 rounded-xl border flex items-center gap-3 animate-error-shake ${isDark ? 'bg-red-950/40 border-red-800/60' : 'bg-red-50 border-red-200'}`}>
-                  <AlertCircle className={`w-4 h-4 flex-shrink-0 ${isDark ? 'text-red-400' : 'text-red-600'}`} />
-                  <p className={`text-sm ${isDark ? 'text-red-300' : 'text-red-600'}`}>{error}</p>
+                <div className="forgot-alert">
+                  <AlertCircle className="forgot-alert-icon" />
+                  <p className="forgot-alert-text">{error}</p>
                 </div>
               )}
 
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div>
-                  <label className={`block text-sm font-semibold mb-1.5 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+              <form onSubmit={handleSubmit} className="forgot-form">
+                <div className="forgot-field">
+                  <label className="forgot-label">
                     Email Address
                   </label>
-                  <div className="relative">
-                    <Mail className={`absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 ${isDark ? 'text-gray-500' : 'text-gray-400'}`} />
+                  <div className="forgot-input-wrap">
+                    <Mail className="forgot-input-icon" />
                     <input
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className={`w-full pl-12 pr-4 py-3 border-2 rounded-xl outline-none transition-all ${
-                        isDark
-                          ? 'border-slate-600 bg-slate-700 text-white placeholder:text-gray-500 focus:border-[var(--accent-primary)]'
-                          : 'border-gray-200 bg-white text-gray-900 placeholder:text-gray-400 focus:border-[var(--accent-primary)]'
-                      }`}
+                      className="forgot-input"
                       placeholder="Enter your registered email"
                       required
                       autoComplete="email"
@@ -89,19 +85,19 @@ export default function ForgotPassword() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="relative w-full py-3 px-6 text-white font-semibold rounded-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed overflow-hidden group focus:outline-none hover:scale-[1.02] active:scale-[0.98]"
+                  className="forgot-submit"
                   style={{
                     background: `linear-gradient(to right, var(--accent-primary), var(--accent-secondary))`,
                     boxShadow: `0 8px 24px -4px color-mix(in srgb, var(--accent-primary) 40%, transparent)`
                   }}
                 >
-                  <span className={`flex items-center justify-center gap-2 ${loading ? 'opacity-0' : ''}`}>
-                    <Send className="w-4 h-4" />
+                  <span className={`forgot-submit-content ${loading ? 'is-hidden' : ''}`}>
+                    <Send className="forgot-submit-icon" />
                     Send Reset Link
                   </span>
                   {loading && (
-                    <span className="absolute inset-0 flex items-center justify-center gap-2">
-                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    <span className="forgot-submit-loading">
+                      <div className="forgot-submit-spinner" />
                       Sending...
                     </span>
                   )}
@@ -110,24 +106,22 @@ export default function ForgotPassword() {
             </>
           ) : (
             /* Success State */
-            <div className="text-center animate-fade-in-up">
-              <div className="mx-auto w-16 h-16 rounded-full flex items-center justify-center mb-4"
+            <div className="forgot-success">
+              <div className="forgot-success-icon"
                 style={{ background: isDark ? 'rgba(34,197,94,0.15)' : 'rgba(34,197,94,0.1)' }}
               >
-                <CheckCircle className="w-8 h-8 text-green-500" />
+                <CheckCircle className="forgot-success-icon-svg" />
               </div>
-              <h3 className={`text-xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>Check Your Email</h3>
-              <p className={`text-sm mb-6 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                If an account exists for <strong className={isDark ? 'text-gray-200' : 'text-gray-700'}>{email}</strong>, you'll receive a password reset link shortly.
+              <h3 className="forgot-success-title">Check Your Email</h3>
+              <p className="forgot-success-text">
+                If an account exists for <strong className="forgot-success-email">{email}</strong>, you'll receive a password reset link shortly.
               </p>
-              <p className={`text-xs mb-6 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+              <p className="forgot-success-note">
                 Didn't receive the email? Check your spam folder or try again in a few minutes.
               </p>
               <button
                 onClick={() => { setSent(false); setEmail('') }}
-                className={`text-sm font-medium px-4 py-2 rounded-lg transition-colors ${
-                  isDark ? 'bg-slate-700 text-gray-300 hover:bg-slate-600' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                }`}
+                className="forgot-success-button"
               >
                 Try Another Email
               </button>
@@ -135,12 +129,12 @@ export default function ForgotPassword() {
           )}
 
           {/* Back to Login */}
-          <div className="mt-6 text-center">
+          <div className="forgot-back">
             <Link
               to="/login"
-              className={`inline-flex items-center gap-2 text-sm font-medium transition-colors ${isDark ? 'text-gray-400 hover:text-gray-200' : 'text-gray-500 hover:text-gray-700'}`}
+              className="forgot-back-link"
             >
-              <ArrowLeft className="w-4 h-4" />
+              <ArrowLeft className="forgot-back-icon" />
               Back to Sign In
             </Link>
           </div>

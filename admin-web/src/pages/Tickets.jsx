@@ -6,26 +6,26 @@ import { ticketApi, userApi, exportApi, downloadBlob } from '../../../api'
 import { Plus, Search, X, Ticket, MessageSquare, User, Edit, AlertTriangle, Clock, FileSpreadsheet } from 'lucide-react'
 import clsx from 'clsx'
 
-const statusColors = {
-  OPEN: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
-  IN_PROGRESS: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
-  RESOLVED: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
-  CLOSED: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-400',
+const statusClasses = {
+  OPEN: 'tickets-badge tickets-badge--open',
+  IN_PROGRESS: 'tickets-badge tickets-badge--progress',
+  RESOLVED: 'tickets-badge tickets-badge--resolved',
+  CLOSED: 'tickets-badge tickets-badge--closed',
 }
 
-const priorityColors = {
-  LOW: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300',
-  MEDIUM: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
-  HIGH: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
-  URGENT: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+const priorityClasses = {
+  LOW: 'tickets-badge tickets-badge--priority-low',
+  MEDIUM: 'tickets-badge tickets-badge--priority-medium',
+  HIGH: 'tickets-badge tickets-badge--priority-high',
+  URGENT: 'tickets-badge tickets-badge--priority-urgent',
 }
 
-const getProgressColor = (progress) => {
-  if (progress >= 100) return 'bg-green-500'
-  if (progress >= 75) return 'bg-emerald-500'
-  if (progress >= 50) return 'bg-blue-500'
-  if (progress >= 25) return 'bg-yellow-500'
-  return 'bg-gray-400'
+const getProgressClass = (progress) => {
+  if (progress >= 100) return 'tickets-progress-bar tickets-progress-bar--done'
+  if (progress >= 75) return 'tickets-progress-bar tickets-progress-bar--strong'
+  if (progress >= 50) return 'tickets-progress-bar tickets-progress-bar--good'
+  if (progress >= 25) return 'tickets-progress-bar tickets-progress-bar--start'
+  return 'tickets-progress-bar tickets-progress-bar--idle'
 }
 
 export default function Tickets() {
@@ -132,18 +132,18 @@ export default function Tickets() {
   }
 
   return (
-    <div>
+    <div className="tickets-page">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+      <div className="tickets-header">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Tickets</h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">Manage support tickets and requests</p>
+          <h1 className="tickets-title">Tickets</h1>
+          <p className="tickets-subtitle">Manage support tickets and requests</p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="tickets-header-actions">
           <button
             onClick={handleExport}
             disabled={isExporting}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition disabled:opacity-50"
+            className="tickets-export-button"
           >
             <FileSpreadsheet size={20} />
             {isExporting ? 'Exporting...' : 'Export'}
@@ -151,7 +151,7 @@ export default function Tickets() {
           {canCreateTickets() && (
             <button
               onClick={() => setShowModal(true)}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+              className="tickets-create-button"
             >
               <Plus size={20} />
               Create Ticket
@@ -161,46 +161,46 @@ export default function Tickets() {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
-        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-4">
-          <p className="text-sm text-gray-500 dark:text-gray-400">Open</p>
-          <p className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">{tickets.filter(t => t.status === 'OPEN').length}</p>
+      <div className="tickets-summary">
+        <div className="tickets-summary-card">
+          <p className="tickets-summary-label">Open</p>
+          <p className="tickets-summary-value tickets-summary-value--open">{tickets.filter(t => t.status === 'OPEN').length}</p>
         </div>
-        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-4">
-          <p className="text-sm text-gray-500 dark:text-gray-400">In Progress</p>
-          <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{tickets.filter(t => t.status === 'IN_PROGRESS').length}</p>
+        <div className="tickets-summary-card">
+          <p className="tickets-summary-label">In Progress</p>
+          <p className="tickets-summary-value tickets-summary-value--progress">{tickets.filter(t => t.status === 'IN_PROGRESS').length}</p>
         </div>
-        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-4">
-          <p className="text-sm text-gray-500 dark:text-gray-400">Resolved</p>
-          <p className="text-2xl font-bold text-green-600 dark:text-green-400">{tickets.filter(t => t.status === 'RESOLVED').length}</p>
+        <div className="tickets-summary-card">
+          <p className="tickets-summary-label">Resolved</p>
+          <p className="tickets-summary-value tickets-summary-value--resolved">{tickets.filter(t => t.status === 'RESOLVED').length}</p>
         </div>
-        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-4">
-          <p className="text-sm text-gray-500 dark:text-gray-400">Overdue</p>
-          <p className="text-2xl font-bold text-red-600 dark:text-red-400">{tickets.filter(t => t.isOverdue).length}</p>
+        <div className="tickets-summary-card">
+          <p className="tickets-summary-label">Overdue</p>
+          <p className="tickets-summary-value tickets-summary-value--overdue">{tickets.filter(t => t.isOverdue).length}</p>
         </div>
-        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-4">
-          <p className="text-sm text-gray-500 dark:text-gray-400">Total</p>
-          <p className="text-2xl font-bold text-gray-900 dark:text-white">{tickets.length}</p>
+        <div className="tickets-summary-card">
+          <p className="tickets-summary-label">Total</p>
+          <p className="tickets-summary-value tickets-summary-value--total">{tickets.length}</p>
         </div>
       </div>
 
       {/* Filters */}
-      <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-4 mb-6">
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+      <div className="tickets-filters">
+        <div className="tickets-filters-row">
+          <div className="tickets-search">
+            <Search className="tickets-search-icon" />
             <input
               type="text"
               placeholder="Search tickets..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white placeholder:text-gray-400 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+              className="tickets-search-input"
             />
           </div>
           <select
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
-            className="px-4 py-2 border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+            className="tickets-filter-select"
           >
             <option value="">All Status</option>
             <option value="OPEN">Open</option>
@@ -211,10 +211,8 @@ export default function Tickets() {
           <button
             onClick={() => setShowOverdueOnly(!showOverdueOnly)}
             className={clsx(
-              'px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-2',
-              showOverdueOnly
-                ? 'bg-red-600 text-white shadow-lg'
-                : 'bg-gray-200 dark:bg-slate-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-slate-600'
+              'tickets-overdue-toggle',
+              showOverdueOnly && 'is-active'
             )}
           >
             <AlertTriangle size={18} />
@@ -225,36 +223,35 @@ export default function Tickets() {
 
       {/* Tickets List */}
       {isLoading ? (
-        <div className="p-8 text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+        <div className="tickets-loading">
+          <div className="tickets-spinner" />
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="tickets-list">
           {filteredTickets.map((ticket) => (
             <div key={ticket.id} className={clsx(
-              "bg-white dark:bg-slate-800 rounded-xl shadow-sm border p-5 hover:shadow-md transition",
-              ticket.isOverdue ? "border-red-300 dark:border-red-700" : "border-gray-100 dark:border-slate-700"
+              'tickets-card',
+              ticket.isOverdue && 'tickets-card--overdue'
             )}>
-              <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
-                <div className="flex items-start gap-4 flex-1">
-                  <div className="p-3 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
-                    <Ticket className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+              <div className="tickets-card-body">
+                <div className="tickets-card-left">
+                  <div className="tickets-card-icon">
+                    <Ticket className="tickets-card-icon-svg" />
                   </div>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-sm font-mono text-gray-500 dark:text-gray-400">#{ticket.id}</span>
-                      <span className={clsx('px-2 py-0.5 rounded-full text-xs font-medium', statusColors[ticket.status])}>
+                  <div className="tickets-card-content">
+                    <div className="tickets-card-meta">
+                      <span className="tickets-card-id">#{ticket.id}</span>
+                      <span className={clsx(statusClasses[ticket.status] || statusClasses.OPEN)}>
                         {ticket.status?.replace('_', ' ')}
                       </span>
-                      <span className={clsx('px-2 py-0.5 rounded-full text-xs font-medium', priorityColors[ticket.priority])}>
+                      <span className={clsx(priorityClasses[ticket.priority] || priorityClasses.MEDIUM)}>
                         {ticket.priority}
                       </span>
                       {ticket.isOverdue && (
                         <span className={clsx(
-                          'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium animate-pulse',
-                          ticket.escalationLevel === 2 ? 'bg-red-600 text-white' :
-                          ticket.escalationLevel === 1 ? 'bg-orange-500 text-white' :
-                          'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                          'tickets-overdue-badge',
+                          ticket.escalationLevel === 2 ? 'is-critical' :
+                          ticket.escalationLevel === 1 ? 'is-escalated' : 'is-overdue'
                         )}>
                           <AlertTriangle size={12} />
                           {ticket.escalationLevel === 2 ? 'CRITICAL' : 
@@ -263,37 +260,37 @@ export default function Tickets() {
                         </span>
                       )}
                     </div>
-                    <h3 className="font-semibold text-gray-900 dark:text-white mt-1">{ticket.title}</h3>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 line-clamp-2">{ticket.description}</p>
+                    <h3 className="tickets-card-title">{ticket.title}</h3>
+                    <p className="tickets-card-desc line-clamp-2">{ticket.description}</p>
                     
                     {/* Progress Bar */}
-                    <div className="mt-3">
-                      <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 mb-1">
+                    <div className="tickets-progress">
+                      <div className="tickets-progress-header">
                         <span>Progress</span>
-                        <span className="font-medium">{ticket.progressPercent || 0}%</span>
+                        <span className="tickets-progress-value">{ticket.progressPercent || 0}%</span>
                       </div>
-                      <div className="w-full bg-gray-200 dark:bg-slate-700 rounded-full h-2">
+                      <div className="tickets-progress-track">
                         <div 
-                          className={clsx("h-2 rounded-full transition-all duration-300", getProgressColor(ticket.progressPercent || 0))}
+                          className={clsx(getProgressClass(ticket.progressPercent || 0))}
                           style={{ width: `${ticket.progressPercent || 0}%` }}
                         />
                       </div>
                     </div>
                     
-                    <div className="flex items-center gap-4 mt-3 text-xs text-gray-500 dark:text-gray-400">
-                      <span>{ticket.type}</span>
-                      {isPlatformLevel && <span>{ticket.societyName}</span>}
-                      <span className="inline-flex items-center gap-1">
+                    <div className="tickets-meta">
+                      <span className="tickets-meta-item">{ticket.type}</span>
+                      {isPlatformLevel && <span className="tickets-meta-item">{ticket.societyName}</span>}
+                      <span className="tickets-meta-item">
                         <Clock size={12} />
                         {ticket.createdAt && new Date(ticket.createdAt).toLocaleDateString()}
                       </span>
                       {ticket.pendingDays > 0 && (
-                        <span className={clsx("inline-flex items-center gap-1", ticket.isOverdue ? "text-red-500" : "")}>
+                        <span className={clsx("tickets-meta-item", ticket.isOverdue && "tickets-meta-item--danger")}> 
                           {ticket.pendingDays} days
                         </span>
                       )}
                       {ticket.assignedToId && (
-                        <span className="inline-flex items-center gap-1">
+                        <span className="tickets-meta-item">
                           <User size={12} />
                           {ticket.assignedToName}
                         </span>
@@ -302,12 +299,12 @@ export default function Tickets() {
                   </div>
                 </div>
 
-                <div className="flex flex-col items-end gap-2">
-                  <div className="flex items-center gap-2">
+                <div className="tickets-actions">
+                  <div className="tickets-action-row">
                     {ticket.status === 'OPEN' && (
                       <button
                         onClick={() => { setSelectedTicket(ticket); setShowAssignModal(true) }}
-                        className="px-3 py-1.5 text-sm bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-900/50 transition"
+                        className="tickets-assign-button"
                       >
                         Assign
                       </button>
@@ -316,7 +313,7 @@ export default function Tickets() {
                       <select
                         value={ticket.status}
                         onChange={(e) => updateStatusMutation.mutate({ id: ticket.id, status: e.target.value })}
-                        className="px-3 py-1.5 text-sm border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                        className="tickets-status-select"
                       >
                         <option value="OPEN">Open</option>
                         <option value="IN_PROGRESS">In Progress</option>
@@ -328,7 +325,7 @@ export default function Tickets() {
                   
                   {/* Progress Slider for staff */}
                   {ticket.status !== 'CLOSED' && ticket.status !== 'RESOLVED' && (
-                    <div className="flex items-center gap-2 mt-2">
+                    <div className="tickets-progress-control">
                       <input
                         type="range"
                         min="0"
@@ -336,9 +333,9 @@ export default function Tickets() {
                         step="10"
                         value={ticket.progressPercent || 0}
                         onChange={(e) => updateProgressMutation.mutate({ id: ticket.id, progress: parseInt(e.target.value) })}
-                        className="w-24 h-2 bg-gray-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                        className="tickets-progress-range"
                       />
-                      <span className="text-xs text-gray-500 dark:text-gray-400 w-8">{ticket.progressPercent || 0}%</span>
+                      <span className="tickets-progress-value">{ticket.progressPercent || 0}%</span>
                     </div>
                   )}
                 </div>
@@ -350,36 +347,36 @@ export default function Tickets() {
 
       {/* Create Ticket Modal */}
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-xl w-full max-w-lg">
-            <div className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-slate-700">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Create Ticket</h3>
-              <button onClick={() => setShowModal(false)} className="p-1 hover:bg-gray-100 dark:hover:bg-slate-700 rounded">
-                <X size={20} className="text-gray-500 dark:text-gray-400" />
+        <div className="tickets-modal">
+          <div className="tickets-modal-card">
+            <div className="tickets-modal-header">
+              <h3 className="tickets-modal-title">Create Ticket</h3>
+              <button onClick={() => setShowModal(false)} className="tickets-modal-close">
+                <X size={20} />
               </button>
             </div>
-            <form onSubmit={handleSubmit} className="p-4 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Title</label>
-                <input type="text" name="title" required className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" />
+            <form onSubmit={handleSubmit} className="tickets-modal-body">
+              <div className="tickets-field">
+                <label className="tickets-label">Title</label>
+                <input type="text" name="title" required className="tickets-input" />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description</label>
-                <textarea name="description" rows={3} required className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" />
+              <div className="tickets-field">
+                <label className="tickets-label">Description</label>
+                <textarea name="description" rows={3} required className="tickets-textarea" />
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Type</label>
-                  <select name="type" required className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
+              <div className="tickets-form-grid">
+                <div className="tickets-field">
+                  <label className="tickets-label">Type</label>
+                  <select name="type" required className="tickets-input">
                     <option value="COMPLAINT">Complaint</option>
                     <option value="REQUEST">Request</option>
                     <option value="ISSUE">Issue</option>
                     <option value="TASK">Task</option>
                   </select>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Priority</label>
-                  <select name="priority" required className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
+                <div className="tickets-field">
+                  <label className="tickets-label">Priority</label>
+                  <select name="priority" required className="tickets-input">
                     <option value="LOW">Low</option>
                     <option value="MEDIUM">Medium</option>
                     <option value="HIGH">High</option>
@@ -387,9 +384,9 @@ export default function Tickets() {
                   </select>
                 </div>
               </div>
-              <div className="flex gap-3 pt-4">
-                <button type="button" onClick={() => setShowModal(false)} className="flex-1 px-4 py-2 border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition">Cancel</button>
-                <button type="submit" className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">Create</button>
+              <div className="tickets-form-actions">
+                <button type="button" onClick={() => setShowModal(false)} className="tickets-cancel-button">Cancel</button>
+                <button type="submit" className="tickets-submit-button">Create</button>
               </div>
             </form>
           </div>
@@ -398,29 +395,29 @@ export default function Tickets() {
 
       {/* Assign Modal */}
       {showAssignModal && selectedTicket && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-xl w-full max-w-md">
-            <div className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-slate-700">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Assign Ticket</h3>
-              <button onClick={() => setShowAssignModal(false)} className="p-1 hover:bg-gray-100 dark:hover:bg-slate-700 rounded">
-                <X size={20} className="text-gray-500 dark:text-gray-400" />
+        <div className="tickets-modal">
+          <div className="tickets-modal-card">
+            <div className="tickets-modal-header">
+              <h3 className="tickets-modal-title">Assign Ticket</h3>
+              <button onClick={() => setShowAssignModal(false)} className="tickets-modal-close">
+                <X size={20} />
               </button>
             </div>
-            <form onSubmit={handleAssign} className="p-4 space-y-4">
-              <div className="bg-gray-50 dark:bg-slate-700 p-3 rounded-lg">
-                <p className="text-sm text-gray-600 dark:text-gray-400">Ticket ID: <span className="font-medium text-gray-900 dark:text-white">#{selectedTicket.id}</span></p>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{selectedTicket.title}</p>
+            <form onSubmit={handleAssign} className="tickets-modal-body">
+              <div className="tickets-assign-summary">
+                <p className="tickets-assign-text">Ticket ID: <span className="tickets-assign-strong">#{selectedTicket.id}</span></p>
+                <p className="tickets-assign-text">{selectedTicket.title}</p>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Assign To</label>
-                <select name="employeeId" required className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
+              <div className="tickets-field">
+                <label className="tickets-label">Assign To</label>
+                <select name="employeeId" required className="tickets-input">
                   <option value="">Select Employee</option>
                   {employees.map(e => <option key={e.id} value={e.id}>{e.name} ({e.email})</option>)}
                 </select>
               </div>
-              <div className="flex gap-3 pt-4">
-                <button type="button" onClick={() => setShowAssignModal(false)} className="flex-1 px-4 py-2 border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition">Cancel</button>
-                <button type="submit" className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">Assign</button>
+              <div className="tickets-form-actions">
+                <button type="button" onClick={() => setShowAssignModal(false)} className="tickets-cancel-button">Cancel</button>
+                <button type="submit" className="tickets-submit-button">Assign</button>
               </div>
             </form>
           </div>

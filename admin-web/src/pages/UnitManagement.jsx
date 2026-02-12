@@ -19,40 +19,10 @@ const unitTypeIcons = {
   OFFICE: Briefcase
 }
 
-const unitTypeColors = {
-  FLAT: 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400',
-  SHOP: 'bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400',
-  OFFICE: 'bg-purple-50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400'
-}
-
-const roleColors = {
-  PLATFORM_OWNER: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300',
-  ORGANIZATION_OWNER: 'bg-violet-100 text-violet-800 dark:bg-violet-900/30 dark:text-violet-300',
-  SOCIETY_ADMIN: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300',
-  CHAIRMAN: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-300',
-  SECRETARY: 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900/30 dark:text-cyan-300',
-  TREASURER: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
-  COMMITTEE: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300',
-  MANAGER: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300',
-  EMPLOYEE: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300',
-  MEMBER: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300',
-  TENANT: 'bg-pink-100 text-pink-800 dark:bg-pink-900/30 dark:text-pink-300',
-  VISITOR: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300',
-}
-
-const roleHierarchyInfo = {
-  PLATFORM_OWNER: 'Platform Owner - Manages all societies and organizations',
-  ORGANIZATION_OWNER: 'Organization Owner - Manages multiple societies under an organization',
-  SOCIETY_ADMIN: 'Society Super Admin - Full control over society, all CRUD operations',
-  CHAIRMAN: 'Highest Committee Authority - Presides meetings, final approval, bank signatory',
-  SECRETARY: 'Administrative Head - Documentation, records, day-to-day operations',
-  TREASURER: 'Financial Head - Finances, billing, payments, accounts',
-  COMMITTEE: 'Committee Member - Intermediate management',
-  MANAGER: 'Operational Manager - Handles day-to-day management tasks',
-  EMPLOYEE: 'Staff/Security - Handles visitors, basic operations',
-  MEMBER: 'Flat Owner - Views own data, raises tickets/complaints',
-  TENANT: 'Renter - Limited access to own profile & bills',
-  VISITOR: 'Guest - Minimal access, read-only',
+const unitTypeClasses = {
+  FLAT: 'units-type units-type--flat',
+  SHOP: 'units-type units-type--shop',
+  OFFICE: 'units-type units-type--office'
 }
 
 export default function UnitManagement() {
@@ -589,7 +559,7 @@ export default function UnitManagement() {
   }
 
   const getUnitIcon = (type) => unitTypeIcons[type] || Home
-  const getUnitColor = (type) => unitTypeColors[type] || unitTypeColors.FLAT
+  const getUnitColor = (type) => unitTypeClasses[type] || unitTypeClasses.FLAT
 
   // Stats - count units with assigned user as occupied
   const stats = useMemo(() => {
@@ -616,38 +586,38 @@ export default function UnitManagement() {
   }, [flats, memberUsers, currentSociety])
 
   return (
-    <div>
+    <div className="units-page">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+      <div className="units-header">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-            <Building2 className="w-7 h-7 text-blue-600" />
-            Management
+          <h1 className="units-title">
+            <Home className="units-title-icon" />
+            Unit Management
           </h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">
-            Manage units and users in one place
+          <p className="units-subtitle">
+            Manage units and their assigned users in one place
           </p>
         </div>
-        <div className="flex gap-2 flex-wrap">
-          {activeTab === 'units' && canEditUnits && (
+        <div className="units-header-actions">
+          {canEditUnits && (
             <>
               <button
                 onClick={() => setShowBulkCreateModal(true)}
-                className="inline-flex items-center gap-2 px-4 py-2 border border-green-300 dark:border-green-700 text-green-700 dark:text-green-300 rounded-lg hover:bg-green-50 dark:hover:bg-green-900/20 transition"
+                className="units-bulk-button units-bulk-button--success"
               >
                 <UsersRound size={18} />
                 Bulk Create Users
               </button>
               <button
                 onClick={() => setShowBulkImportModal(true)}
-                className="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition"
+                className="units-bulk-button"
               >
                 <Upload size={18} />
                 Import Units
               </button>
               <button
                 onClick={() => openUnitModal()}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                className="units-add-button"
               >
                 <Plus size={20} />
                 Add Unit
@@ -727,7 +697,7 @@ export default function UnitManagement() {
       {activeTab === 'units' && (
       <>
       {/* Stats Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4 mb-6">
+      <div className="units-stats">
         <StatCard label="Total Units" value={stats.totalUnits} icon={Layers} color="blue" />
         <StatCard label="Flats" value={`${stats.flats}/${stats.maxFlats}`} icon={Home} color="indigo" />
         <StatCard label="Shops" value={`${stats.shops}/${stats.maxShops}`} icon={Store} color="green" />
@@ -739,34 +709,34 @@ export default function UnitManagement() {
 
       {/* API Error Alert */}
       {apiError && (
-        <div className="flex items-center justify-between gap-2 p-4 mb-6 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-red-700 dark:text-red-300">
-          <div className="flex items-center gap-2">
+        <div className="units-alert">
+          <div className="units-alert-content">
             <AlertCircle size={20} />
             <span>{apiError}</span>
           </div>
-          <button onClick={() => setApiError('')} className="p-1 hover:bg-red-100 dark:hover:bg-red-800 rounded">
+          <button onClick={() => setApiError('')} className="units-alert-close">
             <X size={18} />
           </button>
         </div>
       )}
 
       {/* Filters */}
-      <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-4 mb-6">
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+      <div className="units-filters">
+        <div className="units-filters-row">
+          <div className="units-search">
+            <Search className="units-search-icon" />
             <input
               type="text"
               placeholder="Search by unit number or user name..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white placeholder:text-gray-400"
+              className="units-search-input"
             />
           </div>
           <select
             value={filterType}
             onChange={(e) => setFilterType(e.target.value)}
-            className="px-4 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
+            className="units-filter-select"
           >
             <option value="">All Types</option>
             <option value="FLAT">Flats</option>
@@ -774,14 +744,12 @@ export default function UnitManagement() {
             <option value="OFFICE">Offices</option>
           </select>
           {/* View toggle */}
-          <div className="flex rounded-lg border border-gray-300 dark:border-slate-600 overflow-hidden">
+          <div className="units-view-toggle">
             <button
               onClick={() => setViewMode('units')}
               className={clsx(
-                'px-4 py-2 text-sm font-medium transition',
-                viewMode === 'units'
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-white dark:bg-slate-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-600'
+                'units-view-button',
+                viewMode === 'units' && 'is-active'
               )}
             >
               Cards
@@ -789,10 +757,8 @@ export default function UnitManagement() {
             <button
               onClick={() => setViewMode('table')}
               className={clsx(
-                'px-4 py-2 text-sm font-medium transition',
-                viewMode === 'table'
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-white dark:bg-slate-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-600'
+                'units-view-button',
+                viewMode === 'table' && 'is-active'
               )}
             >
               Table
@@ -803,12 +769,12 @@ export default function UnitManagement() {
 
       {/* Content */}
       {flatsLoading ? (
-        <div className="p-8 text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+        <div className="units-loading">
+          <div className="units-spinner" />
         </div>
       ) : viewMode === 'units' ? (
         /* Card View */
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="units-grid">
           {filteredUnits.map((unit) => {
             const UnitIcon = getUnitIcon(unit.unitType)
             const unitColor = getUnitColor(unit.unitType)
@@ -816,19 +782,19 @@ export default function UnitManagement() {
             const hasAssignedUser = !!assignedUser
             
             return (
-              <div key={unit.id} className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-5 hover:shadow-md transition">
+              <div key={unit.id} className="units-card">
                 {/* Unit Header */}
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex items-center gap-3">
-                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${unitColor}`}>
-                      <UnitIcon className="w-6 h-6" />
+                <div className="units-card-header">
+                  <div className="units-card-title-row">
+                    <div className={clsx('units-card-icon', unitColor)}>
+                      <UnitIcon className="units-card-icon-svg" />
                     </div>
                     <div>
-                      <h3 className="font-bold text-lg text-gray-900 dark:text-white">{unit.flatNumber}</h3>
-                      <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+                      <h3 className="units-card-title">{unit.flatNumber}</h3>
+                      <div className="units-card-meta">
                         {unit.wingName && (
-                          <span className="flex items-center gap-1">
-                            <Layers className="w-3 h-3" />
+                          <span className="units-card-meta-item">
+                            <Layers className="units-card-meta-icon" />
                             {unit.wingName}
                           </span>
                         )}
@@ -837,52 +803,51 @@ export default function UnitManagement() {
                     </div>
                   </div>
                   <span className={clsx(
-                    'px-2 py-1 rounded-full text-xs font-medium',
-                    hasAssignedUser ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' : 'bg-gray-100 text-gray-600 dark:bg-slate-700 dark:text-gray-400'
+                    'units-status',
+                    hasAssignedUser ? 'is-occupied' : 'is-vacant'
                   )}>
                     {hasAssignedUser ? 'Occupied' : 'Vacant'}
                   </span>
                 </div>
 
                 {/* Unit Details */}
-                <div className="space-y-2 mb-4 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-gray-500 dark:text-gray-400">Type:</span>
-                    <span className="font-medium text-gray-900 dark:text-white">{unit.flatType || unit.unitType || 'FLAT'}</span>
+                <div className="units-card-details">
+                  <div className="units-card-detail-row">
+                    <span className="units-card-detail-label">Type:</span>
+                    <span className="units-card-detail-value">{unit.flatType || unit.unitType || 'FLAT'}</span>
                   </div>
                   {unit.area > 0 && (
-                    <div className="flex justify-between">
-                      <span className="text-gray-500 dark:text-gray-400">Area:</span>
-                      <span className="font-medium text-gray-900 dark:text-white">{unit.area} sq.ft</span>
+                    <div className="units-card-detail-row">
+                      <span className="units-card-detail-label">Area:</span>
+                      <span className="units-card-detail-value">{unit.area} sq.ft</span>
                     </div>
                   )}
                 </div>
 
                 {/* Assigned User - single user per unit */}
-                <div className="border-t border-gray-100 dark:border-slate-700 pt-4 mb-4">
-                  <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase mb-2">Assigned User</p>
+                <div className="units-assigned">
+                  <p className="units-assigned-title">Assigned User</p>
                   {assignedUser ? (
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full flex items-center justify-center bg-gradient-to-br from-blue-500 to-indigo-600">
-                        <span className="text-white font-bold text-sm">
+                    <div className="units-assigned-user">
+                      <div className="units-assigned-avatar">
+                        <span className="units-assigned-avatar-text">
                           {assignedUser.name?.charAt(0)?.toUpperCase()}
                         </span>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-gray-900 dark:text-white truncate">{assignedUser.name}</p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{assignedUser.phone || assignedUser.email}</p>
+                      <div className="units-assigned-meta">
+                        <p className="units-assigned-name">{assignedUser.name}</p>
+                        <p className="units-assigned-contact">{assignedUser.phone || assignedUser.email}</p>
                       </div>
-                      <span className={`text-xs px-2 py-1 rounded-full ${
-                        assignedUser.role === 'MEMBER' 
-                          ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300' 
-                          : 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300'
-                      }`}>
+                      <span className={clsx(
+                        'units-assigned-role',
+                        assignedUser.role === 'MEMBER' ? 'is-owner' : 'is-tenant'
+                      )}>
                         {assignedUser.role === 'MEMBER' ? 'Owner' : 'Tenant'}
                       </span>
                       {canEditUnits && (
                         <button
                           onClick={() => openEditUserModal(assignedUser, unit)}
-                          className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition"
+                          className="units-edit-user"
                           title="Edit User"
                         >
                           <Edit size={14} />
@@ -890,16 +855,16 @@ export default function UnitManagement() {
                       )}
                     </div>
                   ) : (
-                    <p className="text-gray-400 dark:text-gray-500 text-sm italic">No user assigned</p>
+                    <p className="units-assigned-empty">No user assigned</p>
                   )}
                 </div>
 
                 {/* Actions */}
                 {canEditUnits && (
-                  <div className="flex gap-2 pt-3 border-t border-gray-100 dark:border-slate-700">
+                  <div className="units-card-actions">
                     <button
                       onClick={() => openUnitModal(unit)}
-                      className="flex-1 inline-flex items-center justify-center gap-1 px-3 py-2 text-sm bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-slate-600 transition"
+                      className="units-card-button"
                     >
                       <Edit size={14} />
                       Edit
@@ -907,7 +872,7 @@ export default function UnitManagement() {
                     {!hasAssignedUser && (
                       <button
                         onClick={() => openUserModal(unit)}
-                        className="flex-1 inline-flex items-center justify-center gap-1 px-3 py-2 text-sm bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-900/50 transition"
+                        className="units-card-button units-card-button--primary"
                       >
                         <UserPlus size={14} />
                         Add User
@@ -919,7 +884,7 @@ export default function UnitManagement() {
                           deleteUnitMutation.mutate(unit.id)
                         }
                       }}
-                      className="p-2 text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition"
+                      className="units-card-delete"
                     >
                       <Trash2 size={16} />
                     </button>
@@ -931,82 +896,82 @@ export default function UnitManagement() {
         </div>
       ) : (
         /* Table View */
-        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50 dark:bg-slate-700 border-b border-gray-100 dark:border-slate-700">
+        <div className="units-table-card">
+          <div className="units-table-scroll">
+            <table className="units-table">
+              <thead className="units-thead">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Unit</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Wing</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Type</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Assigned User</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Contact</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Status</th>
+                  <th className="units-th">Unit</th>
+                  <th className="units-th">Wing</th>
+                  <th className="units-th">Type</th>
+                  <th className="units-th">Assigned User</th>
+                  <th className="units-th">Contact</th>
+                  <th className="units-th">Status</th>
                   {canEditUnits && (
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>
+                    <th className="units-th units-th--right">Actions</th>
                   )}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100 dark:divide-slate-700">
+              <tbody className="units-tbody">
                 {filteredUnits.map((unit) => {
                   const UnitIcon = getUnitIcon(unit.unitType)
                   const assignedUser = unitUserMap[unit.id]?.member
                   const hasAssignedUser = !!assignedUser
                   return (
-                    <tr key={unit.id} className="hover:bg-gray-50 dark:hover:bg-slate-700">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center gap-3">
-                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${getUnitColor(unit.unitType)}`}>
-                            <UnitIcon className="w-4 h-4" />
+                    <tr key={unit.id} className="units-row">
+                      <td className="units-cell">
+                        <div className="units-table-unit">
+                          <div className={clsx('units-table-icon', getUnitColor(unit.unitType))}>
+                            <UnitIcon className="units-table-icon-svg" />
                           </div>
                           <div>
-                            <span className="font-medium text-gray-900 dark:text-white">{unit.flatNumber}</span>
-                            <p className="text-xs text-gray-500 dark:text-gray-400">Floor {unit.floor}</p>
+                            <span className="units-table-title">{unit.flatNumber}</span>
+                            <p className="units-table-subtitle">Floor {unit.floor}</p>
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="units-cell">
                         {unit.wingName ? (
-                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300">
-                            <Layers className="w-3 h-3" />
+                          <span className="units-wing-badge">
+                            <Layers className="units-wing-icon" />
                             {unit.wingName}
                           </span>
                         ) : (
-                          <span className="text-gray-400 dark:text-gray-500">-</span>
+                          <span className="units-cell--muted">-</span>
                         )}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="text-gray-600 dark:text-gray-300">{unit.flatType || unit.unitType || 'FLAT'}</span>
+                      <td className="units-cell units-cell--muted">
+                        {unit.flatType || unit.unitType || 'FLAT'}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="text-gray-900 dark:text-white">{assignedUser?.name || '-'}</span>
+                      <td className="units-cell">
+                        <span className="units-cell--strong">{assignedUser?.name || '-'}</span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm">
-                          <p className="text-gray-600 dark:text-gray-300">{assignedUser?.phone || '-'}</p>
-                          <p className="text-xs text-gray-500 dark:text-gray-400">{assignedUser?.email || ''}</p>
+                      <td className="units-cell">
+                        <div className="units-table-contact">
+                          <p className="units-table-contact-main">{assignedUser?.phone || '-'}</p>
+                          <p className="units-table-contact-sub">{assignedUser?.email || ''}</p>
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="units-cell">
                         <span className={clsx(
-                          'px-2 py-1 rounded-full text-xs font-medium',
-                          hasAssignedUser ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' : 'bg-gray-100 text-gray-600 dark:bg-slate-700 dark:text-gray-400'
+                          'units-status',
+                          hasAssignedUser ? 'is-occupied' : 'is-vacant'
                         )}>
                           {hasAssignedUser ? 'Occupied' : 'Vacant'}
                         </span>
                       </td>
                       {canEditUnits && (
-                        <td className="px-6 py-4 whitespace-nowrap text-right">
+                        <td className="units-cell units-cell--right">
                           <button
                             onClick={() => openUnitModal(unit)}
-                            className="p-1.5 text-gray-500 dark:text-gray-400 hover:text-blue-600 transition"
+                            className="units-table-action units-table-action--edit"
                           >
                             <Edit size={18} />
                           </button>
                           {!hasAssignedUser && (
                             <button
                               onClick={() => openUserModal(unit)}
-                              className="p-1.5 text-gray-500 dark:text-gray-400 hover:text-green-600 transition ml-1"
+                              className="units-table-action units-table-action--add"
                             >
                               <UserPlus size={18} />
                             </button>
@@ -1014,7 +979,7 @@ export default function UnitManagement() {
                           {hasAssignedUser && (
                             <button
                               onClick={() => openEditUserModal(assignedUser, unit)}
-                              className="p-1.5 text-gray-500 dark:text-gray-400 hover:text-purple-600 transition ml-1"
+                              className="units-table-action units-table-action--user"
                               title="Edit User"
                             >
                               <UserCog size={18} />
@@ -1026,7 +991,7 @@ export default function UnitManagement() {
                                 deleteUnitMutation.mutate(unit.id)
                               }
                             }}
-                            className="p-1.5 text-gray-500 dark:text-gray-400 hover:text-red-600 transition ml-1"
+                            className="units-table-action units-table-action--delete"
                           >
                             <Trash2 size={18} />
                           </button>
@@ -1513,24 +1478,24 @@ export default function UnitManagement() {
 // Stat Card Component
 function StatCard({ label, value, icon: Icon, color }) {
   const colorClasses = {
-    blue: 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400',
-    indigo: 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400',
-    green: 'bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400',
-    purple: 'bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400',
-    teal: 'bg-teal-50 dark:bg-teal-900/20 text-teal-600 dark:text-teal-400',
-    orange: 'bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400',
-    pink: 'bg-pink-50 dark:bg-pink-900/20 text-pink-600 dark:text-pink-400',
+    blue: 'units-stat-icon units-stat-icon--blue',
+    indigo: 'units-stat-icon units-stat-icon--indigo',
+    green: 'units-stat-icon units-stat-icon--green',
+    purple: 'units-stat-icon units-stat-icon--purple',
+    teal: 'units-stat-icon units-stat-icon--teal',
+    orange: 'units-stat-icon units-stat-icon--orange',
+    pink: 'units-stat-icon units-stat-icon--pink',
   }
   
   return (
-    <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-4">
-      <div className="flex items-center gap-3">
-        <div className={`p-2 rounded-lg ${colorClasses[color]}`}>
-          <Icon className="w-5 h-5" />
+    <div className="units-stat-card">
+      <div className="units-stat-content">
+        <div className={colorClasses[color]}>
+          <Icon className="units-stat-icon-svg" />
         </div>
         <div>
-          <p className="text-2xl font-bold text-gray-900 dark:text-white">{value}</p>
-          <p className="text-xs text-gray-500 dark:text-gray-400">{label}</p>
+          <p className="units-stat-value">{value}</p>
+          <p className="units-stat-label">{label}</p>
         </div>
       </div>
     </div>
@@ -1561,19 +1526,19 @@ function UnitFormModal({ unit, societies, wings, isPlatformLevel, userSocietyId,
   const maxFloor = selectedWing?.totalFloors || 100
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-      <div className="bg-white dark:bg-slate-800 rounded-xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-slate-700 sticky top-0 bg-white dark:bg-slate-800">
-          <h3 className="text-lg font-semibold dark:text-white">{unit ? 'Edit Unit' : 'Add Unit'}</h3>
-          <button onClick={onClose} className="p-1 hover:bg-gray-100 dark:hover:bg-slate-700 rounded">
-            <X size={20} className="text-gray-500 dark:text-gray-400" />
+    <div className="units-modal">
+      <div className="units-modal-card">
+        <div className="units-modal-header">
+          <h3 className="units-modal-title">{unit ? 'Edit Unit' : 'Add Unit'}</h3>
+          <button onClick={onClose} className="units-modal-close">
+            <X size={20} />
           </button>
         </div>
 
-        {apiError && <div className="mx-4 mt-4"><FormErrorSummary message={apiError} /></div>}
-        {errors.capacity && <div className="mx-4 mt-4"><FormErrorSummary message={errors.capacity} /></div>}
+        {apiError && <div className="units-modal-alert"><FormErrorSummary message={apiError} /></div>}
+        {errors.capacity && <div className="units-modal-alert"><FormErrorSummary message={errors.capacity} /></div>}
 
-        <form onSubmit={onSubmit} className="p-4 space-y-4">
+        <form onSubmit={onSubmit} className="units-modal-body">
           {/* Society (PLATFORM_OWNER only) */}
           {isPlatformLevel ? (
             <SmartSelect
@@ -1591,7 +1556,7 @@ function UnitFormModal({ unit, societies, wings, isPlatformLevel, userSocietyId,
           )}
 
           {/* Unit Type and Wing */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="units-modal-grid">
             <SmartSelect
               label="Unit Type"
               name="unitType"
@@ -1615,7 +1580,7 @@ function UnitFormModal({ unit, societies, wings, isPlatformLevel, userSocietyId,
           </div>
 
           {/* Flat Number and Type */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="units-modal-grid">
             <FormInput
               label="Unit Number"
               name="flatNumber"
@@ -1675,7 +1640,7 @@ function UnitFormModal({ unit, societies, wings, isPlatformLevel, userSocietyId,
           </div>
 
           {/* Floor and Area */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="units-modal-grid">
             <NumberInput
               label={`Floor${selectedWingId && selectedWing?.totalFloors ? ` (0 to ${selectedWing.totalFloors})` : ''}`}
               name="floor"
@@ -1700,18 +1665,18 @@ function UnitFormModal({ unit, societies, wings, isPlatformLevel, userSocietyId,
           {/* Note: Owner/user will be added via the 'Add User' button after creating the unit */}
 
           {/* Submit Button */}
-          <div className="flex gap-3 pt-4 border-t border-gray-100 dark:border-slate-700">
+          <div className="units-modal-actions">
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-4 py-2 border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition"
+              className="units-modal-cancel"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isLoading}
-              className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
+              className="units-modal-submit"
             >
               {isLoading ? 'Saving...' : unit ? 'Update Unit' : 'Create Unit'}
             </button>
@@ -1725,24 +1690,24 @@ function UnitFormModal({ unit, societies, wings, isPlatformLevel, userSocietyId,
 // User Form Modal for linking user to unit
 function UserFormModal({ unit, errors, apiError, onSubmit, onClose, isLoading }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-      <div className="bg-white dark:bg-slate-800 rounded-xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-slate-700 sticky top-0 bg-white dark:bg-slate-800">
+    <div className="units-modal">
+      <div className="units-modal-card units-modal-card--compact">
+        <div className="units-modal-header">
           <div>
-            <h3 className="text-lg font-semibold dark:text-white">Add User to Unit</h3>
-            <p className="text-sm text-gray-500 dark:text-gray-400">Unit: {unit.flatNumber}</p>
+            <h3 className="units-modal-title">Add User to Unit</h3>
+            <p className="units-modal-subtitle">Unit: {unit.flatNumber}</p>
           </div>
-          <button onClick={onClose} className="p-1 hover:bg-gray-100 dark:hover:bg-slate-700 rounded">
-            <X size={20} className="text-gray-500 dark:text-gray-400" />
+          <button onClick={onClose} className="units-modal-close">
+            <X size={20} />
           </button>
         </div>
 
-        {apiError && <div className="mx-4 mt-4"><FormErrorSummary message={apiError} /></div>}
+        {apiError && <div className="units-modal-alert"><FormErrorSummary message={apiError} /></div>}
 
-        <form onSubmit={onSubmit} className="p-4 space-y-4">
-          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3 text-sm text-blue-700 dark:text-blue-300">
+        <form onSubmit={onSubmit} className="units-modal-body">
+          <div className="units-modal-note">
             <p><strong>Default Password:</strong> {unit.flatNumber?.padEnd(6, '123456') || '123456'}</p>
-            <p className="text-xs mt-1">User can change password after login</p>
+            <p className="units-modal-note-text">User can change password after login</p>
           </div>
 
           <FormInput
@@ -1778,18 +1743,18 @@ function UserFormModal({ unit, errors, apiError, onSubmit, onClose, isLoading })
             ]}
           />
 
-          <div className="flex gap-3 pt-4 border-t border-gray-100 dark:border-slate-700">
+          <div className="units-modal-actions">
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-4 py-2 border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition"
+              className="units-modal-cancel"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isLoading}
-              className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
+              className="units-modal-submit"
             >
               {isLoading ? 'Creating...' : 'Create User'}
             </button>
@@ -1803,23 +1768,23 @@ function UserFormModal({ unit, errors, apiError, onSubmit, onClose, isLoading })
 // Edit User Form Modal for editing user linked to unit
 function EditUserFormModal({ user, unit, errors, apiError, onSubmit, onClose, isLoading }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-      <div className="bg-white dark:bg-slate-800 rounded-xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-slate-700 sticky top-0 bg-white dark:bg-slate-800">
+    <div className="units-modal">
+      <div className="units-modal-card units-modal-card--compact">
+        <div className="units-modal-header">
           <div>
-            <h3 className="text-lg font-semibold dark:text-white">Edit User</h3>
-            <p className="text-sm text-gray-500 dark:text-gray-400">Unit: {unit.flatNumber}</p>
+            <h3 className="units-modal-title">Edit User</h3>
+            <p className="units-modal-subtitle">Unit: {unit.flatNumber}</p>
           </div>
-          <button onClick={onClose} className="p-1 hover:bg-gray-100 dark:hover:bg-slate-700 rounded">
-            <X size={20} className="text-gray-500 dark:text-gray-400" />
+          <button onClick={onClose} className="units-modal-close">
+            <X size={20} />
           </button>
         </div>
 
-        {apiError && <div className="mx-4 mt-4"><FormErrorSummary message={apiError} /></div>}
+        {apiError && <div className="units-modal-alert"><FormErrorSummary message={apiError} /></div>}
 
-        <form onSubmit={onSubmit} className="p-4 space-y-4">
-          <div className="bg-gray-50 dark:bg-slate-700 rounded-lg p-3 text-sm">
-            <p className="text-gray-600 dark:text-gray-300">User ID: <span className="font-mono text-xs text-gray-500">{user.id}</span></p>
+        <form onSubmit={onSubmit} className="units-modal-body">
+          <div className="units-modal-meta">
+            <p className="units-modal-meta-text">User ID: <span className="units-modal-meta-id">{user.id}</span></p>
           </div>
 
           <FormInput
@@ -1858,18 +1823,18 @@ function EditUserFormModal({ user, unit, errors, apiError, onSubmit, onClose, is
             ]}
           />
 
-          <div className="flex gap-3 pt-4 border-t border-gray-100 dark:border-slate-700">
+          <div className="units-modal-actions">
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-4 py-2 border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition"
+              className="units-modal-cancel"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isLoading}
-              className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
+              className="units-modal-submit"
             >
               {isLoading ? 'Saving...' : 'Update User'}
             </button>
@@ -1965,18 +1930,18 @@ function BulkImportModal({ onClose, societyId, userId, onSuccess }) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-      <div className="bg-white dark:bg-slate-800 rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden">
-        <div className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-slate-700">
-          <h3 className="text-lg font-semibold dark:text-white">Bulk Import Units</h3>
-          <button onClick={onClose} className="p-1 hover:bg-gray-100 dark:hover:bg-slate-700 rounded">
-            <X size={20} className="text-gray-500 dark:text-gray-400" />
+    <div className="units-modal">
+      <div className="units-modal-card units-modal-card--wide">
+        <div className="units-modal-header">
+          <h3 className="units-modal-title">Bulk Import Units</h3>
+          <button onClick={onClose} className="units-modal-close">
+            <X size={20} />
           </button>
         </div>
 
-        <div className="p-4 overflow-y-auto max-h-[calc(90vh-120px)]">
+        <div className="units-modal-scroll">
           {error && (
-            <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg flex items-center gap-2 text-red-700 dark:text-red-300">
+            <div className="units-import-alert">
               <AlertCircle size={18} />
               {error}
             </div>
@@ -1985,30 +1950,30 @@ function BulkImportModal({ onClose, societyId, userId, onSuccess }) {
           {step === 'upload' && (
             <>
               <div 
-                className="border-2 border-dashed border-gray-300 dark:border-slate-600 rounded-xl p-8 text-center"
+                className="units-import-dropzone"
                 onDrop={handleDrop}
                 onDragOver={(e) => e.preventDefault()}
               >
                 {file ? (
-                  <div className="flex items-center justify-center gap-2">
-                    <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
-                      <Upload className="w-6 h-6 text-green-600 dark:text-green-400" />
+                  <div className="units-import-file">
+                    <div className="units-import-file-icon">
+                      <Upload className="units-import-file-icon-svg" />
                     </div>
-                    <span className="text-gray-700 dark:text-gray-300">{file.name}</span>
+                    <span className="units-import-file-name">{file.name}</span>
                     <button 
                       onClick={() => setFile(null)}
-                      className="p-1 hover:bg-gray-100 dark:hover:bg-slate-700 rounded"
+                      className="units-import-file-remove"
                     >
-                      <X size={18} className="text-gray-500" />
+                      <X size={18} />
                     </button>
                   </div>
                 ) : (
                   <>
-                    <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                    <p className="text-gray-600 dark:text-gray-400 mb-2">
+                    <Upload className="units-import-drop-icon" />
+                    <p className="units-import-drop-title">
                       Drag and drop your Excel file here, or click to browse
                     </p>
-                    <p className="text-sm text-gray-500 dark:text-gray-500 mb-4">
+                    <p className="units-import-drop-subtitle">
                       Supported format: .xlsx, .xls
                     </p>
                   </>
@@ -2023,7 +1988,7 @@ function BulkImportModal({ onClose, societyId, userId, onSuccess }) {
                 {!file && (
                   <label
                     htmlFor="excel-upload"
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 cursor-pointer transition"
+                    className="units-import-button units-import-button--primary"
                   >
                     <Upload size={18} />
                     Select File
@@ -2031,43 +1996,43 @@ function BulkImportModal({ onClose, societyId, userId, onSuccess }) {
                 )}
               </div>
 
-              <div className="mt-4 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border border-blue-200 dark:border-blue-800 rounded-xl">
-                <div className="flex items-center justify-between mb-3">
-                  <h4 className="font-semibold text-blue-900 dark:text-blue-100 flex items-center gap-2">
-                    <span className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></span>
+              <div className="units-import-help">
+                <div className="units-import-help-header">
+                  <h4 className="units-import-help-title">
+                    <span className="units-import-help-dot"></span>
                     Excel Format Requirements
                   </h4>
                   <button
                     onClick={downloadTemplate}
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white text-sm font-medium rounded-lg shadow-md shadow-emerald-500/25 hover:shadow-lg hover:shadow-emerald-500/30 transform hover:-translate-y-0.5 transition-all duration-200"
+                    className="units-import-button units-import-button--success"
                   >
                     <Download size={16} />
                     Download Template
                   </button>
                 </div>
-                <ul className="text-sm text-blue-700 dark:text-blue-300 space-y-2">
-                  <li className="flex items-start gap-2">
-                    <span className="inline-flex items-center justify-center w-5 h-5 bg-blue-100 dark:bg-blue-800 text-blue-600 dark:text-blue-300 text-xs font-bold rounded mt-0.5">A</span>
+                <ul className="units-import-help-list">
+                  <li className="units-import-help-item">
+                    <span className="units-import-help-badge">A</span>
                     <span><strong>Unit Type</strong> (required) - FLAT, SHOP, or OFFICE</span>
                   </li>
-                  <li className="flex items-start gap-2">
-                    <span className="inline-flex items-center justify-center w-5 h-5 bg-blue-100 dark:bg-blue-800 text-blue-600 dark:text-blue-300 text-xs font-bold rounded mt-0.5">B</span>
+                  <li className="units-import-help-item">
+                    <span className="units-import-help-badge">B</span>
                     <span><strong>Wing</strong> (optional) - Wing name/code</span>
                   </li>
-                  <li className="flex items-start gap-2">
-                    <span className="inline-flex items-center justify-center w-5 h-5 bg-blue-100 dark:bg-blue-800 text-blue-600 dark:text-blue-300 text-xs font-bold rounded mt-0.5">C</span>
+                  <li className="units-import-help-item">
+                    <span className="units-import-help-badge">C</span>
                     <span><strong>Unit Number</strong> (required) - e.g., A-101, S-01</span>
                   </li>
-                  <li className="flex items-start gap-2">
-                    <span className="inline-flex items-center justify-center w-5 h-5 bg-blue-100 dark:bg-blue-800 text-blue-600 dark:text-blue-300 text-xs font-bold rounded mt-0.5">D</span>
+                  <li className="units-import-help-item">
+                    <span className="units-import-help-badge">D</span>
                     <span><strong>Configuration</strong> (optional) - e.g., 2BHK, RETAIL</span>
                   </li>
-                  <li className="flex items-start gap-2">
-                    <span className="inline-flex items-center justify-center w-5 h-5 bg-blue-100 dark:bg-blue-800 text-blue-600 dark:text-blue-300 text-xs font-bold rounded mt-0.5">E</span>
+                  <li className="units-import-help-item">
+                    <span className="units-import-help-badge">E</span>
                     <span><strong>Floor</strong> (required) - Floor number</span>
                   </li>
-                  <li className="flex items-start gap-2">
-                    <span className="inline-flex items-center justify-center w-5 h-5 bg-blue-100 dark:bg-blue-800 text-blue-600 dark:text-blue-300 text-xs font-bold rounded mt-0.5">F</span>
+                  <li className="units-import-help-item">
+                    <span className="units-import-help-badge">F</span>
                     <span><strong>Area</strong> (optional) - Size in sq.ft</span>
                   </li>
                 </ul>
@@ -2077,74 +2042,71 @@ function BulkImportModal({ onClose, societyId, userId, onSuccess }) {
 
           {step === 'preview' && validationResults && (
             <>
-              <div className="mb-4 flex gap-4">
-                <div className={`flex-1 p-4 rounded-xl text-center transition-all duration-300 ${
-                  validationResults.successCount > 0 
-                    ? 'bg-gradient-to-br from-emerald-500 to-green-600 shadow-lg shadow-green-500/30' 
-                    : 'bg-gray-100 dark:bg-slate-700/50 border border-gray-200 dark:border-slate-600'
-                }`}>
-                  <div className={`text-3xl font-bold ${validationResults.successCount > 0 ? 'text-white' : 'text-gray-400'}`}>
+              <div className="units-import-summary">
+                <div className={clsx(
+                  'units-import-summary-card',
+                  validationResults.successCount > 0 && 'is-success'
+                )}>
+                  <div className="units-import-summary-value">
                     {validationResults.successCount}
                   </div>
-                  <div className={`text-sm font-medium ${validationResults.successCount > 0 ? 'text-emerald-100' : 'text-gray-500'}`}>
+                  <div className="units-import-summary-label">
                     Valid
                   </div>
                 </div>
-                <div className={`flex-1 p-4 rounded-xl text-center transition-all duration-300 ${
-                  validationResults.failureCount > 0 
-                    ? 'bg-gradient-to-br from-rose-500 to-red-600 shadow-lg shadow-red-500/30' 
-                    : 'bg-gray-100 dark:bg-slate-700/50 border border-gray-200 dark:border-slate-600'
-                }`}>
-                  <div className={`text-3xl font-bold ${validationResults.failureCount > 0 ? 'text-white' : 'text-gray-400'}`}>
+                <div className={clsx(
+                  'units-import-summary-card',
+                  validationResults.failureCount > 0 ? 'is-error' : 'is-idle'
+                )}>
+                  <div className="units-import-summary-value">
                     {validationResults.failureCount}
                   </div>
-                  <div className={`text-sm font-medium ${validationResults.failureCount > 0 ? 'text-rose-100' : 'text-gray-500'}`}>
+                  <div className="units-import-summary-label">
                     {validationResults.failureCount > 0 ? 'Needs Fixing' : 'Invalid'}
                   </div>
                 </div>
               </div>
 
-              <div className="border dark:border-slate-700 rounded-xl overflow-hidden shadow-sm">
-                <table className="w-full text-sm">
-                  <thead className="bg-gradient-to-r from-gray-50 to-slate-50 dark:from-slate-700 dark:to-slate-600">
+              <div className="units-import-table-card">
+                <table className="units-import-table">
+                  <thead className="units-import-thead">
                     <tr>
-                      <th className="px-3 py-3 text-left font-semibold dark:text-white">Row</th>
-                      <th className="px-3 py-3 text-left font-semibold dark:text-white">Unit</th>
-                      <th className="px-3 py-3 text-left font-semibold dark:text-white">Type</th>
-                      <th className="px-3 py-3 text-left font-semibold dark:text-white">Wing</th>
-                      <th className="px-3 py-3 text-left font-semibold dark:text-white">Status</th>
+                      <th className="units-import-th">Row</th>
+                      <th className="units-import-th">Unit</th>
+                      <th className="units-import-th">Type</th>
+                      <th className="units-import-th">Wing</th>
+                      <th className="units-import-th">Status</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y dark:divide-slate-700">
+                  <tbody className="units-import-tbody">
                     {validationResults.results?.map((result, idx) => (
                       <tr 
                         key={idx} 
-                        className={`transition-colors duration-200 ${
-                          result.success 
-                            ? 'hover:bg-green-50/50 dark:hover:bg-green-900/10' 
-                            : 'bg-gradient-to-r from-red-50 to-rose-50 dark:from-red-900/20 dark:to-rose-900/20 border-l-4 border-l-red-500'
-                        }`}
+                        className={clsx('units-import-row', result.success ? 'is-valid' : 'is-invalid')}
                       >
-                        <td className="px-3 py-3 dark:text-gray-300 font-mono text-xs">{result.rowNumber}</td>
-                        <td className="px-3 py-3 dark:text-gray-300 font-medium">{result.flatNumber}</td>
-                        <td className="px-3 py-3 dark:text-gray-300">
-                          <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                            result.unitType === 'FLAT' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' :
-                            result.unitType === 'SHOP' ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300' :
-                            'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300'
-                          }`}>
+                        <td className="units-import-cell units-import-cell--mono">{result.rowNumber}</td>
+                        <td className="units-import-cell units-import-cell--strong">{result.flatNumber}</td>
+                        <td className="units-import-cell">
+                          <span className={clsx(
+                            'units-import-badge',
+                            result.unitType === 'FLAT'
+                              ? 'is-flat'
+                              : result.unitType === 'SHOP'
+                                ? 'is-shop'
+                                : 'is-office'
+                          )}>
                             {result.unitType}
                           </span>
                         </td>
-                        <td className="px-3 py-3 dark:text-gray-300">{result.wingCode || '-'}</td>
-                        <td className="px-3 py-3">
+                        <td className="units-import-cell">{result.wingCode || '-'}</td>
+                        <td className="units-import-cell">
                           {result.success ? (
-                            <span className="inline-flex items-center gap-1 text-green-600 dark:text-green-400">
-                              <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                            <span className="units-import-status units-import-status--success">
+                              <span className="units-import-status-dot"></span>
                               Valid
                             </span>
                           ) : (
-                            <span className="text-red-600 dark:text-red-400 text-xs font-medium">{result.errorMessage}</span>
+                            <span className="units-import-status units-import-status--error">{result.errorMessage}</span>
                           )}
                         </td>
                       </tr>
@@ -2156,53 +2118,52 @@ function BulkImportModal({ onClose, societyId, userId, onSuccess }) {
           )}
 
           {step === 'results' && importResults && (
-            <div className="text-center py-8">
-              <div className={`w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center ${
-                importResults.successCount > 0 
-                  ? 'bg-green-100 dark:bg-green-900/30' 
-                  : 'bg-red-100 dark:bg-red-900/30'
-              }`}>
+            <div className="units-import-results">
+              <div className={clsx(
+                'units-import-results-icon',
+                importResults.successCount > 0 ? 'is-success' : 'is-error'
+              )}>
                 {importResults.successCount > 0 ? (
-                  <Home className="w-8 h-8 text-green-600 dark:text-green-400" />
+                  <Home className="units-import-results-icon-svg" />
                 ) : (
-                  <AlertCircle className="w-8 h-8 text-red-600 dark:text-red-400" />
+                  <AlertCircle className="units-import-results-icon-svg" />
                 )}
               </div>
-              <h4 className="text-lg font-semibold dark:text-white mb-2">{importResults.message}</h4>
-              <div className="flex gap-4 justify-center">
-                <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                  <div className="text-xl font-bold text-green-600 dark:text-green-400">
+              <h4 className="units-import-results-title">{importResults.message}</h4>
+              <div className="units-import-results-grid">
+                <div className="units-import-results-card units-import-results-card--success">
+                  <div className="units-import-results-value">
                     {importResults.successCount}
                   </div>
-                  <div className="text-sm text-green-700 dark:text-green-300">Created</div>
+                  <div className="units-import-results-label">Created</div>
                 </div>
-                <div className="p-3 bg-red-50 dark:bg-red-900/20 rounded-lg">
-                  <div className="text-xl font-bold text-red-600 dark:text-red-400">
+                <div className="units-import-results-card units-import-results-card--error">
+                  <div className="units-import-results-value">
                     {importResults.failureCount}
                   </div>
-                  <div className="text-sm text-red-700 dark:text-red-300">Failed</div>
+                  <div className="units-import-results-label">Failed</div>
                 </div>
               </div>
             </div>
           )}
 
-          <div className="flex gap-3 mt-4">
+          <div className="units-import-actions">
             {step === 'upload' && (
               <>
                 <button
                   onClick={onClose}
-                  className="flex-1 px-4 py-2 border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition"
+                  className="units-import-button"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleValidate}
                   disabled={!file || isValidating}
-                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition flex items-center justify-center gap-2"
+                  className="units-import-button units-import-button--primary"
                 >
                   {isValidating ? (
                     <>
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      <div className="units-import-button-spinner" />
                       Validating...
                     </>
                   ) : (
@@ -2221,20 +2182,20 @@ function BulkImportModal({ onClose, societyId, userId, onSuccess }) {
                   // Check if this looks like a completely wrong file format
                   validationResults.failureCount === validationResults.totalRows ? (
                     // Wrong file format - all rows have errors
-                    <div className="w-full space-y-3">
-                      <div className="p-5 bg-gradient-to-br from-rose-500 to-red-600 dark:from-rose-600 dark:to-red-700 rounded-2xl shadow-xl shadow-red-500/30">
-                        <div className="flex items-start gap-4">
-                          <div className="flex-shrink-0 w-12 h-12 bg-white/20 backdrop-blur rounded-full flex items-center justify-center">
-                            <AlertCircle className="w-6 h-6 text-white" />
+                    <div className="units-import-message">
+                      <div className="units-import-message-card units-import-message-card--error">
+                        <div className="units-import-message-content">
+                          <div className="units-import-message-icon">
+                            <AlertCircle className="units-import-message-icon-svg" />
                           </div>
-                          <div className="flex-1">
-                            <h4 className="font-bold text-white text-lg mb-2">
+                          <div className="units-import-message-body">
+                            <h4 className="units-import-message-title">
                               Invalid File Format
                             </h4>
-                            <p className="text-rose-100 text-sm leading-relaxed">
+                            <p className="units-import-message-text">
                               The uploaded Excel file does not match the required format. Please ensure you are using the correct template with columns: <strong>Unit Type, Wing, Unit Number, Configuration, Floor, Area</strong>.
                             </p>
-                            <p className="text-rose-200 text-xs mt-2">
+                            <p className="units-import-message-footnote">
                               Download the template for reference and try again.
                             </p>
                           </div>
@@ -2246,7 +2207,7 @@ function BulkImportModal({ onClose, societyId, userId, onSuccess }) {
                           setValidationResults(null)
                           setStep('upload')
                         }}
-                        className="w-full px-4 py-3.5 accent-btn rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-center gap-2 font-semibold"
+                        className="units-import-button units-import-button--primary"
                       >
                         <Upload size={18} />
                         Upload Correct File
@@ -2254,17 +2215,17 @@ function BulkImportModal({ onClose, societyId, userId, onSuccess }) {
                     </div>
                   ) : (
                     // Some rows have errors - show fix message
-                    <div className="w-full space-y-3">
-                      <div className="p-5 bg-gradient-to-br from-amber-500 to-orange-500 dark:from-amber-600 dark:to-orange-600 rounded-2xl shadow-xl shadow-orange-500/30">
-                        <div className="flex items-start gap-4">
-                          <div className="flex-shrink-0 w-12 h-12 bg-white/20 backdrop-blur rounded-full flex items-center justify-center animate-bounce-gentle">
-                            <AlertCircle className="w-6 h-6 text-white" />
+                    <div className="units-import-message">
+                      <div className="units-import-message-card units-import-message-card--warning">
+                        <div className="units-import-message-content">
+                          <div className="units-import-message-icon">
+                            <AlertCircle className="units-import-message-icon-svg" />
                           </div>
-                          <div className="flex-1">
-                            <h4 className="font-bold text-white text-lg mb-2">
+                          <div className="units-import-message-body">
+                            <h4 className="units-import-message-title">
                               Please Fix {validationResults.failureCount} Error{validationResults.failureCount > 1 ? 's' : ''} Before Import
                             </h4>
-                            <p className="text-amber-100 text-sm leading-relaxed">
+                            <p className="units-import-message-text">
                               All rows must be valid to proceed. Please review the highlighted errors above, correct them in your Excel file, and re-upload.
                             </p>
                           </div>
@@ -2276,7 +2237,7 @@ function BulkImportModal({ onClose, societyId, userId, onSuccess }) {
                           setValidationResults(null)
                           setStep('upload')
                         }}
-                        className="w-full px-4 py-3.5 accent-btn rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-center gap-2 font-semibold"
+                        className="units-import-button units-import-button--primary"
                       >
                         <Upload size={18} />
                         Fix & Re-upload Excel
@@ -2285,21 +2246,21 @@ function BulkImportModal({ onClose, societyId, userId, onSuccess }) {
                   )
                 ) : (
                   // Show normal import button when all rows are valid
-                  <div className="flex gap-3 w-full">
+                  <div className="units-import-actions">
                     <button
                       onClick={() => setStep('upload')}
-                      className="flex-1 px-4 py-2 border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition"
+                      className="units-import-button"
                     >
                       Back
                     </button>
                     <button
                       onClick={handleImport}
                       disabled={isImporting}
-                      className="flex-1 px-4 py-3 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white rounded-xl shadow-lg shadow-green-500/25 hover:shadow-xl hover:shadow-green-500/30 transform hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-center gap-2 font-medium disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
+                      className="units-import-button units-import-button--success"
                     >
                       {isImporting ? (
                         <>
-                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          <div className="units-import-button-spinner" />
                           Importing...
                         </>
                       ) : (
@@ -2317,7 +2278,7 @@ function BulkImportModal({ onClose, societyId, userId, onSuccess }) {
             {step === 'results' && (
               <button
                 onClick={onClose}
-                className="flex-1 px-4 py-3 accent-btn rounded-xl shadow-lg hover:shadow-xl transition-all font-medium"
+                className="units-import-button units-import-button--primary"
               >
                 Done
               </button>
@@ -2332,31 +2293,31 @@ function BulkImportModal({ onClose, societyId, userId, onSuccess }) {
 // Bulk Create Users Modal
 function BulkCreateUsersModal({ isLoading, results, onConfirm, onClose }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-      <div className="bg-white dark:bg-slate-800 rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden">
-        <div className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-slate-700">
-          <h3 className="text-lg font-semibold dark:text-white">
+    <div className="units-modal">
+      <div className="units-modal-card units-modal-card--wide">
+        <div className="units-modal-header">
+          <h3 className="units-modal-title">
             {results ? 'Bulk Create Results' : 'Create Users in Bulk'}
           </h3>
-          <button onClick={onClose} className="p-1 hover:bg-gray-100 dark:hover:bg-slate-700 rounded">
-            <X size={20} className="text-gray-500 dark:text-gray-400" />
+          <button onClick={onClose} className="units-modal-close">
+            <X size={20} />
           </button>
         </div>
 
-        <div className="p-4 overflow-y-auto max-h-[calc(90vh-120px)]">
+        <div className="units-modal-scroll">
           {!results ? (
             <>
-              <div className="text-center py-6">
-                <div className="w-16 h-16 mx-auto mb-4 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center">
-                  <UsersRound className="w-8 h-8 text-green-600 dark:text-green-400" />
+              <div className="units-bulk-info">
+                <div className="units-bulk-icon">
+                  <UsersRound className="units-bulk-icon-svg" />
                 </div>
-                <h4 className="text-lg font-semibold dark:text-white mb-2">Create Users for All Units</h4>
-                <p className="text-gray-600 dark:text-gray-400 mb-4">
+                <h4 className="units-bulk-title">Create Users for All Units</h4>
+                <p className="units-bulk-text">
                   This will automatically create user accounts for all units that have an owner email configured but don't have an associated user yet.
                 </p>
-                <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 text-left mb-4">
-                  <h5 className="font-medium text-blue-900 dark:text-blue-100 mb-2">How it works:</h5>
-                  <ul className="text-sm text-blue-700 dark:text-blue-300 space-y-1">
+                <div className="units-bulk-callout">
+                  <h5 className="units-bulk-callout-title">How it works:</h5>
+                  <ul className="units-bulk-callout-list">
                     <li>• Email from unit owner details will be used as username</li>
                     <li>• Flat/Unit number will be used as the default password</li>
                     <li>• Units without owner email will be skipped</li>
@@ -2364,29 +2325,29 @@ function BulkCreateUsersModal({ isLoading, results, onConfirm, onClose }) {
                     <li>• All users will be created with MEMBER role</li>
                   </ul>
                 </div>
-                <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3 text-left">
-                  <p className="text-sm text-yellow-700 dark:text-yellow-300 flex items-center gap-2">
+                <div className="units-bulk-warning">
+                  <p className="units-bulk-warning-text">
                     <AlertCircle size={16} />
                     Users should change their password after first login
                   </p>
                 </div>
               </div>
 
-              <div className="flex gap-3">
+              <div className="units-bulk-actions">
                 <button
                   onClick={onClose}
-                  className="flex-1 px-4 py-2 border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition"
+                  className="units-modal-cancel"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={onConfirm}
                   disabled={isLoading}
-                  className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition flex items-center justify-center gap-2"
+                  className="units-modal-submit units-modal-submit--success"
                 >
                   {isLoading ? (
                     <>
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      <div className="units-import-button-spinner" />
                       Creating Users...
                     </>
                   ) : (
@@ -2400,70 +2361,72 @@ function BulkCreateUsersModal({ isLoading, results, onConfirm, onClose }) {
             </>
           ) : (
             <>
-              <div className="text-center py-4">
-                <div className={`w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center ${
-                  results.usersCreated > 0 
-                    ? 'bg-green-100 dark:bg-green-900/30' 
-                    : 'bg-gray-100 dark:bg-gray-700'
-                }`}>
+              <div className="units-bulk-results">
+                <div className={clsx(
+                  'units-bulk-results-icon',
+                  results.usersCreated > 0 ? 'is-success' : 'is-idle'
+                )}>
                   {results.usersCreated > 0 ? (
-                    <UserCheck className="w-8 h-8 text-green-600 dark:text-green-400" />
+                    <UserCheck className="units-bulk-results-icon-svg" />
                   ) : (
-                    <UserX className="w-8 h-8 text-gray-600 dark:text-gray-400" />
+                    <UserX className="units-bulk-results-icon-svg" />
                   )}
                 </div>
-                <h4 className="text-lg font-semibold dark:text-white mb-2">{results.message}</h4>
+                <h4 className="units-bulk-results-title">{results.message}</h4>
               </div>
 
-              <div className="grid grid-cols-3 gap-4 mb-4">
-                <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg text-center">
-                  <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+              <div className="units-bulk-results-grid">
+                <div className="units-bulk-results-card units-bulk-results-card--success">
+                  <div className="units-bulk-results-value">
                     {results.usersCreated}
                   </div>
-                  <div className="text-sm text-green-700 dark:text-green-300">Created</div>
+                  <div className="units-bulk-results-label">Created</div>
                 </div>
-                <div className="p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg text-center">
-                  <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
+                <div className="units-bulk-results-card units-bulk-results-card--warning">
+                  <div className="units-bulk-results-value">
                     {results.usersSkipped}
                   </div>
-                  <div className="text-sm text-yellow-700 dark:text-yellow-300">Skipped</div>
+                  <div className="units-bulk-results-label">Skipped</div>
                 </div>
-                <div className="p-3 bg-red-50 dark:bg-red-900/20 rounded-lg text-center">
-                  <div className="text-2xl font-bold text-red-600 dark:text-red-400">
+                <div className="units-bulk-results-card units-bulk-results-card--error">
+                  <div className="units-bulk-results-value">
                     {results.errors}
                   </div>
-                  <div className="text-sm text-red-700 dark:text-red-300">Errors</div>
+                  <div className="units-bulk-results-label">Errors</div>
                 </div>
               </div>
 
               {results.results && results.results.length > 0 && (
-                <div className="border dark:border-slate-700 rounded-lg overflow-hidden max-h-64 overflow-y-auto">
-                  <table className="w-full text-sm">
-                    <thead className="bg-gray-50 dark:bg-slate-700 sticky top-0">
+                <div className="units-bulk-table-card">
+                  <table className="units-bulk-table">
+                    <thead className="units-bulk-thead">
                       <tr>
-                        <th className="px-3 py-2 text-left dark:text-white">Unit</th>
-                        <th className="px-3 py-2 text-left dark:text-white">Status</th>
-                        <th className="px-3 py-2 text-left dark:text-white">Details</th>
+                        <th className="units-bulk-th">Unit</th>
+                        <th className="units-bulk-th">Status</th>
+                        <th className="units-bulk-th">Details</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y dark:divide-slate-700">
+                    <tbody className="units-bulk-tbody">
                       {results.results.map((result, idx) => (
                         <tr key={idx} className={
-                          result.status === 'CREATED' ? 'bg-green-50/50 dark:bg-green-900/10' :
-                          result.status === 'ERROR' ? 'bg-red-50/50 dark:bg-red-900/10' :
-                          ''
+                          result.status === 'CREATED' ? 'units-bulk-row is-success' :
+                          result.status === 'ERROR' ? 'units-bulk-row is-error' :
+                          'units-bulk-row'
                         }>
-                          <td className="px-3 py-2 dark:text-gray-300">{result.flatNumber}</td>
-                          <td className="px-3 py-2">
-                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                              result.status === 'CREATED' ? 'bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300' :
-                              result.status === 'SKIPPED' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/50 dark:text-yellow-300' :
-                              'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300'
-                            }`}>
+                          <td className="units-bulk-cell">{result.flatNumber}</td>
+                          <td className="units-bulk-cell">
+                            <span className={clsx(
+                              'units-bulk-status',
+                              result.status === 'CREATED'
+                                ? 'is-success'
+                                : result.status === 'SKIPPED'
+                                  ? 'is-warning'
+                                  : 'is-error'
+                            )}>
                               {result.status}
                             </span>
                           </td>
-                          <td className="px-3 py-2 dark:text-gray-300 text-xs">
+                          <td className="units-bulk-cell units-bulk-cell--muted">
                             {result.email || result.errorMessage}
                           </td>
                         </tr>
@@ -2473,10 +2436,10 @@ function BulkCreateUsersModal({ isLoading, results, onConfirm, onClose }) {
                 </div>
               )}
 
-              <div className="flex gap-3 mt-4">
+              <div className="units-bulk-actions">
                 <button
                   onClick={onClose}
-                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                  className="units-modal-submit"
                 >
                   Done
                 </button>

@@ -7,11 +7,11 @@ import { Plus, Search, X, CreditCard, CheckCircle, Clock, AlertCircle, Info } fr
 import clsx from 'clsx'
 import PermissionDenied from '../components/PermissionDenied'
 
-const statusColors = {
-  PENDING: 'bg-yellow-100 text-yellow-800',
-  PARTIAL: 'bg-blue-100 text-blue-800',
-  PAID: 'bg-green-100 text-green-800',
-  OVERDUE: 'bg-red-100 text-red-800',
+const statusClasses = {
+  PENDING: 'maintenance-status maintenance-status--pending',
+  PARTIAL: 'maintenance-status maintenance-status--partial',
+  PAID: 'maintenance-status maintenance-status--paid',
+  OVERDUE: 'maintenance-status maintenance-status--overdue',
 }
 
 export default function MaintenanceBills() {
@@ -161,13 +161,14 @@ export default function MaintenanceBills() {
   }
 
   return (
-    <div>
+    <div className="maintenance-page">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+      <div className="maintenance-header">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Maintenance Bills</h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">Generate and track maintenance bills</p>
+          <h1 className="maintenance-title">Maintenance Bills</h1>
+          <p className="maintenance-subtitle">Generate and track maintenance bills</p>
         </div>
+<<<<<<< HEAD
         {canManageMaintenanceBills() && (
           <div className="flex gap-2">
             <button
@@ -185,45 +186,62 @@ export default function MaintenanceBills() {
             </button>
           </div>
         )}
+=======
+        <div className="maintenance-header-actions">
+          <button
+            onClick={() => setShowBulkModal(true)}
+            className="maintenance-bulk-button"
+          >
+            Bulk Generate
+          </button>
+          <button
+            onClick={() => setShowModal(true)}
+            className="maintenance-add-button"
+          >
+            <Plus size={20} />
+            Add Bill
+          </button>
+        </div>
+>>>>>>> 038a6e0 (Totally Cleaned redundant TailwindCSS lines of code from the Codebase)
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-4">
-          <p className="text-sm text-gray-500 dark:text-gray-400">Total Bills</p>
-          <p className="text-2xl font-bold text-gray-900 dark:text-white">{bills.length}</p>
+      <div className="maintenance-summary">
+        <div className="maintenance-summary-card">
+          <p className="maintenance-summary-label">Total Bills</p>
+          <p className="maintenance-summary-value">{bills.length}</p>
         </div>
-        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-4">
-          <p className="text-sm text-gray-500 dark:text-gray-400">Paid</p>
-          <p className="text-2xl font-bold text-green-600 dark:text-green-400">{bills.filter(b => b.status === 'PAID').length}</p>
+        <div className="maintenance-summary-card">
+          <p className="maintenance-summary-label">Paid</p>
+          <p className="maintenance-summary-value maintenance-summary-value--paid">{bills.filter(b => b.status === 'PAID').length}</p>
         </div>
-        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-4">
-          <p className="text-sm text-gray-500 dark:text-gray-400">Pending</p>
-          <p className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">{bills.filter(b => b.status === 'PENDING').length}</p>
+        <div className="maintenance-summary-card">
+          <p className="maintenance-summary-label">Pending</p>
+          <p className="maintenance-summary-value maintenance-summary-value--pending">{bills.filter(b => b.status === 'PENDING').length}</p>
         </div>
-        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-4">
-          <p className="text-sm text-gray-500 dark:text-gray-400">Total Amount</p>
-          <p className="text-2xl font-bold text-gray-900 dark:text-white">₹{bills.reduce((sum, b) => sum + (b.amount || 0), 0).toLocaleString()}</p>
+        <div className="maintenance-summary-card">
+          <p className="maintenance-summary-label">Total Amount</p>
+          <p className="maintenance-summary-value">₹{bills.reduce((sum, b) => sum + (b.amount || 0), 0).toLocaleString()}</p>
         </div>
       </div>
 
       {/* Filters */}
-      <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-4 mb-6">
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+      <div className="maintenance-filters">
+        <div className="maintenance-filters-row">
+          <div className="maintenance-search">
+            <Search className="maintenance-search-icon" />
             <input
               type="text"
               placeholder="Search by flat or owner..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white placeholder:text-gray-400 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+              className="maintenance-search-input"
             />
           </div>
           <select
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
-            className="px-4 py-2 border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+            className="maintenance-filter-select"
           >
             <option value="">All Status</option>
             <option value="PENDING">Pending</option>
@@ -234,51 +252,51 @@ export default function MaintenanceBills() {
       </div>
 
       {/* Table */}
-      <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 overflow-hidden">
+      <div className="maintenance-table-card">
         {isLoading ? (
-          <div className="p-8 text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+          <div className="maintenance-loading">
+            <div className="maintenance-spinner" />
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50 dark:bg-slate-700 border-b border-gray-100 dark:border-slate-700">
+          <div className="maintenance-table-scroll">
+            <table className="maintenance-table">
+              <thead className="maintenance-thead">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Flat</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Month</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Amount</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Paid</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>
+                  <th className="maintenance-th">Flat</th>
+                  <th className="maintenance-th">Month</th>
+                  <th className="maintenance-th">Amount</th>
+                  <th className="maintenance-th">Paid</th>
+                  <th className="maintenance-th">Status</th>
+                  <th className="maintenance-th maintenance-th--right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100 dark:divide-slate-700">
+              <tbody className="maintenance-tbody">
                 {filteredBills.map((bill) => (
-                  <tr key={bill.id} className="hover:bg-gray-50 dark:hover:bg-slate-700">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-green-50 flex items-center justify-center">
-                          <CreditCard className="w-4 h-4 text-green-600" />
+                  <tr key={bill.id} className="maintenance-row">
+                    <td className="maintenance-cell">
+                      <div className="maintenance-unit">
+                        <div className="maintenance-unit-icon">
+                          <CreditCard className="maintenance-unit-icon-svg" />
                         </div>
-                        <div>
-                          <span className="font-medium text-gray-900">{bill.flatNumber}</span>
-                          <p className="text-xs text-gray-500">{bill.ownerName || '-'}</p>
+                        <div className="maintenance-unit-meta">
+                          <span className="maintenance-unit-number">{bill.flatNumber}</span>
+                          <p className="maintenance-unit-owner">{bill.ownerName || '-'}</p>
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-gray-600">{bill.billMonth}</td>
-                    <td className="px-6 py-4 whitespace-nowrap font-medium text-gray-900">₹{bill.amount?.toLocaleString()}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-gray-600">₹{bill.paidAmount?.toLocaleString() || 0}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={clsx('px-2.5 py-1 rounded-full text-xs font-medium', statusColors[bill.status])}>
+                    <td className="maintenance-cell maintenance-cell--muted">{bill.billMonth}</td>
+                    <td className="maintenance-cell maintenance-cell--strong">₹{bill.amount?.toLocaleString()}</td>
+                    <td className="maintenance-cell maintenance-cell--muted">₹{bill.paidAmount?.toLocaleString() || 0}</td>
+                    <td className="maintenance-cell">
+                      <span className={clsx(statusClasses[bill.status] || statusClasses.PENDING)}>
                         {bill.status}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right">
+                    <td className="maintenance-cell maintenance-cell--right">
                       {bill.status !== 'PAID' && (
                         <button
                           onClick={() => { setSelectedBill(bill); setShowPaymentModal(true) }}
-                          className="px-3 py-1 text-xs bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition"
+                          className="maintenance-pay-button"
                         >
                           Record Payment
                         </button>
@@ -294,21 +312,21 @@ export default function MaintenanceBills() {
 
       {/* Add Bill Modal */}
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-xl w-full max-w-md">
-            <div className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-slate-700">
-              <h3 className="text-lg font-semibold dark:text-white">Add Maintenance Bill</h3>
-              <button onClick={() => setShowModal(false)} className="p-1 hover:bg-gray-100 dark:hover:bg-slate-700 rounded dark:text-gray-400">
+        <div className="maintenance-modal">
+          <div className="maintenance-modal-card">
+            <div className="maintenance-modal-header">
+              <h3 className="maintenance-modal-title">Add Maintenance Bill</h3>
+              <button onClick={() => setShowModal(false)} className="maintenance-modal-close">
                 <X size={20} />
               </button>
             </div>
-            <form onSubmit={handleSubmit} className="p-4 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Flat</label>
+            <form onSubmit={handleSubmit} className="maintenance-modal-body">
+              <div className="maintenance-field">
+                <label className="maintenance-label">Flat</label>
                 <select
                   name="flatId"
                   required
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 dark:text-white"
+                  className="maintenance-input"
                 >
                   <option value="">Select Flat</option>
                   {flats.map(f => (
@@ -318,38 +336,38 @@ export default function MaintenanceBills() {
                   ))}
                 </select>
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Bill Month</label>
+              <div className="maintenance-form-grid">
+                <div className="maintenance-field">
+                  <label className="maintenance-label">Bill Month</label>
                   <input
                     type="month"
                     name="billMonth"
                     required
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 dark:text-white"
+                    className="maintenance-input"
                   />
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Amount</label>
+                <div className="maintenance-field">
+                  <label className="maintenance-label">Amount</label>
                   <input
                     type="number"
                     name="amount"
                     step="0.01"
                     required
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 dark:text-white"
+                    className="maintenance-input"
                   />
                 </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Due Date</label>
+              <div className="maintenance-field">
+                <label className="maintenance-label">Due Date</label>
                 <input
                   type="date"
                   name="dueDate"
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 dark:text-white"
+                  className="maintenance-input"
                 />
               </div>
-              <div className="flex gap-3 pt-4">
-                <button type="button" onClick={() => setShowModal(false)} className="flex-1 px-4 py-2 border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition">Cancel</button>
-                <button type="submit" className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">Create</button>
+              <div className="maintenance-form-actions">
+                <button type="button" onClick={() => setShowModal(false)} className="maintenance-cancel-button">Cancel</button>
+                <button type="submit" className="maintenance-submit-button">Create</button>
               </div>
             </form>
           </div>
@@ -358,51 +376,51 @@ export default function MaintenanceBills() {
 
       {/* Bulk Generate Modal */}
       {showBulkModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-xl w-full max-w-md">
-            <div className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-slate-700">
-              <h3 className="text-lg font-semibold dark:text-white">Bulk Generate Bills</h3>
+        <div className="maintenance-modal">
+          <div className="maintenance-modal-card">
+            <div className="maintenance-modal-header">
+              <h3 className="maintenance-modal-title">Bulk Generate Bills</h3>
               <button onClick={() => {
                 setShowBulkModal(false)
                 setBulkPropertyType('ALL')
                 setBulkBillMonth('')
                 setPreviewCount(null)
-              }} className="p-1 hover:bg-gray-100 dark:hover:bg-slate-700 rounded dark:text-gray-400">
+              }} className="maintenance-modal-close">
                 <X size={20} />
               </button>
             </div>
-            <form onSubmit={handleBulkGenerate} className="p-4 space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Bill Month</label>
+            <form onSubmit={handleBulkGenerate} className="maintenance-modal-body">
+              <div className="maintenance-form-grid">
+                <div className="maintenance-field">
+                  <label className="maintenance-label">Bill Month</label>
                   <input
                     type="month"
                     name="billMonth"
                     required
                     value={bulkBillMonth}
                     onChange={(e) => setBulkBillMonth(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 dark:text-white"
+                    className="maintenance-input"
                   />
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Amount per Unit</label>
+                <div className="maintenance-field">
+                  <label className="maintenance-label">Amount per Unit</label>
                   <input
                     type="number"
                     name="amount"
                     step="0.01"
                     required
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 dark:text-white"
+                    className="maintenance-input"
                   />
                 </div>
               </div>
               
               {/* Property Type Filter */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Property Type</label>
+              <div className="maintenance-field">
+                <label className="maintenance-label">Property Type</label>
                 <select
                   value={bulkPropertyType}
                   onChange={(e) => setBulkPropertyType(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 dark:text-white"
+                  className="maintenance-input"
                 >
                   <option value="ALL">All Property Types</option>
                   <option value="RESIDENTIAL">Residential Only</option>
@@ -414,39 +432,39 @@ export default function MaintenanceBills() {
               
               {/* Preview Count */}
               <div className={clsx(
-                'flex items-center gap-2 p-3 rounded-lg text-sm',
+                'maintenance-preview',
                 previewCount !== null && previewCount > 0 
-                  ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300'
+                  ? 'is-ready'
                   : previewCount === 0
-                    ? 'bg-yellow-50 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-300'
-                    : 'bg-gray-50 dark:bg-slate-700 text-gray-600 dark:text-gray-300'
+                    ? 'is-empty'
+                    : 'is-idle'
               )}>
-                <Info size={16} />
+                <Info className="maintenance-preview-icon" />
                 {isLoadingPreview ? (
-                  <span>Calculating...</span>
+                  <span className="maintenance-preview-text">Calculating...</span>
                 ) : previewCount !== null ? (
-                  <span>
+                  <span className="maintenance-preview-text">
                     <strong>{previewCount}</strong> {previewCount === 1 ? 'unit' : 'units'} will receive bills
                     {bulkPropertyType !== 'ALL' && ` (${bulkPropertyType.toLowerCase()} only)`}
                   </span>
                 ) : bulkBillMonth ? (
-                  <span>Select options to see preview count</span>
+                  <span className="maintenance-preview-text">Select options to see preview count</span>
                 ) : (
-                  <span>Select a bill month to see how many units will be billed</span>
+                  <span className="maintenance-preview-text">Select a bill month to see how many units will be billed</span>
                 )}
               </div>
               
-              <div className="flex gap-3 pt-4">
+              <div className="maintenance-form-actions">
                 <button type="button" onClick={() => {
                   setShowBulkModal(false)
                   setBulkPropertyType('ALL')
                   setBulkBillMonth('')
                   setPreviewCount(null)
-                }} className="flex-1 px-4 py-2 border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition">Cancel</button>
+                }} className="maintenance-cancel-button">Cancel</button>
                 <button 
                   type="submit" 
                   disabled={bulkGenerateMutation.isPending || previewCount === 0}
-                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                  className="maintenance-submit-button"
                 >
                   {bulkGenerateMutation.isPending ? 'Generating...' : 'Generate'}
                 </button>
@@ -458,55 +476,55 @@ export default function MaintenanceBills() {
 
       {/* Payment Modal */}
       {showPaymentModal && selectedBill && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-xl w-full max-w-md">
-            <div className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-slate-700">
-              <h3 className="text-lg font-semibold dark:text-white">Record Payment</h3>
-              <button onClick={() => setShowPaymentModal(false)} className="p-1 hover:bg-gray-100 dark:hover:bg-slate-700 rounded dark:text-gray-400">
+        <div className="maintenance-modal">
+          <div className="maintenance-modal-card">
+            <div className="maintenance-modal-header">
+              <h3 className="maintenance-modal-title">Record Payment</h3>
+              <button onClick={() => setShowPaymentModal(false)} className="maintenance-modal-close">
                 <X size={20} />
               </button>
             </div>
-            <form onSubmit={handlePayment} className="p-4 space-y-4">
-              <div className="bg-gray-50 dark:bg-slate-700 p-3 rounded-lg">
-                <p className="text-sm text-gray-600 dark:text-gray-300">Flat: <span className="font-medium dark:text-white">{selectedBill.flatNumber}</span></p>
-                <p className="text-sm text-gray-600 dark:text-gray-300">Month: <span className="font-medium dark:text-white">{selectedBill.billMonth}</span></p>
-                <p className="text-sm text-gray-600 dark:text-gray-300">Total: <span className="font-medium dark:text-white">₹{selectedBill.amount?.toLocaleString()}</span></p>
-                <p className="text-sm text-gray-600 dark:text-gray-300">Balance: <span className="font-medium text-red-600">₹{(selectedBill.amount - (selectedBill.paidAmount || 0)).toLocaleString()}</span></p>
+            <form onSubmit={handlePayment} className="maintenance-modal-body">
+              <div className="maintenance-payment-summary">
+                <p className="maintenance-payment-row">Flat: <span className="maintenance-payment-strong">{selectedBill.flatNumber}</span></p>
+                <p className="maintenance-payment-row">Month: <span className="maintenance-payment-strong">{selectedBill.billMonth}</span></p>
+                <p className="maintenance-payment-row">Total: <span className="maintenance-payment-strong">₹{selectedBill.amount?.toLocaleString()}</span></p>
+                <p className="maintenance-payment-row">Balance: <span className="maintenance-payment-balance">₹{(selectedBill.amount - (selectedBill.paidAmount || 0)).toLocaleString()}</span></p>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Amount</label>
+              <div className="maintenance-field">
+                <label className="maintenance-label">Amount</label>
                 <input
                   type="number"
                   name="amount"
                   step="0.01"
                   max={selectedBill.amount - (selectedBill.paidAmount || 0)}
                   required
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 dark:text-white"
+                  className="maintenance-input"
                 />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Payment Mode</label>
+              <div className="maintenance-field">
+                <label className="maintenance-label">Payment Mode</label>
                 <select
                   name="paymentMode"
                   required
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 dark:text-white"
+                  className="maintenance-input"
                 >
                   <option value="CASH">Cash</option>
                   <option value="CHEQUE">Cheque</option>
                   <option value="ONLINE">Online</option>
                 </select>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Reference Number</label>
+              <div className="maintenance-field">
+                <label className="maintenance-label">Reference Number</label>
                 <input
                   type="text"
                   name="referenceNumber"
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 dark:text-white"
+                  className="maintenance-input"
                 />
               </div>
-              <div className="flex gap-3 pt-4">
-                <button type="button" onClick={() => setShowPaymentModal(false)} className="flex-1 px-4 py-2 border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition">Cancel</button>
-                <button type="submit" className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">Record Payment</button>
+              <div className="maintenance-form-actions">
+                <button type="button" onClick={() => setShowPaymentModal(false)} className="maintenance-cancel-button">Cancel</button>
+                <button type="submit" className="maintenance-submit-button maintenance-submit-button--success">Record Payment</button>
               </div>
             </form>
           </div>

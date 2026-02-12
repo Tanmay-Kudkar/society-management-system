@@ -104,17 +104,17 @@ export default function Reports() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="reports-page">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <div className="reports-header">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Financial Reports</h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">MTD, YTD and custom period financial analysis</p>
+          <h1 className="reports-title">Financial Reports</h1>
+          <p className="reports-subtitle">MTD, YTD and custom period financial analysis</p>
         </div>
         <button
           onClick={handleExport}
           disabled={!societyId || isExporting}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+          className="reports-export-button"
         >
           <FileSpreadsheet size={20} />
           {isExporting ? 'Exporting...' : 'Export to Excel'}
@@ -122,13 +122,13 @@ export default function Reports() {
       </div>
 
       {/* Filters */}
-      <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-4">
-        <div className="flex flex-wrap items-center gap-4">
+      <div className="reports-filters">
+        <div className="reports-filters-row">
           {isPlatformLevel && (
             <select
               value={selectedSocietyId}
               onChange={(e) => setSelectedSocietyId(e.target.value)}
-              className="px-4 py-2 border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+              className="reports-select"
             >
               <option value="">Select Society</option>
               {societies.map(s => (
@@ -137,16 +137,14 @@ export default function Reports() {
             </select>
           )}
 
-          <div className="flex items-center gap-2 bg-gray-100 dark:bg-slate-700 rounded-lg p-1">
+          <div className="reports-type-toggle">
             {['MTD', 'YTD', 'COMPARISON', 'CUSTOM'].map(type => (
               <button
                 key={type}
                 onClick={() => setReportType(type)}
                 className={clsx(
-                  'px-4 py-2 rounded-md text-sm font-medium transition',
-                  reportType === type
-                    ? 'bg-white dark:bg-slate-600 text-blue-600 dark:text-blue-400 shadow-sm'
-                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                  'reports-type-button',
+                  reportType === type && 'is-active'
                 )}
               >
                 {type}
@@ -160,18 +158,18 @@ export default function Reports() {
                 type="date"
                 value={customStartDate}
                 onChange={(e) => setCustomStartDate(e.target.value)}
-                className="px-4 py-2 border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                className="reports-date-input"
               />
-              <span className="text-gray-500">to</span>
+              <span className="reports-date-separator">to</span>
               <input
                 type="date"
                 value={customEndDate}
                 onChange={(e) => setCustomEndDate(e.target.value)}
-                className="px-4 py-2 border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                className="reports-date-input"
               />
               <button
                 onClick={() => refetch()}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                className="reports-generate-button"
               >
                 Generate
               </button>
@@ -181,181 +179,189 @@ export default function Reports() {
       </div>
 
       {!societyId && (
-        <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4 text-yellow-800 dark:text-yellow-200">
+        <div className="reports-empty-state">
           Please select a society to view reports.
         </div>
       )}
 
       {isLoading && (
-        <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <div className="reports-loading">
+          <div className="reports-spinner" />
         </div>
       )}
 
       {report && (
         <>
           {/* Summary Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="reports-summary-grid">
             {/* Total Income */}
-            <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-6">
-              <div className="flex items-center justify-between">
+            <div className="reports-summary-card">
+              <div className="reports-summary-row">
                 <div>
-                  <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Income</p>
-                  <p className="text-2xl font-bold text-green-600 dark:text-green-400 mt-1">
+                  <p className="reports-summary-label">Total Income</p>
+                  <p className="reports-summary-value reports-summary-value--income">
                     {formatCurrency(report.totalIncome)}
                   </p>
                   {report.incomeGrowthPercent !== null && (
                     <p className={clsx(
-                      'text-sm mt-1 flex items-center gap-1',
-                      report.incomeGrowthPercent >= 0 ? 'text-green-600' : 'text-red-600'
+                      'reports-growth',
+                      report.incomeGrowthPercent >= 0
+                        ? 'reports-growth--positive'
+                        : 'reports-growth--negative'
                     )}>
                       {report.incomeGrowthPercent >= 0 ? <ArrowUpRight size={14} /> : <ArrowDownRight size={14} />}
                       {formatPercent(report.incomeGrowthPercent)} vs previous
                     </p>
                   )}
                 </div>
-                <div className="p-3 bg-green-100 dark:bg-green-900/30 rounded-lg">
-                  <TrendingUp className="w-6 h-6 text-green-600 dark:text-green-400" />
+                <div className="reports-summary-icon reports-summary-icon--income">
+                  <TrendingUp className="reports-summary-icon-svg" />
                 </div>
               </div>
             </div>
 
             {/* Total Expense */}
-            <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-6">
-              <div className="flex items-center justify-between">
+            <div className="reports-summary-card">
+              <div className="reports-summary-row">
                 <div>
-                  <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Expense</p>
-                  <p className="text-2xl font-bold text-red-600 dark:text-red-400 mt-1">
+                  <p className="reports-summary-label">Total Expense</p>
+                  <p className="reports-summary-value reports-summary-value--expense">
                     {formatCurrency(report.totalExpense)}
                   </p>
                   {report.expenseGrowthPercent !== null && (
                     <p className={clsx(
-                      'text-sm mt-1 flex items-center gap-1',
-                      report.expenseGrowthPercent <= 0 ? 'text-green-600' : 'text-red-600'
+                      'reports-growth',
+                      report.expenseGrowthPercent <= 0
+                        ? 'reports-growth--positive'
+                        : 'reports-growth--negative'
                     )}>
                       {report.expenseGrowthPercent <= 0 ? <ArrowDownRight size={14} /> : <ArrowUpRight size={14} />}
                       {formatPercent(report.expenseGrowthPercent)} vs previous
                     </p>
                   )}
                 </div>
-                <div className="p-3 bg-red-100 dark:bg-red-900/30 rounded-lg">
-                  <TrendingDown className="w-6 h-6 text-red-600 dark:text-red-400" />
+                <div className="reports-summary-icon reports-summary-icon--expense">
+                  <TrendingDown className="reports-summary-icon-svg" />
                 </div>
               </div>
             </div>
 
             {/* Net Balance */}
-            <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-6">
-              <div className="flex items-center justify-between">
+            <div className="reports-summary-card">
+              <div className="reports-summary-row">
                 <div>
-                  <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Net Balance</p>
+                  <p className="reports-summary-label">Net Balance</p>
                   <p className={clsx(
-                    'text-2xl font-bold mt-1',
-                    report.netBalance >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
+                    'reports-summary-value',
+                    report.netBalance >= 0
+                      ? 'reports-summary-value--income'
+                      : 'reports-summary-value--expense'
                   )}>
                     {formatCurrency(report.netBalance)}
                   </p>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                  <p className="reports-summary-meta">
                     {report.startDate} to {report.endDate}
                   </p>
                 </div>
-                <div className="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
-                  <DollarSign className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                <div className="reports-summary-icon reports-summary-icon--balance">
+                  <DollarSign className="reports-summary-icon-svg" />
                 </div>
               </div>
             </div>
 
             {/* Cash Balance */}
-            <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-6">
-              <div className="flex items-center justify-between">
+            <div className="reports-summary-card">
+              <div className="reports-summary-row">
                 <div>
-                  <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Cash Balance</p>
+                  <p className="reports-summary-label">Cash Balance</p>
                   <p className={clsx(
-                    'text-2xl font-bold mt-1',
-                    report.cashBalance >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
+                    'reports-summary-value',
+                    report.cashBalance >= 0
+                      ? 'reports-summary-value--income'
+                      : 'reports-summary-value--expense'
                   )}>
                     {formatCurrency(report.cashBalance)}
                   </p>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">All-time balance</p>
+                  <p className="reports-summary-meta">All-time balance</p>
                 </div>
-                <div className="p-3 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
-                  <Wallet className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+                <div className="reports-summary-icon reports-summary-icon--cash">
+                  <Wallet className="reports-summary-icon-svg" />
                 </div>
               </div>
             </div>
           </div>
 
           {/* Category Breakdown */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="reports-grid">
             {/* Income by Category */}
-            <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                <PieChart size={20} className="text-green-600" />
+            <div className="reports-card">
+              <h3 className="reports-card-title">
+                <PieChart size={20} className="reports-card-icon reports-card-icon--income" />
                 Income by Category
               </h3>
               {report.incomeByCategory && Object.keys(report.incomeByCategory).length > 0 ? (
-                <div className="space-y-3">
+                <div className="reports-list">
                   {Object.entries(report.incomeByCategory).map(([category, amount]) => (
-                    <div key={category} className="flex items-center justify-between">
-                      <span className="text-gray-600 dark:text-gray-400">{category}</span>
-                      <span className="font-semibold text-green-600 dark:text-green-400">
+                    <div key={category} className="reports-list-row">
+                      <span className="reports-list-label">{category}</span>
+                      <span className="reports-list-value reports-list-value--income">
                         {formatCurrency(amount)}
                       </span>
                     </div>
                   ))}
                 </div>
               ) : (
-                <p className="text-gray-500 dark:text-gray-400 text-center py-4">No income data</p>
+                <p className="reports-empty">No income data</p>
               )}
             </div>
 
             {/* Expense by Category */}
-            <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                <PieChart size={20} className="text-red-600" />
+            <div className="reports-card">
+              <h3 className="reports-card-title">
+                <PieChart size={20} className="reports-card-icon reports-card-icon--expense" />
                 Expense by Category
               </h3>
               {report.expenseByCategory && Object.keys(report.expenseByCategory).length > 0 ? (
-                <div className="space-y-3">
+                <div className="reports-list">
                   {Object.entries(report.expenseByCategory).map(([category, amount]) => (
-                    <div key={category} className="flex items-center justify-between">
-                      <span className="text-gray-600 dark:text-gray-400">{category}</span>
-                      <span className="font-semibold text-red-600 dark:text-red-400">
+                    <div key={category} className="reports-list-row">
+                      <span className="reports-list-label">{category}</span>
+                      <span className="reports-list-value reports-list-value--expense">
                         {formatCurrency(amount)}
                       </span>
                     </div>
                   ))}
                 </div>
               ) : (
-                <p className="text-gray-500 dark:text-gray-400 text-center py-4">No expense data</p>
+                <p className="reports-empty">No expense data</p>
               )}
             </div>
           </div>
 
           {/* Payment Mode Breakdown */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="reports-grid">
             {/* Income by Payment Mode */}
-            <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                <BarChart3 size={20} className="text-blue-600" />
+            <div className="reports-card">
+              <h3 className="reports-card-title">
+                <BarChart3 size={20} className="reports-card-icon reports-card-icon--primary" />
                 Income by Payment Mode
               </h3>
               {report.incomeByPaymentMode && Object.keys(report.incomeByPaymentMode).length > 0 ? (
-                <div className="space-y-3">
+                <div className="reports-progress-list">
                   {Object.entries(report.incomeByPaymentMode).map(([mode, amount]) => {
                     const total = Object.values(report.incomeByPaymentMode).reduce((a, b) => a + b, 0)
                     const percent = total > 0 ? (amount / total) * 100 : 0
                     return (
                       <div key={mode}>
-                        <div className="flex items-center justify-between mb-1">
-                          <span className="text-gray-600 dark:text-gray-400">{mode}</span>
-                          <span className="font-semibold text-gray-900 dark:text-white">
+                        <div className="reports-progress-row">
+                          <span className="reports-list-label">{mode}</span>
+                          <span className="reports-progress-value">
                             {formatCurrency(amount)}
                           </span>
                         </div>
-                        <div className="w-full bg-gray-200 dark:bg-slate-700 rounded-full h-2">
+                        <div className="reports-progress-track">
                           <div
-                            className="bg-green-500 h-2 rounded-full"
+                            className="reports-progress-bar reports-progress-bar--income"
                             style={{ width: `${percent}%` }}
                           />
                         </div>
@@ -364,32 +370,32 @@ export default function Reports() {
                   })}
                 </div>
               ) : (
-                <p className="text-gray-500 dark:text-gray-400 text-center py-4">No data</p>
+                <p className="reports-empty">No data</p>
               )}
             </div>
 
             {/* Expense by Payment Mode */}
-            <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                <BarChart3 size={20} className="text-orange-600" />
+            <div className="reports-card">
+              <h3 className="reports-card-title">
+                <BarChart3 size={20} className="reports-card-icon reports-card-icon--warning" />
                 Expense by Payment Mode
               </h3>
               {report.expenseByPaymentMode && Object.keys(report.expenseByPaymentMode).length > 0 ? (
-                <div className="space-y-3">
+                <div className="reports-progress-list">
                   {Object.entries(report.expenseByPaymentMode).map(([mode, amount]) => {
                     const total = Object.values(report.expenseByPaymentMode).reduce((a, b) => a + b, 0)
                     const percent = total > 0 ? (amount / total) * 100 : 0
                     return (
                       <div key={mode}>
-                        <div className="flex items-center justify-between mb-1">
-                          <span className="text-gray-600 dark:text-gray-400">{mode}</span>
-                          <span className="font-semibold text-gray-900 dark:text-white">
+                        <div className="reports-progress-row">
+                          <span className="reports-list-label">{mode}</span>
+                          <span className="reports-progress-value">
                             {formatCurrency(amount)}
                           </span>
                         </div>
-                        <div className="w-full bg-gray-200 dark:bg-slate-700 rounded-full h-2">
+                        <div className="reports-progress-track">
                           <div
-                            className="bg-red-500 h-2 rounded-full"
+                            className="reports-progress-bar reports-progress-bar--expense"
                             style={{ width: `${percent}%` }}
                           />
                         </div>
@@ -398,70 +404,70 @@ export default function Reports() {
                   })}
                 </div>
               ) : (
-                <p className="text-gray-500 dark:text-gray-400 text-center py-4">No data</p>
+                <p className="reports-empty">No data</p>
               )}
             </div>
           </div>
 
           {/* Bills Summary */}
-          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-              <Receipt size={20} className="text-indigo-600" />
+          <div className="reports-card">
+            <h3 className="reports-card-title">
+              <Receipt size={20} className="reports-card-icon reports-card-icon--indigo" />
               Bills Summary
             </h3>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="text-center p-4 bg-gray-50 dark:bg-slate-700 rounded-lg">
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">{report.totalBillsGenerated || 0}</p>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Total Bills</p>
+            <div className="reports-bills-grid">
+              <div className="reports-bills-card">
+                <p className="reports-bills-value">{report.totalBillsGenerated || 0}</p>
+                <p className="reports-bills-label">Total Bills</p>
               </div>
-              <div className="text-center p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                <p className="text-2xl font-bold text-green-600 dark:text-green-400">{report.billsPaid || 0}</p>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Paid</p>
+              <div className="reports-bills-card reports-bills-card--paid">
+                <p className="reports-bills-value reports-bills-value--paid">{report.billsPaid || 0}</p>
+                <p className="reports-bills-label">Paid</p>
               </div>
-              <div className="text-center p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
-                <p className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">{report.billsPending || 0}</p>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Pending</p>
+              <div className="reports-bills-card reports-bills-card--pending">
+                <p className="reports-bills-value reports-bills-value--pending">{report.billsPending || 0}</p>
+                <p className="reports-bills-label">Pending</p>
               </div>
-              <div className="text-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+              <div className="reports-bills-card reports-bills-card--collected">
+                <p className="reports-bills-value reports-bills-value--collected">
                   {formatCurrency(report.billsCollectedAmount)}
                 </p>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Collected</p>
+                <p className="reports-bills-label">Collected</p>
               </div>
             </div>
           </div>
 
           {/* Upcoming Payments */}
           {report.upcomingPayments && report.upcomingPayments.length > 0 && (
-            <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                <Clock size={20} className="text-orange-600" />
+            <div className="reports-card">
+              <h3 className="reports-card-title reports-card-title--split">
+                <Clock size={20} className="reports-card-icon reports-card-icon--warning" />
                 Upcoming Payments
-                <span className="ml-auto text-sm font-normal text-gray-500 dark:text-gray-400">
+                <span className="reports-card-meta">
                   Total: {formatCurrency(report.upcomingExpenses)}
                 </span>
               </h3>
-              <div className="overflow-x-auto">
-                <table className="w-full">
+              <div className="reports-table-scroll">
+                <table className="reports-table">
                   <thead>
-                    <tr className="text-left text-sm text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-slate-700">
-                      <th className="pb-3 font-medium">Description</th>
-                      <th className="pb-3 font-medium">Type</th>
-                      <th className="pb-3 font-medium">Due Date</th>
-                      <th className="pb-3 font-medium text-right">Amount</th>
+                    <tr className="reports-table-head">
+                      <th className="reports-th">Description</th>
+                      <th className="reports-th">Type</th>
+                      <th className="reports-th">Due Date</th>
+                      <th className="reports-th reports-th--right">Amount</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-100 dark:divide-slate-700">
+                  <tbody className="reports-tbody">
                     {report.upcomingPayments.map((payment, idx) => (
-                      <tr key={idx} className="text-sm">
-                        <td className="py-3 text-gray-900 dark:text-white">{payment.description}</td>
-                        <td className="py-3">
-                          <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded text-xs">
+                      <tr key={idx} className="reports-row">
+                        <td className="reports-cell reports-cell--strong">{payment.description}</td>
+                        <td className="reports-cell">
+                          <span className="reports-type-badge">
                             {payment.type}
                           </span>
                         </td>
-                        <td className="py-3 text-gray-600 dark:text-gray-400">{payment.dueDate}</td>
-                        <td className="py-3 text-right font-semibold text-gray-900 dark:text-white">
+                        <td className="reports-cell reports-cell--muted">{payment.dueDate}</td>
+                        <td className="reports-cell reports-cell--right reports-cell--strong">
                           {formatCurrency(payment.amount)}
                         </td>
                       </tr>
@@ -474,34 +480,36 @@ export default function Reports() {
 
           {/* Monthly Trends */}
           {report.monthlyTrends && report.monthlyTrends.length > 0 && (
-            <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                <BarChart3 size={20} className="text-purple-600" />
+            <div className="reports-card">
+              <h3 className="reports-card-title">
+                <BarChart3 size={20} className="reports-card-icon reports-card-icon--cash" />
                 Monthly Trends
               </h3>
-              <div className="overflow-x-auto">
-                <table className="w-full">
+              <div className="reports-table-scroll">
+                <table className="reports-table">
                   <thead>
-                    <tr className="text-left text-sm text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-slate-700">
-                      <th className="pb-3 font-medium">Month</th>
-                      <th className="pb-3 font-medium text-right">Income</th>
-                      <th className="pb-3 font-medium text-right">Expense</th>
-                      <th className="pb-3 font-medium text-right">Balance</th>
+                    <tr className="reports-table-head">
+                      <th className="reports-th">Month</th>
+                      <th className="reports-th reports-th--right">Income</th>
+                      <th className="reports-th reports-th--right">Expense</th>
+                      <th className="reports-th reports-th--right">Balance</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-100 dark:divide-slate-700">
+                  <tbody className="reports-tbody">
                     {report.monthlyTrends.map((trend, idx) => (
-                      <tr key={idx} className="text-sm">
-                        <td className="py-3 font-medium text-gray-900 dark:text-white">{trend.month}</td>
-                        <td className="py-3 text-right text-green-600 dark:text-green-400">
+                      <tr key={idx} className="reports-row">
+                        <td className="reports-cell reports-cell--strong">{trend.month}</td>
+                        <td className="reports-cell reports-cell--right reports-cell--income">
                           {formatCurrency(trend.income)}
                         </td>
-                        <td className="py-3 text-right text-red-600 dark:text-red-400">
+                        <td className="reports-cell reports-cell--right reports-cell--expense">
                           {formatCurrency(trend.expense)}
                         </td>
                         <td className={clsx(
-                          'py-3 text-right font-semibold',
-                          trend.balance >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
+                          'reports-cell reports-cell--right reports-cell--strong',
+                          trend.balance >= 0
+                            ? 'reports-cell--income'
+                            : 'reports-cell--expense'
                         )}>
                           {formatCurrency(trend.balance)}
                         </td>

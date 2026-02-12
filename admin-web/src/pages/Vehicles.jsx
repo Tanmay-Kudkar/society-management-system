@@ -103,30 +103,30 @@ export default function Vehicles() {
 
   const VehicleIcon = ({ type }) => {
     if (type === 'TWO_WHEELER') {
-      return <Bike className="w-5 h-5 text-green-600" />
+      return <Bike className="vehicles-icon-svg vehicles-icon-svg--green" />
     }
-    return <Car className="w-5 h-5 text-blue-600" />
+    return <Car className="vehicles-icon-svg vehicles-icon-svg--blue" />
   } 
 
   return (
-    <div>
+    <div className="vehicles-page">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+      <div className="vehicles-header">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Vehicles</h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">Manage resident vehicles and parking</p>
+          <h1 className="vehicles-title">Vehicles</h1>
+          <p className="vehicles-subtitle">Manage resident vehicles and parking</p>
         </div>
-        <div className="flex gap-2">
+        <div className="vehicles-header-actions">
           <button
             onClick={() => setShowBulkImport(true)}
-            className="inline-flex items-center gap-2 px-4 py-2 border border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition cursor-pointer"
+            className="vehicles-bulk-button"
           >
             <Upload size={20} />
             Bulk Import
           </button>
           <button
             onClick={() => { setEditingVehicle(null); setShowModal(true) }}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition cursor-pointer"
+            className="vehicles-add-button"
           >
             <Plus size={20} />
             Add Vehicle
@@ -135,22 +135,22 @@ export default function Vehicles() {
       </div>
 
       {/* Filters */}
-      <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-4 mb-6">
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+      <div className="vehicles-filters">
+        <div className="vehicles-filters-row">
+          <div className="vehicles-search">
+            <Search className="vehicles-search-icon" />
             <input
               type="text"
               placeholder="Search vehicles..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white placeholder:text-gray-400"
+              className="vehicles-search-input"
             />
           </div>
           <select
             value={filterType}
             onChange={(e) => setFilterType(e.target.value)}
-            className="px-4 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
+            className="vehicles-filter-select"
           >
             <option value="">All Types</option>
             <option value="TWO_WHEELER">Two Wheeler</option>
@@ -160,108 +160,108 @@ export default function Vehicles() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
-              <Car className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+      <div className="vehicles-stats">
+        <div className="vehicles-stat-card">
+          <div className="vehicles-stat-content">
+            <div className="vehicles-stat-icon vehicles-stat-icon--blue">
+              <Car className="vehicles-stat-icon-svg" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">
+              <p className="vehicles-stat-value">
                 {vehicles.filter(v => v.vehicleType === 'FOUR_WHEELER').length}
               </p>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Four Wheelers</p>
+              <p className="vehicles-stat-label">Four Wheelers</p>
             </div>
           </div>
         </div>
-        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
-              <Bike className="w-5 h-5 text-green-600 dark:text-green-400" />
+        <div className="vehicles-stat-card">
+          <div className="vehicles-stat-content">
+            <div className="vehicles-stat-icon vehicles-stat-icon--green">
+              <Bike className="vehicles-stat-icon-svg" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">
+              <p className="vehicles-stat-value">
                 {vehicles.filter(v => v.vehicleType === 'TWO_WHEELER').length}
               </p>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Two Wheelers</p>
+              <p className="vehicles-stat-label">Two Wheelers</p>
             </div>
           </div>
         </div>
-        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
-              <Car className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+        <div className="vehicles-stat-card">
+          <div className="vehicles-stat-content">
+            <div className="vehicles-stat-icon vehicles-stat-icon--purple">
+              <Car className="vehicles-stat-icon-svg" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">{vehicles.length}</p>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Total Vehicles</p>
+              <p className="vehicles-stat-value">{vehicles.length}</p>
+              <p className="vehicles-stat-label">Total Vehicles</p>
             </div>
           </div>
         </div>
       </div>
 
       {/* Table */}
-      <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 overflow-hidden">
+      <div className="vehicles-table-card">
         {isLoading ? (
-          <div className="p-8 text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+          <div className="vehicles-loading">
+            <div className="vehicles-spinner" />
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50 dark:bg-slate-700 border-b border-gray-100 dark:border-slate-700">
+          <div className="vehicles-table-scroll">
+            <table className="vehicles-table">
+              <thead className="vehicles-thead">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Vehicle</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Type</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Flat</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Owner</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Parking</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>
+                  <th className="vehicles-th">Vehicle</th>
+                  <th className="vehicles-th">Type</th>
+                  <th className="vehicles-th">Flat</th>
+                  <th className="vehicles-th">Owner</th>
+                  <th className="vehicles-th">Parking</th>
+                  <th className="vehicles-th vehicles-th--right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100 dark:divide-slate-700">
+              <tbody className="vehicles-tbody">
                 {filteredVehicles.map((vehicle) => (
-                  <tr key={vehicle.id} className="hover:bg-gray-50 dark:hover:bg-slate-700">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-lg bg-gray-100 dark:bg-slate-600 flex items-center justify-center">
+                  <tr key={vehicle.id} className="vehicles-row">
+                    <td className="vehicles-cell">
+                      <div className="vehicles-cell-vehicle">
+                        <div className="vehicles-cell-icon">
                           <VehicleIcon type={vehicle.vehicleType} />
                         </div>
                         <div>
-                          <span className="font-medium text-gray-900 dark:text-white">{vehicle.vehicleNumber}</span>
-                          <p className="text-xs text-gray-500 dark:text-gray-400">{vehicle.brand} {vehicle.model}</p>
+                          <span className="vehicles-cell-number">{vehicle.vehicleNumber}</span>
+                          <p className="vehicles-cell-detail">{vehicle.brand} {vehicle.model}</p>
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
+                    <td className="vehicles-cell">
+                      <span className={`vehicles-type-badge ${
                         vehicle.vehicleType === 'FOUR_WHEELER' 
-                          ? 'bg-blue-100 text-blue-700' 
-                          : 'bg-green-100 text-green-700'
+                          ? 'vehicles-type-badge--four' 
+                          : 'vehicles-type-badge--two'
                       }`}>
                         {vehicle.vehicleType === 'FOUR_WHEELER' ? 'Four Wheeler' : 'Two Wheeler'}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-gray-700 dark:text-gray-300">
+                    <td className="vehicles-cell vehicles-cell--muted">
                       {getFlatDisplay(vehicle.flatId)}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-gray-700 dark:text-gray-300">
+                    <td className="vehicles-cell vehicles-cell--muted">
                       {vehicle.ownerName || 'N/A'}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="vehicles-cell">
                       {vehicle.parkingSlot ? (
-                        <span className="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-gray-100 dark:bg-slate-600 text-gray-700 dark:text-gray-300">
+                        <span className="vehicles-parking-badge">
                           {vehicle.parkingSlot}
                         </span>
                       ) : (
-                        <span className="text-gray-400 dark:text-gray-500">Not assigned</span>
+                        <span className="vehicles-parking-empty">Not assigned</span>
                       )}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right">
-                      <div className="flex items-center justify-end gap-2">
+                    <td className="vehicles-cell vehicles-cell--right">
+                      <div className="vehicles-cell-actions">
                         <button
                           onClick={() => { setEditingVehicle(vehicle); setShowModal(true) }}
-                          className="p-2 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition cursor-pointer"
+                          className="vehicles-action-button vehicles-action-button--edit"
                         >
                           <Edit size={18} />
                         </button>
@@ -271,7 +271,7 @@ export default function Vehicles() {
                               deleteMutation.mutate(vehicle.id)
                             }
                           }}
-                          className="p-2 text-gray-600 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition cursor-pointer"
+                          className="vehicles-action-button vehicles-action-button--delete"
                         >
                           <Trash2 size={18} />
                         </button>
@@ -281,7 +281,7 @@ export default function Vehicles() {
                 ))}
                 {filteredVehicles.length === 0 && (
                   <tr>
-                    <td colSpan="6" className="px-6 py-8 text-center text-gray-500 dark:text-gray-400">
+                    <td colSpan="6" className="vehicles-empty">
                       No vehicles found
                     </td>
                   </tr>
@@ -294,107 +294,105 @@ export default function Vehicles() {
 
       {/* Modal */}
       {showModal && (
-        <div className="fixed inset-0 z-50 overflow-y-auto">
-          <div className="flex min-h-full items-center justify-center p-4">
-            <div className="fixed inset-0 bg-black/50" onClick={() => setShowModal(false)} />
-            <div className="relative bg-white dark:bg-slate-800 rounded-xl shadow-xl w-full max-w-lg p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                  {editingVehicle ? 'Edit Vehicle' : 'Add Vehicle'}
-                </h2>
-                <button
-                  onClick={() => { setShowModal(false); setEditingVehicle(null) }}
-                  className="p-2 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg cursor-pointer text-gray-500 dark:text-gray-400"
-                >
-                  <X size={20} />
-                </button>
+        <div className="vehicles-modal">
+          <div className="vehicles-modal-overlay" onClick={() => setShowModal(false)} />
+          <div className="vehicles-modal-card">
+            <div className="vehicles-modal-header">
+              <h2 className="vehicles-modal-title">
+                {editingVehicle ? 'Edit Vehicle' : 'Add Vehicle'}
+              </h2>
+              <button
+                onClick={() => { setShowModal(false); setEditingVehicle(null) }}
+                className="vehicles-modal-close"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmit} className="vehicles-modal-body">
+              <SmartSelect
+                label="Flat"
+                name="flatId"
+                defaultValue={editingVehicle?.flatId || ''}
+                required
+                options={flats.map(f => ({ value: f.id, label: isPlatformLevel ? `${f.flatNumber} - ${f.societyName || 'N/A'}` : f.flatNumber }))}
+                placeholder="Select Flat"
+                emptyMessage="No flats available"
+              />
+
+              <div className="vehicles-form-grid">
+                <FormInput
+                  label="Vehicle Number"
+                  name="vehicleNumber"
+                  defaultValue={editingVehicle?.vehicleNumber || ''}
+                  placeholder="MH01AB1234"
+                  required
+                />
+                <SmartSelect
+                  label="Vehicle Type"
+                  name="vehicleType"
+                  defaultValue={editingVehicle?.vehicleType || ''}
+                  required
+                  options={[
+                    { value: 'TWO_WHEELER', label: 'Two Wheeler' },
+                    { value: 'FOUR_WHEELER', label: 'Four Wheeler' },
+                  ]}
+                  placeholder="Select Type"
+                />
               </div>
 
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <SmartSelect
-                  label="Flat"
-                  name="flatId"
-                  defaultValue={editingVehicle?.flatId || ''}
-                  required
-                  options={flats.map(f => ({ value: f.id, label: isPlatformLevel ? `${f.flatNumber} - ${f.societyName || 'N/A'}` : f.flatNumber }))}
-                  placeholder="Select Flat"
-                  emptyMessage="No flats available"
-                />
-
-                <div className="grid grid-cols-2 gap-4">
-                  <FormInput
-                    label="Vehicle Number"
-                    name="vehicleNumber"
-                    defaultValue={editingVehicle?.vehicleNumber || ''}
-                    placeholder="MH01AB1234"
-                    required
-                  />
-                  <SmartSelect
-                    label="Vehicle Type"
-                    name="vehicleType"
-                    defaultValue={editingVehicle?.vehicleType || ''}
-                    required
-                    options={[
-                      { value: 'TWO_WHEELER', label: 'Two Wheeler' },
-                      { value: 'FOUR_WHEELER', label: 'Four Wheeler' },
-                    ]}
-                    placeholder="Select Type"
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <FormInput
-                    label="Brand"
-                    name="brand"
-                    defaultValue={editingVehicle?.brand || ''}
-                    placeholder="Honda, Maruti, etc."
-                  />
-                  <FormInput
-                    label="Model"
-                    name="model"
-                    defaultValue={editingVehicle?.model || ''}
-                    placeholder="City, Swift, etc."
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <FormInput
-                    label="Color"
-                    name="color"
-                    defaultValue={editingVehicle?.color || ''}
-                  />
-                  <FormInput
-                    label="Parking Slot"
-                    name="parkingSlot"
-                    defaultValue={editingVehicle?.parkingSlot || ''}
-                    placeholder="A-101"
-                  />
-                </div>
-
+              <div className="vehicles-form-grid">
                 <FormInput
-                  label="Owner Name"
-                  name="ownerName"
-                  defaultValue={editingVehicle?.ownerName || ''}
+                  label="Brand"
+                  name="brand"
+                  defaultValue={editingVehicle?.brand || ''}
+                  placeholder="Honda, Maruti, etc."
                 />
+                <FormInput
+                  label="Model"
+                  name="model"
+                  defaultValue={editingVehicle?.model || ''}
+                  placeholder="City, Swift, etc."
+                />
+              </div>
 
-                <div className="flex justify-end gap-3 pt-4">
-                  <button
-                    type="button"
-                    onClick={() => { setShowModal(false); setEditingVehicle(null) }}
-                    className="px-4 py-2 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-slate-700 rounded-lg hover:bg-gray-200 dark:hover:bg-slate-600 transition cursor-pointer"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={createMutation.isPending || updateMutation.isPending}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 cursor-pointer"
-                  >
-                    {createMutation.isPending || updateMutation.isPending ? 'Saving...' : 'Save'}
-                  </button>
-                </div>
-              </form>
-            </div>
+              <div className="vehicles-form-grid">
+                <FormInput
+                  label="Color"
+                  name="color"
+                  defaultValue={editingVehicle?.color || ''}
+                />
+                <FormInput
+                  label="Parking Slot"
+                  name="parkingSlot"
+                  defaultValue={editingVehicle?.parkingSlot || ''}
+                  placeholder="A-101"
+                />
+              </div>
+
+              <FormInput
+                label="Owner Name"
+                name="ownerName"
+                defaultValue={editingVehicle?.ownerName || ''}
+              />
+
+              <div className="vehicles-modal-actions">
+                <button
+                  type="button"
+                  onClick={() => { setShowModal(false); setEditingVehicle(null) }}
+                  className="vehicles-cancel-button"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={createMutation.isPending || updateMutation.isPending}
+                  className="vehicles-submit-button"
+                >
+                  {createMutation.isPending || updateMutation.isPending ? 'Saving...' : 'Save'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

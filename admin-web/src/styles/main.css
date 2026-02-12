@@ -35,6 +35,20 @@
 @import "./pages/dashboard.css";
 @import "./pages/welcome.css";
 @import "./pages/login.css";
+@import "./pages/documents.css";
+@import "./pages/emergency-contacts.css";
+@import "./pages/flats.css";
+@import "./pages/forgot-password.css";
+@import "./pages/reset-password.css";
+@import "./pages/notices.css";
+@import "./pages/maintenance-bills.css";
+@import "./pages/tickets.css";
+@import "./pages/transactions.css";
+@import "./pages/reports.css";
+@import "./pages/tenants.css";
+@import "./pages/societies.css";
+@import "./pages/unit-management.css";
+@import "./pages/vehicles.css";
 
 /* Utility replacements for Tailwind classes */
 @import "./utils/layout.css";

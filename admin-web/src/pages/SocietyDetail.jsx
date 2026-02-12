@@ -203,21 +203,21 @@ export default function SocietyDetail() {
 
   if (societyLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="society-state society-state--loading">
+        <div className="society-spinner" />
       </div>
     )
   }
 
   if (societyError || !society) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[400px] text-center">
-        <AlertCircle className="w-16 h-16 text-red-400 mb-4" />
-        <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Society Not Found</h2>
-        <p className="text-gray-500 dark:text-gray-400 mb-6">The society you're looking for doesn't exist or has been removed.</p>
+      <div className="society-state society-state--error">
+        <AlertCircle className="society-error-icon" />
+        <h2 className="society-error-title">Society Not Found</h2>
+        <p className="society-error-text">The society you're looking for doesn't exist or has been removed.</p>
         <button 
           onClick={() => navigate('/societies')}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+          className="society-error-button"
         >
           <ArrowLeft size={18} />
           Back to Societies
@@ -245,7 +245,7 @@ export default function SocietyDetail() {
           
           {/* Address */}
           <p className="society-address">
-            <MapPin className="inline-block w-4 h-4 mr-1" />
+            <MapPin className="society-address-icon" />
             {society.address}, {society.city}, {society.state} - {society.pincode}
           </p>
 
@@ -360,7 +360,7 @@ export default function SocietyDetail() {
       </div>
 
       {/* Role Hierarchy Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="society-bottom-grid">
         {/* Role Tree */}
         <div className="role-hierarchy">
           <h3 className="role-hierarchy-title">
@@ -389,7 +389,7 @@ export default function SocietyDetail() {
         </div>
 
         {/* Users List */}
-        <div className="lg:col-span-2">
+        <div className="society-bottom-main">
           <div className="society-section">
             <div className="society-section-header">
               <h2 className="society-section-title">

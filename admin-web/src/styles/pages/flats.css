@@ -1,0 +1,520 @@
+/* Flats page */
+
+.flats-page {
+  display: block;
+}
+
+.flats-header {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+@media (min-width: 640px) {
+  .flats-header {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
+.flats-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.dark .flats-title {
+  color: #fff;
+}
+
+.flats-subtitle {
+  margin-top: 0.25rem;
+  color: #4b5563;
+}
+
+.dark .flats-subtitle {
+  color: #9ca3af;
+}
+
+.flats-add-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 0.75rem;
+  background: #2563eb;
+  color: #fff;
+  font-weight: 600;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.flats-add-button:hover {
+  background: #1d4ed8;
+  transform: translateY(-1px);
+}
+
+.flats-filters {
+  padding: 1rem;
+  border-radius: 1rem;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
+  margin-bottom: 1.5rem;
+}
+
+.dark .flats-filters {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+.flats-filters-row {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+@media (min-width: 640px) {
+  .flats-filters-row {
+    flex-direction: row;
+  }
+}
+
+.flats-search {
+  position: relative;
+  flex: 1;
+}
+
+.flats-search-icon {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  width: 1.25rem;
+  height: 1.25rem;
+  transform: translateY(-50%);
+  color: #9ca3af;
+}
+
+.flats-search-input,
+.flats-filter-select {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.75rem;
+  border: 1px solid #d1d5db;
+  background: #fff;
+  color: #0f172a;
+  transition: border 0.2s ease, box-shadow 0.2s ease;
+}
+
+.flats-search-input {
+  padding-left: 2.5rem;
+}
+
+.dark .flats-search-input,
+.dark .flats-filter-select {
+  background: #1f2937;
+  border-color: #475569;
+  color: #fff;
+}
+
+.flats-search-input:focus,
+.flats-filter-select:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+}
+
+.flats-table-card {
+  border-radius: 1rem;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  overflow: hidden;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+}
+
+.dark .flats-table-card {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+.flats-loading {
+  padding: 2rem;
+  text-align: center;
+}
+
+.flats-spinner {
+  width: 2rem;
+  height: 2rem;
+  margin: 0 auto;
+  border-radius: 999px;
+  border: 3px solid rgba(37, 99, 235, 0.2);
+  border-top-color: #2563eb;
+  animation: flatsSpin 1s linear infinite;
+}
+
+@keyframes flatsSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.flats-table-scroll {
+  overflow-x: auto;
+}
+
+.flats-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.flats-thead {
+  background: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.dark .flats-thead {
+  background: #334155;
+  border-bottom-color: #334155;
+}
+
+.flats-th {
+  padding: 0.75rem 1.5rem;
+  text-align: left;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #6b7280;
+}
+
+.dark .flats-th {
+  color: #cbd5f5;
+}
+
+.flats-th--right {
+  text-align: right;
+}
+
+.flats-tbody {
+  border-top: 1px solid #e5e7eb;
+}
+
+.dark .flats-tbody {
+  border-top-color: #334155;
+}
+
+.flats-row:hover {
+  background: #f9fafb;
+}
+
+.dark .flats-row:hover {
+  background: #334155;
+}
+
+.flats-cell {
+  padding: 1rem 1.5rem;
+  white-space: nowrap;
+  color: #0f172a;
+}
+
+.dark .flats-cell {
+  color: #e2e8f0;
+}
+
+.flats-cell--muted {
+  color: #6b7280;
+}
+
+.dark .flats-cell--muted {
+  color: #cbd5f5;
+}
+
+.flats-cell--right {
+  text-align: right;
+}
+
+.flats-unit {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.flats-unit-icon {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.75rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.flats-unit-icon-svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.flats-unit-icon--flat {
+  background: #dbeafe;
+  color: #2563eb;
+}
+
+.flats-unit-icon--shop {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.flats-unit-icon--office {
+  background: #ede9fe;
+  color: #7c3aed;
+}
+
+.dark .flats-unit-icon--flat {
+  background: rgba(37, 99, 235, 0.25);
+  color: #93c5fd;
+}
+
+.dark .flats-unit-icon--shop {
+  background: rgba(34, 197, 94, 0.25);
+  color: #86efac;
+}
+
+.dark .flats-unit-icon--office {
+  background: rgba(124, 58, 237, 0.25);
+  color: #c4b5fd;
+}
+
+.flats-unit-meta {
+  display: grid;
+}
+
+.flats-unit-number {
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.dark .flats-unit-number {
+  color: #fff;
+}
+
+.flats-unit-floor {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+.dark .flats-unit-floor {
+  color: #94a3b8;
+}
+
+.flats-wing-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: #eef2ff;
+  color: #4338ca;
+}
+
+.dark .flats-wing-badge {
+  background: rgba(79, 70, 229, 0.2);
+  color: #c7d2fe;
+}
+
+.flats-wing-icon {
+  width: 0.75rem;
+  height: 0.75rem;
+}
+
+.flats-empty {
+  color: #9ca3af;
+}
+
+.dark .flats-empty {
+  color: #64748b;
+}
+
+.flats-owner-name {
+  color: #0f172a;
+}
+
+.dark .flats-owner-name {
+  color: #fff;
+}
+
+.flats-owner-phone {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+.dark .flats-owner-phone {
+  color: #94a3b8;
+}
+
+.flats-type {
+  color: #4b5563;
+}
+
+.dark .flats-type {
+  color: #e2e8f0;
+}
+
+.flats-type-label {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+.dark .flats-type-label {
+  color: #94a3b8;
+}
+
+.flats-action-button {
+  padding: 0.35rem;
+  border-radius: 0.6rem;
+  transition: color 0.2s ease, background 0.2s ease;
+}
+
+.flats-action-edit {
+  color: #6b7280;
+}
+
+.flats-action-edit:hover {
+  color: #2563eb;
+  background: rgba(37, 99, 235, 0.1);
+}
+
+.flats-action-delete {
+  color: #6b7280;
+  margin-left: 0.5rem;
+}
+
+.flats-action-delete:hover {
+  color: #dc2626;
+  background: rgba(220, 38, 38, 0.1);
+}
+
+.flats-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(15, 23, 42, 0.55);
+}
+
+.flats-modal-card {
+  width: 100%;
+  max-width: 32rem;
+  max-height: 90vh;
+  overflow-y: auto;
+  border-radius: 1.25rem;
+  background: #fff;
+  box-shadow: 0 30px 60px rgba(2, 6, 23, 0.4);
+}
+
+.dark .flats-modal-card {
+  background: #1e293b;
+}
+
+.flats-modal-header {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem;
+  border-bottom: 1px solid #e5e7eb;
+  background: inherit;
+}
+
+.dark .flats-modal-header {
+  border-bottom-color: #334155;
+}
+
+.flats-modal-title {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.dark .flats-modal-title {
+  color: #fff;
+}
+
+.flats-modal-close {
+  padding: 0.25rem;
+  border-radius: 0.5rem;
+  color: #6b7280;
+}
+
+.flats-modal-close:hover {
+  background: #f3f4f6;
+}
+
+.dark .flats-modal-close:hover {
+  background: #334155;
+}
+
+.flats-modal-body {
+  display: grid;
+  gap: 1rem;
+  padding: 1rem;
+}
+
+.flats-form-row {
+  display: grid;
+  gap: 1rem;
+}
+
+@media (min-width: 640px) {
+  .flats-form-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.flats-form-actions {
+  display: flex;
+  gap: 0.75rem;
+  padding-top: 0.5rem;
+}
+
+.flats-cancel-button,
+.flats-submit-button {
+  flex: 1;
+  padding: 0.5rem 1rem;
+  border-radius: 0.75rem;
+  font-weight: 600;
+}
+
+.flats-cancel-button {
+  border: 1px solid #d1d5db;
+  background: transparent;
+  color: #334155;
+}
+
+.flats-cancel-button:hover {
+  background: #f3f4f6;
+}
+
+.dark .flats-cancel-button {
+  border-color: #475569;
+  color: #e2e8f0;
+}
+
+.dark .flats-cancel-button:hover {
+  background: #334155;
+}
+
+.flats-submit-button {
+  background: #2563eb;
+  color: #fff;
+}
+
+.flats-submit-button:hover {
+  background: #1d4ed8;
+}

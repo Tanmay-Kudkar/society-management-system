@@ -116,18 +116,18 @@ export default function Transactions() {
   }
 
   return (
-    <div>
+    <div className="transactions-page">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+      <div className="transactions-header">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Transactions</h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">Track income and expenses</p>
+          <h1 className="transactions-title">Transactions</h1>
+          <p className="transactions-subtitle">Track income and expenses</p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="transactions-header-actions">
           <button
             onClick={handleExport}
             disabled={isExporting}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition disabled:opacity-50"
+            className="transactions-export-button"
           >
             <FileSpreadsheet size={20} />
             {isExporting ? 'Exporting...' : 'Export'}
@@ -135,7 +135,7 @@ export default function Transactions() {
           {canManageTransactions() && (
             <button
               onClick={() => setShowModal(true)}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+              className="transactions-add-button"
             >
               <Plus size={20} />
               Add Transaction
@@ -145,61 +145,66 @@ export default function Transactions() {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-4">
-          <div className="flex items-center justify-between">
+      <div className="transactions-summary">
+        <div className="transactions-summary-card">
+          <div className="transactions-summary-row">
             <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Total Income</p>
-              <p className="text-2xl font-bold text-green-600 dark:text-green-400">₹{totalIncome.toLocaleString()}</p>
+              <p className="transactions-summary-label">Total Income</p>
+              <p className="transactions-summary-value transactions-summary-value--income">₹{totalIncome.toLocaleString()}</p>
             </div>
-            <div className="p-3 bg-green-50 dark:bg-green-900/30 rounded-lg">
-              <TrendingUp className="w-6 h-6 text-green-600 dark:text-green-400" />
+            <div className="transactions-summary-icon transactions-summary-icon--income">
+              <TrendingUp className="transactions-summary-icon-svg" />
             </div>
           </div>
         </div>
-        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-4">
-          <div className="flex items-center justify-between">
+        <div className="transactions-summary-card">
+          <div className="transactions-summary-row">
             <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Total Expense</p>
-              <p className="text-2xl font-bold text-red-600 dark:text-red-400">₹{totalExpense.toLocaleString()}</p>
+              <p className="transactions-summary-label">Total Expense</p>
+              <p className="transactions-summary-value transactions-summary-value--expense">₹{totalExpense.toLocaleString()}</p>
             </div>
-            <div className="p-3 bg-red-50 dark:bg-red-900/30 rounded-lg">
-              <TrendingDown className="w-6 h-6 text-red-600 dark:text-red-400" />
+            <div className="transactions-summary-icon transactions-summary-icon--expense">
+              <TrendingDown className="transactions-summary-icon-svg" />
             </div>
           </div>
         </div>
-        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-4">
-          <div className="flex items-center justify-between">
+        <div className="transactions-summary-card">
+          <div className="transactions-summary-row">
             <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Net Balance</p>
-              <p className={clsx('text-2xl font-bold', totalIncome - totalExpense >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400')}>
+              <p className="transactions-summary-label">Net Balance</p>
+              <p className={clsx(
+                'transactions-summary-value',
+                totalIncome - totalExpense >= 0
+                  ? 'transactions-summary-value--positive'
+                  : 'transactions-summary-value--negative'
+              )}>
                 ₹{(totalIncome - totalExpense).toLocaleString()}
               </p>
             </div>
-            <div className="p-3 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
-              <DollarSign className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+            <div className="transactions-summary-icon transactions-summary-icon--balance">
+              <DollarSign className="transactions-summary-icon-svg" />
             </div>
           </div>
         </div>
       </div>
 
       {/* Filters */}
-      <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-4 mb-6">
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+      <div className="transactions-filters">
+        <div className="transactions-filters-row">
+          <div className="transactions-search">
+            <Search className="transactions-search-icon" />
             <input
               type="text"
               placeholder="Search transactions..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white placeholder:text-gray-400 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+              className="transactions-search-input"
             />
           </div>
           <select
             value={filterType}
             onChange={(e) => setFilterType(e.target.value)}
-            className="px-4 py-2 border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+            className="transactions-filter-select"
           >
             <option value="">All Types</option>
             <option value="INCOME">Income</option>
@@ -208,7 +213,7 @@ export default function Transactions() {
           <select
             value={filterMode}
             onChange={(e) => setFilterMode(e.target.value)}
-            className="px-4 py-2 border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+            className="transactions-filter-select"
           >
             <option value="">All Modes</option>
             <option value="CASH">Cash</option>
@@ -219,56 +224,58 @@ export default function Transactions() {
       </div>
 
       {/* Table */}
-      <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 overflow-hidden">
+      <div className="transactions-table-card">
         {isLoading ? (
-          <div className="p-8 text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+          <div className="transactions-loading">
+            <div className="transactions-spinner" />
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50 dark:bg-slate-700 border-b border-gray-100 dark:border-slate-700">
+          <div className="transactions-table-scroll">
+            <table className="transactions-table">
+              <thead className="transactions-thead">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Date</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Type</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Category</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Unit</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Description</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Mode</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Amount</th>
+                  <th className="transactions-th">Date</th>
+                  <th className="transactions-th">Type</th>
+                  <th className="transactions-th">Category</th>
+                  <th className="transactions-th">Unit</th>
+                  <th className="transactions-th">Description</th>
+                  <th className="transactions-th">Mode</th>
+                  <th className="transactions-th transactions-th--right">Amount</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100 dark:divide-slate-700">
+              <tbody className="transactions-tbody">
                 {filteredTransactions.map((t) => (
-                  <tr key={t.id} className="hover:bg-gray-50 dark:hover:bg-slate-700">
-                    <td className="px-6 py-4 whitespace-nowrap text-gray-600 dark:text-gray-300">
+                  <tr key={t.id} className="transactions-row">
+                    <td className="transactions-cell transactions-cell--muted">
                       {t.transactionDate && new Date(t.transactionDate).toLocaleDateString()}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="transactions-cell">
                       <span className={clsx(
-                        'inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium',
-                        t.transactionType === 'INCOME' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
+                        'transactions-badge',
+                        t.transactionType === 'INCOME' ? 'transactions-badge--income' : 'transactions-badge--expense'
                       )}>
                         {t.transactionType === 'INCOME' ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
                         {t.transactionType}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-gray-600 dark:text-gray-300">{t.category}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-gray-600 dark:text-gray-300">
+                    <td className="transactions-cell transactions-cell--muted">{t.category}</td>
+                    <td className="transactions-cell transactions-cell--muted">
                       {t.flatNumber ? (
-                        <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 text-xs rounded-full">
+                        <span className="transactions-unit-badge">
                           <Home size={10} />
                           {t.flatNumber}
                         </span>
                       ) : '-'}
                     </td>
-                    <td className="px-6 py-4 text-gray-600 dark:text-gray-300">{t.description || '-'}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="px-2 py-1 bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300 text-xs rounded-full">{t.paymentMode}</span>
+                    <td className="transactions-cell transactions-cell--muted">{t.description || '-'}</td>
+                    <td className="transactions-cell">
+                      <span className="transactions-mode-badge">{t.paymentMode}</span>
                     </td>
                     <td className={clsx(
-                      'px-6 py-4 whitespace-nowrap text-right font-medium',
-                      t.transactionType === 'INCOME' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
+                      'transactions-cell transactions-cell--right transactions-cell--strong',
+                      t.transactionType === 'INCOME'
+                        ? 'transactions-cell--income'
+                        : 'transactions-cell--expense'
                     )}>
                       {t.transactionType === 'INCOME' ? '+' : '-'}₹{t.amount?.toLocaleString()}
                     </td>
@@ -282,56 +289,56 @@ export default function Transactions() {
 
       {/* Modal */}
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-slate-700 sticky top-0 bg-white dark:bg-slate-800">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Add Transaction</h3>
-              <button onClick={() => setShowModal(false)} className="p-1 hover:bg-gray-100 dark:hover:bg-slate-700 rounded text-gray-500 dark:text-gray-400">
+        <div className="transactions-modal">
+          <div className="transactions-modal-card">
+            <div className="transactions-modal-header">
+              <h3 className="transactions-modal-title">Add Transaction</h3>
+              <button onClick={() => setShowModal(false)} className="transactions-modal-close">
                 <X size={20} />
               </button>
             </div>
-            <form onSubmit={handleSubmit} className="p-4 space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Type</label>
+            <form onSubmit={handleSubmit} className="transactions-modal-body">
+              <div className="transactions-form-grid">
+                <div className="transactions-field">
+                  <label className="transactions-label">Type</label>
                   <select 
                     name="transactionType" 
                     value={formType}
                     onChange={(e) => setFormType(e.target.value)}
                     required 
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                    className="transactions-input"
                   >
                     <option value="INCOME">Income</option>
                     <option value="EXPENSE">Expense</option>
                   </select>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Payment Mode</label>
-                  <select name="paymentMode" required className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
+                <div className="transactions-field">
+                  <label className="transactions-label">Payment Mode</label>
+                  <select name="paymentMode" required className="transactions-input">
                     <option value="CASH">Cash</option>
                     <option value="CHEQUE">Cheque</option>
                     <option value="ONLINE">Online</option>
                   </select>
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Amount</label>
-                  <input type="number" name="amount" step="0.01" required className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" />
+              <div className="transactions-form-grid">
+                <div className="transactions-field">
+                  <label className="transactions-label">Amount</label>
+                  <input type="number" name="amount" step="0.01" required className="transactions-input" />
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Date</label>
-                  <input type="date" name="transactionDate" required className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" />
+                <div className="transactions-field">
+                  <label className="transactions-label">Date</label>
+                  <input type="date" name="transactionDate" required className="transactions-input" />
                 </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Category</label>
+              <div className="transactions-field">
+                <label className="transactions-label">Category</label>
                 <select 
                   name="category" 
                   value={formCategory}
                   onChange={(e) => setFormCategory(e.target.value)}
                   required 
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                  className="transactions-input"
                 >
                   <option value="MAINTENANCE">Maintenance</option>
                   <option value="VENDOR_PAYMENT">Vendor Payment</option>
@@ -346,18 +353,18 @@ export default function Transactions() {
               
               {/* Unit/Flat selector - shown for maintenance income */}
               {showFlatSelector && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    <span className="flex items-center gap-1">
+                <div className="transactions-field">
+                  <label className="transactions-label">
+                    <span className="transactions-required">
                       <Home size={14} />
-                      Unit/Flat <span className="text-red-500">*</span>
+                      Unit/Flat <span>*</span>
                     </span>
                   </label>
                   <select 
                     value={formFlatId}
                     onChange={(e) => setFormFlatId(e.target.value)}
                     required={showFlatSelector}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                    className="transactions-input"
                   >
                     <option value="">Select Unit/Flat</option>
                     {flats.map(flat => (
@@ -366,31 +373,31 @@ export default function Transactions() {
                       </option>
                     ))}
                   </select>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Required for maintenance income transactions</p>
+                  <p className="transactions-help">Required for maintenance income transactions</p>
                 </div>
               )}
               
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description</label>
-                <textarea name="description" rows={2} className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" />
+              <div className="transactions-field">
+                <label className="transactions-label">Description</label>
+                <textarea name="description" rows={2} className="transactions-textarea" />
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Reference #</label>
-                  <input type="text" name="referenceNumber" className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" />
+              <div className="transactions-form-grid">
+                <div className="transactions-field">
+                  <label className="transactions-label">Reference #</label>
+                  <input type="text" name="referenceNumber" className="transactions-input" />
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Cheque #</label>
-                  <input type="text" name="chequeNumber" className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" />
+                <div className="transactions-field">
+                  <label className="transactions-label">Cheque #</label>
+                  <input type="text" name="chequeNumber" className="transactions-input" />
                 </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Bank Name</label>
-                <input type="text" name="bankName" className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" />
+              <div className="transactions-field">
+                <label className="transactions-label">Bank Name</label>
+                <input type="text" name="bankName" className="transactions-input" />
               </div>
-              <div className="flex gap-3 pt-4">
-                <button type="button" onClick={() => setShowModal(false)} className="flex-1 px-4 py-2 border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition">Cancel</button>
-                <button type="submit" className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">Create</button>
+              <div className="transactions-form-actions">
+                <button type="button" onClick={() => setShowModal(false)} className="transactions-cancel-button">Cancel</button>
+                <button type="submit" className="transactions-submit-button">Create</button>
               </div>
             </form>
           </div>
