@@ -64,18 +64,10 @@
 }
 
 .wings-action-btn--outline:hover {
-  background: #eff6ff;
+  background: rgba(59, 130, 246, 0.1);
   transform: translateY(-1px);
 }
 
-.dark .wings-action-btn--outline {
-  color: #60a5fa;
-  border-color: #60a5fa;
-}
-
-.dark .wings-action-btn--outline:hover {
-  background: rgba(30, 58, 138, 0.2);
-}
 
 .wings-action-btn--primary {
   background: #2563eb;
@@ -114,7 +106,7 @@
   left: 14px;
   top: 50%;
   transform: translateY(-50%);
-  color: #9ca3af;
+  color: var(--text-tertiary);
 }
 
 .wings-search__input {
@@ -170,10 +162,6 @@
 .wings-empty__icon {
   color: #d1d5db;
   margin-bottom: 12px;
-}
-
-.dark .wings-empty__icon {
-  color: #4b5563;
 }
 
 .wings-card {
@@ -284,15 +272,6 @@
   border-color: #f3e8ff;
 }
 
-.dark .wings-stat--floors {
-  background: rgba(30, 58, 138, 0.2);
-  border-color: rgba(59, 130, 246, 0.3);
-}
-
-.dark .wings-stat--id {
-  background: rgba(88, 28, 135, 0.2);
-  border-color: rgba(167, 139, 250, 0.3);
-}
 
 .wings-stat__label {
   display: flex;
@@ -310,13 +289,6 @@
   color: #7c3aed;
 }
 
-.dark .wings-stat__label {
-  color: #93c5fd;
-}
-
-.dark .wings-stat__label--purple {
-  color: #c4b5fd;
-}
 
 .wings-stat__value {
   font-size: 20px;
@@ -334,10 +306,6 @@
   gap: 10px;
 }
 
-.dark .wings-card__footer {
-  background: rgba(51, 65, 85, 0.55);
-}
-
 .wings-card__btn {
   display: inline-flex;
   align-items: center;
@@ -353,7 +321,7 @@
 
 .wings-card__btn--edit {
   color: #2563eb;
-  background: #eff6ff;
+  background: rgba(59, 130, 246, 0.1);
 }
 
 .wings-card__btn--edit:hover {
@@ -369,15 +337,6 @@
   background: #fee2e2;
 }
 
-.dark .wings-card__btn--edit {
-  color: #93c5fd;
-  background: rgba(30, 58, 138, 0.3);
-}
-
-.dark .wings-card__btn--delete {
-  color: #fca5a5;
-  background: rgba(127, 29, 29, 0.3);
-}
 
 .wings-modal {
   position: fixed;

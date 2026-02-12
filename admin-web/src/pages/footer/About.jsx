@@ -1,15 +1,15 @@
 import { useNavigate } from 'react-router-dom'
-import { Target, Heart, Zap, Shield, Globe, Users, Award, ArrowRight } from 'lucide-react'
+import { Target, Heart, Zap, Shield, Globe, Users, Award, ArrowRight, Crown, Cpu, Palette, Code2 } from 'lucide-react'
 import PageShell from '../../components/PageShell'
 
 export default function About() {
   const navigate = useNavigate()
 
   const team = [
-    { name: 'Tanmay Kudkar & Nidhish Vartak', role: 'Founder & CEO', initials: 'TK & NV' },
-    { name: 'Parth Waghe', role: 'CTO', initials: 'PW' },
-    { name: 'Atharva Raut', role: 'Head of Design', initials: 'AR' },
-    { name: 'Yash Thakur & Tanmay Kudkar', role: 'Lead Developers', initials: 'YT & TK' },
+    { name: 'Tanmay Kudkar & Nidhish Vartak', role: 'Founder & CEO', avatarIcon: Crown },
+    { name: 'Parth Waghe', role: 'Chief Technology Officer (CTO)', avatarIcon: Cpu },
+    { name: 'Atharva Raut', role: 'Head of Designing', avatarIcon: Palette },
+    { name: 'Yash Thakur & Tanmay Kudkar', role: 'Lead Developers', avatarIcon: Code2 },
   ]
 
   const values = [
@@ -129,10 +129,10 @@ export default function About() {
                   className="about-team-avatar"
                   style={{ background: `linear-gradient(to bottom right, var(--accent-primary), var(--accent-secondary))` }}
                 >
-                  {member.initials}
+                  <member.avatarIcon className="about-team-avatar-icon" />
                 </div>
-                <h3 className="about-card-title">{member.name}</h3>
-                <p className="about-card-text">{member.role}</p>
+                <h3 className="about-card-title about-team-name">{member.name}</h3>
+                <p className="about-card-text about-team-role">{member.role}</p>
               </div>
             ))}
           </div>
@@ -142,23 +142,13 @@ export default function About() {
       {/* CTA */}
       <section className="about-cta">
         <div className="about-cta-inner">
-          <div
-            className="about-cta-card"
-            style={{ background: `linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))` }}
-          >
-            <div
-              className="about-cta-overlay"
-              style={{ backgroundImage: 'radial-gradient(circle at 30% 50%, white 0%, transparent 50%), radial-gradient(circle at 70% 80%, white 0%, transparent 50%)' }}
-            />
+          <div className="about-cta-card">
+            <div className="about-cta-overlay" />
             <div className="about-cta-content">
               <Award className="about-cta-award" />
               <h2 className="about-cta-title">Join Our Growing Family</h2>
               <p className="about-cta-text">Be part of the community that's transforming society management</p>
-              <button
-                onClick={() => navigate('/login')}
-                className="about-cta-button"
-                style={{ color: 'var(--accent-primary)' }}
-              >
+              <button onClick={() => navigate('/login')} className="about-cta-button">
                 Get Started Today
                 <ArrowRight className="about-cta-arrow" />
               </button>

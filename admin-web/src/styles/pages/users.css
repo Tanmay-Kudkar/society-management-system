@@ -79,16 +79,11 @@
 }
 
 .users-permissions {
-  background: #eff6ff;
-  border: 1px solid #bfdbfe;
+  background: color-mix(in srgb, var(--accent-primary) 8%, var(--bg-tertiary));
+  border: 1px solid color-mix(in srgb, var(--accent-primary) 20%, var(--border-light));
   border-radius: 16px;
   padding: 16px;
   margin-bottom: 24px;
-}
-
-.dark .users-permissions {
-  background: rgba(30, 58, 138, 0.2);
-  border-color: rgba(30, 64, 175, 0.5);
 }
 
 .users-permissions__row {
@@ -98,32 +93,20 @@
 }
 
 .users-permissions__icon {
-  color: #2563eb;
-}
-
-.dark .users-permissions__icon {
-  color: #60a5fa;
+  color: var(--accent-primary);
 }
 
 .users-permissions__title {
   font-size: 14px;
   font-weight: 600;
   margin: 0;
-  color: #1e3a8a;
-}
-
-.dark .users-permissions__title {
-  color: #dbeafe;
+  color: var(--text-primary);
 }
 
 .users-permissions__text {
   margin: 6px 0 0;
   font-size: 13px;
-  color: #1d4ed8;
-}
-
-.dark .users-permissions__text {
-  color: #bfdbfe;
+  color: var(--text-secondary);
 }
 
 .users-permissions__meta {
@@ -135,24 +118,16 @@
 }
 
 .users-permissions__label {
-  color: #2563eb;
+  color: var(--accent-primary);
   font-weight: 600;
 }
 
 .users-permissions__value {
-  color: #1e40af;
-}
-
-.dark .users-permissions__label {
-  color: #93c5fd;
-}
-
-.dark .users-permissions__value {
-  color: #dbeafe;
+  color: var(--text-primary);
 }
 
 .users-permissions__divider {
-  color: #93c5fd;
+  color: var(--text-tertiary);
 }
 
 .users-alert {
@@ -163,9 +138,9 @@
   padding: 14px 16px;
   border-radius: 14px;
   margin-bottom: 24px;
-  background: #fef2f2;
-  border: 1px solid #fecaca;
-  color: #b91c1c;
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #fca5a5;
 }
 
 .users-alert__content {
@@ -183,7 +158,7 @@
 }
 
 .users-alert__close:hover {
-  background: #fee2e2;
+  background: rgba(239, 68, 68, 0.2);
 }
 
 .users-filters {
@@ -286,12 +261,8 @@
 }
 
 .users-empty__icon {
-  color: #d1d5db;
-  margin-bottom: 12px;
-}
-
-.dark .users-empty__icon {
   color: #4b5563;
+  margin-bottom: 12px;
 }
 
 .users-empty__text {
@@ -463,18 +434,18 @@
   letter-spacing: 0.04em;
 }
 
-.role-pill--platform-owner { background: #ede9fe; color: #5b21b6; }
-.role-pill--organization-owner { background: #ede9fe; color: #6d28d9; }
-.role-pill--society-admin { background: #dbeafe; color: #1d4ed8; }
-.role-pill--chairman { background: #e0e7ff; color: #3730a3; }
-.role-pill--secretary { background: #cffafe; color: #155e75; }
-.role-pill--treasurer { background: #dcfce7; color: #166534; }
-.role-pill--committee { background: #fef9c3; color: #92400e; }
-.role-pill--manager { background: #ffedd5; color: #9a3412; }
-.role-pill--employee { background: #ffedd5; color: #c2410c; }
-.role-pill--member { background: #f3f4f6; color: #1f2937; }
-.role-pill--tenant { background: #fce7f3; color: #9d174d; }
-.role-pill--visitor { background: #fee2e2; color: #b91c1c; }
+.role-pill--platform-owner { background: rgba(139, 92, 246, 0.18); color: #c4b5fd; }
+.role-pill--organization-owner { background: rgba(124, 58, 237, 0.18); color: #c4b5fd; }
+.role-pill--society-admin { background: rgba(59, 130, 246, 0.18); color: #93c5fd; }
+.role-pill--chairman { background: rgba(99, 102, 241, 0.18); color: #a5b4fc; }
+.role-pill--secretary { background: rgba(6, 182, 212, 0.18); color: #67e8f9; }
+.role-pill--treasurer { background: rgba(34, 197, 94, 0.18); color: #86efac; }
+.role-pill--committee { background: rgba(234, 179, 8, 0.18); color: #fde68a; }
+.role-pill--manager { background: rgba(249, 115, 22, 0.18); color: #fdba74; }
+.role-pill--employee { background: rgba(251, 146, 60, 0.18); color: #fed7aa; }
+.role-pill--member { background: rgba(255, 255, 255, 0.08); color: rgba(255, 255, 255, 0.7); }
+.role-pill--tenant { background: rgba(236, 72, 153, 0.18); color: #f9a8d4; }
+.role-pill--visitor { background: rgba(239, 68, 68, 0.18); color: #fca5a5; }
 
 .user-card__society {
   display: flex;
@@ -519,13 +490,13 @@
 }
 
 .user-card__action--view {
-  color: #2563eb;
-  background: #eff6ff;
+  color: #93c5fd;
+  background: rgba(59, 130, 246, 0.12);
   flex: 1;
 }
 
 .user-card__action--view:hover {
-  background: #dbeafe;
+  background: rgba(59, 130, 246, 0.22);
 }
 
 .user-card__action--icon {
@@ -597,8 +568,8 @@
   width: 32px;
   height: 32px;
   border-radius: 999px;
-  background: #dbeafe;
-  color: #2563eb;
+  background: rgba(99, 102, 241, 0.2);
+  color: #a5b4fc;
   font-weight: 600;
   display: flex;
   align-items: center;
@@ -609,7 +580,7 @@
 .users-table__self {
   margin-left: 6px;
   font-size: 11px;
-  color: #2563eb;
+  color: #818cf8;
 }
 
 .users-table__cell {
@@ -795,9 +766,9 @@
   gap: 8px;
   padding: 10px 12px;
   border-radius: 12px;
-  background: #fef2f2;
-  border: 1px solid #fecaca;
-  color: #b91c1c;
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #fca5a5;
   font-size: 13px;
   margin-bottom: 16px;
 }
@@ -886,13 +857,8 @@
   margin-top: 16px;
   padding: 16px;
   border-radius: 16px;
-  border: 1px solid #bfdbfe;
-  background: linear-gradient(135deg, #eff6ff, #e0e7ff);
-}
-
-.dark .bulk-requirements {
-  background: rgba(30, 58, 138, 0.2);
-  border-color: rgba(30, 64, 175, 0.6);
+  border: 1px solid rgba(30, 64, 175, 0.35);
+  background: rgba(30, 58, 138, 0.15);
 }
 
 .bulk-requirements__header {
@@ -909,7 +875,7 @@
   margin: 0;
   font-size: 13px;
   font-weight: 700;
-  color: #1e3a8a;
+  color: #93c5fd;
 }
 
 .bulk-requirements__dot {
@@ -942,7 +908,7 @@
   display: grid;
   gap: 8px;
   font-size: 12px;
-  color: #1e40af;
+  color: #bfdbfe;
 }
 
 .bulk-requirements__item {
@@ -955,8 +921,8 @@
   width: 20px;
   height: 20px;
   border-radius: 6px;
-  background: #dbeafe;
-  color: #2563eb;
+  background: rgba(59, 130, 246, 0.2);
+  color: #93c5fd;
   font-size: 11px;
   font-weight: 700;
   display: inline-flex;
@@ -968,7 +934,7 @@
   margin: 12px 0 6px;
   font-size: 11px;
   font-weight: 700;
-  color: #1e3a8a;
+  color: #93c5fd;
 }
 
 .bulk-summary {
@@ -1221,13 +1187,13 @@
   gap: 10px;
   padding: 10px 12px;
   border-radius: 12px;
-  background: rgba(234, 179, 8, 0.15);
-  color: #a16207;
+  background: rgba(234, 179, 8, 0.1);
+  color: #fde68a;
   font-size: 12px;
 }
 
 .bulk-create__note svg {
-  color: #d97706;
+  color: #fbbf24;
 }
 
 @media (max-width: 900px) {

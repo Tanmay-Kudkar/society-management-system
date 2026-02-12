@@ -22,20 +22,12 @@
 .transactions-title {
   font-size: 1.5rem;
   font-weight: 700;
-  color: #0f172a;
-}
-
-.dark .transactions-title {
-  color: #fff;
+  color: var(--text-primary);
 }
 
 .transactions-subtitle {
   margin-top: 0.25rem;
-  color: #4b5563;
-}
-
-.dark .transactions-subtitle {
-  color: #9ca3af;
+  color: var(--text-secondary);
 }
 
 .transactions-header-actions {
@@ -96,14 +88,9 @@
 .transactions-summary-card {
   padding: 1rem;
   border-radius: 1rem;
-  background: #fff;
-  border: 1px solid #e5e7eb;
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
   box-shadow: 0 10px 22px rgba(15, 23, 42, 0.08);
-}
-
-.dark .transactions-summary-card {
-  background: #1e293b;
-  border-color: #334155;
 }
 
 .transactions-summary-row {
@@ -114,22 +101,14 @@
 
 .transactions-summary-label {
   font-size: 0.85rem;
-  color: #6b7280;
-}
-
-.dark .transactions-summary-label {
-  color: #94a3b8;
+  color: var(--text-tertiary);
 }
 
 .transactions-summary-value {
   margin-top: 0.25rem;
   font-size: 1.5rem;
   font-weight: 700;
-  color: #0f172a;
-}
-
-.dark .transactions-summary-value {
-  color: #fff;
+  color: var(--text-primary);
 }
 
 .transactions-summary-value--income,
@@ -174,15 +153,10 @@
 .transactions-filters {
   padding: 1rem;
   border-radius: 1rem;
-  background: #fff;
-  border: 1px solid #e5e7eb;
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
   box-shadow: 0 10px 22px rgba(15, 23, 42, 0.08);
   margin-bottom: 1.5rem;
-}
-
-.dark .transactions-filters {
-  background: #1e293b;
-  border-color: #334155;
 }
 
 .transactions-filters-row {
@@ -210,7 +184,7 @@
   width: 1.25rem;
   height: 1.25rem;
   transform: translateY(-50%);
-  color: #9ca3af;
+  color: var(--text-tertiary);
 }
 
 .transactions-search-input,
@@ -220,9 +194,9 @@
   width: 100%;
   padding: 0.55rem 0.75rem;
   border-radius: 0.75rem;
-  border: 1px solid #d1d5db;
-  background: #fff;
-  color: #0f172a;
+  border: 1px solid var(--border-light);
+  background: var(--bg-card);
+  color: var(--text-primary);
   transition: border 0.2s ease, box-shadow 0.2s ease;
 }
 
@@ -232,15 +206,6 @@
 
 .transactions-textarea {
   resize: vertical;
-}
-
-.dark .transactions-search-input,
-.dark .transactions-filter-select,
-.dark .transactions-input,
-.dark .transactions-textarea {
-  background: #1f2937;
-  border-color: #475569;
-  color: #fff;
 }
 
 .transactions-search-input:focus,
@@ -254,15 +219,10 @@
 
 .transactions-table-card {
   border-radius: 1rem;
-  background: #fff;
-  border: 1px solid #e5e7eb;
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
   box-shadow: 0 12px 24px rgba(15, 23, 42, 0.08);
   overflow: hidden;
-}
-
-.dark .transactions-table-card {
-  background: #1e293b;
-  border-color: #334155;
 }
 
 .transactions-loading {
@@ -297,13 +257,8 @@
 }
 
 .transactions-thead {
-  background: #f8fafc;
-  border-bottom: 1px solid #e5e7eb;
-}
-
-.dark .transactions-thead {
-  background: #0f172a;
-  border-color: #334155;
+  background: var(--bg-tertiary);
+  border-bottom: 1px solid var(--border-light);
 }
 
 .transactions-th {
@@ -313,11 +268,7 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: #6b7280;
-}
-
-.dark .transactions-th {
-  color: #cbd5f5;
+  color: var(--text-tertiary);
 }
 
 .transactions-th--right {
@@ -329,29 +280,17 @@
 }
 
 .transactions-row:hover {
-  background: #f8fafc;
-}
-
-.dark .transactions-row:hover {
-  background: rgba(148, 163, 184, 0.08);
+  background: var(--bg-tertiary);
 }
 
 .transactions-cell {
   padding: 0.85rem 1.5rem;
   font-size: 0.9rem;
-  color: #0f172a;
-}
-
-.dark .transactions-cell {
-  color: #e2e8f0;
+  color: var(--text-primary);
 }
 
 .transactions-cell--muted {
-  color: #64748b;
-}
-
-.dark .transactions-cell--muted {
-  color: #94a3b8;
+  color: var(--text-tertiary);
 }
 
 .transactions-cell--strong {
@@ -390,15 +329,6 @@
   color: #991b1b;
 }
 
-.dark .transactions-badge--income {
-  background: rgba(34, 197, 94, 0.2);
-  color: #86efac;
-}
-
-.dark .transactions-badge--expense {
-  background: rgba(239, 68, 68, 0.2);
-  color: #fca5a5;
-}
 
 .transactions-unit-badge {
   display: inline-flex;
@@ -412,11 +342,6 @@
   background: rgba(37, 99, 235, 0.12);
 }
 
-.dark .transactions-unit-badge {
-  background: rgba(37, 99, 235, 0.2);
-  color: #93c5fd;
-}
-
 .transactions-mode-badge {
   display: inline-flex;
   align-items: center;
@@ -424,13 +349,8 @@
   border-radius: 999px;
   font-size: 0.75rem;
   font-weight: 600;
-  color: #475569;
-  background: #e2e8f0;
-}
-
-.dark .transactions-mode-badge {
-  background: #334155;
-  color: #cbd5f5;
+  color: var(--text-secondary);
+  background: rgba(255, 255, 255, 0.1);
 }
 
 .transactions-modal {
@@ -450,14 +370,9 @@
   max-height: 90vh;
   overflow-y: auto;
   border-radius: 1rem;
-  background: #fff;
-  border: 1px solid #e5e7eb;
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
   box-shadow: 0 24px 48px rgba(15, 23, 42, 0.2);
-}
-
-.dark .transactions-modal-card {
-  background: #0f172a;
-  border-color: #334155;
 }
 
 .transactions-modal-header {
@@ -467,40 +382,27 @@
   align-items: center;
   justify-content: space-between;
   padding: 1rem 1.25rem;
-  background: #fff;
-  border-bottom: 1px solid #e5e7eb;
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border-light);
   z-index: 1;
-}
-
-.dark .transactions-modal-header {
-  background: #0f172a;
-  border-color: #334155;
 }
 
 .transactions-modal-title {
   font-size: 1.1rem;
   font-weight: 600;
-  color: #0f172a;
-}
-
-.dark .transactions-modal-title {
-  color: #fff;
+  color: var(--text-primary);
 }
 
 .transactions-modal-close {
   border-radius: 0.65rem;
   padding: 0.25rem;
-  color: #64748b;
+  color: var(--text-tertiary);
   transition: background 0.2s ease, color 0.2s ease;
 }
 
 .transactions-modal-close:hover {
   background: rgba(148, 163, 184, 0.2);
-  color: #0f172a;
-}
-
-.dark .transactions-modal-close:hover {
-  color: #fff;
+  color: var(--text-primary);
 }
 
 .transactions-modal-body {
@@ -531,11 +433,7 @@
 .transactions-label {
   font-size: 0.85rem;
   font-weight: 600;
-  color: #374151;
-}
-
-.dark .transactions-label {
-  color: #cbd5f5;
+  color: var(--text-secondary);
 }
 
 .transactions-required {
@@ -551,11 +449,7 @@
 
 .transactions-help {
   font-size: 0.75rem;
-  color: #6b7280;
-}
-
-.dark .transactions-help {
-  color: #94a3b8;
+  color: var(--text-tertiary);
 }
 
 .transactions-form-actions {
@@ -576,13 +470,7 @@
 .transactions-cancel-button {
   border: 1px solid #cbd5f5;
   color: #334155;
-  background: #f8fafc;
-}
-
-.dark .transactions-cancel-button {
-  border-color: #475569;
-  color: #e2e8f0;
-  background: #1f2937;
+  background: var(--bg-tertiary);
 }
 
 .transactions-cancel-button:hover {

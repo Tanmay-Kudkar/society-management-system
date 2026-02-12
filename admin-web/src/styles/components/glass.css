@@ -68,8 +68,8 @@
 }
 
 .dark .glass-navbar {
-  background: rgba(15, 23, 42, 0.8);
-  border-bottom-color: rgba(71, 85, 105, 0.3);
+  background: rgba(0, 0, 0, 0.85);
+  border-bottom-color: rgba(255, 255, 255, 0.06);
 }
 
 /* Glass sidebar */
@@ -81,8 +81,8 @@
 }
 
 .dark .glass-sidebar {
-  background: rgba(15, 23, 42, 0.7);
-  border-right-color: rgba(71, 85, 105, 0.3);
+  background: rgba(0, 0, 0, 0.85);
+  border-right-color: rgba(255, 255, 255, 0.06);
 }
 
 /* Glass button */

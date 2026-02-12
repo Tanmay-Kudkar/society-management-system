@@ -370,6 +370,9 @@ export default function Users() {
 
   // Determine page title based on context
   const getPageTitle = () => {
+    if (urlRole === 'SOCIETY_ADMIN' && !urlSocietyId) {
+      return 'Society Admins'
+    }
     if (urlSocietyId && urlRole) {
       return `${urlRole.replace('_', ' ')}s`
     }
@@ -386,6 +389,9 @@ export default function Users() {
   }
   
   const getPageDescription = () => {
+    if (urlRole === 'SOCIETY_ADMIN' && !urlSocietyId) {
+      return 'Manage society administrators'
+    }
     if (urlSocietyId) {
       return 'View users in this society'
     }
@@ -442,7 +448,7 @@ export default function Users() {
               className="users-action-btn users-action-btn--primary"
             >
               <Plus size={20} />
-              {isPlatformLevel && !urlSocietyId ? 'Create User' : 'Add User'}
+              {urlRole === 'SOCIETY_ADMIN' ? 'Add Society Admin' : isPlatformLevel && !urlSocietyId ? 'Create User' : 'Add User'}
             </button>
           )}
         </div>

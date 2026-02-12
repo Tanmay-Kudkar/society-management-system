@@ -350,11 +350,96 @@ function MobileAccordion({ group, hasRole, onNavigate, isOpen, onToggle }) {
   )
 }
 
+// Desktop sidebar link
+function SidebarLink({ group }) {
+  const location = useLocation()
+  const isActive = location.pathname === group.path
+  return (
+    <NavLink
+      to={group.path}
+      className={clsx(
+        'app-sidebar__link',
+        isActive ? 'app-sidebar__link--active' : 'app-sidebar__link--idle'
+      )}
+    >
+      <group.icon size={20} />
+      <span>{group.label}</span>
+    </NavLink>
+  )
+}
+
+// Desktop sidebar accordion group
+function SidebarGroup({ group, hasRole, isOpen, onToggle }) {
+  const location = useLocation()
+  const contentRef = useRef(null)
+  const [contentHeight, setContentHeight] = useState(0)
+
+  const filteredItems = useMemo(() => {
+    if (!group.items) return []
+    return group.items.filter(item => !item.roles || hasRole(...item.roles))
+  }, [group.items, hasRole])
+
+  useEffect(() => {
+    if (contentRef.current) {
+      setContentHeight(contentRef.current.scrollHeight)
+    }
+  }, [filteredItems])
+
+  if (group.roles && !hasRole(...group.roles)) return null
+  if (filteredItems.length === 0) return null
+
+  const isActiveGroup = filteredItems.some(item => location.pathname === item.path)
+
+  return (
+    <div className="app-sidebar__group">
+      <button
+        onClick={onToggle}
+        className={clsx(
+          'app-sidebar__trigger',
+          (isActiveGroup || isOpen) ? 'app-sidebar__trigger--active' : 'app-sidebar__trigger--idle'
+        )}
+      >
+        <div className="app-sidebar__trigger-left">
+          <group.icon size={20} />
+          <span>{group.label}</span>
+        </div>
+        <ChevronDown
+          size={16}
+          className={clsx('app-sidebar__chevron', isOpen && 'app-sidebar__chevron--open')}
+        />
+      </button>
+      <div
+        className="app-sidebar__submenu"
+        style={{ height: isOpen ? contentHeight : 0 }}
+      >
+        <div ref={contentRef} className="app-sidebar__submenu-inner">
+          {filteredItems.map(item => (
+            <NavLink
+              key={item.path}
+              to={item.path}
+              className={({ isActive }) =>
+                clsx(
+                  'app-sidebar__sublink',
+                  isActive ? 'app-sidebar__sublink--active' : 'app-sidebar__sublink--idle'
+                )
+              }
+            >
+              <span className="app-sidebar__dot" />
+              <span>{item.label}</span>
+            </NavLink>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function Layout() {
   const { user, logout, hasRole } = useAuth()
   const navigate = useNavigate()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const [openAccordion, setOpenAccordion] = useState(null) // Track which accordion is open
+  const [openAccordion, setOpenAccordion] = useState(null)
+  const [sidebarOpen, setSidebarOpen] = useState(null)
 
   // Determine which menu to show based on user role
   const isPlatformOwner = user?.role === 'PLATFORM_OWNER'
@@ -385,8 +470,11 @@ export default function Layout() {
   }
 
   const handleAccordionToggle = (groupId) => {
-    // If clicking the same one, close it; otherwise open the new one (closes others)
     setOpenAccordion(prev => prev === groupId ? null : groupId)
+  }
+
+  const handleSidebarToggle = (groupId) => {
+    setSidebarOpen(prev => prev === groupId ? null : groupId)
   }
 
   // Close mobile menu on resize to desktop
@@ -403,13 +491,60 @@ export default function Layout() {
 
   return (
     <div className="app-layout">
+      {/* Desktop Sidebar */}
+      <aside className="app-sidebar">
+        <div className="app-sidebar__header">
+          <div className="app-sidebar__logo" onClick={() => navigate('/')}>
+            <div className="app-sidebar__logo-mark">
+              <Building2 size={20} className="app-sidebar__logo-icon" />
+            </div>
+            <div className="app-sidebar__logo-text">
+              <span className="app-sidebar__brand-name">SocietyHub</span>
+              <span className="app-sidebar__brand-tag">Management Platform</span>
+            </div>
+          </div>
+        </div>
+
+        <nav className="app-sidebar__nav">
+          {menuGroups.map((group) => (
+            group.path ? (
+              <SidebarLink key={group.id} group={group} />
+            ) : (
+              <SidebarGroup
+                key={group.id}
+                group={group}
+                hasRole={hasRole}
+                isOpen={sidebarOpen === group.id}
+                onToggle={() => handleSidebarToggle(group.id)}
+              />
+            )
+          ))}
+        </nav>
+
+        <div className="app-sidebar__footer">
+          <div className="app-sidebar__user-card">
+            <div className="app-sidebar__avatar">
+              <span className="app-sidebar__initial">
+                {user?.name?.charAt(0)?.toUpperCase() || 'U'}
+              </span>
+            </div>
+            <div className="app-sidebar__user-info">
+              <p className="app-sidebar__user-name">{user?.name}</p>
+              <p className="app-sidebar__user-role">{user?.role?.replace(/_/g, ' ')}</p>
+            </div>
+          </div>
+          <button onClick={handleLogout} className="app-sidebar__logout-btn">
+            <LogOut size={18} />
+            <span>Logout</span>
+          </button>
+        </div>
+      </aside>
+
       {/* Top Navbar */}
       <header className="app-layout__header">
-        {/* Accent gradient line at top */}
-        <div className="app-layout__accent" />
         <div className="app-layout__bar">
           <div className="app-layout__bar-inner">
-            {/* Logo */}
+            {/* Logo - visible on mobile only */}
             <div className="app-layout__logo" onClick={() => navigate('/')}>
               <div className="app-layout__logo-mark">
                 <Building2 size={22} className="app-layout__logo-icon" />
@@ -422,7 +557,7 @@ export default function Layout() {
               </div>
             </div>
 
-            {/* Desktop Navigation */}
+            {/* Desktop Navigation - hidden, sidebar replaces it */}
             <nav className="app-layout__nav">
               {menuGroups.map((group) => (
                 <NavDropdown key={group.id} group={group} hasRole={hasRole} />

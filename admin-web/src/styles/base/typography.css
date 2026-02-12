@@ -79,19 +79,19 @@
 
 /* Links */
 .text-link {
-  color: var(--color-primary-600);
+  color: var(--accent-primary);
   text-decoration: none;
-  transition: color var(--transition-fast);
+  transition: color 0.15s ease;
 }
 
 .text-link:hover {
-  color: var(--color-primary-700);
+  color: var(--accent-hover);
   text-decoration: underline;
 }
 
 /* Text Utilities */
 .text-gradient {
-  background: linear-gradient(135deg, var(--color-primary-600), var(--color-accent-purple));
+  background: linear-gradient(135deg, var(--accent-primary), #58a6ff);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;

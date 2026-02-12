@@ -17,20 +17,12 @@
 .vendor-bills-title {
   font-size: 24px;
   font-weight: 700;
-  color: #0f172a;
-}
-
-.dark .vendor-bills-title {
-  color: #f8fafc;
+  color: var(--text-primary);
 }
 
 .vendor-bills-subtitle {
   margin-top: 4px;
-  color: #64748b;
-}
-
-.dark .vendor-bills-subtitle {
-  color: #94a3b8;
+  color: var(--text-tertiary);
 }
 
 .vendor-bills-action-button {
@@ -50,17 +42,12 @@
 }
 
 .vendor-bills-filters {
-  background: #fff;
-  border: 1px solid #e2e8f0;
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
   border-radius: 12px;
   padding: 16px;
   margin-bottom: 24px;
   box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
-}
-
-.dark .vendor-bills-filters {
-  background: #1e293b;
-  border-color: #334155;
 }
 
 .vendor-bills-filters-row {
@@ -88,7 +75,7 @@
   transform: translateY(-50%);
   width: 20px;
   height: 20px;
-  color: #94a3b8;
+  color: var(--text-tertiary);
 }
 
 .vendor-bills-input,
@@ -97,20 +84,13 @@
   padding: 8px 12px 8px 40px;
   border-radius: 10px;
   border: 1px solid #cbd5f5;
-  background: #fff;
-  color: #0f172a;
+  background: var(--bg-card);
+  color: var(--text-primary);
   outline: none;
 }
 
 .vendor-bills-select {
   padding-left: 12px;
-}
-
-.dark .vendor-bills-input,
-.dark .vendor-bills-select {
-  background: #334155;
-  color: #f8fafc;
-  border-color: #475569;
 }
 
 .vendor-bills-input:focus,
@@ -120,16 +100,11 @@
 }
 
 .vendor-bills-table-card {
-  background: #fff;
-  border: 1px solid #e2e8f0;
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
   border-radius: 16px;
   overflow: hidden;
   box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
-}
-
-.dark .vendor-bills-table-card {
-  background: #1e293b;
-  border-color: #334155;
 }
 
 .vendor-bills-table-scroll {
@@ -142,13 +117,8 @@
 }
 
 .vendor-bills-thead {
-  background: #f8fafc;
-  border-bottom: 1px solid #e2e8f0;
-}
-
-.dark .vendor-bills-thead {
-  background: #334155;
-  border-color: #475569;
+  background: var(--bg-tertiary);
+  border-bottom: 1px solid var(--border-light);
 }
 
 .vendor-bills-th {
@@ -157,11 +127,7 @@
   font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: #64748b;
-}
-
-.dark .vendor-bills-th {
-  color: #cbd5f5;
+  color: var(--text-tertiary);
 }
 
 .vendor-bills-th--right {
@@ -169,21 +135,13 @@
 }
 
 .vendor-bills-row:hover {
-  background: #f8fafc;
-}
-
-.dark .vendor-bills-row:hover {
-  background: #334155;
+  background: var(--bg-tertiary);
 }
 
 .vendor-bills-cell {
   padding: 16px 24px;
   white-space: nowrap;
-  color: #0f172a;
-}
-
-.dark .vendor-bills-cell {
-  color: #e2e8f0;
+  color: var(--text-primary);
 }
 
 .vendor-bills-cell--right {
@@ -191,12 +149,8 @@
 }
 
 .vendor-bills-cell-muted {
-  color: #64748b;
+  color: var(--text-tertiary);
   font-size: 14px;
-}
-
-.dark .vendor-bills-cell-muted {
-  color: #cbd5f5;
 }
 
 .vendor-bills-cell-strong {
@@ -219,18 +173,10 @@
   justify-content: center;
 }
 
-.dark .vendor-bills-icon {
-  background: rgba(194, 65, 12, 0.2);
-}
-
 .vendor-bills-icon-symbol {
   width: 16px;
   height: 16px;
   color: #ea580c;
-}
-
-.dark .vendor-bills-icon-symbol {
-  color: #fdba74;
 }
 
 .vendor-bills-vendor-name {
@@ -249,13 +195,6 @@
   color: #16a34a;
 }
 
-.dark .vendor-bills-pending-amount--due {
-  color: #fca5a5;
-}
-
-.dark .vendor-bills-pending-amount--clear {
-  color: #86efac;
-}
 
 .vendor-bills-status {
   display: inline-flex;
@@ -282,20 +221,6 @@
   color: #166534;
 }
 
-.dark .vendor-bills-status--pending {
-  background: rgba(180, 83, 9, 0.2);
-  color: #fcd34d;
-}
-
-.dark .vendor-bills-status--partial {
-  background: rgba(29, 78, 216, 0.2);
-  color: #93c5fd;
-}
-
-.dark .vendor-bills-status--paid {
-  background: rgba(22, 101, 52, 0.2);
-  color: #86efac;
-}
 
 .vendor-bills-pay-button {
   padding: 4px 8px;
@@ -320,7 +245,7 @@
   border-radius: 8px;
   background: transparent;
   border: none;
-  color: #64748b;
+  color: var(--text-tertiary);
   transition: color 0.2s ease;
 }
 
@@ -363,13 +288,9 @@
 .vendor-bills-modal-card {
   width: 100%;
   max-width: 420px;
-  background: #fff;
+  background: var(--bg-card);
   border-radius: 16px;
   box-shadow: 0 24px 60px rgba(15, 23, 42, 0.2);
-}
-
-.dark .vendor-bills-modal-card {
-  background: #1e293b;
 }
 
 .vendor-bills-modal-header {
@@ -377,39 +298,26 @@
   align-items: center;
   justify-content: space-between;
   padding: 16px;
-  border-bottom: 1px solid #e2e8f0;
-}
-
-.dark .vendor-bills-modal-header {
-  border-color: #334155;
+  border-bottom: 1px solid var(--border-light);
 }
 
 .vendor-bills-modal-title {
   font-size: 18px;
   font-weight: 600;
-  color: #0f172a;
-}
-
-.dark .vendor-bills-modal-title {
-  color: #f8fafc;
+  color: var(--text-primary);
 }
 
 .vendor-bills-modal-close {
   border: none;
   background: transparent;
-  color: #94a3b8;
+  color: var(--text-tertiary);
   padding: 4px;
   border-radius: 8px;
 }
 
 .vendor-bills-modal-close:hover {
-  background: #f1f5f9;
-  color: #0f172a;
-}
-
-.dark .vendor-bills-modal-close:hover {
-  background: #334155;
-  color: #e2e8f0;
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
 }
 
 .vendor-bills-form {
@@ -438,10 +346,6 @@
   color: #334155;
 }
 
-.dark .vendor-bills-label {
-  color: #cbd5f5;
-}
-
 .vendor-bills-text-input,
 .vendor-bills-select-input,
 .vendor-bills-textarea {
@@ -449,17 +353,9 @@
   padding: 8px 12px;
   border-radius: 10px;
   border: 1px solid #cbd5f5;
-  background: #fff;
-  color: #0f172a;
+  background: var(--bg-card);
+  color: var(--text-primary);
   outline: none;
-}
-
-.dark .vendor-bills-text-input,
-.dark .vendor-bills-select-input,
-.dark .vendor-bills-textarea {
-  background: #334155;
-  color: #f8fafc;
-  border-color: #475569;
 }
 
 .vendor-bills-text-input:focus,
@@ -490,23 +386,13 @@
 }
 
 .vendor-bills-btn--ghost {
-  background: #fff;
-  border-color: #d1d5db;
+  background: var(--bg-card);
+  border-color: var(--border-light);
   color: #334155;
 }
 
-.dark .vendor-bills-btn--ghost {
-  background: transparent;
-  border-color: #475569;
-  color: #cbd5f5;
-}
-
 .vendor-bills-btn--ghost:hover {
-  background: #f8fafc;
-}
-
-.dark .vendor-bills-btn--ghost:hover {
-  background: #334155;
+  background: var(--bg-tertiary);
 }
 
 .vendor-bills-btn--primary {
@@ -530,29 +416,17 @@
 .vendor-bills-summary {
   padding: 12px;
   border-radius: 12px;
-  background: #f8fafc;
-}
-
-.dark .vendor-bills-summary {
-  background: #334155;
+  background: var(--bg-tertiary);
 }
 
 .vendor-bills-summary-row {
   font-size: 14px;
-  color: #475569;
-}
-
-.dark .vendor-bills-summary-row {
-  color: #cbd5f5;
+  color: var(--text-secondary);
 }
 
 .vendor-bills-summary-strong {
   font-weight: 600;
-  color: #0f172a;
-}
-
-.dark .vendor-bills-summary-strong {
-  color: #f8fafc;
+  color: var(--text-primary);
 }
 
 .vendor-bills-summary-balance {

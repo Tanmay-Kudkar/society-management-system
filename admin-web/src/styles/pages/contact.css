@@ -6,8 +6,8 @@
 
 @media (min-width: 640px) {
   .contact-hero {
-    padding-top: 6rem;
-    padding-bottom: 6rem;
+    padding-top: 5.25rem;
+    padding-bottom: 5.25rem;
   }
 }
 
@@ -62,10 +62,10 @@
 }
 
 .contact-lead {
-  font-size: 1.25rem;
+  font-size: 1.15rem;
   max-width: 42rem;
   margin: 0 auto;
-  color: var(--text-secondary);
+  color: color-mix(in srgb, var(--text-primary) 68%, var(--text-secondary));
 }
 
 .contact-methods {
@@ -99,8 +99,8 @@
   text-align: center;
   padding: 1.5rem;
   border-radius: var(--radius-2xl);
-  background: var(--bg-card);
-  border: 1px solid var(--border-light);
+  background: color-mix(in srgb, var(--bg-card) 92%, var(--bg-secondary));
+  border: 1px solid var(--border-default);
   box-shadow: var(--shadow-sm);
   transition: transform 0.3s ease;
 }
@@ -148,7 +148,7 @@
 }
 
 .contact-form-section {
-  padding: 3rem 1rem;
+  padding: 2.5rem 1rem 4rem;
 }
 
 @media (min-width: 640px) {
@@ -166,8 +166,8 @@
 .contact-form-card {
   padding: 2rem;
   border-radius: 1.5rem;
-  background: var(--bg-card);
-  border: 1px solid var(--border-light);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--accent-primary) 10%, var(--bg-card)) 0%, color-mix(in srgb, var(--bg-card) 92%, var(--bg-secondary)) 100%);
+  border: 1px solid color-mix(in srgb, var(--accent-primary) 18%, var(--border-default));
   box-shadow: var(--shadow-xl);
 }
 
@@ -240,7 +240,7 @@
   font-size: var(--text-sm);
   font-weight: 600;
   margin-bottom: 0.5rem;
-  color: var(--text-secondary);
+  color: var(--text-primary);
 }
 
 .contact-input,
@@ -262,7 +262,7 @@
 
 .contact-input::placeholder,
 .contact-textarea::placeholder {
-  color: var(--text-muted);
+  color: var(--text-secondary);
 }
 
 .contact-input:focus,

@@ -206,10 +206,6 @@
   box-shadow: var(--shadow-md);
 }
 
-.dark .society-stat-card:hover {
-  border-color: var(--color-primary-800);
-}
-
 .society-stat-icon {
   width: 48px;
   height: 48px;
@@ -475,10 +471,6 @@
 
 .role-tree-item.active {
   background: var(--color-primary-50);
-}
-
-.dark .role-tree-item.active {
-  background: rgba(59, 130, 246, 0.1);
 }
 
 .role-tree-connector {

@@ -53,6 +53,10 @@
 @import "./pages/contact.css";
 @import "./pages/terms.css";
 @import "./pages/privacy.css";
+@import "./pages/pricing.css";
+@import "./pages/blog.css";
+@import "./pages/demo.css";
+@import "./pages/help.css";
 
 /* Utility replacements for Tailwind classes */
 @import "./utils/layout.css";
@@ -73,39 +77,23 @@
 }
 
 /* ============================================
-   Accent Color Utilities
+   Accent Color Utilities (fixed blue)
    ============================================ */
 
 .accent-text {
-  color: var(--accent-500);
-}
-
-.accent-text-dark {
-  color: var(--accent-600);
+  color: var(--accent-primary);
 }
 
 .accent-bg {
-  background-color: var(--accent-500);
+  background-color: var(--accent-primary);
 }
 
 .accent-bg-light {
   background-color: var(--accent-50);
 }
 
-.accent-bg-hover:hover {
-  background-color: var(--accent-600);
-}
-
-.accent-border {
-  border-color: var(--accent-500);
-}
-
-.accent-ring {
-  --tw-ring-color: var(--accent-500);
-}
-
 .accent-btn {
-  background-color: var(--accent-500);
+  background-color: var(--accent-primary);
   color: white;
 }
 
@@ -113,48 +101,27 @@
   background-color: var(--accent-600);
 }
 
-.accent-toggle {
-  background-color: var(--accent-500) !important;
-}
-
-/* Dark mode accent bg light */
-.dark .accent-bg-light {
-  background-color: color-mix(in srgb, var(--accent-500) 15%, transparent);
-}
-
 /* ============================================
    Scrollbar Styling
    ============================================ */
 
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f5f9;
+  background: var(--bg-primary);
   border-radius: 4px;
-}
-
-.dark ::-webkit-scrollbar-track {
-  background: #1e293b;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: var(--border-default);
   border-radius: 4px;
 }
 
-.dark ::-webkit-scrollbar-thumb {
-  background: #475569;
-}
-
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
-}
-
-.dark ::-webkit-scrollbar-thumb:hover {
-  background: #64748b;
+  background: var(--border-strong);
 }
 
 /* ============================================
@@ -167,17 +134,12 @@ button:focus-visible {
 }
 
 select option {
-  background-color: white;
-  color: #1f2937;
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
 }
 
-.dark select option {
-  background-color: #1e293b;
-  color: #f1f5f9;
-}
-
-.dark ::placeholder {
-  color: #9ca3af;
+::placeholder {
+  color: var(--text-tertiary);
   opacity: 1;
 }
 

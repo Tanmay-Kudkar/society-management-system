@@ -1,4 +1,5 @@
-import { Routes, Route, Navigate } from 'react-router-dom'
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
+import { useEffect } from 'react'
 import { useAuth } from './context/AuthContext'
 import { ToastProvider } from './context/ToastContext'
 import { ThemeProvider } from './context/ThemeContext'
@@ -36,6 +37,10 @@ import About from './pages/footer/About'
 import Privacy from './pages/footer/Privacy'
 import Terms from './pages/footer/Terms'
 import Contact from './pages/footer/Contact'
+import Pricing from './pages/footer/Pricing'
+import Blog from './pages/footer/Blog'
+import Demo from './pages/footer/Demo'
+import Help from './pages/footer/Help'
 
 // Protected Route component
 const ProtectedRoute = ({ children }) => {
@@ -56,10 +61,75 @@ const ProtectedRoute = ({ children }) => {
   return children
 }
 
+const ScrollToTop = () => {
+  const { pathname } = useLocation()
+
+  useEffect(() => {
+    // Reset scroll on both window and document element to cover all containers
+    window.scrollTo(0, 0)
+    document.documentElement.scrollTop = 0
+    document.body.scrollTop = 0
+  }, [pathname])
+
+  return null
+}
+
+const PAGE_TITLES = {
+  '/welcome': 'Welcome',
+  '/login': 'Sign In',
+  '/forgot-password': 'Forgot Password',
+  '/reset-password': 'Reset Password',
+  '/about': 'About',
+  '/privacy': 'Privacy Policy',
+  '/terms': 'Terms of Service',
+  '/contact': 'Contact',
+  '/pricing': 'Pricing',
+  '/blog': 'Blog',
+  '/demo': 'Demo',
+  '/help': 'Help',
+  '/': 'Dashboard',
+  '/users': 'Users',
+  '/societies': 'Societies',
+  '/organizations': 'Organizations',
+  '/society-admins': 'Society Admins',
+  '/wings': 'Wings',
+  '/unit-management': 'Unit Management',
+  '/tenants': 'Tenants',
+  '/vehicles': 'Vehicles',
+  '/vendors': 'Vendors',
+  '/vendor-bills': 'Vendor Bills',
+  '/contracts': 'Contracts',
+  '/maintenance-bills': 'Maintenance Bills',
+  '/transactions': 'Transactions',
+  '/reports': 'Reports',
+  '/roles-permissions': 'Roles & Permissions',
+  '/notices': 'Notices',
+  '/banners': 'Banners',
+  '/tickets': 'Tickets',
+  '/complaints': 'Complaints',
+  '/emergency-contacts': 'Emergency Contacts',
+  '/documents': 'Documents',
+  '/settings': 'Settings',
+}
+
+const DynamicTitle = () => {
+  const { pathname } = useLocation()
+
+  useEffect(() => {
+    const title = PAGE_TITLES[pathname]
+      || (pathname.startsWith('/societies/') ? 'Society Details' : null)
+    document.title = title ? `${title} - SocietyHub` : 'SocietyHub'
+  }, [pathname])
+
+  return null
+}
+
 function App() {
   return (
     <ThemeProvider>
       <ToastProvider>
+        <ScrollToTop />
+        <DynamicTitle />
         <Routes>
           <Route path="/welcome" element={<Welcome />} />
           <Route path="/login" element={<Login />} />
@@ -71,6 +141,10 @@ function App() {
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/terms" element={<Terms />} />
           <Route path="/contact" element={<Contact />} />
+          <Route path="/pricing" element={<Pricing />} />
+          <Route path="/blog" element={<Blog />} />
+          <Route path="/demo" element={<Demo />} />
+          <Route path="/help" element={<Help />} />
       
       <Route path="/" element={
         <ProtectedRoute>
