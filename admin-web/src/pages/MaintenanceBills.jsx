@@ -3,9 +3,11 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { maintenanceBillApi, flatApi } from '../../../api'
-import { Plus, Search, X, CreditCard, CheckCircle, Clock, AlertCircle, Info } from 'lucide-react'
+import { Plus, Search, X, CreditCard, CheckCircle, Clock, AlertCircle, Info, Wallet } from 'lucide-react'
 import clsx from 'clsx'
 import PermissionDenied from '../components/PermissionDenied'
+import { useRazorpay } from '../hooks/useRazorpay'
+import { useToast } from '../context/ToastContext'
 
 const statusClasses = {
   PENDING: 'maintenance-status maintenance-status--pending',
@@ -17,6 +19,7 @@ const statusClasses = {
 export default function MaintenanceBills() {
   const { user, canManageMaintenanceBills } = useAuth()
   const queryClient = useQueryClient()
+  const toast = useToast()
   
   // Permission check
   if (!canManageMaintenanceBills()) {
@@ -30,11 +33,47 @@ export default function MaintenanceBills() {
   const [searchTerm, setSearchTerm] = useState('')
   const [filterStatus, setFilterStatus] = useState('')
   
+  // Individual bill state
+  const [billMonth, setBillMonth] = useState('')
+  
   // Bulk generation state
   const [bulkPropertyType, setBulkPropertyType] = useState('ALL')
   const [bulkBillMonth, setBulkBillMonth] = useState('')
   const [previewCount, setPreviewCount] = useState(null)
   const [isLoadingPreview, setIsLoadingPreview] = useState(false)
+
+  // Razorpay integration
+  const { initiatePayment, isLoading: isPaymentLoading, error: paymentError } = useRazorpay({
+    onSuccess: (paymentData) => {
+      toast.success('Payment successful! Bill has been updated.')
+      queryClient.invalidateQueries(['maintenanceBills'])
+      setShowPaymentModal(false)
+      setSelectedBill(null)
+    },
+    onError: (error) => {
+      toast.error(error?.description || error?.message || 'Payment failed. Please try again.')
+    },
+    onDismiss: () => {
+      // User closed the payment modal without completing
+    },
+  })
+
+  // Handle online payment via Razorpay
+  const handleOnlinePayment = (bill) => {
+    const balance = bill.amount - (bill.paidAmount || 0)
+    initiatePayment({
+      amount: balance,
+      maintenanceBillId: bill.id,
+      userId: user.id,
+      description: `Maintenance Bill - ${bill.billMonth} - Flat ${bill.flatNumber}`,
+      paymentType: 'MAINTENANCE',
+      prefill: {
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+      },
+    })
+  }
 
   // Get society filter from URL (for PLATFORM_OWNER viewing specific society)
   const societyIdFromUrl = searchParams.get('society')
@@ -67,6 +106,7 @@ export default function MaintenanceBills() {
     onSuccess: () => {
       queryClient.invalidateQueries(['maintenanceBills'])
       setShowModal(false)
+      setBillMonth('')
     },
   })
 
@@ -276,12 +316,23 @@ export default function MaintenanceBills() {
                     </td>
                     <td className="maintenance-cell maintenance-cell--right">
                       {bill.status !== 'PAID' && (
-                        <button
-                          onClick={() => { setSelectedBill(bill); setShowPaymentModal(true) }}
-                          className="maintenance-pay-button"
-                        >
-                          Record Payment
-                        </button>
+                        <div className="maintenance-actions">
+                          <button
+                            onClick={() => handleOnlinePayment(bill)}
+                            disabled={isPaymentLoading}
+                            className="maintenance-pay-online-button"
+                            title="Pay Online via Razorpay"
+                          >
+                            <Wallet size={16} />
+                            Pay Online
+                          </button>
+                          <button
+                            onClick={() => { setSelectedBill(bill); setShowPaymentModal(true) }}
+                            className="maintenance-pay-button"
+                          >
+                            Record Payment
+                          </button>
+                        </div>
                       )}
                     </td>
                   </tr>
@@ -298,7 +349,7 @@ export default function MaintenanceBills() {
           <div className="maintenance-modal-card">
             <div className="maintenance-modal-header">
               <h3 className="maintenance-modal-title">Add Maintenance Bill</h3>
-              <button onClick={() => setShowModal(false)} className="maintenance-modal-close">
+              <button onClick={() => {setShowModal(false); setBillMonth('')}} className="maintenance-modal-close">
                 <X size={20} />
               </button>
             </div>
@@ -325,6 +376,8 @@ export default function MaintenanceBills() {
                     type="month"
                     name="billMonth"
                     required
+                    value={billMonth}
+                    onChange={(e) => setBillMonth(e.target.value)}
                     className="maintenance-input"
                   />
                 </div>
@@ -348,7 +401,7 @@ export default function MaintenanceBills() {
                 />
               </div>
               <div className="maintenance-form-actions">
-                <button type="button" onClick={() => setShowModal(false)} className="maintenance-cancel-button">Cancel</button>
+                <button type="button" onClick={() => {setShowModal(false); setBillMonth('')}} className="maintenance-cancel-button">Cancel</button>
                 <button type="submit" className="maintenance-submit-button">Create</button>
               </div>
             </form>

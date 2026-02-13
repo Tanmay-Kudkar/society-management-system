@@ -26,6 +26,7 @@ import {
   ChevronDown,
   BarChart3,
   Layers,
+  Wallet,
 } from 'lucide-react'
 import clsx from 'clsx'
 
@@ -106,6 +107,13 @@ const standardMenuGroups = [
     path: '/',
   },
   {
+    id: 'my-bills',
+    label: 'My Bills',
+    icon: CreditCard,
+    path: '/my-bills',
+    roles: ['MEMBER', 'TENANT'],
+  },
+  {
     id: 'management',
     label: 'Management',
     icon: Building2,
@@ -126,6 +134,7 @@ const standardMenuGroups = [
       { path: '/vendor-bills', icon: Receipt, label: 'Vendor Bills', roles: ['SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER'] },
       { path: '/contracts', icon: FileText, label: 'Contracts', roles: ['SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER'] },
       { path: '/maintenance-bills', icon: CreditCard, label: 'Maintenance Bills', roles: ['SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE'] },
+      { path: '/payments', icon: Wallet, label: 'Online Payments', roles: ['SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER'] },
       { path: '/transactions', icon: DollarSign, label: 'Transactions', roles: ['SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER'] },
       { path: '/reports', icon: BarChart3, label: 'Reports', roles: ['SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER'] },
     ],

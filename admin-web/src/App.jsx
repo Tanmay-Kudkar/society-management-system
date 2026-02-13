@@ -32,6 +32,8 @@ import Documents from './pages/Documents'
 import Settings from './pages/Settings'
 import Reports from './pages/Reports'
 import RolesPermissions from './pages/RolesPermissions'
+import Payments from './pages/Payments'
+import MyBills from './pages/MyBills'
 // Footer Pages
 import About from './pages/footer/About'
 import Privacy from './pages/footer/Privacy'
@@ -100,6 +102,8 @@ const PAGE_TITLES = {
   '/vendor-bills': 'Vendor Bills',
   '/contracts': 'Contracts',
   '/maintenance-bills': 'Maintenance Bills',
+  '/payments': 'Online Payments',
+  '/my-bills': 'My Bills',
   '/transactions': 'Transactions',
   '/reports': 'Reports',
   '/roles-permissions': 'Roles & Permissions',
@@ -166,6 +170,8 @@ function App() {
         <Route path="vendor-bills" element={<VendorBills />} />
         <Route path="contracts" element={<Contracts />} />
         <Route path="maintenance-bills" element={<MaintenanceBills />} />
+        <Route path="payments" element={<Payments />} />
+        <Route path="my-bills" element={<MyBills />} />
         <Route path="transactions" element={<Transactions />} />
         <Route path="reports" element={<Reports />} />
         <Route path="roles-permissions" element={<RolesPermissions />} />
