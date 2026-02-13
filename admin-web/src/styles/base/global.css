@@ -23,7 +23,7 @@ body {
 
 body {
     font-family: var(--font-sans);
-    background-color: var(--background);
+    background-color: var(--bg-primary);
     color: var(--text-primary);
     margin: 0;
     text-rendering: optimizeLegibility;
@@ -34,7 +34,7 @@ body {
 
 .dark body,
 body.dark {
-    background-color: var(--background);
+    background-color: var(--bg-primary);
     color: var(--text-primary);
 }
 

@@ -391,10 +391,22 @@
 
 
 .flats-submit-button {
-  background: #2563eb;
-  color: #fff;
+  border: 1px solid var(--border-default);
+  background: var(--bg-card);
+  color: var(--text-primary);
 }
 
 .flats-submit-button:hover {
-  background: #1d4ed8;
+  background: color-mix(in srgb, var(--bg-tertiary) 70%, var(--bg-card));
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.14);
+}
+
+.dark .flats-submit-button {
+  border-color: rgba(148, 163, 184, 0.22);
+  background: #f8fafc;
+  color: #0f172a;
+}
+
+.dark .flats-submit-button:hover {
+  background: #ffffff;
 }

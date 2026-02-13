@@ -77,6 +77,16 @@ public class WingServiceImpl implements WingService {
 
         roleService.enforceSocietyScope(roleService.getCurrentUser(), society.getId());
 
+        Integer totalWings = society.getTotalWings();
+        if (totalWings != null && totalWings > 0) {
+            long currentWingCount = wingRepository.countBySocietyId(society.getId());
+            if (currentWingCount >= totalWings) {
+                throw new ApiException(
+                        HttpStatus.BAD_REQUEST,
+                        "Cannot create more wings. Society capacity reached: " + currentWingCount + "/" + totalWings);
+            }
+        }
+
         Wing wing = new Wing();
         wing.setSociety(society);
         wing.setOrganization(society.getOrganization());
@@ -101,6 +111,19 @@ public class WingServiceImpl implements WingService {
         Society society = societyRepository.findById(request.getSocietyId())
             .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Society not found"));
         roleService.enforceSocietyScope(roleService.getCurrentUser(), society.getId());
+
+        if (!society.getId().equals(wing.getSociety().getId())) {
+            Integer totalWings = society.getTotalWings();
+            if (totalWings != null && totalWings > 0) {
+                long currentWingCount = wingRepository.countBySocietyId(society.getId());
+                if (currentWingCount >= totalWings) {
+                    throw new ApiException(
+                            HttpStatus.BAD_REQUEST,
+                            "Cannot move wing. Target society capacity reached: " + currentWingCount + "/" + totalWings);
+                }
+            }
+        }
+
         wing.setSociety(society);
         wing.setOrganization(society.getOrganization());
 

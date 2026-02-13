@@ -13,6 +13,7 @@ public class ContractRequest {
     @NotNull(message = "Society ID is required")
     private Long societyId;
 
+    @NotNull(message = "Vendor is required")
     private Long vendorId;
 
     @NotBlank(message = "Contract type is required")
@@ -29,6 +30,7 @@ public class ContractRequest {
     @NotNull(message = "End date is required")
     private LocalDate endDate;
 
+    @NotNull(message = "Reminder days is required")
     private Integer reminderDays; // Days before expiry to send reminder
 
     private String documentUrl;

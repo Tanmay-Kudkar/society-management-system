@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '../context/AuthContext'
+import { useConfirmDialog } from '../context/ConfirmDialogContext'
 import { vendorApi, societyApi } from '../../../api'
 import { Plus, Edit, Trash2, Search, X, Truck, Phone, Mail, Eye, Building2, Landmark, FileText, User, MapPin, Upload } from 'lucide-react'
 import clsx from 'clsx'
@@ -16,6 +17,7 @@ const approvalClasses = {
 
 export default function Vendors() {
   const { user, canManageVendors } = useAuth()
+  const confirmDialog = useConfirmDialog()
   const queryClient = useQueryClient()
   
   // Permission check
@@ -35,6 +37,7 @@ export default function Vendors() {
   const { data: vendors = [], isLoading } = useQuery({
     queryKey: ['vendors'],
     queryFn: () => vendorApi.getAll().then(res => res.data),
+    placeholderData: [],
   })
 
   const { data: societies = [] } = useQuery({
@@ -86,15 +89,43 @@ export default function Vendors() {
     v.serviceType?.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
-  const handleApprove = (id) => {
-    if (window.confirm('Approve this vendor for partnership?')) {
-      approveMutation.mutate(id)
+  const handleApprove = async (vendor) => {
+    const confirmed = await confirmDialog({
+      title: 'Approve Vendor',
+      message: 'Approve this vendor for partnership?',
+      confirmText: 'Approve',
+      tone: 'neutral',
+      details: [
+        { label: 'Vendor', value: vendor?.name || '-' },
+        { label: 'Service', value: vendor?.serviceType || '-' },
+        { label: 'Status', value: vendor?.approvalStatus || 'PENDING' },
+      ],
+      impacts: [
+        { label: 'Approval Status', count: 1 },
+      ],
+    })
+    if (confirmed) {
+      approveMutation.mutate(vendor?.id)
     }
   }
 
-  const handleReject = (id) => {
-    if (window.confirm('Reject this vendor application?')) {
-      rejectMutation.mutate(id)
+  const handleReject = async (vendor) => {
+    const confirmed = await confirmDialog({
+      title: 'Reject Vendor',
+      message: 'Reject this vendor application?',
+      confirmText: 'Reject',
+      tone: 'warning',
+      details: [
+        { label: 'Vendor', value: vendor?.name || '-' },
+        { label: 'Service', value: vendor?.serviceType || '-' },
+        { label: 'Status', value: vendor?.approvalStatus || 'PENDING' },
+      ],
+      impacts: [
+        { label: 'Approval Status', count: 1 },
+      ],
+    })
+    if (confirmed) {
+      rejectMutation.mutate(vendor?.id)
     }
   }
 
@@ -213,8 +244,24 @@ export default function Vendors() {
                     <Edit size={18} />
                   </button>
                   <button
-                    onClick={() => {
-                      if (confirm('Are you sure you want to delete this vendor?')) {
+                    onClick={async () => {
+                      const confirmed = await confirmDialog({
+                        title: 'Delete Vendor',
+                        message: 'Are you sure you want to delete this vendor? This action cannot be undone.',
+                        confirmText: 'Delete',
+                        tone: 'danger',
+                        details: [
+                          { label: 'Vendor', value: vendor.name || '-' },
+                          { label: 'Service', value: vendor.serviceType || '-' },
+                          { label: 'Contact', value: vendor.contactPerson || vendor.phone || '-' },
+                          { label: 'Status', value: vendor.approvalStatus || 'PENDING' },
+                        ],
+                        impacts: [
+                          { label: 'Vendor Profile', count: 1 },
+                        ],
+                        caution: 'This action permanently removes vendor records.',
+                      })
+                      if (confirmed) {
                         deleteMutation.mutate(vendor.id)
                       }
                     }}
@@ -326,12 +373,14 @@ export default function Vendors() {
                     name="contactPerson"
                     defaultValue={editingVendor?.contactPerson}
                     placeholder="e.g., John Doe"
+                    required
                   />
                   <div className="vendors-form-grid">
                     <PhoneInput
                       label="Contact Phone"
                       name="contactPersonPhone"
                       defaultValue={editingVendor?.contactPersonPhone}
+                      required
                     />
                     <FormInput
                       label="Contact Email"
@@ -339,6 +388,7 @@ export default function Vendors() {
                       type="email"
                       defaultValue={editingVendor?.contactPersonEmail}
                       placeholder="Contact email"
+                      required
                     />
                   </div>
                 </div>
@@ -371,6 +421,7 @@ export default function Vendors() {
                       type="email"
                       defaultValue={editingVendor?.email}
                       placeholder="Vendor's business email"
+                      required
                     />
                   </div>
                 </div>
@@ -380,6 +431,7 @@ export default function Vendors() {
                 name="address"
                 defaultValue={editingVendor?.address}
                 rows={2}
+                required
               />
 
               {/* Tax Details */}
@@ -391,12 +443,14 @@ export default function Vendors() {
                     name="gstNumber"
                     defaultValue={editingVendor?.gstNumber}
                     placeholder="22AAAAA0000A1Z5"
+                    required
                   />
                   <FormInput
                     label="PAN Number"
                     name="panNumber"
                     defaultValue={editingVendor?.panNumber}
                     placeholder="AAAAA0000A"
+                    required
                   />
                 </div>
               </div>
@@ -410,6 +464,7 @@ export default function Vendors() {
                     name="bankName"
                     defaultValue={editingVendor?.bankName}
                     placeholder="HDFC Bank"
+                    required
                   />
                   <div className="vendors-form-grid">
                     <FormInput
@@ -417,12 +472,14 @@ export default function Vendors() {
                       name="accountNumber"
                       defaultValue={editingVendor?.accountNumber}
                       placeholder="1234567890"
+                      required
                     />
                     <FormInput
                       label="IFSC Code"
                       name="ifscCode"
                       defaultValue={editingVendor?.ifscCode}
                       placeholder="HDFC0000123"
+                      required
                     />
                   </div>
                 </div>
@@ -663,7 +720,7 @@ export default function Vendors() {
                     <div className="vendors-status-actions">
                       {viewingVendor.approvalStatus !== 'APPROVED' && (
                         <button
-                          onClick={() => handleApprove(viewingVendor.id)}
+                          onClick={() => handleApprove(viewingVendor)}
                           className="vendors-approve-btn"
                         >
                           ✓ Approve
@@ -671,7 +728,7 @@ export default function Vendors() {
                       )}
                       {viewingVendor.approvalStatus !== 'REJECTED' && (
                         <button
-                          onClick={() => handleReject(viewingVendor.id)}
+                          onClick={() => handleReject(viewingVendor)}
                           className="vendors-reject-btn"
                         >
                           ✗ Reject

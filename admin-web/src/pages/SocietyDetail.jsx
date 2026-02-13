@@ -15,7 +15,6 @@ import {
   CreditCard,
   Bell,
   MessageSquare,
-  Shield,
   ChevronRight,
   Edit,
   Trash2,
@@ -30,37 +29,24 @@ import clsx from 'clsx'
 
 // Role colors matching the main app
 const roleColors = {
-  PLATFORM_OWNER: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300',
-  SOCIETY_ADMIN: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300',
-  CHAIRMAN: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-300',
-  SECRETARY: 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900/30 dark:text-cyan-300',
-  TREASURER: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
-  COMMITTEE: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300',
-  EMPLOYEE: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300',
-  MEMBER: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300',
-  TENANT: 'bg-pink-100 text-pink-800 dark:bg-pink-900/30 dark:text-pink-300',
-  VISITOR: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300',
+  PLATFORM_OWNER: 'society-role-color society-role-color--platform-owner',
+  SOCIETY_ADMIN: 'society-role-color society-role-color--society-admin',
+  CHAIRMAN: 'society-role-color society-role-color--chairman',
+  SECRETARY: 'society-role-color society-role-color--secretary',
+  TREASURER: 'society-role-color society-role-color--treasurer',
+  COMMITTEE: 'society-role-color society-role-color--committee',
+  EMPLOYEE: 'society-role-color society-role-color--employee',
+  MEMBER: 'society-role-color society-role-color--member',
+  TENANT: 'society-role-color society-role-color--tenant',
+  VISITOR: 'society-role-color society-role-color--visitor',
 }
 
 const avatarColors = [
-  'bg-gradient-to-br from-blue-500 to-indigo-600',
-  'bg-gradient-to-br from-emerald-500 to-teal-600',
-  'bg-gradient-to-br from-purple-500 to-pink-600',
-  'bg-gradient-to-br from-orange-500 to-red-600',
-  'bg-gradient-to-br from-cyan-500 to-blue-600',
-]
-
-// Role hierarchy for display
-const roleHierarchy = [
-  { role: 'SOCIETY_ADMIN', label: 'Society Admin', icon: Shield, color: 'blue' },
-  { role: 'CHAIRMAN', label: 'Chairman', icon: User, color: 'indigo' },
-  { role: 'SECRETARY', label: 'Secretary', icon: Briefcase, color: 'cyan' },
-  { role: 'TREASURER', label: 'Treasurer', icon: CreditCard, color: 'green' },
-  { role: 'COMMITTEE', label: 'Committee', icon: Users, color: 'yellow' },
-  { role: 'EMPLOYEE', label: 'Employee', icon: Briefcase, color: 'orange' },
-  { role: 'MEMBER', label: 'Member', icon: Home, color: 'gray' },
-  { role: 'TENANT', label: 'Tenant', icon: User, color: 'pink' },
-  { role: 'VISITOR', label: 'Visitor', icon: User, color: 'red' },
+  'society-user-avatar--blue',
+  'society-user-avatar--emerald',
+  'society-user-avatar--purple',
+  'society-user-avatar--orange',
+  'society-user-avatar--cyan',
 ]
 
 export default function SocietyDetail() {
@@ -95,15 +81,6 @@ export default function SocietyDetail() {
     enabled: !!id,
   })
 
-  // Group users by role
-  const usersByRole = useMemo(() => {
-    const grouped = {}
-    roleHierarchy.forEach(({ role }) => {
-      grouped[role] = societyUsers.filter(u => u.role === role)
-    })
-    return grouped
-  }, [societyUsers])
-
   // Calculate stats
   const stats = useMemo(() => {
     const flats = societyFlats.filter(f => !f.unitType || f.unitType === 'FLAT')
@@ -119,11 +96,11 @@ export default function SocietyDetail() {
       totalOffices: offices.length,
       occupiedOffices: offices.filter(f => f.isOccupied === true || f.ownerName).length,
       totalWings: societyWings.length,
-      totalMembers: usersByRole.MEMBER?.length || 0,
-      totalTenants: usersByRole.TENANT?.length || 0,
-      totalEmployees: usersByRole.EMPLOYEE?.length || 0,
+      totalMembers: societyUsers.filter(u => u.role === 'MEMBER').length,
+      totalTenants: societyUsers.filter(u => u.role === 'TENANT').length,
+      totalEmployees: societyUsers.filter(u => u.role === 'EMPLOYEE').length,
     }
-  }, [societyUsers, societyFlats, societyWings, usersByRole])
+  }, [societyUsers, societyFlats, societyWings])
 
   // Quick action links
   const quickActions = [
@@ -220,7 +197,7 @@ export default function SocietyDetail() {
           className="society-error-button"
         >
           <ArrowLeft size={18} />
-          Back to Societies
+          Go Back
         </button>
       </div>
     )
@@ -233,11 +210,11 @@ export default function SocietyDetail() {
         <div className="society-header-content">
           {/* Back Button */}
           <button 
-            onClick={() => navigate('/societies')}
+            onClick={() => navigate(-1)}
             className="society-back-btn"
           >
             <ArrowLeft size={18} />
-            Back to Societies
+            Go Back
           </button>
 
           {/* Society Title */}
@@ -359,82 +336,49 @@ export default function SocietyDetail() {
         </div>
       </div>
 
-      {/* Role Hierarchy Section */}
-      <div className="society-bottom-grid">
-        {/* Role Tree */}
-        <div className="role-hierarchy">
-          <h3 className="role-hierarchy-title">
-            <Shield size={18} />
-            Role Hierarchy
-          </h3>
-          <div className="role-tree">
-            {roleHierarchy.map(({ role, label }, index) => {
-              const count = usersByRole[role]?.length || 0
-              const indentLevel = index === 0 ? 0 : index <= 3 ? 1 : index <= 5 ? 2 : 3
-              
-              return (
-                <div 
-                  key={role} 
-                  className={clsx('role-tree-item', count > 0 && 'active')}
-                  style={{ paddingLeft: `${indentLevel * 24}px` }}
-                >
-                  <span className={clsx('role-tree-badge', roleColors[role])}>
-                    {label}
-                  </span>
-                  <span className="role-tree-count">{count} user{count !== 1 ? 's' : ''}</span>
-                </div>
-              )
-            })}
-          </div>
+      <div className="society-section">
+        <div className="society-section-header">
+          <h2 className="society-section-title">
+            <Users size={20} />
+            Society Members
+          </h2>
+          {/* View All removed - all members shown on this page */}
         </div>
 
-        {/* Users List */}
-        <div className="society-bottom-main">
-          <div className="society-section">
-            <div className="society-section-header">
-              <h2 className="society-section-title">
-                <Users size={20} />
-                Society Members
-              </h2>
-              {/* View All removed - all members shown on this page */}
-            </div>
-
-            {societyUsers.length === 0 ? (
-              <div className="society-empty">
-                <Users className="society-empty-icon" />
-                <p className="society-empty-title">No users yet</p>
-                <p className="society-empty-text">Users assigned to this society will appear here</p>
-              </div>
-            ) : (
-              <div className="society-users-grid">
-                {societyUsers.map((u, idx) => (
-                  <div key={u.id} className="society-user-card">
-                    <div className="society-user-header">
-                      <div className={clsx('society-user-avatar', avatarColors[idx % avatarColors.length])}>
-                        {u.name?.charAt(0)?.toUpperCase()}
-                      </div>
-                      <div className="society-user-info">
-                        <div className="society-user-name">{u.name}</div>
-                        <div className="society-user-email">{u.email}</div>
-                      </div>
-                      <span className={clsx('society-user-role', roleColors[u.role])}>
-                        {u.role?.replace('_', ' ')}
-                      </span>
-                    </div>
-                    {u.phone && (
-                      <div className="society-user-meta">
-                        <div className="society-user-meta-item">
-                          <Phone size={14} />
-                          {u.phone}
-                        </div>
-                      </div>
-                    )}
+        {societyUsers.length === 0 ? (
+          <div className="society-empty">
+            <Users className="society-empty-icon" />
+            <p className="society-empty-title">No users yet</p>
+            <p className="society-empty-text">Users assigned to this society will appear here</p>
+          </div>
+        ) : (
+          <div className="society-users-grid">
+            {societyUsers.map((u, idx) => (
+              <div key={u.id} className="society-user-card">
+                <div className="society-user-header">
+                  <div className={clsx('society-user-avatar', avatarColors[idx % avatarColors.length])}>
+                    {u.name?.charAt(0)?.toUpperCase()}
                   </div>
-                ))}
+                  <div className="society-user-info">
+                    <div className="society-user-name">{u.name}</div>
+                    <div className="society-user-email">{u.email}</div>
+                  </div>
+                  <span className={clsx('society-user-role', roleColors[u.role])}>
+                    {u.role?.replace('_', ' ')}
+                  </span>
+                </div>
+                {u.phone && (
+                  <div className="society-user-meta">
+                    <div className="society-user-meta-item">
+                      <Phone size={14} />
+                      {u.phone}
+                    </div>
+                  </div>
+                )}
               </div>
-            )}
+            ))}
           </div>
-        </div>
+        )}
       </div>
     </div>
   )

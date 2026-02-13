@@ -40,16 +40,17 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.5rem 1rem;
-  border: 1px solid #2563eb;
-  color: #2563eb;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  color: #f8fafc;
+  background: #0f172a;
   border-radius: 0.5rem;
   font-weight: 500;
   cursor: pointer;
-  transition: background 0.2s ease;
+  transition: background 0.2s ease, box-shadow 0.2s ease;
 }
 
 .vehicles-bulk-button:hover {
-  background: rgba(37, 99, 235, 0.08);
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.16);
 }
 
 .vehicles-add-button {
@@ -57,24 +58,42 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.5rem 1rem;
-  background: #2563eb;
-  color: #fff;
+  border: 1px solid var(--border-default);
+  background: var(--bg-card);
+  color: var(--text-primary);
   border-radius: 0.5rem;
   font-weight: 500;
   cursor: pointer;
-  transition: background 0.2s ease;
+  transition: background 0.2s ease, box-shadow 0.2s ease;
 }
 
 .vehicles-add-button:hover {
-  background: #1d4ed8;
+  background: color-mix(in srgb, var(--bg-tertiary) 70%, var(--bg-card));
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.14);
+}
+
+.dark .vehicles-bulk-button {
+  border-color: rgba(148, 163, 184, 0.26);
+  background: #020617;
+  color: #f8fafc;
+}
+
+.dark .vehicles-add-button {
+  border-color: rgba(148, 163, 184, 0.22);
+  background: #f8fafc;
+  color: #0f172a;
+}
+
+.dark .vehicles-add-button:hover {
+  background: #ffffff;
 }
 
 /* Filters */
 .vehicles-filters {
   background: var(--bg-card);
   border-radius: 0.75rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
-  border: 1px solid #f3f4f6;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-default);
   padding: 1rem;
   margin-bottom: 1.5rem;
 }
@@ -156,8 +175,8 @@
 .vehicles-stat-card {
   background: var(--bg-card);
   border-radius: 0.75rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
-  border: 1px solid #f3f4f6;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-default);
   padding: 1rem;
 }
 
@@ -173,15 +192,15 @@
 }
 
 .vehicles-stat-icon--blue {
-  background: #dbeafe;
+  background: color-mix(in srgb, #2563eb 16%, var(--bg-card));
 }
 
 .vehicles-stat-icon--green {
-  background: #dcfce7;
+  background: color-mix(in srgb, #16a34a 16%, var(--bg-card));
 }
 
 .vehicles-stat-icon--purple {
-  background: #f3e8ff;
+  background: color-mix(in srgb, #9333ea 16%, var(--bg-card));
 }
 
 .vehicles-stat-icon-svg {
@@ -230,8 +249,8 @@
 .vehicles-table-card {
   background: var(--bg-card);
   border-radius: 0.75rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
-  border: 1px solid #f3f4f6;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-default);
   overflow: hidden;
 }
 
@@ -265,7 +284,7 @@
 
 .vehicles-thead {
   background: var(--bg-tertiary);
-  border-bottom: 1px solid #f3f4f6;
+  border-bottom: 1px solid var(--border-light);
 }
 
 .vehicles-th {
@@ -287,7 +306,7 @@
 }
 
 .vehicles-tbody > .vehicles-row + .vehicles-row {
-  border-top: 1px solid #f3f4f6;
+  border-top: 1px solid var(--border-light);
 }
 
 .vehicles-row {
@@ -346,13 +365,13 @@
 }
 
 .vehicles-type-badge--four {
-  background: #dbeafe;
-  color: #1d4ed8;
+  background: color-mix(in srgb, #2563eb 16%, var(--bg-card));
+  color: #2563eb;
 }
 
 .vehicles-type-badge--two {
-  background: #dcfce7;
-  color: #15803d;
+  background: color-mix(in srgb, #16a34a 16%, var(--bg-card));
+  color: #16a34a;
 }
 
 .vehicles-parking-badge {
@@ -421,7 +440,8 @@
   position: relative;
   background: var(--bg-card);
   border-radius: 0.75rem;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+  box-shadow: var(--shadow-xl);
+  border: 1px solid var(--border-default);
   width: 100%;
   max-width: 32rem;
   padding: 1.5rem;
@@ -481,23 +501,35 @@
 }
 
 .vehicles-cancel-button:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--bg-secondary);
 }
 
 .vehicles-submit-button {
   padding: 0.5rem 1rem;
-  background: #2563eb;
-  color: #fff;
+  border: 1px solid var(--border-default);
+  background: var(--bg-card);
+  color: var(--text-primary);
   border-radius: 0.5rem;
   cursor: pointer;
-  transition: background 0.15s ease;
+  transition: background 0.15s ease, box-shadow 0.2s ease;
 }
 
 .vehicles-submit-button:hover {
-  background: #1d4ed8;
+  background: color-mix(in srgb, var(--bg-tertiary) 70%, var(--bg-card));
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.14);
 }
 
 .vehicles-submit-button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+.dark .vehicles-submit-button {
+  border-color: rgba(148, 163, 184, 0.22);
+  background: #f8fafc;
+  color: #0f172a;
+}
+
+.dark .vehicles-submit-button:hover {
+  background: #ffffff;
 }

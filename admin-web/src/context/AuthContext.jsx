@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, useRef } from 'react'
+import { createContext, useContext, useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { authApi } from '../../../api'
 
@@ -27,7 +27,17 @@ export const AuthProvider = ({ children }) => {
     }
     return null
   })
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(() => {
+    // Skip loading spinner when cached user data exists
+    try {
+      const storedUser = localStorage.getItem('user')
+      const token = localStorage.getItem('token')
+      if (storedUser && storedUser !== 'undefined' && token) {
+        return false // cached user available, render immediately
+      }
+    } catch (e) {}
+    return true // no cached user, must wait for auth check
+  })
   const authChecked = useRef(false)
 
   useEffect(() => {
@@ -43,31 +53,40 @@ export const AuthProvider = ({ children }) => {
         try {
           const response = await authApi.me()
           const userData = response.data
-          setUser(userData)
+          setUser((prevUser) => {
+            if (!prevUser) return userData
+
+            const isSameUser =
+              prevUser.id === userData.id &&
+              prevUser.name === userData.name &&
+              prevUser.email === userData.email &&
+              prevUser.role === userData.role &&
+              prevUser.accountType === userData.accountType &&
+              prevUser.organizationId === userData.organizationId &&
+              prevUser.societyId === userData.societyId &&
+              prevUser.flatId === userData.flatId
+
+            return isSameUser ? prevUser : userData
+          })
           localStorage.setItem('user', JSON.stringify(userData))
         } catch (error) {
           // Cookie/token invalid - use localStorage data if available
-          // Don't clear localStorage here, let the user stay logged in
-          // They'll get 401 on actual API calls which will trigger logout
-          console.log('Auth check failed, using cached user data')
         }
       }
-      setLoading(false)
+      // Only update loading if it was true (avoids unnecessary re-render when cached user exists)
+      setLoading((prev) => prev ? false : prev)
     }
     
     checkAuth()
   }, [])
 
-  const login = async (email, password, { portalType, rememberMe } = {}) => {
+  const login = useCallback(async (email, password, { portalType, rememberMe } = {}) => {
     try {
       const response = await authApi.login({ email, password, portalType, rememberMe })
-      // Backend returns: { id, name, email, role, accountType, organizationId, societyId, flatId, token, tokenType }
-      // Backend also sets HTTP-only cookie with JWT
       const { token, id, name, email: userEmail, role, accountType, organizationId, societyId, flatId } = response.data
       
       const userData = { id, name, email: userEmail, role, accountType, organizationId, societyId, flatId }
       
-      // Store in localStorage as fallback and for quick access
       localStorage.setItem('token', token)
       localStorage.setItem('user', JSON.stringify(userData))
       setUser(userData)
@@ -79,110 +98,65 @@ export const AuthProvider = ({ children }) => {
         error: error.response?.data?.message || 'Login failed' 
       }
     }
-  }
+  }, [])
 
-  const logout = () => {
-    // Clear user state immediately for instant UI response
+  const logout = useCallback(() => {
     setUser(null)
-    // Clear all cached queries to ensure fresh data on next login
     queryClient.clear()
-    // Clear localStorage
     localStorage.removeItem('token')
     localStorage.removeItem('user')
-    // Call backend to clear HTTP-only cookie (fire and forget - don't wait)
     authApi.logout().catch(() => {})
-  }
+  }, [queryClient])
 
-  const hasRole = (...roles) => {
+  const hasRole = useCallback((...roles) => {
     if (!user) return false
     return roles.includes(user.role)
-  }
+  }, [user])
 
-  const isPlatformOwner = () => hasRole('PLATFORM_OWNER')
-  const isOrganizationOwner = () => hasRole('ORGANIZATION_OWNER')
-  const isSocietyAdmin = () => hasRole('SOCIETY_ADMIN')
-  const isChairman = () => hasRole('CHAIRMAN')
-  const isSecretary = () => hasRole('SECRETARY')
-  const isTreasurer = () => hasRole('TREASURER')
-  const isCommittee = () => hasRole('COMMITTEE')
-  const isManager = () => hasRole('MANAGER')
-  const isMember = () => hasRole('MEMBER')
+  const isPlatformOwner = useCallback(() => hasRole('PLATFORM_OWNER'), [hasRole])
+  const isOrganizationOwner = useCallback(() => hasRole('ORGANIZATION_OWNER'), [hasRole])
+  const isSocietyAdmin = useCallback(() => hasRole('SOCIETY_ADMIN'), [hasRole])
+  const isChairman = useCallback(() => hasRole('CHAIRMAN'), [hasRole])
+  const isSecretary = useCallback(() => hasRole('SECRETARY'), [hasRole])
+  const isTreasurer = useCallback(() => hasRole('TREASURER'), [hasRole])
+  const isCommittee = useCallback(() => hasRole('COMMITTEE'), [hasRole])
+  const isManager = useCallback(() => hasRole('MANAGER'), [hasRole])
+  const isMember = useCallback(() => hasRole('MEMBER'), [hasRole])
   
-  const isAdminLevel = () => hasRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN')
-  const isCommitteeLevel = () => hasRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'MANAGER')
+  const isAdminLevel = useCallback(() => hasRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN'), [hasRole])
+  const isCommitteeLevel = useCallback(() => hasRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'MANAGER'), [hasRole])
   
-  // ═══════════════════════════════════════════════════════════════
-  // Module Permission checks - aligned with backend @PreAuthorize
-  // These are MODULE-LEVEL permissions (banners, tickets, etc.)
-  // NOT user CRUD permissions (which are in RolePermissions.java)
-  // ═══════════════════════════════════════════════════════════════
-  
-  // Notices: Staff level (PO → EMPLOYEE can manage)
-  const canManageNotices = () => hasRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'MANAGER', 'EMPLOYEE')
-  // Documents: Staff level
-  const canManageDocuments = () => hasRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'MANAGER', 'EMPLOYEE')
-  // Financials: Committee level (leadership + financial roles)
-  const canViewFinancials = () => hasRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE')
-  
-  // Banners: Operational management
-  const canManageBanners = () => hasRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'MANAGER')
-  // Contracts: Administrative + leadership
-  const canManageContracts = () => hasRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY')
-  // Emergency Contacts: Operational management
-  const canManageEmergencyContacts = () => hasRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'MANAGER')
-  // Maintenance Bills: Financial operations (Treasurer included)
-  const canManageMaintenanceBills = () => hasRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER')
-  // Tenants: Module-level tenant management (MANAGER keeps access for day-to-day ops)
-  const canManageTenants = () => hasRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'COMMITTEE', 'MANAGER', 'MEMBER')
-  // Tickets: Module-level ticket management
-  const canManageTickets = () => hasRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'COMMITTEE', 'MANAGER')
-  // Ticket Creation: Almost everyone can raise tickets
-  const canCreateTickets = () => hasRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'MANAGER', 'EMPLOYEE', 'MEMBER', 'TENANT')
-  // Transactions: Financial operations
-  const canManageTransactions = () => hasRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER')
-  // Vendors: Operational management
-  const canManageVendors = () => hasRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'MANAGER')
-  // Vendor Bills: Financial operations
-  const canManageVendorBills = () => hasRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER')
-  // Security Logs: Leadership only
-  const canViewSecurityLogs = () => hasRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN')
-  // Data Export: Committee level
-  const canExportData = () => hasRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'MANAGER')
-  // Societies: Platform/Org level only
-  const canManageSocieties = () => hasRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER')
-  
-  // ═══════════════════════════════════════════════════════════════
-  // USER CRUD permissions - aligned with Permission Matrix
-  // MANAGER has NO user CRUD rights (not in permission matrix)
-  // ═══════════════════════════════════════════════════════════════
-  const canManageUsers = () => hasRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'EMPLOYEE', 'MEMBER')
-  
-  // ═══════════════════════════════════════════════════════════════
-  // Additional granular permissions for UI components
-  // ═══════════════════════════════════════════════════════════════
-  // Flats/Wings (Property Management) - Committee + Manager
-  const canManageFlats = () => hasRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'MANAGER')
-  const canManageWings = () => hasRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'MANAGER')
-  
-  // Vehicles - Broader access for staff
-  const canManageVehicles = () => hasRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'MANAGER', 'EMPLOYEE', 'MEMBER')
-  
-  // Complaints - Anyone can raise, Committee+ can manage  
-  const canRaiseComplaints = () => hasRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'MANAGER', 'EMPLOYEE', 'MEMBER', 'TENANT')
-  const canManageComplaints = () => hasRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'MANAGER')
-  
-  // Organizations - Platform + Org Owner only
-  const canManageOrganizations = () => hasRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER')
-  
-  // Reports - Financial visibility
-  const canViewReports = () => hasRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'MANAGER')
+  const canManageNotices = useCallback(() => hasRole('SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'MANAGER', 'EMPLOYEE'), [hasRole])
+  const canManageDocuments = useCallback(() => hasRole('SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'MANAGER', 'EMPLOYEE'), [hasRole])
+  const canViewFinancials = useCallback(() => hasRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE'), [hasRole])
+  const canManageBanners = useCallback(() => hasRole('SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'MANAGER'), [hasRole])
+  const canManageContracts = useCallback(() => hasRole('SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY'), [hasRole])
+  const canManageEmergencyContacts = useCallback(() => hasRole('SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'MANAGER'), [hasRole])
+  const canManageMaintenanceBills = useCallback(() => hasRole('SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER'), [hasRole])
+  const canManageTenants = useCallback(() => hasRole('SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'MANAGER', 'MEMBER'), [hasRole])
+  const canManageTickets = useCallback(() => hasRole('SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'COMMITTEE', 'MANAGER'), [hasRole])
+  const canCreateTickets = useCallback(() => hasRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'MANAGER', 'EMPLOYEE', 'MEMBER', 'TENANT'), [hasRole])
+  const canManageTransactions = useCallback(() => hasRole('SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER'), [hasRole])
+  const canManageVendors = useCallback(() => hasRole('SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'MANAGER'), [hasRole])
+  const canManageVendorBills = useCallback(() => hasRole('SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER'), [hasRole])
+  const canViewSecurityLogs = useCallback(() => hasRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN'), [hasRole])
+  const canExportData = useCallback(() => hasRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'MANAGER'), [hasRole])
+  const canManageSocieties = useCallback(() => hasRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER'), [hasRole])
+  const canManageUsers = useCallback(() => hasRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'EMPLOYEE', 'MEMBER'), [hasRole])
+  const canManageFlats = useCallback(() => hasRole('SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'MANAGER'), [hasRole])
+  const canManageWings = useCallback(() => hasRole('SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'MANAGER'), [hasRole])
+  const canManageVehicles = useCallback(() => hasRole('SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'MANAGER', 'EMPLOYEE'), [hasRole])
+  const canRaiseComplaints = useCallback(() => hasRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'MANAGER', 'EMPLOYEE', 'MEMBER', 'TENANT'), [hasRole])
+  const canManageComplaints = useCallback(() => hasRole('SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'MANAGER'), [hasRole])
+  const canManageOrganizations = useCallback(() => hasRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER'), [hasRole])
+  const canViewReports = useCallback(() => hasRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'MANAGER'), [hasRole])
 
-  const updateUser = (updatedUser) => {
+  const updateUser = useCallback((updatedUser) => {
     setUser(updatedUser)
     localStorage.setItem('user', JSON.stringify(updatedUser))
-  }
+  }, [])
 
-  const value = {
+  const value = useMemo(() => ({
     user,
     loading,
     login,
@@ -224,7 +198,16 @@ export const AuthProvider = ({ children }) => {
     canManageComplaints,
     canManageOrganizations,
     canViewReports,
-  }
+  }), [user, loading, login, logout, updateUser, hasRole,
+    isPlatformOwner, isOrganizationOwner, isSocietyAdmin, isChairman, isSecretary,
+    isTreasurer, isCommittee, isManager, isMember, isAdminLevel, isCommitteeLevel,
+    canManageNotices, canManageDocuments, canViewFinancials, canManageBanners,
+    canManageContracts, canManageEmergencyContacts, canManageMaintenanceBills,
+    canManageTenants, canManageTickets, canCreateTickets, canManageTransactions,
+    canManageVendors, canManageVendorBills, canViewSecurityLogs, canExportData,
+    canManageSocieties, canManageUsers, canManageFlats, canManageWings,
+    canManageVehicles, canRaiseComplaints, canManageComplaints, canManageOrganizations,
+    canViewReports])
 
   return (
     <AuthContext.Provider value={value}>

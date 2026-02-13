@@ -20,6 +20,7 @@ export default function Banners() {
   const { data: banners = [], isLoading } = useQuery({
     queryKey: ['banners'],
     queryFn: () => bannerApi.getAll().then(res => res.data),
+    placeholderData: [],
   })
 
 
@@ -254,11 +255,13 @@ export default function Banners() {
                   name="displayOrder"
                   defaultValue={editingBanner?.displayOrder || 1}
                   min={1}
+                  required
                 />
                 <SmartSelect
                   label="Status"
                   name="isActive"
                   defaultValue={editingBanner?.isActive?.toString() || 'true'}
+                  required
                   options={[
                     { value: 'true', label: 'Active' },
                     { value: 'false', label: 'Inactive' },

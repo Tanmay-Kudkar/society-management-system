@@ -25,12 +25,13 @@ public class UserRequest {
     @NotBlank(message = "Role is required")
     private String role;
 
-    @Pattern(regexp = "^(\\+91)?[6-9]\\d{9}$|^$", message = "Invalid phone number format. Use 10-digit mobile number")
+    @NotBlank(message = "Phone is required")
+    @Pattern(regexp = "^(\\+91)?[6-9]\\d{9}$", message = "Invalid phone number format. Use 10-digit mobile number")
     private String phone;
 
     private Long societyId; // Required when PLATFORM_OWNER creates SOCIETY_ADMIN
 
-    private Long flatId; // Required for MEMBER and TENANT roles
+    private Long flatId; // Required for MEMBER, TENANT, CHAIRMAN, SECRETARY, TREASURER, COMMITTEE roles
 
     private Long organizationId; // Optional: assign to existing organization (for ORGANIZATION_OWNER)
 

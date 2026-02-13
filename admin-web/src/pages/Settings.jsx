@@ -10,6 +10,28 @@ import {
 import clsx from 'clsx'
 import Toggle from '../components/Toggle'
 import { PhoneInput } from '../components/FormComponents'
+import { getDeviceInfo } from '../utils/deviceDetect'
+
+/* ── OS icons ── */
+import windowsIcon from '../assets/icons/os/windows.svg'
+import macosIcon from '../assets/icons/os/macos.svg'
+import linuxIcon from '../assets/icons/os/linux.svg'
+import chromeosIcon from '../assets/icons/os/chromeos.svg'
+import androidIcon from '../assets/icons/os/android.svg'
+import unknownOsIcon from '../assets/icons/os/unknown.svg'
+
+/* ── Browser icons ── */
+import chromeIcon from '../assets/icons/browsers/chrome.svg'
+import firefoxIcon from '../assets/icons/browsers/firefox.svg'
+import safariIcon from '../assets/icons/browsers/safari.svg'
+import edgeIcon from '../assets/icons/browsers/edge.svg'
+import operaIcon from '../assets/icons/browsers/opera.svg'
+import braveIcon from '../assets/icons/browsers/brave.svg'
+import vivaldiIcon from '../assets/icons/browsers/vivaldi.svg'
+import unknownBrowserIcon from '../assets/icons/browsers/unknown.svg'
+
+const OS_ICONS = { windows: windowsIcon, macos: macosIcon, linux: linuxIcon, chromeos: chromeosIcon, android: androidIcon, unknown: unknownOsIcon }
+const BROWSER_ICONS = { chrome: chromeIcon, firefox: firefoxIcon, safari: safariIcon, edge: edgeIcon, opera: operaIcon, brave: braveIcon, vivaldi: vivaldiIcon, unknown: unknownBrowserIcon }
 
 /* ── helpers ────────────────────────────────────────────── */
 const PHONE_REGEX = /^(\+91)?[6-9]\d{9}$/
@@ -599,23 +621,40 @@ export default function Settings() {
                   <h3 className="settings-section-title">Active Sessions</h3>
                   <p className="settings-section-subtitle">Manage your active login sessions</p>
                 </div>
-                <div className="settings-session-card">
-                  <div className="settings-session-card__left">
-                    <div className="settings-session-card__icon">
-                      <Monitor size={18} />
+                {(() => {
+                  const { os, browser } = getDeviceInfo()
+                  const osIcon = OS_ICONS[os.icon] || OS_ICONS.unknown
+                  const browserIcon = BROWSER_ICONS[browser.icon] || BROWSER_ICONS.unknown
+                  return (
+                    <div className="settings-session-card">
+                      <div className="settings-session-card__left">
+                        <div className="settings-session-card__icon">
+                          <Monitor size={18} />
+                        </div>
+                        <div className="settings-session-card__info">
+                          <p className="settings-session-title">Current Session</p>
+                          <div className="settings-session-details">
+                            <span className="settings-session-chip">
+                              <img src={osIcon} alt={os.name} className="settings-session-chip__icon" />
+                              {os.name}{os.version ? ` ${os.version}` : ''}
+                            </span>
+                            <span className="settings-session-separator">&bull;</span>
+                            <span className="settings-session-chip">
+                              <img src={browserIcon} alt={browser.name} className="settings-session-chip__icon" />
+                              {browser.name}
+                            </span>
+                            <span className="settings-session-separator">&bull;</span>
+                            <span className="settings-session-chip settings-session-chip--active">Active now</span>
+                          </div>
+                        </div>
+                      </div>
+                      <span className="settings-status-badge">
+                        <span className="settings-status-badge__dot" />
+                        Active
+                      </span>
                     </div>
-                    <div>
-                      <p className="settings-session-title">Current Session</p>
-                      <p className="settings-session-text">
-                        {navigator.platform || 'Unknown OS'} &bull; {/Chrome/.test(navigator.userAgent) ? 'Chrome' : /Firefox/.test(navigator.userAgent) ? 'Firefox' : /Safari/.test(navigator.userAgent) ? 'Safari' : 'Browser'} &bull; Active now
-                      </p>
-                    </div>
-                  </div>
-                  <span className="settings-status-badge">
-                    <span className="settings-status-badge__dot" />
-                    Active
-                  </span>
-                </div>
+                  )
+                })()}
               </div>
 
               {/* Danger Zone */}

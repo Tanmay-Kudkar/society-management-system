@@ -20,6 +20,7 @@
 @import "./components/layout.css";
 @import "./components/page-shell.css";
 @import "./components/bulk-import-modal.css";
+@import "./components/confirm-dialog.css";
 @import "./components/toggle.css";
 
 /* Page-specific styles */

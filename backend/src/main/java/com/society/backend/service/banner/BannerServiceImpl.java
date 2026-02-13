@@ -45,7 +45,7 @@ public class BannerServiceImpl implements BannerService {
         banner.setStartDate(request.getStartDate());
         banner.setEndDate(request.getEndDate());
         banner.setDisplayOrder(request.getDisplayOrder() != null ? request.getDisplayOrder() : 0);
-        banner.setIsActive(true);
+        banner.setIsActive(request.getIsActive());
 
         Banner saved = bannerRepository.save(banner);
         return mapToResponse(saved);
@@ -126,6 +126,8 @@ public class BannerServiceImpl implements BannerService {
             banner.setEndDate(request.getEndDate());
         if (request.getDisplayOrder() != null)
             banner.setDisplayOrder(request.getDisplayOrder());
+        if (request.getIsActive() != null)
+            banner.setIsActive(request.getIsActive());
 
         Banner saved = bannerRepository.save(banner);
         return mapToResponse(saved);

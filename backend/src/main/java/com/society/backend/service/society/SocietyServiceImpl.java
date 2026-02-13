@@ -14,6 +14,7 @@ import com.society.backend.service.common.RoleService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -109,6 +110,19 @@ public class SocietyServiceImpl implements SocietyService {
         Society society = societyRepository.findById(id)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Society not found"));
         return toResponse(society);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<SocietyResponse> getByOrganizationId(Long organizationId) {
+        var currentUser = roleService.getCurrentUser();
+        if (currentUser != null && currentUser.getRole() == Role.ORGANIZATION_OWNER) {
+            roleService.enforceOrganizationScope(currentUser, organizationId);
+        }
+        return societyRepository.findByOrganizationIdWithOrg(organizationId)
+                .stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
     }
 
     @Override

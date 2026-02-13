@@ -52,6 +52,7 @@ export const authApi = {
 export const societyApi = {
   getAll: () => api.get('/societies'),
   getById: (id) => api.get(`/societies/${id}`),
+  getByOrganizationId: (orgId) => api.get(`/societies/by-organization/${orgId}`),
   create: (data, userId) => api.post(`/societies?userId=${userId}`, data),
   update: (id, data, userId) => api.put(`/societies/${id}?userId=${userId}`, data),
   delete: (id, userId) => api.delete(`/societies/${id}?userId=${userId}`),

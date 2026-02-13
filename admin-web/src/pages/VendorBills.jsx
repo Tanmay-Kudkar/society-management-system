@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '../context/AuthContext'
+import { useConfirmDialog } from '../context/ConfirmDialogContext'
 import { vendorBillApi, vendorApi } from '../../../api'
 import { Plus, Edit, Trash2, Search, X, Receipt, CheckCircle, Clock, AlertCircle } from 'lucide-react'
 import clsx from 'clsx'
@@ -19,6 +20,7 @@ const statusIcons = {
 
 export default function VendorBills() {
   const { user, canManageVendorBills } = useAuth()
+  const confirmDialog = useConfirmDialog()
   const queryClient = useQueryClient()
   const [showModal, setShowModal] = useState(false)
   const [showPaymentModal, setShowPaymentModal] = useState(false)
@@ -29,6 +31,7 @@ export default function VendorBills() {
   const { data: bills = [], isLoading } = useQuery({
     queryKey: ['vendorBills'],
     queryFn: () => vendorBillApi.getAll().then(res => res.data),
+    placeholderData: [],
   })
 
   const { data: vendors = [] } = useQuery({
@@ -203,8 +206,21 @@ export default function VendorBills() {
                           </button>
                         )}
                         <button
-                          onClick={() => {
-                            if (confirm('Are you sure you want to delete this bill?')) {
+                          onClick={async () => {
+                            const confirmed = await confirmDialog({
+                              title: 'Delete Vendor Bill',
+                              message: 'Are you sure you want to delete this bill? This action cannot be undone.',
+                              confirmText: 'Delete',
+                              tone: 'danger',
+                              details: [
+                                { label: 'Bill', value: bill.billNumber || bill.invoiceNumber || '-' },
+                                { label: 'Vendor', value: bill.vendorName || '-' },
+                                { label: 'Amount', value: `₹${bill.amount?.toLocaleString() || 0}` },
+                                { label: 'Status', value: bill.status || '-' },
+                              ],
+                              caution: 'This action permanently removes bill history.',
+                            })
+                            if (confirmed) {
                               deleteMutation.mutate(bill.id)
                             }
                           }}

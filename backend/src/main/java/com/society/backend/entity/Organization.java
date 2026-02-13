@@ -71,8 +71,8 @@ public class Organization {
     // Check if the organization can create more societies
    
     public boolean canCreateMoreSocieties(long currentSocietyCount) {
-        if (isFoundingMember != null && isFoundingMember) {
-            return true; // Founding members have unlimited societies
+        if ("LIFETIME".equals(subscriptionType)) {
+            return true; // Lifetime subscriptions have unlimited societies
         }
         return currentSocietyCount < maxSocieties;
     }
@@ -81,7 +81,7 @@ public class Organization {
     // Check if subscription is active
    
     public boolean isSubscriptionActive() {
-        if ("LIFETIME".equals(subscriptionType) || (isFoundingMember != null && isFoundingMember)) {
+        if ("LIFETIME".equals(subscriptionType)) {
             return true;
         }
         if (!"ACTIVE".equals(subscriptionStatus)) {

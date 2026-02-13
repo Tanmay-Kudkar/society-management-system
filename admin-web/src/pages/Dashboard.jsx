@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, memo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "../context/AuthContext";
 import {
@@ -31,6 +31,7 @@ import {
   PieChart, Pie, Cell, Sector,
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip,
   AreaChart, Area,
+  ReferenceLine,
   ResponsiveContainer,
 } from "recharts";
 
@@ -150,10 +151,10 @@ const renderActiveDonutShape = (props) => {
   const { cx, cy, innerRadius, outerRadius, startAngle, endAngle, fill, payload, value } = props;
   return (
     <g>
-      <text x={cx} y={cy - 6} textAnchor="middle" fill="#e2e8f0" fontSize={24} fontWeight={700}>{value}</text>
-      <text x={cx} y={cy + 14} textAnchor="middle" fill="#94a3b8" fontSize={11} fontWeight={600}>{payload.label || payload.name}</text>
-      <Sector cx={cx} cy={cy} innerRadius={innerRadius} outerRadius={outerRadius + 8} startAngle={startAngle} endAngle={endAngle} fill={fill} />
-      <Sector cx={cx} cy={cy} innerRadius={outerRadius + 12} outerRadius={outerRadius + 16} startAngle={startAngle} endAngle={endAngle} fill={fill} opacity={0.25} />
+      <text x={cx} y={cy - 6} textAnchor="middle" fill="var(--text-primary, #e2e8f0)" fontSize={24} fontWeight={700}>{value}</text>
+      <text x={cx} y={cy + 14} textAnchor="middle" fill="var(--text-tertiary, #94a3b8)" fontSize={11} fontWeight={600}>{payload.label || payload.name}</text>
+      <Sector cx={cx} cy={cy} innerRadius={innerRadius} outerRadius={outerRadius + 8} startAngle={startAngle} endAngle={endAngle} fill={fill} style={{ transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)", filter: `drop-shadow(0 0 8px ${fill}40)` }} />
+      <Sector cx={cx} cy={cy} innerRadius={outerRadius + 12} outerRadius={outerRadius + 16} startAngle={startAngle} endAngle={endAngle} fill={fill} opacity={0.25} style={{ transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)" }} />
     </g>
   );
 };
@@ -176,6 +177,44 @@ const ChartTooltipContent = ({ active, payload, label, suffix = "" }) => {
   );
 };
 
+// Isolated clock component - prevents re-rendering entire Dashboard every second
+const ClockDisplay = memo(function ClockDisplay() {
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  return (
+    <div className="dashboard-hero__timecard">
+      <div className="dashboard-hero__time-overlay"></div>
+      <div className="dashboard-hero__time-content">
+        <div className="dashboard-hero__clock">
+          <Clock className="dashboard-hero__clock-icon" />
+          <span className="dashboard-hero__clock-day">
+            {currentTime.toLocaleDateString("en-US", { weekday: "long" })}
+          </span>
+        </div>
+        <p className="dashboard-hero__time">
+          {currentTime.toLocaleTimeString("en-US", {
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
+          })}
+        </p>
+        <p className="dashboard-hero__date">
+          {currentTime.toLocaleDateString("en-US", {
+            month: "short",
+            day: "numeric",
+            year: "numeric",
+          })}
+        </p>
+      </div>
+    </div>
+  );
+});
+
 export default function Dashboard() {
   const {
     user,
@@ -185,30 +224,44 @@ export default function Dashboard() {
     canManageTenants,
     canManageContracts,
   } = useAuth();
-  const [currentTime, setCurrentTime] = useState(new Date());
   const isPlatformOwner = hasRole("PLATFORM_OWNER");
   const isOrgOwner = hasRole("ORGANIZATION_OWNER");
   const isPlatformLevel = isPlatformOwner || isOrgOwner;
   const isMemberOrTenant = user?.role === "MEMBER" || user?.role === "TENANT";
   const isSocietyOpsLevel = !isPlatformLevel && !isMemberOrTenant;
-  const [activePieIndex, setActivePieIndex] = useState(0);
+  const [activePieIndex, setActivePieIndex] = useState(null);
   const [activeUnitPieIndex, setActiveUnitPieIndex] = useState(0);
   const [activeVehiclePieIndex, setActiveVehiclePieIndex] = useState(0);
+  const [animatePlatformCharts, setAnimatePlatformCharts] = useState(true);
+  const [animateSocietyCharts, setAnimateSocietyCharts] = useState(true);
+  const hasPlayedPlatformAnimation = useRef(false);
+  const hasPlayedSocietyAnimation = useRef(false);
+
+  // One-time chart animation for platform analytics
+  useEffect(() => {
+    if (!hasPlayedPlatformAnimation.current && isPlatformLevel) {
+      hasPlayedPlatformAnimation.current = true;
+      const timer = setTimeout(() => setAnimatePlatformCharts(false), 1100);
+      return () => clearTimeout(timer);
+    }
+  }, [isPlatformLevel]);
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentTime(new Date());
-    }, 1000);
-    return () => clearInterval(timer);
-  }, []);
+    if (!hasPlayedSocietyAnimation.current && isSocietyOpsLevel) {
+      hasPlayedSocietyAnimation.current = true;
+      const timer = setTimeout(() => setAnimateSocietyCharts(false), 1100);
+      return () => clearTimeout(timer);
+    }
+  }, [isSocietyOpsLevel]);
 
-  const { data: societies = [], isLoading: societiesLoading } = useQuery({
+  const { data: societies = [] } = useQuery({
     queryKey: ["societies"],
     queryFn: () => societyApi.getAll().then((res) => res.data),
     enabled: isPlatformLevel,
+    placeholderData: [],
   });
 
-  const { data: organizations = [], isLoading: organizationsLoading } = useQuery({
+  const { data: organizations = [] } = useQuery({
     queryKey: ["organizations"],
     queryFn: () =>
       organizationApi
@@ -216,9 +269,10 @@ export default function Dashboard() {
         .then((res) => res.data)
         .catch(() => []),
     enabled: isPlatformLevel,
+    placeholderData: [],
   });
 
-  const { data: platformUsers = [], isLoading: platformUsersLoading } = useQuery({
+  const { data: platformUsers = [] } = useQuery({
     queryKey: ["dashboard-platform-users"],
     queryFn: () =>
       userApi
@@ -226,6 +280,7 @@ export default function Dashboard() {
         .then((res) => res.data)
         .catch(() => []),
     enabled: isPlatformLevel,
+    placeholderData: [],
   });
 
   const { data: flats = [] } = useQuery({
@@ -236,6 +291,7 @@ export default function Dashboard() {
         .then((res) => res.data)
         .catch(() => []),
     enabled: isSocietyOpsLevel && !!user?.id,
+    placeholderData: [],
   });
 
   const { data: tenants = [] } = useQuery({
@@ -246,6 +302,7 @@ export default function Dashboard() {
         .then((res) => res.data)
         .catch(() => []),
     enabled: isSocietyOpsLevel,
+    placeholderData: [],
   });
 
   const { data: vehicles = [] } = useQuery({
@@ -256,6 +313,7 @@ export default function Dashboard() {
         .then((res) => res.data)
         .catch(() => []),
     enabled: isSocietyOpsLevel,
+    placeholderData: [],
   });
 
   const { data: contracts = [] } = useQuery({
@@ -266,6 +324,7 @@ export default function Dashboard() {
         .then((res) => res.data)
         .catch(() => []),
     enabled: isSocietyOpsLevel,
+    placeholderData: [],
   });
 
   const { data: allTickets = [] } = useQuery({
@@ -275,6 +334,7 @@ export default function Dashboard() {
         .getAll()
         .then((res) => res.data)
         .catch(() => []),
+    placeholderData: [],
   });
 
   const openTickets = allTickets.filter(
@@ -283,22 +343,26 @@ export default function Dashboard() {
 
   const pendingTickets = allTickets.filter((t) => t.status === "OPEN");
 
-  const { data: pendingBills = [] } = useQuery({
-    queryKey: ["bills", "pending"],
+  const { data: maintenanceBills = [] } = useQuery({
+    queryKey: ["maintenance-bills", user?.id],
     queryFn: () =>
       maintenanceBillApi
-        .getPending()
+        .getAll()
         .then((res) => res.data)
         .catch(() => []),
+    enabled: !!user?.id,
+    placeholderData: [],
   });
 
   const { data: complaints = [] } = useQuery({
-    queryKey: ["complaints"],
+    queryKey: ["complaints", user?.id],
     queryFn: () =>
       complaintApi
         .getAll(user?.id)
         .then((res) => res.data)
         .catch(() => []),
+    enabled: !!user?.id,
+    placeholderData: [],
   });
 
   const expiringContracts = contracts.filter((c) => {
@@ -321,13 +385,13 @@ export default function Dashboard() {
     return daysUntilExpiry > 0 && daysUntilExpiry <= 30;
   });
 
-  const totalBillAmount = pendingBills.reduce(
+  const totalBillAmount = maintenanceBills.reduce(
     (sum, b) => sum + (b.amount || 0),
     0,
   );
-  const paidBills = pendingBills.filter((b) => b.status === "PAID");
-  const pendingBillsCount = pendingBills.filter((b) => b.status === "PENDING");
-  const overdueBills = pendingBills.filter((b) => {
+  const paidBills = maintenanceBills.filter((b) => b.status === "PAID");
+  const pendingBillsCount = maintenanceBills.filter((b) => b.status === "PENDING");
+  const overdueBills = maintenanceBills.filter((b) => {
     if (b.status !== "PENDING" || !b.dueDate) return false;
     return new Date(b.dueDate) < new Date();
   });
@@ -345,12 +409,16 @@ export default function Dashboard() {
     (u) => u.role === "ORGANIZATION_OWNER",
   ).length;
 
-  const roleBreakdown = [
-    { label: "Org Owners", value: organizationOwnersCount, color: "#14b8a6" },
-    { label: "Society Admins", value: societyAdminsCount, color: "#3b82f6" },
-    { label: "Members", value: membersCount, color: "#8b5cf6" },
-    { label: "Tenants", value: tenantsCount, color: "#f97316" },
-  ];
+  const roleBreakdown = isPlatformOwner
+    ? [
+        { label: "Org Owners", value: organizationOwnersCount, color: "#14b8a6" },
+        { label: "Society Admins", value: societyAdminsCount, color: "#3b82f6" },
+      ]
+    : [
+        { label: "Society Admins", value: societyAdminsCount, color: "#3b82f6" },
+        { label: "Members", value: membersCount, color: "#8b5cf6" },
+        { label: "Tenants", value: tenantsCount, color: "#f97316" },
+      ];
   const roleBreakdownTotal = roleBreakdown.reduce(
     (sum, item) => sum + item.value,
     0,
@@ -403,9 +471,99 @@ export default function Dashboard() {
     .sort((a, b) => b.occupancyPercent - a.occupancyPercent)
     .slice(0, 6);
 
-  const platformAnalyticsLoading =
-    isPlatformLevel &&
-    (societiesLoading || organizationsLoading || platformUsersLoading);
+  const platformTotalIssues = allTickets.length + complaints.length;
+  const resolvedTicketsCount = allTickets.filter(
+    (item) => item.status === "CLOSED" || item.status === "RESOLVED",
+  ).length;
+  const resolvedComplaintsCount = complaints.filter(
+    (item) => item.status === "CLOSED" || item.status === "RESOLVED",
+  ).length;
+  const resolvedIssuesCount = resolvedTicketsCount + resolvedComplaintsCount;
+  const issueResolutionRate =
+    platformTotalIssues > 0
+      ? Math.round((resolvedIssuesCount / platformTotalIssues) * 100)
+      : 0;
+
+  const averageOccupancy =
+    societyOccupancyStats.length > 0
+      ? Math.round(
+          societyOccupancyStats.reduce(
+            (sum, societyItem) => sum + societyItem.occupancyPercent,
+            0,
+          ) / societyOccupancyStats.length,
+        )
+      : 0;
+
+  const billTotalCount = paidBills.length + pendingBillsCount.length + overdueBills.length;
+  const billCollectionRate =
+    billTotalCount > 0 ? Math.round((paidBills.length / billTotalCount) * 100) : 0;
+
+  const issueHealthData = [
+    {
+      label: "Open",
+      value: allTickets.filter((item) => item.status === "OPEN").length
+        + complaints.filter((item) => item.status === "PENDING").length,
+      color: "#f97316",
+    },
+    {
+      label: "In Progress",
+      value: allTickets.filter((item) => item.status === "IN_PROGRESS").length
+        + complaints.filter((item) => item.status === "IN_PROGRESS").length,
+      color: "#3b82f6",
+    },
+    {
+      label: "Resolved",
+      value: resolvedIssuesCount,
+      color: "#22c55e",
+    },
+  ].filter((item) => item.value > 0);
+
+  const billingHealthData = [
+    { name: "Paid", value: paidBills.length, color: "#22c55e" },
+    { name: "Pending", value: pendingBillsCount.length, color: "#f59e0b" },
+    { name: "Overdue", value: overdueBills.length, color: "#ef4444" },
+  ];
+
+  const showPlatformFinancialWidgets = !isPlatformOwner;
+
+  const platformKpiCards = [
+    {
+      key: "issue-resolution",
+      label: "Issue Resolution",
+      value: `${issueResolutionRate}%`,
+      helper:
+        platformTotalIssues > 0
+          ? `${resolvedIssuesCount}/${platformTotalIssues} resolved`
+          : "No issues recorded yet",
+      tone: "green",
+    },
+    {
+      key: "avg-occupancy",
+      label: "Avg Occupancy",
+      value: `${averageOccupancy}%`,
+      helper:
+        societyOccupancyStats.length > 0
+          ? `${societyOccupancyStats.length} societies tracked`
+          : "No unit occupancy data yet",
+      tone: "blue",
+    },
+    ...(showPlatformFinancialWidgets
+      ? [
+          {
+            key: "bill-collection",
+            label: "Bill Collection",
+            value: `${billCollectionRate}%`,
+            helper:
+              billTotalCount > 0
+                ? `${paidBills.length}/${billTotalCount} paid`
+                : "No bills generated yet",
+            tone: "teal",
+          },
+        ]
+      : []),
+  ];
+
+  const platformAnalyticsLoading = false; // placeholderData eliminates loading flash
 
   // Society Admin chart data
   const unitTypeData = isSocietyOpsLevel ? [
@@ -436,6 +594,8 @@ export default function Dashboard() {
     { name: "Expiring", value: expiringTenants.length, color: "#f59e0b" },
     { name: "Inactive", value: tenants.filter(t => !t.isActive).length, color: "#6b7280" },
   ].filter(t => t.value > 0) : [];
+
+  const societyAnalyticsLoading = false; // placeholderData eliminates loading flash
 
   const canSeeFinancialCards = canViewFinancials();
   const canSeeTenantCards = canManageTenants();
@@ -715,6 +875,9 @@ export default function Dashboard() {
                 {isMemberOrTenant && (
                   <span className="dashboard-hero__badge">{user?.role}</span>
                 )}
+                {!isMemberOrTenant && (
+                  <span className="dashboard-hero__badge dashboard-hero__badge--live">LIVE DATA</span>
+                )}
               </div>
               <h1 className="dashboard-hero__title">
                 Hello, {user?.name?.split(" ")[0] || "User"}
@@ -753,33 +916,7 @@ export default function Dashboard() {
                 )}
               </div>
 
-              <div className="dashboard-hero__timecard">
-                <div className="dashboard-hero__time-overlay"></div>
-                <div className="dashboard-hero__time-content">
-                  <div className="dashboard-hero__clock">
-                    <Clock className="dashboard-hero__clock-icon" />
-                    <span className="dashboard-hero__clock-day">
-                      {currentTime.toLocaleDateString("en-US", {
-                        weekday: "long",
-                      })}
-                    </span>
-                  </div>
-                  <p className="dashboard-hero__time">
-                    {currentTime.toLocaleTimeString("en-US", {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                      second: "2-digit",
-                    })}
-                  </p>
-                  <p className="dashboard-hero__date">
-                    {currentTime.toLocaleDateString("en-US", {
-                      month: "short",
-                      day: "numeric",
-                      year: "numeric",
-                    })}
-                  </p>
-                </div>
-              </div>
+              <ClockDisplay />
             </div>
           </div>
         </div>
@@ -939,10 +1076,7 @@ export default function Dashboard() {
           </div>
 
           {isPlatformLevel && (
-            <div
-              className="dashboard-platform-analytics animate-slide-up"
-              style={{ animationDelay: "850ms" }}
-            >
+            <div className="dashboard-platform-analytics">
               <div className="dashboard-section">
                 <BarChart3 className="dashboard-section__icon" />
                 <h2 className="dashboard-section__title">
@@ -963,14 +1097,14 @@ export default function Dashboard() {
                 ) : (
                   <>
                     {/* User Role Distribution - Donut */}
-                    <div className="dashboard-chart-card animate-slide-up" style={{ animationDelay: "900ms" }}>
+                    <div className="dashboard-chart-card">
                       <h3 className="dashboard-chart-card__title">
                         <span className="dashboard-chart-card__dot dashboard-chart-card__dot--blue" />
                         User Role Distribution
                       </h3>
                       <div className="dashboard-chart-card__body">
                         {roleBreakdownWithPercent.length > 0 ? (
-                          <ResponsiveContainer width="100%" height={280}>
+                          <ResponsiveContainer width="100%" height={280} debounce={100}>
                             <PieChart>
                               <Pie
                                 activeIndex={activePieIndex}
@@ -983,14 +1117,15 @@ export default function Dashboard() {
                                 dataKey="value"
                                 nameKey="label"
                                 onMouseEnter={(_, index) => setActivePieIndex(index)}
-                                animationBegin={200}
-                                animationDuration={800}
-                                animationEasing="ease-out"
+                                onMouseLeave={() => setActivePieIndex(null)}
+                                isAnimationActive={animatePlatformCharts}
+                                animationBegin={0}
+                                animationDuration={900}
                                 strokeWidth={2}
                                 stroke="rgba(0,0,0,0.15)"
                               >
                                 {roleBreakdownWithPercent.map((entry, idx) => (
-                                  <Cell key={`cell-${idx}`} fill={entry.color} />
+                                  <Cell key={`cell-${idx}`} fill={entry.color} style={{ cursor: "pointer", transition: "opacity 0.3s ease" }} />
                                 ))}
                               </Pie>
                               <RechartsTooltip content={<ChartTooltipContent />} />
@@ -1014,14 +1149,14 @@ export default function Dashboard() {
                     </div>
 
                     {/* Organizations by Societies - Bar Chart */}
-                    <div className="dashboard-chart-card animate-slide-up" style={{ animationDelay: "1000ms" }}>
+                    <div className="dashboard-chart-card">
                       <h3 className="dashboard-chart-card__title">
                         <span className="dashboard-chart-card__dot dashboard-chart-card__dot--teal" />
                         Organizations by Societies
                       </h3>
                       <div className="dashboard-chart-card__body">
                         {orgSocietyStats.length > 0 ? (
-                          <ResponsiveContainer width="100%" height={280}>
+                          <ResponsiveContainer width="100%" height={280} debounce={100}>
                             <BarChart data={orgSocietyStats} layout="vertical" margin={{ left: 0, right: 20, top: 5, bottom: 5 }}>
                               <defs>
                                 <linearGradient id="barGradient" x1="0" y1="0" x2="1" y2="0">
@@ -1030,10 +1165,10 @@ export default function Dashboard() {
                                 </linearGradient>
                               </defs>
                               <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.1)" horizontal={false} />
-                              <XAxis type="number" tick={{ fill: "#94a3b8", fontSize: 11 }} axisLine={{ stroke: "rgba(148,163,184,0.15)" }} />
+                              <XAxis type="number" tick={{ fill: "#94a3b8", fontSize: 11 }} axisLine={{ stroke: "rgba(148,163,184,0.15)" }} allowDecimals={false} />
                               <YAxis dataKey="name" type="category" width={130} tick={{ fill: "#94a3b8", fontSize: 11 }} axisLine={false} tickLine={false} />
                               <RechartsTooltip content={<ChartTooltipContent />} cursor={{ fill: "rgba(59,130,246,0.06)" }} />
-                              <Bar dataKey="count" fill="url(#barGradient)" radius={[0, 6, 6, 0]} animationDuration={1000} animationBegin={400} barSize={20} name="Societies" />
+                              <Bar dataKey="count" fill="url(#barGradient)" radius={[0, 6, 6, 0]} isAnimationActive={animatePlatformCharts} animationDuration={850} animationBegin={0} barSize={32} name="Societies" />
                             </BarChart>
                           </ResponsiveContainer>
                         ) : (
@@ -1043,14 +1178,14 @@ export default function Dashboard() {
                     </div>
 
                     {/* Users per Society - Area Chart */}
-                    <div className="dashboard-chart-card dashboard-chart-card--wide animate-slide-up" style={{ animationDelay: "1100ms" }}>
+                    <div className="dashboard-chart-card dashboard-chart-card--wide">
                       <h3 className="dashboard-chart-card__title">
                         <span className="dashboard-chart-card__dot dashboard-chart-card__dot--violet" />
                         Users per Society (Top 7)
                       </h3>
                       <div className="dashboard-chart-card__body">
                         {usersPerSociety.length > 0 ? (
-                          <ResponsiveContainer width="100%" height={300}>
+                          <ResponsiveContainer width="100%" height={300} debounce={100}>
                             <AreaChart data={usersPerSociety} margin={{ left: 0, right: 20, top: 10, bottom: 10 }}>
                               <defs>
                                 <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
@@ -1071,9 +1206,9 @@ export default function Dashboard() {
                                 fill="url(#areaGradient)"
                                 dot={{ r: 5, fill: "#8b5cf6", stroke: "#1e1b4b", strokeWidth: 2 }}
                                 activeDot={{ r: 8, fill: "#8b5cf6", stroke: "#fff", strokeWidth: 2, filter: "drop-shadow(0 0 6px rgba(139,92,246,0.5))" }}
-                                animationDuration={1200}
-                                animationBegin={500}
-                                animationEasing="ease-out"
+                                isAnimationActive={animatePlatformCharts}
+                                animationDuration={850}
+                                animationBegin={0}
                                 name="Users"
                               />
                             </AreaChart>
@@ -1085,38 +1220,39 @@ export default function Dashboard() {
                     </div>
 
                     {/* Society Occupancy Rate - Bar Chart */}
-                    <div className="dashboard-chart-card dashboard-chart-card--wide animate-slide-up" style={{ animationDelay: "1200ms" }}>
+                    <div className="dashboard-chart-card dashboard-chart-card--wide">
                       <h3 className="dashboard-chart-card__title">
                         <span className="dashboard-chart-card__dot dashboard-chart-card__dot--green" />
                         Society Occupancy Rate
                       </h3>
+                      <p className="dashboard-chart-card__meta">
+                        Average occupancy across tracked societies: {averageOccupancy}%
+                      </p>
                       <div className="dashboard-chart-card__body">
                         {societyOccupancyStats.length > 0 ? (
-                          <ResponsiveContainer width="100%" height={280}>
+                          <ResponsiveContainer width="100%" height={280} debounce={100}>
                             <BarChart data={societyOccupancyStats} margin={{ left: 0, right: 20, top: 10, bottom: 10 }}>
-                              <defs>
-                                <linearGradient id="occupancyHigh" x1="0" y1="0" x2="0" y2="1">
-                                  <stop offset="0%" stopColor="#22c55e" stopOpacity={0.95} />
-                                  <stop offset="100%" stopColor="#14b8a6" stopOpacity={0.85} />
-                                </linearGradient>
-                                <linearGradient id="occupancyMid" x1="0" y1="0" x2="0" y2="1">
-                                  <stop offset="0%" stopColor="#f59e0b" stopOpacity={0.95} />
-                                  <stop offset="100%" stopColor="#f97316" stopOpacity={0.85} />
-                                </linearGradient>
-                                <linearGradient id="occupancyLow" x1="0" y1="0" x2="0" y2="1">
-                                  <stop offset="0%" stopColor="#ef4444" stopOpacity={0.95} />
-                                  <stop offset="100%" stopColor="#dc2626" stopOpacity={0.85} />
-                                </linearGradient>
-                              </defs>
                               <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.1)" />
-                              <XAxis dataKey="name" tick={{ fill: "#94a3b8", fontSize: 10 }} angle={-15} textAnchor="end" height={50} axisLine={{ stroke: "rgba(148,163,184,0.15)" }} />
+                              <XAxis dataKey="name" tick={{ fill: "#94a3b8", fontSize: 10 }} axisLine={{ stroke: "rgba(148,163,184,0.15)" }} interval={0} minTickGap={10} />
                               <YAxis tick={{ fill: "#94a3b8", fontSize: 11 }} domain={[0, 100]} unit="%" axisLine={{ stroke: "rgba(148,163,184,0.15)" }} />
-                              <RechartsTooltip content={<ChartTooltipContent suffix="%" />} cursor={{ fill: "rgba(34,197,94,0.06)" }} />
-                              <Bar dataKey="occupancyPercent" radius={[6, 6, 0, 0]} animationDuration={1000} animationBegin={600} barSize={36} name="Occupancy">
+                              <ReferenceLine
+                                y={averageOccupancy}
+                                stroke="rgba(59,130,246,0.6)"
+                                strokeDasharray="4 4"
+                                ifOverflow="extendDomain"
+                                label={{
+                                  value: `Avg ${averageOccupancy}%`,
+                                  position: "insideTopRight",
+                                  fill: "#93c5fd",
+                                  fontSize: 11,
+                                }}
+                              />
+                              <RechartsTooltip content={<ChartTooltipContent suffix="%" />} cursor={{ fill: "rgba(59,130,246,0.06)" }} />
+                              <Bar dataKey="occupancyPercent" radius={[8, 8, 0, 0]} isAnimationActive={animatePlatformCharts} animationDuration={900} animationBegin={0} barSize={42} name="Occupancy">
                                 {societyOccupancyStats.map((entry, idx) => (
                                   <Cell
                                     key={idx}
-                                    fill={entry.occupancyPercent > 70 ? "url(#occupancyHigh)" : entry.occupancyPercent > 40 ? "url(#occupancyMid)" : "url(#occupancyLow)"}
+                                    fill={entry.occupancyPercent > 70 ? "#22c55e" : entry.occupancyPercent > 40 ? "#f59e0b" : "#ef4444"}
                                   />
                                 ))}
                               </Bar>
@@ -1127,6 +1263,88 @@ export default function Dashboard() {
                         )}
                       </div>
                     </div>
+
+                    {/* Platform KPI Strip */}
+                    <div className="dashboard-chart-card dashboard-chart-card--wide">
+                      <h3 className="dashboard-chart-card__title">
+                        <span className="dashboard-chart-card__dot dashboard-chart-card__dot--blue" />
+                        Platform Health Snapshot
+                      </h3>
+                      <div className="dashboard-platform-kpis">
+                        {platformKpiCards.map((kpi) => (
+                          <div key={kpi.key} className={`dashboard-platform-kpi dashboard-platform-kpi--${kpi.tone}`}>
+                            <p className="dashboard-platform-kpi__label">{kpi.label}</p>
+                            <p className="dashboard-platform-kpi__value">{kpi.value}</p>
+                            <p className="dashboard-platform-kpi__helper">{kpi.helper}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Issue Resolution Mix */}
+                    <div className="dashboard-chart-card">
+                      <h3 className="dashboard-chart-card__title">
+                        <span className="dashboard-chart-card__dot dashboard-chart-card__dot--orange" />
+                        Issue Resolution Mix
+                      </h3>
+                      <div className="dashboard-chart-card__body">
+                        {issueHealthData.length > 0 ? (
+                          <ResponsiveContainer width="100%" height={260} debounce={100}>
+                            <PieChart>
+                              <Pie
+                                data={issueHealthData}
+                                cx="50%"
+                                cy="50%"
+                                innerRadius={58}
+                                outerRadius={86}
+                                dataKey="value"
+                                nameKey="label"
+                                isAnimationActive={animatePlatformCharts}
+                                animationDuration={900}
+                                animationBegin={0}
+                                strokeWidth={2}
+                                stroke="rgba(0,0,0,0.15)"
+                              >
+                                {issueHealthData.map((entry, idx) => (
+                                  <Cell key={`issue-${idx}`} fill={entry.color} />
+                                ))}
+                              </Pie>
+                              <RechartsTooltip content={<ChartTooltipContent />} />
+                            </PieChart>
+                          </ResponsiveContainer>
+                        ) : (
+                          <p className="dashboard-chart-card__empty">No issue data available</p>
+                        )}
+                      </div>
+                    </div>
+
+                    {showPlatformFinancialWidgets && (
+                      <div className="dashboard-chart-card">
+                        <h3 className="dashboard-chart-card__title">
+                          <span className="dashboard-chart-card__dot dashboard-chart-card__dot--teal" />
+                          Billing Health
+                        </h3>
+                        <div className="dashboard-chart-card__body">
+                          {billingHealthData.some((item) => item.value > 0) ? (
+                            <ResponsiveContainer width="100%" height={260} debounce={100}>
+                              <BarChart data={billingHealthData} margin={{ left: 0, right: 20, top: 10, bottom: 10 }}>
+                                <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.1)" />
+                                <XAxis dataKey="name" tick={{ fill: "#94a3b8", fontSize: 12 }} axisLine={{ stroke: "rgba(148,163,184,0.15)" }} />
+                                <YAxis tick={{ fill: "#94a3b8", fontSize: 11 }} axisLine={{ stroke: "rgba(148,163,184,0.15)" }} allowDecimals={false} />
+                                <RechartsTooltip content={<ChartTooltipContent />} cursor={{ fill: "rgba(20,184,166,0.08)" }} />
+                                <Bar dataKey="value" radius={[8, 8, 0, 0]} isAnimationActive={animatePlatformCharts} animationDuration={900} animationBegin={0} barSize={42} name="Bills">
+                                  {billingHealthData.map((entry, idx) => (
+                                    <Cell key={`bill-health-${idx}`} fill={entry.color} />
+                                  ))}
+                                </Bar>
+                              </BarChart>
+                            </ResponsiveContainer>
+                          ) : (
+                            <p className="dashboard-chart-card__empty">No billing data available</p>
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </>
                 )}
               </div>
@@ -1265,7 +1483,7 @@ export default function Dashboard() {
                         Unit Distribution
                       </h3>
                       <div className="dashboard-chart-card__body">
-                        <ResponsiveContainer width="100%" height={280}>
+                        <ResponsiveContainer width="100%" height={280} debounce={100}>
                           <PieChart>
                             <Pie
                               activeIndex={activeUnitPieIndex}
@@ -1278,9 +1496,9 @@ export default function Dashboard() {
                               dataKey="total"
                               nameKey="name"
                               onMouseEnter={(_, index) => setActiveUnitPieIndex(index)}
-                              animationBegin={200}
-                              animationDuration={800}
-                              animationEasing="ease-out"
+                              isAnimationActive={animateSocietyCharts}
+                              animationDuration={850}
+                              animationBegin={0}
                               strokeWidth={2}
                               stroke="rgba(0,0,0,0.15)"
                             >
@@ -1312,13 +1530,13 @@ export default function Dashboard() {
                     </h3>
                     <div className="dashboard-chart-card__body">
                       {billsChartData.some(b => b.value > 0) ? (
-                        <ResponsiveContainer width="100%" height={280}>
+                        <ResponsiveContainer width="100%" height={280} debounce={100}>
                           <BarChart data={billsChartData} margin={{ left: 0, right: 20, top: 10, bottom: 10 }}>
                             <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.1)" />
                             <XAxis dataKey="name" tick={{ fill: "#94a3b8", fontSize: 12 }} axisLine={{ stroke: "rgba(148,163,184,0.15)" }} />
                             <YAxis tick={{ fill: "#94a3b8", fontSize: 11 }} axisLine={{ stroke: "rgba(148,163,184,0.15)" }} allowDecimals={false} />
                             <RechartsTooltip content={<ChartTooltipContent />} cursor={{ fill: "rgba(59,130,246,0.06)" }} />
-                            <Bar dataKey="value" radius={[6, 6, 0, 0]} animationDuration={800} animationBegin={300} barSize={40} name="Bills">
+                            <Bar dataKey="value" radius={[6, 6, 0, 0]} isAnimationActive={animateSocietyCharts} animationDuration={850} animationBegin={0} barSize={40} name="Bills">
                               {billsChartData.map((entry, idx) => (
                                 <Cell key={idx} fill={entry.color} />
                               ))}
@@ -1339,14 +1557,14 @@ export default function Dashboard() {
                     </h3>
                     <div className="dashboard-chart-card__body">
                       {ticketChartData.some(t => t.tickets > 0 || t.complaints > 0) ? (
-                        <ResponsiveContainer width="100%" height={280}>
+                        <ResponsiveContainer width="100%" height={280} debounce={100}>
                           <BarChart data={ticketChartData} margin={{ left: 0, right: 20, top: 10, bottom: 10 }}>
                             <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.1)" />
                             <XAxis dataKey="name" tick={{ fill: "#94a3b8", fontSize: 12 }} axisLine={{ stroke: "rgba(148,163,184,0.15)" }} />
                             <YAxis tick={{ fill: "#94a3b8", fontSize: 11 }} axisLine={{ stroke: "rgba(148,163,184,0.15)" }} allowDecimals={false} />
                             <RechartsTooltip content={<ChartTooltipContent />} cursor={{ fill: "rgba(139,92,246,0.06)" }} />
-                            <Bar dataKey="tickets" fill="#3b82f6" radius={[4, 4, 0, 0]} animationDuration={800} animationBegin={400} barSize={24} name="Tickets" />
-                            <Bar dataKey="complaints" fill="#f97316" radius={[4, 4, 0, 0]} animationDuration={800} animationBegin={500} barSize={24} name="Complaints" />
+                            <Bar dataKey="tickets" fill="#3b82f6" radius={[4, 4, 0, 0]} isAnimationActive={animateSocietyCharts} animationDuration={850} animationBegin={0} barSize={24} name="Tickets" />
+                            <Bar dataKey="complaints" fill="#f97316" radius={[4, 4, 0, 0]} isAnimationActive={animateSocietyCharts} animationDuration={850} animationBegin={0} barSize={24} name="Complaints" />
                           </BarChart>
                         </ResponsiveContainer>
                       ) : (
@@ -1363,7 +1581,7 @@ export default function Dashboard() {
                         Vehicle Distribution
                       </h3>
                       <div className="dashboard-chart-card__body">
-                        <ResponsiveContainer width="100%" height={260}>
+                        <ResponsiveContainer width="100%" height={260} debounce={100}>
                           <PieChart>
                             <Pie
                               activeIndex={activeVehiclePieIndex}
@@ -1376,9 +1594,9 @@ export default function Dashboard() {
                               dataKey="value"
                               nameKey="name"
                               onMouseEnter={(_, index) => setActiveVehiclePieIndex(index)}
-                              animationBegin={300}
-                              animationDuration={800}
-                              animationEasing="ease-out"
+                              isAnimationActive={animateSocietyCharts}
+                              animationDuration={850}
+                              animationBegin={0}
                               strokeWidth={2}
                               stroke="rgba(0,0,0,0.15)"
                             >
@@ -1401,13 +1619,13 @@ export default function Dashboard() {
                         Tenant Status
                       </h3>
                       <div className="dashboard-chart-card__body">
-                        <ResponsiveContainer width="100%" height={260}>
+                        <ResponsiveContainer width="100%" height={260} debounce={100}>
                           <BarChart data={tenantChartData} margin={{ left: 0, right: 20, top: 10, bottom: 10 }}>
                             <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.1)" />
                             <XAxis dataKey="name" tick={{ fill: "#94a3b8", fontSize: 12 }} axisLine={{ stroke: "rgba(148,163,184,0.15)" }} />
                             <YAxis tick={{ fill: "#94a3b8", fontSize: 11 }} axisLine={{ stroke: "rgba(148,163,184,0.15)" }} allowDecimals={false} />
                             <RechartsTooltip content={<ChartTooltipContent />} cursor={{ fill: "rgba(34,197,94,0.06)" }} />
-                            <Bar dataKey="value" radius={[6, 6, 0, 0]} animationDuration={800} animationBegin={300} barSize={40} name="Tenants">
+                            <Bar dataKey="value" radius={[6, 6, 0, 0]} isAnimationActive={animateSocietyCharts} animationDuration={850} animationBegin={0} barSize={40} name="Tenants">
                               {tenantChartData.map((entry, idx) => (
                                 <Cell key={idx} fill={entry.color} />
                               ))}
@@ -1456,66 +1674,68 @@ export default function Dashboard() {
               </div>
 
               <div className="dashboard-duo">
-                <div
-                  className="dashboard-bills-summary animate-slide-up"
-                  style={{ animationDelay: "1200ms" }}
-                >
-                  <div className="dashboard-bills-summary__accent"></div>
-                  <div className="dashboard-bills-summary__glow"></div>
-                  <div className="dashboard-bills-summary__shine"></div>
+                {showPlatformFinancialWidgets && (
+                  <div
+                    className="dashboard-bills-summary animate-slide-up"
+                    style={{ animationDelay: "1200ms" }}
+                  >
+                    <div className="dashboard-bills-summary__accent"></div>
+                    <div className="dashboard-bills-summary__glow"></div>
+                    <div className="dashboard-bills-summary__shine"></div>
 
-                  <div className="dashboard-bills-summary__header">
-                    <div className="dashboard-bills-summary__icon">
-                      <DollarSign className="dashboard-bills-summary__icon-symbol animate-pulse-custom" />
+                    <div className="dashboard-bills-summary__header">
+                      <div className="dashboard-bills-summary__icon">
+                        <DollarSign className="dashboard-bills-summary__icon-symbol animate-pulse-custom" />
+                      </div>
+                      <div>
+                        <h3 className="dashboard-bills-summary__title">
+                          Bills Summary
+                        </h3>
+                        <p className="dashboard-bills-summary__subtitle">
+                          Overview of all transactions
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <h3 className="dashboard-bills-summary__title">
-                        Bills Summary
-                      </h3>
-                      <p className="dashboard-bills-summary__subtitle">
-                        Overview of all transactions
-                      </p>
+
+                    <div className="dashboard-bills-summary__list">
+                      <div className="dashboard-bills-summary__row">
+                        <span className="dashboard-bills-summary__label">
+                          Total Bills Amount
+                        </span>
+                        <span className="dashboard-bills-summary__value">
+                          ₹{totalBillAmount.toLocaleString()}
+                        </span>
+                      </div>
+
+                      <div className="dashboard-bills-summary__stats">
+                        <div className="dashboard-bills-summary__stat dashboard-bills-summary__stat--paid">
+                          <span className="dashboard-bills-summary__stat-value">
+                            {paidBills.length}
+                          </span>
+                          <span className="dashboard-bills-summary__stat-label">
+                            Paid Bills
+                          </span>
+                        </div>
+                        <div className="dashboard-bills-summary__stat dashboard-bills-summary__stat--pending">
+                          <span className="dashboard-bills-summary__stat-value">
+                            {pendingBillsCount.length}
+                          </span>
+                          <span className="dashboard-bills-summary__stat-label">
+                            Pending
+                          </span>
+                        </div>
+                        <div className="dashboard-bills-summary__stat dashboard-bills-summary__stat--overdue">
+                          <span className="dashboard-bills-summary__stat-value">
+                            {overdueBills.length}
+                          </span>
+                          <span className="dashboard-bills-summary__stat-label">
+                            Overdue
+                          </span>
+                        </div>
+                      </div>
                     </div>
                   </div>
-
-                  <div className="dashboard-bills-summary__list">
-                    <div className="dashboard-bills-summary__row">
-                      <span className="dashboard-bills-summary__label">
-                        Total Bills Amount
-                      </span>
-                      <span className="dashboard-bills-summary__value">
-                        ₹{totalBillAmount.toLocaleString()}
-                      </span>
-                    </div>
-
-                    <div className="dashboard-bills-summary__stats">
-                      <div className="dashboard-bills-summary__stat dashboard-bills-summary__stat--paid">
-                        <span className="dashboard-bills-summary__stat-value">
-                          {paidBills.length}
-                        </span>
-                        <span className="dashboard-bills-summary__stat-label">
-                          Paid Bills
-                        </span>
-                      </div>
-                      <div className="dashboard-bills-summary__stat dashboard-bills-summary__stat--pending">
-                        <span className="dashboard-bills-summary__stat-value">
-                          {pendingBillsCount.length}
-                        </span>
-                        <span className="dashboard-bills-summary__stat-label">
-                          Pending
-                        </span>
-                      </div>
-                      <div className="dashboard-bills-summary__stat dashboard-bills-summary__stat--overdue">
-                        <span className="dashboard-bills-summary__stat-value">
-                          {overdueBills.length}
-                        </span>
-                        <span className="dashboard-bills-summary__stat-label">
-                          Overdue
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                )}
 
                 <div
                   className="dashboard-vehicle-card animate-slide-up"

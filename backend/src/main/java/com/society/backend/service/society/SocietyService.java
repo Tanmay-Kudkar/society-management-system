@@ -12,6 +12,8 @@ public interface SocietyService {
 
     SocietyResponse getById(Long id);
 
+    List<SocietyResponse> getByOrganizationId(Long organizationId);
+
     SocietyResponse update(Long id, SocietyRequest request);
 
     void delete(Long id);

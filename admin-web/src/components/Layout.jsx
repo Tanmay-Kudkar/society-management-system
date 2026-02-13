@@ -51,12 +51,6 @@ const platformOwnerMenu = [
     path: '/society-admins',
   },
   {
-    id: 'users',
-    label: 'Manage Users',
-    icon: Users,
-    path: '/users',
-  },
-  {
     id: 'settings',
     label: 'Settings',
     icon: Settings,
@@ -360,8 +354,9 @@ function MobileAccordion({ group, hasRole, onNavigate, isOpen, onToggle }) {
 }
 
 // Desktop sidebar link
-function SidebarLink({ group }) {
+function SidebarLink({ group, hasRole }) {
   const location = useLocation()
+  if (group.roles && !hasRole(...group.roles)) return null
   const isActive = location.pathname === group.path
   return (
     <NavLink
@@ -515,9 +510,10 @@ export default function Layout() {
         </div>
 
         <nav className="app-sidebar__nav">
+          <div className="app-sidebar__section-title">Navigation</div>
           {menuGroups.map((group) => (
             group.path ? (
-              <SidebarLink key={group.id} group={group} />
+              <SidebarLink key={group.id} group={group} hasRole={hasRole} />
             ) : (
               <SidebarGroup
                 key={group.id}

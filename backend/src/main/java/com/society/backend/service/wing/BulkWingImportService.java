@@ -60,12 +60,20 @@ public class BulkWingImportService {
     }
 
     public BulkWingImportResponse validateImportRows(List<WingImportRow> rows, Long societyId) {
+        Society society = societyRepository.findById(societyId)
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Society not found"));
+
         Set<String> existingNames = new HashSet<>();
         List<Wing> societyWings = wingRepository.findBySocietyId(societyId);
         for (Wing w : societyWings) {
             existingNames.add(w.getName().toUpperCase());
         }
         Set<String> seenNames = new HashSet<>();
+
+        Integer totalWings = society.getTotalWings();
+        int maxAllowed = (totalWings != null && totalWings > 0) ? totalWings : Integer.MAX_VALUE;
+        int remainingSlots = Math.max(maxAllowed - societyWings.size(), 0);
+        int acceptedNewWings = 0;
 
         BulkWingImportResponse response = new BulkWingImportResponse();
         response.setTotalRows(rows.size());
@@ -92,6 +100,10 @@ public class BulkWingImportService {
                 errors.add("Total floors must be between 1 and 200");
             }
 
+            if (errors.isEmpty() && acceptedNewWings >= remainingSlots) {
+                errors.add("Wing capacity reached for this society");
+            }
+
             WingImportResult result = new WingImportResult();
             result.setRowNumber(row.getRowNumber());
             result.setName(row.getName());
@@ -105,6 +117,7 @@ public class BulkWingImportService {
             } else {
                 row.setValid(true);
                 result.setSuccess(true);
+                acceptedNewWings++;
                 valid++;
             }
             response.getResults().add(result);
@@ -121,6 +134,9 @@ public class BulkWingImportService {
         Society society = societyRepository.findById(societyId)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Society not found"));
 
+        Integer totalWings = society.getTotalWings();
+        int maxAllowed = (totalWings != null && totalWings > 0) ? totalWings : Integer.MAX_VALUE;
+
         BulkWingImportResponse response = new BulkWingImportResponse();
         response.setTotalRows(rows.size());
         int success = 0, failure = 0;
@@ -133,6 +149,17 @@ public class BulkWingImportService {
                 continue;
             }
             try {
+                long currentWingCount = wingRepository.countBySocietyId(societyId);
+                if (currentWingCount >= maxAllowed) {
+                    response.getResults().add(
+                            WingImportResult.failure(
+                                    row.getRowNumber(),
+                                    row.getName(),
+                                    "Wing capacity reached for this society"));
+                    failure++;
+                    continue;
+                }
+
                 Wing wing = new Wing();
                 wing.setSociety(society);
                 wing.setName(row.getName().trim());

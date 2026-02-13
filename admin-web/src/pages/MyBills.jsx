@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext'
 import { useToast } from '../context/ToastContext'
 import { maintenanceBillApi } from '../../../api'
 import { useRazorpay } from '../hooks/useRazorpay'
+import PermissionDenied from '../components/PermissionDenied'
 import { CreditCard, CheckCircle, Clock, AlertCircle, Wallet, Receipt, Calendar } from 'lucide-react'
 import clsx from 'clsx'
 
@@ -20,6 +21,11 @@ export default function MyBills() {
   const queryClient = useQueryClient()
   const toast = useToast()
   const [selectedBill, setSelectedBill] = useState(null)
+  const canAccessMyBills = user?.role === 'MEMBER' || user?.role === 'TENANT'
+
+  if (!canAccessMyBills) {
+    return <PermissionDenied message="My Bills is available only for members and tenants." />
+  }
 
   // Razorpay integration
   const { initiatePayment, isLoading: isPaymentLoading } = useRazorpay({

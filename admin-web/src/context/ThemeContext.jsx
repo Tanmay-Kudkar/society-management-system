@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect } from 'react'
+import { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react'
 
 const ThemeContext = createContext()
 
@@ -54,27 +54,27 @@ export function ThemeProvider({ children }) {
     }
   }, [theme])
 
-  const toggleTheme = () => {
+  const toggleTheme = useCallback(() => {
     const newTheme = theme === 'dark' ? 'light' : 'dark'
     setThemeState(newTheme)
     setIsManual(true)
     localStorage.setItem('societyhub-theme', newTheme)
-  }
+  }, [theme])
 
-  const setTheme = (newTheme) => {
+  const setTheme = useCallback((newTheme) => {
     setThemeState(newTheme)
     setIsManual(true)
     localStorage.setItem('societyhub-theme', newTheme)
-  }
+  }, [])
 
-  const resetToSystemTheme = () => {
+  const resetToSystemTheme = useCallback(() => {
     localStorage.removeItem('societyhub-theme')
     setIsManual(false)
     const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
     setThemeState(systemTheme)
-  }
+  }, [])
 
-  const value = {
+  const value = useMemo(() => ({
     theme,
     isDark: theme === 'dark',
     isLight: theme === 'light',
@@ -82,7 +82,7 @@ export function ThemeProvider({ children }) {
     toggleTheme,
     setTheme,
     resetToSystemTheme,
-  }
+  }), [theme, isManual, toggleTheme, setTheme, resetToSystemTheme])
 
   return (
     <ThemeContext.Provider value={value}>

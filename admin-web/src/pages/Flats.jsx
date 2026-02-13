@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { useConfirmDialog } from '../context/ConfirmDialogContext'
 import { flatApi, societyApi, wingApi } from '../../../api'
 import { Plus, Edit, Trash2, Search, X, Home, Store, Briefcase, Layers, AlertCircle } from 'lucide-react'
 import { FormInput, PhoneInput, SmartSelect, NumberInput, FormErrorSummary } from '../components/FormComponents'
@@ -9,6 +10,7 @@ import PermissionDenied from '../components/PermissionDenied'
 
 export default function Flats() {
   const { user, canManageFlats } = useAuth()
+  const confirmDialog = useConfirmDialog()
   const queryClient = useQueryClient()
   
   // Permission check
@@ -64,6 +66,7 @@ export default function Flats() {
     queryKey: ['flats', effectiveSocietyId],
     queryFn: () => flatApi.getBySociety(effectiveSocietyId).then(res => res.data),
     enabled: !!effectiveSocietyId,
+    placeholderData: [],
   })
 
   const { data: societies = [] } = useQuery({
@@ -355,8 +358,21 @@ export default function Flats() {
                         <Edit size={18} />
                       </button>
                       <button
-                        onClick={() => {
-                          if (confirm('Are you sure you want to delete this flat?')) {
+                        onClick={async () => {
+                          const confirmed = await confirmDialog({
+                            title: 'Delete Flat',
+                            message: 'Are you sure you want to delete this flat? This action cannot be undone.',
+                            confirmText: 'Delete',
+                            tone: 'danger',
+                            details: [
+                              { label: 'Flat', value: flat.flatNumber || '-' },
+                              { label: 'Type', value: flat.flatType || flat.unitType || 'FLAT' },
+                              { label: 'Wing', value: flat.wingName || 'No Wing' },
+                              { label: 'Owner', value: flat.ownerName || 'Unassigned' },
+                            ],
+                            caution: 'This action permanently removes this unit.',
+                          })
+                          if (confirmed) {
                             deleteMutation.mutate(flat.id)
                           }
                         }}
@@ -407,6 +423,7 @@ export default function Flats() {
                   name="unitType"
                   value={selectedUnitType}
                   onChange={(e) => setSelectedUnitType(e.target.value)}
+                  required
                   options={[
                     { value: 'FLAT', label: '🏠 Flat' },
                     { value: 'SHOP', label: '🏪 Shop' },
@@ -414,7 +431,7 @@ export default function Flats() {
                   ]}
                 />
                 <SmartSelect
-                  label={`Wing ${selectedWingId && wings.find(w => w.id === parseInt(selectedWingId))?.totalFloors ? `(Max Floor: ${wings.find(w => w.id === parseInt(selectedWingId))?.totalFloors})` : ''}`}
+                  label={`Wing (Optional) ${selectedWingId && wings.find(w => w.id === parseInt(selectedWingId))?.totalFloors ? `(Max Floor: ${wings.find(w => w.id === parseInt(selectedWingId))?.totalFloors})` : ''}`}
                   name="wingId"
                   value={selectedWingId}
                   onChange={(e) => setSelectedWingId(e.target.value)}
@@ -441,6 +458,7 @@ export default function Flats() {
                   name="flatType"
                   value={selectedFlatType}
                   onChange={(e) => setSelectedFlatType(e.target.value)}
+                  required
                   options={
                     selectedUnitType === 'FLAT' ? [
                       { value: '1RK', label: '1 RK' }, { value: '1BHK', label: '1 BHK' },
@@ -483,6 +501,7 @@ export default function Flats() {
                   defaultValue={editingFlat?.area}
                   placeholder={selectedUnitType === 'SHOP' ? 'e.g., 500' : selectedUnitType === 'OFFICE' ? 'e.g., 800' : 'e.g., 1200'}
                   error={formErrors.area}
+                  required
                 />
               </div>
               <FormInput
@@ -491,6 +510,7 @@ export default function Flats() {
                 defaultValue={editingFlat?.ownerName}
                 maxLength={100}
                 placeholder={selectedUnitType === 'SHOP' ? 'e.g., ABC Stores Pvt Ltd' : selectedUnitType === 'OFFICE' ? 'e.g., Tech Corp' : 'e.g., John Doe'}
+                required
               />
               <div className="flats-form-row">
                 <FormInput
@@ -500,12 +520,14 @@ export default function Flats() {
                   defaultValue={editingFlat?.ownerEmail}
                   placeholder="example@email.com"
                   error={formErrors.ownerEmail}
+                  required
                 />
                 <PhoneInput
                   label="Contact Phone"
                   name="ownerPhone"
                   defaultValue={editingFlat?.ownerPhone}
                   error={formErrors.ownerPhone}
+                  required
                 />
               </div>
               <FormErrorSummary errors={formErrors} />

@@ -46,6 +46,7 @@ export default function Tickets() {
   const { data: tickets = [], isLoading } = useQuery({
     queryKey: ['tickets'],
     queryFn: () => ticketApi.getAll().then(res => res.data),
+    placeholderData: [],
   })
 
 

@@ -36,6 +36,7 @@ export default function Notices() {
     queryFn: () => effectiveSocietyId
       ? noticeApi.getBySociety(effectiveSocietyId).then(res => res.data)
       : noticeApi.getAll().then(res => res.data),
+    placeholderData: [],
   })
 
 
@@ -206,6 +207,7 @@ export default function Notices() {
                   label="Priority"
                   name="priority"
                   defaultValue={editingNotice?.priority || 'MEDIUM'}
+                  required
                   options={[
                     { value: 'LOW', label: 'Low' },
                     { value: 'MEDIUM', label: 'Medium' },
@@ -214,7 +216,7 @@ export default function Notices() {
                   ]}
                 />
                 <FormInput
-                  label="Expiry Date"
+                  label="Expiry Date (Optional)"
                   name="expiryDate"
                   type="date"
                   defaultValue={editingNotice?.expiryDate || ''}

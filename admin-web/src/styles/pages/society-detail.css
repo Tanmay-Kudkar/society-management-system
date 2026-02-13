@@ -12,6 +12,8 @@
   margin-bottom: var(--spacing-xl);
   overflow: hidden;
   color: white;
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  box-shadow: var(--shadow-md);
 }
 
 .society-header::before {
@@ -104,22 +106,6 @@
   height: 1rem;
   margin-right: 0.25rem;
   vertical-align: middle;
-}
-
-.society-bottom-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 1.5rem;
-}
-
-@media (min-width: 1024px) {
-  .society-bottom-grid {
-    grid-template-columns: 1fr 2fr;
-  }
-}
-
-.society-bottom-main {
-  min-width: 0;
 }
 
 /* Loading and error states */
@@ -352,6 +338,47 @@
   gap: var(--spacing-sm);
 }
 
+.light .society-header {
+  background: linear-gradient(135deg, #0f4ea8, #4338ca);
+  border-color: rgba(30, 64, 175, 0.35);
+  box-shadow: 0 10px 24px rgba(30, 64, 175, 0.22);
+}
+
+.light .society-stats,
+.light .society-actions,
+.light .society-users-grid {
+  gap: 14px;
+}
+
+.light .society-stat-card,
+.light .society-action-card,
+.light .society-user-card {
+  border-color: #b8c4d3;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
+}
+
+.light .society-stat-card:hover,
+.light .society-action-card:hover,
+.light .society-user-card:hover {
+  border-color: #85a1c6;
+  box-shadow: 0 10px 18px rgba(15, 23, 42, 0.1);
+}
+
+.light .society-section-title,
+.light .society-stat-value,
+.light .society-action-card .action-title,
+.light .society-user-name {
+  color: #0f172a;
+}
+
+.light .society-stat-label,
+.light .society-action-card .action-count,
+.light .society-user-email,
+.light .society-user-meta-item,
+.light .society-empty-text {
+  color: #475569;
+}
+
 /* User Cards within Society */
 .society-users-grid {
   display: grid;
@@ -416,7 +443,25 @@
   border-radius: var(--radius-full);
   font-size: var(--text-xs);
   font-weight: 600;
+  white-space: nowrap;
 }
+
+.society-user-avatar--blue { background: linear-gradient(135deg, #3b82f6, #4f46e5); }
+.society-user-avatar--emerald { background: linear-gradient(135deg, #10b981, #14b8a6); }
+.society-user-avatar--purple { background: linear-gradient(135deg, #8b5cf6, #ec4899); }
+.society-user-avatar--orange { background: linear-gradient(135deg, #f59e0b, #ef4444); }
+.society-user-avatar--cyan { background: linear-gradient(135deg, #06b6d4, #3b82f6); }
+
+.society-role-color--platform-owner { background: rgba(139, 92, 246, 0.18); color: #c4b5fd; }
+.society-role-color--society-admin { background: rgba(59, 130, 246, 0.18); color: #93c5fd; }
+.society-role-color--chairman { background: rgba(99, 102, 241, 0.18); color: #a5b4fc; }
+.society-role-color--secretary { background: rgba(6, 182, 212, 0.18); color: #67e8f9; }
+.society-role-color--treasurer { background: rgba(34, 197, 94, 0.18); color: #86efac; }
+.society-role-color--committee { background: rgba(245, 158, 11, 0.18); color: #fcd34d; }
+.society-role-color--employee { background: rgba(249, 115, 22, 0.18); color: #fdba74; }
+.society-role-color--member { background: rgba(148, 163, 184, 0.2); color: #cbd5e1; }
+.society-role-color--tenant { background: rgba(236, 72, 153, 0.18); color: #f9a8d4; }
+.society-role-color--visitor { background: rgba(239, 68, 68, 0.18); color: #fca5a5; }
 
 .society-user-meta {
   display: flex;
@@ -431,71 +476,6 @@
   gap: var(--spacing-xs);
   font-size: var(--text-sm);
   color: var(--text-tertiary);
-}
-
-/* Role Hierarchy Tree */
-.role-hierarchy {
-  background: var(--bg-card);
-  border-radius: var(--radius-xl);
-  padding: var(--spacing-xl);
-  border: 1px solid var(--border-light);
-}
-
-.role-hierarchy-title {
-  font-weight: 600;
-  color: var(--text-primary);
-  margin-bottom: var(--spacing-lg);
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-sm);
-}
-
-.role-tree {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-xs);
-}
-
-.role-tree-item {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-md);
-  padding: var(--spacing-sm) var(--spacing-md);
-  border-radius: var(--radius-md);
-  transition: background var(--transition-fast);
-}
-
-.role-tree-item:hover {
-  background: var(--bg-secondary);
-}
-
-.role-tree-item.active {
-  background: var(--color-primary-50);
-}
-
-.role-tree-connector {
-  width: 20px;
-  height: 20px;
-  border-left: 2px solid var(--border-default);
-  border-bottom: 2px solid var(--border-default);
-  border-radius: 0 0 0 4px;
-  margin-left: var(--spacing-md);
-}
-
-.role-tree-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--spacing-xs);
-  padding: var(--spacing-xs) var(--spacing-md);
-  border-radius: var(--radius-full);
-  font-size: var(--text-sm);
-  font-weight: 500;
-}
-
-.role-tree-count {
-  font-size: var(--text-xs);
-  color: var(--text-muted);
-  margin-left: auto;
 }
 
 /* Empty State */

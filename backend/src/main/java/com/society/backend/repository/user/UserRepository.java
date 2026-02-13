@@ -47,4 +47,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
     
     @Query("SELECT CASE WHEN COUNT(u) > 0 THEN true ELSE false END FROM User u WHERE u.flat.id = :flatId")
     boolean existsByFlatId(@Param("flatId") Long flatId);
+
+    @Query("SELECT CASE WHEN COUNT(u) > 0 THEN true ELSE false END FROM User u WHERE u.society.id = :societyId AND u.role = :role")
+    boolean existsBySocietyIdAndRole(@Param("societyId") Long societyId, @Param("role") Role role);
 }

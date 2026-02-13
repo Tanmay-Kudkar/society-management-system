@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '../context/AuthContext'
+import { useConfirmDialog } from '../context/ConfirmDialogContext'
 import { userApi, societyApi, flatApi } from '../../../api'
 import { Plus, Edit, Trash2, Search, X, AlertCircle, Shield, Users as UsersIcon, Building2, Home, Upload, Download, UserPlus, FileSpreadsheet, CheckCircle, XCircle, Info, Eye } from 'lucide-react'
 import clsx from 'clsx'
@@ -10,38 +11,38 @@ import { FormInput, PhoneInput, SmartSelect, FormErrorSummary } from '../compone
 import PermissionDenied from '../components/PermissionDenied'
 
 const roleColors = {
-  PLATFORM_OWNER: 'role-pill role-pill--platform-owner',
-  ORGANIZATION_OWNER: 'role-pill role-pill--organization-owner',
-  SOCIETY_ADMIN: 'role-pill role-pill--society-admin',
-  CHAIRMAN: 'role-pill role-pill--chairman',
-  SECRETARY: 'role-pill role-pill--secretary',
-  TREASURER: 'role-pill role-pill--treasurer',
-  COMMITTEE: 'role-pill role-pill--committee',
-  MANAGER: 'role-pill role-pill--manager',
-  EMPLOYEE: 'role-pill role-pill--employee',
-  MEMBER: 'role-pill role-pill--member',
-  TENANT: 'role-pill role-pill--tenant',
-  VISITOR: 'role-pill role-pill--visitor',
+  PLATFORM_OWNER: 'role-tag role-tag--platform-owner',
+  ORGANIZATION_OWNER: 'role-tag role-tag--organization-owner',
+  SOCIETY_ADMIN: 'role-tag role-tag--society-admin',
+  CHAIRMAN: 'role-tag role-tag--chairman',
+  SECRETARY: 'role-tag role-tag--secretary',
+  TREASURER: 'role-tag role-tag--treasurer',
+  COMMITTEE: 'role-tag role-tag--committee',
+  MANAGER: 'role-tag role-tag--manager',
+  EMPLOYEE: 'role-tag role-tag--employee',
+  MEMBER: 'role-tag role-tag--member',
+  TENANT: 'role-tag role-tag--tenant',
+  VISITOR: 'role-tag role-tag--visitor',
 }
 
-// Role hierarchy descriptions for tooltips - aligned with Permission Matrix
-const roleHierarchyInfo = {
-  PLATFORM_OWNER: 'Platform Owner - Manages all societies and organizations',
-  ORGANIZATION_OWNER: 'Organization Owner - Manages multiple societies under an organization',
-  SOCIETY_ADMIN: 'Society Super Admin - Full control over society, all CRUD operations',
-  CHAIRMAN: 'Highest Committee Authority - Presides meetings, final approval, bank signatory',
-  SECRETARY: 'Administrative Head - Documentation, records, day-to-day operations. Creates Committee',
-  TREASURER: 'Financial Head - Finances, billing, payments, accounts. Creates Committee',
-  COMMITTEE: 'Committee Member - Intermediate management, creates Employee and Member',
-  MANAGER: 'Operational Manager - Handles day-to-day management tasks (no user CRUD)',
-  EMPLOYEE: 'Staff/Security - Handles visitors, basic operations. Creates Visitor only',
-  MEMBER: 'Flat Owner - Views own data, raises tickets/complaints. Creates Tenant only',
-  TENANT: 'Renter - Limited access to own profile & bills',
-  VISITOR: 'Guest - Minimal access, read-only',
+const roleAccentColors = {
+  PLATFORM_OWNER: 'var(--role-platform-owner)',
+  ORGANIZATION_OWNER: 'var(--role-organization-owner)',
+  SOCIETY_ADMIN: 'var(--role-society-admin)',
+  CHAIRMAN: 'var(--role-chairman)',
+  SECRETARY: 'var(--role-secretary)',
+  TREASURER: 'var(--role-treasurer)',
+  COMMITTEE: 'var(--role-committee)',
+  MANAGER: 'var(--role-manager)',
+  EMPLOYEE: 'var(--role-employee)',
+  MEMBER: 'var(--role-member)',
+  TENANT: 'var(--role-tenant)',
+  VISITOR: 'var(--role-visitor)',
 }
 
 export default function Users() {
   const { user, canManageUsers } = useAuth()
+  const confirmDialog = useConfirmDialog()
   const navigate = useNavigate()
   
   // Permission check
@@ -89,6 +90,7 @@ export default function Users() {
   const { data: users = [], isLoading } = useQuery({
     queryKey: ['users', user?.id],
     queryFn: () => userApi.getAll().then(res => res.data).catch(() => []),
+    placeholderData: [],
   })
 
   // Fetch current user's full profile to get flatId and verify role (for MEMBER creating TENANT)
@@ -266,6 +268,7 @@ export default function Users() {
   // UNLESS viewing a specific society from URL - then show all users in that society
   // For others, show all users they can see
   let displayUsers = users
+  const scopedSocietyIds = new Set(societies.map(s => s.id))
   
   // Apply society filter from URL if present
   if (urlSocietyId) {
@@ -274,8 +277,12 @@ export default function Users() {
     // Platform Owner sees both Organization Owners and Society Admins
     displayUsers = displayUsers.filter(u => u.role === 'ORGANIZATION_OWNER' || u.role === 'SOCIETY_ADMIN')
   } else if (user?.role === 'ORGANIZATION_OWNER') {
-    // Organization Owner sees Society Admins in their org
-    displayUsers = displayUsers.filter(u => u.role === 'SOCIETY_ADMIN')
+    // Organization Owner sees only Society Admins scoped to societies in their organization
+    displayUsers = displayUsers.filter(u =>
+      u.role === 'SOCIETY_ADMIN' &&
+      ((u.societyId && scopedSocietyIds.has(u.societyId)) ||
+        (u.organizationId && user?.organizationId && u.organizationId === user.organizationId))
+    )
   }
 
   const filteredUsers = displayUsers.filter(u => {
@@ -322,12 +329,13 @@ export default function Users() {
       return
     }
 
-    // Validate flatId is required for MEMBER/TENANT roles only (they are resident roles)
+    // Validate flatId is required for resident society roles
     // Exception: MEMBER creating TENANT - backend auto-assigns the member's flat
-    if (['MEMBER', 'TENANT'].includes(roleValue) && !data.flatId) {
+    const residentUnitRoles = ['MEMBER', 'TENANT', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE']
+    if (residentUnitRoles.includes(roleValue) && !data.flatId) {
       // Skip validation if MEMBER is creating TENANT (backend will auto-assign)
       if (!(confirmedIsMember && roleValue === 'TENANT')) {
-        setError('Please select a property for the user')
+        setError(`Please select a property for ${roleValue.replace('_', ' ').toLowerCase()}`)
         return
       }
     }
@@ -461,7 +469,7 @@ export default function Users() {
           <div>
             <h3 className="users-permissions__title">Your Permissions ({user?.role?.replace('_', ' ')})</h3>
             <p className="users-permissions__text">
-              {roleHierarchyInfo[user?.role] || 'View only access'}
+              Access scope is based on your current role and organization/society assignment.
             </p>
             <div className="users-permissions__meta">
               {creatableRoles.length > 0 && (
@@ -597,13 +605,23 @@ export default function Users() {
                     
                     {/* Actions */}
                     <div className="user-card__actions">
-                      {u.societyId && (
+                      {u.societyId ? (
                         <button
                           onClick={() => navigate(`/societies/${u.societyId}`)}
                           className="user-card__action user-card__action--view"
                         >
                           <Building2 size={16} />
                           View Society
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          disabled
+                          className="user-card__action user-card__action--view user-card__action--disabled"
+                          title="No society assigned"
+                        >
+                          <Building2 size={16} />
+                          No Society
                         </button>
                       )}
                       {canEdit && (
@@ -617,8 +635,25 @@ export default function Users() {
                       )}
                       {canDelete && (
                         <button
-                          onClick={() => {
-                            if (confirm('Are you sure you want to delete this user?')) {
+                          onClick={async () => {
+                            const confirmed = await confirmDialog({
+                              title: 'Delete User',
+                              message: 'Are you sure you want to delete this user? This action cannot be undone.',
+                              confirmText: 'Delete',
+                              tone: 'danger',
+                              details: [
+                                { label: 'Name', value: u.name || '-' },
+                                { label: 'Email', value: u.email || '-' },
+                                { label: 'Role', value: u.role?.replace(/_/g, ' ') || '-' },
+                                { label: 'Society', value: societyName || 'Not linked' },
+                              ],
+                              impacts: [
+                                { label: 'User Account', count: 1 },
+                                { label: 'Society Link', count: u.societyId ? 1 : 0 },
+                              ],
+                              caution: 'This action permanently removes the user account.',
+                            })
+                            if (confirmed) {
                               deleteMutation.mutate(u.id)
                             }
                           }}
@@ -636,101 +671,125 @@ export default function Users() {
           )}
         </div>
       ) : (
-      /* Table view for non-PLATFORM_OWNER users */
-      <div className="users-table">
+      /* Card-row view for non-PLATFORM_OWNER users */
+      <div className="utbl">
         {isLoading ? (
           <div className="users-loading">
             <div className="users-loading__spinner"></div>
           </div>
         ) : (
-          <div className="users-table__wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Email</th>
-                  <th>Role</th>
-                  <th>Phone</th>
-                  <th className="users-table__actions">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredUsers.map((u) => {
-                  // Check if current user can edit/delete this user
-                  const canEdit = u.id === user?.id || updatableRoles.includes(u.role)
-                  const canDelete = u.role !== 'PLATFORM_OWNER' && updatableRoles.includes(u.role)
-                  const isSelf = u.id === user?.id
-                  
-                  return (
-                  <tr key={u.id}>
-                    <td>
-                      <div className="users-table__name">
-                        <div className="users-table__avatar">
-                          <span>
-                            {u.name?.charAt(0)?.toUpperCase()}
-                          </span>
-                        </div>
-                        <div>
-                          <span>{u.name}</span>
-                          {isSelf && (
-                            <span className="users-table__self">(You)</span>
-                          )}
-                        </div>
-                      </div>
-                    </td>
-                    <td className="users-table__cell">{u.email}</td>
-                    <td>
-                      <span className={clsx(roleColors[u.role])}>
-                        {u.role?.replace('_', ' ')}
-                      </span>
-                    </td>
-                    <td className="users-table__cell">{u.phone || '-'}</td>
-                    <td className="users-table__actions">
-                      {canEdit ? (
-                        <button
-                          onClick={() => handleOpenModal(u)}
-                          className="users-table__icon-btn"
-                          title={isSelf ? 'Edit your profile' : 'Edit user'}
-                        >
-                          <Edit size={18} />
-                        </button>
-                      ) : (
-                        <button
-                          disabled
-                          className="users-table__icon-btn"
-                          title="No permission to edit this user"
-                        >
-                          <Edit size={18} />
-                        </button>
-                      )}
-                      {canDelete ? (
-                        <button
-                          onClick={() => {
-                            if (confirm('Are you sure you want to delete this user?')) {
-                              deleteMutation.mutate(u.id)
-                            }
-                          }}
-                          className="users-table__icon-btn users-table__icon-btn--danger"
-                          title="Delete user"
-                        >
-                          <Trash2 size={18} />
-                        </button>
-                      ) : (
-                        <button
-                          disabled
-                          className="users-table__icon-btn"
-                          title={isSelf ? "Cannot delete yourself" : "No permission to delete this user"}
-                        >
-                          <Trash2 size={18} />
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                  )
-                })}
-              </tbody>
-            </table>
+          <>
+          {/* Column labels */}
+          <div className="utbl__head">
+            <span className="utbl__col utbl__col--name">Name</span>
+            <span className="utbl__col utbl__col--email">Email</span>
+            <span className="utbl__col utbl__col--role">Role</span>
+            <span className="utbl__col utbl__col--prop">Property</span>
+            <span className="utbl__col utbl__col--phone">Phone</span>
+            <span className="utbl__col utbl__col--acts">Actions</span>
           </div>
+
+          {/* Rows */}
+          <div className="utbl__body">
+            {filteredUsers.map((u) => {
+              const canEdit = u.id === user?.id || updatableRoles.includes(u.role)
+              const canDelete = u.role !== 'PLATFORM_OWNER' && updatableRoles.includes(u.role)
+              const isSelf = u.id === user?.id
+              const userFlat = flats.find(f => f.id === u.flatId)
+              const accentColor = roleAccentColors[u.role] || 'var(--role-member)'
+
+              return (
+              <div key={u.id} className="utbl__row" style={{ '--row-accent': accentColor }}>
+                <div className="utbl__accent" />
+                <div className="utbl__col utbl__col--name">
+                  <div className="utbl__avatar" style={{ '--avatar-accent': accentColor }}>
+                    {u.name?.charAt(0)?.toUpperCase()}
+                  </div>
+                  <div className="utbl__name-block">
+                    <span className="utbl__name">{u.name}</span>
+                    {isSelf && <span className="utbl__you">You</span>}
+                  </div>
+                </div>
+
+                <div className="utbl__col utbl__col--email">
+                  <span className="utbl__email">{u.email}</span>
+                </div>
+
+                <div className="utbl__col utbl__col--role">
+                  <span className={clsx(roleColors[u.role])}>
+                    <span className="role-tag__dot" />
+                    {u.role?.replace('_', ' ')}
+                  </span>
+                </div>
+
+                <div className="utbl__col utbl__col--prop">
+                  {userFlat ? (
+                    <span className="utbl__prop-chip">
+                      <Home size={13} />
+                      <span>{userFlat.flatNumber}</span>
+                      {userFlat.wingName && <span className="utbl__prop-wing">{userFlat.wingName}</span>}
+                    </span>
+                  ) : (
+                    <span className="utbl__prop-empty">—</span>
+                  )}
+                </div>
+
+                <div className="utbl__col utbl__col--phone">
+                  <span className="utbl__phone">{u.phone || '—'}</span>
+                </div>
+
+                <div className="utbl__col utbl__col--acts">
+                  <div className="utbl__act-group">
+                    {canEdit ? (
+                      <button onClick={() => handleOpenModal(u)} className="utbl__act-btn" title={isSelf ? 'Edit your profile' : 'Edit user'}>
+                        <Edit size={15} />
+                      </button>
+                    ) : (
+                      <button disabled className="utbl__act-btn" title="No permission to edit">
+                        <Edit size={15} />
+                      </button>
+                    )}
+                    {canDelete ? (
+                      <button
+                        onClick={async () => {
+                          const confirmed = await confirmDialog({
+                            title: 'Delete User',
+                            message: 'Are you sure you want to delete this user? This action cannot be undone.',
+                            confirmText: 'Delete',
+                            tone: 'danger',
+                            details: [
+                              { label: 'Name', value: u.name || '-' },
+                              { label: 'Email', value: u.email || '-' },
+                              { label: 'Role', value: u.role?.replace(/_/g, ' ') || '-' },
+                              { label: 'Property', value: userFlat?.flatNumber || 'Unassigned' },
+                            ],
+                            impacts: [
+                              { label: 'User Account', count: 1 },
+                              { label: 'Property Link', count: userFlat ? 1 : 0 },
+                            ],
+                            caution: 'This action permanently removes the user account.',
+                          })
+                          if (confirmed) {
+                            deleteMutation.mutate(u.id)
+                          }
+                        }}
+                        className="utbl__act-btn utbl__act-btn--danger"
+                        title="Delete user"
+                      >
+                        <Trash2 size={15} />
+                      </button>
+                    ) : (
+                      <button disabled className="utbl__act-btn" title={isSelf ? 'Cannot delete yourself' : 'No permission'}>
+                        <Trash2 size={15} />
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+              )
+            })}
+          </div>
+          </>
         )}
       </div>
       )}
@@ -806,8 +865,8 @@ export default function Users() {
                   emptyMessage="No societies available"
                 />
               )}
-              {/* Property selection for MEMBER/TENANT roles - NOT shown for EMPLOYEE */}
-              {['MEMBER', 'TENANT'].includes(selectedRole || creatableRoles[0]) && (
+              {/* Property selection for resident society roles - hidden only for non-unit roles */}
+              {['MEMBER', 'TENANT', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE'].includes(selectedRole || creatableRoles[0]) && (
                 <div>
                   {/* MEMBER creating TENANT: auto-assign from member's flat */}
                   {confirmedIsMember && (selectedRole || creatableRoles[0]) === 'TENANT' ? (
@@ -854,6 +913,7 @@ export default function Users() {
                 label={(selectedRole || editingUser?.role) === 'SOCIETY_ADMIN' ? 'Telephone' : 'Phone'}
                 name="phone"
                 defaultValue={editingUser?.phone}
+                required
               />
               <div className="users-modal__actions">
                 <button

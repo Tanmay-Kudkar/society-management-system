@@ -17,8 +17,10 @@ public class NoticeRequest {
     @NotBlank(message = "Title is required")
     private String title;
 
+    @NotBlank(message = "Content is required")
     private String content;
 
+    @NotBlank(message = "Priority is required")
     private String priority = "MEDIUM"; // LOW, MEDIUM, HIGH, URGENT
 
     private LocalDate expiryDate;

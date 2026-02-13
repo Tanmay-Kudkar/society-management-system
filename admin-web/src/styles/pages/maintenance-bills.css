@@ -48,24 +48,42 @@
 }
 
 .maintenance-bulk-button {
-  border: 1px solid #2563eb;
-  color: #2563eb;
-  background: rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  color: #f8fafc;
+  background: #0f172a;
 }
 
 .maintenance-bulk-button:hover {
   transform: translateY(-1px);
-  box-shadow: 0 10px 16px rgba(37, 99, 235, 0.2);
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.16);
 }
 
 .maintenance-add-button {
-  background: #2563eb;
-  color: #fff;
+  border: 1px solid var(--border-default);
+  background: var(--bg-card);
+  color: var(--text-primary);
 }
 
 .maintenance-add-button:hover {
   transform: translateY(-1px);
-  box-shadow: 0 12px 18px rgba(37, 99, 235, 0.25);
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.14);
+  background: color-mix(in srgb, var(--bg-tertiary) 70%, var(--bg-card));
+}
+
+.dark .maintenance-bulk-button {
+  border-color: rgba(148, 163, 184, 0.26);
+  background: #020617;
+  color: #f8fafc;
+}
+
+.dark .maintenance-add-button {
+  border-color: rgba(148, 163, 184, 0.22);
+  background: #f8fafc;
+  color: #0f172a;
+}
+
+.dark .maintenance-add-button:hover {
+  background: #ffffff;
 }
 
 .maintenance-summary {
@@ -440,21 +458,38 @@
 }
 
 .maintenance-submit-button {
-  background: #2563eb;
-  color: #fff;
+  border: 1px solid var(--border-default);
+  background: var(--bg-card);
+  color: var(--text-primary);
 }
 
 .maintenance-submit-button:hover {
   transform: translateY(-1px);
-  box-shadow: 0 14px 24px rgba(37, 99, 235, 0.2);
+  background: color-mix(in srgb, var(--bg-tertiary) 70%, var(--bg-card));
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.14);
 }
 
 .maintenance-submit-button--success {
-  background: #16a34a;
+  border: 1px solid var(--border-default);
+  background: var(--bg-card);
+  color: var(--text-primary);
 }
 
 .maintenance-submit-button--success:hover {
-  box-shadow: 0 14px 24px rgba(22, 163, 74, 0.2);
+  background: color-mix(in srgb, var(--bg-tertiary) 70%, var(--bg-card));
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.14);
+}
+
+.dark .maintenance-submit-button,
+.dark .maintenance-submit-button--success {
+  border-color: rgba(148, 163, 184, 0.22);
+  background: #f8fafc;
+  color: #0f172a;
+}
+
+.dark .maintenance-submit-button:hover,
+.dark .maintenance-submit-button--success:hover {
+  background: #ffffff;
 }
 
 .maintenance-preview {

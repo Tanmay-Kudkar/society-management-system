@@ -105,6 +105,15 @@ public class UserServiceImpl implements UserService {
             }
         }
 
+        // Enforce: each society can have at most 1 SOCIETY_ADMIN
+        if (targetRole == Role.SOCIETY_ADMIN && request.getSocietyId() != null) {
+            boolean adminExists = userRepository.existsBySocietyIdAndRole(request.getSocietyId(), Role.SOCIETY_ADMIN);
+            if (adminExists) {
+                throw new ApiException(HttpStatus.CONFLICT,
+                        "This society already has a Society Admin. Each society can have only one admin.");
+            }
+        }
+
         User user = new User();
         user.setName(request.getName());
         user.setEmail(request.getEmail());
@@ -177,8 +186,8 @@ public class UserServiceImpl implements UserService {
             user.setOrganization(currentUser.getOrganization());
         }
 
-        // Handle flat assignment for MEMBER and TENANT roles
-        if (targetRole == Role.MEMBER || targetRole == Role.TENANT) {
+        // Handle flat assignment for resident unit roles
+        if (isResidentUnitRole(targetRole)) {
             Flat flat = null;
             if (request.getFlatId() != null) {
                 // Use provided flatId
@@ -194,7 +203,8 @@ public class UserServiceImpl implements UserService {
                 user.setFlat(flat);
                 log.info("Auto-assigned TENANT {} to MEMBER's flat {}", request.getEmail(), flat.getFlatNumber());
             } else {
-                log.warn("No flatId provided for MEMBER/TENANT user: {}", request.getEmail());
+                throw new ApiException(HttpStatus.BAD_REQUEST,
+                        "Flat/Unit assignment is required for MEMBER, TENANT, CHAIRMAN, SECRETARY, TREASURER, and COMMITTEE roles");
             }
 
             // Update flat ownership for MEMBER role (not TENANT - they don't own the flat)
@@ -213,6 +223,13 @@ public class UserServiceImpl implements UserService {
                 flat.setIsOccupied(true);
                 flatRepository.save(flat);
             }
+            if (flat != null && targetRole != Role.MEMBER && targetRole != Role.TENANT) {
+                flat.setIsOccupied(true);
+                flatRepository.save(flat);
+            }
+        } else if (request.getFlatId() != null) {
+            throw new ApiException(HttpStatus.BAD_REQUEST,
+                    targetRole.name() + " role cannot be assigned to a unit");
         }
 
         User saved = userRepository.save(user);
@@ -563,6 +580,15 @@ public class UserServiceImpl implements UserService {
         } catch (IllegalArgumentException ex) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "Invalid role: " + roleValue);
         }
+    }
+
+    private boolean isResidentUnitRole(Role role) {
+        return role == Role.MEMBER
+                || role == Role.TENANT
+                || role == Role.CHAIRMAN
+                || role == Role.SECRETARY
+                || role == Role.TREASURER
+                || role == Role.COMMITTEE;
     }
 
     private Role getCurrentUserRole() {

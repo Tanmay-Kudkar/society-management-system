@@ -44,6 +44,11 @@ public class SocietyController {
         return ResponseEntity.ok(societyService.getById(id));
     }
 
+    @GetMapping("/by-organization/{organizationId}")
+    public ResponseEntity<List<SocietyResponse>> getByOrganizationId(@PathVariable Long organizationId) {
+        return ResponseEntity.ok(societyService.getByOrganizationId(organizationId));
+    }
+
     // PLATFORM_OWNER only
     @PutMapping("/{id}")
     public ResponseEntity<SocietyResponse> update(

@@ -25,6 +25,7 @@ export default function Documents() {
   const { data: documents = [], isLoading } = useQuery({
     queryKey: ['documentTemplates'],
     queryFn: () => documentTemplateApi.getAll().then(res => res.data),
+    placeholderData: [],
   })
 
   const createMutation = useMutation({

@@ -17,9 +17,18 @@ public class VehicleRequest {
     @NotBlank(message = "Vehicle number is required")
     private String vehicleNumber;
 
+    @NotBlank(message = "Brand is required")
     private String brand;
+
+    @NotBlank(message = "Model is required")
     private String model;
+
+    @NotBlank(message = "Color is required")
     private String color;
+
+    @NotBlank(message = "Owner name is required")
     private String ownerName;
+
+    @NotBlank(message = "Parking slot is required")
     private String parkingSlot;
 }

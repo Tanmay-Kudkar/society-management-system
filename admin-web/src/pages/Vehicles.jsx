@@ -2,13 +2,15 @@ import { useState, useMemo } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { useConfirmDialog } from '../context/ConfirmDialogContext'
 import { vehicleApi, flatApi } from '../../../api'
 import { Plus, Edit, Trash2, Search, X, Car, Bike, Upload } from 'lucide-react'
 import { FormInput, SmartSelect } from '../components/FormComponents'
 import BulkImportModal from '../components/BulkImportModal'
 
 export default function Vehicles() {
-  const { user } = useAuth()
+  const { user, canManageVehicles } = useAuth()
+  const confirmDialog = useConfirmDialog()
   const queryClient = useQueryClient()
   const [searchParams] = useSearchParams()
   const [showModal, setShowModal] = useState(false)
@@ -25,10 +27,12 @@ export default function Vehicles() {
 
   // Determine effective society ID for filtering
   const effectiveSocietyId = isPlatformLevel && societyIdFromUrl ? parseInt(societyIdFromUrl) : user?.societyId
+  const canEditVehicles = canManageVehicles()
 
   const { data: allVehicles = [], isLoading } = useQuery({
     queryKey: ['vehicles'],
     queryFn: () => vehicleApi.getAll().then(res => res.data),
+    placeholderData: [],
   })
 
   // Filter vehicles by society
@@ -116,22 +120,24 @@ export default function Vehicles() {
           <h1 className="vehicles-title">Vehicles</h1>
           <p className="vehicles-subtitle">Manage resident vehicles and parking</p>
         </div>
-        <div className="vehicles-header-actions">
-          <button
-            onClick={() => setShowBulkImport(true)}
-            className="vehicles-bulk-button"
-          >
-            <Upload size={20} />
-            Bulk Import
-          </button>
-          <button
-            onClick={() => { setEditingVehicle(null); setShowModal(true) }}
-            className="vehicles-add-button"
-          >
-            <Plus size={20} />
-            Add Vehicle
-          </button>
-        </div>
+        {canEditVehicles && (
+          <div className="vehicles-header-actions">
+            <button
+              onClick={() => setShowBulkImport(true)}
+              className="vehicles-bulk-button"
+            >
+              <Upload size={20} />
+              Bulk Import
+            </button>
+            <button
+              onClick={() => { setEditingVehicle(null); setShowModal(true) }}
+              className="vehicles-add-button"
+            >
+              <Plus size={20} />
+              Add Vehicle
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Filters */}
@@ -258,24 +264,41 @@ export default function Vehicles() {
                       )}
                     </td>
                     <td className="vehicles-cell vehicles-cell--right">
-                      <div className="vehicles-cell-actions">
-                        <button
-                          onClick={() => { setEditingVehicle(vehicle); setShowModal(true) }}
-                          className="vehicles-action-button vehicles-action-button--edit"
-                        >
-                          <Edit size={18} />
-                        </button>
-                        <button
-                          onClick={() => {
-                            if (confirm('Delete this vehicle?')) {
-                              deleteMutation.mutate(vehicle.id)
-                            }
-                          }}
-                          className="vehicles-action-button vehicles-action-button--delete"
-                        >
-                          <Trash2 size={18} />
-                        </button>
-                      </div>
+                      {canEditVehicles ? (
+                        <div className="vehicles-cell-actions">
+                          <button
+                            onClick={() => { setEditingVehicle(vehicle); setShowModal(true) }}
+                            className="vehicles-action-button vehicles-action-button--edit"
+                          >
+                            <Edit size={18} />
+                          </button>
+                          <button
+                            onClick={async () => {
+                              const confirmed = await confirmDialog({
+                                title: 'Delete Vehicle',
+                                message: 'Are you sure you want to delete this vehicle? This action cannot be undone.',
+                                confirmText: 'Delete',
+                                tone: 'danger',
+                                details: [
+                                  { label: 'Vehicle No', value: vehicle.vehicleNumber || '-' },
+                                  { label: 'Type', value: vehicle.vehicleType === 'FOUR_WHEELER' ? 'Four Wheeler' : 'Two Wheeler' },
+                                  { label: 'Owner', value: vehicle.ownerName || '-' },
+                                  { label: 'Parking', value: vehicle.parkingSlot || 'Not assigned' },
+                                ],
+                                caution: 'This action permanently removes vehicle details.',
+                              })
+                              if (confirmed) {
+                                deleteMutation.mutate(vehicle.id)
+                              }
+                            }}
+                            className="vehicles-action-button vehicles-action-button--delete"
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        </div>
+                      ) : (
+                        <span className="vehicles-cell--muted">Read only</span>
+                      )}
                     </td>
                   </tr>
                 ))}
@@ -293,7 +316,7 @@ export default function Vehicles() {
       </div>
 
       {/* Modal */}
-      {showModal && (
+      {showModal && canEditVehicles && (
         <div className="vehicles-modal">
           <div className="vehicles-modal-overlay" onClick={() => setShowModal(false)} />
           <div className="vehicles-modal-card">
@@ -347,12 +370,14 @@ export default function Vehicles() {
                   name="brand"
                   defaultValue={editingVehicle?.brand || ''}
                   placeholder="Honda, Maruti, etc."
+                  required
                 />
                 <FormInput
                   label="Model"
                   name="model"
                   defaultValue={editingVehicle?.model || ''}
                   placeholder="City, Swift, etc."
+                  required
                 />
               </div>
 
@@ -361,12 +386,14 @@ export default function Vehicles() {
                   label="Color"
                   name="color"
                   defaultValue={editingVehicle?.color || ''}
+                  required
                 />
                 <FormInput
                   label="Parking Slot"
                   name="parkingSlot"
                   defaultValue={editingVehicle?.parkingSlot || ''}
                   placeholder="A-101"
+                  required
                 />
               </div>
 
@@ -374,6 +401,7 @@ export default function Vehicles() {
                 label="Owner Name"
                 name="ownerName"
                 defaultValue={editingVehicle?.ownerName || ''}
+                required
               />
 
               <div className="vehicles-modal-actions">
@@ -398,7 +426,7 @@ export default function Vehicles() {
       )}
 
       {/* Bulk Import Modal */}
-      {showBulkImport && (
+      {showBulkImport && canEditVehicles && (
         <BulkImportModal
           title="Bulk Import Vehicles"
           entityName="Vehicles"

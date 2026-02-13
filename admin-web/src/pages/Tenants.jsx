@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { useConfirmDialog } from '../context/ConfirmDialogContext'
 import { tenantApi, flatApi } from '../../../api'
 import { Plus, Edit, Trash2, Search, X, User, Calendar, Phone, Mail, Upload } from 'lucide-react'
 import { FormInput, PhoneInput, SmartSelect, NumberInput } from '../components/FormComponents'
@@ -9,6 +10,7 @@ import BulkImportModal from '../components/BulkImportModal'
 
 export default function Tenants() {
   const { user, canManageTenants } = useAuth()
+  const confirmDialog = useConfirmDialog()
   const queryClient = useQueryClient()
   const [searchParams] = useSearchParams()
   const [showModal, setShowModal] = useState(false)
@@ -25,10 +27,12 @@ export default function Tenants() {
 
   // Determine effective society ID for filtering
   const effectiveSocietyId = isPlatformLevel && societyIdFromUrl ? parseInt(societyIdFromUrl) : user?.societyId
+  const canEditTenants = canManageTenants()
 
   const { data: allTenants = [], isLoading } = useQuery({
     queryKey: ['tenants'],
     queryFn: () => tenantApi.getAll().then(res => res.data),
+    placeholderData: [],
   })
 
   // Filter tenants by society
@@ -131,7 +135,7 @@ export default function Tenants() {
           <h1 className="tenants-title">Tenants</h1>
           <p className="tenants-subtitle">Manage tenant details and agreements</p>
         </div>
-        {canManageTenants() && (
+        {canEditTenants && (
           <div className="tenants-header-actions">
             <button
               onClick={() => setShowBulkImport(true)}
@@ -248,37 +252,67 @@ export default function Tenants() {
                       </span>
                     </td>
                     <td className="tenants-cell tenants-cell--right">
-                      <div className="tenants-actions">
-                        <button
-                          onClick={() => { setEditingTenant(tenant); setShowModal(true) }}
-                          className="tenants-action-button tenants-action-button--edit"
-                        >
-                          <Edit size={18} />
-                        </button>
-                        {tenant.isActive && (
+                      {canEditTenants ? (
+                        <div className="tenants-actions">
                           <button
-                            onClick={() => {
-                              if (confirm('Deactivate this tenant?')) {
-                                deactivateMutation.mutate(tenant.id)
+                            onClick={() => { setEditingTenant(tenant); setShowModal(true) }}
+                            className="tenants-action-button tenants-action-button--edit"
+                          >
+                            <Edit size={18} />
+                          </button>
+                          {tenant.isActive && (
+                            <button
+                              onClick={async () => {
+                                const confirmed = await confirmDialog({
+                                  title: 'Deactivate Tenant',
+                                  message: 'Are you sure you want to deactivate this tenant?',
+                                  confirmText: 'Deactivate',
+                                  tone: 'warning',
+                                  details: [
+                                    { label: 'Tenant', value: tenant.name || '-' },
+                                    { label: 'Unit', value: tenant.flatNumber || '-' },
+                                    { label: 'Rent', value: `₹${tenant.rentAmount?.toLocaleString() || 0}/mo` },
+                                    { label: 'Ends', value: formatDate(tenant.agreementEndDate) || '-' },
+                                  ],
+                                  caution: 'Tenant record will be marked inactive.',
+                                })
+                                if (confirmed) {
+                                  deactivateMutation.mutate(tenant.id)
+                                }
+                              }}
+                              className="tenants-action-button tenants-action-button--deactivate"
+                              title="Deactivate"
+                            >
+                              <User size={18} />
+                            </button>
+                          )}
+                          <button
+                            onClick={async () => {
+                              const confirmed = await confirmDialog({
+                                title: 'Delete Tenant',
+                                message: 'Are you sure you want to delete this tenant? This action cannot be undone.',
+                                confirmText: 'Delete',
+                                tone: 'danger',
+                                details: [
+                                  { label: 'Tenant', value: tenant.name || '-' },
+                                  { label: 'Unit', value: tenant.flatNumber || '-' },
+                                  { label: 'Phone', value: tenant.phone || '-' },
+                                  { label: 'Email', value: tenant.email || '-' },
+                                ],
+                                caution: 'This action permanently removes tenant data.',
+                              })
+                              if (confirmed) {
+                                deleteMutation.mutate(tenant.id)
                               }
                             }}
-                            className="tenants-action-button tenants-action-button--deactivate"
-                            title="Deactivate"
+                            className="tenants-action-button tenants-action-button--delete"
                           >
-                            <User size={18} />
+                            <Trash2 size={18} />
                           </button>
-                        )}
-                        <button
-                          onClick={() => {
-                            if (confirm('Delete this tenant?')) {
-                              deleteMutation.mutate(tenant.id)
-                            }
-                          }}
-                          className="tenants-action-button tenants-action-button--delete"
-                        >
-                          <Trash2 size={18} />
-                        </button>
-                      </div>
+                        </div>
+                      ) : (
+                        <span className="tenants-cell--muted">Read only</span>
+                      )}
                     </td>
                   </tr>
                 ))}
@@ -296,7 +330,7 @@ export default function Tenants() {
       </div>
 
       {/* Modal */}
-      {showModal && (
+      {showModal && canEditTenants && (
         <div className="tenants-modal">
           <div className="tenants-modal-overlay" onClick={() => setShowModal(false)} />
           <div className="tenants-modal-card">
@@ -341,6 +375,7 @@ export default function Tenants() {
                     type="email"
                     defaultValue={editingTenant?.email || ''}
                     placeholder="tenant@example.com"
+                    required
                   />
                   <PhoneInput
                     name="phone"
@@ -373,6 +408,7 @@ export default function Tenants() {
                     defaultValue={editingTenant?.rentAmount || ''}
                     min={0}
                     placeholder="0"
+                    required
                   />
                   <NumberInput
                     label="Deposit (₹)"
@@ -380,6 +416,7 @@ export default function Tenants() {
                     defaultValue={editingTenant?.depositAmount || ''}
                     min={0}
                     placeholder="0"
+                    required
                   />
                 </div>
 
@@ -388,6 +425,7 @@ export default function Tenants() {
                     label="ID Proof Type"
                     name="idProofType"
                     defaultValue={editingTenant?.idProofType || ''}
+                    required
                     options={[
                       { value: 'AADHAR', label: 'Aadhar Card' },
                       { value: 'PAN', label: 'PAN Card' },
@@ -402,6 +440,7 @@ export default function Tenants() {
                     name="idProofNumber"
                     defaultValue={editingTenant?.idProofNumber || ''}
                     placeholder="ID number"
+                    required
                   />
                 </div>
 
@@ -427,7 +466,7 @@ export default function Tenants() {
       )}
 
       {/* Bulk Import Modal */}
-      {showBulkImport && (
+      {showBulkImport && canEditTenants && (
         <BulkImportModal
           title="Bulk Import Tenants"
           entityName="Tenants"

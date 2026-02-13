@@ -141,6 +141,7 @@ export default function Reports() {
             {['MTD', 'YTD', 'COMPARISON', 'CUSTOM'].map(type => (
               <button
                 key={type}
+                type="button"
                 onClick={() => setReportType(type)}
                 className={clsx(
                   'reports-type-button',
@@ -153,7 +154,7 @@ export default function Reports() {
           </div>
 
           {reportType === 'CUSTOM' && (
-            <>
+            <div className="reports-custom-range">
               <input
                 type="date"
                 value={customStartDate}
@@ -173,7 +174,7 @@ export default function Reports() {
               >
                 Generate
               </button>
-            </>
+            </div>
           )}
         </div>
       </div>

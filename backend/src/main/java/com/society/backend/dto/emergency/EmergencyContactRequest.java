@@ -20,7 +20,10 @@ public class EmergencyContactRequest {
     @NotBlank(message = "Phone is required")
     private String phone;
 
+    @NotBlank(message = "Alternate phone is required")
     private String alternatePhone;
+
+    @NotBlank(message = "Address is required")
     private String address;
     private String notes;
 }

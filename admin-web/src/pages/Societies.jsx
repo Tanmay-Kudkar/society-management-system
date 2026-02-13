@@ -3,13 +3,17 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useToast } from '../context/ToastContext'
-import { societyApi } from '../../../api'
+import { useConfirmDialog } from '../context/ConfirmDialogContext'
+import { societyApi, userApi, organizationApi } from '../../../api'
 import { parseApiError } from '../utils/validation'
 import { Plus, Edit, Trash2, Search, X, Building2, Eye, ChevronRight, Home, Store, Briefcase, Layers } from 'lucide-react'
 import { FormInput, PhoneInput, PincodeInput, NumberInput, FormTextarea, StateCitySelector } from '../components/FormComponents'
 
 export default function Societies() {
   const { user, canManageSocieties } = useAuth()
+  const confirmDialog = useConfirmDialog()
+  const isPlatformOwner = user?.role === 'PLATFORM_OWNER'
+  const isOrganizationOwner = user?.role === 'ORGANIZATION_OWNER'
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const toast = useToast()
@@ -21,12 +25,37 @@ export default function Societies() {
   const { data: societies = [], isLoading } = useQuery({
     queryKey: ['societies'],
     queryFn: () => societyApi.getAll().then(res => res.data).catch(() => []),
+    placeholderData: [],
+  })
+
+  const { data: organizations = [] } = useQuery({
+    queryKey: ['organizations', user?.id],
+    queryFn: () => organizationApi.getAll().then(res => res.data).catch(() => []),
+    enabled: isPlatformOwner,
+    placeholderData: [],
   })
 
   const createMutation = useMutation({
-    mutationFn: (data) => societyApi.create(data, user.id),
+    mutationFn: async ({ societyData, adminData }) => {
+      const societyResponse = await societyApi.create(societyData, user.id)
+      const createdSociety = societyResponse.data
+
+      if (adminData && createdSociety?.id) {
+        await userApi.create({
+          name: adminData.name,
+          email: adminData.email,
+          password: adminData.password,
+          phone: adminData.phone,
+          role: 'SOCIETY_ADMIN',
+          societyId: createdSociety.id,
+        })
+      }
+
+      return createdSociety
+    },
     onSuccess: () => {
       queryClient.invalidateQueries(['societies'])
+      queryClient.invalidateQueries(['users'])
       setShowModal(false)
       setFormError('')
       toast.success('Society created successfully')
@@ -63,7 +92,7 @@ export default function Societies() {
   const handleSubmit = (e) => {
     e.preventDefault()
     const formData = new FormData(e.target)
-    const data = {
+    const societyData = {
       name: formData.get('name'),
       address: formData.get('address'),
       city: formData.get('city'),
@@ -76,12 +105,35 @@ export default function Societies() {
       totalShops: parseInt(formData.get('totalShops')) || 0,
       totalOffices: parseInt(formData.get('totalOffices')) || 0,
       totalWings: parseInt(formData.get('totalWings')) || 0,
+      ...(isPlatformOwner && formData.get('organizationId')
+        ? { organizationId: parseInt(formData.get('organizationId'), 10) }
+        : {}),
+    }
+
+    const shouldCreateAdmin = !editingSociety && (isPlatformOwner || isOrganizationOwner)
+    const adminData = shouldCreateAdmin
+      ? {
+          name: formData.get('adminName')?.trim(),
+          email: formData.get('adminEmail')?.trim(),
+          password: formData.get('adminPassword')?.trim(),
+          phone: formData.get('adminPhone')?.trim(),
+        }
+      : null
+
+    if (isPlatformOwner && !editingSociety && !societyData.organizationId) {
+      setFormError('Please select an organization for this society')
+      return
+    }
+
+    if (adminData && (!adminData.name || !adminData.email || !adminData.password)) {
+      setFormError('Society Admin name, email, and password are required')
+      return
     }
 
     if (editingSociety) {
-      updateMutation.mutate({ id: editingSociety.id, data })
+      updateMutation.mutate({ id: editingSociety.id, data: societyData })
     } else {
-      createMutation.mutate(data)
+      createMutation.mutate({ societyData, adminData })
     }
   }
 
@@ -179,8 +231,31 @@ export default function Societies() {
                     <Edit size={18} />
                   </button>
                   <button
-                    onClick={() => {
-                      if (confirm('Are you sure you want to delete this society?')) {
+                    onClick={async () => {
+                      const confirmed = await confirmDialog({
+                        title: 'Delete Society',
+                        message: 'Are you sure you want to delete this society? This action cannot be undone.',
+                        confirmText: 'Delete',
+                        tone: 'danger',
+                        details: [
+                          { label: 'Society', value: society.name || '-' },
+                          { label: 'City', value: society.city || '-' },
+                          { label: 'Flats', value: society.totalFlats || society.actualFlats || 0 },
+                          { label: 'Shops', value: society.totalShops || society.actualShops || 0 },
+                        ],
+                        impacts: [
+                          {
+                            label: 'Configured Units',
+                            count:
+                              (society.totalFlats || society.actualFlats || 0)
+                              + (society.totalShops || society.actualShops || 0)
+                              + (society.totalOffices || society.actualOffices || 0),
+                          },
+                          { label: 'Society Record', count: 1 },
+                        ],
+                        caution: 'Deleting a society may affect linked users and records.',
+                      })
+                      if (confirmed) {
                         deleteMutation.mutate(society.id)
                       }
                     }}
@@ -294,6 +369,25 @@ export default function Societies() {
                   Basic Information
                 </h4>
                 <div className="societies-modal-grid">
+                  {isPlatformOwner && !editingSociety && (
+                    <div className="societies-modal-full">
+                      <label className="form-label">Organization</label>
+                      <select
+                        name="organizationId"
+                        defaultValue=""
+                        className="form-input"
+                        required
+                      >
+                        <option value="">Select organization</option>
+                        {organizations.map((organization) => (
+                          <option key={organization.id} value={organization.id}>
+                            {organization.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+
                   <div className="societies-modal-full">
                     <FormInput
                       label="Society Name"
@@ -317,17 +411,20 @@ export default function Societies() {
                     <StateCitySelector
                       stateDefaultValue={editingSociety?.state}
                       cityDefaultValue={editingSociety?.city}
+                      stateRequired={true}
                       cityRequired={true}
                     />
                   </div>
                   <PincodeInput
                     name="pincode"
                     defaultValue={editingSociety?.pincode}
+                    required
                   />
                   <FormInput
                     label="Registration Number"
                     name="registrationNumber"
                     defaultValue={editingSociety?.registrationNumber}
+                    required
                     placeholder="Registration number"
                   />
                   <FormInput
@@ -335,25 +432,63 @@ export default function Societies() {
                     name="email"
                     type="email"
                     defaultValue={editingSociety?.email}
+                    required
                     placeholder="Society email"
                   />
                   <PhoneInput
                     label="Telephone"
                     name="telephone"
                     defaultValue={editingSociety?.telephone}
+                    required
                   />
                 </div>
               </div>
+
+              {!editingSociety && (isPlatformOwner || isOrganizationOwner) && (
+                <div className="societies-modal-section societies-modal-section--divider">
+                  <h4 className="societies-modal-section-title">
+                    <Building2 size={16} className="societies-modal-section-icon societies-modal-section-icon--purple" />
+                    Society Admin Credentials
+                  </h4>
+                  <p className="societies-modal-section-text">
+                    These credentials will create the initial Society Admin linked to this society.
+                  </p>
+                  <div className="societies-modal-grid">
+                    <FormInput
+                      label="Admin Name"
+                      name="adminName"
+                      required
+                      placeholder="Enter society admin name"
+                    />
+                    <FormInput
+                      label="Admin Email"
+                      name="adminEmail"
+                      type="email"
+                      required
+                      placeholder="admin@society.com"
+                    />
+                    <FormInput
+                      label="Admin Password"
+                      name="adminPassword"
+                      type="password"
+                      required
+                      placeholder="Minimum 6 characters"
+                    />
+                    <PhoneInput
+                      label="Admin Phone"
+                      name="adminPhone"
+                      required
+                    />
+                  </div>
+                </div>
+              )}
 
               {/* Property Capacity Section */}
               <div className="societies-modal-section societies-modal-section--divider">
                 <h4 className="societies-modal-section-title">
                   <Layers size={16} className="societies-modal-section-icon societies-modal-section-icon--purple" />
-                  Property Capacity (Optional)
+                  Property Capacity
                 </h4>
-                <p className="societies-modal-section-text">
-                  Set the total capacity for planning purposes. Actual counts are calculated automatically.
-                </p>
                 <div className="societies-modal-grid societies-modal-grid--compact">
                   <NumberInput
                     label="Total Flats"
@@ -361,6 +496,7 @@ export default function Societies() {
                     min={0}
                     defaultValue={editingSociety?.totalFlats || 0}
                     icon={Home}
+                    required
                   />
                   <NumberInput
                     label="Total Shops"
@@ -368,6 +504,7 @@ export default function Societies() {
                     min={0}
                     defaultValue={editingSociety?.totalShops || 0}
                     icon={Store}
+                    required
                   />
                   <NumberInput
                     label="Total Offices"
@@ -375,6 +512,7 @@ export default function Societies() {
                     min={0}
                     defaultValue={editingSociety?.totalOffices || 0}
                     icon={Briefcase}
+                    required
                   />
                   <NumberInput
                     label="Total Wings"
@@ -382,6 +520,7 @@ export default function Societies() {
                     min={0}
                     defaultValue={editingSociety?.totalWings || 0}
                     icon={Layers}
+                    required
                   />
                 </div>
               </div>

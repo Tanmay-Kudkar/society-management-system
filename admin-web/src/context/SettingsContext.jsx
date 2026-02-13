@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect } from 'react'
+import { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react'
 
 const SettingsContext = createContext(null)
 
@@ -71,34 +71,34 @@ export const SettingsProvider = ({ children }) => {
   }, [theme])
 
   // Preview functions (set temporarily without persisting)
-  const setThemePreview = (value) => setPreviewTheme(value)
-  const setCompactSidebarPreview = (value) => setPreviewCompactSidebar(value)
+  const setThemePreview = useCallback((value) => setPreviewTheme(value), [])
+  const setCompactSidebarPreview = useCallback((value) => setPreviewCompactSidebar(value), [])
 
   // Clear all previews (reset to saved values)
-  const clearPreviews = () => {
+  const clearPreviews = useCallback(() => {
     setPreviewTheme(null)
     setPreviewCompactSidebar(null)
-  }
+  }, [])
 
   // Update functions that save to localStorage and clear preview
-  const updateTheme = (newTheme) => {
+  const updateTheme = useCallback((newTheme) => {
     setSavedTheme(newTheme)
     setPreviewTheme(null)
     localStorage.setItem('theme', newTheme)
-  }
+  }, [])
 
-  const updateCompactSidebar = (value) => {
+  const updateCompactSidebar = useCallback((value) => {
     setSavedCompactSidebar(value)
     setPreviewCompactSidebar(null)
     localStorage.setItem('compactSidebar', JSON.stringify(value))
-  }
+  }, [])
 
-  const updateNotifications = (newNotifications) => {
+  const updateNotifications = useCallback((newNotifications) => {
     setNotifications(newNotifications)
     localStorage.setItem('notificationPreferences', JSON.stringify(newNotifications))
-  }
+  }, [])
 
-  const value = {
+  const value = useMemo(() => ({
     theme,
     compactSidebar,
     notifications,
@@ -110,7 +110,9 @@ export const SettingsProvider = ({ children }) => {
     updateTheme,
     updateCompactSidebar,
     updateNotifications,
-  }
+  }), [theme, compactSidebar, notifications, savedTheme, savedCompactSidebar,
+    setThemePreview, setCompactSidebarPreview, clearPreviews,
+    updateTheme, updateCompactSidebar, updateNotifications])
 
   return (
     <SettingsContext.Provider value={value}>

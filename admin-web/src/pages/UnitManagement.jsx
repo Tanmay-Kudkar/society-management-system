@@ -3,15 +3,17 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useSearchParams, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useToast } from '../context/ToastContext'
-import { flatApi, societyApi, wingApi, userApi } from '../../../api'
+import { useConfirmDialog } from '../context/ConfirmDialogContext'
+import { flatApi, societyApi, wingApi, userApi, organizationApi } from '../../../api'
 import { 
   Plus, Edit, Trash2, Search, X, Home, Store, Briefcase, Layers, 
   Users, UserPlus, UserCheck, UserX, Upload, Download, AlertCircle,
-  Eye, Link, Unlink, UsersRound, UserCog, Building2, Shield, FileSpreadsheet, CheckCircle, XCircle, Info
+  Link, Unlink, UsersRound, UserCog, Building2, Shield, FileSpreadsheet, CheckCircle, XCircle, Info
 } from 'lucide-react'
 import clsx from 'clsx'
 import { validateFlatForm, validateUserForm, parseApiError } from '../utils/validation'
 import { SmartSelect, FormInput, NumberInput, PhoneInput, FormErrorSummary } from '../components/FormComponents'
+import SharedBulkImportModal from '../components/BulkImportModal'
 
 const unitTypeIcons = {
   FLAT: Home,
@@ -25,9 +27,24 @@ const unitTypeClasses = {
   OFFICE: 'units-type units-type--office'
 }
 
+const roleColors = {
+  PLATFORM_OWNER: 'units-role-tag',
+  ORGANIZATION_OWNER: 'units-role-tag',
+  CHAIRMAN: 'units-role-tag',
+  SECRETARY: 'units-role-tag',
+  TREASURER: 'units-role-tag',
+  COMMITTEE: 'units-role-tag',
+  MEMBER: 'units-role-tag',
+  TENANT: 'units-role-tag',
+  default: 'units-role-tag',
+}
+
+const UNLINKED_ORGANIZATION_FILTER = '__UNLINKED__'
+
 export default function UnitManagement() {
   const { user, isCommitteeLevel, canManageDocuments } = useAuth()
   const { showToast } = useToast()
+  const confirmDialog = useConfirmDialog()
   const queryClient = useQueryClient()
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
@@ -38,6 +55,7 @@ export default function UnitManagement() {
   const tabFromUrl = searchParams.get('tab')
   const isPlatformLevel = user?.role === 'PLATFORM_OWNER' || user?.role === 'ORGANIZATION_OWNER'
   const effectiveSocietyId = isPlatformLevel && societyIdFromUrl ? parseInt(societyIdFromUrl) : user?.societyId
+  const currentUserSocietyId = user?.societyId ? String(user.societyId) : ''
 
   // PO/OO are supervisory - they can view but not directly edit units/users within a society
   const canEditUnits = isCommitteeLevel() && !isPlatformLevel
@@ -66,6 +84,8 @@ export default function UnitManagement() {
   const [editingStandaloneUser, setEditingStandaloneUser] = useState(null)
   const [userSearchTerm, setUserSearchTerm] = useState('')
   const [filterRole, setFilterRole] = useState('')
+  const [filterOrganization, setFilterOrganization] = useState('')
+  const [filterSociety, setFilterSociety] = useState(societyIdFromUrl || '')
   const [userError, setUserError] = useState('')
   const [deleteError, setDeleteError] = useState('')
   const [selectedRole, setSelectedRole] = useState('')
@@ -105,6 +125,16 @@ export default function UnitManagement() {
     setFilterType(unitTypeFromUrl || '')
   }, [unitTypeFromUrl])
 
+  useEffect(() => {
+    if (societyIdFromUrl) {
+      setFilterSociety(String(societyIdFromUrl))
+      return
+    }
+    if (!isPlatformLevel && user?.societyId) {
+      setFilterSociety(String(user.societyId))
+    }
+  }, [societyIdFromUrl, isPlatformLevel, user?.societyId])
+
   // Fetch flats/units
   // PO/OO must have effectiveSocietyId (from URL), otherwise skip
   const { data: flats = [], isLoading: flatsLoading } = useQuery({
@@ -113,6 +143,7 @@ export default function UnitManagement() {
       ? flatApi.getBySociety(effectiveSocietyId).then(res => res.data)
       : flatApi.getAll(user.id).then(res => res.data),
     enabled: !!user?.id && (!!effectiveSocietyId || !isPlatformLevel),
+    placeholderData: [],
   })
 
   // Fetch users in the society
@@ -126,6 +157,12 @@ export default function UnitManagement() {
   const { data: societies = [] } = useQuery({
     queryKey: ['societies'],
     queryFn: () => societyApi.getAll().then(res => res.data),
+    enabled: isPlatformLevel,
+  })
+
+  const { data: organizations = [] } = useQuery({
+    queryKey: ['organizations'],
+    queryFn: () => organizationApi.getAll().then(res => res.data),
     enabled: isPlatformLevel,
   })
 
@@ -145,10 +182,45 @@ export default function UnitManagement() {
     enabled: !!effectiveSocietyId,
   })
 
+  const scopedUsers = useMemo(() => {
+    let usersInScope = [...users]
+
+    if (filterSociety) {
+      usersInScope = usersInScope.filter(u => String(u.societyId || '') === filterSociety)
+    } else if (isPlatformLevel && filterOrganization) {
+      if (filterOrganization === UNLINKED_ORGANIZATION_FILTER) {
+        const unlinkedSocietyIds = new Set(
+          societies
+            .filter(s => !s.organizationId)
+            .map(s => String(s.id))
+        )
+
+        usersInScope = usersInScope.filter(u =>
+          unlinkedSocietyIds.has(String(u.societyId || ''))
+        )
+      } else {
+      const orgSocietyIds = new Set(
+        societies
+          .filter(s => String(s.organizationId || '') === filterOrganization)
+          .map(s => String(s.id))
+      )
+
+      usersInScope = usersInScope.filter(u =>
+        String(u.organizationId || '') === filterOrganization ||
+        orgSocietyIds.has(String(u.societyId || ''))
+      )
+      }
+    } else if (!isPlatformLevel && currentUserSocietyId) {
+      usersInScope = usersInScope.filter(u => String(u.societyId || '') === currentUserSocietyId)
+    }
+
+    return usersInScope
+  }, [users, filterSociety, isPlatformLevel, filterOrganization, societies, currentUserSocietyId])
+
   // Filter members for linking to units
   const memberUsers = useMemo(() => {
-    return users.filter(u => ['MEMBER', 'TENANT'].includes(u.role))
-  }, [users])
+    return scopedUsers.filter(u => ['MEMBER', 'TENANT'].includes(u.role))
+  }, [scopedUsers])
 
   // Create unit-user mapping (1 user per unit)
   const unitUserMap = useMemo(() => {
@@ -158,12 +230,12 @@ export default function UnitManagement() {
       const assignedUser = memberUsers.find(u => u.flatId === flat.id)
       map[flat.id] = {
         flat,
-        owner: flat.ownerEmail ? users.find(u => u.email === flat.ownerEmail) : null,
+        owner: flat.ownerEmail ? scopedUsers.find(u => u.email === flat.ownerEmail) : null,
         member: assignedUser || null
       }
     })
     return map
-  }, [flats, users, memberUsers])
+  }, [flats, scopedUsers, memberUsers])
 
   // Filtered data - search includes assigned user name
   const filteredUnits = useMemo(() => {
@@ -359,13 +431,47 @@ export default function UnitManagement() {
 
   // Filtered users for Users tab
   const filteredTabUsers = useMemo(() => {
-    return users.filter(u => {
+    return scopedUsers.filter(u => {
       const matchesSearch = u.name?.toLowerCase().includes(userSearchTerm.toLowerCase()) ||
                            u.email?.toLowerCase().includes(userSearchTerm.toLowerCase())
       const matchesRole = !filterRole || u.role === filterRole
       return matchesSearch && matchesRole
     })
-  }, [users, userSearchTerm, filterRole])
+  }, [scopedUsers, userSearchTerm, filterRole])
+
+  const organizationOptions = useMemo(() => {
+    if (organizations.length) {
+      return organizations.map(org => ({
+        id: String(org.id),
+        name: org.name,
+      }))
+    }
+
+    const seen = new Set()
+    return societies
+      .filter(s => s.organizationId && !seen.has(s.organizationId) && seen.add(s.organizationId))
+      .map(s => ({
+        id: String(s.organizationId),
+        name: s.organizationName || `Organization ${s.organizationId}`,
+      }))
+  }, [organizations, societies])
+
+  const hasUnlinkedSocieties = useMemo(() => {
+    return societies.some(s => !s.organizationId)
+  }, [societies])
+
+  const societyOptions = useMemo(() => {
+    if (filterOrganization === UNLINKED_ORGANIZATION_FILTER) {
+      return societies.filter(s => !s.organizationId)
+    }
+    if (!filterOrganization) return societies
+    return societies.filter(s => String(s.organizationId || '') === filterOrganization)
+  }, [societies, filterOrganization])
+
+  const roleFilterOptions = useMemo(() => {
+    const roles = new Set(scopedUsers.map(u => u.role).filter(Boolean))
+    return Array.from(roles).sort((a, b) => a.localeCompare(b))
+  }, [scopedUsers])
 
   const handleOpenStandaloneUserModal = (userToEdit = null) => {
     setEditingStandaloneUser(userToEdit)
@@ -635,24 +741,24 @@ export default function UnitManagement() {
                       setBulkImportError('')
                       setShowUserBulkImportModal(true)
                     }}
-                    className="inline-flex items-center gap-2 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition text-sm"
+                    className="units-bulk-button units-bulk-button--success"
                   >
                     <Upload size={18} />
                     Import Excel
                   </button>
                   <button
                     onClick={() => setShowBulkCreateModal(true)}
-                    className="inline-flex items-center gap-2 px-3 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition text-sm"
+                    className="units-bulk-button units-bulk-button--auto"
                   >
                     <UserPlus size={18} />
                     Auto-Create
                   </button>
                 </>
               )}
-              {creatableRoles.length > 0 && (
+              {!isPlatformLevel && creatableRoles.length > 0 && (
                 <button
                   onClick={() => handleOpenStandaloneUserModal(null)}
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                  className="units-add-button units-add-button--users"
                 >
                   <Plus size={20} />
                   Add User
@@ -664,32 +770,34 @@ export default function UnitManagement() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 mb-6 bg-gray-100 dark:bg-slate-700 rounded-xl p-1">
+      <div className="units-main-tabs" role="tablist" aria-label="Unit management sections">
         <button
           onClick={() => switchTab('units')}
+          type="button"
           className={clsx(
-            'flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition',
-            activeTab === 'units'
-              ? 'bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-sm'
-              : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+            'units-main-tab',
+            activeTab === 'units' && 'is-active'
           )}
+          role="tab"
+          aria-selected={activeTab === 'units'}
         >
           <Home size={18} />
           Units
-          <span className="ml-1 px-2 py-0.5 rounded-full text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400">{flats.length}</span>
+          <span className="units-main-tab-badge">{flats.length}</span>
         </button>
         <button
           onClick={() => switchTab('users')}
+          type="button"
           className={clsx(
-            'flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition',
-            activeTab === 'users'
-              ? 'bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-sm'
-              : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+            'units-main-tab',
+            activeTab === 'users' && 'is-active'
           )}
+          role="tab"
+          aria-selected={activeTab === 'users'}
         >
           <Users size={18} />
           Users
-          <span className="ml-1 px-2 py-0.5 rounded-full text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400">{users.length}</span>
+          <span className="units-main-tab-badge">{scopedUsers.length}</span>
         </button>
       </div>
 
@@ -879,8 +987,25 @@ export default function UnitManagement() {
                       </button>
                     )}
                     <button
-                      onClick={() => {
-                        if (confirm('Are you sure you want to delete this unit?')) {
+                      onClick={async () => {
+                        const confirmed = await confirmDialog({
+                          title: 'Delete Unit',
+                          message: 'Are you sure you want to delete this unit? This action cannot be undone.',
+                          confirmText: 'Delete',
+                          tone: 'danger',
+                          details: [
+                            { label: 'Unit', value: unit.flatNumber || '-' },
+                            { label: 'Type', value: unit.flatType || unit.unitType || 'FLAT' },
+                            { label: 'Wing', value: unit.wingName || 'No Wing' },
+                            { label: 'Floor', value: unit.floor ?? '-' },
+                          ],
+                          impacts: [
+                            { label: 'Unit Record', count: 1 },
+                            { label: 'User Link', count: hasAssignedUser ? 1 : 0 },
+                          ],
+                          caution: 'This action permanently removes this unit.',
+                        })
+                        if (confirmed) {
                           deleteUnitMutation.mutate(unit.id)
                         }
                       }}
@@ -986,8 +1111,25 @@ export default function UnitManagement() {
                             </button>
                           )}
                           <button
-                            onClick={() => {
-                              if (confirm('Are you sure you want to delete this unit?')) {
+                            onClick={async () => {
+                              const confirmed = await confirmDialog({
+                                title: 'Delete Unit',
+                                message: 'Are you sure you want to delete this unit? This action cannot be undone.',
+                                confirmText: 'Delete',
+                                tone: 'danger',
+                                details: [
+                                  { label: 'Unit', value: unit.flatNumber || '-' },
+                                  { label: 'Type', value: unit.flatType || unit.unitType || 'FLAT' },
+                                  { label: 'Wing', value: unit.wingName || 'No Wing' },
+                                  { label: 'Floor', value: unit.floor ?? '-' },
+                                ],
+                                impacts: [
+                                  { label: 'Unit Record', count: 1 },
+                                  { label: 'User Link', count: hasAssignedUser ? 1 : 0 },
+                                ],
+                                caution: 'This action permanently removes this unit.',
+                              })
+                              if (confirmed) {
                                 deleteUnitMutation.mutate(unit.id)
                               }
                             }}
@@ -1012,28 +1154,28 @@ export default function UnitManagement() {
       {activeTab === 'users' && (
       <>
         {/* Role Permissions Info */}
-        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4 mb-6">
-          <div className="flex items-start gap-3">
-            <Shield className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5" />
-            <div className="flex-1">
-              <h3 className="font-medium text-blue-900 dark:text-blue-100">Your Permissions ({user?.role?.replace('_', ' ')})</h3>
-              <p className="text-sm text-blue-700 dark:text-blue-300 mt-1">
-                {roleHierarchyInfo[user?.role] || 'View only access'}
+        <div className="units-permissions-card">
+          <div className="units-permissions-layout">
+            <Shield className="units-permissions-icon units-permissions-icon--md" />
+            <div className="units-permissions-content">
+              <h3 className="units-permissions-title units-permissions-title--medium">Your Permissions ({user?.role?.replace('_', ' ')})</h3>
+              <p className="units-permissions-text units-permissions-text--sm units-permissions-text--mt">
+                Access scope is based on your current role and selected society.
               </p>
-              <div className="mt-2 flex flex-wrap gap-2">
+              <div className="units-permissions-meta">
                 {creatableRoles.length > 0 && (
-                  <div className="text-xs">
-                    <span className="text-blue-600 dark:text-blue-400 font-medium">Can create:</span>{' '}
-                    <span className="text-blue-800 dark:text-blue-200">{creatableRoles.map(r => r.replace('_', ' ')).join(', ')}</span>
+                  <div className="units-permissions-text units-permissions-text--xs">
+                    <span className="units-permissions-label">Can create:</span>{' '}
+                    <span className="units-permissions-value">{creatableRoles.map(r => r.replace('_', ' ')).join(', ')}</span>
                   </div>
                 )}
                 {updatableRoles.length > 0 && creatableRoles.length > 0 && (
-                  <span className="text-blue-400 dark:text-blue-500">|</span>
+                  <span className="units-permissions-sep">|</span>
                 )}
                 {updatableRoles.length > 0 && (
-                  <div className="text-xs">
-                    <span className="text-blue-600 dark:text-blue-400 font-medium">Can edit/delete:</span>{' '}
-                    <span className="text-blue-800 dark:text-blue-200">{updatableRoles.map(r => r.replace('_', ' ')).join(', ')}</span>
+                  <div className="units-permissions-text units-permissions-text--xs">
+                    <span className="units-permissions-label">Can edit/delete:</span>{' '}
+                    <span className="units-permissions-value">{updatableRoles.map(r => r.replace('_', ' ')).join(', ')}</span>
                   </div>
                 )}
               </div>
@@ -1043,12 +1185,12 @@ export default function UnitManagement() {
 
         {/* Delete Error Alert */}
         {deleteError && (
-          <div className="flex items-center justify-between gap-2 p-4 mb-6 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-red-700 dark:text-red-300">
-            <div className="flex items-center gap-2">
+          <div className="units-inline-alert">
+            <div className="units-inline-alert__content">
               <AlertCircle size={20} />
               <span>{deleteError}</span>
             </div>
-            <button onClick={() => setDeleteError('')} className="p-1 hover:bg-red-100 dark:hover:bg-red-800 rounded">
+            <button onClick={() => setDeleteError('')} className="units-inline-alert__close">
               <X size={18} />
             </button>
           </div>
@@ -1056,40 +1198,71 @@ export default function UnitManagement() {
 
         {/* User Error Alert */}
         {userError && !showStandaloneUserModal && (
-          <div className="flex items-center justify-between gap-2 p-4 mb-6 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-red-700 dark:text-red-300">
-            <div className="flex items-center gap-2">
+          <div className="units-inline-alert">
+            <div className="units-inline-alert__content">
               <AlertCircle size={20} />
               <span>{userError}</span>
             </div>
-            <button onClick={() => setUserError('')} className="p-1 hover:bg-red-100 dark:hover:bg-red-800 rounded">
+            <button onClick={() => setUserError('')} className="units-inline-alert__close">
               <X size={18} />
             </button>
           </div>
         )}
 
         {/* User Filters */}
-        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-4 mb-6">
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+        <div className="units-filters units-users-filters">
+          <div className="units-filters-row units-users-filters-row">
+            <div className="units-search">
+              <Search className="units-search-icon" />
               <input
                 type="text"
                 placeholder="Search by name or email..."
                 value={userSearchTerm}
                 onChange={(e) => setUserSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white placeholder:text-gray-400"
+                className="units-search-input"
               />
             </div>
-            {updatableRoles.length > 0 && (
+
+            {user?.role === 'PLATFORM_OWNER' && (
+              <select
+                value={filterOrganization}
+                onChange={(e) => {
+                  setFilterOrganization(e.target.value)
+                  setFilterSociety('')
+                }}
+                className="units-filter-select"
+              >
+                <option value="">All Organizations</option>
+                {organizationOptions.map(org => (
+                  <option key={org.id} value={org.id}>{org.name}</option>
+                ))}
+                {hasUnlinkedSocieties && (
+                  <option value={UNLINKED_ORGANIZATION_FILTER}>Unlinked Societies</option>
+                )}
+              </select>
+            )}
+
+            {isPlatformLevel && (
+              <select
+                value={filterSociety}
+                onChange={(e) => setFilterSociety(e.target.value)}
+                className="units-filter-select"
+              >
+                <option value="">All Societies</option>
+                {societyOptions.map(society => (
+                  <option key={society.id} value={String(society.id)}>{society.name}</option>
+                ))}
+              </select>
+            )}
+
+            {roleFilterOptions.length > 0 && (
               <select
                 value={filterRole}
                 onChange={(e) => setFilterRole(e.target.value)}
-                className="px-4 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
+                className="units-filter-select"
               >
                 <option value="">All Roles</option>
-                {[user?.role, ...updatableRoles]
-                  .filter((role, index, arr) => role && arr.indexOf(role) === index)
-                  .map(role => (
+                {roleFilterOptions.map(role => (
                   <option key={role} value={role}>{role.replace(/_/g, ' ')}</option>
                 ))}
               </select>
@@ -1098,26 +1271,26 @@ export default function UnitManagement() {
         </div>
 
         {/* Users Table */}
-        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 overflow-hidden">
-          {!users.length ? (
-            <div className="p-8 text-center">
-              <Users className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
-              <p className="text-gray-500 dark:text-gray-400">No users found</p>
+        <div className="units-users-table">
+          {!filteredTabUsers.length ? (
+            <div className="units-users-empty">
+              <Users className="units-users-empty__icon" />
+              <p className="units-users-empty__text">No users found</p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-50 dark:bg-slate-700 border-b border-gray-100 dark:border-slate-700">
+            <div className="units-users-table__scroll">
+              <table className="units-users-table__table">
+                <thead className="units-users-table__thead">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Name</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Email</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Role</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Property</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Phone</th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>
+                    <th className="units-users-table__th">Name</th>
+                    <th className="units-users-table__th">Email</th>
+                    <th className="units-users-table__th">Role</th>
+                    <th className="units-users-table__th">Property</th>
+                    <th className="units-users-table__th">Phone</th>
+                    <th className="units-users-table__th units-users-table__th--right units-users-table__th--actions">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100 dark:divide-slate-700">
+                <tbody className="units-users-table__tbody">
                   {filteredTabUsers.map((u) => {
                     const canEdit = u.id === user?.id || updatableRoles.includes(u.role)
                     const canDelete = u.role !== 'PLATFORM_OWNER' && u.id !== user?.id && updatableRoles.includes(u.role)
@@ -1125,67 +1298,84 @@ export default function UnitManagement() {
                     const userFlat = flats.find(f => f.id === u.flatId)
 
                     return (
-                      <tr key={u.id} className="hover:bg-gray-50 dark:hover:bg-slate-700">
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
-                              <span className="text-white font-medium text-sm">
+                      <tr key={u.id} className="units-users-table__row">
+                        <td className="units-users-table__td">
+                          <div className="units-users-table__name">
+                            <div className="units-users-table__avatar">
+                              <span className="units-users-table__avatar-text">
                                 {u.name?.charAt(0)?.toUpperCase()}
                               </span>
                             </div>
-                            <div>
-                              <span className="font-medium text-gray-900 dark:text-white">{u.name}</span>
-                              {isSelf && <span className="ml-2 text-xs text-blue-600 dark:text-blue-400">(You)</span>}
+                            <div className="units-users-table__name-text">
+                              <span className="units-users-table__name-main">{u.name}</span>
+                              {isSelf && <span className="units-users-table__you">You</span>}
                             </div>
                           </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-gray-600 dark:text-gray-300 text-sm">{u.email}</td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={clsx('px-2.5 py-1 rounded-full text-xs font-medium', roleColors[u.role])}>
+                        <td className="units-users-table__td units-users-table__mono">{u.email}</td>
+                        <td className="units-users-table__td">
+                          <span className={clsx(roleColors[u.role] || roleColors.default)}>
                             {u.role?.replace(/_/g, ' ')}
                           </span>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
+                        <td className="units-users-table__td">
                           {userFlat ? (
-                            <span className="inline-flex items-center gap-1">
-                              <Home className="w-3.5 h-3.5 text-gray-400" />
+                            <span className="units-users-table__prop">
+                              <Home className="units-users-table__prop-ico" />
                               {userFlat.flatNumber}
-                              {userFlat.wingName && <span className="text-gray-400 text-xs">({userFlat.wingName})</span>}
+                              {userFlat.wingName && <span className="units-users-table__prop-wing">({userFlat.wingName})</span>}
                             </span>
                           ) : (
-                            <span className="text-gray-400">-</span>
+                            <span className="units-users-table__empty">-</span>
                           )}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-gray-600 dark:text-gray-300 text-sm">{u.phone || '-'}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-right">
-                          <div className="inline-flex items-center gap-1">
+                        <td className="units-users-table__td">{u.phone || '-'}</td>
+                        <td className="units-users-table__td units-users-table__td--right">
+                          <div className="units-users-table__actions">
                             {canEdit ? (
                               <button
                                 onClick={() => handleOpenStandaloneUserModal(u)}
-                                className="p-1.5 text-gray-500 dark:text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition"
+                                className="units-users-table__icon-btn"
                                 title={isSelf ? 'Edit your profile' : 'Edit user'}
                               >
                                 <Edit size={16} />
                               </button>
                             ) : (
-                              <button disabled className="p-1.5 text-gray-300 dark:text-gray-600 cursor-not-allowed" title="No permission to edit">
+                              <button disabled className="units-users-table__icon-btn" title="No permission to edit">
                                 <Edit size={16} />
                               </button>
                             )}
                             {canDelete ? (
                               <button
-                                onClick={() => {
-                                  if (confirm(`Are you sure you want to delete "${u.name}"?`)) {
+                                onClick={async () => {
+                                  const confirmed = await confirmDialog({
+                                    title: 'Delete User',
+                                    message: `Are you sure you want to delete "${u.name}"? This action cannot be undone.`,
+                                    confirmText: 'Delete',
+                                    tone: 'danger',
+                                    details: [
+                                      { label: 'Name', value: u.name || '-' },
+                                      { label: 'Email', value: u.email || '-' },
+                                      { label: 'Role', value: u.role?.replace(/_/g, ' ') || '-' },
+                                      { label: 'Property', value: userFlat?.flatNumber || 'Unassigned' },
+                                    ],
+                                    impacts: [
+                                      { label: 'User Account', count: 1 },
+                                      { label: 'Property Link', count: userFlat ? 1 : 0 },
+                                    ],
+                                    caution: 'This action permanently removes the user account.',
+                                  })
+                                  if (confirmed) {
                                     deleteUserMutation.mutate(u.id)
                                   }
                                 }}
-                                className="p-1.5 text-gray-500 dark:text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition"
+                                className="units-users-table__icon-btn units-users-table__icon-btn--danger"
                                 title="Delete user"
                               >
                                 <Trash2 size={16} />
                               </button>
                             ) : (
-                              <button disabled className="p-1.5 text-gray-300 dark:text-gray-600 cursor-not-allowed" title={isSelf ? "Cannot delete yourself" : "No permission"}>
+                              <button disabled className="units-users-table__icon-btn" title={isSelf ? "Cannot delete yourself" : "No permission"}>
                                 <Trash2 size={16} />
                               </button>
                             )}
@@ -1202,15 +1392,15 @@ export default function UnitManagement() {
 
         {/* Standalone User Modal (Users tab) */}
         {showStandaloneUserModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-            <div className="bg-white dark:bg-slate-800 rounded-xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
-              <div className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-slate-700">
-                <h3 className="text-lg font-semibold dark:text-white">{editingStandaloneUser ? 'Edit User' : 'Add User'}</h3>
-                <button onClick={() => { setShowStandaloneUserModal(false); setUserError(''); }} className="p-1 hover:bg-gray-100 dark:hover:bg-slate-700 rounded">
-                  <X size={20} className="text-gray-500" />
+          <div className="units-modal">
+            <div className="units-modal-card units-modal-card--compact">
+              <div className="units-modal-header">
+                <h3 className="units-modal-title">{editingStandaloneUser ? 'Edit User' : 'Add User'}</h3>
+                <button onClick={() => { setShowStandaloneUserModal(false); setUserError(''); }} className="units-modal-close">
+                  <X size={20} />
                 </button>
               </div>
-              <form onSubmit={handleStandaloneUserSubmit} className="p-4 space-y-4">
+              <form onSubmit={handleStandaloneUserSubmit} className="units-modal-body">
                 <FormErrorSummary message={userError} />
                 <FormInput label="Name" name="name" defaultValue={editingStandaloneUser?.name} required placeholder="Full name" />
                 <FormInput label="Email" name="email" type="email" defaultValue={editingStandaloneUser?.email} required placeholder="user@example.com" />
@@ -1243,15 +1433,16 @@ export default function UnitManagement() {
                     emptyMessage="No available properties"
                   />
                 )}
-                <PhoneInput label="Phone" name="phone" defaultValue={editingStandaloneUser?.phone} />
-                <div className="flex gap-3 pt-4">
+                <PhoneInput label="Phone" name="phone" defaultValue={editingStandaloneUser?.phone} required />
+                
+                <div className="units-modal-actions">
                   <button type="button" onClick={() => { setShowStandaloneUserModal(false); setUserError(''); }}
-                    className="flex-1 px-4 py-2 border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition">
+                    className="units-modal-cancel">
                     Cancel
                   </button>
                   <button type="submit"
                     disabled={standaloneCreateUserMutation.isPending || standaloneUpdateUserMutation.isPending}
-                    className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed">
+                    className="units-modal-submit units-modal-submit--disabled-aware">
                     {(standaloneCreateUserMutation.isPending || standaloneUpdateUserMutation.isPending) ? 'Saving...' : (editingStandaloneUser ? 'Update' : 'Create')}
                   </button>
                 </div>
@@ -1262,18 +1453,18 @@ export default function UnitManagement() {
 
         {/* User Bulk Import Modal */}
         {showUserBulkImportModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-            <div className="bg-white dark:bg-slate-800 rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden">
-              <div className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-slate-700">
-                <h3 className="text-lg font-semibold dark:text-white">Bulk Import Users</h3>
+          <div className="units-modal">
+            <div className="units-modal-card units-user-import-modal">
+              <div className="units-modal-header">
+                <h3 className="units-modal-title">Bulk Import Users</h3>
                 <button onClick={() => { setShowUserBulkImportModal(false); setBulkImportFile(null); setBulkImportPreview(null); setBulkImportError(''); }}
-                  className="p-1 hover:bg-gray-100 dark:hover:bg-slate-700 rounded">
-                  <X size={20} className="text-gray-500" />
+                  className="units-modal-close">
+                  <X size={20} />
                 </button>
               </div>
-              <div className="p-4 overflow-y-auto max-h-[calc(90vh-180px)]">
+              <div className="units-user-import-body">
                 {bulkImportError && (
-                  <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg flex items-center gap-2 text-red-700 dark:text-red-300">
+                  <div className="units-inline-alert units-inline-alert--compact">
                     <AlertCircle size={18} />{bulkImportError}
                   </div>
                 )}
@@ -1281,71 +1472,71 @@ export default function UnitManagement() {
                   <>
                     <div
                       className={clsx(
-                        'border-2 border-dashed rounded-xl p-8 text-center transition-colors',
-                        isDragOver ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' : 'border-gray-300 dark:border-slate-600 hover:border-gray-400'
+                        'units-user-import-dropzone',
+                        isDragOver && 'is-dragover'
                       )}
                       onDragOver={(e) => { e.preventDefault(); setIsDragOver(true) }}
                       onDragLeave={() => setIsDragOver(false)}
                       onDrop={(e) => { e.preventDefault(); setIsDragOver(false); const file = e.dataTransfer.files[0]; if (file) { setBulkImportFile(file); setBulkImportError('') } }}
                     >
-                      <FileSpreadsheet className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-                      <p className="text-gray-600 dark:text-gray-300 mb-2">
+                      <FileSpreadsheet className="units-user-import-dropzone__icon" />
+                      <p className="units-user-import-dropzone__title">
                         {bulkImportFile ? bulkImportFile.name : 'Drag & drop Excel file here'}
                       </p>
                       <button type="button" onClick={() => fileInputRef.current?.click()}
-                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm">
+                        className="units-user-import-dropzone__btn">
                         {bulkImportFile ? 'Change File' : 'Select File'}
                       </button>
-                      <input ref={fileInputRef} type="file" accept=".xlsx,.xls" className="hidden"
+                      <input ref={fileInputRef} type="file" accept=".xlsx,.xls" className="units-user-import-file-input"
                         onChange={(e) => { if (e.target.files[0]) { setBulkImportFile(e.target.files[0]); setBulkImportError('') } }} />
                     </div>
-                    <div className="mt-4 flex items-center justify-between">
+                    <div className="units-user-import-template-row">
                       <a href={`/api/users/bulk-import/template?societyId=${effectiveSocietyId}&userId=${user?.id}`}
-                        className="inline-flex items-center gap-2 text-sm text-blue-600 hover:text-blue-700">
+                        className="units-user-import-template-link">
                         <Download size={16} />Download Template
                       </a>
                     </div>
                   </>
                 ) : (
-                  <div>
-                    <div className="grid grid-cols-3 gap-3 mb-4">
-                      <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-3 text-center">
-                        <p className="text-2xl font-bold text-green-600">{bulkImportPreview.validCount || 0}</p>
-                        <p className="text-xs text-green-700 dark:text-green-300">Valid</p>
+                  <div className="units-user-import-preview">
+                    <div className="units-user-import-summary">
+                      <div className="units-user-import-summary-card is-valid">
+                        <p className="units-user-import-summary-value">{bulkImportPreview.validCount || 0}</p>
+                        <p className="units-user-import-summary-label">Valid</p>
                       </div>
-                      <div className="bg-red-50 dark:bg-red-900/20 rounded-lg p-3 text-center">
-                        <p className="text-2xl font-bold text-red-600">{bulkImportPreview.invalidCount || 0}</p>
-                        <p className="text-xs text-red-700 dark:text-red-300">Invalid</p>
+                      <div className="units-user-import-summary-card is-invalid">
+                        <p className="units-user-import-summary-value">{bulkImportPreview.invalidCount || 0}</p>
+                        <p className="units-user-import-summary-label">Invalid</p>
                       </div>
-                      <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3 text-center">
-                        <p className="text-2xl font-bold text-blue-600">{bulkImportPreview.totalRows || 0}</p>
-                        <p className="text-xs text-blue-700 dark:text-blue-300">Total</p>
+                      <div className="units-user-import-summary-card is-total">
+                        <p className="units-user-import-summary-value">{bulkImportPreview.totalRows || 0}</p>
+                        <p className="units-user-import-summary-label">Total</p>
                       </div>
                     </div>
                     {bulkImportPreview.rows?.length > 0 && (
-                      <div className="border dark:border-slate-700 rounded-lg overflow-hidden max-h-64 overflow-y-auto mb-4">
-                        <table className="w-full text-sm">
-                          <thead className="bg-gray-50 dark:bg-slate-700 sticky top-0">
+                      <div className="units-user-import-table-wrap">
+                        <table className="units-user-import-table">
+                          <thead className="units-user-import-table__head">
                             <tr>
-                              <th className="px-3 py-2 text-left dark:text-white">Row</th>
-                              <th className="px-3 py-2 text-left dark:text-white">Name</th>
-                              <th className="px-3 py-2 text-left dark:text-white">Email</th>
-                              <th className="px-3 py-2 text-left dark:text-white">Role</th>
-                              <th className="px-3 py-2 text-left dark:text-white">Status</th>
+                              <th className="units-user-import-table__th">Row</th>
+                              <th className="units-user-import-table__th">Name</th>
+                              <th className="units-user-import-table__th">Email</th>
+                              <th className="units-user-import-table__th">Role</th>
+                              <th className="units-user-import-table__th">Status</th>
                             </tr>
                           </thead>
-                          <tbody className="divide-y dark:divide-slate-700">
+                          <tbody className="units-user-import-table__body">
                             {bulkImportPreview.rows.map((row, idx) => (
-                              <tr key={idx} className={row.valid === false ? 'bg-red-50/50 dark:bg-red-900/10' : ''}>
-                                <td className="px-3 py-2 dark:text-gray-300">{row.rowNumber || idx + 1}</td>
-                                <td className="px-3 py-2 dark:text-gray-300">{row.name}</td>
-                                <td className="px-3 py-2 dark:text-gray-300">{row.email}</td>
-                                <td className="px-3 py-2 dark:text-gray-300">{row.role}</td>
-                                <td className="px-3 py-2">
+                              <tr key={idx} className={clsx('units-user-import-table__row', row.valid === false && 'is-invalid')}>
+                                <td className="units-user-import-table__td">{row.rowNumber || idx + 1}</td>
+                                <td className="units-user-import-table__td">{row.name}</td>
+                                <td className="units-user-import-table__td">{row.email}</td>
+                                <td className="units-user-import-table__td">{row.role}</td>
+                                <td className="units-user-import-table__td">
                                   {row.valid === false ? (
-                                    <span className="text-red-600 text-xs">{row.error || 'Invalid'}</span>
+                                    <span className="units-user-import-status units-user-import-status--error">{row.error || 'Invalid'}</span>
                                   ) : (
-                                    <CheckCircle size={16} className="text-green-500" />
+                                    <CheckCircle size={16} className="units-user-import-status units-user-import-status--ok" />
                                   )}
                                 </td>
                               </tr>
@@ -1357,25 +1548,25 @@ export default function UnitManagement() {
                   </div>
                 )}
               </div>
-              <div className="flex gap-3 p-4 border-t border-gray-100 dark:border-slate-700">
+              <div className="units-user-import-actions">
                 {!bulkImportPreview ? (
                   <button
                     onClick={() => { if (bulkImportFile) validateBulkImportMutation.mutate({ file: bulkImportFile, societyId: effectiveSocietyId }) }}
                     disabled={!bulkImportFile || validateBulkImportMutation.isPending}
-                    className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
+                    className="units-user-import-action-btn units-user-import-action-btn--primary"
                   >
                     {validateBulkImportMutation.isPending ? 'Validating...' : 'Validate'}
                   </button>
                 ) : (
                   <>
                     <button onClick={() => { setBulkImportPreview(null); setBulkImportFile(null) }}
-                      className="flex-1 px-4 py-2 border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 transition">
+                      className="units-user-import-action-btn units-user-import-action-btn--secondary">
                       Back
                     </button>
                     <button
                       onClick={() => processBulkImportMutation.mutate({ file: bulkImportFile, societyId: effectiveSocietyId })}
                       disabled={(bulkImportPreview.invalidCount > 0) || processBulkImportMutation.isPending}
-                      className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition disabled:opacity-50"
+                      className="units-user-import-action-btn units-user-import-action-btn--success"
                     >
                       {processBulkImportMutation.isPending ? 'Importing...' : 'Import All'}
                     </button>
@@ -1447,7 +1638,26 @@ export default function UnitManagement() {
 
       {/* Bulk Import Modal */}
       {showBulkImportModal && (
-        <BulkImportModal
+        <SharedBulkImportModal
+          title="Bulk Import Units"
+          entityName="Units"
+          templateFilename="unit_import_template.xlsx"
+          columns={[
+            { letter: 'A', label: 'Unit Type', required: true, description: 'FLAT, SHOP, or OFFICE' },
+            { letter: 'B', label: 'Wing', required: false, description: 'Wing name/code' },
+            { letter: 'C', label: 'Unit Number', required: true, description: 'e.g., A-101, S-01' },
+            { letter: 'D', label: 'Configuration', required: false, description: 'e.g., 2BHK, RETAIL' },
+            { letter: 'E', label: 'Floor', required: true, description: 'Floor number' },
+            { letter: 'F', label: 'Area', required: false, description: 'Size in sq.ft' },
+          ]}
+          tableColumns={[
+            { key: 'flatNumber', label: 'Unit' },
+            { key: 'unitType', label: 'Type' },
+            { key: 'wingCode', label: 'Wing' },
+          ]}
+          apiValidate={(file, societyId) => flatApi.validateBulkImport(file, societyId, user?.id)}
+          apiProcess={(file, societyId, currentUserId) => flatApi.processBulkImport(file, societyId, currentUserId || user?.id)}
+          apiTemplate={() => flatApi.downloadImportTemplate(user?.id)}
           onClose={() => setShowBulkImportModal(false)}
           societyId={effectiveSocietyId}
           userId={user?.id}
@@ -1563,6 +1773,7 @@ function UnitFormModal({ unit, societies, wings, isPlatformLevel, userSocietyId,
               value={selectedUnitType}
               onChange={(e) => setSelectedUnitType(e.target.value)}
               icon={Home}
+              required
               options={[
                 { value: 'FLAT', label: '🏠 Flat' },
                 { value: 'SHOP', label: '🏪 Shop' },
@@ -1570,7 +1781,7 @@ function UnitFormModal({ unit, societies, wings, isPlatformLevel, userSocietyId,
               ]}
             />
             <SmartSelect
-              label={`Wing${selectedWingId && selectedWing?.totalFloors ? ` (Max Floor: ${selectedWing.totalFloors})` : ''}`}
+              label={`Wing (Optional)${selectedWingId && selectedWing?.totalFloors ? ` (Max Floor: ${selectedWing.totalFloors})` : ''}`}
               name="wingId"
               value={selectedWingId}
               onChange={(e) => setSelectedWingId(e.target.value)}
@@ -1602,6 +1813,7 @@ function UnitFormModal({ unit, societies, wings, isPlatformLevel, userSocietyId,
               name="flatType"
               value={selectedFlatType}
               onChange={(e) => setSelectedFlatType(e.target.value)}
+              required
               options={[
                 ...(selectedUnitType === 'FLAT' ? [
                   { value: '1RK', label: '1 RK' },
@@ -1659,6 +1871,7 @@ function UnitFormModal({ unit, societies, wings, isPlatformLevel, userSocietyId,
               max={100000}
               step={0.01}
               placeholder={selectedUnitType === 'SHOP' ? 'e.g., 500' : selectedUnitType === 'OFFICE' ? 'e.g., 800' : 'e.g., 1200'}
+              required
             />
           </div>
 
@@ -1731,12 +1944,14 @@ function UserFormModal({ unit, errors, apiError, onSubmit, onClose, isLoading })
             label="Phone"
             name="phone"
             error={errors.phone}
+            required
           />
 
           <SmartSelect
             label="Role"
             name="role"
             defaultValue="MEMBER"
+            required
             options={[
               { value: 'MEMBER', label: 'Member (Owner)' },
               { value: 'TENANT', label: 'Tenant' },
@@ -1811,12 +2026,14 @@ function EditUserFormModal({ user, unit, errors, apiError, onSubmit, onClose, is
             name="phone"
             defaultValue={user.phone}
             error={errors.phone}
+            required
           />
 
           <SmartSelect
             label="Role (Ownership Type)"
             name="role"
             defaultValue={user.role}
+            required
             options={[
               { value: 'MEMBER', label: 'Member (Owner)' },
               { value: 'TENANT', label: 'Tenant' },
@@ -1840,451 +2057,6 @@ function EditUserFormModal({ user, unit, errors, apiError, onSubmit, onClose, is
             </button>
           </div>
         </form>
-      </div>
-    </div>
-  )
-}
-
-// Bulk Import Modal (placeholder for now)
-function BulkImportModal({ onClose, societyId, userId, onSuccess }) {
-  const [file, setFile] = useState(null)
-  const [validationResults, setValidationResults] = useState(null)
-  const [importResults, setImportResults] = useState(null)
-  const [isValidating, setIsValidating] = useState(false)
-  const [isImporting, setIsImporting] = useState(false)
-  const [error, setError] = useState('')
-  const [step, setStep] = useState('upload') // 'upload', 'preview', 'results'
-
-  const handleFileChange = (e) => {
-    const selectedFile = e.target.files?.[0]
-    if (selectedFile) {
-      setFile(selectedFile)
-      setValidationResults(null)
-      setImportResults(null)
-      setError('')
-      setStep('upload')
-    }
-  }
-
-  const handleDrop = (e) => {
-    e.preventDefault()
-    const droppedFile = e.dataTransfer.files?.[0]
-    if (droppedFile && (droppedFile.name.endsWith('.xlsx') || droppedFile.name.endsWith('.xls'))) {
-      setFile(droppedFile)
-      setValidationResults(null)
-      setImportResults(null)
-      setError('')
-      setStep('upload')
-    } else {
-      setError('Please drop a valid Excel file (.xlsx or .xls)')
-    }
-  }
-
-  const handleValidate = async () => {
-    if (!file || !societyId || !userId) return
-    setIsValidating(true)
-    setError('')
-    try {
-      const response = await flatApi.validateBulkImport(file, societyId, userId)
-      setValidationResults(response.data)
-      setStep('preview')
-    } catch (err) {
-      setError(err.response?.data?.message || 'Failed to validate file')
-    } finally {
-      setIsValidating(false)
-    }
-  }
-
-  const handleImport = async () => {
-    if (!file || !societyId || !userId) return
-    setIsImporting(true)
-    setError('')
-    try {
-      const response = await flatApi.processBulkImport(file, societyId, userId)
-      setImportResults(response.data)
-      setStep('results')
-      if (response.data.successCount > 0) {
-        onSuccess?.()
-      }
-    } catch (err) {
-      setError(err.response?.data?.message || 'Failed to import units')
-    } finally {
-      setIsImporting(false)
-    }
-  }
-
-  const downloadTemplate = async () => {
-    try {
-      const response = await flatApi.downloadImportTemplate(userId)
-      const url = window.URL.createObjectURL(new Blob([response.data]))
-      const link = document.createElement('a')
-      link.href = url
-      link.setAttribute('download', 'unit_import_template.xlsx')
-      document.body.appendChild(link)
-      link.click()
-      link.remove()
-      window.URL.revokeObjectURL(url)
-    } catch (err) {
-      setError('Failed to download template')
-    }
-  }
-
-  return (
-    <div className="units-modal">
-      <div className="units-modal-card units-modal-card--wide">
-        <div className="units-modal-header">
-          <h3 className="units-modal-title">Bulk Import Units</h3>
-          <button onClick={onClose} className="units-modal-close">
-            <X size={20} />
-          </button>
-        </div>
-
-        <div className="units-modal-scroll">
-          {error && (
-            <div className="units-import-alert">
-              <AlertCircle size={18} />
-              {error}
-            </div>
-          )}
-
-          {step === 'upload' && (
-            <>
-              <div 
-                className="units-import-dropzone"
-                onDrop={handleDrop}
-                onDragOver={(e) => e.preventDefault()}
-              >
-                {file ? (
-                  <div className="units-import-file">
-                    <div className="units-import-file-icon">
-                      <Upload className="units-import-file-icon-svg" />
-                    </div>
-                    <span className="units-import-file-name">{file.name}</span>
-                    <button 
-                      onClick={() => setFile(null)}
-                      className="units-import-file-remove"
-                    >
-                      <X size={18} />
-                    </button>
-                  </div>
-                ) : (
-                  <>
-                    <Upload className="units-import-drop-icon" />
-                    <p className="units-import-drop-title">
-                      Drag and drop your Excel file here, or click to browse
-                    </p>
-                    <p className="units-import-drop-subtitle">
-                      Supported format: .xlsx, .xls
-                    </p>
-                  </>
-                )}
-                <input
-                  type="file"
-                  accept=".xlsx,.xls"
-                  onChange={handleFileChange}
-                  className="hidden"
-                  id="excel-upload"
-                />
-                {!file && (
-                  <label
-                    htmlFor="excel-upload"
-                    className="units-import-button units-import-button--primary"
-                  >
-                    <Upload size={18} />
-                    Select File
-                  </label>
-                )}
-              </div>
-
-              <div className="units-import-help">
-                <div className="units-import-help-header">
-                  <h4 className="units-import-help-title">
-                    <span className="units-import-help-dot"></span>
-                    Excel Format Requirements
-                  </h4>
-                  <button
-                    onClick={downloadTemplate}
-                    className="units-import-button units-import-button--success"
-                  >
-                    <Download size={16} />
-                    Download Template
-                  </button>
-                </div>
-                <ul className="units-import-help-list">
-                  <li className="units-import-help-item">
-                    <span className="units-import-help-badge">A</span>
-                    <span><strong>Unit Type</strong> (required) - FLAT, SHOP, or OFFICE</span>
-                  </li>
-                  <li className="units-import-help-item">
-                    <span className="units-import-help-badge">B</span>
-                    <span><strong>Wing</strong> (optional) - Wing name/code</span>
-                  </li>
-                  <li className="units-import-help-item">
-                    <span className="units-import-help-badge">C</span>
-                    <span><strong>Unit Number</strong> (required) - e.g., A-101, S-01</span>
-                  </li>
-                  <li className="units-import-help-item">
-                    <span className="units-import-help-badge">D</span>
-                    <span><strong>Configuration</strong> (optional) - e.g., 2BHK, RETAIL</span>
-                  </li>
-                  <li className="units-import-help-item">
-                    <span className="units-import-help-badge">E</span>
-                    <span><strong>Floor</strong> (required) - Floor number</span>
-                  </li>
-                  <li className="units-import-help-item">
-                    <span className="units-import-help-badge">F</span>
-                    <span><strong>Area</strong> (optional) - Size in sq.ft</span>
-                  </li>
-                </ul>
-              </div>
-            </>
-          )}
-
-          {step === 'preview' && validationResults && (
-            <>
-              <div className="units-import-summary">
-                <div className={clsx(
-                  'units-import-summary-card',
-                  validationResults.successCount > 0 && 'is-success'
-                )}>
-                  <div className="units-import-summary-value">
-                    {validationResults.successCount}
-                  </div>
-                  <div className="units-import-summary-label">
-                    Valid
-                  </div>
-                </div>
-                <div className={clsx(
-                  'units-import-summary-card',
-                  validationResults.failureCount > 0 ? 'is-error' : 'is-idle'
-                )}>
-                  <div className="units-import-summary-value">
-                    {validationResults.failureCount}
-                  </div>
-                  <div className="units-import-summary-label">
-                    {validationResults.failureCount > 0 ? 'Needs Fixing' : 'Invalid'}
-                  </div>
-                </div>
-              </div>
-
-              <div className="units-import-table-card">
-                <table className="units-import-table">
-                  <thead className="units-import-thead">
-                    <tr>
-                      <th className="units-import-th">Row</th>
-                      <th className="units-import-th">Unit</th>
-                      <th className="units-import-th">Type</th>
-                      <th className="units-import-th">Wing</th>
-                      <th className="units-import-th">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody className="units-import-tbody">
-                    {validationResults.results?.map((result, idx) => (
-                      <tr 
-                        key={idx} 
-                        className={clsx('units-import-row', result.success ? 'is-valid' : 'is-invalid')}
-                      >
-                        <td className="units-import-cell units-import-cell--mono">{result.rowNumber}</td>
-                        <td className="units-import-cell units-import-cell--strong">{result.flatNumber}</td>
-                        <td className="units-import-cell">
-                          <span className={clsx(
-                            'units-import-badge',
-                            result.unitType === 'FLAT'
-                              ? 'is-flat'
-                              : result.unitType === 'SHOP'
-                                ? 'is-shop'
-                                : 'is-office'
-                          )}>
-                            {result.unitType}
-                          </span>
-                        </td>
-                        <td className="units-import-cell">{result.wingCode || '-'}</td>
-                        <td className="units-import-cell">
-                          {result.success ? (
-                            <span className="units-import-status units-import-status--success">
-                              <span className="units-import-status-dot"></span>
-                              Valid
-                            </span>
-                          ) : (
-                            <span className="units-import-status units-import-status--error">{result.errorMessage}</span>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </>
-          )}
-
-          {step === 'results' && importResults && (
-            <div className="units-import-results">
-              <div className={clsx(
-                'units-import-results-icon',
-                importResults.successCount > 0 ? 'is-success' : 'is-error'
-              )}>
-                {importResults.successCount > 0 ? (
-                  <Home className="units-import-results-icon-svg" />
-                ) : (
-                  <AlertCircle className="units-import-results-icon-svg" />
-                )}
-              </div>
-              <h4 className="units-import-results-title">{importResults.message}</h4>
-              <div className="units-import-results-grid">
-                <div className="units-import-results-card units-import-results-card--success">
-                  <div className="units-import-results-value">
-                    {importResults.successCount}
-                  </div>
-                  <div className="units-import-results-label">Created</div>
-                </div>
-                <div className="units-import-results-card units-import-results-card--error">
-                  <div className="units-import-results-value">
-                    {importResults.failureCount}
-                  </div>
-                  <div className="units-import-results-label">Failed</div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          <div className="units-import-actions">
-            {step === 'upload' && (
-              <>
-                <button
-                  onClick={onClose}
-                  className="units-import-button"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleValidate}
-                  disabled={!file || isValidating}
-                  className="units-import-button units-import-button--primary"
-                >
-                  {isValidating ? (
-                    <>
-                      <div className="units-import-button-spinner" />
-                      Validating...
-                    </>
-                  ) : (
-                    <>
-                      <Eye size={18} />
-                      Preview & Validate
-                    </>
-                  )}
-                </button>
-              </>
-            )}
-
-            {step === 'preview' && (
-              <>
-                {validationResults?.failureCount > 0 ? (
-                  // Check if this looks like a completely wrong file format
-                  validationResults.failureCount === validationResults.totalRows ? (
-                    // Wrong file format - all rows have errors
-                    <div className="units-import-message">
-                      <div className="units-import-message-card units-import-message-card--error">
-                        <div className="units-import-message-content">
-                          <div className="units-import-message-icon">
-                            <AlertCircle className="units-import-message-icon-svg" />
-                          </div>
-                          <div className="units-import-message-body">
-                            <h4 className="units-import-message-title">
-                              Invalid File Format
-                            </h4>
-                            <p className="units-import-message-text">
-                              The uploaded Excel file does not match the required format. Please ensure you are using the correct template with columns: <strong>Unit Type, Wing, Unit Number, Configuration, Floor, Area</strong>.
-                            </p>
-                            <p className="units-import-message-footnote">
-                              Download the template for reference and try again.
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                      <button
-                        onClick={() => {
-                          setFile(null)
-                          setValidationResults(null)
-                          setStep('upload')
-                        }}
-                        className="units-import-button units-import-button--primary"
-                      >
-                        <Upload size={18} />
-                        Upload Correct File
-                      </button>
-                    </div>
-                  ) : (
-                    // Some rows have errors - show fix message
-                    <div className="units-import-message">
-                      <div className="units-import-message-card units-import-message-card--warning">
-                        <div className="units-import-message-content">
-                          <div className="units-import-message-icon">
-                            <AlertCircle className="units-import-message-icon-svg" />
-                          </div>
-                          <div className="units-import-message-body">
-                            <h4 className="units-import-message-title">
-                              Please Fix {validationResults.failureCount} Error{validationResults.failureCount > 1 ? 's' : ''} Before Import
-                            </h4>
-                            <p className="units-import-message-text">
-                              All rows must be valid to proceed. Please review the highlighted errors above, correct them in your Excel file, and re-upload.
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                      <button
-                        onClick={() => {
-                          setFile(null)
-                          setValidationResults(null)
-                          setStep('upload')
-                        }}
-                        className="units-import-button units-import-button--primary"
-                      >
-                        <Upload size={18} />
-                        Fix & Re-upload Excel
-                      </button>
-                    </div>
-                  )
-                ) : (
-                  // Show normal import button when all rows are valid
-                  <div className="units-import-actions">
-                    <button
-                      onClick={() => setStep('upload')}
-                      className="units-import-button"
-                    >
-                      Back
-                    </button>
-                    <button
-                      onClick={handleImport}
-                      disabled={isImporting}
-                      className="units-import-button units-import-button--success"
-                    >
-                      {isImporting ? (
-                        <>
-                          <div className="units-import-button-spinner" />
-                          Importing...
-                        </>
-                      ) : (
-                        <>
-                          <Upload size={18} />
-                          Import {validationResults?.successCount} Units
-                        </>
-                      )}
-                    </button>
-                  </div>
-                )}
-              </>
-            )}
-
-            {step === 'results' && (
-              <button
-                onClick={onClose}
-                className="units-import-button units-import-button--primary"
-              >
-                Done
-              </button>
-            )}
-          </div>
-        </div>
       </div>
     </div>
   )
@@ -2347,7 +2119,7 @@ function BulkCreateUsersModal({ isLoading, results, onConfirm, onClose }) {
                 >
                   {isLoading ? (
                     <>
-                      <div className="units-import-button-spinner" />
+                      <div className="units-bulk-spinner" />
                       Creating Users...
                     </>
                   ) : (

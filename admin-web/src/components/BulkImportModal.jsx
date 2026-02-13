@@ -30,6 +30,9 @@ export default function BulkImportModal({
   apiTemplate,
   societyId,
   userId,
+  requireScopeId = true,
+  onDownloadErrorReport,
+  errorReportFilename = 'bulk_import_errors.xlsx',
   onClose,
   onSuccess,
 }) {
@@ -70,7 +73,7 @@ export default function BulkImportModal({
   }
 
   const handleValidate = async () => {
-    if (!file || !societyId) return
+    if (!file || (requireScopeId && !societyId)) return
     setIsValidating(true)
     setError('')
     try {
@@ -85,7 +88,7 @@ export default function BulkImportModal({
   }
 
   const handleImport = async () => {
-    if (!file || !societyId) return
+    if (!file || (requireScopeId && !societyId)) return
     setIsImporting(true)
     setError('')
     try {
@@ -115,6 +118,23 @@ export default function BulkImportModal({
       window.URL.revokeObjectURL(url)
     } catch (err) {
       setError('Failed to download template')
+    }
+  }
+
+  const downloadErrorReport = async () => {
+    if (!onDownloadErrorReport) return
+    try {
+      const response = await onDownloadErrorReport(importResults)
+      const url = window.URL.createObjectURL(new Blob([response.data]))
+      const link = document.createElement('a')
+      link.href = url
+      link.setAttribute('download', errorReportFilename)
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+      window.URL.revokeObjectURL(url)
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to download error report')
     }
   }
 
@@ -497,12 +517,23 @@ export default function BulkImportModal({
             )}
 
             {step === 'results' && (
-              <button
-                onClick={onClose}
-                className="bulk-import__btn bulk-import__btn--accent"
-              >
-                Done
-              </button>
+              <div className="bulk-import__footer-row">
+                {onDownloadErrorReport && importResults?.failureCount > 0 && (
+                  <button
+                    onClick={downloadErrorReport}
+                    className="bulk-import__btn bulk-import__btn--secondary"
+                  >
+                    <Download size={18} />
+                    Download Error Report
+                  </button>
+                )}
+                <button
+                  onClick={onClose}
+                  className="bulk-import__btn bulk-import__btn--accent"
+                >
+                  Done
+                </button>
+              </div>
             )}
           </div>
         </div>

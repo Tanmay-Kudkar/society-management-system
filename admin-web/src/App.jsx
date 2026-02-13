@@ -3,6 +3,7 @@ import { useEffect } from 'react'
 import { useAuth } from './context/AuthContext'
 import { ToastProvider } from './context/ToastContext'
 import { ThemeProvider } from './context/ThemeContext'
+import { ConfirmDialogProvider } from './context/ConfirmDialogContext'
 import Layout from './components/Layout'
 import Welcome from './pages/Welcome'
 import Login from './pages/Login'
@@ -95,7 +96,7 @@ const PAGE_TITLES = {
   '/organizations': 'Organizations',
   '/society-admins': 'Society Admins',
   '/wings': 'Wings',
-  '/unit-management': 'Unit Management',
+  '/unit-management': 'Unit & User Management',
   '/tenants': 'Tenants',
   '/vehicles': 'Vehicles',
   '/vendors': 'Vendors',
@@ -131,10 +132,11 @@ const DynamicTitle = () => {
 function App() {
   return (
     <ThemeProvider>
-      <ToastProvider>
-        <ScrollToTop />
-        <DynamicTitle />
-        <Routes>
+      <ConfirmDialogProvider>
+        <ToastProvider>
+          <ScrollToTop />
+          <DynamicTitle />
+          <Routes>
           <Route path="/welcome" element={<Welcome />} />
           <Route path="/login" element={<Login />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
@@ -185,8 +187,9 @@ function App() {
         </Route>
         
         <Route path="*" element={<Navigate to="/welcome" replace />} />
-      </Routes>
-      </ToastProvider>
+          </Routes>
+        </ToastProvider>
+      </ConfirmDialogProvider>
     </ThemeProvider>
   )
 }

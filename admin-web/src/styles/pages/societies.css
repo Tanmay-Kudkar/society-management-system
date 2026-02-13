@@ -578,15 +578,30 @@
 }
 
 .societies-modal-submit {
-  background: linear-gradient(90deg, #2563eb, #4f46e5);
-  color: #fff;
-  box-shadow: 0 14px 24px rgba(37, 99, 235, 0.25);
+  border: 1px solid var(--border-default);
+  background: var(--bg-card);
+  color: var(--text-primary);
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.14);
+}
+
+.societies-modal-submit:hover {
+  background: color-mix(in srgb, var(--bg-tertiary) 70%, var(--bg-card));
 }
 
 .societies-modal-submit:disabled {
   opacity: 0.6;
   cursor: not-allowed;
   box-shadow: none;
+}
+
+.dark .societies-modal-submit {
+  border-color: rgba(148, 163, 184, 0.22);
+  background: #f8fafc;
+  color: #0f172a;
+}
+
+.dark .societies-modal-submit:hover {
+  background: #ffffff;
 }
 
 .societies-modal-submit-loading {

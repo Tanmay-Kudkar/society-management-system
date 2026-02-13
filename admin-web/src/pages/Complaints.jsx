@@ -51,6 +51,7 @@ export default function Complaints() {
       complaintApi.getBySociety(effectiveSocietyId, user.id)
         .then(res => res.data),
     enabled: !!user?.id && !!effectiveSocietyId,
+    placeholderData: [],
   })
 
 

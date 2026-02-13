@@ -30,6 +30,7 @@ export default function Transactions() {
   const { data: transactions = [], isLoading } = useQuery({
     queryKey: ['transactions'],
     queryFn: () => transactionApi.getAll().then(res => res.data),
+    placeholderData: [],
   })
 
   // Fetch flats for the society

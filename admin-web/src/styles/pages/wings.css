@@ -58,26 +58,104 @@
 }
 
 .wings-action-btn--outline {
-  background: transparent;
-  color: #2563eb;
-  border-color: #2563eb;
+  background: #0f172a;
+  color: #f8fafc;
+  border-color: rgba(15, 23, 42, 0.12);
 }
 
 .wings-action-btn--outline:hover {
-  background: rgba(59, 130, 246, 0.1);
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.16);
   transform: translateY(-1px);
+}
+
+.wings-action-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
 
 .wings-action-btn--primary {
-  background: #2563eb;
-  color: #fff;
-  box-shadow: 0 10px 24px rgba(37, 99, 235, 0.2);
+  background: var(--bg-card);
+  color: var(--text-primary);
+  border-color: var(--border-default);
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.14);
 }
 
 .wings-action-btn--primary:hover {
-  background: #1d4ed8;
+  background: color-mix(in srgb, var(--bg-tertiary) 70%, var(--bg-card));
   transform: translateY(-1px);
+}
+
+.dark .wings-action-btn--outline {
+  border-color: rgba(148, 163, 184, 0.26);
+  background: #020617;
+  color: #f8fafc;
+}
+
+.dark .wings-action-btn--primary {
+  border-color: rgba(148, 163, 184, 0.22);
+  background: #f8fafc;
+  color: #0f172a;
+}
+
+.dark .wings-action-btn--primary:hover {
+  background: #ffffff;
+}
+
+.wings-alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  border-radius: 14px;
+  padding: 14px 16px;
+  margin-bottom: 18px;
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  background: linear-gradient(90deg, rgba(239, 68, 68, 0.14), rgba(248, 113, 113, 0.08));
+}
+
+.wings-alert__icon {
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  color: #fff;
+  background: #ef4444;
+  flex-shrink: 0;
+}
+
+.wings-alert__content {
+  flex: 1;
+}
+
+.wings-alert__title {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: #fecaca;
+}
+
+.wings-alert__text {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: #fca5a5;
+}
+
+.wings-alert__close {
+  border: none;
+  background: transparent;
+  color: #fca5a5;
+  padding: 4px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.wings-alert__close:hover {
+  background: rgba(248, 113, 113, 0.15);
 }
 
 .wings-filters {
@@ -167,22 +245,22 @@
 .wings-card {
   background: var(--bg-card);
   border-radius: 18px;
-  border: 1px solid var(--border-light);
+  border: 1px solid var(--border-default);
   overflow: hidden;
   box-shadow: var(--shadow-sm);
   transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
 }
 
 .wings-card:hover {
-  transform: translateY(-4px);
+  transform: translateY(-3px);
   box-shadow: var(--shadow-lg);
-  border-color: rgba(99, 102, 241, 0.4);
+  border-color: color-mix(in srgb, var(--accent-primary) 45%, var(--border-default));
 }
 
 .wings-card__hero {
   position: relative;
   padding: 18px;
-  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 50%, #4f46e5 100%);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--accent-primary) 70%, #4f46e5), color-mix(in srgb, var(--accent-secondary) 60%, #312e81));
   color: #fff;
   overflow: hidden;
 }
@@ -205,8 +283,8 @@
   width: 56px;
   height: 56px;
   border-radius: 16px;
-  background: rgba(255, 255, 255, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.35);
+  background: rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.28);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -259,17 +337,16 @@
 .wings-stat {
   padding: 10px 12px;
   border-radius: 12px;
-  border: 1px solid transparent;
+  border: 1px solid var(--border-light);
+  background: var(--bg-tertiary);
 }
 
 .wings-stat--floors {
-  background: linear-gradient(135deg, #eff6ff, #e0e7ff);
-  border-color: #dbeafe;
+  border-color: color-mix(in srgb, var(--accent-primary) 28%, var(--border-default));
 }
 
 .wings-stat--id {
-  background: linear-gradient(135deg, #faf5ff, #fce7f3);
-  border-color: #f3e8ff;
+  border-color: color-mix(in srgb, #7c3aed 30%, var(--border-default));
 }
 
 
@@ -281,12 +358,12 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: #2563eb;
+  color: color-mix(in srgb, var(--accent-primary) 78%, var(--text-secondary));
   margin-bottom: 6px;
 }
 
 .wings-stat__label--purple {
-  color: #7c3aed;
+  color: color-mix(in srgb, #7c3aed 72%, var(--text-secondary));
 }
 
 
@@ -299,7 +376,7 @@
 
 .wings-card__footer {
   padding: 14px 18px;
-  border-top: 1px solid var(--border-light);
+  border-top: 1px solid var(--border-default);
   background: var(--bg-tertiary);
   display: flex;
   justify-content: flex-end;
@@ -320,21 +397,21 @@
 }
 
 .wings-card__btn--edit {
-  color: #2563eb;
-  background: rgba(59, 130, 246, 0.1);
+  color: var(--accent-primary);
+  background: color-mix(in srgb, var(--accent-primary) 18%, var(--bg-card));
 }
 
 .wings-card__btn--edit:hover {
-  background: #dbeafe;
+  background: color-mix(in srgb, var(--accent-primary) 26%, var(--bg-card));
 }
 
 .wings-card__btn--delete {
   color: #dc2626;
-  background: #fef2f2;
+  background: color-mix(in srgb, #dc2626 14%, var(--bg-card));
 }
 
 .wings-card__btn--delete:hover {
-  background: #fee2e2;
+  background: color-mix(in srgb, #dc2626 20%, var(--bg-card));
 }
 
 
@@ -423,12 +500,24 @@
 }
 
 .wings-modal__btn--primary {
-  background: #2563eb;
-  color: #fff;
+  border-color: var(--border-default);
+  background: var(--bg-card);
+  color: var(--text-primary);
 }
 
 .wings-modal__btn--primary:hover {
-  background: #1d4ed8;
+  background: color-mix(in srgb, var(--bg-tertiary) 70%, var(--bg-card));
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.14);
+}
+
+.dark .wings-modal__btn--primary {
+  border-color: rgba(148, 163, 184, 0.22);
+  background: #f8fafc;
+  color: #0f172a;
+}
+
+.dark .wings-modal__btn--primary:hover {
+  background: #ffffff;
 }
 
 .wings-modal__btn:disabled {

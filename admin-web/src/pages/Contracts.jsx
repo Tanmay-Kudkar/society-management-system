@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '../context/AuthContext'
+import { useConfirmDialog } from '../context/ConfirmDialogContext'
 import { contractApi, vendorApi } from '../../../api'
 import { Plus, Edit, Trash2, Search, X, FileText, AlertTriangle, CheckCircle } from 'lucide-react'
 import { FormInput, SmartSelect, NumberInput, FormTextarea } from '../components/FormComponents'
@@ -12,6 +13,7 @@ const contractTypes = [
 
 export default function Contracts() {
   const { user, canManageContracts } = useAuth()
+  const confirmDialog = useConfirmDialog()
   const queryClient = useQueryClient()
   const [showModal, setShowModal] = useState(false)
   const [editingContract, setEditingContract] = useState(null)
@@ -24,6 +26,7 @@ export default function Contracts() {
   const { data: contracts = [], isLoading } = useQuery({
     queryKey: ['contracts'],
     queryFn: () => contractApi.getAll().then(res => res.data),
+    placeholderData: [],
   })
 
   const { data: vendors = [] } = useQuery({
@@ -207,8 +210,21 @@ export default function Contracts() {
                           <Edit size={18} />
                         </button>
                         <button
-                          onClick={() => {
-                            if (confirm('Are you sure you want to delete this contract?')) {
+                          onClick={async () => {
+                            const confirmed = await confirmDialog({
+                              title: 'Delete Contract',
+                              message: 'Are you sure you want to delete this contract? This action cannot be undone.',
+                              confirmText: 'Delete',
+                              tone: 'danger',
+                              details: [
+                                { label: 'Contract', value: contract.contractNumber || contract.title || '-' },
+                                { label: 'Type', value: contract.contractType?.replace('_', ' ') || '-' },
+                                { label: 'Vendor', value: contract.vendorName || '-' },
+                                { label: 'Amount', value: contract.amount ? `₹${contract.amount.toLocaleString()}` : '-' },
+                              ],
+                              caution: 'This action permanently removes contract records.',
+                            })
+                            if (confirmed) {
                               deleteMutation.mutate(contract.id)
                             }
                           }}
@@ -256,6 +272,7 @@ export default function Contracts() {
                   label="Vendor"
                   name="vendorId"
                   defaultValue={editingContract?.vendorId}
+                  required
                   options={vendors.map(v => ({ value: v.id, label: v.name }))}
                   placeholder="None"
                   emptyMessage="No vendors available"
@@ -281,9 +298,10 @@ export default function Contracts() {
                 label="Reminder Days Before Expiry"
                 name="reminderDays"
                 defaultValue={editingContract?.reminderDays || 30}
+                required
               />
               <FormTextarea
-                label="Description"
+                label="Description (Optional)"
                 name="description"
                 defaultValue={editingContract?.description}
                 rows={3}

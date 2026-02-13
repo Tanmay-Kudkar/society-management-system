@@ -52,6 +52,7 @@ export default function EmergencyContacts() {
   const { data: contacts = [], isLoading } = useQuery({
     queryKey: ['emergencyContacts'],
     queryFn: () => emergencyContactApi.getAll().then(res => res.data),
+    placeholderData: [],
   })
 
 
@@ -310,6 +311,7 @@ export default function EmergencyContacts() {
                   label="Alternate Phone"
                   name="alternatePhone"
                   defaultValue={editingContact?.alternatePhone || ''}
+                  required
                 />
               </div>
               <SmartSelect
@@ -334,9 +336,10 @@ export default function EmergencyContacts() {
                 label="Address"
                 name="address"
                 defaultValue={editingContact?.address || ''}
+                required
               />
               <div>
-                <label className="emergency-label">Notes</label>
+                <label className="emergency-label">Notes (Optional)</label>
                 <textarea
                   name="notes"
                   rows={2}

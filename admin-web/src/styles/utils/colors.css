@@ -119,6 +119,42 @@
     background-color: #dbeafe;
 }
 
+.bg-blue-500 {
+    background-color: #3b82f6;
+}
+
+.bg-indigo-500 {
+    background-color: #6366f1;
+}
+
+.bg-green-500 {
+    background-color: #22c55e;
+}
+
+.bg-amber-500 {
+    background-color: #f59e0b;
+}
+
+.bg-emerald-500 {
+    background-color: #10b981;
+}
+
+.bg-purple-500 {
+    background-color: #8b5cf6;
+}
+
+.bg-orange-500 {
+    background-color: #f97316;
+}
+
+.bg-cyan-500 {
+    background-color: #06b6d4;
+}
+
+.bg-rose-500 {
+    background-color: #f43f5e;
+}
+
 .bg-blue-600 {
     background-color: #2563eb;
 }
