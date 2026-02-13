@@ -49,6 +49,8 @@
 @import "./pages/societies.css";
 @import "./pages/unit-management.css";
 @import "./pages/vehicles.css";
+@import "./pages/payments.css";
+@import "./pages/my-bills.css";
 @import "./pages/about.css";
 @import "./pages/contact.css";
 @import "./pages/terms.css";

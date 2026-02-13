@@ -417,6 +417,34 @@ export const notificationPreferenceApi = {
   update: (userId, data) => api.put(`/notification-preferences/${userId}`, data),
 }
 
+// Payment API (Razorpay Integration)
+export const paymentApi = {
+  // Create a Razorpay order
+  createOrder: (data) => api.post('/api/payments/create-order', data),
+  
+  // Verify payment after successful checkout
+  verifyPayment: (data) => api.post('/api/payments/verify', data),
+  
+  // Handle payment failure
+  handleFailure: (paymentId, errorCode, errorDescription) => 
+    api.post(`/api/payments/failure?paymentId=${paymentId}&errorCode=${encodeURIComponent(errorCode || '')}&errorDescription=${encodeURIComponent(errorDescription || '')}`),
+  
+  // Get payment by ID
+  getById: (id) => api.get(`/api/payments/${id}`),
+  
+  // Get payment by Razorpay order ID
+  getByOrderId: (orderId) => api.get(`/api/payments/order/${orderId}`),
+  
+  // Get all payments for a user
+  getByUser: (userId) => api.get(`/api/payments/user/${userId}`),
+  
+  // Get all payments for a society
+  getBySociety: (societyId) => api.get(`/api/payments/society/${societyId}`),
+  
+  // Get all payments for a maintenance bill
+  getByBill: (billId) => api.get(`/api/payments/bill/${billId}`),
+}
+
 // Reports API
 export const reportApi = {
   getMTD: (societyId) => api.get(`/api/reports/mtd/${societyId}`),
