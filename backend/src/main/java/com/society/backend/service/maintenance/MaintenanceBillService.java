@@ -26,6 +26,12 @@ public interface MaintenanceBillService {
     MaintenanceBillResponse recordPayment(Long id, BigDecimal amount, String paymentMode, String referenceNumber,
             Long userId);
 
+    /**
+     * Record online payment (Razorpay) - bypasses role check since payment is already verified
+     */
+    MaintenanceBillResponse recordOnlinePayment(Long id, BigDecimal amount, String paymentMode, String referenceNumber,
+            Long userId);
+
     void generateBillsForSociety(Long societyId, String billMonth, BigDecimal amount, Long userId);
     
     void generateBillsForSociety(Long societyId, String billMonth, BigDecimal amount, String propertyType, Long userId);

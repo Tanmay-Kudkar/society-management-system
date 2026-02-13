@@ -1,5 +1,8 @@
 -- Add organization_id and society_id scoping columns across domain tables
 
+-- Societies (ensure organization_id exists for backfill operations)
+ALTER TABLE societies ADD COLUMN IF NOT EXISTS organization_id BIGINT;
+
 -- Flats
 ALTER TABLE flats ADD COLUMN IF NOT EXISTS organization_id INT;
 

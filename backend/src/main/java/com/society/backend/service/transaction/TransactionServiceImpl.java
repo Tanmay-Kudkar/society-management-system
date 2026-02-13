@@ -78,6 +78,43 @@ public class TransactionServiceImpl implements TransactionService {
     }
 
     @Override
+    @Transactional
+    public TransactionResponse createFromSystem(TransactionRequest request) {
+        // No role check - this is for system-initiated transactions 
+        // like auto-generated income from verified online payments
+
+        Society society = societyRepository.findById(request.getSocietyId())
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Society not found"));
+
+        Transaction transaction = new Transaction();
+        transaction.setSociety(society);
+        transaction.setOrganization(society.getOrganization());
+        transaction.setTransactionType(request.getTransactionType());
+        transaction.setPaymentMode(request.getPaymentMode());
+        transaction.setAmount(request.getAmount());
+        transaction.setCategory(request.getCategory());
+        transaction.setDescription(request.getDescription());
+        transaction.setTransactionDate(
+                request.getTransactionDate() != null ? request.getTransactionDate() : LocalDate.now());
+        transaction.setReferenceNumber(request.getReferenceNumber());
+        transaction.setChequeNumber(request.getChequeNumber());
+        transaction.setBankName(request.getBankName());
+        transaction.setChequeDate(request.getChequeDate());
+        transaction.setRelatedBillId(request.getRelatedBillId());
+        transaction.setRelatedBillType(request.getRelatedBillType());
+        
+        // Set flat if provided
+        if (request.getFlatId() != null) {
+            Flat flat = flatRepository.findById(request.getFlatId())
+                    .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Unit/Flat not found"));
+            transaction.setFlat(flat);
+        }
+
+        Transaction saved = transactionRepository.save(transaction);
+        return mapToResponse(saved);
+    }
+
+    @Override
     public TransactionResponse getById(Long id) {
         Transaction transaction = transactionRepository.findById(id)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Transaction not found"));

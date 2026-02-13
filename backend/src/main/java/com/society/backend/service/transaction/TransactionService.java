@@ -10,6 +10,12 @@ import java.util.Map;
 
 public interface TransactionService {
     TransactionResponse create(TransactionRequest request, Long userId);
+    
+    /**
+     * Create a transaction without role check - for system-initiated transactions
+     * like auto-generated income from verified online payments.
+     */
+    TransactionResponse createFromSystem(TransactionRequest request);
 
     TransactionResponse getById(Long id);
 

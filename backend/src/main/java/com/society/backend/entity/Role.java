@@ -93,5 +93,6 @@ public enum Role {
     EMPLOYEE, // Level 6: Staff/Security - handles visitors, basic operations
     MEMBER, // Level 6: Flat Owner - views own data, raises tickets/complaints
     TENANT, // Level 7: Renter - limited access to own profile & bills
-    VISITOR // Level 8: Guest - minimal access, read-only
+    VISITOR, // Level 8: Guest - minimal access, read-only
+    MASTER_ADMIN // Legacy role - mapped to PLATFORM_OWNER (for backward compatibility)
 }
