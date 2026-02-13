@@ -157,6 +157,40 @@ public class MaintenanceBillServiceImpl implements MaintenanceBillService {
 
         return mapToResponse(saved);
     }
+
+    @Override
+    @Transactional
+    public MaintenanceBillResponse recordOnlinePayment(Long id, BigDecimal amount, String paymentMode, String referenceNumber,
+            Long userId) {
+        // No role check - this is for verified online payments (Razorpay)
+        // The payment has already been verified by PaymentService
+
+        MaintenanceBill bill = maintenanceBillRepository.findById(id)
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Maintenance bill not found"));
+
+        BigDecimal newPaidAmount = bill.getPaidAmount().add(amount);
+        if (newPaidAmount.compareTo(bill.getAmount()) > 0) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Payment amount exceeds bill amount");
+        }
+
+        bill.setPaidAmount(newPaidAmount);
+        bill.setPaymentMode(paymentMode);
+        bill.setReferenceNumber(referenceNumber);
+
+        updateBillStatus(bill);
+
+        if ("PAID".equals(bill.getStatus())) {
+            bill.setPaidAt(LocalDateTime.now());
+            bill.setReceiptNumber("RCP-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase());
+        }
+
+        MaintenanceBill saved = maintenanceBillRepository.save(bill);
+        
+        // Auto-create income transaction for this payment
+        createIncomeTransaction(saved, amount, paymentMode, referenceNumber, userId);
+
+        return mapToResponse(saved);
+    }
     
     /**
      * Creates an income transaction linked to the maintenance bill payment
@@ -180,7 +214,8 @@ public class MaintenanceBillServiceImpl implements MaintenanceBillService {
         txRequest.setRelatedBillType("MAINTENANCE_BILL");
         txRequest.setFlatId(flat.getId());
         
-        transactionService.create(txRequest, userId);
+        // Use createFromSystem to bypass role checks - this is a system-generated transaction
+        transactionService.createFromSystem(txRequest);
     }
 
     @Override
