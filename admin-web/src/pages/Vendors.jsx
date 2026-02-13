@@ -5,19 +5,7 @@ import { vendorApi, societyApi } from '../../../api'
 import { Plus, Edit, Trash2, Search, X, Truck, Phone, Mail, Eye, Building2, Landmark, FileText, User, MapPin, Upload } from 'lucide-react'
 import clsx from 'clsx'
 import { FormInput, PhoneInput, SmartSelect, FormTextarea } from '../components/FormComponents'
-<<<<<<< HEAD
 import PermissionDenied from '../components/PermissionDenied'
-<<<<<<< HEAD
-<<<<<<< HEAD
-import BulkImportModal from '../components/BulkImportModal'
-=======
-=======
-import BulkImportModal from '../components/BulkImportModal'
->>>>>>> bb22427 (Implemented bulk import services for vehicles, vendors, and wings)
->>>>>>> 5ada67c (Implemented bulk import services for vehicles, vendors, and wings)
-=======
->>>>>>> 4e40213 (Added role-based permissions and access denied screen)
-=======
 import BulkImportModal from '../components/BulkImportModal'
 
 const approvalClasses = {
@@ -34,13 +22,8 @@ export default function Vendors() {
   if (!canManageVendors()) {
     return <PermissionDenied message="You don't have permission to manage vendors" />
   }
-  
-  // Permission check
-  if (!canManageVendors()) {
-    return <PermissionDenied message="You don't have permission to manage vendors" />
-  }
+
   const [showModal, setShowModal] = useState(false)
-  const [showBulkImport, setShowBulkImport] = useState(false)
   const [showBulkImport, setShowBulkImport] = useState(false)
   const [editingVendor, setEditingVendor] = useState(null)
   const [searchTerm, setSearchTerm] = useState('')

@@ -100,25 +100,15 @@ export default function Complaints() {
           <h1 className="complaints-title">Complaints</h1>
           <p className="complaints-subtitle">Manage resident complaints</p>
         </div>
-<<<<<<< HEAD
         {canRaiseComplaints() && (
           <button
             onClick={() => setShowModal(true)}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+            className="complaints-action-button"
           >
             <Plus size={20} />
             Log Complaint
           </button>
         )}
-=======
-        <button
-          onClick={() => setShowModal(true)}
-          className="complaints-action-button"
-        >
-          <Plus size={20} />
-          Log Complaint
-        </button>
->>>>>>> aab3455 (Added Flyway dependency with version 12.2.0 to backend pom.xml)
       </div>
 
       {/* Summary Cards */}
@@ -219,13 +209,8 @@ export default function Complaints() {
                     </div>
                   </div>
 
-<<<<<<< HEAD
-                  <div className="flex items-center gap-2 ml-auto">
-                    {canManageComplaints() && complaint.status !== 'RESOLVED' && complaint.status !== 'REJECTED' && (
-=======
                   <div className="complaints-item-actions">
-                    {complaint.status !== 'RESOLVED' && complaint.status !== 'REJECTED' && (
->>>>>>> aab3455 (Added Flyway dependency with version 12.2.0 to backend pom.xml)
+                    {canManageComplaints() && complaint.status !== 'RESOLVED' && complaint.status !== 'REJECTED' && (
                       <select
                         value={complaint.status}
                         onChange={(e) => handleStatusChange(complaint, e.target.value)}

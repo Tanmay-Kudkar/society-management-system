@@ -168,41 +168,23 @@ export default function MaintenanceBills() {
           <h1 className="maintenance-title">Maintenance Bills</h1>
           <p className="maintenance-subtitle">Generate and track maintenance bills</p>
         </div>
-<<<<<<< HEAD
         {canManageMaintenanceBills() && (
-          <div className="flex gap-2">
+          <div className="maintenance-header-actions">
             <button
               onClick={() => setShowBulkModal(true)}
-              className="inline-flex items-center gap-2 px-4 py-2 border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 transition"
+              className="maintenance-bulk-button"
             >
               Bulk Generate
             </button>
             <button
               onClick={() => setShowModal(true)}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+              className="maintenance-add-button"
             >
               <Plus size={20} />
               Add Bill
             </button>
           </div>
         )}
-=======
-        <div className="maintenance-header-actions">
-          <button
-            onClick={() => setShowBulkModal(true)}
-            className="maintenance-bulk-button"
-          >
-            Bulk Generate
-          </button>
-          <button
-            onClick={() => setShowModal(true)}
-            className="maintenance-add-button"
-          >
-            <Plus size={20} />
-            Add Bill
-          </button>
-        </div>
->>>>>>> 038a6e0 (Totally Cleaned redundant TailwindCSS lines of code from the Codebase)
       </div>
 
       {/* Summary Cards */}

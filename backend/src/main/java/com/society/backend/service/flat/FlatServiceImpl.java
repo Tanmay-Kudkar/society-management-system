@@ -42,7 +42,8 @@ public class FlatServiceImpl implements FlatService {
         Flat flat = new Flat();
         mapRequestToEntity(request, flat, society);
         Flat saved = flatRepository.save(flat);
-        log.info("Created unit {} (type: {}) in society {}", saved.getFlatNumber(), unitType, society.getId());
+        log.info("Created unit {} (type: {}) in society {}", saved.getFlatNumber(), saved.getUnitType(),
+                society.getId());
         return toResponse(saved);
     }
 
