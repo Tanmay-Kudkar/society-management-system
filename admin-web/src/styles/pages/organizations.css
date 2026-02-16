@@ -495,6 +495,52 @@
     flex-shrink: 0;
 }
 
+/* Organization Detail */
+.org-detail__back {
+    margin: 0 0 10px;
+    border: 1px solid rgba(165, 180, 252, 0.35);
+    background: rgba(165, 180, 252, 0.14);
+    color: #fff;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.org-detail__owner {
+    margin: 16px 0;
+    border: 1px solid var(--border-light);
+    background: var(--bg-card);
+    border-radius: 12px;
+    padding: 14px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 8px;
+    color: var(--text-secondary);
+    font-size: 13px;
+}
+
+.org-detail__owner p {
+    margin: 0;
+}
+
+.org-detail__section {
+    border: 1px solid var(--border-light);
+    background: var(--bg-card);
+    border-radius: 12px;
+    padding: 14px;
+}
+
+.org-detail__title {
+    margin: 0 0 10px;
+    font-size: 16px;
+    color: var(--text-primary);
+}
+
 /* ============================================
    MODAL
    ============================================ */

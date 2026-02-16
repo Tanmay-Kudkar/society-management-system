@@ -1054,6 +1054,30 @@
   gap: 1rem;
 }
 
+.units-modal-password-field {
+  position: relative;
+}
+
+.units-modal-toggle-pw {
+  position: absolute;
+  right: 10px;
+  top: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: var(--text-tertiary);
+  padding: 4px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.units-modal-toggle-pw:hover {
+  color: var(--text-primary);
+  background: var(--bg-tertiary);
+}
+
 .units-modal-grid {
   display: grid;
   grid-template-columns: repeat(1, minmax(0, 1fr));

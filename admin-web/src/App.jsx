@@ -1,40 +1,17 @@
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { useEffect } from 'react'
-import { useAuth } from './context/AuthContext'
-import { ToastProvider } from './context/ToastContext'
-import { ThemeProvider } from './context/ThemeContext'
-import { ConfirmDialogProvider } from './context/ConfirmDialogContext'
-import Layout from './components/Layout'
-import Welcome from './pages/Welcome'
-import Login from './pages/Login'
-import ForgotPassword from './pages/ForgotPassword'
-import ResetPassword from './pages/ResetPassword'
-import Dashboard from './pages/Dashboard'
-import Users from './pages/Users'
-import Societies from './pages/Societies'
-import Organizations from './pages/Organizations'
-import SocietyAdmins from './pages/SocietyAdmins'
-import SocietyDetail from './pages/SocietyDetail'
-import UnitManagement from './pages/UnitManagement'
-import Wings from './pages/Wings'
-import Tenants from './pages/Tenants'
-import Vehicles from './pages/Vehicles'
-import Vendors from './pages/Vendors'
-import VendorBills from './pages/VendorBills'
-import Contracts from './pages/Contracts'
-import MaintenanceBills from './pages/MaintenanceBills'
-import Transactions from './pages/Transactions'
-import Notices from './pages/Notices'
-import Banners from './pages/Banners'
-import Tickets from './pages/Tickets'
-import Complaints from './pages/Complaints'
-import EmergencyContacts from './pages/EmergencyContacts'
-import Documents from './pages/Documents'
-import Settings from './pages/Settings'
-import Reports from './pages/Reports'
-import RolesPermissions from './pages/RolesPermissions'
-import Payments from './pages/Payments'
-import MyBills from './pages/MyBills'
+import { useAuth, ToastProvider, ThemeProvider, ConfirmDialogProvider } from './context'
+
+import { Layout } from './components'
+import { Welcome, Login, ForgotPassword, ResetPassword } from './pages/auth'
+import { Dashboard, Settings, Reports } from './pages/core'
+import { Users, RolesPermissions } from './pages/users'
+import { Societies, Organizations, OrganizationDetail, SocietyAdmins, SocietyDetail } from './pages/society'
+import { UnitManagement, Wings, Tenants, Vehicles } from './pages/unit'
+import { VendorBills, Contracts, MaintenanceBills, Transactions, Payments, MyBills } from './pages/finance'
+import { Notices, Banners, Tickets, Complaints, EmergencyContacts, Documents } from './pages/communication'
+import { Vendors } from './pages/vendors'
+
 // Footer Pages
 import About from './pages/footer/About'
 import Privacy from './pages/footer/Privacy'
@@ -122,6 +99,7 @@ const DynamicTitle = () => {
 
   useEffect(() => {
     const title = PAGE_TITLES[pathname]
+      || (pathname.startsWith('/organizations/') ? 'Organization Details' : null)
       || (pathname.startsWith('/societies/') ? 'Society Details' : null)
     document.title = title ? `${title} - SocietyHub` : 'SocietyHub'
   }, [pathname])
@@ -161,6 +139,7 @@ function App() {
         <Route path="users" element={<Users />} />
         <Route path="societies" element={<Societies />} />
         <Route path="organizations" element={<Organizations />} />
+        <Route path="organizations/:id" element={<OrganizationDetail />} />
         <Route path="society-admins" element={<SocietyAdmins />} />
         <Route path="societies/:id" element={<SocietyDetail />} />
         <Route path="wings" element={<Wings />} />

@@ -961,6 +961,30 @@
   gap: 16px;
 }
 
+.users-modal__password-field {
+  position: relative;
+}
+
+.users-modal__toggle-pw {
+  position: absolute;
+  right: 10px;
+  top: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: var(--text-tertiary);
+  padding: 4px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.users-modal__toggle-pw:hover {
+  color: var(--text-primary);
+  background: var(--bg-tertiary);
+}
+
 .users-modal__actions {
   display: flex;
   gap: 12px;

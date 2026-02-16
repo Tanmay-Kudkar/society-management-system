@@ -1,8 +1,7 @@
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import { QueryClient, QueryClientProvider, MutationCache } from '@tanstack/react-query'
-import { AuthProvider } from './context/AuthContext'
-import { SettingsProvider } from './context/SettingsContext'
+import { AuthProvider, SettingsProvider } from './context'
 import App from './App.jsx'
 import './styles/main.css'
 

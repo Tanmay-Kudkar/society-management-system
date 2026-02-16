@@ -4,6 +4,30 @@
   grid-column: 1 / -1;
 }
 
+.societies-password-field {
+  position: relative;
+}
+
+.societies-password-toggle {
+  position: absolute;
+  right: 10px;
+  top: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: var(--text-tertiary);
+  padding: 4px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.societies-password-toggle:hover {
+  color: var(--text-primary);
+  background: var(--bg-tertiary);
+}
+
 .societies-page {
   display: block;
 }
