@@ -8,7 +8,7 @@
 
 ![Render](https://img.shields.io/badge/Render-Cloud-46E3B7?style=for-the-badge&logo=render&logoColor=white)
 ![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.5.10-6DB33F?style=for-the-badge&logo=springboot&logoColor=white)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-18-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
 ![React](https://img.shields.io/badge/React-19.2.0-61DAFB?style=for-the-badge&logo=react&logoColor=white)
 ![Expo](https://img.shields.io/badge/Expo-54.0.32-000020?style=for-the-badge&logo=expo&logoColor=white)
 
@@ -27,7 +27,7 @@
 | 3 | [Step 1 — Push to GitHub](#-3-step-1--push-to-github) | Prepare your repository |
 | 4 | [Step 2 — Create Render Account](#-4-step-2--create-render-account) | Sign up on Render |
 | 5 | [Step 3 — Deploy via Blueprint](#-5-step-3--deploy-via-blueprint) | One-click blueprint deploy |
-| 6 | [Step 4 — Database Setup](#-6-step-4--database-setup-society-db) | PostgreSQL configuration |
+| 6 | [Step 4 — Database Setup](#-6-step-4--database-setup-societyhub-db) | PostgreSQL configuration |
 | 7 | [Step 5 — Backend Setup](#-7-step-5--backend-setup-society-backend) | Spring Boot service config |
 | 8 | [Step 6 — Frontend Setup](#-8-step-6--frontend-setup-society-admin-web) | Vite static site config |
 | 9 | [Step 7 — Verify Deployment](#-9-step-7--verify-deployment) | Health checks & testing |
@@ -50,10 +50,10 @@ The `render.yaml` blueprint auto-creates **3 services** on Render:
 ╚══════════════════════════════════════════════════════════════════════╝
 
   ┌──────────────────────────┐
-  │  🟢 society-backend       │  ← Spring Boot Java Web Service
+  │  🟢 society-backend       │  ← Spring Boot Docker Web Service
   │  Type: Web Service       │     Port: auto-assigned ($PORT)
   │  Plan: Free              │     Health: /actuator/health
-  │  Root: /backend          │     Build: Maven → JAR
+  │  Root: /backend          │     Build: Docker (multi-stage)
   └──────────────────────────┘
 
   ┌──────────────────────────┐
@@ -64,8 +64,8 @@ The `render.yaml` blueprint auto-creates **3 services** on Render:
   └──────────────────────────┘
 
   ┌──────────────────────────┐
-  │  🟢 society-db            │  ← PostgreSQL Managed Database
-  │  Type: PostgreSQL        │     Database: society_db
+  │  🟢 societyhub-db         │  ← PostgreSQL Managed Database
+  │  Type: PostgreSQL        │     Database: societyhub
   │  Plan: Free              │     User: society_user
   │  Auto-provisioned        │     Auto-connected to backend
   └──────────────────────────┘
@@ -160,18 +160,18 @@ This is the **easiest method** — Render reads `render.yaml` and auto-creates e
 ### What Render Creates Automatically
 
 ```
-✅ society-backend    → Java Web Service (Port auto-assigned)
+✅ society-backend    → Docker Web Service (Port auto-assigned)
 ✅ society-admin-web  → Static Site (dist/ folder)
-✅ society-db         → PostgreSQL Database (society_db / society_user)
+✅ societyhub-db      → PostgreSQL Database (societyhub / society_user)
 ```
 
 ### What's Auto-Configured (from render.yaml)
 
 | Variable | Source | Auto-Set? |
 |:---------|:-------|:---------:|
-| `DB_URL` | From `society-db` connection string | ✅ Auto |
-| `DB_USERNAME` | From `society-db` user property | ✅ Auto |
-| `DB_PASSWORD` | From `society-db` password property | ✅ Auto |
+| `DB_URL` | From `societyhub-db` connection string | ✅ Auto |
+| `DB_USERNAME` | From `societyhub-db` user property | ✅ Auto |
+| `DB_PASSWORD` | From `societyhub-db` password property | ✅ Auto |
 | `APP_FRONTEND_URL` | From `society-admin-web` URL | ✅ Auto |
 | `JWT_COOKIE_SECURE` | Hardcoded `true` in render.yaml | ✅ Auto |
 | `SPRING_PROFILES_ACTIVE` | Hardcoded `prod` in render.yaml | ✅ Auto |
@@ -183,46 +183,231 @@ This is the **easiest method** — Render reads `render.yaml` and auto-creates e
 
 ---
 
-## 🗄️ 6. Step 4 — Database Setup (`society-db`)
+## 🗄️ 6. Step 4 — Database Setup (`societyhub-db`)
 
-### What Render Creates
+> Go to **[dashboard.render.com/new/database](https://dashboard.render.com/new/database)** or click **"+ New"** → **"PostgreSQL"** from the Render dashboard.
 
-| Field | Value |
-|:------|:------|
-| **Service Name** | `society-db` |
-| **Database Name** | `society_db` |
-| **User** | `society_user` |
-| **Plan** | Free (30-day limit, 256 MB storage) |
-| **Region** | Auto-selected (choose closest to your users) |
-| **PostgreSQL Version** | Latest available (18+) |
+### 📝 Fill the "New Postgres" Form — Field by Field
+
+```
+╔══════════════════════════════════════════════════════════════════════════════╗
+║              🗄️ NEW POSTGRES FORM — EXACT VALUES TO ENTER                   ║
+╠══════════════════════════════════════════════════════════════════════════════╣
+║                                                                            ║
+║  Follow each field below exactly as shown.                                 ║
+║  Fields marked (Optional) can be left blank if you prefer defaults.        ║
+║                                                                            ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+```
+
+---
+
+#### 1️⃣ Name
+
+| | |
+|:--|:--|
+| **Label on form** | *Name — A unique name for your Postgres instance.* |
+| **Placeholder** | `example-postgresql-name` |
+| **✅ Enter this value** | `societyhub-db` |
+
+> This is the **service name** visible in your Render dashboard. Use `societyhub-db` to match the `render.yaml` blueprint.
+
+---
+
+#### 2️⃣ Project *(Optional)*
+
+| | |
+|:--|:--|
+| **Label on form** | *Project — Add this database to a project once it's created.* |
+| **Default** | No project (shows "Create a new project to add this to?") |
+| **✅ Recommended** | Click **"+ Create a project"** → name it `Society Management` |
+
+> Projects help group your Backend + Frontend + Database services together in the Render dashboard. **Not required**, but keeps things organized.
+
+---
+
+#### 3️⃣ Database *(Optional)*
+
+| | |
+|:--|:--|
+| **Label on form** | *Database — The Postgres dbname* |
+| **Placeholder** | `randomly generated unless specified` |
+| **✅ Enter this value** | `societyhub` |
+
+> This is the **actual database name** inside PostgreSQL. The backend's `DB_URL` will connect to this name. **Must match** `render.yaml` → `databaseName: societyhub`.
+
+---
+
+#### 4️⃣ User *(Optional)*
+
+| | |
+|:--|:--|
+| **Label on form** | *User — The Postgres user* |
+| **Placeholder** | `randomly generated unless specified` |
+| **✅ Enter this value** | `society_user` |
+
+> This is the **database username**. The backend's `DB_USERNAME` env var will be set to this. **Must match** `render.yaml` → `user: society_user`.
+
+---
+
+#### 5️⃣ Region
+
+| | |
+|:--|:--|
+| **Label on form** | *Region — Your services in the same region can communicate over a private network.* |
+| **Default** | `Oregon (US West)` |
+| **✅ Recommended** | **Keep `Oregon (US West)`** — or choose the region closest to your users |
+
+```
+┌────────────────────────────────────────────────────────────┐
+│  ● Oregon (US West)            ← Recommended (default)    │
+│                                                            │
+│  Other options:                                            │
+│    ○ Ohio (US East)                                        │
+│    ○ Frankfurt (EU Central)                                │
+│    ○ Singapore (Asia)                                      │
+│                                                            │
+│  ⚠️ IMPORTANT: All 3 services (backend, frontend, DB)      │
+│     MUST be in the SAME region for private networking      │
+│     and lowest latency.                                    │
+└────────────────────────────────────────────────────────────┘
+```
+
+> If you already have services in Oregon (as shown: "6 existing services"), **keep Oregon** so everything communicates over the private network.
+
+---
+
+#### 6️⃣ PostgreSQL Version
+
+| | |
+|:--|:--|
+| **Label on form** | *PostgreSQL Version* |
+| **Default dropdown** | `18` (latest) |
+| **✅ Recommended** | **Keep `18`** (or whatever latest version is shown) |
+
+> Any version 15+ works. The latest (`18`) is recommended for best features and security patches.
+
+---
+
+#### 7️⃣ Datadog API Key *(Optional)*
+
+| | |
+|:--|:--|
+| **Label on form** | *Datadog API Key — The API key to use for sending metrics to Datadog.* |
+| **Default** | Empty |
+| **✅ Leave blank** | Skip — not needed for this project |
+
+---
+
+#### 8️⃣ Datadog Region *(Optional)*
+
+| | |
+|:--|:--|
+| **Label on form** | *Datadog Region — The region key to use for sending metrics to Datadog.* |
+| **Default dropdown** | `US1 (default)` |
+| **✅ Leave as default** | Skip — not needed for this project |
+
+---
+
+#### 9️⃣ Plan Options → Instance Type
+
+| | |
+|:--|:--|
+| **Label on form** | *Instance Type — Set your database's RAM and CPU.* |
+| **✅ Select** | **Free** |
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  Plan Options                                               │
+│                                                             │
+│  ● Free          ← SELECT THIS                             │
+│    For testing out Render Postgres                          │
+│    ┌─────────────────────────────────────────────┐          │
+│    │  Free                     256 MB (RAM)      │          │
+│    │  $0 / month               0.1 CPU           │          │
+│    │                           1 GB (Storage)    │          │
+│    └─────────────────────────────────────────────┘          │
+│                                                             │
+│  ○ Basic    — $6/month  (for hobby projects)                │
+│  ○ Pro      — $55/month (for production)                    │
+│  ○ Accelerated — $160/month (memory-optimized)              │
+└─────────────────────────────────────────────────────────────┘
+```
+
+> **Free tier** is perfect for development & demos. Upgrade to **Basic ($6/mo)** or **Pro ($55/mo)** for production use with better reliability.
+
+---
+
+#### 🔟 Storage *(shown below Plan Options)*
+
+| | |
+|:--|:--|
+| **Free plan** | Fixed at **1 GB** (cannot be changed) |
+| **Paid plans** | Adjustable (start from 10 GB) |
+| **✅ For Free plan** | No action needed — auto-set to 1 GB |
+
+---
+
+### 📋 Complete Form Summary — Copy & Paste Ready
+
+| # | Form Field | What to Enter | Required? |
+|:-:|:-----------|:-------------|:---------:|
+| 1 | **Name** | `societyhub-db` | ✅ Yes |
+| 2 | **Project** | Create → `Society Management` (or skip) | Optional |
+| 3 | **Database** | `societyhub` | ✅ Recommended |
+| 4 | **User** | `society_user` | ✅ Recommended |
+| 5 | **Region** | `Oregon (US West)` (keep default) | ✅ Yes |
+| 6 | **PostgreSQL Version** | `18` (keep latest) | ✅ Yes |
+| 7 | **Datadog API Key** | *(leave blank)* | Skip |
+| 8 | **Datadog Region** | `US1 (default)` | Skip |
+| 9 | **Instance Type** | `Free` ($0/month) | ✅ Yes |
+| 10 | **Storage** | 1 GB (auto for Free) | Auto |
+
+### ✅ Click "Create Database"
+
+After filling all fields, click the **"Create Database"** button at the bottom. Render will provision your PostgreSQL instance in ~1-2 minutes.
+
+---
 
 ### ℹ️ Free Plan Limitations
 
 ```
-╔══════════════════════════════════════════════════════╗
-║  ⚠️ RENDER FREE POSTGRESQL LIMITATIONS               ║
-╠══════════════════════════════════════════════════════╣
-║  • Storage: 256 MB max                              ║
-║  • Expiry: Deleted after 30 days of inactivity      ║
-║  • Connections: Limited concurrent connections       ║
-║  • Backups: Manual only (no auto-backups)           ║
-║  • Performance: Shared CPU, not for production      ║
-╚══════════════════════════════════════════════════════╝
+╔══════════════════════════════════════════════════════════════════╗
+║  ⚠️ RENDER FREE POSTGRESQL LIMITATIONS                          ║
+╠══════════════════════════════════════════════════════════════════╣
+║                                                                 ║
+║  • RAM: 256 MB                                                  ║
+║  • CPU: 0.1 (shared)                                            ║
+║  • Storage: 1 GB max                                            ║
+║  • Expiry: Deleted after 30 days of inactivity                  ║
+║  • Connections: Limited concurrent connections                   ║
+║  • Backups: Manual only (no auto-backups)                       ║
+║  • Performance: Shared CPU, suitable for dev/demo only          ║
+║                                                                 ║
+║  💡 For production: Upgrade to Basic ($6/mo) or Pro ($55/mo)    ║
+║                                                                 ║
+╚══════════════════════════════════════════════════════════════════╝
 ```
 
-### 🔍 Verify Database Connection
+---
 
-After deployment, go to your **society-db** service in Render Dashboard:
+### 🔍 After Creation — Verify Database Connection
 
-1. Click on `society-db` in services list
-2. Go to **"Info"** tab
-3. You'll see:
+Once Render finishes provisioning, go to your **societyhub-db** service:
+
+1. Click on **`societyhub-db`** in your Render dashboard services list
+2. Go to the **"Info"** tab
+3. You'll see these connection details (**auto-generated by Render**):
 
 | Property | Example Value | Description |
 |:---------|:-------------|:------------|
-| **Internal Database URL** | `postgres://society_user:xxxx@dpg-xxxx:5432/society_db` | Used by backend (auto-wired) |
-| **External Database URL** | `postgres://society_user:xxxx@dpg-xxxx.oregon-postgres.render.com:5432/society_db` | For connecting from local tools |
-| **PSQL Command** | `PGPASSWORD=xxxx psql -h dpg-xxxx.oregon-postgres.render.com -U society_user society_db` | Direct terminal access |
+| **Internal Database URL** | `postgres://society_user:xxxx@dpg-xxxx:5432/societyhub` | Used by backend (auto-wired via `DB_URL`) |
+| **External Database URL** | `postgres://society_user:xxxx@dpg-xxxx.oregon-postgres.render.com:5432/societyhub` | For connecting from local tools (pgAdmin, DBeaver, etc.) |
+| **PSQL Command** | `PGPASSWORD=xxxx psql -h dpg-xxxx.oregon-postgres.render.com -U society_user societyhub` | Direct terminal access |
+| **Hostname** | `dpg-xxxxx-a.oregon-postgres.render.com` | Individual host for connection |
+| **Port** | `5432` | Standard PostgreSQL port |
+
+> 📌 **You don't need to copy these** — the backend's `DB_URL`, `DB_USERNAME`, and `DB_PASSWORD` are **auto-wired** from `render.yaml`. These are just for your reference if you want to connect externally.
 
 ### 📝 Optional: Load Schema Manually
 
@@ -230,7 +415,7 @@ If the backend's `spring.jpa.hibernate.ddl-auto=update` doesn't create all table
 
 ```bash
 # Connect using the External Database URL from Render dashboard
-psql "postgres://society_user:YOUR_PASSWORD@dpg-xxxx.oregon-postgres.render.com:5432/society_db"
+psql "postgres://society_user:YOUR_PASSWORD@dpg-xxxx.oregon-postgres.render.com:5432/societyhub"
 
 # Then paste contents of database/schema.sql
 # OR use the PSQL command from Render's "Info" tab
@@ -250,9 +435,9 @@ These are set by `render.yaml` and wired automatically:
 
 | Variable | Value / Source | Notes |
 |:---------|:--------------|:------|
-| `DB_URL` | ← `society-db` connection string | ✅ Auto-wired from database |
-| `DB_USERNAME` | ← `society-db` user | ✅ Auto-wired |
-| `DB_PASSWORD` | ← `society-db` password | ✅ Auto-wired |
+| `DB_URL` | ← `societyhub-db` connection string | ✅ Auto-wired from database |
+| `DB_USERNAME` | ← `societyhub-db` user | ✅ Auto-wired |
+| `DB_PASSWORD` | ← `societyhub-db` password | ✅ Auto-wired |
 | `APP_FRONTEND_URL` | ← `society-admin-web` URL | ✅ Auto-wired (e.g., `https://society-admin-web.onrender.com`) |
 | `JWT_COOKIE_SECURE` | `true` | ✅ Hardcoded for HTTPS |
 | `SPRING_PROFILES_ACTIVE` | `prod` | ✅ Hardcoded |
@@ -434,12 +619,34 @@ Render Dashboard
 
 > After adding variables, click **"Manual Deploy"** → **"Deploy latest commit"** to apply changes.
 
-### ⏱️ Backend Build & Start
+### ⏱️ Backend Build & Start (Docker)
 
-| Phase | Command | Duration |
-|:------|:--------|:---------|
-| **Build** | `chmod +x mvnw ; ./mvnw clean package -DskipTests` | ~3-5 minutes |
-| **Start** | `java -Dserver.port=$PORT -jar target/backend-0.0.1-SNAPSHOT.jar` | ~30-60 seconds |
+The backend uses a **multi-stage Dockerfile** (`backend/Dockerfile`):
+
+```dockerfile
+# Stage 1: Build with Maven
+FROM maven:3.9-eclipse-temurin-21-alpine AS build
+WORKDIR /app
+COPY pom.xml . 
+COPY src ./src
+COPY mvnw .
+COPY .mvn ./.mvn
+RUN chmod +x mvnw && ./mvnw clean package -DskipTests
+
+# Stage 2: Run with lightweight JRE
+FROM eclipse-temurin:21-jre-alpine
+WORKDIR /app
+COPY --from=build /app/target/backend-0.0.1-SNAPSHOT.jar app.jar
+EXPOSE 8080
+ENV PORT=8080
+CMD java -Dserver.port=$PORT -jar app.jar
+```
+
+| Phase | What Happens | Duration |
+|:------|:-------------|:---------|
+| **Docker Build (Stage 1)** | Maven compiles & packages JAR | ~3-5 minutes |
+| **Docker Build (Stage 2)** | Copies JAR into slim JRE image | ~10 seconds |
+| **Start** | `java -Dserver.port=$PORT -jar app.jar` | ~30-60 seconds |
 | **Health Check** | `GET /actuator/health` | Checked every 30 seconds |
 
 > 💡 **Free tier:** Backend may sleep after 15 minutes of inactivity. First request after sleep takes ~30-60 seconds to wake up.
@@ -852,7 +1059,7 @@ Step 6:  Users login via Web Panel or Mobile App
 
 | Issue | Cause | Fix |
 |:------|:------|:----|
-| Backend shows `{"status":"DOWN"}` | Database not connected | Check if `society-db` is created and healthy in Render dashboard |
+| Backend shows `{"status":"DOWN"}` | Database not connected | Check if `societyhub-db` is created and healthy in Render dashboard |
 | Frontend shows blank page | Build failed | Check **Logs** tab in `society-admin-web` service |
 | Login returns 401 | JWT_SECRET not set | Add `JWT_SECRET` to backend environment variables → redeploy |
 | CORS errors in browser console | Frontend URL not allowed | `APP_FRONTEND_URL` is auto-set; check if custom domain needs `APP_CORS_ALLOWED_ORIGINS` |
@@ -862,7 +1069,7 @@ Step 6:  Users login via Web Panel or Mobile App
 | Backend takes 30-60 sec first load | Free tier cold start | Normal on Render free tier — backend sleeps after 15 min of inactivity |
 | Mobile app can't connect to API | Wrong BASE_URL | Update `mobile-app/src/constants/index.js` → `BASE_URL` to your Render backend URL |
 | Database expired | 90-day free tier limit | Create a new database and redeploy, or upgrade to paid plan |
-| Build fails with Maven error | Java version mismatch | Ensure Render uses Java 21 (check build logs) |
+| Build fails with Docker error | Dockerfile issue | Check `backend/Dockerfile` exists and is committed. Verify Docker build logs in Render dashboard |
 
 ### 📋 Debugging Checklist
 
@@ -871,7 +1078,7 @@ Step 6:  Users login via Web Panel or Mobile App
 □ Check frontend Logs tab: Render Dashboard → society-admin-web → Logs
 □ Verify all env vars are set: society-backend → Environment
 □ Test health endpoint: curl https://your-backend.onrender.com/actuator/health
-□ Check database: society-db → Info → Connection status
+□ Check database: societyhub-db → Info → Connection status
 □ Verify CORS: Browser DevTools → Console → look for CORS errors
 □ Check network: Browser DevTools → Network → check API calls
 ```
@@ -927,10 +1134,10 @@ git push
          └───────────┬──────────┘
                      │
          ┌───────────▼───────────┐
-         │ 🗄️ society-db          │
+         │ 🗄️ societyhub-db       │
          │ (Render PostgreSQL)   │
          │                      │
-         │ PostgreSQL 16        │
+         │ PostgreSQL 18        │
          │ 21 Tables            │
          │ Auto-connected       │
          └───────────────────────┘
