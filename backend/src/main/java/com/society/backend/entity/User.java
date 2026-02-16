@@ -79,6 +79,13 @@ public class User {
     @Column(nullable = false)
     private LocalDateTime createdAt;
 
+    @PrePersist
+    protected void onCreate() {
+        if (createdAt == null) {
+            createdAt = LocalDateTime.now();
+        }
+    }
+
     /**
      * Check if user is the platform owner (invisible global administrator)
      */

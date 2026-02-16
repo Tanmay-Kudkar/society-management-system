@@ -34,6 +34,13 @@ public class PasswordResetToken {
     @Column(nullable = false)
     private LocalDateTime createdAt;
 
+    @PrePersist
+    protected void onCreate() {
+        if (createdAt == null) {
+            createdAt = LocalDateTime.now();
+        }
+    }
+
     public PasswordResetToken(String token, User user, LocalDateTime expiryDate) {
         this.token = token;
         this.user = user;
