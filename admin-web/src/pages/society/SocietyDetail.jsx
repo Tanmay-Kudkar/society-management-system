@@ -26,6 +26,8 @@ import {
   Layers
 } from 'lucide-react'
 import clsx from 'clsx'
+import { DetailPageSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
+import useMinLoadingTime from '../../hooks/useMinLoadingTime'
 
 // Role colors matching the main app
 const roleColors = {
@@ -53,8 +55,15 @@ export default function SocietyDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
 
+  const getOrganizationLabel = (item) => (
+    item?.organizationName
+    || item?.organization?.name
+    || item?.organization
+    || null
+  )
+
   // Fetch society details
-  const { data: society, isLoading: societyLoading, error: societyError } = useQuery({
+  const { data: society, isLoading: societyLoading, isError: societyError } = useQuery({
     queryKey: ['society', id],
     queryFn: () => societyApi.getById(id).then(res => res.data),
     enabled: !!id,
@@ -178,11 +187,14 @@ export default function SocietyDetail() {
     },
   ]
 
-  if (societyLoading) {
+  const showSkeleton = useMinLoadingTime(societyLoading || societyError)
+
+  if (showSkeleton) {
     return (
-      <div className="society-state society-state--loading">
-        <div className="society-spinner" />
-      </div>
+      <>
+        <WakeUpBanner show={societyLoading} />
+        <DetailPageSkeleton />
+      </>
     )
   }
 
@@ -202,6 +214,8 @@ export default function SocietyDetail() {
       </div>
     )
   }
+
+  const organizationLabel = getOrganizationLabel(society)
 
   return (
     <div className="animate-fadeIn">
@@ -246,21 +260,20 @@ export default function SocietyDetail() {
               </div>
               <span>Reg: {society.registrationNumber || 'N/A'}</span>
             </div>
+            <div className="society-meta-item">
+              <div className="society-meta-icon">
+                <Building2 size={16} />
+              </div>
+              <span className={`society-org-badge ${organizationLabel ? 'society-org-badge--linked' : 'society-org-badge--unassigned'}`}>
+                {organizationLabel || 'Unassigned'}
+              </span>
+            </div>
           </div>
         </div>
       </div>
 
       {/* Stats Row */}
       <div className="society-stats">
-        <div className="society-stat-card">
-          <div className="society-stat-icon indigo">
-            <Layers size={24} />
-          </div>
-          <div className="society-stat-content">
-            <div className="society-stat-value">{stats.totalWings}</div>
-            <div className="society-stat-label">Wings</div>
-          </div>
-        </div>
         <div className="society-stat-card">
           <div className="society-stat-icon blue">
             <Home size={24} />
@@ -286,6 +299,15 @@ export default function SocietyDetail() {
           <div className="society-stat-content">
             <div className="society-stat-value">{stats.totalOffices}</div>
             <div className="society-stat-label">Offices ({stats.occupiedOffices} occupied)</div>
+          </div>
+        </div>
+        <div className="society-stat-card">
+          <div className="society-stat-icon indigo">
+            <Layers size={24} />
+          </div>
+          <div className="society-stat-content">
+            <div className="society-stat-value">{stats.totalWings}</div>
+            <div className="society-stat-label">Wings</div>
           </div>
         </div>
         <div className="society-stat-card">

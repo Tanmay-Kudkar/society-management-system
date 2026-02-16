@@ -2,16 +2,19 @@ import { useState, useMemo } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 import { organizationApi } from '../../../../api'
+import * as XLSX from 'xlsx'
 import { useToast } from '../../context'
 import { useAuth } from '../../context'
 import { useConfirmDialog } from '../../context'
 import { parseApiError } from '../../utils'
-import { FormInput, PhoneInput, NumberInput, SmartSelect } from '../../components'
+import { FormInput, PhoneInput, NumberInput, SmartSelect, AsyncButton, BulkImportModal } from '../../components'
 import {
   Building2, Plus, Edit, Trash2, Search, X, Crown, Star, Zap, Gift,
   ChevronRight, Eye, EyeOff, Shield, TrendingUp,
-  Mail, Phone, User
+  Mail, Phone, User, Upload
 } from 'lucide-react'
+import { CardGridSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
+import useMinLoadingTime from '../../hooks/useMinLoadingTime'
 import '../../styles/pages/organizations.css'
 
 const subscriptionOptions = [
@@ -32,6 +35,188 @@ const subscriptionConfig = {
   LIFETIME: { icon: Crown, color: '#f59e0b', bg: 'rgba(245,158,11,0.12)',  label: 'Lifetime', limit: '∞' },
 }
 
+const ORG_EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+const ORG_PHONE_REGEX = /^[6-9]\d{9}$/
+
+const BULK_ORG_FIELD_CONFIG = [
+  { key: 'name', label: 'Organization Name', required: true, description: 'Name of organization', sample: 'Skyline Group', aliases: ['organizationname', 'organization_name', 'name'] },
+  { key: 'ownerName', label: 'Owner Name', required: true, description: 'Full name of owner', sample: 'Amit Shah', aliases: ['ownername', 'owner_name'] },
+  { key: 'ownerEmail', label: 'Owner Email', required: true, description: 'Owner login email', sample: 'amit@skyline.com', aliases: ['owneremail', 'owner_email', 'email'] },
+  { key: 'ownerPhone', label: 'Owner Phone', required: true, description: '10-digit Indian mobile number', sample: '9876543210', aliases: ['ownerphone', 'owner_phone', 'phone', 'mobile'] },
+  { key: 'ownerPassword', label: 'Owner Password', required: true, description: 'Minimum 6 characters', sample: 'Owner@123', aliases: ['ownerpassword', 'owner_password', 'password'] },
+  { key: 'subscriptionType', label: 'Subscription Type', required: false, description: 'FREE, BASIC, PREMIUM, or LIFETIME', sample: 'BASIC', aliases: ['subscriptiontype', 'subscription_type', 'tier'] },
+  { key: 'maxSocieties', label: 'Max Societies', required: false, description: 'Leave blank for default of selected subscription', sample: '3', aliases: ['maxsocieties', 'max_societies', 'limit'] },
+]
+
+const normalizeHeader = (value) => String(value || '').toLowerCase().replace(/[^a-z0-9]/g, '')
+const normalizeText = (value) => String(value ?? '').trim()
+const normalizePhone = (value) => normalizeText(value).replace(/\D/g, '').replace(/^91(?=\d{10}$)/, '')
+const isBlankRow = (row = []) => row.every((cell) => normalizeText(cell) === '')
+const createBulkImportError = (message) => ({ response: { data: { message } } })
+
+const getBulkOrgHeaderIndexMap = (headerRow) => {
+  const normalizedHeaders = headerRow.map((header) => normalizeHeader(header))
+  const headerIndex = {}
+  BULK_ORG_FIELD_CONFIG.forEach((field) => {
+    const aliases = [field.label, ...field.aliases].map(normalizeHeader)
+    const matchedIndex = normalizedHeaders.findIndex((header) => aliases.includes(header))
+    if (matchedIndex >= 0) {
+      headerIndex[field.key] = matchedIndex
+    }
+  })
+  return headerIndex
+}
+
+const parseOrganizationWorkbookRows = async (file) => {
+  const buffer = await file.arrayBuffer()
+  const workbook = XLSX.read(buffer, { type: 'array' })
+  const firstSheetName = workbook.SheetNames?.[0]
+  if (!firstSheetName) {
+    return { rows: [], missingHeaders: BULK_ORG_FIELD_CONFIG.filter((field) => field.required).map((field) => field.label) }
+  }
+
+  const sheet = workbook.Sheets[firstSheetName]
+  const sheetRows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' })
+  if (!sheetRows.length) {
+    return { rows: [], missingHeaders: BULK_ORG_FIELD_CONFIG.filter((field) => field.required).map((field) => field.label) }
+  }
+
+  const [headerRow, ...dataRows] = sheetRows
+  const headerIndex = getBulkOrgHeaderIndexMap(headerRow)
+  const missingHeaders = BULK_ORG_FIELD_CONFIG
+    .filter((field) => field.required && headerIndex[field.key] === undefined)
+    .map((field) => field.label)
+
+  const rows = dataRows
+    .map((cells, idx) => {
+      if (isBlankRow(cells)) return null
+      const rowData = { rowNumber: idx + 2 }
+      BULK_ORG_FIELD_CONFIG.forEach((field) => {
+        const value = headerIndex[field.key] !== undefined ? cells[headerIndex[field.key]] : ''
+        rowData[field.key] = normalizeText(value)
+      })
+      return rowData
+    })
+    .filter(Boolean)
+
+  return { rows, missingHeaders }
+}
+
+const validateOrganizationRows = ({ rows, existingOrgNames, existingOwnerEmails }) => {
+  const seenOrgNames = new Set()
+  const seenOwnerEmails = new Set()
+
+  const results = rows.map((row) => {
+    const errors = []
+
+    const name = normalizeText(row.name)
+    const ownerName = normalizeText(row.ownerName)
+    const ownerEmail = normalizeText(row.ownerEmail).toLowerCase()
+    const ownerPhone = normalizePhone(row.ownerPhone)
+    const ownerPassword = normalizeText(row.ownerPassword)
+    const rawSubscription = normalizeText(row.subscriptionType).toUpperCase()
+    const subscriptionType = rawSubscription || 'FREE'
+
+    if (!name) errors.push('Organization Name is required')
+    if (!ownerName) errors.push('Owner Name is required')
+    if (!ownerEmail) errors.push('Owner Email is required')
+    if (!ownerPhone) errors.push('Owner Phone is required')
+    if (!ownerPassword) errors.push('Owner Password is required')
+
+    if (ownerEmail && !ORG_EMAIL_REGEX.test(ownerEmail)) {
+      errors.push('Invalid owner email format')
+    }
+
+    if (ownerPhone && !ORG_PHONE_REGEX.test(ownerPhone)) {
+      errors.push('Owner phone must be a valid 10-digit Indian mobile number')
+    }
+
+    if (ownerPassword && ownerPassword.length < 6) {
+      errors.push('Owner password must be at least 6 characters')
+    }
+
+    if (!['FREE', 'BASIC', 'PREMIUM', 'LIFETIME'].includes(subscriptionType)) {
+      errors.push('Subscription Type must be FREE, BASIC, PREMIUM, or LIFETIME')
+    }
+
+    const maxSocietiesRaw = normalizeText(row.maxSocieties)
+    let maxSocieties = null
+    if (maxSocietiesRaw) {
+      const parsed = Number(maxSocietiesRaw)
+      if (!Number.isInteger(parsed) || parsed < 0) {
+        errors.push('Max Societies must be a whole number greater than or equal to 0')
+      } else {
+        maxSocieties = parsed
+      }
+    }
+
+    if (!maxSocietiesRaw && subscriptionType !== 'LIFETIME') {
+      maxSocieties = tierDefaults[subscriptionType] || 1
+    }
+
+    if (name) {
+      const normalizedName = name.toLowerCase()
+      if (seenOrgNames.has(normalizedName)) {
+        errors.push('Duplicate organization name in uploaded file')
+      } else {
+        seenOrgNames.add(normalizedName)
+      }
+      if (existingOrgNames.has(normalizedName)) {
+        errors.push('Organization name already exists')
+      }
+    }
+
+    if (ownerEmail) {
+      if (seenOwnerEmails.has(ownerEmail)) {
+        errors.push('Duplicate owner email in uploaded file')
+      } else {
+        seenOwnerEmails.add(ownerEmail)
+      }
+      if (existingOwnerEmails.has(ownerEmail)) {
+        errors.push('Owner email already exists')
+      }
+    }
+
+    const normalizedRow = {
+      name,
+      ownerName,
+      ownerEmail,
+      ownerPhone,
+      ownerPassword,
+      subscriptionType,
+      maxSocieties: subscriptionType === 'LIFETIME' ? null : maxSocieties,
+    }
+
+    return {
+      rowNumber: row.rowNumber,
+      name,
+      ownerEmail,
+      subscriptionType,
+      success: errors.length === 0,
+      errorMessage: errors.join(', '),
+      normalizedRow,
+    }
+  })
+
+  const successCount = results.filter((result) => result.success).length
+  return {
+    totalRows: rows.length,
+    successCount,
+    failureCount: rows.length - successCount,
+    results,
+  }
+}
+
+const buildOrganizationTemplateWorkbook = () => {
+  const headers = BULK_ORG_FIELD_CONFIG.map((field) => field.label)
+  const sampleRow = BULK_ORG_FIELD_CONFIG.map((field) => field.sample)
+  const worksheet = XLSX.utils.aoa_to_sheet([headers, sampleRow])
+  const workbook = XLSX.utils.book_new()
+  XLSX.utils.book_append_sheet(workbook, worksheet, 'OrganizationImport')
+  const buffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' })
+  return new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+}
+
 export default function Organizations() {
   const { user } = useAuth()
   const confirmDialog = useConfirmDialog()
@@ -40,6 +225,7 @@ export default function Organizations() {
   const navigate = useNavigate()
   const isPlatformOwner = user?.role === 'PLATFORM_OWNER'
   const [showModal, setShowModal] = useState(false)
+  const [showBulkImport, setShowBulkImport] = useState(false)
   const [editingOrg, setEditingOrg] = useState(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [formError, setFormError] = useState('')
@@ -48,12 +234,13 @@ export default function Organizations() {
   const [formSubType, setFormSubType] = useState('FREE')
   const [formMaxSocieties, setFormMaxSocieties] = useState('')
 
-  const { data: organizations = [], isLoading } = useQuery({
+  const { data: organizations = [], isLoading, isFetching, isError } = useQuery({
     queryKey: ['organizations', user?.id],
-    queryFn: () => organizationApi.getAll().then(res => res.data).catch(() => []),
+    queryFn: () => organizationApi.getAll().then(res => res.data),
     enabled: !!user?.id,
-    placeholderData: [],
   })
+
+  const showSkeleton = useMinLoadingTime(isLoading || isError)
 
   const createMutation = useMutation({
     mutationFn: (data) => organizationApi.create(data),
@@ -81,10 +268,10 @@ export default function Organizations() {
   })
 
   const deleteMutation = useMutation({
-    mutationFn: (id) => organizationApi.delete(id),
-    onSuccess: () => {
+    mutationFn: ({ id, force = false }) => organizationApi.delete(id, force),
+    onSuccess: (_response, variables) => {
       queryClient.invalidateQueries(['organizations'])
-      toast.success('Organization deleted successfully')
+      toast.success(variables?.force ? 'Organization force-deleted successfully' : 'Organization deleted successfully')
     },
     onError: (error) => toast.error(parseApiError(error)),
   })
@@ -98,6 +285,118 @@ export default function Organizations() {
     }),
     [organizations, searchTerm]
   )
+
+  const existingOrganizationNames = useMemo(
+    () => new Set(organizations.map((org) => normalizeText(org.name).toLowerCase()).filter(Boolean)),
+    [organizations]
+  )
+
+  const existingOrganizationOwnerEmails = useMemo(
+    () => new Set(organizations.map((org) => normalizeText(org.ownerEmail).toLowerCase()).filter(Boolean)),
+    [organizations]
+  )
+
+  const bulkImportColumns = useMemo(
+    () => BULK_ORG_FIELD_CONFIG.map((field, index) => ({
+      letter: String.fromCharCode(65 + index),
+      label: field.label,
+      required: field.required,
+      description: field.description,
+    })),
+    []
+  )
+
+  const bulkPreviewColumns = useMemo(
+    () => [
+      { key: 'name', label: 'Organization Name' },
+      { key: 'ownerEmail', label: 'Owner Email' },
+      { key: 'subscriptionType', label: 'Subscription Type' },
+    ],
+    []
+  )
+
+  const validateBulkImport = async (file) => {
+    let parsedRows
+    try {
+      parsedRows = await parseOrganizationWorkbookRows(file)
+    } catch {
+      throw createBulkImportError('Invalid Excel file. Please upload a valid .xlsx/.xls file.')
+    }
+
+    const { rows, missingHeaders } = parsedRows
+    if (missingHeaders.length > 0) {
+      throw createBulkImportError(`Missing required column(s): ${missingHeaders.join(', ')}`)
+    }
+
+    if (!rows.length) {
+      throw createBulkImportError('No data rows found. Add at least one row below the header in the template.')
+    }
+
+    return {
+      data: validateOrganizationRows({
+        rows,
+        existingOrgNames: existingOrganizationNames,
+        existingOwnerEmails: existingOrganizationOwnerEmails,
+      }),
+    }
+  }
+
+  const processBulkImport = async (file) => {
+    const validationResponse = await validateBulkImport(file)
+    const validationResults = validationResponse.data
+    const validRows = validationResults.results.filter((result) => result.success)
+
+    if (!validRows.length) {
+      return { data: validationResults }
+    }
+
+    const importRuns = await Promise.all(
+      validRows.map(async (rowResult) => {
+        const row = rowResult.normalizedRow
+        const payload = {
+          name: row.name,
+          ownerName: row.ownerName,
+          ownerEmail: row.ownerEmail,
+          ownerPhone: row.ownerPhone,
+          ownerPassword: row.ownerPassword,
+          subscriptionType: row.subscriptionType,
+          ...(row.maxSocieties != null ? { maxSocieties: row.maxSocieties } : {}),
+        }
+
+        try {
+          await organizationApi.create(payload)
+          return {
+            ...rowResult,
+            success: true,
+            errorMessage: '',
+          }
+        } catch (error) {
+          return {
+            ...rowResult,
+            success: false,
+            errorMessage: parseApiError(error),
+          }
+        }
+      })
+    )
+
+    const failedValidationRows = validationResults.results.filter((result) => !result.success)
+    const finalResults = [...failedValidationRows, ...importRuns].sort((a, b) => a.rowNumber - b.rowNumber)
+    const successCount = finalResults.filter((result) => result.success).length
+
+    return {
+      data: {
+        totalRows: validationResults.totalRows,
+        successCount,
+        failureCount: validationResults.totalRows - successCount,
+        results: finalResults,
+      },
+    }
+  }
+
+  const downloadBulkImportTemplate = async () => ({
+    data: buildOrganizationTemplateWorkbook(),
+  })
 
   const handleSubscriptionChange = (e) => {
     const tier = e.target.value || 'FREE'
@@ -164,8 +463,40 @@ export default function Organizations() {
       ],
       caution: 'Deleting an organization may affect all linked societies.',
     })
-    if (confirmed) {
-      deleteMutation.mutate(org.id)
+    if (!confirmed) return
+
+    try {
+      await deleteMutation.mutateAsync({ id: org.id, force: false })
+    } catch (error) {
+      const serverMessage = error?.response?.data?.message || parseApiError(error)
+      const shouldOfferForceDelete =
+        error?.response?.status === 409 &&
+        String(serverMessage).toLowerCase().includes('use force delete')
+
+      if (!shouldOfferForceDelete) {
+        return
+      }
+
+      const finalWarning = await confirmDialog({
+        title: 'Final Warning: Force Delete Organization',
+        message: `This will permanently delete "${org.name}" and unlink all related records from this organization reference. Continue?`,
+        confirmText: 'Force Delete',
+        cancelText: 'Cancel',
+        tone: 'danger',
+        details: [
+          { label: 'Organization', value: org.name || '-' },
+          { label: 'Owner', value: org.ownerName || '-' },
+        ],
+        caution: 'This action is irreversible and may impact reports, ownership views, and organization-scoped records.',
+      })
+
+      if (!finalWarning) return
+
+      try {
+        await deleteMutation.mutateAsync({ id: org.id, force: true })
+      } catch (forceError) {
+        toast.error(parseApiError(forceError))
+      }
     }
   }
 
@@ -203,10 +534,16 @@ export default function Organizations() {
             </div>
           </div>
           {isPlatformOwner && (
-            <button onClick={() => openModal()} className="org-hero__button">
-              <Plus size={18} />
-              Add Organization
-            </button>
+            <div className="org-hero__actions">
+              <button onClick={() => setShowBulkImport(true)} className="org-hero__button org-hero__button--secondary">
+                <Upload size={18} />
+                Bulk Import
+              </button>
+              <button onClick={() => openModal()} className="org-hero__button">
+                <Plus size={18} />
+                Add Organization
+              </button>
+            </div>
           )}
         </div>
       </header>
@@ -227,8 +564,11 @@ export default function Organizations() {
         </div>
       </div>
 
-      {isLoading ? (
-        <div className="org-empty">Loading organizations...</div>
+      {showSkeleton ? (
+        <>
+          <WakeUpBanner show={showSkeleton} />
+          <CardGridSkeleton count={4} />
+        </>
       ) : filteredOrganizations.length === 0 ? (
         <div className="org-empty">
           <Building2 size={48} className="org-empty__icon" />
@@ -327,7 +667,10 @@ export default function Organizations() {
                   className="org-card__expand-btn"
                   onClick={() => navigate(`/organizations/${org.id}`)}
                 >
-                  <span>View Organization Page</span>
+                  <span className="org-card__expand-content">
+                    <Building2 size={14} />
+                    View Organization Page
+                  </span>
                   <ChevronRight size={16} />
                 </button>
               </div>
@@ -430,13 +773,37 @@ export default function Organizations() {
                 <button type="button" onClick={() => { setShowModal(false); setShowPassword(false) }} className="org-btn">
                   Cancel
                 </button>
-                <button type="submit" className="org-btn org-btn--primary">
+                <AsyncButton
+                  type="submit"
+                  className="org-btn org-btn--primary"
+                  isLoading={createMutation.isPending || updateMutation.isPending}
+                  loadingText="Saving..."
+                >
                   {editingOrg ? 'Update Organization' : 'Create Organization'}
-                </button>
+                </AsyncButton>
               </div>
             </form>
           </div>
         </div>
+      )}
+
+      {showBulkImport && (
+        <BulkImportModal
+          title="Bulk Import Organizations"
+          entityName="Organizations"
+          templateFilename="organization_import_template.xlsx"
+          columns={bulkImportColumns}
+          tableColumns={bulkPreviewColumns}
+          apiValidate={validateBulkImport}
+          apiProcess={processBulkImport}
+          apiTemplate={downloadBulkImportTemplate}
+          requireScopeId={false}
+          onClose={() => setShowBulkImport(false)}
+          onSuccess={() => {
+            queryClient.invalidateQueries(['organizations'])
+            toast.success('Organizations imported successfully')
+          }}
+        />
       )}
     </div>
   )

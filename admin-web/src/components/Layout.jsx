@@ -30,6 +30,45 @@ import {
 } from 'lucide-react'
 import clsx from 'clsx'
 
+const prefetchedRouteSet = new Set()
+
+const routePrefetchMap = {
+  '/': () => import('../pages/core/Dashboard'),
+  '/settings': () => import('../pages/core/Settings'),
+  '/reports': () => import('../pages/core/Reports'),
+  '/users': () => import('../pages/users/Users'),
+  '/roles-permissions': () => import('../pages/users/RolesPermissions'),
+  '/societies': () => import('../pages/society/Societies'),
+  '/organizations': () => import('../pages/society/Organizations'),
+  '/society-admins': () => import('../pages/society/SocietyAdmins'),
+  '/unit-management': () => import('../pages/unit/UnitManagement'),
+  '/wings': () => import('../pages/unit/Wings'),
+  '/tenants': () => import('../pages/unit/Tenants'),
+  '/vehicles': () => import('../pages/unit/Vehicles'),
+  '/vendors': () => import('../pages/vendors/Vendors'),
+  '/vendor-bills': () => import('../pages/finance/VendorBills'),
+  '/contracts': () => import('../pages/finance/Contracts'),
+  '/maintenance-bills': () => import('../pages/finance/MaintenanceBills'),
+  '/payments': () => import('../pages/finance/Payments'),
+  '/my-bills': () => import('../pages/finance/MyBills'),
+  '/transactions': () => import('../pages/finance/Transactions'),
+  '/notices': () => import('../pages/communication/Notices'),
+  '/banners': () => import('../pages/communication/Banners'),
+  '/tickets': () => import('../pages/communication/Tickets'),
+  '/complaints': () => import('../pages/communication/Complaints'),
+  '/emergency-contacts': () => import('../pages/communication/EmergencyContacts'),
+  '/documents': () => import('../pages/communication/Documents'),
+}
+
+const prefetchRoute = (path) => {
+  const importer = routePrefetchMap[path]
+  if (!importer || prefetchedRouteSet.has(path)) {
+    return
+  }
+  prefetchedRouteSet.add(path)
+  importer().catch(() => null)
+}
+
 // PLATFORM_OWNER specific menu - simplified for platform management
 const platformOwnerMenu = [
   {
@@ -162,7 +201,7 @@ const standardMenuGroups = [
 ]
 
 // Dropdown component for desktop navbar
-function NavDropdown({ group, hasRole }) {
+function NavDropdown({ group, hasRole, onPrefetch }) {
   const [isOpen, setIsOpen] = useState(false)
   const timeoutRef = useRef(null)
   const location = useLocation()
@@ -195,6 +234,8 @@ function NavDropdown({ group, hasRole }) {
     return (
       <NavLink
         to={group.path}
+        onMouseEnter={() => onPrefetch?.(group.path)}
+        onFocus={() => onPrefetch?.(group.path)}
         className={clsx(
           'app-nav__link',
           isActive ? 'app-nav__link--active' : 'app-nav__link--idle'
@@ -235,6 +276,8 @@ function NavDropdown({ group, hasRole }) {
             key={item.path}
             to={item.path}
             onClick={() => setIsOpen(false)}
+            onMouseEnter={() => onPrefetch?.(item.path)}
+            onFocus={() => onPrefetch?.(item.path)}
             className={({ isActive }) =>
               clsx(
                 'app-nav__menu-link',
@@ -254,7 +297,7 @@ function NavDropdown({ group, hasRole }) {
 }
 
 // Mobile menu accordion - controlled from parent
-function MobileAccordion({ group, hasRole, onNavigate, isOpen, onToggle }) {
+function MobileAccordion({ group, hasRole, onNavigate, isOpen, onToggle, onPrefetch }) {
   const location = useLocation()
   const contentRef = useRef(null)
   const [contentHeight, setContentHeight] = useState(0)
@@ -290,6 +333,8 @@ function MobileAccordion({ group, hasRole, onNavigate, isOpen, onToggle }) {
     return (
       <NavLink
         to={group.path}
+        onMouseEnter={() => onPrefetch?.(group.path)}
+        onFocus={() => onPrefetch?.(group.path)}
         onClick={onNavigate}
         className={clsx(
           'app-mobile__link',
@@ -333,6 +378,8 @@ function MobileAccordion({ group, hasRole, onNavigate, isOpen, onToggle }) {
             <NavLink
               key={item.path}
               to={item.path}
+              onMouseEnter={() => onPrefetch?.(item.path)}
+              onFocus={() => onPrefetch?.(item.path)}
               onClick={onNavigate}
               className={({ isActive }) =>
                 clsx(
@@ -354,13 +401,15 @@ function MobileAccordion({ group, hasRole, onNavigate, isOpen, onToggle }) {
 }
 
 // Desktop sidebar link
-function SidebarLink({ group, hasRole }) {
+function SidebarLink({ group, hasRole, onPrefetch }) {
   const location = useLocation()
   if (group.roles && !hasRole(...group.roles)) return null
   const isActive = location.pathname === group.path
   return (
     <NavLink
       to={group.path}
+      onMouseEnter={() => onPrefetch?.(group.path)}
+      onFocus={() => onPrefetch?.(group.path)}
       className={clsx(
         'app-sidebar__link',
         isActive ? 'app-sidebar__link--active' : 'app-sidebar__link--idle'
@@ -373,7 +422,7 @@ function SidebarLink({ group, hasRole }) {
 }
 
 // Desktop sidebar accordion group
-function SidebarGroup({ group, hasRole, isOpen, onToggle }) {
+function SidebarGroup({ group, hasRole, isOpen, onToggle, onPrefetch }) {
   const location = useLocation()
   const contentRef = useRef(null)
   const [contentHeight, setContentHeight] = useState(0)
@@ -421,6 +470,8 @@ function SidebarGroup({ group, hasRole, isOpen, onToggle }) {
             <NavLink
               key={item.path}
               to={item.path}
+              onMouseEnter={() => onPrefetch?.(item.path)}
+              onFocus={() => onPrefetch?.(item.path)}
               className={({ isActive }) =>
                 clsx(
                   'app-sidebar__sublink',
@@ -481,6 +532,10 @@ export default function Layout() {
     setSidebarOpen(prev => prev === groupId ? null : groupId)
   }
 
+  const handlePrefetch = (path) => {
+    prefetchRoute(path)
+  }
+
   // Close mobile menu on resize to desktop
   useEffect(() => {
     const handleResize = () => {
@@ -513,7 +568,7 @@ export default function Layout() {
           <div className="app-sidebar__section-title">Navigation</div>
           {menuGroups.map((group) => (
             group.path ? (
-              <SidebarLink key={group.id} group={group} hasRole={hasRole} />
+              <SidebarLink key={group.id} group={group} hasRole={hasRole} onPrefetch={handlePrefetch} />
             ) : (
               <SidebarGroup
                 key={group.id}
@@ -521,6 +576,7 @@ export default function Layout() {
                 hasRole={hasRole}
                 isOpen={sidebarOpen === group.id}
                 onToggle={() => handleSidebarToggle(group.id)}
+                onPrefetch={handlePrefetch}
               />
             )
           ))}
@@ -565,7 +621,7 @@ export default function Layout() {
             {/* Desktop Navigation - hidden, sidebar replaces it */}
             <nav className="app-layout__nav">
               {menuGroups.map((group) => (
-                <NavDropdown key={group.id} group={group} hasRole={hasRole} />
+                <NavDropdown key={group.id} group={group} hasRole={hasRole} onPrefetch={handlePrefetch} />
               ))}
             </nav>
 
@@ -673,6 +729,7 @@ export default function Layout() {
                 onNavigate={closeMobileMenu}
                 isOpen={openAccordion === group.id}
                 onToggle={() => handleAccordionToggle(group.id)}
+                onPrefetch={handlePrefetch}
               />
             ))}
           </nav>

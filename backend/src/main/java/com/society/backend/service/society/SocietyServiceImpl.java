@@ -10,6 +10,8 @@ import com.society.backend.repository.WingRepository;
 import com.society.backend.repository.flat.FlatRepository;
 import com.society.backend.repository.organization.OrganizationRepository;
 import com.society.backend.repository.society.SocietyRepository;
+import com.society.backend.repository.user.UserRepository;
+import com.society.backend.service.common.ReferenceCleanupService;
 import com.society.backend.service.common.RoleService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -17,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -27,6 +30,8 @@ public class SocietyServiceImpl implements SocietyService {
     private final FlatRepository flatRepository;
     private final WingRepository wingRepository;
     private final OrganizationRepository organizationRepository;
+    private final UserRepository userRepository;
+    private final ReferenceCleanupService referenceCleanupService;
     private final RoleService roleService;
 
     @Override
@@ -140,15 +145,46 @@ public class SocietyServiceImpl implements SocietyService {
     }
 
     @Override
-    public void delete(Long id) {
+    @Transactional
+    public void delete(Long id, boolean force) {
         var currentUser = roleService.getCurrentUser();
         if (currentUser != null) {
             roleService.enforceSocietyScope(currentUser, id);
         }
 
-        if (!societyRepository.existsById(id)) {
-            throw new ApiException(HttpStatus.NOT_FOUND, "Society not found");
+        Society society = societyRepository.findById(id)
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Society not found"));
+
+        long linkedUsers = userRepository.countBySocietyId(id);
+        long linkedWings = wingRepository.countBySocietyId(id);
+        long linkedFlats = flatRepository.findBySocietyId(id).size();
+
+        if (!force && (linkedUsers > 0 || linkedWings > 0 || linkedFlats > 0)) {
+            throw new ApiException(
+                    HttpStatus.CONFLICT,
+                    String.format(
+                            "Cannot delete society '%s'. Remove linked records first (%d users, %d wings, %d units). Use force delete to auto-clean linked records.",
+                            society.getName(),
+                            linkedUsers,
+                            linkedWings,
+                            linkedFlats));
         }
+
+        if (force) {
+            var flatIds = flatRepository.findBySocietyId(id).stream().map(flat -> flat.getId()).toList();
+            var wingIds = wingRepository.findBySocietyId(id).stream().map(com.society.backend.entity.Wing::getId).toList();
+
+            for (Long flatId : flatIds) {
+                referenceCleanupService.clearReferences("flat_id", flatId, true, Set.of("flats"));
+            }
+
+            for (Long wingId : wingIds) {
+                referenceCleanupService.clearReferences("wing_id", wingId, true, Set.of("wings"));
+            }
+
+            referenceCleanupService.clearReferences("society_id", id, true, Set.of("societies"));
+        }
+
         societyRepository.deleteById(id);
     }
 

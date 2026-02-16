@@ -14,8 +14,10 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Linking from 'expo-linking';
 import { useTheme } from '../../context/ThemeContext';
 import { Header, Card, Loading, EmptyState, ErrorState, Badge } from '../../components/common';
+import { DocumentsSkeleton } from '../../components/common/Skeleton';
 import { Layout } from '../../constants';
 import { documentAPI } from '../../services/api';
+import useMinLoadingTime from '../../hooks/useMinLoadingTime';
 
 const DocumentsScreen = ({ navigation }) => {
   const { theme } = useTheme();
@@ -37,7 +39,7 @@ const DocumentsScreen = ({ navigation }) => {
   const fetchDocuments = async () => {
     try {
       setError(null);
-      const response = await documentAPI.getAll();
+      const response = await documentAPI.getTemplates();
       setDocuments(response.data);
     } catch (err) {
       setError('Failed to load documents');
@@ -207,11 +209,13 @@ const DocumentsScreen = ({ navigation }) => {
     },
   });
 
-  if (loading) {
+  const showSkeleton = useMinLoadingTime(loading);
+
+  if (showSkeleton) {
     return (
       <SafeAreaView style={styles.container} edges={['bottom']}>
         <Header title="Documents" showBack />
-        <Loading fullScreen text="Loading documents..." />
+        <DocumentsSkeleton />
       </SafeAreaView>
     );
   }
@@ -274,7 +278,7 @@ const DocumentsScreen = ({ navigation }) => {
                 <Ionicons name={fileInfo.icon} size={24} color={fileInfo.color} />
                 {item.isNew && (
                   <View style={styles.badge}>
-                    <Badge text="NEW" variant="success" size="small" />
+                    <Badge label="NEW" variant="success" size="sm" />
                   </View>
                 )}
               </View>

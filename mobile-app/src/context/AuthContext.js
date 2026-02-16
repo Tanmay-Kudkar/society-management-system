@@ -26,11 +26,12 @@ export const AuthProvider = ({ children }) => {
         setUser(JSON.parse(storedUser));
         setIsAuthenticated(true);
         
-        // Optionally verify token with backend
+        // Verify token with backend
         try {
-          const response = await authAPI.verifyToken();
+          const response = await authAPI.me();
           if (response.data) {
-            setUser(response.data.user || JSON.parse(storedUser));
+            setUser(response.data);
+            await SecureStore.setItemAsync(STORAGE_KEYS.USER_DATA, JSON.stringify(response.data));
           }
         } catch (error) {
           // Token invalid, clear storage
@@ -68,38 +69,6 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const sendOTP = async (phone) => {
-    try {
-      const response = await authAPI.sendOTP(phone);
-      return { success: true, data: response.data };
-    } catch (error) {
-      const message = error.response?.data?.message || 'Failed to send OTP.';
-      return { success: false, error: message };
-    }
-  };
-
-  const verifyOTP = async (phone, otp) => {
-    try {
-      setIsLoading(true);
-      const response = await authAPI.verifyOTP(phone, otp);
-      const { token: authToken, user: userData } = response.data;
-
-      await SecureStore.setItemAsync(STORAGE_KEYS.AUTH_TOKEN, authToken);
-      await SecureStore.setItemAsync(STORAGE_KEYS.USER_DATA, JSON.stringify(userData));
-
-      setToken(authToken);
-      setUser(userData);
-      setIsAuthenticated(true);
-
-      return { success: true };
-    } catch (error) {
-      const message = error.response?.data?.message || 'OTP verification failed.';
-      return { success: false, error: message };
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   const logout = async () => {
     try {
       setIsLoading(true);
@@ -113,7 +82,6 @@ export const AuthProvider = ({ children }) => {
 
       // Clear stored data
       await SecureStore.deleteItemAsync(STORAGE_KEYS.AUTH_TOKEN);
-      await SecureStore.deleteItemAsync(STORAGE_KEYS.REFRESH_TOKEN);
       await SecureStore.deleteItemAsync(STORAGE_KEYS.USER_DATA);
 
       setToken(null);
@@ -134,29 +102,6 @@ export const AuthProvider = ({ children }) => {
       return { success: true };
     } catch (error) {
       return { success: false, error: 'Failed to update user data.' };
-    }
-  };
-
-  const refreshToken = async () => {
-    try {
-      const storedRefreshToken = await SecureStore.getItemAsync(STORAGE_KEYS.REFRESH_TOKEN);
-      if (!storedRefreshToken) {
-        throw new Error('No refresh token available');
-      }
-
-      const response = await authAPI.refreshToken(storedRefreshToken);
-      const { token: newToken, refreshToken: newRefreshToken } = response.data;
-
-      await SecureStore.setItemAsync(STORAGE_KEYS.AUTH_TOKEN, newToken);
-      if (newRefreshToken) {
-        await SecureStore.setItemAsync(STORAGE_KEYS.REFRESH_TOKEN, newRefreshToken);
-      }
-
-      setToken(newToken);
-      return { success: true, token: newToken };
-    } catch (error) {
-      await logout();
-      return { success: false, error: 'Session expired. Please login again.' };
     }
   };
 
@@ -186,11 +131,8 @@ export const AuthProvider = ({ children }) => {
     isLoading,
     isAuthenticated,
     login,
-    sendOTP,
-    verifyOTP,
     logout,
     updateUser,
-    refreshToken,
     // Role helpers
     isPlatformOwner,
     isOrganizationOwner,

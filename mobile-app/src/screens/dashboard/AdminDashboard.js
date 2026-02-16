@@ -12,9 +12,11 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../context/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
 import { useNotifications } from '../../context/NotificationContext';
-import { Card, Avatar, Badge, Loading, ErrorState } from '../../components/common';
+import { Card, Avatar, Badge, ErrorState } from '../../components/common';
+import { AdminDashboardSkeleton } from '../../components/common/Skeleton';
 import { Layout } from '../../constants';
-import { dashboardAPI } from '../../services/api';
+import { reportAPI } from '../../services/api';
+import useMinLoadingTime from '../../hooks/useMinLoadingTime';
 
 const AdminDashboard = ({ navigation }) => {
   const { theme } = useTheme();
@@ -36,7 +38,7 @@ const AdminDashboard = ({ navigation }) => {
   const fetchDashboardData = async () => {
     try {
       setError(null);
-      const response = await dashboardAPI.getAdminDashboard();
+      const response = await reportAPI.getDashboard(user?.societyId);
       setStats(response.data);
     } catch (err) {
       setError('Failed to load dashboard data');
@@ -211,8 +213,10 @@ const AdminDashboard = ({ navigation }) => {
     },
   });
 
-  if (loading) {
-    return <Loading fullScreen text="Loading dashboard..." />;
+  const showSkeleton = useMinLoadingTime(loading);
+
+  if (showSkeleton) {
+    return <AdminDashboardSkeleton />;
   }
 
   if (error) {

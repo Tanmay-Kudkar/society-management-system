@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '../../context'
@@ -15,8 +15,9 @@ import {
   Hash,
   Upload
 } from 'lucide-react'
-import { FormInput, SmartSelect, NumberInput, FormErrorSummary } from '../../components'
-import { BulkImportModal } from '../../components'
+import { FormInput, SmartSelect, NumberInput, FormErrorSummary, BulkImportModal, AsyncButton } from '../../components'
+import { HeroSkeleton, FiltersSkeleton, CardGridSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
+import useMinLoadingTime from '../../hooks/useMinLoadingTime'
 import '../../styles/pages/wings.css'
 
 export default function Wings() {
@@ -57,7 +58,7 @@ export default function Wings() {
   })
 
   // Fetch wings
-  const { data: wings = [], isLoading } = useQuery({
+  const { data: wings = [], isLoading, isError } = useQuery({
     queryKey: ['wings', effectiveSocietyIdNum],
     queryFn: () => {
       if (effectiveSocietyIdNum) {
@@ -65,12 +66,14 @@ export default function Wings() {
       }
       return wingApi.getAll().then(res => res.data)
     },
-    placeholderData: [],
   })
 
-  const currentWingCount = effectiveSocietyIdNum
-    ? wings.filter((wingItem) => Number(wingItem.societyId) === effectiveSocietyIdNum).length
-    : 0
+  const currentWingCount = useMemo(() => {
+    if (!effectiveSocietyIdNum) {
+      return 0
+    }
+    return wings.filter((wingItem) => Number(wingItem.societyId) === effectiveSocietyIdNum).length
+  }, [wings, effectiveSocietyIdNum])
   const maxWings = currentSociety?.totalWings || 0
   const hasWingLimit = maxWings > 0
   const wingsCapacityReached = hasWingLimit && currentWingCount >= maxWings
@@ -118,11 +121,13 @@ export default function Wings() {
   })
 
   // Filter wings
-  const filteredWings = wings.filter(wing => {
-    const matchesSearch = wing.name?.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesSociety = !filterSociety || wing.societyId?.toString() === filterSociety
-    return matchesSearch && matchesSociety
-  })
+  const filteredWings = useMemo(() => {
+    return wings.filter(wing => {
+      const matchesSearch = wing.name?.toLowerCase().includes(searchTerm.toLowerCase())
+      const matchesSociety = !filterSociety || wing.societyId?.toString() === filterSociety
+      return matchesSearch && matchesSociety
+    })
+  }, [wings, searchTerm, filterSociety])
 
   const handleSubmit = (e) => {
     e.preventDefault()
@@ -232,6 +237,17 @@ export default function Wings() {
     return wingApi.processBulkImport(file, societyId)
   }
 
+  const showSkeleton = useMinLoadingTime(isLoading || isError)
+
+  if (showSkeleton) return (
+    <div className="wings-page">
+      <WakeUpBanner />
+      <HeroSkeleton statCount={2} />
+      <FiltersSkeleton filterCount={1} />
+      <CardGridSkeleton count={6} showBadge={false} />
+    </div>
+  )
+
   return (
     <div className="wings-page">
       {/* Header */}
@@ -315,11 +331,7 @@ export default function Wings() {
 
       {/* Grid View */}
       <div className="wings-grid">
-        {isLoading ? (
-          <div className="wings-loading">
-            <div className="wings-loading__spinner"></div>
-          </div>
-        ) : filteredWings.length === 0 ? (
+        {filteredWings.length === 0 ? (
           <div className="wings-empty">
             <Layers className="wings-empty__icon" size={48} />
             <p>No wings found</p>
@@ -472,13 +484,14 @@ export default function Wings() {
                 >
                   Cancel
                 </button>
-                <button
+                <AsyncButton
                   type="submit"
-                  disabled={createMutation.isLoading || updateMutation.isLoading}
                   className="wings-modal__btn wings-modal__btn--primary"
+                  isLoading={createMutation.isPending || updateMutation.isPending}
+                  loadingText="Saving..."
                 >
-                  {createMutation.isLoading || updateMutation.isLoading ? 'Saving...' : 'Save'}
-                </button>
+                  Save
+                </AsyncButton>
               </div>
             </form>
           </div>

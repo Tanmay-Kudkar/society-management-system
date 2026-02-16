@@ -11,8 +11,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../context/ThemeContext';
 import { Header, Card, Badge, Loading, EmptyState, ErrorState } from '../../components/common';
+import { FilteredListSkeleton } from '../../components/common/Skeleton';
 import { Layout } from '../../constants';
 import { noticeAPI } from '../../services/api';
+import useMinLoadingTime from '../../hooks/useMinLoadingTime';
 
 const NoticesScreen = ({ navigation }) => {
   const { theme } = useTheme();
@@ -206,11 +208,13 @@ const NoticesScreen = ({ navigation }) => {
     );
   };
 
-  if (loading) {
+  const showSkeleton = useMinLoadingTime(loading);
+
+  if (showSkeleton) {
     return (
       <SafeAreaView style={styles.container} edges={['bottom']}>
         <Header title="Notices & Announcements" showBack />
-        <Loading fullScreen text="Loading notices..." />
+        <FilteredListSkeleton filterCount={4} cardCount={5} showAvatar={false} />
       </SafeAreaView>
     );
   }

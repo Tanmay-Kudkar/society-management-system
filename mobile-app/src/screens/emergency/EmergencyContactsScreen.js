@@ -12,8 +12,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../context/ThemeContext';
 import { Header, Card, Loading, EmptyState, ErrorState } from '../../components/common';
+import { EmergencyContactsSkeleton } from '../../components/common/Skeleton';
 import { Layout } from '../../constants';
 import { emergencyAPI } from '../../services/api';
+import useMinLoadingTime from '../../hooks/useMinLoadingTime';
 
 const EmergencyContactsScreen = ({ navigation }) => {
   const { theme } = useTheme();
@@ -153,11 +155,13 @@ const EmergencyContactsScreen = ({ navigation }) => {
     },
   });
 
-  if (loading) {
+  const showSkeleton = useMinLoadingTime(loading);
+
+  if (showSkeleton) {
     return (
       <SafeAreaView style={styles.container} edges={['bottom']}>
         <Header title="Emergency Contacts" showBack />
-        <Loading fullScreen text="Loading contacts..." />
+        <EmergencyContactsSkeleton />
       </SafeAreaView>
     );
   }

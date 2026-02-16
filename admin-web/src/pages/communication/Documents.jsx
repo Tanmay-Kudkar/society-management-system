@@ -1,9 +1,13 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '../../context'
+import { useConfirmDialog } from '../../context'
 import { documentTemplateApi } from '../../../../api'
 import { Plus, Search, X, FileText, Edit, Trash2 } from 'lucide-react'
 import clsx from 'clsx'
+import { AsyncButton } from '../../components'
+import { HeroSkeleton, DocumentsSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
+import useMinLoadingTime from '../../hooks/useMinLoadingTime'
 
 const templateTypeClasses = {
   NOC: 'documents-badge documents-badge--noc',
@@ -16,16 +20,16 @@ const templateTypeClasses = {
 
 export default function Documents() {
   const { user, canManageDocuments } = useAuth()
+  const confirmDialog = useConfirmDialog()
   const queryClient = useQueryClient()
   const [showModal, setShowModal] = useState(false)
   const [editingDocument, setEditingDocument] = useState(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [filterCategory, setFilterCategory] = useState('')
 
-  const { data: documents = [], isLoading } = useQuery({
+  const { data: documents = [], isLoading, isError } = useQuery({
     queryKey: ['documentTemplates'],
     queryFn: () => documentTemplateApi.getAll().then(res => res.data),
-    placeholderData: [],
   })
 
   const createMutation = useMutation({
@@ -49,15 +53,41 @@ export default function Documents() {
     onSuccess: () => queryClient.invalidateQueries(['documentTemplates']),
   })
 
-  const filteredDocuments = documents.filter(d => {
-    const matchesSearch = d.title?.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesCategory = !filterCategory || d.templateType === filterCategory
-    return matchesSearch && matchesCategory
-  })
+  const filteredDocuments = useMemo(() => {
+    return documents.filter(d => {
+      const matchesSearch = d.title?.toLowerCase().includes(searchTerm.toLowerCase())
+      const matchesCategory = !filterCategory || d.templateType === filterCategory
+      return matchesSearch && matchesCategory
+    })
+  }, [documents, searchTerm, filterCategory])
+
+  const documentTypeCounts = useMemo(() => {
+    return ['NOC', 'LETTER', 'AGREEMENT'].reduce((acc, templateType) => {
+      acc[templateType] = documents.filter(d => d.templateType === templateType).length
+      return acc
+    }, {})
+  }, [documents])
 
   const closeModal = () => {
     setShowModal(false)
     setEditingDocument(null)
+  }
+
+  const confirmAndDeleteDocument = async (doc) => {
+    const confirmed = await confirmDialog({
+      title: 'Delete Template',
+      message: 'Are you sure you want to delete this document template? This action cannot be undone.',
+      confirmText: 'Delete',
+      tone: 'danger',
+      details: [
+        { label: 'Title', value: doc.title || '-' },
+        { label: 'Type', value: doc.templateType || '-' },
+      ],
+      caution: 'This action permanently removes the template.',
+    })
+    if (confirmed) {
+      deleteMutation.mutate(doc.id)
+    }
   }
 
   const handleSubmit = (e) => {
@@ -73,6 +103,18 @@ export default function Documents() {
     } else {
       createMutation.mutate(data)
     }
+  }
+
+  const showSkeleton = useMinLoadingTime(isLoading || isError)
+
+  if (showSkeleton) {
+    return (
+      <div className="documents-page">
+        <WakeUpBanner />
+        <HeroSkeleton />
+        <DocumentsSkeleton />
+      </div>
+    )
   }
 
   return (
@@ -103,7 +145,7 @@ export default function Documents() {
         {['NOC', 'LETTER', 'AGREEMENT'].map(cat => (
           <div key={cat} className="documents-stat-card">
             <p className="documents-stat-label">{cat}</p>
-            <p className="documents-stat-value">{documents.filter(d => d.templateType === cat).length}</p>
+            <p className="documents-stat-value">{documentTypeCounts[cat] || 0}</p>
           </div>
         ))}
       </div>
@@ -138,11 +180,6 @@ export default function Documents() {
       </div>
 
       {/* Documents Grid */}
-      {isLoading ? (
-        <div className="documents-loading">
-          <div className="documents-spinner" />
-        </div>
-      ) : (
         <div className="documents-grid">
           {filteredDocuments.map((doc) => (
             <div key={doc.id} className="documents-card">
@@ -182,7 +219,7 @@ export default function Documents() {
                     Edit
                   </button>
                   <button
-                    onClick={() => deleteMutation.mutate(doc.id)}
+                    onClick={() => confirmAndDeleteDocument(doc)}
                     className="documents-delete-button"
                   >
                     <Trash2 size={16} />
@@ -192,7 +229,6 @@ export default function Documents() {
             </div>
           ))}
         </div>
-      )}
 
       {/* Modal */}
       {showModal && (
@@ -247,9 +283,14 @@ export default function Documents() {
               </div>
               <div className="documents-form-actions">
                 <button type="button" onClick={closeModal} className="documents-cancel-button">Cancel</button>
-                <button type="submit" className="documents-submit-button">
+                <AsyncButton
+                  type="submit"
+                  className="documents-submit-button"
+                  isLoading={createMutation.isPending || updateMutation.isPending}
+                  loadingText={editingDocument ? 'Updating...' : 'Creating...'}
+                >
                   {editingDocument ? 'Update' : 'Create'}
-                </button>
+                </AsyncButton>
               </div>
             </form>
           </div>

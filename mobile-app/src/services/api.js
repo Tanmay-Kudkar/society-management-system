@@ -29,39 +29,14 @@ apiClient.interceptors.request.use(
   }
 );
 
-// Response interceptor for error handling and token refresh
+// Response interceptor for error handling
 apiClient.interceptors.response.use(
   (response) => response,
   async (error) => {
-    const originalRequest = error.config;
-
-    // If 401 and haven't tried refresh yet
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true;
-
-      try {
-        const refreshToken = await SecureStore.getItemAsync(STORAGE_KEYS.REFRESH_TOKEN);
-        
-        if (refreshToken) {
-          const response = await axios.post(`${API_CONFIG.BASE_URL}/auth/refresh`, {
-            refreshToken,
-          });
-
-          const { token } = response.data;
-          await SecureStore.setItemAsync(STORAGE_KEYS.AUTH_TOKEN, token);
-
-          originalRequest.headers.Authorization = `Bearer ${token}`;
-          return apiClient(originalRequest);
-        }
-      } catch (refreshError) {
-        // Refresh failed, user needs to login again
-        await SecureStore.deleteItemAsync(STORAGE_KEYS.AUTH_TOKEN);
-        await SecureStore.deleteItemAsync(STORAGE_KEYS.REFRESH_TOKEN);
-        await SecureStore.deleteItemAsync(STORAGE_KEYS.USER_DATA);
-        
-        // You might want to emit an event here to trigger logout in the app
-        return Promise.reject(refreshError);
-      }
+    // If 401, clear stored credentials (user must login again)
+    if (error.response?.status === 401) {
+      await SecureStore.deleteItemAsync(STORAGE_KEYS.AUTH_TOKEN);
+      await SecureStore.deleteItemAsync(STORAGE_KEYS.USER_DATA);
     }
 
     return Promise.reject(error);
@@ -73,52 +48,35 @@ export const authAPI = {
   login: (email, password) => 
     apiClient.post('/auth/login', { email, password }),
   
-  sendOTP: (phone) => 
-    apiClient.post('/auth/send-otp', { phone }),
-  
-  verifyOTP: (phone, otp) => 
-    apiClient.post('/auth/verify-otp', { phone, otp }),
-  
   register: (userData) => 
     apiClient.post('/auth/register', userData),
   
   logout: () => 
     apiClient.post('/auth/logout'),
   
-  verifyToken: () => 
-    apiClient.get('/auth/verify'),
-  
-  refreshToken: (refreshToken) => 
-    apiClient.post('/auth/refresh', { refreshToken }),
+  me: () => 
+    apiClient.get('/auth/me'),
   
   forgotPassword: (email) => 
     apiClient.post('/auth/forgot-password', { email }),
   
   resetPassword: (token, password) => 
     apiClient.post('/auth/reset-password', { token, password }),
+  
+  changePassword: (currentPassword, newPassword) => 
+    apiClient.post('/auth/change-password', { currentPassword, newPassword }),
 };
 
 // ============= User API =============
 export const userAPI = {
-  getProfile: () => 
-    apiClient.get('/users/profile'),
-  
-  updateProfile: (data) => 
-    apiClient.put('/users/profile', data),
-  
-  changePassword: (oldPassword, newPassword) => 
-    apiClient.post('/users/change-password', { oldPassword, newPassword }),
-  
-  uploadAvatar: (formData) => 
-    apiClient.post('/users/avatar', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    }),
-  
   getUsers: (params) => 
     apiClient.get('/users', { params }),
   
   getUserById: (id) => 
     apiClient.get(`/users/${id}`),
+  
+  getUsersBySociety: (societyId) => 
+    apiClient.get(`/users/society/${societyId}`),
   
   createUser: (data) => 
     apiClient.post('/users', data),
@@ -156,6 +114,9 @@ export const flatAPI = {
   getFlatById: (id) => 
     apiClient.get(`/flats/${id}`),
   
+  getFlatsBySociety: (societyId) => 
+    apiClient.get(`/flats/society/${societyId}`),
+  
   createFlat: (data) => 
     apiClient.post('/flats', data),
   
@@ -164,9 +125,6 @@ export const flatAPI = {
   
   deleteFlat: (id) => 
     apiClient.delete(`/flats/${id}`),
-  
-  getFlatMembers: (id) => 
-    apiClient.get(`/flats/${id}/members`),
 };
 
 // ============= Notices API =============
@@ -177,17 +135,20 @@ export const noticeAPI = {
   getNoticeById: (id) => 
     apiClient.get(`/notices/${id}`),
   
-  createNotice: (data) => 
-    apiClient.post('/notices', data),
+  getNoticesBySociety: (societyId) => 
+    apiClient.get(`/notices/society/${societyId}`),
   
-  updateNotice: (id, data) => 
-    apiClient.put(`/notices/${id}`, data),
+  createNotice: (data, userId) => 
+    apiClient.post(`/notices?userId=${userId}`, data),
   
-  deleteNotice: (id) => 
-    apiClient.delete(`/notices/${id}`),
+  updateNotice: (id, data, userId) => 
+    apiClient.put(`/notices/${id}?userId=${userId}`, data),
+  
+  deleteNotice: (id, userId) => 
+    apiClient.delete(`/notices/${id}?userId=${userId}`),
 };
 
-// ============= Complaints/Tickets API =============
+// ============= Complaints API =============
 export const complaintAPI = {
   getComplaints: (params) => 
     apiClient.get('/complaints', { params }),
@@ -195,119 +156,119 @@ export const complaintAPI = {
   getComplaintById: (id) => 
     apiClient.get(`/complaints/${id}`),
   
-  createComplaint: (data) => 
-    apiClient.post('/complaints', data),
+  getComplaintsBySociety: (societyId, userId) => 
+    apiClient.get(`/complaints/society/${societyId}?userId=${userId}`),
   
-  updateComplaint: (id, data) => 
-    apiClient.put(`/complaints/${id}`, data),
+  getComplaintsByStatus: (status, userId) => 
+    apiClient.get(`/complaints/status/${status}?userId=${userId}`),
   
-  deleteComplaint: (id) => 
-    apiClient.delete(`/complaints/${id}`),
+  createComplaint: (data, userId) => 
+    apiClient.post(`/complaints?userId=${userId}`, data),
   
-  addComment: (id, comment) => 
-    apiClient.post(`/complaints/${id}/comments`, { comment }),
+  updateStatus: (id, status, resolution, userId) => {
+    let url = `/complaints/${id}/status?status=${status}&userId=${userId}`;
+    if (resolution) url += `&resolution=${encodeURIComponent(resolution)}`;
+    return apiClient.patch(url);
+  },
   
-  updateStatus: (id, status) => 
-    apiClient.patch(`/complaints/${id}/status`, { status }),
+  deleteComplaint: (id, userId) => 
+    apiClient.delete(`/complaints/${id}?userId=${userId}`),
 };
 
-// ============= Maintenance/Bills API =============
+// ============= Maintenance Bills API =============
 export const maintenanceAPI = {
   getBills: (params) => 
-    apiClient.get('/maintenance/bills', { params }),
+    apiClient.get('/maintenance-bills', { params }),
   
   getBillById: (id) => 
-    apiClient.get(`/maintenance/bills/${id}`),
+    apiClient.get(`/maintenance-bills/${id}`),
   
-  createBill: (data) => 
-    apiClient.post('/maintenance/bills', data),
+  getBillsByFlat: (flatId) => 
+    apiClient.get(`/maintenance-bills/flat/${flatId}`),
   
-  updateBill: (id, data) => 
-    apiClient.put(`/maintenance/bills/${id}`, data),
+  getPendingBills: () => 
+    apiClient.get('/maintenance-bills/pending'),
   
-  deleteBill: (id) => 
-    apiClient.delete(`/maintenance/bills/${id}`),
+  createBill: (data, userId) => 
+    apiClient.post(`/maintenance-bills?userId=${userId}`, data),
   
-  getExpenses: (params) => 
-    apiClient.get('/maintenance/expenses', { params }),
+  updateBill: (id, data, userId) => 
+    apiClient.put(`/maintenance-bills/${id}?userId=${userId}`, data),
   
-  createExpense: (data) => 
-    apiClient.post('/maintenance/expenses', data),
+  recordPayment: (id, amount, paymentMode, referenceNumber, userId) => 
+    apiClient.post(`/maintenance-bills/${id}/payment?amount=${amount}&paymentMode=${paymentMode}&referenceNumber=${encodeURIComponent(referenceNumber || '')}&userId=${userId}`),
+  
+  deleteBill: (id, userId) => 
+    apiClient.delete(`/maintenance-bills/${id}?userId=${userId}`),
 };
 
-// ============= Payments API =============
+// ============= Payments API (Razorpay) =============
 export const paymentAPI = {
-  getPayments: (params) => 
-    apiClient.get('/payments', { params }),
+  createOrder: (data) => 
+    apiClient.post('/api/payments/create-order', data),
+  
+  verifyPayment: (data) => 
+    apiClient.post('/api/payments/verify', data),
+  
+  handleFailure: (paymentId, errorCode, errorDescription) => 
+    apiClient.post(`/api/payments/failure?paymentId=${paymentId}&errorCode=${encodeURIComponent(errorCode || '')}&errorDescription=${encodeURIComponent(errorDescription || '')}`),
   
   getPaymentById: (id) => 
-    apiClient.get(`/payments/${id}`),
+    apiClient.get(`/api/payments/${id}`),
   
-  createPayment: (data) => 
-    apiClient.post('/payments', data),
+  getPaymentByOrderId: (orderId) => 
+    apiClient.get(`/api/payments/order/${orderId}`),
   
-  getPaymentHistory: (params) => 
-    apiClient.get('/payments/history', { params }),
+  getPaymentsByUser: (userId) => 
+    apiClient.get(`/api/payments/user/${userId}`),
   
-  getDues: () => 
-    apiClient.get('/payments/dues'),
+  getPaymentsBySociety: (societyId) => 
+    apiClient.get(`/api/payments/society/${societyId}`),
   
-  initiatePayment: (billId, amount) => 
-    apiClient.post('/payments/initiate', { billId, amount }),
-  
-  verifyPayment: (paymentId, transactionId) => 
-    apiClient.post('/payments/verify', { paymentId, transactionId }),
+  getPaymentsByBill: (billId) => 
+    apiClient.get(`/api/payments/bill/${billId}`),
 };
 
-// ============= Visitors API =============
-export const visitorAPI = {
-  getVisitors: (params) => 
-    apiClient.get('/visitors', { params }),
+// ============= Tickets API =============
+export const ticketAPI = {
+  getTickets: (params) => 
+    apiClient.get('/tickets', { params }),
   
-  getVisitorById: (id) => 
-    apiClient.get(`/visitors/${id}`),
+  getTicketById: (id) => 
+    apiClient.get(`/tickets/${id}`),
   
-  createVisitor: (data) => 
-    apiClient.post('/visitors', data),
+  getTicketsBySociety: (societyId) => 
+    apiClient.get(`/tickets/society/${societyId}`),
   
-  updateVisitor: (id, data) => 
-    apiClient.put(`/visitors/${id}`, data),
+  getTicketsByStatus: (status) => 
+    apiClient.get(`/tickets/status/${status}`),
   
-  deleteVisitor: (id) => 
-    apiClient.delete(`/visitors/${id}`),
+  createTicket: (data, userId) => 
+    apiClient.post(`/tickets?userId=${userId}`, data),
   
-  checkIn: (id) => 
-    apiClient.post(`/visitors/${id}/check-in`),
+  updateTicket: (id, data, userId) => 
+    apiClient.put(`/tickets/${id}?userId=${userId}`, data),
   
-  checkOut: (id) => 
-    apiClient.post(`/visitors/${id}/check-out`),
+  updateTicketStatus: (id, status, resolution, userId) => {
+    let url = `/tickets/${id}/status?status=${status}&userId=${userId}`;
+    if (resolution) url += `&resolution=${encodeURIComponent(resolution)}`;
+    return apiClient.patch(url);
+  },
   
-  approveVisitor: (id) => 
-    apiClient.post(`/visitors/${id}/approve`),
-  
-  rejectVisitor: (id) => 
-    apiClient.post(`/visitors/${id}/reject`),
-  
-  getExpectedVisitors: () => 
-    apiClient.get('/visitors/expected'),
-  
-  getActiveVisitors: () => 
-    apiClient.get('/visitors/active'),
+  deleteTicket: (id, userId) => 
+    apiClient.delete(`/tickets/${id}?userId=${userId}`),
 };
 
-// ============= Dashboard API =============
-export const dashboardAPI = {
-  getAdminDashboard: () => 
-    apiClient.get('/dashboard/admin'),
+// ============= Reports/Dashboard API =============
+export const reportAPI = {
+  getDashboard: (societyId) => 
+    apiClient.get(`/api/reports/dashboard/${societyId}`),
   
-  getMemberDashboard: () => 
-    apiClient.get('/dashboard/member'),
+  getMTD: (societyId) => 
+    apiClient.get(`/api/reports/mtd/${societyId}`),
   
-  getStaffDashboard: () => 
-    apiClient.get('/dashboard/staff'),
-  
-  getStatistics: () => 
-    apiClient.get('/dashboard/statistics'),
+  getYTD: (societyId) => 
+    apiClient.get(`/api/reports/ytd/${societyId}`),
 };
 
 // ============= Vehicles API =============
@@ -346,26 +307,56 @@ export const emergencyAPI = {
     apiClient.delete(`/emergency-contacts/${id}`),
 };
 
-// ============= Documents API =============
+// ============= Document Templates API =============
 export const documentAPI = {
-  getDocuments: (params) => 
-    apiClient.get('/documents', { params }),
+  getTemplates: (params) => 
+    apiClient.get('/document-templates', { params }),
   
-  getDocumentById: (id) => 
-    apiClient.get(`/documents/${id}`),
+  getTemplateById: (id) => 
+    apiClient.get(`/document-templates/${id}`),
   
-  uploadDocument: (formData) => 
-    apiClient.post('/documents', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    }),
+  getTemplatesByType: (templateType) => 
+    apiClient.get(`/document-templates/type/${templateType}`),
   
-  deleteDocument: (id) => 
-    apiClient.delete(`/documents/${id}`),
+  generateDocument: (id, data) => 
+    apiClient.post(`/document-templates/${id}/generate`, data),
+};
+
+// ============= Banners API =============
+export const bannerAPI = {
+  getActive: (societyId) => 
+    apiClient.get(`/banners/active/${societyId}`),
   
-  downloadDocument: (id) => 
-    apiClient.get(`/documents/${id}/download`, {
-      responseType: 'blob',
-    }),
+  getBySociety: (societyId) => 
+    apiClient.get(`/banners/society/${societyId}`),
+};
+
+// ============= Notification Preferences API =============
+export const notificationPreferenceAPI = {
+  getByUserId: (userId) => 
+    apiClient.get(`/notification-preferences/${userId}`),
+  
+  update: (userId, data) => 
+    apiClient.put(`/notification-preferences/${userId}`, data),
+};
+
+// TODO: No backend VisitorController exists yet — stub export to prevent import crashes
+export const visitorAPI = {
+  getVisitors: () => Promise.reject(new Error('Visitor API not implemented in backend')),
+  getVisitorById: () => Promise.reject(new Error('Visitor API not implemented in backend')),
+  createVisitor: () => Promise.reject(new Error('Visitor API not implemented in backend')),
+  approveVisitor: () => Promise.reject(new Error('Visitor API not implemented in backend')),
+  rejectVisitor: () => Promise.reject(new Error('Visitor API not implemented in backend')),
+  checkIn: () => Promise.reject(new Error('Visitor API not implemented in backend')),
+  checkOut: () => Promise.reject(new Error('Visitor API not implemented in backend')),
+};
+
+// TODO: No backend DashboardController exists yet — uses /api/reports/dashboard instead
+export const dashboardAPI = {
+  getAdminDashboard: () => Promise.reject(new Error('Dashboard API not implemented — use reportAPI.getDashboard(societyId)')),
+  getMemberDashboard: () => Promise.reject(new Error('Dashboard API not implemented — use reportAPI.getDashboard(societyId)')),
+  getStaffDashboard: () => Promise.reject(new Error('Dashboard API not implemented — use reportAPI.getDashboard(societyId)')),
+  getStatistics: () => Promise.reject(new Error('Dashboard API not implemented — use reportAPI.getDashboard(societyId)')),
 };
 
 export default apiClient;

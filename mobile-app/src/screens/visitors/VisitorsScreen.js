@@ -12,8 +12,10 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../context/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
 import { Header, Card, Badge, Loading, EmptyState, ErrorState, Avatar } from '../../components/common';
+import { FilteredListSkeleton } from '../../components/common/Skeleton';
 import { Layout, VISITOR_STATUS } from '../../constants';
 import { visitorAPI } from '../../services/api';
+import useMinLoadingTime from '../../hooks/useMinLoadingTime';
 
 const VisitorsScreen = ({ navigation }) => {
   const { theme } = useTheme();
@@ -332,11 +334,13 @@ const VisitorsScreen = ({ navigation }) => {
     );
   };
 
-  if (loading) {
+  const showSkeleton = useMinLoadingTime(loading);
+
+  if (showSkeleton) {
     return (
       <SafeAreaView style={styles.container} edges={['bottom']}>
         <Header title="Visitors" showBack />
-        <Loading fullScreen text="Loading visitors..." />
+        <FilteredListSkeleton filterCount={3} cardCount={4} />
       </SafeAreaView>
     );
   }

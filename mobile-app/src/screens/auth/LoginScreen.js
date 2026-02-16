@@ -21,10 +21,8 @@ const LoginScreen = ({ navigation }) => {
   const { theme } = useTheme();
   const { login, isLoading } = useAuth();
   
-  const [loginMethod, setLoginMethod] = useState('email'); // 'email' or 'phone'
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [phone, setPhone] = useState('');
   const [errors, setErrors] = useState({});
 
   const validateEmail = () => {
@@ -46,31 +44,13 @@ const LoginScreen = ({ navigation }) => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const validatePhone = () => {
-    const newErrors = {};
-    
-    if (!phone.trim()) {
-      newErrors.phone = 'Phone number is required';
-    } else if (!/^[0-9]{10}$/.test(phone.replace(/\D/g, ''))) {
-      newErrors.phone = 'Invalid phone number';
-    }
-    
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleEmailLogin = async () => {
+  const handleLogin = async () => {
     if (!validateEmail()) return;
     
     const result = await login(email, password);
     if (!result.success) {
       Alert.alert('Login Failed', result.error);
     }
-  };
-
-  const handlePhoneLogin = () => {
-    if (!validatePhone()) return;
-    navigation.navigate('OTPVerification', { phone });
   };
 
   const styles = StyleSheet.create({
@@ -208,98 +188,43 @@ const LoginScreen = ({ navigation }) => {
           </LinearGradient>
 
           <View style={styles.content}>
-            {/* Login Method Tabs */}
-            <View style={styles.tabContainer}>
-              <TouchableOpacity
-                style={[styles.tab, loginMethod === 'email' && styles.activeTab]}
-                onPress={() => setLoginMethod('email')}
-              >
-                <Text style={[
-                  styles.tabText, 
-                  loginMethod === 'email' && styles.activeTabText
-                ]}>
-                  Email
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.tab, loginMethod === 'phone' && styles.activeTab]}
-                onPress={() => setLoginMethod('phone')}
-              >
-                <Text style={[
-                  styles.tabText, 
-                  loginMethod === 'phone' && styles.activeTabText
-                ]}>
-                  Phone
-                </Text>
-              </TouchableOpacity>
-            </View>
-
             {/* Login Form */}
             <View style={styles.form}>
-              {loginMethod === 'email' ? (
-                <>
-                  <Input
-                    label="Email Address"
-                    placeholder="Enter your email"
-                    value={email}
-                    onChangeText={(text) => {
-                      setEmail(text);
-                      setErrors({ ...errors, email: '' });
-                    }}
-                    error={errors.email}
-                    keyboardType="email-address"
-                    leftIcon="mail-outline"
-                    autoCapitalize="none"
-                  />
-                  <Input
-                    label="Password"
-                    placeholder="Enter your password"
-                    value={password}
-                    onChangeText={(text) => {
-                      setPassword(text);
-                      setErrors({ ...errors, password: '' });
-                    }}
-                    error={errors.password}
-                    secureTextEntry
-                    leftIcon="lock-closed-outline"
-                  />
-                  <TouchableOpacity style={styles.forgotPassword}>
-                    <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
-                  </TouchableOpacity>
-                  <Button
-                    title="Sign In"
-                    onPress={handleEmailLogin}
-                    loading={isLoading}
-                    fullWidth
-                    gradient
-                  />
-                </>
-              ) : (
-                <>
-                  <Input
-                    label="Phone Number"
-                    placeholder="Enter your phone number"
-                    value={phone}
-                    onChangeText={(text) => {
-                      setPhone(text);
-                      setErrors({ ...errors, phone: '' });
-                    }}
-                    error={errors.phone}
-                    keyboardType="phone-pad"
-                    leftIcon="call-outline"
-                    maxLength={10}
-                  />
-                  <Button
-                    title="Send OTP"
-                    onPress={handlePhoneLogin}
-                    loading={isLoading}
-                    fullWidth
-                    gradient
-                    icon="arrow-forward"
-                    iconPosition="right"
-                  />
-                </>
-              )}
+              <Input
+                label="Email Address"
+                placeholder="Enter your email"
+                value={email}
+                onChangeText={(text) => {
+                  setEmail(text);
+                  setErrors({ ...errors, email: '' });
+                }}
+                error={errors.email}
+                keyboardType="email-address"
+                leftIcon="mail-outline"
+                autoCapitalize="none"
+              />
+              <Input
+                label="Password"
+                placeholder="Enter your password"
+                value={password}
+                onChangeText={(text) => {
+                  setPassword(text);
+                  setErrors({ ...errors, password: '' });
+                }}
+                error={errors.password}
+                secureTextEntry
+                leftIcon="lock-closed-outline"
+              />
+              <TouchableOpacity style={styles.forgotPassword}>
+                <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+              </TouchableOpacity>
+              <Button
+                title="Sign In"
+                onPress={handleLogin}
+                loading={isLoading}
+                fullWidth
+                gradient
+              />
             </View>
 
             <View style={styles.dividerContainer}>

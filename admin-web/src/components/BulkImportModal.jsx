@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react'
 import { Upload, Download, X, AlertCircle, Eye, CheckCircle2 } from 'lucide-react'
 import clsx from 'clsx'
+import * as XLSX from 'xlsx'
 
 /**
  * Reusable Bulk Import Modal component.
@@ -122,10 +123,43 @@ export default function BulkImportModal({
   }
 
   const downloadErrorReport = async () => {
-    if (!onDownloadErrorReport) return
     try {
-      const response = await onDownloadErrorReport(importResults)
-      const url = window.URL.createObjectURL(new Blob([response.data]))
+      let reportBlob
+
+      if (onDownloadErrorReport) {
+        const response = await onDownloadErrorReport(importResults)
+        reportBlob = new Blob([response.data])
+      } else {
+        const failedRows = (importResults?.results || []).filter((row) => !row.success)
+        if (!failedRows.length) {
+          throw new Error('No failed rows found to export')
+        }
+
+        const reportColumns = tableColumns.length > 0
+          ? tableColumns.map((column) => ({ key: column.key, label: column.label }))
+          : Object.keys(failedRows[0] || {})
+              .filter((key) => !['success', 'normalizedRow'].includes(key))
+              .map((key) => ({ key, label: key }))
+
+        const rows = failedRows.map((row) => {
+          const reportRow = { Row: row.rowNumber ?? '-' }
+          reportColumns.forEach((column) => {
+            reportRow[column.label] = row[column.key] ?? '-'
+          })
+          reportRow['Error Message'] = row.errorMessage || 'Unknown error'
+          return reportRow
+        })
+
+        const worksheet = XLSX.utils.json_to_sheet(rows)
+        const workbook = XLSX.utils.book_new()
+        XLSX.utils.book_append_sheet(workbook, worksheet, 'ImportErrors')
+        const buffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' })
+        reportBlob = new Blob([buffer], {
+          type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        })
+      }
+
+      const url = window.URL.createObjectURL(reportBlob)
       const link = document.createElement('a')
       link.href = url
       link.setAttribute('download', errorReportFilename)
@@ -518,7 +552,7 @@ export default function BulkImportModal({
 
             {step === 'results' && (
               <div className="bulk-import__footer-row">
-                {onDownloadErrorReport && importResults?.failureCount > 0 && (
+                {importResults?.failureCount > 0 && (
                   <button
                     onClick={downloadErrorReport}
                     className="bulk-import__btn bulk-import__btn--secondary"

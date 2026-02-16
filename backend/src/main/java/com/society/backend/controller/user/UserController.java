@@ -132,8 +132,10 @@ public class UserController {
      */
     @DeleteMapping("/{id}")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
-        userService.deleteUser(id);
+    public ResponseEntity<Void> deleteUser(
+            @PathVariable Long id,
+            @RequestParam(defaultValue = "false") boolean force) {
+        userService.deleteUser(id, force);
         return ResponseEntity.noContent().build();
     }
 

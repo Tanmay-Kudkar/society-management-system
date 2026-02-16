@@ -9,7 +9,6 @@ import { View, Text, StyleSheet } from 'react-native';
 
 // Auth Screens
 import LoginScreen from '../screens/auth/LoginScreen';
-import OTPVerificationScreen from '../screens/auth/OTPVerificationScreen';
 
 // Dashboard Screens
 import AdminDashboard from '../screens/dashboard/AdminDashboard';
@@ -39,7 +38,6 @@ const AuthNavigator = () => {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="Login" component={LoginScreen} />
-      <Stack.Screen name="OTPVerification" component={OTPVerificationScreen} />
     </Stack.Navigator>
   );
 };

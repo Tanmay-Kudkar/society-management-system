@@ -1,0 +1,382 @@
+/* ============================================
+   SKELETON LOADING SYSTEM
+   YouTube / Social-media style shimmer skeletons
+   Works in both dark & light themes
+   ============================================ */
+
+/* ── Shimmer keyframe ── */
+@keyframes skeletonShimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+@keyframes skeletonFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes skeletonPulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.5; }
+}
+
+/* ── Base bone element ── */
+.skeleton-bone {
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--bg-card) 86%, var(--text-muted) 14%) 0%,
+    color-mix(in srgb, var(--bg-card) 70%, var(--text-muted) 30%) 50%,
+    color-mix(in srgb, var(--bg-card) 86%, var(--text-muted) 14%) 100%
+  );
+  background-size: 200% 100%;
+  animation: skeletonShimmer 1.4s ease-in-out infinite;
+  border-radius: var(--radius-md);
+}
+
+/* ── Skeleton container: fades in ── */
+.skeleton-container {
+  animation: skeletonFadeIn 0.25s ease-out;
+}
+
+/* ── Preset shapes ── */
+.skeleton-bone--circle {
+  border-radius: 50%;
+}
+
+.skeleton-bone--rounded {
+  border-radius: var(--radius-xl);
+}
+
+.skeleton-bone--pill {
+  border-radius: var(--radius-full);
+}
+
+/* ── Skeleton Card ── */
+.skeleton-card {
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--border-light);
+  padding: 20px;
+  background: var(--bg-card);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  overflow: hidden;
+}
+
+.skeleton-card--no-pad {
+  padding: 0;
+}
+
+/* ── Common layout patterns ── */
+.skeleton-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.skeleton-col {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+}
+
+.skeleton-grid {
+  display: grid;
+  gap: 16px;
+}
+
+.skeleton-grid--2 { grid-template-columns: repeat(2, 1fr); }
+.skeleton-grid--3 { grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
+.skeleton-grid--4 { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
+
+/* ── Stat card skeleton ── */
+.skeleton-stat {
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--border-light);
+  padding: 20px;
+  background: var(--bg-card);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 100px;
+}
+
+.skeleton-stat .skeleton-bone--icon {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-lg);
+}
+
+.skeleton-stat .skeleton-bone--number {
+  width: 60%;
+  height: 28px;
+}
+
+.skeleton-stat .skeleton-bone--label {
+  width: 80%;
+  height: 14px;
+}
+
+/* ── Table skeleton ── */
+.skeleton-table {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  background: var(--bg-card);
+}
+
+.skeleton-table__header {
+  display: grid;
+  gap: 16px;
+  padding: 14px 20px;
+  background: var(--bg-elevated);
+  border-bottom: 1px solid var(--border-light);
+}
+
+.skeleton-table__row {
+  display: grid;
+  gap: 16px;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border-light);
+  align-items: center;
+}
+
+.skeleton-table__row:last-child {
+  border-bottom: none;
+}
+
+/* ── Hero / Page header skeleton ── */
+.skeleton-hero {
+  border-radius: var(--radius-xl);
+  padding: 28px 24px;
+  background: linear-gradient(135deg,
+    color-mix(in srgb, var(--accent-primary) 15%, var(--bg-card)),
+    color-mix(in srgb, var(--accent-primary) 8%, var(--bg-card))
+  );
+  border: 1px solid var(--border-light);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.skeleton-hero .skeleton-bone--title {
+  width: 40%;
+  height: 28px;
+}
+
+.skeleton-hero .skeleton-bone--subtitle {
+  width: 60%;
+  height: 16px;
+}
+
+.skeleton-hero__stats {
+  display: flex;
+  gap: 16px;
+  margin-top: 8px;
+}
+
+.skeleton-hero__stat-box {
+  width: 80px;
+  height: 56px;
+  border-radius: var(--radius-lg);
+}
+
+/* ── Card grid skeleton (like Societies, Vendors, etc.) ── */
+.skeleton-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 16px;
+}
+
+.skeleton-card-grid .skeleton-card {
+  min-height: 200px;
+}
+
+.skeleton-card-grid .skeleton-bone--avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.skeleton-card-grid .skeleton-bone--title {
+  width: 70%;
+  height: 18px;
+}
+
+.skeleton-card-grid .skeleton-bone--text {
+  width: 90%;
+  height: 12px;
+}
+
+.skeleton-card-grid .skeleton-bone--text-sm {
+  width: 50%;
+  height: 12px;
+}
+
+.skeleton-card-grid .skeleton-bone--badge {
+  width: 64px;
+  height: 22px;
+  border-radius: var(--radius-full);
+}
+
+/* ── Chart placeholder ── */
+.skeleton-chart {
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--border-light);
+  padding: 20px;
+  background: var(--bg-card);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-height: 260px;
+}
+
+.skeleton-chart__bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  flex: 1;
+  padding-top: 16px;
+}
+
+.skeleton-chart__bar {
+  flex: 1;
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  min-width: 16px;
+}
+
+/* ── Filter bar skeleton ── */
+.skeleton-filters {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.skeleton-filters .skeleton-bone--search {
+  width: 260px;
+  height: 40px;
+  border-radius: var(--radius-lg);
+}
+
+.skeleton-filters .skeleton-bone--btn {
+  width: 110px;
+  height: 40px;
+  border-radius: var(--radius-lg);
+}
+
+/* ── Tab bar skeleton ── */
+.skeleton-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 20px;
+  padding: 4px;
+  background: var(--bg-elevated);
+  border-radius: var(--radius-lg);
+  width: fit-content;
+}
+
+.skeleton-tabs .skeleton-bone--tab {
+  width: 100px;
+  height: 36px;
+  border-radius: var(--radius-md);
+}
+
+/* ── List skeleton (vertical cards) ── */
+.skeleton-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.skeleton-list .skeleton-card {
+  flex-direction: row;
+  align-items: center;
+  min-height: 80px;
+  padding: 16px 20px;
+}
+
+/* ── Summary cards row ── */
+.skeleton-summary-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+/* ── Backend Wake-Up Overlay ── */
+.skeleton-wakeup-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 20px;
+  background: linear-gradient(135deg,
+    color-mix(in srgb, var(--color-info) 14%, var(--bg-card)),
+    color-mix(in srgb, var(--accent-primary) 10%, var(--bg-card))
+  );
+  border: 1px solid color-mix(in srgb, var(--color-info) 25%, var(--border-light));
+  border-radius: var(--radius-xl);
+  margin-bottom: 20px;
+  animation: skeletonFadeIn 0.3s ease-out, skeletonPulse 2.5s ease-in-out infinite;
+}
+
+.skeleton-wakeup-banner__icon {
+  font-size: 20px;
+  animation: skeletonPulse 1.5s ease-in-out infinite;
+}
+
+.skeleton-wakeup-banner__text {
+  flex: 1;
+}
+
+.skeleton-wakeup-banner__title {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 2px;
+}
+
+.skeleton-wakeup-banner__subtitle {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+}
+
+.skeleton-wakeup-banner__dots {
+  display: flex;
+  gap: 4px;
+}
+
+.skeleton-wakeup-banner__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent-primary);
+  animation: skeletonPulse 1.2s ease-in-out infinite;
+}
+.skeleton-wakeup-banner__dot:nth-child(2) { animation-delay: 0.2s; }
+.skeleton-wakeup-banner__dot:nth-child(3) { animation-delay: 0.4s; }
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .skeleton-card-grid {
+    grid-template-columns: 1fr;
+  }
+  .skeleton-grid--2 { grid-template-columns: 1fr; }
+  .skeleton-grid--3 { grid-template-columns: 1fr; }
+  .skeleton-grid--4 { grid-template-columns: repeat(2, 1fr); }
+  .skeleton-summary-row { grid-template-columns: repeat(2, 1fr); }
+  .skeleton-filters .skeleton-bone--search { width: 100%; }
+  .skeleton-hero__stats { flex-wrap: wrap; }
+}
+
+@media (max-width: 480px) {
+  .skeleton-grid--4 { grid-template-columns: 1fr; }
+  .skeleton-summary-row { grid-template-columns: 1fr; }
+}

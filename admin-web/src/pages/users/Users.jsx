@@ -1,14 +1,18 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useRef } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '../../context'
 import { useConfirmDialog } from '../../context'
+import { useToast } from '../../context'
 import { userApi, societyApi, flatApi } from '../../../../api'
 import { Plus, Edit, Trash2, Search, X, AlertCircle, Shield, Users as UsersIcon, Building2, Home, Upload, Download, UserPlus, FileSpreadsheet, CheckCircle, XCircle, Info, Eye, EyeOff } from 'lucide-react'
 import clsx from 'clsx'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { parseApiError, validateUserForm } from '../../utils'
+import * as XLSX from 'xlsx'
 import { FormInput, PhoneInput, SmartSelect, FormErrorSummary } from '../../components'
 import { PermissionDenied } from '../../components'
+import { HeroSkeleton, FiltersSkeleton, TableSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
+import useMinLoadingTime from '../../hooks/useMinLoadingTime'
 
 const roleColors = {
   PLATFORM_OWNER: 'role-tag role-tag--platform-owner',
@@ -43,12 +47,10 @@ const roleAccentColors = {
 export default function Users() {
   const { user, canManageUsers } = useAuth()
   const confirmDialog = useConfirmDialog()
+  const toast = useToast()
   const navigate = useNavigate()
-  
-  // Permission check
-  if (!canManageUsers()) {
-    return <PermissionDenied message="You don't have permission to manage users" />
-  }
+  const hasUserManagementPermission = canManageUsers()
+
   const queryClient = useQueryClient()
   const [searchParams] = useSearchParams()
   
@@ -59,7 +61,7 @@ export default function Users() {
   const [showModal, setShowModal] = useState(false)
   const [editingUser, setEditingUser] = useState(null)
   const [searchTerm, setSearchTerm] = useState('')
-  const [filterRole, setFilterRole] = useState('')
+  const [filterRole, setFilterRole] = useState(urlRole || '')
   const [error, setError] = useState('')
   const [selectedRole, setSelectedRole] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -72,14 +74,38 @@ export default function Users() {
   const [bulkImportError, setBulkImportError] = useState('')
   const [isDragOver, setIsDragOver] = useState(false)
   const fileInputRef = useRef(null)
-  
-  // Initialize filterRole from URL parameter
-  useEffect(() => {
-    if (urlRole) {
-      setFilterRole(urlRole)
-    }
-  }, [urlRole])
 
+  const downloadUsersBulkErrorReport = () => {
+    const failedRows = (bulkImportPreview?.results || []).filter((row) => !row.success)
+    if (!failedRows.length) return
+
+    const reportRows = failedRows.map((row) => ({
+      Row: row.rowNumber ?? '-',
+      Name: row.name || '-',
+      Email: row.email || '-',
+      Flat: row.flatNumber || '-',
+      Role: row.role || '-',
+      'Error Message': row.errorMessage || 'Unknown error',
+    }))
+
+    const worksheet = XLSX.utils.json_to_sheet(reportRows)
+    const workbook = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'ImportErrors')
+    const buffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' })
+    const blob = new Blob([buffer], {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    })
+
+    const url = window.URL.createObjectURL(blob)
+    const anchor = document.createElement('a')
+    anchor.href = url
+    anchor.download = 'user_bulk_import_errors.xlsx'
+    document.body.appendChild(anchor)
+    anchor.click()
+    anchor.remove()
+    window.URL.revokeObjectURL(url)
+  }
+  
   // Check if current user is PLATFORM_OWNER
   const isPlatformLevel = user?.role === 'PLATFORM_OWNER' || user?.role === 'ORGANIZATION_OWNER'
   
@@ -88,10 +114,9 @@ export default function Users() {
   const isMember = user?.role === 'MEMBER'
 
   // Fetch users - include user.id in queryKey to refetch when user changes
-  const { data: users = [], isLoading } = useQuery({
+  const { data: users = [], isLoading, isError } = useQuery({
     queryKey: ['users', user?.id],
-    queryFn: () => userApi.getAll().then(res => res.data).catch(() => []),
-    placeholderData: [],
+    queryFn: () => userApi.getAll().then(res => res.data),
   })
 
   // Fetch current user's full profile to get flatId and verify role (for MEMBER creating TENANT)
@@ -211,7 +236,7 @@ export default function Users() {
   const [deleteError, setDeleteError] = useState('')
 
   const deleteMutation = useMutation({
-    mutationFn: (id) => userApi.delete(id),
+    mutationFn: ({ id, force = false }) => userApi.delete(id, force),
     onSuccess: () => {
       queryClient.invalidateQueries(['users'])
       setDeleteError('')
@@ -220,6 +245,68 @@ export default function Users() {
       setDeleteError(err.response?.data?.message || 'Failed to delete user')
     },
   })
+
+  const confirmAndDeleteUser = async (targetUser, context = {}) => {
+    const propertyValue = context?.property || context?.userFlat?.flatNumber || 'Unassigned'
+    const societyValue = context?.societyName || 'Not linked'
+
+    const confirmed = await confirmDialog({
+      title: 'Delete User',
+      message: 'Are you sure you want to delete this user? This action cannot be undone.',
+      confirmText: 'Delete',
+      tone: 'danger',
+      details: [
+        { label: 'Name', value: targetUser?.name || '-' },
+        { label: 'Email', value: targetUser?.email || '-' },
+        { label: 'Role', value: targetUser?.role?.replace(/_/g, ' ') || '-' },
+        { label: 'Society', value: societyValue },
+        { label: 'Property', value: propertyValue },
+      ],
+      impacts: [
+        { label: 'User Account', count: 1 },
+        { label: 'Role Access', count: 1 },
+      ],
+      caution: 'This action permanently removes the user account.',
+    })
+
+    if (!confirmed) return
+
+    try {
+      await deleteMutation.mutateAsync({ id: targetUser.id, force: false })
+    } catch (error) {
+      const serverMessage = error?.response?.data?.message || parseApiError(error)
+      const shouldOfferForceDelete =
+        error?.response?.status === 400 &&
+        String(serverMessage).toLowerCase().includes('use force delete')
+
+      if (!shouldOfferForceDelete) {
+        return
+      }
+
+      const finalWarning = await confirmDialog({
+        title: 'Final Warning: Force Delete User',
+        message: `Force delete user "${targetUser?.name}" and automatically clean linked role records?`,
+        confirmText: 'Force Delete',
+        cancelText: 'Cancel',
+        tone: 'danger',
+        details: [
+          { label: 'Name', value: targetUser?.name || '-' },
+          { label: 'Role', value: targetUser?.role?.replace(/_/g, ' ') || '-' },
+          { label: 'Society', value: societyValue },
+          { label: 'Property', value: propertyValue },
+        ],
+        caution: 'This will auto-remove or unlink linked references and cannot be undone.',
+      })
+
+      if (!finalWarning) return
+
+      try {
+        await deleteMutation.mutateAsync({ id: targetUser.id, force: true })
+      } catch (forceError) {
+        setDeleteError(parseApiError(forceError))
+      }
+    }
+  }
 
   // Bulk validate import mutation
   const validateBulkImportMutation = useMutation({
@@ -254,11 +341,11 @@ export default function Users() {
     mutationFn: (societyId) => userApi.bulkCreateForUnits(societyId),
     onSuccess: (res) => {
       queryClient.invalidateQueries(['users'])
-      alert(`${res.data.message}`)
+      toast.success(`${res.data.message}`)
       setShowBulkCreateModal(false)
     },
     onError: (err) => {
-      alert(parseApiError(err))
+      toast.error(parseApiError(err))
     },
   })
 
@@ -411,6 +498,21 @@ export default function Users() {
     return 'Manage system users and roles'
   }
 
+  const showSkeleton = useMinLoadingTime(isLoading || isError)
+
+  if (!hasUserManagementPermission) {
+    return <PermissionDenied message="You don't have permission to manage users" />
+  }
+
+  if (showSkeleton) return (
+    <div className="users-page">
+      <WakeUpBanner />
+      <HeroSkeleton statCount={0} />
+      <FiltersSkeleton filterCount={3} />
+      <TableSkeleton rows={10} cols={6} />
+    </div>
+  )
+
   return (
     <div className="users-page">
       {/* Header */}
@@ -552,11 +654,7 @@ export default function Users() {
             <span className="users-section__count">({filteredUsers.length})</span>
           </h2>
           
-          {isLoading ? (
-            <div className="users-loading">
-              <div className="users-loading__spinner"></div>
-            </div>
-          ) : filteredUsers.length === 0 ? (
+          {filteredUsers.length === 0 ? (
             <div className="users-empty">
               <UsersIcon className="users-empty__icon" size={48} />
               <p className="users-empty__text">No users found</p>
@@ -634,28 +732,7 @@ export default function Users() {
                       )}
                       {canDelete && (
                         <button
-                          onClick={async () => {
-                            const confirmed = await confirmDialog({
-                              title: 'Delete User',
-                              message: 'Are you sure you want to delete this user? This action cannot be undone.',
-                              confirmText: 'Delete',
-                              tone: 'danger',
-                              details: [
-                                { label: 'Name', value: u.name || '-' },
-                                { label: 'Email', value: u.email || '-' },
-                                { label: 'Role', value: u.role?.replace(/_/g, ' ') || '-' },
-                                { label: 'Society', value: societyName || 'Not linked' },
-                              ],
-                              impacts: [
-                                { label: 'User Account', count: 1 },
-                                { label: 'Society Link', count: u.societyId ? 1 : 0 },
-                              ],
-                              caution: 'This action permanently removes the user account.',
-                            })
-                            if (confirmed) {
-                              deleteMutation.mutate(u.id)
-                            }
-                          }}
+                          onClick={() => confirmAndDeleteUser(u, { societyName })}
                           className="user-card__action user-card__action--icon user-card__action--danger"
                           title="Delete user"
                         >
@@ -672,11 +749,7 @@ export default function Users() {
       ) : (
       /* Card-row view for non-PLATFORM_OWNER users */
       <div className="utbl">
-        {isLoading ? (
-          <div className="users-loading">
-            <div className="users-loading__spinner"></div>
-          </div>
-        ) : (
+        {(
           <>
           {/* Column labels */}
           <div className="utbl__head">
@@ -750,28 +823,7 @@ export default function Users() {
                     )}
                     {canDelete ? (
                       <button
-                        onClick={async () => {
-                          const confirmed = await confirmDialog({
-                            title: 'Delete User',
-                            message: 'Are you sure you want to delete this user? This action cannot be undone.',
-                            confirmText: 'Delete',
-                            tone: 'danger',
-                            details: [
-                              { label: 'Name', value: u.name || '-' },
-                              { label: 'Email', value: u.email || '-' },
-                              { label: 'Role', value: u.role?.replace(/_/g, ' ') || '-' },
-                              { label: 'Property', value: userFlat?.flatNumber || 'Unassigned' },
-                            ],
-                            impacts: [
-                              { label: 'User Account', count: 1 },
-                              { label: 'Property Link', count: userFlat ? 1 : 0 },
-                            ],
-                            caution: 'This action permanently removes the user account.',
-                          })
-                          if (confirmed) {
-                            deleteMutation.mutate(u.id)
-                          }
-                        }}
+                        onClick={() => confirmAndDeleteUser(u, { userFlat, property: userFlat?.flatNumber || 'Unassigned' })}
                         className="utbl__act-btn utbl__act-btn--danger"
                         title="Delete user"
                       >
@@ -1256,6 +1308,13 @@ export default function Users() {
                       <Upload size={18} />
                       Upload Correct File
                     </button>
+                    <button
+                      onClick={downloadUsersBulkErrorReport}
+                      className="bulk-error-action"
+                    >
+                      <Download size={18} />
+                      Download Error Report
+                    </button>
                   </div>
                 ) : (
                   // Some rows have errors
@@ -1285,6 +1344,13 @@ export default function Users() {
                     >
                       <Upload size={18} />
                       Fix & Re-upload Excel
+                    </button>
+                    <button
+                      onClick={downloadUsersBulkErrorReport}
+                      className="bulk-error-action"
+                    >
+                      <Download size={18} />
+                      Download Error Report
                     </button>
                   </div>
                 )
@@ -1386,7 +1452,7 @@ export default function Users() {
                 onClick={() => {
                   const societyId = urlSocietyId || user?.societyId
                   if (!societyId) {
-                    alert('Society ID is required')
+                    toast.error('Society ID is required')
                     return
                   }
                   bulkCreateFromUnitsMutation.mutate(societyId)

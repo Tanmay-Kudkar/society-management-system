@@ -5,8 +5,10 @@ import { useToast } from '../../context'
 import { maintenanceBillApi } from '../../../../api'
 import { useRazorpay } from '../../hooks/useRazorpay'
 import { PermissionDenied } from '../../components'
+import { HeroSkeleton, SummaryRowSkeleton, ListSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
 import { CreditCard, CheckCircle, Clock, AlertCircle, Wallet, Receipt, Calendar } from 'lucide-react'
 import clsx from 'clsx'
+import useMinLoadingTime from '../../hooks/useMinLoadingTime'
 
 const statusConfig = {
   PENDING: { label: 'Pending', icon: Clock, className: 'mybills-status--pending' },
@@ -40,7 +42,7 @@ export default function MyBills() {
   })
 
   // Fetch bills for the user's flat
-  const { data: bills = [], isLoading } = useQuery({
+  const { data: bills = [], isLoading, isError } = useQuery({
     queryKey: ['myBills', user?.flatId],
     queryFn: async () => {
       if (!user?.flatId) return []
@@ -54,6 +56,8 @@ export default function MyBills() {
   const sortedBills = useMemo(() => {
     return [...bills].sort((a, b) => b.billMonth?.localeCompare(a.billMonth))
   }, [bills])
+
+  const showSkeleton = useMinLoadingTime(isLoading || isError)
 
   // Calculate summary
   const summary = useMemo(() => {
@@ -112,6 +116,17 @@ export default function MyBills() {
     )
   }
 
+  if (showSkeleton) {
+    return (
+      <div className="mybills-page">
+        <WakeUpBanner />
+        <HeroSkeleton />
+        <SummaryRowSkeleton count={4} />
+        <ListSkeleton count={4} />
+      </div>
+    )
+  }
+
   return (
     <div className="mybills-page">
       {/* Header */}
@@ -164,11 +179,7 @@ export default function MyBills() {
 
       {/* Bills List */}
       <div className="mybills-list">
-        {isLoading ? (
-          <div className="mybills-loading">
-            <div className="mybills-spinner" />
-          </div>
-        ) : sortedBills.length === 0 ? (
+        {sortedBills.length === 0 ? (
           <div className="mybills-empty">
             <Receipt size={48} className="mybills-empty-icon" />
             <p className="mybills-empty-text">No bills found</p>

@@ -1,16 +1,18 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '../../context'
 import { useConfirmDialog } from '../../context'
+import { useToast } from '../../context'
 import { flatApi, societyApi, wingApi } from '../../../../api'
 import { Plus, Edit, Trash2, Search, X, Home, Store, Briefcase, Layers, AlertCircle } from 'lucide-react'
-import { FormInput, PhoneInput, SmartSelect, NumberInput, FormErrorSummary } from '../../components'
+import { FormInput, PhoneInput, SmartSelect, NumberInput, FormErrorSummary, AsyncButton } from '../../components'
 import { PermissionDenied } from '../../components'
 
 export default function Flats() {
   const { user, canManageFlats } = useAuth()
   const confirmDialog = useConfirmDialog()
+  const toast = useToast()
   const queryClient = useQueryClient()
   
   // Permission check
@@ -106,12 +108,12 @@ export default function Flats() {
     onSuccess: () => queryClient.invalidateQueries(['flats']),
   })
 
-  const filteredFlats = flats.filter(f => {
+  const filteredFlats = useMemo(() => flats.filter(f => {
     const matchesSearch = f.flatNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          f.ownerName?.toLowerCase().includes(searchTerm.toLowerCase())
     const matchesSociety = !filterSociety || f.societyId === parseInt(filterSociety)
     return matchesSearch && matchesSociety
-  })
+  }), [flats, searchTerm, filterSociety])
 
   // Get icon based on unit type
   const getUnitIcon = (unitType) => {
@@ -206,7 +208,7 @@ export default function Flats() {
       : user?.societyId
 
     if (!societyId) {
-      alert('Society ID is required. Please log out and log back in.')
+      toast.error('Society ID is required. Please log out and log back in.')
       return
     }
 
@@ -539,12 +541,14 @@ export default function Flats() {
                 >
                   Cancel
                 </button>
-                <button
+                <AsyncButton
                   type="submit"
                   className="flats-submit-button"
+                  isLoading={createMutation.isPending || updateMutation.isPending}
+                  loadingText="Saving..."
                 >
                   {editingFlat ? 'Update' : 'Create Unit'}
-                </button>
+                </AsyncButton>
               </div>
             </form>
           </div>

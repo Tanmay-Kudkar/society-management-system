@@ -8,6 +8,8 @@ import { societyApi, userApi, organizationApi } from '../../../../api'
 import { parseApiError } from '../../utils'
 import { Plus, Edit, Trash2, Search, X, Building2, Eye, EyeOff, ChevronRight, Home, Store, Briefcase, Layers } from 'lucide-react'
 import { FormInput, PhoneInput, PincodeInput, NumberInput, FormTextarea, StateCitySelector } from '../../components'
+import { HeroSkeleton, FiltersSkeleton, CardGridSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
+import useMinLoadingTime from '../../hooks/useMinLoadingTime'
 
 export default function Societies() {
   const { user, canManageSocieties } = useAuth()
@@ -22,11 +24,11 @@ export default function Societies() {
   const [searchTerm, setSearchTerm] = useState('')
   const [formError, setFormError] = useState('')
   const [showAdminPassword, setShowAdminPassword] = useState(false)
+  const [organizationFilter, setOrganizationFilter] = useState('all')
 
-  const { data: societies = [], isLoading } = useQuery({
+  const { data: societies = [], isLoading, isError } = useQuery({
     queryKey: ['societies'],
-    queryFn: () => societyApi.getAll().then(res => res.data).catch(() => []),
-    placeholderData: [],
+    queryFn: () => societyApi.getAll().then(res => res.data),
   })
 
   const { data: organizations = [] } = useQuery({
@@ -77,17 +79,96 @@ export default function Societies() {
   })
 
   const deleteMutation = useMutation({
-    mutationFn: (id) => societyApi.delete(id, user.id),
-    onSuccess: () => {
+    mutationFn: ({ id, force = false }) => societyApi.delete(id, user.id, force),
+    onSuccess: (_response, variables) => {
       queryClient.invalidateQueries(['societies'])
-      toast.success('Society deleted successfully')
+      toast.success(variables?.force ? 'Society force-deleted successfully' : 'Society deleted successfully')
     },
     onError: (error) => toast.error(parseApiError(error)),
   })
 
-  const filteredSocieties = societies.filter(s =>
-    s.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    s.address?.toLowerCase().includes(searchTerm.toLowerCase())
+  const confirmAndDeleteSociety = async (society) => {
+    const confirmed = await confirmDialog({
+      title: 'Delete Society',
+      message: 'Are you sure you want to delete this society? This action cannot be undone.',
+      confirmText: 'Delete',
+      tone: 'danger',
+      details: [
+        { label: 'Society', value: society.name || '-' },
+        { label: 'City', value: society.city || '-' },
+        { label: 'Flats', value: society.totalFlats || society.actualFlats || 0 },
+        { label: 'Shops', value: society.totalShops || society.actualShops || 0 },
+      ],
+      impacts: [
+        {
+          label: 'Configured Units',
+          count:
+            (society.totalFlats || society.actualFlats || 0)
+            + (society.totalShops || society.actualShops || 0)
+            + (society.totalOffices || society.actualOffices || 0),
+        },
+        { label: 'Society Record', count: 1 },
+      ],
+      caution: 'Deleting a society may affect linked users and records.',
+    })
+
+    if (!confirmed) return
+
+    try {
+      await deleteMutation.mutateAsync({ id: society.id, force: false })
+    } catch (error) {
+      const serverMessage = error?.response?.data?.message || parseApiError(error)
+      const shouldOfferForceDelete =
+        error?.response?.status === 409 &&
+        String(serverMessage).toLowerCase().includes('use force delete')
+
+      if (!shouldOfferForceDelete) {
+        return
+      }
+
+      const finalWarning = await confirmDialog({
+        title: 'Final Warning: Force Delete Society',
+        message: `Force delete society "${society.name}" and auto-clean all linked records?`,
+        confirmText: 'Force Delete',
+        cancelText: 'Cancel',
+        tone: 'danger',
+        details: [
+          { label: 'Society', value: society.name || '-' },
+          { label: 'City', value: society.city || '-' },
+        ],
+        caution: 'This is irreversible and will delete or unlink related records tied to this society.',
+      })
+
+      if (!finalWarning) return
+      await deleteMutation.mutateAsync({ id: society.id, force: true })
+    }
+  }
+
+  const hasOrganization = (society) => Boolean(
+    society?.organizationId
+    || society?.organizationName
+    || society?.organization?.id
+    || society?.organization?.name
+    || (typeof society?.organization === 'string' && society.organization.trim())
+  )
+
+  const filteredSocieties = societies.filter((society) => {
+    const matchesSearch =
+      society.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      society.address?.toLowerCase().includes(searchTerm.toLowerCase())
+
+    if (!matchesSearch) return false
+
+    if (organizationFilter === 'assigned') return hasOrganization(society)
+    if (organizationFilter === 'unassigned') return !hasOrganization(society)
+    return true
+  })
+
+  const getOrganizationLabel = (society) => (
+    society.organizationName
+    || society.organization?.name
+    || society.organization
+    || null
   )
 
   const handleSubmit = (e) => {
@@ -121,11 +202,6 @@ export default function Societies() {
         }
       : null
 
-    if (isPlatformOwner && !editingSociety && !societyData.organizationId) {
-      setFormError('Please select an organization for this society')
-      return
-    }
-
     if (adminData && (!adminData.name || !adminData.email || !adminData.password)) {
       setFormError('Society Admin name, email, and password are required')
       return
@@ -137,6 +213,17 @@ export default function Societies() {
       createMutation.mutate({ societyData, adminData })
     }
   }
+
+  const showSkeleton = useMinLoadingTime(isLoading || isError)
+
+  if (showSkeleton) return (
+    <div className="societies-page">
+      <WakeUpBanner />
+      <HeroSkeleton statCount={3} />
+      <FiltersSkeleton filterCount={2} />
+      <CardGridSkeleton count={6} />
+    </div>
+  )
 
   return (
     <div className="societies-page">
@@ -175,16 +262,33 @@ export default function Societies() {
             className="societies-search-input"
           />
         </div>
+        <div className="societies-filters">
+          <button
+            type="button"
+            className={`societies-filter-btn ${organizationFilter === 'all' ? 'societies-filter-btn--active' : ''}`}
+            onClick={() => setOrganizationFilter('all')}
+          >
+            All
+          </button>
+          <button
+            type="button"
+            className={`societies-filter-btn ${organizationFilter === 'assigned' ? 'societies-filter-btn--active' : ''}`}
+            onClick={() => setOrganizationFilter('assigned')}
+          >
+            Assigned
+          </button>
+          <button
+            type="button"
+            className={`societies-filter-btn ${organizationFilter === 'unassigned' ? 'societies-filter-btn--active' : ''}`}
+            onClick={() => setOrganizationFilter('unassigned')}
+          >
+            Unassigned
+          </button>
+        </div>
       </div>
 
       {/* Cards Grid */}
-      {isLoading ? (
-        <div className="societies-loading">
-          <div className="societies-spinner">
-            <Building2 className="societies-spinner-icon" />
-          </div>
-        </div>
-      ) : filteredSocieties.length === 0 ? (
+      {filteredSocieties.length === 0 ? (
         <div className="societies-empty">
           <div className="societies-empty-icon">
             <Building2 className="societies-empty-icon-svg" />
@@ -201,7 +305,10 @@ export default function Societies() {
         </div>
       ) : (
         <div className="societies-grid">
-          {filteredSocieties.map((society, index) => (
+          {filteredSocieties.map((society, index) => {
+            const organizationLabel = getOrganizationLabel(society)
+
+            return (
             <div 
               key={society.id} 
               className="societies-card"
@@ -232,34 +339,7 @@ export default function Societies() {
                     <Edit size={18} />
                   </button>
                   <button
-                    onClick={async () => {
-                      const confirmed = await confirmDialog({
-                        title: 'Delete Society',
-                        message: 'Are you sure you want to delete this society? This action cannot be undone.',
-                        confirmText: 'Delete',
-                        tone: 'danger',
-                        details: [
-                          { label: 'Society', value: society.name || '-' },
-                          { label: 'City', value: society.city || '-' },
-                          { label: 'Flats', value: society.totalFlats || society.actualFlats || 0 },
-                          { label: 'Shops', value: society.totalShops || society.actualShops || 0 },
-                        ],
-                        impacts: [
-                          {
-                            label: 'Configured Units',
-                            count:
-                              (society.totalFlats || society.actualFlats || 0)
-                              + (society.totalShops || society.actualShops || 0)
-                              + (society.totalOffices || society.actualOffices || 0),
-                          },
-                          { label: 'Society Record', count: 1 },
-                        ],
-                        caution: 'Deleting a society may affect linked users and records.',
-                      })
-                      if (confirmed) {
-                        deleteMutation.mutate(society.id)
-                      }
-                    }}
+                    onClick={() => confirmAndDeleteSociety(society)}
                     className="societies-icon-button societies-icon-button--danger"
                     title="Delete society"
                   >
@@ -312,6 +392,12 @@ export default function Societies() {
               {/* Contact Info */}
               <div className="societies-contact">
                 <p className="societies-contact-row">
+                  <span className="societies-contact-icon">🏢</span>
+                  <span className={`societies-org-badge ${organizationLabel ? 'societies-org-badge--linked' : 'societies-org-badge--unassigned'}`}>
+                    {organizationLabel || 'Unassigned'}
+                  </span>
+                </p>
+                <p className="societies-contact-row">
                   <span className="societies-contact-icon">📍</span> 
                   {society.city}{society.state ? `, ${society.state}` : ''}
                 </p>
@@ -331,7 +417,8 @@ export default function Societies() {
                 <ChevronRight size={16} className="societies-view-button-icon" />
               </button>
             </div>
-          ))}
+            )
+          })}
         </div>
       )}
 
@@ -377,9 +464,8 @@ export default function Societies() {
                         name="organizationId"
                         defaultValue=""
                         className="form-input"
-                        required
                       >
-                        <option value="">Select organization</option>
+                        <option value="">No organization (optional)</option>
                         {organizations.map((organization) => (
                           <option key={organization.id} value={organization.id}>
                             {organization.name}

@@ -1,10 +1,13 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '../../context'
 import { useToast } from '../../context'
 import { ticketApi, userApi, exportApi, downloadBlob } from '../../../../api'
 import { Plus, Search, X, Ticket, MessageSquare, User, Edit, AlertTriangle, Clock, FileSpreadsheet } from 'lucide-react'
 import clsx from 'clsx'
+import { AsyncButton } from '../../components'
+import { HeroSkeleton, SummaryRowSkeleton, FiltersSkeleton, ListSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
+import useMinLoadingTime from '../../hooks/useMinLoadingTime'
 
 const statusClasses = {
   OPEN: 'tickets-badge tickets-badge--open',
@@ -43,10 +46,9 @@ export default function Tickets() {
   // Check if current user is PLATFORM_OWNER
   const isPlatformLevel = user?.role === 'PLATFORM_OWNER' || user?.role === 'ORGANIZATION_OWNER'
 
-  const { data: tickets = [], isLoading } = useQuery({
+  const { data: tickets = [], isLoading, isError } = useQuery({
     queryKey: ['tickets'],
     queryFn: () => ticketApi.getAll().then(res => res.data),
-    placeholderData: [],
   })
 
 
@@ -83,13 +85,13 @@ export default function Tickets() {
     onSuccess: () => queryClient.invalidateQueries(['tickets']),
   })
 
-  const filteredTickets = tickets.filter(t => {
+  const filteredTickets = useMemo(() => tickets.filter(t => {
     const matchesSearch = t.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          t.type?.toLowerCase().includes(searchTerm.toLowerCase())
     const matchesStatus = !filterStatus || t.status === filterStatus
     const matchesOverdue = !showOverdueOnly || t.isOverdue
     return matchesSearch && matchesStatus && matchesOverdue
-  })
+  }), [tickets, searchTerm, filterStatus, showOverdueOnly])
 
   const handleSubmit = (e) => {
     e.preventDefault()
@@ -130,6 +132,20 @@ export default function Tickets() {
     } finally {
       setIsExporting(false)
     }
+  }
+
+  const showSkeleton = useMinLoadingTime(isLoading || isError)
+
+  if (showSkeleton) {
+    return (
+      <div className="tickets-page">
+        <WakeUpBanner />
+        <HeroSkeleton />
+        <SummaryRowSkeleton count={4} />
+        <FiltersSkeleton filterCount={2} />
+        <ListSkeleton count={5} />
+      </div>
+    )
   }
 
   return (
@@ -223,11 +239,6 @@ export default function Tickets() {
       </div>
 
       {/* Tickets List */}
-      {isLoading ? (
-        <div className="tickets-loading">
-          <div className="tickets-spinner" />
-        </div>
-      ) : (
         <div className="tickets-list">
           {filteredTickets.map((ticket) => (
             <div key={ticket.id} className={clsx(
@@ -344,7 +355,6 @@ export default function Tickets() {
             </div>
           ))}
         </div>
-      )}
 
       {/* Create Ticket Modal */}
       {showModal && (
@@ -387,7 +397,7 @@ export default function Tickets() {
               </div>
               <div className="tickets-form-actions">
                 <button type="button" onClick={() => setShowModal(false)} className="tickets-cancel-button">Cancel</button>
-                <button type="submit" className="tickets-submit-button">Create</button>
+                <AsyncButton type="submit" className="tickets-submit-button" isLoading={createMutation.isPending} loadingText="Creating...">Create</AsyncButton>
               </div>
             </form>
           </div>
@@ -418,7 +428,7 @@ export default function Tickets() {
               </div>
               <div className="tickets-form-actions">
                 <button type="button" onClick={() => setShowAssignModal(false)} className="tickets-cancel-button">Cancel</button>
-                <button type="submit" className="tickets-submit-button">Assign</button>
+                <AsyncButton type="submit" className="tickets-submit-button" isLoading={assignMutation.isPending} loadingText="Assigning...">Assign</AsyncButton>
               </div>
             </form>
           </div>

@@ -12,13 +12,15 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../context/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
 import { useNotifications } from '../../context/NotificationContext';
-import { Card, Avatar, Badge, Loading, ErrorState } from '../../components/common';
+import { Card, Avatar, Badge, ErrorState } from '../../components/common';
+import { StaffDashboardSkeleton } from '../../components/common/Skeleton';
 import { Layout } from '../../constants';
-import { dashboardAPI, visitorAPI } from '../../services/api';
+import { reportAPI } from '../../services/api';
+import useMinLoadingTime from '../../hooks/useMinLoadingTime';
 
 const StaffDashboard = ({ navigation }) => {
   const { theme } = useTheme();
-  const { user, isSecurity, isMaintenance } = useAuth();
+  const { user } = useAuth();
   const { unreadCount } = useNotifications();
   
   const [loading, setLoading] = useState(true);
@@ -34,7 +36,7 @@ const StaffDashboard = ({ navigation }) => {
   const fetchDashboardData = async () => {
     try {
       setError(null);
-      const response = await dashboardAPI.getStaffDashboard();
+      const response = await reportAPI.getDashboard(user?.societyId);
       setDashboardData(response.data);
     } catch (err) {
       setError('Failed to load dashboard data');
@@ -54,21 +56,12 @@ const StaffDashboard = ({ navigation }) => {
     fetchDashboardData();
   }, []);
 
-  const securityActions = [
-    { icon: 'person-add-outline', label: 'Add Visitor', screen: 'AddVisitor', color: theme.primary },
-    { icon: 'scan-outline', label: 'Scan Entry', screen: 'ScanEntry', color: theme.secondary },
-    { icon: 'list-outline', label: 'Visitor Log', screen: 'Visitors', color: theme.warning },
-    { icon: 'call-outline', label: 'Emergency', screen: 'EmergencyContacts', color: theme.error },
-  ];
-
-  const maintenanceActions = [
-    { icon: 'construct-outline', label: 'My Tasks', screen: 'Tasks', color: theme.primary },
-    { icon: 'checkmark-done-outline', label: 'Completed', screen: 'CompletedTasks', color: theme.success },
+  const quickActions = [
     { icon: 'chatbubbles-outline', label: 'Complaints', screen: 'Complaints', color: theme.warning },
-    { icon: 'document-text-outline', label: 'Reports', screen: 'Reports', color: theme.info },
+    { icon: 'call-outline', label: 'Emergency', screen: 'EmergencyContacts', color: theme.error },
+    { icon: 'megaphone-outline', label: 'Notices', screen: 'Notices', color: theme.primary },
+    { icon: 'car-outline', label: 'Vehicles', screen: 'Vehicles', color: theme.info },
   ];
-
-  const quickActions = isSecurity ? securityActions : maintenanceActions;
 
   const styles = StyleSheet.create({
     container: {
@@ -252,8 +245,10 @@ const StaffDashboard = ({ navigation }) => {
     },
   });
 
-  if (loading) {
-    return <Loading fullScreen text="Loading dashboard..." />;
+  const showSkeleton = useMinLoadingTime(loading);
+
+  if (showSkeleton) {
+    return <StaffDashboardSkeleton />;
   }
 
   if (error) {
@@ -270,7 +265,7 @@ const StaffDashboard = ({ navigation }) => {
             <Text style={styles.greetingText}>Welcome back,</Text>
             <Text style={styles.userName}>{user?.name || 'Staff'}</Text>
             <Text style={styles.roleLabel}>
-              {isSecurity ? 'Security' : isMaintenance ? 'Maintenance' : 'Staff'}
+              {user?.role || 'Staff'}
             </Text>
           </View>
         </View>

@@ -5,8 +5,10 @@ import { useAuth } from '../../context'
 import { maintenanceBillApi, flatApi } from '../../../../api'
 import { Plus, Search, X, CreditCard, CheckCircle, Clock, AlertCircle, Info, Wallet } from 'lucide-react'
 import clsx from 'clsx'
-import { PermissionDenied } from '../../components'
+import { PermissionDenied, AsyncButton } from '../../components'
+import { HeroSkeleton, FinancePageSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
 import { useRazorpay } from '../../hooks/useRazorpay'
+import useMinLoadingTime from '../../hooks/useMinLoadingTime'
 import { useToast } from '../../context'
 
 const statusClasses = {
@@ -84,7 +86,7 @@ export default function MaintenanceBills() {
   // Determine effective society ID for filtering
   const effectiveSocietyId = isPlatformLevel && societyIdFromUrl ? parseInt(societyIdFromUrl) : user?.societyId
 
-  const { data: allBills = [], isLoading } = useQuery({
+  const { data: allBills = [], isLoading, isError } = useQuery({
     queryKey: ['maintenanceBills'],
     queryFn: () => maintenanceBillApi.getAll().then(res => res.data),
   })
@@ -132,12 +134,14 @@ export default function MaintenanceBills() {
     },
   })
 
-  const filteredBills = bills.filter(b => {
-    const matchesSearch = b.flatNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         b.ownerName?.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesStatus = !filterStatus || b.status === filterStatus
-    return matchesSearch && matchesStatus
-  })
+  const filteredBills = useMemo(() => {
+    return bills.filter(b => {
+      const matchesSearch = b.flatNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           b.ownerName?.toLowerCase().includes(searchTerm.toLowerCase())
+      const matchesStatus = !filterStatus || b.status === filterStatus
+      return matchesSearch && matchesStatus
+    })
+  }, [bills, searchTerm, filterStatus])
 
   const handleSubmit = (e) => {
     e.preventDefault()
@@ -198,6 +202,18 @@ export default function MaintenanceBills() {
       paymentMode: formData.get('paymentMode'),
       referenceNumber: formData.get('referenceNumber'),
     })
+  }
+
+  const showSkeleton = useMinLoadingTime(isLoading || isError)
+
+  if (showSkeleton) {
+    return (
+      <div className="maintenance-page">
+        <WakeUpBanner />
+        <HeroSkeleton />
+        <FinancePageSkeleton summaryCount={3} rows={8} cols={6} />
+      </div>
+    )
   }
 
   return (
@@ -275,11 +291,6 @@ export default function MaintenanceBills() {
 
       {/* Table */}
       <div className="maintenance-table-card">
-        {isLoading ? (
-          <div className="maintenance-loading">
-            <div className="maintenance-spinner" />
-          </div>
-        ) : (
           <div className="maintenance-table-scroll">
             <table className="maintenance-table">
               <thead className="maintenance-thead">
@@ -340,7 +351,6 @@ export default function MaintenanceBills() {
               </tbody>
             </table>
           </div>
-        )}
       </div>
 
       {/* Add Bill Modal */}
@@ -402,7 +412,14 @@ export default function MaintenanceBills() {
               </div>
               <div className="maintenance-form-actions">
                 <button type="button" onClick={() => {setShowModal(false); setBillMonth('')}} className="maintenance-cancel-button">Cancel</button>
-                <button type="submit" className="maintenance-submit-button">Create</button>
+                <AsyncButton
+                  type="submit"
+                  className="maintenance-submit-button"
+                  isLoading={createMutation.isPending}
+                  loadingText="Creating..."
+                >
+                  Create
+                </AsyncButton>
               </div>
             </form>
           </div>
@@ -496,13 +513,15 @@ export default function MaintenanceBills() {
                   setBulkBillMonth('')
                   setPreviewCount(null)
                 }} className="maintenance-cancel-button">Cancel</button>
-                <button 
+                <AsyncButton 
                   type="submit" 
-                  disabled={bulkGenerateMutation.isPending || previewCount === 0}
                   className="maintenance-submit-button"
+                  isLoading={bulkGenerateMutation.isPending}
+                  loadingText="Generating..."
+                  disabled={previewCount === 0}
                 >
-                  {bulkGenerateMutation.isPending ? 'Generating...' : 'Generate'}
-                </button>
+                  Generate
+                </AsyncButton>
               </div>
             </form>
           </div>
@@ -559,7 +578,14 @@ export default function MaintenanceBills() {
               </div>
               <div className="maintenance-form-actions">
                 <button type="button" onClick={() => setShowPaymentModal(false)} className="maintenance-cancel-button">Cancel</button>
-                <button type="submit" className="maintenance-submit-button maintenance-submit-button--success">Record Payment</button>
+                <AsyncButton
+                  type="submit"
+                  className="maintenance-submit-button maintenance-submit-button--success"
+                  isLoading={paymentMutation.isPending}
+                  loadingText="Recording..."
+                >
+                  Record Payment
+                </AsyncButton>
               </div>
             </form>
           </div>

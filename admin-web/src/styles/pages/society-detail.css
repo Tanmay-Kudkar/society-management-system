@@ -64,14 +64,14 @@
 }
 
 .society-title {
-  font-size: var(--text-3xl);
+  font-size: clamp(2.1rem, 3.2vw, 2.8rem);
   font-weight: 700;
-  margin-bottom: var(--spacing-sm);
+  margin-bottom: var(--spacing-md);
   letter-spacing: -0.02em;
 }
 
 .society-address {
-  font-size: var(--text-base);
+  font-size: var(--text-lg);
   color: rgba(255, 255, 255, 0.85);
   margin-bottom: var(--spacing-lg);
 }
@@ -86,13 +86,13 @@
   display: flex;
   align-items: center;
   gap: var(--spacing-sm);
-  font-size: var(--text-sm);
+  font-size: var(--text-base);
   color: rgba(255, 255, 255, 0.9);
 }
 
 .society-meta-icon {
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   background: rgba(255, 255, 255, 0.15);
   border-radius: var(--radius-md);
   display: flex;
@@ -106,6 +106,28 @@
   height: 1rem;
   margin-right: 0.25rem;
   vertical-align: middle;
+}
+
+.society-org-badge {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  padding: 0.2rem 0.6rem;
+  font-size: var(--text-xs);
+  font-weight: 600;
+}
+
+.society-org-badge--linked {
+  border-color: rgba(16, 185, 129, 0.42);
+  background: rgba(16, 185, 129, 0.16);
+  color: #d1fae5;
+}
+
+.society-org-badge--unassigned {
+  border-color: rgba(255, 255, 255, 0.36);
+  background: rgba(255, 255, 255, 0.14);
+  color: rgba(255, 255, 255, 0.9);
 }
 
 /* Loading and error states */
@@ -462,6 +484,21 @@
 .society-role-color--member { background: rgba(148, 163, 184, 0.2); color: #cbd5e1; }
 .society-role-color--tenant { background: rgba(236, 72, 153, 0.18); color: #f9a8d4; }
 .society-role-color--visitor { background: rgba(239, 68, 68, 0.18); color: #fca5a5; }
+
+.light .society-user-role {
+  font-weight: 700;
+}
+
+.light .society-role-color--platform-owner { background: rgba(139, 92, 246, 0.2); color: #5b21b6; }
+.light .society-role-color--society-admin { background: rgba(59, 130, 246, 0.2); color: #1d4ed8; }
+.light .society-role-color--chairman { background: rgba(99, 102, 241, 0.2); color: #3730a3; }
+.light .society-role-color--secretary { background: rgba(6, 182, 212, 0.2); color: #0f766e; }
+.light .society-role-color--treasurer { background: rgba(34, 197, 94, 0.2); color: #166534; }
+.light .society-role-color--committee { background: rgba(245, 158, 11, 0.2); color: #92400e; }
+.light .society-role-color--employee { background: rgba(249, 115, 22, 0.2); color: #9a3412; }
+.light .society-role-color--member { background: rgba(148, 163, 184, 0.24); color: #334155; }
+.light .society-role-color--tenant { background: rgba(236, 72, 153, 0.2); color: #9d174d; }
+.light .society-role-color--visitor { background: rgba(239, 68, 68, 0.2); color: #991b1b; }
 
 .society-user-meta {
   display: flex;

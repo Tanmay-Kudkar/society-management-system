@@ -46,9 +46,9 @@
   --bg-overlay: #1a1a1a;
 
   --text-primary: #ffffff;
-  --text-secondary: #e6edf3;
-  --text-tertiary: #9da7b3;
-  --text-muted: #7d8590;
+  --text-secondary: #f2f6fb;
+  --text-tertiary: #c8d2de;
+  --text-muted: #a9b5c3;
   --text-inverse: #000000;
 
   --border-light: #1a1a1a;
@@ -70,12 +70,12 @@
 
   /* Spacing */
   --spacing-xs: 0.25rem;
-  --spacing-sm: 0.5rem;
-  --spacing-md: 1rem;
-  --spacing-lg: 1.5rem;
-  --spacing-xl: 2rem;
-  --spacing-2xl: 3rem;
-  --spacing-3xl: 4rem;
+  --spacing-sm: 0.45rem;
+  --spacing-md: 0.9rem;
+  --spacing-lg: 1.25rem;
+  --spacing-xl: 1.75rem;
+  --spacing-2xl: 2.5rem;
+  --spacing-3xl: 3.25rem;
 
   /* Radii */
   --radius-sm: 4px;
@@ -90,11 +90,11 @@
   --font-mono: 'JetBrains Mono', 'Fira Code', SFMono-Regular, Consolas, monospace;
 
   /* Font Sizes */
-  --text-xs: 0.75rem;
-  --text-sm: 0.8125rem;
-  --text-base: 0.875rem;
-  --text-md: 0.9375rem;
-  --text-lg: 1rem;
+  --text-xs: 0.8125rem;
+  --text-sm: 0.875rem;
+  --text-base: 0.9375rem;
+  --text-md: 1rem;
+  --text-lg: 1.0625rem;
   --text-xl: 1.25rem;
   --text-2xl: 1.5rem;
   --text-3xl: 2rem;
@@ -130,9 +130,9 @@
   --bg-overlay: #d9e0e8;
 
   --text-primary: #0f172a;
-  --text-secondary: #1f2937;
-  --text-tertiary: #475569;
-  --text-muted: #64748b;
+  --text-secondary: #111827;
+  --text-tertiary: #334155;
+  --text-muted: #475569;
   --text-inverse: #ffffff;
 
   --border-light: #c5d0dd;
@@ -179,9 +179,9 @@
   --bg-overlay: #1a1a1a;
 
   --text-primary: #ffffff;
-  --text-secondary: #e6edf3;
-  --text-tertiary: #9da7b3;
-  --text-muted: #7d8590;
+  --text-secondary: #f2f6fb;
+  --text-tertiary: #c8d2de;
+  --text-muted: #a9b5c3;
 
   --border-light: #1a1a1a;
   --border-default: #222222;

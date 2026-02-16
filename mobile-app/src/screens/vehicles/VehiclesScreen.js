@@ -13,8 +13,10 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../context/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
 import { Header, Card, Loading, EmptyState, ErrorState, Badge, Avatar } from '../../components/common';
+import { VehiclesSkeleton } from '../../components/common/Skeleton';
 import { Layout } from '../../constants';
 import { vehicleAPI } from '../../services/api';
+import useMinLoadingTime from '../../hooks/useMinLoadingTime';
 
 const VehiclesScreen = ({ navigation }) => {
   const { theme } = useTheme();
@@ -28,7 +30,7 @@ const VehiclesScreen = ({ navigation }) => {
   const fetchVehicles = async () => {
     try {
       setError(null);
-      const response = await vehicleAPI.getByUser(user.id);
+      const response = await vehicleAPI.getVehicles();
       setVehicles(response.data);
     } catch (err) {
       setError('Failed to load vehicles');
@@ -196,11 +198,13 @@ const VehiclesScreen = ({ navigation }) => {
     },
   });
 
-  if (loading) {
+  const showSkeleton = useMinLoadingTime(loading);
+
+  if (showSkeleton) {
     return (
       <SafeAreaView style={styles.container} edges={['bottom']}>
         <Header title="My Vehicles" showBack />
-        <Loading fullScreen text="Loading vehicles..." />
+        <VehiclesSkeleton />
       </SafeAreaView>
     );
   }
@@ -267,9 +271,9 @@ const VehiclesScreen = ({ navigation }) => {
                 )}
               </View>
               <Badge 
-                text={item.isApproved ? 'Approved' : 'Pending'} 
+                label={item.isApproved ? 'Approved' : 'Pending'} 
                 variant={item.isApproved ? 'success' : 'warning'}
-                size="small"
+                size="sm"
               />
             </View>
           );
@@ -279,10 +283,8 @@ const VehiclesScreen = ({ navigation }) => {
             icon="car-outline"
             title="No Vehicles"
             message="You haven't registered any vehicles yet."
-            action={{
-              label: 'Add Vehicle',
-              onPress: () => navigation.navigate('AddVehicle'),
-            }}
+            actionLabel="Add Vehicle"
+            onAction={() => navigation.navigate('AddVehicle')}
           />
         }
       />

@@ -11,8 +11,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../context/ThemeContext';
 import { Header, Card, Badge, Loading, EmptyState, ErrorState, Button } from '../../components/common';
+import { PaymentPageSkeleton } from '../../components/common/Skeleton';
 import { Layout, PAYMENT_STATUS } from '../../constants';
 import { paymentAPI, maintenanceAPI } from '../../services/api';
+import useMinLoadingTime from '../../hooks/useMinLoadingTime';
 
 const PaymentHistoryScreen = ({ navigation }) => {
   const { theme } = useTheme();
@@ -27,12 +29,11 @@ const PaymentHistoryScreen = ({ navigation }) => {
   const fetchData = async () => {
     try {
       setError(null);
-      const [paymentsRes, duesRes] = await Promise.all([
-        paymentAPI.getPaymentHistory(),
-        paymentAPI.getDues(),
-      ]);
-      setPayments(paymentsRes.data);
-      setDues(duesRes.data);
+      const pendingBills = await maintenanceAPI.getPendingBills();
+      const pending = pendingBills.data || [];
+      const totalDue = pending.reduce((sum, b) => sum + (b.amount || 0), 0);
+      setDues({ total: totalDue, items: pending });
+      setPayments(pending);
     } catch (err) {
       setError('Failed to load payment data');
       console.error(err);
@@ -286,11 +287,13 @@ const PaymentHistoryScreen = ({ navigation }) => {
     );
   };
 
-  if (loading) {
+  const showSkeleton = useMinLoadingTime(loading);
+
+  if (showSkeleton) {
     return (
       <SafeAreaView style={styles.container} edges={['bottom']}>
         <Header title="Payments" showBack />
-        <Loading fullScreen text="Loading payment data..." />
+        <PaymentPageSkeleton tabCount={2} cardCount={4} />
       </SafeAreaView>
     );
   }

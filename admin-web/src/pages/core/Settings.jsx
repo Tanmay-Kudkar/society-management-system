@@ -10,6 +10,7 @@ import {
 import clsx from 'clsx'
 import Toggle from '../../components/Toggle'
 import { PhoneInput } from '../../components'
+import { SettingsSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
 import { getDeviceInfo } from '../../utils'
 
 /* OS icons */
@@ -96,6 +97,15 @@ const Alert = ({ type = 'error', children }) => {
 /* ── main component ─────────────────────────────────────── */
 export default function Settings() {
   const { user, logout, updateUser } = useAuth()
+
+  if (!user) {
+    return (
+      <>
+        <WakeUpBanner show />
+        <SettingsSkeleton />
+      </>
+    )
+  }
   const {
     theme, compactSidebar,
     setThemePreview, setCompactSidebarPreview,

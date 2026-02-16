@@ -20,7 +20,7 @@ public interface UserService {
 
     UserResponse updateUser(Long id, UserRequest request);
 
-    void deleteUser(Long id);
+    void deleteUser(Long id, boolean force);
 
     /**
      * Get the roles that the current user can create.

@@ -1,13 +1,17 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '../../context'
+import { useConfirmDialog } from '../../context'
 import { bannerApi } from '../../../../api'
 import { Plus, Search, X, Image, Edit, Trash2, Eye, EyeOff } from 'lucide-react'
 import clsx from 'clsx'
-import { FormInput, SmartSelect, NumberInput } from '../../components'
+import { FormInput, SmartSelect, NumberInput, AsyncButton } from '../../components'
+import { HeroSkeleton, FiltersSkeleton, CardGridSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
+import useMinLoadingTime from '../../hooks/useMinLoadingTime'
 
 export default function Banners() {
   const { user, canManageBanners } = useAuth()
+  const confirmDialog = useConfirmDialog()
   const queryClient = useQueryClient()
   const [showModal, setShowModal] = useState(false)
   const [editingBanner, setEditingBanner] = useState(null)
@@ -17,10 +21,9 @@ export default function Banners() {
   // Check if current user is PLATFORM_OWNER
   const isPlatformLevel = user?.role === 'PLATFORM_OWNER' || user?.role === 'ORGANIZATION_OWNER'
 
-  const { data: banners = [], isLoading } = useQuery({
+  const { data: banners = [], isLoading, isError } = useQuery({
     queryKey: ['banners'],
     queryFn: () => bannerApi.getAll().then(res => res.data),
-    placeholderData: [],
   })
 
 
@@ -51,17 +54,36 @@ export default function Banners() {
     onSuccess: () => queryClient.invalidateQueries(['banners']),
   })
 
-  const filteredBanners = banners.filter(b => {
-    const matchesSearch = b.title?.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesStatus = filterStatus === '' || 
-      (filterStatus === 'active' && b.isActive) || 
-      (filterStatus === 'inactive' && !b.isActive)
-    return matchesSearch && matchesStatus
-  })
+  const filteredBanners = useMemo(() => {
+    return banners.filter(b => {
+      const matchesSearch = b.title?.toLowerCase().includes(searchTerm.toLowerCase())
+      const matchesStatus = filterStatus === '' || 
+        (filterStatus === 'active' && b.isActive) || 
+        (filterStatus === 'inactive' && !b.isActive)
+      return matchesSearch && matchesStatus
+    })
+  }, [banners, searchTerm, filterStatus])
 
   const closeModal = () => {
     setShowModal(false)
     setEditingBanner(null)
+  }
+
+  const confirmAndDeleteBanner = async (banner) => {
+    const confirmed = await confirmDialog({
+      title: 'Delete Banner',
+      message: 'Are you sure you want to delete this banner? This action cannot be undone.',
+      confirmText: 'Delete',
+      tone: 'danger',
+      details: [
+        { label: 'Title', value: banner.title || '-' },
+        { label: 'Status', value: banner.isActive ? 'Active' : 'Inactive' },
+      ],
+      caution: 'This action permanently removes the banner.',
+    })
+    if (confirmed) {
+      deleteMutation.mutate(banner.id)
+    }
   }
 
   const handleSubmit = (e) => {
@@ -82,6 +104,17 @@ export default function Banners() {
       createMutation.mutate(data)
     }
   }
+
+  const showSkeleton = useMinLoadingTime(isLoading || isError)
+
+  if (showSkeleton) return (
+    <div>
+      <WakeUpBanner />
+      <HeroSkeleton statCount={0} />
+      <FiltersSkeleton filterCount={1} />
+      <CardGridSkeleton count={4} showAvatar={false} />
+    </div>
+  )
 
   return (
     <div>
@@ -128,11 +161,7 @@ export default function Banners() {
       </div>
 
       {/* Banners Grid */}
-      {isLoading ? (
-        <div className="banners-loading">
-          <div className="banners-spinner"></div>
-        </div>
-      ) : (
+      {(
         <div className="banners-grid">
           {filteredBanners.map((banner) => (
             <div key={banner.id} className="banners-card">
@@ -189,7 +218,7 @@ export default function Banners() {
                     <Edit size={16} />
                   </button>
                   <button
-                    onClick={() => deleteMutation.mutate(banner.id)}
+                    onClick={() => confirmAndDeleteBanner(banner)}
                     className="banners-icon-button banners-icon-button--delete"
                   >
                     <Trash2 size={16} />
@@ -270,9 +299,14 @@ export default function Banners() {
               </div>
               <div className="banners-form-actions">
                 <button type="button" onClick={closeModal} className="banners-btn banners-btn--ghost">Cancel</button>
-                <button type="submit" className="banners-btn banners-btn--primary">
+                <AsyncButton
+                  type="submit"
+                  className="banners-btn banners-btn--primary"
+                  isLoading={createMutation.isPending || updateMutation.isPending}
+                  loadingText={editingBanner ? 'Updating...' : 'Creating...'}
+                >
                   {editingBanner ? 'Update' : 'Create'}
-                </button>
+                </AsyncButton>
               </div>
             </form>
           </div>

@@ -12,8 +12,10 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../context/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
 import { Header, Card, Loading, EmptyState, Badge } from '../../components/common';
+import { PaymentPageSkeleton } from '../../components/common/Skeleton';
 import { Layout } from '../../constants';
 import { maintenanceAPI } from '../../services/api';
+import useMinLoadingTime from '../../hooks/useMinLoadingTime';
 
 const MaintenanceScreen = ({ navigation }) => {
   const { theme } = useTheme();
@@ -34,7 +36,7 @@ const MaintenanceScreen = ({ navigation }) => {
   const fetchBills = async () => {
     try {
       setError(null);
-      const response = await maintenanceAPI.getByUser(user.id);
+      const response = await maintenanceAPI.getBills();
       setBills(response.data);
     } catch (err) {
       setError('Failed to load bills');
@@ -212,11 +214,13 @@ const MaintenanceScreen = ({ navigation }) => {
     },
   });
 
-  if (loading) {
+  const showSkeleton = useMinLoadingTime(loading);
+
+  if (showSkeleton) {
     return (
       <SafeAreaView style={styles.container} edges={['bottom']}>
         <Header title="Maintenance Bills" showBack />
-        <Loading fullScreen text="Loading bills..." />
+        <PaymentPageSkeleton tabCount={3} cardCount={3} />
       </SafeAreaView>
     );
   }
@@ -274,9 +278,9 @@ const MaintenanceScreen = ({ navigation }) => {
               <View style={{ alignItems: 'flex-end' }}>
                 <Text style={styles.billAmount}>{formatAmount(item.amount)}</Text>
                 <Badge 
-                  text={item.status} 
+                  label={item.status} 
                   variant={getStatusVariant(item.status)}
-                  size="small"
+                  size="sm"
                 />
               </View>
             </View>

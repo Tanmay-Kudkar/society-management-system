@@ -5,8 +5,9 @@ import { useAuth } from '../../context'
 import { useConfirmDialog } from '../../context'
 import { tenantApi, flatApi } from '../../../../api'
 import { Plus, Edit, Trash2, Search, X, User, Calendar, Phone, Mail, Upload } from 'lucide-react'
-import { FormInput, PhoneInput, SmartSelect, NumberInput } from '../../components'
-import { BulkImportModal } from '../../components'
+import { FormInput, PhoneInput, SmartSelect, NumberInput, BulkImportModal, AsyncButton } from '../../components'
+import { HeroSkeleton, FiltersSkeleton, TableSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
+import useMinLoadingTime from '../../hooks/useMinLoadingTime'
 
 export default function Tenants() {
   const { user, canManageTenants } = useAuth()
@@ -29,10 +30,9 @@ export default function Tenants() {
   const effectiveSocietyId = isPlatformLevel && societyIdFromUrl ? parseInt(societyIdFromUrl) : user?.societyId
   const canEditTenants = canManageTenants()
 
-  const { data: allTenants = [], isLoading } = useQuery({
+  const { data: allTenants = [], isLoading, isError } = useQuery({
     queryKey: ['tenants'],
     queryFn: () => tenantApi.getAll().then(res => res.data),
-    placeholderData: [],
   })
 
   // Filter tenants by society
@@ -74,15 +74,17 @@ export default function Tenants() {
     onSuccess: () => queryClient.invalidateQueries(['tenants']),
   })
 
-  const filteredTenants = tenants.filter(t => {
-    const matchesSearch = t.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         t.phone?.includes(searchTerm) ||
-                         t.email?.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesStatus = !filterStatus || 
-                         (filterStatus === 'active' && t.isActive) ||
-                         (filterStatus === 'inactive' && !t.isActive)
-    return matchesSearch && matchesStatus
-  })
+  const filteredTenants = useMemo(() => {
+    return tenants.filter(t => {
+      const matchesSearch = t.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           t.phone?.includes(searchTerm) ||
+                           t.email?.toLowerCase().includes(searchTerm.toLowerCase())
+      const matchesStatus = !filterStatus || 
+                           (filterStatus === 'active' && t.isActive) ||
+                           (filterStatus === 'inactive' && !t.isActive)
+      return matchesSearch && matchesStatus
+    })
+  }, [tenants, searchTerm, filterStatus])
 
   const handleSubmit = (e) => {
     e.preventDefault()
@@ -126,6 +128,17 @@ export default function Tenants() {
     const daysUntil = Math.ceil((end - today) / (1000 * 60 * 60 * 24))
     return daysUntil > 0 && daysUntil <= 30
   }
+
+  const showSkeleton = useMinLoadingTime(isLoading || isError)
+
+  if (showSkeleton) return (
+    <div className="tenants-page">
+      <WakeUpBanner />
+      <HeroSkeleton statCount={0} />
+      <FiltersSkeleton />
+      <TableSkeleton rows={8} cols={5} />
+    </div>
+  )
 
   return (
     <div className="tenants-page">
@@ -182,11 +195,7 @@ export default function Tenants() {
 
       {/* Table */}
       <div className="tenants-table-card">
-        {isLoading ? (
-          <div className="tenants-loading">
-            <div className="tenants-spinner" />
-          </div>
-        ) : (
+        {(
           <div className="tenants-table-scroll">
             <table className="tenants-table">
               <thead className="tenants-thead">
@@ -452,13 +461,14 @@ export default function Tenants() {
                   >
                     Cancel
                   </button>
-                  <button
+                  <AsyncButton
                     type="submit"
-                    disabled={createMutation.isPending || updateMutation.isPending}
                     className="tenants-submit-button"
+                    isLoading={createMutation.isPending || updateMutation.isPending}
+                    loadingText="Saving..."
                   >
-                    {createMutation.isPending || updateMutation.isPending ? 'Saving...' : 'Save'}
-                  </button>
+                    Save
+                  </AsyncButton>
                 </div>
               </form>
             </div>

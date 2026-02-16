@@ -12,8 +12,10 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../context/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
 import { Header, Card, Badge, Loading, EmptyState, ErrorState, Avatar } from '../../components/common';
+import { FilteredListSkeleton } from '../../components/common/Skeleton';
 import { Layout, COMPLAINT_STATUS } from '../../constants';
 import { complaintAPI } from '../../services/api';
+import useMinLoadingTime from '../../hooks/useMinLoadingTime';
 
 const ComplaintsScreen = ({ navigation }) => {
   const { theme } = useTheme();
@@ -260,11 +262,13 @@ const ComplaintsScreen = ({ navigation }) => {
     );
   };
 
-  if (loading) {
+  const showSkeleton = useMinLoadingTime(loading);
+
+  if (showSkeleton) {
     return (
       <SafeAreaView style={styles.container} edges={['bottom']}>
         <Header title="Complaints" showBack />
-        <Loading fullScreen text="Loading complaints..." />
+        <FilteredListSkeleton filterCount={4} cardCount={5} />
       </SafeAreaView>
     );
   }

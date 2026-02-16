@@ -6,6 +6,8 @@ import { paymentApi } from '../../../../api'
 import { Search, CreditCard, CheckCircle, XCircle, Clock, Filter } from 'lucide-react'
 import clsx from 'clsx'
 import { PermissionDenied } from '../../components'
+import { HeroSkeleton, FinancePageSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
+import useMinLoadingTime from '../../hooks/useMinLoadingTime'
 
 const statusConfig = {
   CREATED: { label: 'Pending', icon: Clock, className: 'payment-status--pending' },
@@ -32,7 +34,7 @@ export default function Payments() {
   const effectiveSocietyId = isPlatformLevel && societyIdFromUrl ? parseInt(societyIdFromUrl) : user?.societyId
 
   // Fetch payments based on user role
-  const { data: payments = [], isLoading } = useQuery({
+  const { data: payments = [], isLoading, isError } = useQuery({
     queryKey: ['payments', effectiveSocietyId],
     queryFn: async () => {
       if (effectiveSocietyId) {
@@ -78,6 +80,18 @@ export default function Payments() {
       hour: '2-digit',
       minute: '2-digit',
     })
+  }
+
+  const showSkeleton = useMinLoadingTime(isLoading || isError)
+
+  if (showSkeleton) {
+    return (
+      <div className="payments-page">
+        <WakeUpBanner />
+        <HeroSkeleton />
+        <FinancePageSkeleton summaryCount={4} rows={6} cols={5} />
+      </div>
+    )
   }
 
   return (
@@ -139,11 +153,7 @@ export default function Payments() {
 
       {/* Table */}
       <div className="payments-table-card">
-        {isLoading ? (
-          <div className="payments-loading">
-            <div className="payments-spinner" />
-          </div>
-        ) : filteredPayments.length === 0 ? (
+        {filteredPayments.length === 0 ? (
           <div className="payments-empty">
             <CreditCard size={48} className="payments-empty-icon" />
             <p className="payments-empty-text">No payments found</p>

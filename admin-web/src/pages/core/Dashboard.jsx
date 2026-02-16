@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, memo } from "react";
+import { useState, useEffect, useRef, useMemo, memo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "../../context/AuthContext";
 import {
@@ -51,6 +51,8 @@ import {
   noticeApi,
   securityLogApi,
 } from "../../../../api";
+import { DashboardSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders';
+import useMinLoadingTime from '../../hooks/useMinLoadingTime';
 
 const formatCurrency = (amount) => {
   return new Intl.NumberFormat("en-IN", {
@@ -254,11 +256,10 @@ export default function Dashboard() {
     }
   }, [isSocietyOpsLevel]);
 
-  const { data: societies = [] } = useQuery({
+  const { data: societies = [], isLoading: societiesLoading, isError: societiesError } = useQuery({
     queryKey: ["societies"],
     queryFn: () => societyApi.getAll().then((res) => res.data),
     enabled: isPlatformLevel,
-    placeholderData: [],
   });
 
   const { data: organizations = [] } = useQuery({
@@ -337,11 +338,15 @@ export default function Dashboard() {
     placeholderData: [],
   });
 
-  const openTickets = allTickets.filter(
-    (t) => t.status === "OPEN" || t.status === "IN_PROGRESS",
+  const openTickets = useMemo(
+    () => allTickets.filter((t) => t.status === "OPEN" || t.status === "IN_PROGRESS"),
+    [allTickets],
   );
 
-  const pendingTickets = allTickets.filter((t) => t.status === "OPEN");
+  const pendingTickets = useMemo(
+    () => allTickets.filter((t) => t.status === "OPEN"),
+    [allTickets],
+  );
 
   const { data: maintenanceBills = [] } = useQuery({
     queryKey: ["maintenance-bills", user?.id],
@@ -365,127 +370,173 @@ export default function Dashboard() {
     placeholderData: [],
   });
 
-  const expiringContracts = contracts.filter((c) => {
-    if (!c.endDate) return false;
-    const endDate = new Date(c.endDate);
-    const today = new Date();
-    const daysUntilExpiry = Math.ceil(
-      (endDate - today) / (1000 * 60 * 60 * 24),
-    );
-    return daysUntilExpiry > 0 && daysUntilExpiry <= 30;
-  });
+  const expiringContracts = useMemo(() => {
+    return contracts.filter((c) => {
+      if (!c.endDate) return false;
+      const endDate = new Date(c.endDate);
+      const today = new Date();
+      const daysUntilExpiry = Math.ceil(
+        (endDate - today) / (1000 * 60 * 60 * 24),
+      );
+      return daysUntilExpiry > 0 && daysUntilExpiry <= 30;
+    });
+  }, [contracts]);
 
-  const expiringTenants = tenants.filter((t) => {
-    if (!t.agreementEndDate || !t.isActive) return false;
-    const endDate = new Date(t.agreementEndDate);
-    const today = new Date();
-    const daysUntilExpiry = Math.ceil(
-      (endDate - today) / (1000 * 60 * 60 * 24),
-    );
-    return daysUntilExpiry > 0 && daysUntilExpiry <= 30;
-  });
+  const expiringTenants = useMemo(() => {
+    return tenants.filter((t) => {
+      if (!t.agreementEndDate || !t.isActive) return false;
+      const endDate = new Date(t.agreementEndDate);
+      const today = new Date();
+      const daysUntilExpiry = Math.ceil(
+        (endDate - today) / (1000 * 60 * 60 * 24),
+      );
+      return daysUntilExpiry > 0 && daysUntilExpiry <= 30;
+    });
+  }, [tenants]);
 
-  const totalBillAmount = maintenanceBills.reduce(
-    (sum, b) => sum + (b.amount || 0),
-    0,
+  const {
+    totalBillAmount,
+    paidBills,
+    pendingBillsCount,
+    overdueBills,
+    billTotalCount,
+    billCollectionRate,
+  } = useMemo(() => {
+    const totalAmount = maintenanceBills.reduce((sum, b) => sum + (b.amount || 0), 0);
+    const paid = maintenanceBills.filter((b) => b.status === "PAID");
+    const pending = maintenanceBills.filter((b) => b.status === "PENDING");
+    const overdue = maintenanceBills.filter((b) => {
+      if (b.status !== "PENDING" || !b.dueDate) return false;
+      return new Date(b.dueDate) < new Date();
+    });
+    const totalCount = paid.length + pending.length + overdue.length;
+    const collectionRate = totalCount > 0 ? Math.round((paid.length / totalCount) * 100) : 0;
+    return {
+      totalBillAmount: totalAmount,
+      paidBills: paid,
+      pendingBillsCount: pending,
+      overdueBills: overdue,
+      billTotalCount: totalCount,
+      billCollectionRate: collectionRate,
+    };
+  }, [maintenanceBills]);
+
+  const pendingComplaints = useMemo(
+    () => complaints.filter((c) => c.status === "PENDING" || c.status === "IN_PROGRESS"),
+    [complaints],
   );
-  const paidBills = maintenanceBills.filter((b) => b.status === "PAID");
-  const pendingBillsCount = maintenanceBills.filter((b) => b.status === "PENDING");
-  const overdueBills = maintenanceBills.filter((b) => {
-    if (b.status !== "PENDING" || !b.dueDate) return false;
-    return new Date(b.dueDate) < new Date();
-  });
 
-  const pendingComplaints = complaints.filter(
-    (c) => c.status === "PENDING" || c.status === "IN_PROGRESS",
-  );
+  const { societyAdminsCount, tenantsCount, membersCount, organizationOwnersCount } = useMemo(() => {
+    return {
+      societyAdminsCount: platformUsers.filter((u) => u.role === "SOCIETY_ADMIN").length,
+      tenantsCount: platformUsers.filter((u) => u.role === "TENANT").length,
+      membersCount: platformUsers.filter((u) => u.role === "MEMBER").length,
+      organizationOwnersCount: platformUsers.filter((u) => u.role === "ORGANIZATION_OWNER").length,
+    };
+  }, [platformUsers]);
 
-  const societyAdminsCount = platformUsers.filter(
-    (u) => u.role === "SOCIETY_ADMIN",
-  ).length;
-  const tenantsCount = platformUsers.filter((u) => u.role === "TENANT").length;
-  const membersCount = platformUsers.filter((u) => u.role === "MEMBER").length;
-  const organizationOwnersCount = platformUsers.filter(
-    (u) => u.role === "ORGANIZATION_OWNER",
-  ).length;
-
-  const roleBreakdown = isPlatformOwner
-    ? [
+  const roleBreakdown = useMemo(() => {
+    if (isPlatformOwner) {
+      return [
         { label: "Org Owners", value: organizationOwnersCount, color: "#14b8a6" },
         { label: "Society Admins", value: societyAdminsCount, color: "#3b82f6" },
-      ]
-    : [
-        { label: "Society Admins", value: societyAdminsCount, color: "#3b82f6" },
-        { label: "Members", value: membersCount, color: "#8b5cf6" },
-        { label: "Tenants", value: tenantsCount, color: "#f97316" },
       ];
-  const roleBreakdownTotal = roleBreakdown.reduce(
-    (sum, item) => sum + item.value,
-    0,
+    }
+    return [
+      { label: "Society Admins", value: societyAdminsCount, color: "#3b82f6" },
+      { label: "Members", value: membersCount, color: "#8b5cf6" },
+      { label: "Tenants", value: tenantsCount, color: "#f97316" },
+    ];
+  }, [isPlatformOwner, organizationOwnersCount, societyAdminsCount, membersCount, tenantsCount]);
+
+  const roleBreakdownTotal = useMemo(
+    () => roleBreakdown.reduce((sum, item) => sum + item.value, 0),
+    [roleBreakdown],
   );
-  const roleBreakdownWithPercent = roleBreakdown.map((item) => ({
-    ...item,
-    percent:
-      roleBreakdownTotal > 0
-        ? Math.round((item.value / roleBreakdownTotal) * 100)
-        : 0,
-  }));
 
-  const orgSocietyStats = organizations
-    .map((org) => ({
-      name: org.name || `Org ${org.id}`,
-      count: societies.filter((s) => s.organizationId === org.id).length,
-    }))
-    .sort((a, b) => b.count - a.count)
-    .slice(0, 6);
+  const roleBreakdownWithPercent = useMemo(() => {
+    return roleBreakdown.map((item) => ({
+      ...item,
+      percent:
+        roleBreakdownTotal > 0
+          ? Math.round((item.value / roleBreakdownTotal) * 100)
+          : 0,
+    }));
+  }, [roleBreakdown, roleBreakdownTotal]);
 
-  const usersPerSociety = societies
-    .map((society) => ({
-      name: society.name || `Society ${society.id}`,
-      count: platformUsers.filter((userItem) => userItem.societyId === society.id)
-        .length,
-    }))
-    .sort((a, b) => b.count - a.count)
-    .slice(0, 7);
+  const orgSocietyStats = useMemo(() => {
+    return organizations
+      .map((org) => ({
+        name: org.name || `Org ${org.id}`,
+        count: societies.filter((s) => s.organizationId === org.id).length,
+      }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 6);
+  }, [organizations, societies]);
 
-  const societyOccupancyStats = societies
-    .map((society) => {
-      const totalUnits =
-        (society.actualFlats ?? society.totalFlats ?? 0)
-        + (society.actualShops ?? society.totalShops ?? 0)
-        + (society.actualOffices ?? society.totalOffices ?? 0);
-      const occupiedUnits =
-        (society.occupiedFlats ?? 0)
-        + (society.occupiedShops ?? 0)
-        + (society.occupiedOffices ?? 0);
-      const occupancyPercent =
-        totalUnits > 0 ? Math.round((occupiedUnits / totalUnits) * 100) : 0;
-      return {
+  const usersPerSociety = useMemo(() => {
+    return societies
+      .map((society) => ({
         name: society.name || `Society ${society.id}`,
-        occupiedUnits,
-        totalUnits,
-        occupancyPercent,
-      };
-    })
-    .filter((item) => item.totalUnits > 0)
-    .sort((a, b) => b.occupancyPercent - a.occupancyPercent)
-    .slice(0, 6);
+        count: platformUsers.filter((userItem) => userItem.societyId === society.id).length,
+      }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 7);
+  }, [societies, platformUsers]);
 
-  const platformTotalIssues = allTickets.length + complaints.length;
-  const resolvedTicketsCount = allTickets.filter(
-    (item) => item.status === "CLOSED" || item.status === "RESOLVED",
-  ).length;
-  const resolvedComplaintsCount = complaints.filter(
-    (item) => item.status === "CLOSED" || item.status === "RESOLVED",
-  ).length;
-  const resolvedIssuesCount = resolvedTicketsCount + resolvedComplaintsCount;
-  const issueResolutionRate =
-    platformTotalIssues > 0
-      ? Math.round((resolvedIssuesCount / platformTotalIssues) * 100)
-      : 0;
+  const societyOccupancyStats = useMemo(() => {
+    return societies
+      .map((society) => {
+        const totalUnits =
+          (society.actualFlats ?? society.totalFlats ?? 0)
+          + (society.actualShops ?? society.totalShops ?? 0)
+          + (society.actualOffices ?? society.totalOffices ?? 0);
+        const occupiedUnits =
+          (society.occupiedFlats ?? 0)
+          + (society.occupiedShops ?? 0)
+          + (society.occupiedOffices ?? 0);
+        const occupancyPercent =
+          totalUnits > 0 ? Math.round((occupiedUnits / totalUnits) * 100) : 0;
+        return {
+          name: society.name || `Society ${society.id}`,
+          occupiedUnits,
+          totalUnits,
+          occupancyPercent,
+        };
+      })
+      .filter((item) => item.totalUnits > 0)
+      .sort((a, b) => b.occupancyPercent - a.occupancyPercent)
+      .slice(0, 6);
+  }, [societies]);
 
-  const averageOccupancy =
-    societyOccupancyStats.length > 0
+  const {
+    platformTotalIssues,
+    resolvedTicketsCount,
+    resolvedComplaintsCount,
+    resolvedIssuesCount,
+    issueResolutionRate,
+  } = useMemo(() => {
+    const totalIssues = allTickets.length + complaints.length;
+    const resolvedTickets = allTickets.filter(
+      (item) => item.status === "CLOSED" || item.status === "RESOLVED",
+    ).length;
+    const resolvedComplaints = complaints.filter(
+      (item) => item.status === "CLOSED" || item.status === "RESOLVED",
+    ).length;
+    const totalResolved = resolvedTickets + resolvedComplaints;
+    const resolutionRate =
+      totalIssues > 0 ? Math.round((totalResolved / totalIssues) * 100) : 0;
+    return {
+      platformTotalIssues: totalIssues,
+      resolvedTicketsCount: resolvedTickets,
+      resolvedComplaintsCount: resolvedComplaints,
+      resolvedIssuesCount: totalResolved,
+      issueResolutionRate: resolutionRate,
+    };
+  }, [allTickets, complaints]);
+
+  const averageOccupancy = useMemo(() => {
+    return societyOccupancyStats.length > 0
       ? Math.round(
           societyOccupancyStats.reduce(
             (sum, societyItem) => sum + societyItem.occupancyPercent,
@@ -493,36 +544,37 @@ export default function Dashboard() {
           ) / societyOccupancyStats.length,
         )
       : 0;
+  }, [societyOccupancyStats]);
 
-  const billTotalCount = paidBills.length + pendingBillsCount.length + overdueBills.length;
-  const billCollectionRate =
-    billTotalCount > 0 ? Math.round((paidBills.length / billTotalCount) * 100) : 0;
+  const issueHealthData = useMemo(() => {
+    return [
+      {
+        label: "Open",
+        value: allTickets.filter((item) => item.status === "OPEN").length
+          + complaints.filter((item) => item.status === "PENDING").length,
+        color: "#f97316",
+      },
+      {
+        label: "In Progress",
+        value: allTickets.filter((item) => item.status === "IN_PROGRESS").length
+          + complaints.filter((item) => item.status === "IN_PROGRESS").length,
+        color: "#3b82f6",
+      },
+      {
+        label: "Resolved",
+        value: resolvedIssuesCount,
+        color: "#22c55e",
+      },
+    ].filter((item) => item.value > 0);
+  }, [allTickets, complaints, resolvedIssuesCount]);
 
-  const issueHealthData = [
-    {
-      label: "Open",
-      value: allTickets.filter((item) => item.status === "OPEN").length
-        + complaints.filter((item) => item.status === "PENDING").length,
-      color: "#f97316",
-    },
-    {
-      label: "In Progress",
-      value: allTickets.filter((item) => item.status === "IN_PROGRESS").length
-        + complaints.filter((item) => item.status === "IN_PROGRESS").length,
-      color: "#3b82f6",
-    },
-    {
-      label: "Resolved",
-      value: resolvedIssuesCount,
-      color: "#22c55e",
-    },
-  ].filter((item) => item.value > 0);
-
-  const billingHealthData = [
-    { name: "Paid", value: paidBills.length, color: "#22c55e" },
-    { name: "Pending", value: pendingBillsCount.length, color: "#f59e0b" },
-    { name: "Overdue", value: overdueBills.length, color: "#ef4444" },
-  ];
+  const billingHealthData = useMemo(() => {
+    return [
+      { name: "Paid", value: paidBills.length, color: "#22c55e" },
+      { name: "Pending", value: pendingBillsCount.length, color: "#f59e0b" },
+      { name: "Overdue", value: overdueBills.length, color: "#ef4444" },
+    ];
+  }, [paidBills.length, pendingBillsCount.length, overdueBills.length]);
 
   const showPlatformFinancialWidgets = !isPlatformOwner;
 
@@ -566,34 +618,115 @@ export default function Dashboard() {
   const platformAnalyticsLoading = false; // placeholderData eliminates loading flash
 
   // Society Admin chart data
-  const unitTypeData = isSocietyOpsLevel ? [
-    { name: "Flats", total: flats.filter(f => !f.unitType || f.unitType === "FLAT").length, occupied: flats.filter(f => (!f.unitType || f.unitType === "FLAT") && f.ownerName).length, color: "#3b82f6" },
-    { name: "Shops", total: flats.filter(f => f.unitType === "SHOP").length, occupied: flats.filter(f => f.unitType === "SHOP" && f.ownerName).length, color: "#14b8a6" },
-    { name: "Offices", total: flats.filter(f => f.unitType === "OFFICE").length, occupied: flats.filter(f => f.unitType === "OFFICE" && f.ownerName).length, color: "#8b5cf6" },
-  ].filter(u => u.total > 0) : [];
+  const unitTypeData = useMemo(() => {
+    if (!isSocietyOpsLevel) {
+      return [];
+    }
+    return [
+      {
+        name: "Flats",
+        total: flats.filter((f) => !f.unitType || f.unitType === "FLAT").length,
+        occupied: flats.filter((f) => (!f.unitType || f.unitType === "FLAT") && f.ownerName).length,
+        color: "#3b82f6",
+      },
+      {
+        name: "Shops",
+        total: flats.filter((f) => f.unitType === "SHOP").length,
+        occupied: flats.filter((f) => f.unitType === "SHOP" && f.ownerName).length,
+        color: "#14b8a6",
+      },
+      {
+        name: "Offices",
+        total: flats.filter((f) => f.unitType === "OFFICE").length,
+        occupied: flats.filter((f) => f.unitType === "OFFICE" && f.ownerName).length,
+        color: "#8b5cf6",
+      },
+    ].filter((u) => u.total > 0);
+  }, [isSocietyOpsLevel, flats]);
 
-  const billsChartData = isSocietyOpsLevel ? [
-    { name: "Paid", value: paidBills.length, color: "#22c55e" },
-    { name: "Pending", value: pendingBillsCount.length, color: "#f59e0b" },
-    { name: "Overdue", value: overdueBills.length, color: "#ef4444" },
-  ] : [];
+  const billsChartData = useMemo(() => {
+    if (!isSocietyOpsLevel) {
+      return [];
+    }
+    return [
+      { name: "Paid", value: paidBills.length, color: "#22c55e" },
+      { name: "Pending", value: pendingBillsCount.length, color: "#f59e0b" },
+      { name: "Overdue", value: overdueBills.length, color: "#ef4444" },
+    ];
+  }, [isSocietyOpsLevel, paidBills.length, pendingBillsCount.length, overdueBills.length]);
 
-  const ticketChartData = isSocietyOpsLevel ? [
-    { name: "Open", tickets: allTickets.filter(t => t.status === "OPEN").length, complaints: complaints.filter(c => c.status === "PENDING").length },
-    { name: "In Progress", tickets: allTickets.filter(t => t.status === "IN_PROGRESS").length, complaints: complaints.filter(c => c.status === "IN_PROGRESS").length },
-    { name: "Resolved", tickets: allTickets.filter(t => t.status === "CLOSED" || t.status === "RESOLVED").length, complaints: complaints.filter(c => c.status === "RESOLVED").length },
-  ] : [];
+  const ticketChartData = useMemo(() => {
+    if (!isSocietyOpsLevel) {
+      return [];
+    }
+    return [
+      {
+        name: "Open",
+        tickets: allTickets.filter((t) => t.status === "OPEN").length,
+        complaints: complaints.filter((c) => c.status === "PENDING").length,
+      },
+      {
+        name: "In Progress",
+        tickets: allTickets.filter((t) => t.status === "IN_PROGRESS").length,
+        complaints: complaints.filter((c) => c.status === "IN_PROGRESS").length,
+      },
+      {
+        name: "Resolved",
+        tickets: allTickets.filter((t) => t.status === "CLOSED" || t.status === "RESOLVED").length,
+        complaints: complaints.filter((c) => c.status === "RESOLVED").length,
+      },
+    ];
+  }, [isSocietyOpsLevel, allTickets, complaints]);
 
-  const vehicleChartData = isSocietyOpsLevel ? [
-    { name: "Four Wheeler", value: vehicles.filter(v => v.vehicleType === "FOUR_WHEELER").length, color: "#3b82f6" },
-    { name: "Two Wheeler", value: vehicles.filter(v => v.vehicleType === "TWO_WHEELER").length, color: "#22c55e" },
-  ].filter(v => v.value > 0) : [];
+  const vehicleChartData = useMemo(() => {
+    if (!isSocietyOpsLevel) {
+      return [];
+    }
+    return [
+      { name: "Four Wheeler", value: vehicles.filter((v) => v.vehicleType === "FOUR_WHEELER").length, color: "#3b82f6" },
+      { name: "Two Wheeler", value: vehicles.filter((v) => v.vehicleType === "TWO_WHEELER").length, color: "#22c55e" },
+    ].filter((v) => v.value > 0);
+  }, [isSocietyOpsLevel, vehicles]);
 
-  const tenantChartData = isSocietyOpsLevel ? [
-    { name: "Active", value: tenants.filter(t => t.isActive).length, color: "#22c55e" },
-    { name: "Expiring", value: expiringTenants.length, color: "#f59e0b" },
-    { name: "Inactive", value: tenants.filter(t => !t.isActive).length, color: "#6b7280" },
-  ].filter(t => t.value > 0) : [];
+  const tenantChartData = useMemo(() => {
+    if (!isSocietyOpsLevel) {
+      return [];
+    }
+    return [
+      { name: "Active", value: tenants.filter((t) => t.isActive).length, color: "#22c55e" },
+      { name: "Expiring", value: expiringTenants.length, color: "#f59e0b" },
+      { name: "Inactive", value: tenants.filter((t) => !t.isActive).length, color: "#6b7280" },
+    ].filter((t) => t.value > 0);
+  }, [isSocietyOpsLevel, tenants, expiringTenants.length]);
+
+  const memberIssueStats = useMemo(() => {
+    const myTickets = allTickets.filter((t) => t.raisedById === user?.id);
+    const myOpenTickets = myTickets.filter((t) => t.status === "OPEN");
+    const myComplaints = complaints.filter((c) => c.raisedById === user?.id);
+    const myPendingComplaints = myComplaints.filter((c) => c.status === "PENDING");
+    return {
+      myTicketsCount: myTickets.length,
+      myOpenTicketsCount: myOpenTickets.length,
+      myComplaintsCount: myComplaints.length,
+      myPendingComplaintsCount: myPendingComplaints.length,
+    };
+  }, [allTickets, complaints, user?.id]);
+
+  const {
+    fourWheelerCount,
+    twoWheelerCount,
+    activeTenantsCount,
+    activeContractsCount,
+    pendingTicketsInProgressCount,
+  } = useMemo(() => {
+    return {
+      fourWheelerCount: vehicles.filter((v) => v.vehicleType === "FOUR_WHEELER").length,
+      twoWheelerCount: vehicles.filter((v) => v.vehicleType === "TWO_WHEELER").length,
+      activeTenantsCount: tenants.filter((t) => t.isActive).length,
+      activeContractsCount: contracts.filter((c) => c.isActive).length,
+      pendingTicketsInProgressCount: pendingTickets.filter((t) => t.status === "IN_PROGRESS").length,
+    };
+  }, [vehicles, tenants, contracts, pendingTickets]);
 
   const societyAnalyticsLoading = false; // placeholderData eliminates loading flash
 
@@ -847,6 +980,17 @@ export default function Dashboard() {
     return "dashboard-security__badge--info";
   };
 
+  const showSkeleton = useMinLoadingTime(societiesLoading || societiesError);
+
+  if (showSkeleton) {
+    return (
+      <>
+        <WakeUpBanner show={societiesLoading} />
+        <DashboardSkeleton />
+      </>
+    );
+  }
+
   return (
     <div className="dashboard animate-fadeIn">
       <div className="dashboard-hero animate-slide-down">
@@ -979,18 +1123,18 @@ export default function Dashboard() {
             />
             <StatCard
               title="My Tickets"
-              value={allTickets.filter((t) => t.raisedById === user?.id).length}
+              value={memberIssueStats.myTicketsCount}
               icon={Ticket}
               variant="blue"
-              subtext={`${allTickets.filter((t) => t.raisedById === user?.id && t.status === "OPEN").length} open`}
+              subtext={`${memberIssueStats.myOpenTicketsCount} open`}
               delay={150}
             />
             <StatCard
               title="My Complaints"
-              value={complaints.filter((c) => c.raisedById === user?.id).length}
+              value={memberIssueStats.myComplaintsCount}
               icon={AlertTriangle}
               variant="amber"
-              subtext={`${complaints.filter((c) => c.raisedById === user?.id && c.status === "PENDING").length} pending`}
+              subtext={`${memberIssueStats.myPendingComplaintsCount} pending`}
               delay={200}
             />
           </div>
@@ -1086,14 +1230,7 @@ export default function Dashboard() {
 
               <div className="dashboard-charts-grid">
                 {platformAnalyticsLoading ? (
-                  <>
-                    {[1, 2, 3, 4].map((i) => (
-                      <div key={i} className={`dashboard-chart-card dashboard-chart-card--loading ${i > 2 ? "dashboard-chart-card--wide" : ""}`}>
-                        <div className="dashboard-platform-skeleton dashboard-platform-skeleton--title"></div>
-                        <div className="dashboard-platform-skeleton dashboard-platform-skeleton--chart"></div>
-                      </div>
-                    ))}
-                  </>
+                  <DashboardSkeleton />
                 ) : (
                   <>
                     {/* User Role Distribution - Donut */}
@@ -1765,11 +1902,7 @@ export default function Dashboard() {
                         <div className="dashboard-vehicle-card__ring-inner">
                           <div className="dashboard-vehicle-card__ring-content">
                             <span className="dashboard-vehicle-card__ring-value dashboard-vehicle-card__ring-value--blue">
-                              {
-                                vehicles.filter(
-                                  (v) => v.vehicleType === "FOUR_WHEELER",
-                                ).length
-                              }
+                              {fourWheelerCount}
                             </span>
                             <Car className="dashboard-vehicle-card__ring-icon dashboard-vehicle-card__ring-icon--blue" />
                           </div>
@@ -1785,11 +1918,7 @@ export default function Dashboard() {
                         <div className="dashboard-vehicle-card__ring-inner">
                           <div className="dashboard-vehicle-card__ring-content">
                             <span className="dashboard-vehicle-card__ring-value dashboard-vehicle-card__ring-value--green">
-                              {
-                                vehicles.filter(
-                                  (v) => v.vehicleType === "TWO_WHEELER",
-                                ).length
-                              }
+                              {twoWheelerCount}
                             </span>
                             <Activity className="dashboard-vehicle-card__ring-icon dashboard-vehicle-card__ring-icon--green" />
                           </div>
@@ -1905,19 +2034,17 @@ export default function Dashboard() {
                       },
                       {
                         label: "In Progress",
-                        value: pendingTickets.filter(
-                          (t) => t.status === "IN_PROGRESS",
-                        ).length,
+                        value: pendingTicketsInProgressCount,
                         tone: "blue",
                       },
                       {
                         label: "Active Tenants",
-                        value: tenants.filter((t) => t.isActive).length,
+                        value: activeTenantsCount,
                         tone: "teal",
                       },
                       {
                         label: "Active Contracts",
-                        value: contracts.filter((c) => c.isActive).length,
+                        value: activeContractsCount,
                         tone: "accent",
                       },
                     ].map((stat, idx) => (

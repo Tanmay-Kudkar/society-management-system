@@ -63,9 +63,10 @@ public class SocietyController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(
             @PathVariable Long id,
-            @RequestParam Long userId) {
+            @RequestParam Long userId,
+            @RequestParam(defaultValue = "false") boolean force) {
         roleService.canManageSocieties(userId);
-        societyService.delete(id);
+        societyService.delete(id, force);
         return ResponseEntity.noContent().build();
     }
 }

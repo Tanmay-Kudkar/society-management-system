@@ -1,10 +1,12 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '../../context'
 import { useConfirmDialog } from '../../context'
 import { contractApi, vendorApi } from '../../../../api'
 import { Plus, Edit, Trash2, Search, X, FileText, AlertTriangle, CheckCircle } from 'lucide-react'
-import { FormInput, SmartSelect, NumberInput, FormTextarea } from '../../components'
+import { FormInput, SmartSelect, NumberInput, FormTextarea, AsyncButton } from '../../components'
+import { HeroSkeleton, FinancePageSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
+import useMinLoadingTime from '../../hooks/useMinLoadingTime'
 
 const contractTypes = [
   'AMC', 'INSURANCE', 'PEST_CONTROL', 'HOUSEKEEPING', 'CCTV', 
@@ -23,10 +25,9 @@ export default function Contracts() {
   // Check if current user is PLATFORM_OWNER
   const isPlatformLevel = user?.role === 'PLATFORM_OWNER' || user?.role === 'ORGANIZATION_OWNER'
 
-  const { data: contracts = [], isLoading } = useQuery({
+  const { data: contracts = [], isLoading, isError } = useQuery({
     queryKey: ['contracts'],
     queryFn: () => contractApi.getAll().then(res => res.data),
-    placeholderData: [],
   })
 
   const { data: vendors = [] } = useQuery({
@@ -58,12 +59,12 @@ export default function Contracts() {
     onSuccess: () => queryClient.invalidateQueries(['contracts']),
   })
 
-  const filteredContracts = contracts.filter(c => {
+  const filteredContracts = useMemo(() => contracts.filter(c => {
     const matchesSearch = c.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          c.vendorName?.toLowerCase().includes(searchTerm.toLowerCase())
     const matchesType = !filterType || c.contractType === filterType
     return matchesSearch && matchesType
-  })
+  }), [contracts, searchTerm, filterType])
 
   const handleSubmit = (e) => {
     e.preventDefault()
@@ -94,6 +95,16 @@ export default function Contracts() {
     const diff = Math.ceil((end - now) / (1000 * 60 * 60 * 24))
     return diff
   }
+
+  const showSkeleton = useMinLoadingTime(isLoading || isError)
+
+  if (showSkeleton) return (
+    <div>
+      <WakeUpBanner />
+      <HeroSkeleton statCount={0} />
+      <FinancePageSkeleton summaryCount={0} rows={6} cols={5} />
+    </div>
+  )
 
   return (
     <div>
@@ -142,11 +153,7 @@ export default function Contracts() {
 
       {/* Table */}
       <div className="contracts-table-card">
-        {isLoading ? (
-          <div className="contracts-loading">
-            <div className="contracts-spinner"></div>
-          </div>
-        ) : (
+        {(
           <div className="contracts-table-scroll">
             <table className="contracts-table">
               <thead className="contracts-thead">
@@ -314,12 +321,14 @@ export default function Contracts() {
                 >
                   Cancel
                 </button>
-                <button
+                <AsyncButton
                   type="submit"
                   className="contracts-btn contracts-btn--primary"
+                  isLoading={createMutation.isPending || updateMutation.isPending}
+                  loadingText="Saving..."
                 >
                   {editingContract ? 'Update' : 'Create'}
-                </button>
+                </AsyncButton>
               </div>
             </form>
           </div>

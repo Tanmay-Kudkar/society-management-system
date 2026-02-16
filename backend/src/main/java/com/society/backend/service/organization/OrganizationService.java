@@ -15,7 +15,7 @@ public interface OrganizationService {
 
     OrganizationResponse update(Long id, OrganizationRequest request);
 
-    void delete(Long id);
+    void delete(Long id, boolean force);
 
     List<OrganizationResponse> getByOwnerEmail(String email);
 }

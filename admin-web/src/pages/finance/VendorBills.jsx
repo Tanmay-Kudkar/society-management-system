@@ -1,10 +1,13 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '../../context'
 import { useConfirmDialog } from '../../context'
 import { vendorBillApi, vendorApi } from '../../../../api'
 import { Plus, Edit, Trash2, Search, X, Receipt, CheckCircle, Clock, AlertCircle } from 'lucide-react'
 import clsx from 'clsx'
+import { AsyncButton } from '../../components'
+import { HeroSkeleton, FinancePageSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
+import useMinLoadingTime from '../../hooks/useMinLoadingTime'
 
 const statusColors = {
   PENDING: 'vendor-bills-status--pending',
@@ -28,10 +31,9 @@ export default function VendorBills() {
   const [searchTerm, setSearchTerm] = useState('')
   const [filterStatus, setFilterStatus] = useState('')
 
-  const { data: bills = [], isLoading } = useQuery({
+  const { data: bills = [], isLoading, isError } = useQuery({
     queryKey: ['vendorBills'],
     queryFn: () => vendorBillApi.getAll().then(res => res.data),
-    placeholderData: [],
   })
 
   const { data: vendors = [] } = useQuery({
@@ -62,12 +64,12 @@ export default function VendorBills() {
     onSuccess: () => queryClient.invalidateQueries(['vendorBills']),
   })
 
-  const filteredBills = bills.filter(b => {
+  const filteredBills = useMemo(() => bills.filter(b => {
     const matchesSearch = b.vendorName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          b.description?.toLowerCase().includes(searchTerm.toLowerCase())
     const matchesStatus = !filterStatus || b.status === filterStatus
     return matchesSearch && matchesStatus
-  })
+  }), [bills, searchTerm, filterStatus])
 
   const handleSubmit = (e) => {
     e.preventDefault()
@@ -96,6 +98,16 @@ export default function VendorBills() {
       referenceNumber: formData.get('referenceNumber'),
     })
   }
+
+  const showSkeleton = useMinLoadingTime(isLoading || isError)
+
+  if (showSkeleton) return (
+    <div>
+      <WakeUpBanner />
+      <HeroSkeleton statCount={0} />
+      <FinancePageSkeleton summaryCount={0} rows={8} cols={6} />
+    </div>
+  )
 
   return (
     <div>
@@ -144,11 +156,7 @@ export default function VendorBills() {
 
       {/* Table */}
       <div className="vendor-bills-table-card">
-        {isLoading ? (
-          <div className="vendor-bills-loading">
-            <div className="vendor-bills-spinner"></div>
-          </div>
-        ) : (
+        {(
           <div className="vendor-bills-table-scroll">
             <table className="vendor-bills-table">
               <thead className="vendor-bills-thead">
@@ -318,12 +326,14 @@ export default function VendorBills() {
                 >
                   Cancel
                 </button>
-                <button
+                <AsyncButton
                   type="submit"
                   className="vendor-bills-btn vendor-bills-btn--primary"
+                  isLoading={createMutation.isPending}
+                  loadingText="Creating..."
                 >
                   Create
-                </button>
+                </AsyncButton>
               </div>
             </form>
           </div>
@@ -386,12 +396,14 @@ export default function VendorBills() {
                 >
                   Cancel
                 </button>
-                <button
+                <AsyncButton
                   type="submit"
                   className="vendor-bills-btn vendor-bills-btn--success"
+                  isLoading={paymentMutation.isPending}
+                  loadingText="Recording..."
                 >
                   Record Payment
-                </button>
+                </AsyncButton>
               </div>
             </form>
           </div>

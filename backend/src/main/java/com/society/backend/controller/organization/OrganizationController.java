@@ -55,8 +55,10 @@ public class OrganizationController {
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('PLATFORM_OWNER')")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
-        organizationService.delete(id);
+    public ResponseEntity<Void> delete(
+            @PathVariable Long id,
+            @RequestParam(defaultValue = "false") boolean force) {
+        organizationService.delete(id, force);
         return ResponseEntity.noContent().build();
     }
 }

@@ -10,6 +10,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.society.backend.dto.user.BulkCreateUsersResponse;
 import com.society.backend.dto.user.UserRequest;
@@ -25,6 +26,7 @@ import com.society.backend.repository.ticket.TicketRepository;
 import com.society.backend.repository.user.UserRepository;
 import com.society.backend.repository.society.SocietyRepository;
 import com.society.backend.security.RolePermissions;
+import com.society.backend.service.common.ReferenceCleanupService;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -38,11 +40,13 @@ public class UserServiceImpl implements UserService {
     private final SocietyRepository societyRepository;
     private final FlatRepository flatRepository;
     private final OrganizationRepository organizationRepository;
+    private final ReferenceCleanupService referenceCleanupService;
 
     public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder,
             ComplaintRepository complaintRepository, TicketRepository ticketRepository,
             SocietyRepository societyRepository, FlatRepository flatRepository,
-            OrganizationRepository organizationRepository) {
+            OrganizationRepository organizationRepository,
+            ReferenceCleanupService referenceCleanupService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.complaintRepository = complaintRepository;
@@ -50,6 +54,7 @@ public class UserServiceImpl implements UserService {
         this.societyRepository = societyRepository;
         this.flatRepository = flatRepository;
         this.organizationRepository = organizationRepository;
+        this.referenceCleanupService = referenceCleanupService;
     }
 
     @Override
@@ -511,7 +516,8 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void deleteUser(Long id) {
+    @Transactional
+    public void deleteUser(Long id, boolean force) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "User not found"));
 
@@ -561,11 +567,18 @@ public class UserServiceImpl implements UserService {
             associations.add(ticketsAssignedCount + " ticket(s) assigned");
         }
 
-        if (!associations.isEmpty()) {
+        if (!force && !associations.isEmpty()) {
             String message = "Cannot delete user '" + user.getName() + "'. User is associated with: "
                     + String.join(", ", associations)
-                    + ". Please reassign or delete these records first.";
+                    + ". Please reassign or delete these records first. Use force delete to auto-clean linked records.";
             throw new ApiException(HttpStatus.BAD_REQUEST, message);
+        }
+
+        if (force) {
+            referenceCleanupService.clearReferences("owner_user_id", id, false, Set.of("users"));
+            referenceCleanupService.clearReferences("assigned_to_id", id, false, Set.of("users"));
+            referenceCleanupService.clearReferences("raised_by_id", id, true, Set.of("users"));
+            referenceCleanupService.clearReferences("user_id", id, true, Set.of("users"));
         }
 
         userRepository.delete(user);

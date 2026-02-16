@@ -55,7 +55,8 @@ export const societyApi = {
   getByOrganizationId: (orgId) => api.get(`/societies/by-organization/${orgId}`),
   create: (data, userId) => api.post(`/societies?userId=${userId}`, data),
   update: (id, data, userId) => api.put(`/societies/${id}?userId=${userId}`, data),
-  delete: (id, userId) => api.delete(`/societies/${id}?userId=${userId}`),
+  delete: (id, userId, force = false) =>
+    api.delete(`/societies/${id}?userId=${userId}${force ? '&force=true' : ''}`),
 }
 
 // Organization API - PLATFORM_OWNER and ORGANIZATION_OWNER
@@ -65,7 +66,7 @@ export const organizationApi = {
   getByOwnerEmail: (email) => api.get(`/organizations/by-owner?email=${encodeURIComponent(email)}`),
   create: (data) => api.post('/organizations', data),
   update: (id, data) => api.put(`/organizations/${id}`, data),
-  delete: (id) => api.delete(`/organizations/${id}`),
+  delete: (id, force = false) => api.delete(`/organizations/${id}${force ? '?force=true' : ''}`),
 }
 
 // User API - No userId needed, backend gets user from JWT token
@@ -75,7 +76,7 @@ export const userApi = {
   getBySociety: (societyId) => api.get(`/users/society/${societyId}`),
   create: (data) => api.post('/users', data),
   update: (id, data) => api.put(`/users/${id}`, data),
-  delete: (id) => api.delete(`/users/${id}`),
+  delete: (id, force = false) => api.delete(`/users/${id}${force ? '?force=true' : ''}`),
   getCreatableRoles: () => api.get('/users/creatable-roles'),
   getUpdatableRoles: () => api.get('/users/updatable-roles'),
   // Bulk create users for units without users
@@ -109,7 +110,7 @@ export const flatApi = {
   getBySociety: (societyId) => api.get(`/flats/society/${societyId}`),
   create: (data, userId) => api.post(`/flats?userId=${userId}`, data),
   update: (id, data, userId) => api.put(`/flats/${id}?userId=${userId}`, data),
-  delete: (id, userId) => api.delete(`/flats/${id}?userId=${userId}`),
+  delete: (id, userId, force = true) => api.delete(`/flats/${id}?userId=${userId}${force ? '&force=true' : ''}`),
   
   // Bulk import endpoints
   validateBulkImport: (file, societyId, userId) => {
@@ -140,7 +141,7 @@ export const wingApi = {
   getBySociety: (societyId) => api.get(`/api/wings/society/${societyId}`),
   create: (data) => api.post('/api/wings', data),
   update: (id, data) => api.put(`/api/wings/${id}`, data),
-  delete: (id) => api.delete(`/api/wings/${id}`),
+  delete: (id, force = true) => api.delete(`/api/wings/${id}${force ? '?force=true' : ''}`),
   validateBulkImport: (file, societyId) => {
     const formData = new FormData();
     formData.append('file', file);
@@ -167,11 +168,14 @@ export const vendorApi = {
   getAll: () => api.get('/vendors'),
   getById: (id) => api.get(`/vendors/${id}`),
   getBySociety: (societyId) => api.get(`/vendors/society/${societyId}`),
+  getCommon: () => api.get('/vendors/common'),
+  getByServiceType: (serviceType) => api.get(`/vendors/service-type/${serviceType}`),
   create: (data, userId) => api.post(`/vendors?userId=${userId}`, data),
   update: (id, data, userId) => api.put(`/vendors/${id}?userId=${userId}`, data),
-  delete: (id, userId) => api.delete(`/vendors/${id}?userId=${userId}`),
+  delete: (id, userId, force = true) => api.delete(`/vendors/${id}?userId=${userId}${force ? '&force=true' : ''}`),
   approve: (id, userId) => api.patch(`/vendors/${id}/approve?userId=${userId}`),
   reject: (id, userId) => api.patch(`/vendors/${id}/reject?userId=${userId}`),
+  deactivate: (id, userId) => api.patch(`/vendors/${id}/deactivate?userId=${userId}`),
   getPending: (societyId) => api.get(`/vendors/pending${societyId ? `?societyId=${societyId}` : ''}`),
   validateBulkImport: (file, societyId) => {
     const formData = new FormData();
@@ -199,12 +203,14 @@ export const vendorBillApi = {
   getAll: () => api.get('/vendor-bills'),
   getById: (id) => api.get(`/vendor-bills/${id}`),
   getByVendor: (vendorId) => api.get(`/vendor-bills/vendor/${vendorId}`),
+  getBySociety: (societyId) => api.get(`/vendor-bills/society/${societyId}`),
+  getByStatus: (status) => api.get(`/vendor-bills/status/${status}`),
   getPending: (societyId) => api.get(`/vendor-bills/pending/${societyId}`),
   create: (data, userId) => api.post(`/vendor-bills?userId=${userId}`, data),
   update: (id, data, userId) => api.put(`/vendor-bills/${id}?userId=${userId}`, data),
   recordPayment: (id, amount, paymentMode, referenceNumber, userId) => 
     api.post(`/vendor-bills/${id}/payment?amount=${amount}&paymentMode=${paymentMode}&referenceNumber=${encodeURIComponent(referenceNumber || '')}&userId=${userId}`),
-  delete: (id, userId) => api.delete(`/vendor-bills/${id}?userId=${userId}`),
+  delete: (id, userId, force = true) => api.delete(`/vendor-bills/${id}?userId=${userId}${force ? '&force=true' : ''}`),
 }
 
 // Contract API
@@ -212,10 +218,12 @@ export const contractApi = {
   getAll: () => api.get('/contracts'),
   getById: (id) => api.get(`/contracts/${id}`),
   getBySociety: (societyId) => api.get(`/contracts/society/${societyId}`),
+  getByType: (contractType) => api.get(`/contracts/type/${contractType}`),
   getExpiringSoon: (societyId, days = 30) => api.get(`/contracts/expiring/${societyId}?days=${days}`),
   create: (data, userId) => api.post(`/contracts?userId=${userId}`, data),
   update: (id, data, userId) => api.put(`/contracts/${id}?userId=${userId}`, data),
-  delete: (id, userId) => api.delete(`/contracts/${id}?userId=${userId}`),
+  deactivate: (id, userId) => api.patch(`/contracts/${id}/deactivate?userId=${userId}`),
+  delete: (id, userId, force = true) => api.delete(`/contracts/${id}?userId=${userId}${force ? '&force=true' : ''}`),
 }
 
 // Maintenance Bill API
@@ -224,6 +232,7 @@ export const maintenanceBillApi = {
   getById: (id) => api.get(`/maintenance-bills/${id}`),
   getByFlat: (flatId) => api.get(`/maintenance-bills/flat/${flatId}`),
   getByMonth: (month) => api.get(`/maintenance-bills/month/${month}`),
+  getByStatus: (status) => api.get(`/maintenance-bills/status/${status}`),
   getPending: () => api.get('/maintenance-bills/pending'),
   create: (data, userId) => api.post(`/maintenance-bills?userId=${userId}`, data),
   update: (id, data, userId) => api.put(`/maintenance-bills/${id}?userId=${userId}`, data),
@@ -233,7 +242,7 @@ export const maintenanceBillApi = {
     api.post(`/maintenance-bills/generate?societyId=${societyId}&billMonth=${billMonth}&amount=${amount}&userId=${userId}${propertyType ? '&propertyType=' + propertyType : ''}`),
   getGenerationPreview: (societyId, billMonth, propertyType) =>
     api.get(`/maintenance-bills/generate/preview?societyId=${societyId}&billMonth=${billMonth}${propertyType ? '&propertyType=' + propertyType : ''}`),
-  delete: (id, userId) => api.delete(`/maintenance-bills/${id}?userId=${userId}`),
+  delete: (id, userId, force = true) => api.delete(`/maintenance-bills/${id}?userId=${userId}${force ? '&force=true' : ''}`),
 }
 
 // Transaction API
@@ -248,7 +257,7 @@ export const transactionApi = {
   getSummaryByCategory: (societyId, start, end) => api.get(`/transactions/summary/${societyId}/by-category?start=${start}&end=${end}`),
   create: (data, userId) => api.post(`/transactions?userId=${userId}`, data),
   update: (id, data, userId) => api.put(`/transactions/${id}?userId=${userId}`, data),
-  delete: (id, userId) => api.delete(`/transactions/${id}?userId=${userId}`),
+  delete: (id, userId, force = true) => api.delete(`/transactions/${id}?userId=${userId}${force ? '&force=true' : ''}`),
 }
 
 // Notice API
@@ -259,22 +268,25 @@ export const noticeApi = {
   getActive: (societyId) => api.get(`/notices/society/${societyId}`),
   create: (data, userId) => api.post(`/notices?userId=${userId}`, data),
   update: (id, data, userId) => api.put(`/notices/${id}?userId=${userId}`, data),
-  delete: (id, userId) => api.delete(`/notices/${id}?userId=${userId}`),
+  delete: (id, userId, force = true) => api.delete(`/notices/${id}?userId=${userId}${force ? '&force=true' : ''}`),
 }
 
 // Security Log API
 export const securityLogApi = {
   getRecent: (societyId, limit = 10) => api.get(`/api/security-logs?societyId=${societyId}&limit=${limit}`),
+  create: (data) => api.post('/api/security-logs', data),
 }
 
 // Banner API
 export const bannerApi = {
   getAll: () => api.get('/banners'),
   getById: (id) => api.get(`/banners/${id}`),
+  getBySociety: (societyId) => api.get(`/banners/society/${societyId}`),
   getActive: (societyId) => api.get(`/banners/active/${societyId}`),
   create: (data, userId) => api.post(`/banners?userId=${userId}`, data),
   update: (id, data, userId) => api.put(`/banners/${id}?userId=${userId}`, data),
-  delete: (id, userId) => api.delete(`/banners/${id}?userId=${userId}`),
+  deactivate: (id, userId) => api.patch(`/banners/${id}/deactivate?userId=${userId}`),
+  delete: (id, userId, force = true) => api.delete(`/banners/${id}?userId=${userId}${force ? '&force=true' : ''}`),
 }
 
 // Ticket API
@@ -285,6 +297,9 @@ export const ticketApi = {
   getByRaisedBy: (userId) => api.get(`/tickets/raised-by/${userId}`),
   getByAssignedTo: (userId) => api.get(`/tickets/assigned-to/${userId}`),
   getByStatus: (status) => api.get(`/tickets/status/${status}`),
+  getOverdue: () => api.get('/tickets/overdue'),
+  getOverdueBySociety: (societyId) => api.get(`/tickets/overdue/society/${societyId}`),
+  getOverdueCount: () => api.get('/tickets/overdue/count'),
   create: (data, userId) => api.post(`/tickets?userId=${userId}`, data),
   update: (id, data, userId) => api.put(`/tickets/${id}?userId=${userId}`, data),
   updateStatus: (id, status, resolution, userId) => {
@@ -294,7 +309,7 @@ export const ticketApi = {
   },
   updateProgress: (id, progress, userId) => api.patch(`/tickets/${id}/progress?progress=${progress}&userId=${userId}`),
   assign: (id, assignedToId, userId) => api.patch(`/tickets/${id}/assign?assignedToId=${assignedToId}&userId=${userId}`),
-  delete: (id, userId) => api.delete(`/tickets/${id}?userId=${userId}`),
+  delete: (id, userId, force = true) => api.delete(`/tickets/${id}?userId=${userId}${force ? '&force=true' : ''}`),
 }
 
 // Complaint API
@@ -310,7 +325,7 @@ export const complaintApi = {
     if (resolution) url += `&resolution=${encodeURIComponent(resolution)}`;
     return api.patch(url);
   },
-  delete: (id, userId) => api.delete(`/complaints/${id}?userId=${userId}`),
+  delete: (id, userId, force = true) => api.delete(`/complaints/${id}?userId=${userId}${force ? '&force=true' : ''}`),
 }
 
 // Emergency Contact API
@@ -318,9 +333,11 @@ export const emergencyContactApi = {
   getAll: () => api.get('/emergency-contacts'),
   getById: (id) => api.get(`/emergency-contacts/${id}`),
   getBySociety: (societyId) => api.get(`/emergency-contacts/society/${societyId}`),
+  getByType: (contactType) => api.get(`/emergency-contacts/type/${contactType}`),
   create: (data, userId) => api.post(`/emergency-contacts?userId=${userId}`, data),
   update: (id, data, userId) => api.put(`/emergency-contacts/${id}?userId=${userId}`, data),
-  delete: (id, userId) => api.delete(`/emergency-contacts/${id}?userId=${userId}`),
+  deactivate: (id, userId) => api.patch(`/emergency-contacts/${id}/deactivate?userId=${userId}`),
+  delete: (id, userId, force = true) => api.delete(`/emergency-contacts/${id}?userId=${userId}${force ? '&force=true' : ''}`),
   validateBulkImport: (file, societyId) => {
     const formData = new FormData();
     formData.append('file', file);
@@ -349,7 +366,9 @@ export const documentTemplateApi = {
   getByType: (type) => api.get(`/document-templates/type/${type}`),
   create: (data, userId) => api.post(`/document-templates?userId=${userId}`, data),
   update: (id, data, userId) => api.put(`/document-templates/${id}?userId=${userId}`, data),
-  delete: (id, userId) => api.delete(`/document-templates/${id}?userId=${userId}`),
+  deactivate: (id, userId) => api.patch(`/document-templates/${id}/deactivate?userId=${userId}`),
+  generate: (id, data) => api.post(`/document-templates/${id}/generate`, data),
+  delete: (id, userId, force = true) => api.delete(`/document-templates/${id}?userId=${userId}${force ? '&force=true' : ''}`),
 }
 
 // Tenant API
@@ -361,7 +380,7 @@ export const tenantApi = {
   create: (data, userId) => api.post(`/tenants?userId=${userId}`, data),
   update: (id, data, userId) => api.put(`/tenants/${id}?userId=${userId}`, data),
   deactivate: (id, userId) => api.patch(`/tenants/${id}/deactivate?userId=${userId}`),
-  delete: (id, userId) => api.delete(`/tenants/${id}?userId=${userId}`),
+  delete: (id, userId, force = true) => api.delete(`/tenants/${id}?userId=${userId}${force ? '&force=true' : ''}`),
   validateBulkImport: (file, societyId) => {
     const formData = new FormData();
     formData.append('file', file);
@@ -390,7 +409,7 @@ export const vehicleApi = {
   getByFlat: (flatId) => api.get(`/vehicles/flat/${flatId}`),
   create: (data, userId) => api.post(`/vehicles?userId=${userId}`, data),
   update: (id, data, userId) => api.put(`/vehicles/${id}?userId=${userId}`, data),
-  delete: (id, userId) => api.delete(`/vehicles/${id}?userId=${userId}`),
+  delete: (id, userId, force = true) => api.delete(`/vehicles/${id}?userId=${userId}${force ? '&force=true' : ''}`),
   validateBulkImport: (file, societyId) => {
     const formData = new FormData();
     formData.append('file', file);

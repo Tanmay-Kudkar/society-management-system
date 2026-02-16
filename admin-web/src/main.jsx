@@ -22,10 +22,17 @@ const queryClient = new QueryClient({
   }),
   defaultOptions: {
     queries: {
-      retry: false,
+      retry: (failureCount, error) => {
+        // Don't retry on 401/403 (auth errors)
+        const status = error?.response?.status
+        if (status === 401 || status === 403) return false
+        // Keep retrying indefinitely for network/server errors (backend sleeping)
+        return true
+      },
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 15000),
       refetchOnWindowFocus: false,
       refetchOnMount: false,
-      refetchOnReconnect: false,
+      refetchOnReconnect: true,
       staleTime: 5 * 60 * 1000, // 5 minutes
     },
   },

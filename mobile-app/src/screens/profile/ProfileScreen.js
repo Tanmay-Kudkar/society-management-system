@@ -32,7 +32,7 @@ const ProfileScreen = ({ navigation }) => {
   const handleSave = async () => {
     setLoading(true);
     try {
-      const response = await userAPI.updateProfile(formData);
+      const response = await userAPI.updateUser(user?.id, formData);
       await updateUser(response.data);
       Alert.alert('Success', 'Profile updated successfully');
       setIsEditing(false);

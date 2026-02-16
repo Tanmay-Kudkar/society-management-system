@@ -1,12 +1,14 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '../../context'
 import { complaintApi } from '../../../../api'
 import { Plus, Search, X, AlertTriangle, Clock, CheckCircle, XCircle } from 'lucide-react'
 import clsx from 'clsx'
-import { FormInput, SmartSelect, FormTextarea } from '../../components'
+import { FormInput, SmartSelect, FormTextarea, AsyncButton } from '../../components'
 import { PermissionDenied } from '../../components'
+import { HeroSkeleton, SummaryRowSkeleton, FiltersSkeleton, ListSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
+import useMinLoadingTime from '../../hooks/useMinLoadingTime'
 
 const statusColors = {
   PENDING: 'complaints-status--pending',
@@ -45,13 +47,12 @@ export default function Complaints() {
   // Determine which societyId to use for filtering
   const effectiveSocietyId = isPlatformLevel && societyIdFromUrl ? societyIdFromUrl : user?.societyId
 
-  const { data: complaints = [], isLoading } = useQuery({
+  const { data: complaints = [], isLoading, isError } = useQuery({
     queryKey: ['complaints', user?.id, effectiveSocietyId],
     queryFn: () =>
       complaintApi.getBySociety(effectiveSocietyId, user.id)
         .then(res => res.data),
     enabled: !!user?.id && !!effectiveSocietyId,
-    placeholderData: [],
   })
 
 
@@ -69,12 +70,12 @@ export default function Complaints() {
     onSuccess: () => queryClient.invalidateQueries(['complaints']),
   })
 
-  const filteredComplaints = complaints.filter(c => {
+  const filteredComplaints = useMemo(() => complaints.filter(c => {
     const matchesSearch = c.subject?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          c.complaintNumber?.toLowerCase().includes(searchTerm.toLowerCase())
     const matchesStatus = !filterStatus || c.status === filterStatus
     return matchesSearch && matchesStatus
-  })
+  }), [complaints, searchTerm, filterStatus])
 
   const handleSubmit = (e) => {
     e.preventDefault()
@@ -91,6 +92,20 @@ export default function Complaints() {
     const resolution = newStatus === 'RESOLVED' ? prompt('Enter resolution notes:') : null
     if (newStatus === 'RESOLVED' && !resolution) return
     updateStatusMutation.mutate({ id: complaint.id, status: newStatus, resolution })
+  }
+
+  const showSkeleton = useMinLoadingTime(isLoading || isError)
+
+  if (showSkeleton) {
+    return (
+      <div>
+        <WakeUpBanner />
+        <HeroSkeleton />
+        <SummaryRowSkeleton count={4} />
+        <FiltersSkeleton filterCount={1} />
+        <ListSkeleton count={4} />
+      </div>
+    )
   }
 
   return (
@@ -160,11 +175,6 @@ export default function Complaints() {
       </div>
 
       {/* Complaints List */}
-      {isLoading ? (
-        <div className="complaints-loading">
-          <div className="complaints-spinner"></div>
-        </div>
-      ) : (
         <div className="complaints-list">
           {filteredComplaints.map((complaint) => {
             const StatusIcon = statusIcons[complaint.status] || Clock
@@ -229,7 +239,6 @@ export default function Complaints() {
             )
           })}
         </div>
-      )}
 
       {/* Create Complaint Modal */}
       {showModal && (
@@ -270,7 +279,7 @@ export default function Complaints() {
               />
               <div className="complaints-form-actions">
                 <button type="button" onClick={() => setShowModal(false)} className="complaints-btn complaints-btn--ghost">Cancel</button>
-                <button type="submit" className="complaints-btn complaints-btn--primary">Submit</button>
+                <AsyncButton type="submit" className="complaints-btn complaints-btn--primary" isLoading={createMutation.isPending} loadingText="Submitting...">Submit</AsyncButton>
               </div>
             </form>
           </div>

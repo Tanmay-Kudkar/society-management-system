@@ -1,12 +1,13 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '../../context'
 import { useToast } from '../../context'
 import { emergencyContactApi } from '../../../../api'
 import { Plus, Search, X, Phone, Edit, Trash2, AlertCircle, CheckCircle, Upload } from 'lucide-react'
 import clsx from 'clsx'
-import { FormInput, PhoneInput, SmartSelect } from '../../components'
-import { BulkImportModal } from '../../components'
+import { FormInput, PhoneInput, SmartSelect, BulkImportModal, AsyncButton } from '../../components'
+import { HeroSkeleton, GroupedListSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
+import useMinLoadingTime from '../../hooks/useMinLoadingTime'
 
 const contactTypeClasses = {
   POLICE: 'emergency-type--police',
@@ -49,10 +50,9 @@ export default function EmergencyContacts() {
     return isCommitteeLevel && isCommitteeLevel()
   }
 
-  const { data: contacts = [], isLoading } = useQuery({
+  const { data: contacts = [], isLoading, isError } = useQuery({
     queryKey: ['emergencyContacts'],
     queryFn: () => emergencyContactApi.getAll().then(res => res.data),
-    placeholderData: [],
   })
 
 
@@ -104,12 +104,14 @@ export default function EmergencyContacts() {
     setContactToDelete(null)
   }
 
-  const filteredContacts = contacts.filter(c => {
-    const matchesSearch = c.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         c.phone?.includes(searchTerm)
-    const matchesCategory = !filterCategory || c.contactType === filterCategory
-    return matchesSearch && matchesCategory
-  })
+  const filteredContacts = useMemo(() => {
+    return contacts.filter(c => {
+      const matchesSearch = c.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           c.phone?.includes(searchTerm)
+      const matchesCategory = !filterCategory || c.contactType === filterCategory
+      return matchesSearch && matchesCategory
+    })
+  }, [contacts, searchTerm, filterCategory])
 
   const closeModal = () => {
     setShowModal(false)
@@ -136,12 +138,24 @@ export default function EmergencyContacts() {
   }
 
   // Group contacts by contactType
-  const groupedContacts = filteredContacts.reduce((acc, contact) => {
-    const contactType = contact.contactType || 'OTHER'
-    if (!acc[contactType]) acc[contactType] = []
-    acc[contactType].push(contact)
-    return acc
-  }, {})
+  const groupedContacts = useMemo(() => {
+    return filteredContacts.reduce((acc, contact) => {
+      const contactType = contact.contactType || 'OTHER'
+      if (!acc[contactType]) acc[contactType] = []
+      acc[contactType].push(contact)
+      return acc
+    }, {})
+  }, [filteredContacts])
+
+  const showSkeleton = useMinLoadingTime(isLoading || isError)
+
+  if (showSkeleton) return (
+    <div className="emergency-page">
+      <WakeUpBanner />
+      <HeroSkeleton statCount={0} />
+      <GroupedListSkeleton groups={3} itemsPerGroup={3} />
+    </div>
+  )
 
   return (
     <div className="emergency-page">
@@ -203,11 +217,7 @@ export default function EmergencyContacts() {
       </div>
 
       {/* Contacts by Category */}
-      {isLoading ? (
-        <div className="emergency-loading">
-          <div className="emergency-spinner" />
-        </div>
-      ) : (
+      {(
         <div className="emergency-groups">
           {Object.entries(groupedContacts).map(([contactType, contactTypeContacts]) => (
             <div key={contactType} className="emergency-group">
@@ -350,9 +360,14 @@ export default function EmergencyContacts() {
               </div>
               <div className="emergency-form-actions">
                 <button type="button" onClick={closeModal} className="emergency-cancel-button">Cancel</button>
-                <button type="submit" className="emergency-submit-button">
+                <AsyncButton
+                  type="submit"
+                  className="emergency-submit-button"
+                  isLoading={createMutation.isPending || updateMutation.isPending}
+                  loadingText={editingContact ? 'Updating...' : 'Creating...'}
+                >
                   {editingContact ? 'Update' : 'Create'}
-                </button>
+                </AsyncButton>
               </div>
             </form>
           </div>

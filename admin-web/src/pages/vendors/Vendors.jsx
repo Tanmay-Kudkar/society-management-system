@@ -1,13 +1,16 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '../../context'
 import { useConfirmDialog } from '../../context'
+import { useToast } from '../../context'
 import { vendorApi, societyApi } from '../../../../api'
 import { Plus, Edit, Trash2, Search, X, Truck, Phone, Mail, Eye, Building2, Landmark, FileText, User, MapPin, Upload } from 'lucide-react'
 import clsx from 'clsx'
-import { FormInput, PhoneInput, SmartSelect, FormTextarea } from '../../components'
+import { FormInput, PhoneInput, SmartSelect, FormTextarea, AsyncButton } from '../../components'
 import { PermissionDenied } from '../../components'
 import { BulkImportModal } from '../../components'
+import { HeroSkeleton, FiltersSkeleton, CardGridSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
+import useMinLoadingTime from '../../hooks/useMinLoadingTime'
 
 const approvalClasses = {
   APPROVED: 'vendors-approval-badge--approved',
@@ -18,6 +21,7 @@ const approvalClasses = {
 export default function Vendors() {
   const { user, canManageVendors } = useAuth()
   const confirmDialog = useConfirmDialog()
+  const toast = useToast()
   const queryClient = useQueryClient()
   
   // Permission check
@@ -34,10 +38,9 @@ export default function Vendors() {
   // Check if current user is PLATFORM_OWNER
   const isPlatformLevel = user?.role === 'PLATFORM_OWNER' || user?.role === 'ORGANIZATION_OWNER'
 
-  const { data: vendors = [], isLoading } = useQuery({
+  const { data: vendors = [], isLoading, isError } = useQuery({
     queryKey: ['vendors'],
     queryFn: () => vendorApi.getAll().then(res => res.data),
-    placeholderData: [],
   })
 
   const { data: societies = [] } = useQuery({
@@ -84,10 +87,10 @@ export default function Vendors() {
     },
   })
 
-  const filteredVendors = vendors.filter(v =>
+  const filteredVendors = useMemo(() => vendors.filter(v =>
     v.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     v.serviceType?.toLowerCase().includes(searchTerm.toLowerCase())
-  )
+  ), [vendors, searchTerm])
 
   const handleApprove = async (vendor) => {
     const confirmed = await confirmDialog({
@@ -139,7 +142,7 @@ export default function Vendors() {
       : user?.societyId
     
     if (!societyId) {
-      alert('Society is required. Please select a society or log in again.')
+      toast.error('Society is required. Please select a society or log in again.')
       return
     }
     
@@ -166,6 +169,17 @@ export default function Vendors() {
       createMutation.mutate(data)
     }
   }
+
+  const showSkeleton = useMinLoadingTime(isLoading || isError)
+
+  if (showSkeleton) return (
+    <div>
+      <WakeUpBanner />
+      <HeroSkeleton statCount={2} />
+      <FiltersSkeleton />
+      <CardGridSkeleton count={6} />
+    </div>
+  )
 
   return (
     <div>
@@ -213,11 +227,7 @@ export default function Vendors() {
       </div>
 
       {/* Cards Grid */}
-      {isLoading ? (
-        <div className="vendors-loading">
-          <div className="vendors-spinner"></div>
-        </div>
-      ) : (
+      {(
         <div className="vendors-grid">
           {filteredVendors.map((vendor) => (
             <div key={vendor.id} className="vendors-card">
@@ -493,12 +503,14 @@ export default function Vendors() {
                 >
                   Cancel
                 </button>
-                <button
+                <AsyncButton
                   type="submit"
                   className="vendors-btn vendors-btn--primary"
+                  isLoading={createMutation.isPending || updateMutation.isPending}
+                  loadingText="Saving..."
                 >
                   {editingVendor ? 'Update' : 'Create'}
-                </button>
+                </AsyncButton>
               </div>
             </form>
           </div>
@@ -795,35 +807,6 @@ export default function Vendors() {
         />
       )}
 
-      {/* Bulk Import Modal */}
-      {showBulkImport && (
-        <BulkImportModal
-          title="Bulk Import Vendors"
-          entityName="Vendors"
-          templateFilename="vendor_import_template.xlsx"
-          columns={[
-            { letter: 'A', label: 'Vendor Name', required: true, description: 'Name of the vendor/company' },
-            { letter: 'B', label: 'Service Type', required: true, description: 'PLUMBER, ELECTRICIAN, SECURITY, etc.' },
-            { letter: 'C', label: 'Contact Person', required: false, description: 'Primary contact person name' },
-            { letter: 'D', label: 'Phone', required: false, description: 'Contact phone number' },
-            { letter: 'E', label: 'Email', required: false, description: 'Contact email address' },
-            { letter: 'F', label: 'Address', required: false, description: 'Business address' },
-            { letter: 'G', label: 'GST Number', required: false, description: 'GST registration number' },
-            { letter: 'H', label: 'PAN Number', required: false, description: 'PAN card number' },
-          ]}
-          tableColumns={[
-            { key: 'name', label: 'Vendor Name' },
-            { key: 'serviceType', label: 'Service Type' },
-          ]}
-          apiValidate={vendorApi.validateBulkImport}
-          apiProcess={vendorApi.processBulkImport}
-          apiTemplate={vendorApi.downloadImportTemplate}
-          societyId={user?.societyId}
-          userId={user?.id}
-          onClose={() => setShowBulkImport(false)}
-          onSuccess={() => queryClient.invalidateQueries(['vendors'])}
-        />
-      )}
     </div>
   )
 }

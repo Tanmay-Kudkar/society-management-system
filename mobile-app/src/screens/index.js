@@ -1,6 +1,5 @@
 // Auth Screens
 export { default as LoginScreen } from './auth/LoginScreen';
-export { default as OTPVerificationScreen } from './auth/OTPVerificationScreen';
 
 // Dashboard Screens
 export { default as AdminDashboard } from './dashboard/AdminDashboard';

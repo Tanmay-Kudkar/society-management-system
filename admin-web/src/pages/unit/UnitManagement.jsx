@@ -12,8 +12,10 @@ import {
 } from 'lucide-react'
 import clsx from 'clsx'
 import { validateFlatForm, validateUserForm, parseApiError } from '../../utils'
-import { SmartSelect, FormInput, NumberInput, PhoneInput, FormErrorSummary } from '../../components'
+import { SmartSelect, FormInput, NumberInput, PhoneInput, FormErrorSummary, AsyncButton } from '../../components'
 import { BulkImportModal as SharedBulkImportModal } from '../../components'
+import { HeroSkeleton, TabsSkeleton, FiltersSkeleton, CardGridSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
+import useMinLoadingTime from '../../hooks/useMinLoadingTime'
 
 const unitTypeIcons = {
   FLAT: Home,
@@ -138,13 +140,12 @@ export default function UnitManagement() {
 
   // Fetch flats/units
   // PO/OO must have effectiveSocietyId (from URL), otherwise skip
-  const { data: flats = [], isLoading: flatsLoading } = useQuery({
+  const { data: flats = [], isLoading: flatsLoading, isError: flatsError } = useQuery({
     queryKey: ['flats', effectiveSocietyId],
     queryFn: () => effectiveSocietyId 
       ? flatApi.getBySociety(effectiveSocietyId).then(res => res.data)
       : flatApi.getAll(user.id).then(res => res.data),
     enabled: !!user?.id && (!!effectiveSocietyId || !isPlatformLevel),
-    placeholderData: [],
   })
 
   // Fetch users in the society
@@ -695,6 +696,18 @@ export default function UnitManagement() {
     }
   }, [flats, memberUsers, currentSociety])
 
+  const showSkeleton = useMinLoadingTime(flatsLoading || flatsError)
+
+  if (showSkeleton) return (
+    <div className="units-page">
+      <WakeUpBanner />
+      <HeroSkeleton statCount={0} />
+      <TabsSkeleton tabCount={2} />
+      <FiltersSkeleton />
+      <CardGridSkeleton count={8} />
+    </div>
+  )
+
   return (
     <div className="units-page">
       {/* Header */}
@@ -880,11 +893,7 @@ export default function UnitManagement() {
       </div>
 
       {/* Content */}
-      {flatsLoading ? (
-        <div className="units-loading">
-          <div className="units-spinner" />
-        </div>
-      ) : viewMode === 'units' ? (
+      {viewMode === 'units' ? (
         /* Card View */
         <div className="units-grid">
           {filteredUnits.map((unit) => {
@@ -1458,11 +1467,14 @@ export default function UnitManagement() {
                     className="units-modal-cancel">
                     Cancel
                   </button>
-                  <button type="submit"
-                    disabled={standaloneCreateUserMutation.isPending || standaloneUpdateUserMutation.isPending}
-                    className="units-modal-submit units-modal-submit--disabled-aware">
-                    {(standaloneCreateUserMutation.isPending || standaloneUpdateUserMutation.isPending) ? 'Saving...' : (editingStandaloneUser ? 'Update' : 'Create')}
-                  </button>
+                  <AsyncButton
+                    type="submit"
+                    className="units-modal-submit units-modal-submit--disabled-aware"
+                    isLoading={standaloneCreateUserMutation.isPending || standaloneUpdateUserMutation.isPending}
+                    loadingText="Saving..."
+                  >
+                    {editingStandaloneUser ? 'Update' : 'Create'}
+                  </AsyncButton>
                 </div>
               </form>
             </div>
@@ -1904,13 +1916,14 @@ function UnitFormModal({ unit, societies, wings, isPlatformLevel, userSocietyId,
             >
               Cancel
             </button>
-            <button
+            <AsyncButton
               type="submit"
-              disabled={isLoading}
               className="units-modal-submit"
+              isLoading={isLoading}
+              loadingText="Saving..."
             >
-              {isLoading ? 'Saving...' : unit ? 'Update Unit' : 'Create Unit'}
-            </button>
+              {unit ? 'Update Unit' : 'Create Unit'}
+            </AsyncButton>
           </div>
         </form>
       </div>
@@ -1984,13 +1997,14 @@ function UserFormModal({ unit, errors, apiError, onSubmit, onClose, isLoading })
             >
               Cancel
             </button>
-            <button
+            <AsyncButton
               type="submit"
-              disabled={isLoading}
               className="units-modal-submit"
+              isLoading={isLoading}
+              loadingText="Creating..."
             >
-              {isLoading ? 'Creating...' : 'Create User'}
-            </button>
+              Create User
+            </AsyncButton>
           </div>
         </form>
       </div>
@@ -2066,13 +2080,14 @@ function EditUserFormModal({ user, unit, errors, apiError, onSubmit, onClose, is
             >
               Cancel
             </button>
-            <button
+            <AsyncButton
               type="submit"
-              disabled={isLoading}
               className="units-modal-submit"
+              isLoading={isLoading}
+              loadingText="Saving..."
             >
-              {isLoading ? 'Saving...' : 'Update User'}
-            </button>
+              Update User
+            </AsyncButton>
           </div>
         </form>
       </div>

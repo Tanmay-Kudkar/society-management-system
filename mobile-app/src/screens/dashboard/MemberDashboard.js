@@ -12,9 +12,11 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../context/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
 import { useNotifications } from '../../context/NotificationContext';
-import { Card, Avatar, Badge, Loading, ErrorState } from '../../components/common';
+import { Card, Avatar, Badge, ErrorState } from '../../components/common';
+import { MemberDashboardSkeleton } from '../../components/common/Skeleton';
 import { Layout } from '../../constants';
-import { dashboardAPI, maintenanceAPI } from '../../services/api';
+import { reportAPI } from '../../services/api';
+import useMinLoadingTime from '../../hooks/useMinLoadingTime';
 
 const MemberDashboard = ({ navigation }) => {
   const { theme } = useTheme();
@@ -35,7 +37,7 @@ const MemberDashboard = ({ navigation }) => {
   const fetchDashboardData = async () => {
     try {
       setError(null);
-      const response = await dashboardAPI.getMemberDashboard();
+      const response = await reportAPI.getDashboard(user?.societyId);
       setDashboardData(response.data);
     } catch (err) {
       setError('Failed to load dashboard data');
@@ -248,8 +250,10 @@ const MemberDashboard = ({ navigation }) => {
     },
   });
 
-  if (loading) {
-    return <Loading fullScreen text="Loading dashboard..." />;
+  const showSkeleton = useMinLoadingTime(loading);
+
+  if (showSkeleton) {
+    return <MemberDashboardSkeleton />;
   }
 
   if (error) {

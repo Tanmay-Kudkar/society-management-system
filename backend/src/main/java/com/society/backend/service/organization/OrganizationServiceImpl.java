@@ -9,14 +9,17 @@ import com.society.backend.exception.ApiException;
 import com.society.backend.repository.organization.OrganizationRepository;
 import com.society.backend.repository.society.SocietyRepository;
 import com.society.backend.repository.user.UserRepository;
+import com.society.backend.service.common.ReferenceCleanupService;
 import com.society.backend.service.common.RoleService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -28,6 +31,7 @@ public class OrganizationServiceImpl implements OrganizationService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final RoleService roleService;
+    private final ReferenceCleanupService referenceCleanupService;
 
     @Override
     public OrganizationResponse create(OrganizationRequest request) {
@@ -126,14 +130,36 @@ public class OrganizationServiceImpl implements OrganizationService {
     }
 
     @Override
-    public void delete(Long id) {
+    @Transactional
+    public void delete(Long id, boolean force) {
         var currentUser = roleService.getCurrentUser();
         roleService.requireMasterAdmin(currentUser);
 
-        if (!organizationRepository.existsById(id)) {
-            throw new ApiException(HttpStatus.NOT_FOUND, "Organization not found");
+        Organization organization = organizationRepository.findById(id)
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Organization not found"));
+
+        long linkedSocieties = societyRepository.countByOrganizationId(id);
+        long linkedUsers = userRepository.countByOrganizationId(id);
+
+        if (!force && (linkedSocieties > 0 || linkedUsers > 0)) {
+            throw new ApiException(
+                    HttpStatus.CONFLICT,
+                    String.format(
+                            "Cannot delete organization '%s'. Remove linked records first (%d users, %d societies). Use force delete to unlink all organization references.",
+                            organization.getName(),
+                            linkedUsers,
+                            linkedSocieties));
         }
+
+        if (force) {
+            clearOrganizationReferences(id);
+        }
+
         organizationRepository.deleteById(id);
+    }
+
+    private void clearOrganizationReferences(Long organizationId) {
+        referenceCleanupService.clearReferences("organization_id", organizationId, true, Set.of("organizations"));
     }
 
     @Override

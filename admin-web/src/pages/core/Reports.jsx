@@ -20,6 +20,8 @@ import {
 } from 'lucide-react'
 import clsx from 'clsx'
 import { PermissionDenied } from '../../components'
+import { ReportsSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
+import useMinLoadingTime from '../../hooks/useMinLoadingTime'
 
 const formatCurrency = (amount) => {
   return new Intl.NumberFormat('en-IN', {
@@ -57,7 +59,7 @@ export default function Reports() {
 
   const societyId = isPlatformLevel ? selectedSocietyId : user?.societyId
 
-  const { data: report, isLoading, refetch } = useQuery({
+  const { data: report, isLoading, isError, refetch } = useQuery({
     queryKey: ['report', reportType, societyId, customStartDate, customEndDate],
     queryFn: async () => {
       if (!societyId) return null
@@ -102,6 +104,15 @@ export default function Reports() {
       setIsExporting(false)
     }
   }
+
+  const showSkeleton = useMinLoadingTime(isLoading || isError)
+
+  if (showSkeleton) return (
+    <div className="reports-page">
+      <WakeUpBanner />
+      <ReportsSkeleton />
+    </div>
+  )
 
   return (
     <div className="reports-page">
@@ -185,11 +196,6 @@ export default function Reports() {
         </div>
       )}
 
-      {isLoading && (
-        <div className="reports-loading">
-          <div className="reports-spinner" />
-        </div>
-      )}
 
       {report && (
         <>

@@ -9,9 +9,11 @@ import { parseApiError } from '../../utils'
 import * as XLSX from 'xlsx'
 import {
   FormInput, PhoneInput, PincodeInput, NumberInput,
-  StateCitySelector, SmartSelect
+  StateCitySelector, SmartSelect, AsyncButton
 } from '../../components'
 import { BulkImportModal } from '../../components'
+import { FiltersSkeleton, CardGridSkeleton, HeroSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
+import useMinLoadingTime from '../../hooks/useMinLoadingTime'
 import {
   UserCheck, Plus, Edit, Trash2, Search, X, Building2,
   Eye, EyeOff, Mail, Phone, MapPin, Shield, ChevronRight,
@@ -27,7 +29,7 @@ const BULK_FIELD_CONFIG = [
   { key: 'adminEmail', label: 'Admin Email', required: true, description: 'Login email for admin account', sample: 'rahul.sharma@example.com', aliases: ['adminemail', 'admin_email'] },
   { key: 'adminPassword', label: 'Admin Password', required: true, description: 'Minimum 6 characters', sample: 'Admin@123', aliases: ['adminpassword', 'admin_password'] },
   { key: 'adminPhone', label: 'Admin Phone', required: true, description: '10-digit Indian mobile number', sample: '9876543210', aliases: ['adminphone', 'admin_phone'] },
-  { key: 'organization', label: 'Organization', required: false, description: 'Required for platform owner (organization ID or exact name)', sample: '1', aliases: ['organization', 'organizationid', 'organization_id', 'organizationname', 'organization_name'] },
+  { key: 'organization', label: 'Organization', required: false, description: 'Optional (organization ID or exact name)', sample: '1', aliases: ['organization', 'organizationid', 'organization_id', 'organizationname', 'organization_name'] },
   { key: 'societyName', label: 'Society Name', required: true, description: 'Name of the new society', sample: 'Green Heights CHS', aliases: ['societyname', 'society_name'] },
   { key: 'address', label: 'Address', required: true, description: 'Complete society address', sample: 'Plot 18, Sector 7, Nerul', aliases: ['address'] },
   { key: 'state', label: 'State', required: true, description: 'State name', sample: 'Maharashtra', aliases: ['state'] },
@@ -178,9 +180,10 @@ const validateBulkRows = ({ rows, isPlatformOwner, organizations, existingAdminE
       }
     })
 
-    const organizationId = resolveOrganizationId(row.organization, organizations)
-    if (isPlatformOwner && !organizationId) {
-      errors.push('Organization is required and must match an existing organization (ID or exact name)')
+    const organizationRaw = normalizeText(row.organization)
+    const organizationId = resolveOrganizationId(organizationRaw, organizations)
+    if (organizationRaw && !organizationId) {
+      errors.push('Organization must match an existing organization (ID or exact name), or be left blank')
     }
 
     if (adminEmail) {
@@ -279,12 +282,14 @@ export default function SocietyAdmins() {
   const [formError, setFormError] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [bulkImportFailedRows, setBulkImportFailedRows] = useState([])
+  const [assignmentSociety, setAssignmentSociety] = useState(null)
+  const [adminFilter, setAdminFilter] = useState('all')
+  const [deletingSocietyId, setDeletingSocietyId] = useState(null)
 
   // Fetch all users, filter to SOCIETY_ADMIN
-  const { data: allUsers = [], isLoading: usersLoading } = useQuery({
+  const { data: allUsers = [], isLoading: usersLoading, isError: usersError } = useQuery({
     queryKey: ['users'],
-    queryFn: () => userApi.getAll().then(res => res.data).catch(() => []),
-    placeholderData: [],
+    queryFn: () => userApi.getAll().then(res => res.data),
   })
 
   // Fetch all societies
@@ -307,6 +312,24 @@ export default function SocietyAdmins() {
     [allUsers]
   )
 
+  const hasOrganization = (society) => Boolean(
+    society?.organizationId
+    || society?.organizationName
+    || society?.organization?.id
+    || society?.organization?.name
+    || (typeof society?.organization === 'string' && society.organization.trim())
+  )
+
+  const assignedSocietyIds = useMemo(
+    () => new Set(societyAdmins.map((admin) => admin.societyId).filter(Boolean)),
+    [societyAdmins]
+  )
+
+  const societiesNeedingAssignment = useMemo(
+    () => societies.filter((society) => !assignedSocietyIds.has(society.id) || !hasOrganization(society)),
+    [societies, assignedSocietyIds]
+  )
+
   // Build a map of societyId to society data for quick lookup
   const societyMap = useMemo(() => {
     const map = {}
@@ -315,15 +338,32 @@ export default function SocietyAdmins() {
   }, [societies])
 
   const editingSociety = editingAdmin?.societyId ? societyMap[editingAdmin.societyId] : null
+  const activeSociety = assignmentSociety || editingSociety
 
   const filteredAdmins = useMemo(() => {
     const q = searchTerm.toLowerCase()
-    return societyAdmins.filter(a =>
+    const base = societyAdmins.filter(a =>
       a.name?.toLowerCase().includes(q) ||
       a.email?.toLowerCase().includes(q) ||
       a.societyName?.toLowerCase().includes(q)
     )
-  }, [societyAdmins, searchTerm])
+
+    if (adminFilter === 'assigned') {
+      return base.filter((admin) => {
+        const linkedSociety = societyMap[admin.societyId]
+        return linkedSociety ? hasOrganization(linkedSociety) : false
+      })
+    }
+
+    if (adminFilter === 'unassigned') {
+      return base.filter((admin) => {
+        const linkedSociety = societyMap[admin.societyId]
+        return !linkedSociety || !hasOrganization(linkedSociety)
+      })
+    }
+
+    return base
+  }, [societyAdmins, searchTerm, adminFilter, societyMap])
 
   const canManageSocietyAdmins = isPlatformOwner || isOrgOwner
 
@@ -346,10 +386,10 @@ export default function SocietyAdmins() {
     () => BULK_FIELD_CONFIG.map((field, index) => ({
       letter: String.fromCharCode(65 + index),
       label: field.label,
-      required: field.required || (isPlatformOwner && field.key === 'organization'),
+      required: field.required,
       description: field.description,
     })),
-    [isPlatformOwner]
+    []
   )
 
   const bulkPreviewColumns = useMemo(
@@ -566,6 +606,63 @@ export default function SocietyAdmins() {
     onError: (error) => setFormError(parseApiError(error)),
   })
 
+  const assignMutation = useMutation({
+    mutationFn: async ({ society, adminData, organizationId }) => {
+      if (isPlatformOwner && organizationId && society.organizationId !== organizationId) {
+        await societyApi.update(society.id, {
+          name: society.name,
+          address: society.address,
+          city: society.city,
+          state: society.state,
+          pincode: society.pincode,
+          registrationNumber: society.registrationNumber,
+          email: society.email,
+          telephone: society.telephone,
+          totalFlats: society.totalFlats ?? society.actualFlats ?? 0,
+          totalShops: society.totalShops ?? society.actualShops ?? 0,
+          totalOffices: society.totalOffices ?? society.actualOffices ?? 0,
+          totalWings: society.totalWings ?? society.actualWings ?? 0,
+          organizationId,
+        }, user.id)
+      }
+
+      await userApi.create({
+        name: adminData.name,
+        email: adminData.email,
+        password: adminData.password,
+        phone: adminData.phone,
+        role: 'SOCIETY_ADMIN',
+        societyId: society.id,
+      })
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(['users'])
+      queryClient.invalidateQueries(['societies'])
+      setShowModal(false)
+      setAssignmentSociety(null)
+      setFormError('')
+      setShowPassword(false)
+      toast.success('Society admin assigned successfully')
+    },
+    onError: (error) => setFormError(parseApiError(error)),
+  })
+
+  const deleteSocietyMutation = useMutation({
+    mutationFn: (id) => societyApi.delete(id, user.id),
+    onMutate: (id) => {
+      setDeletingSocietyId(id)
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(['societies'])
+      queryClient.invalidateQueries(['users'])
+      toast.success('Society deleted successfully')
+    },
+    onError: (error) => toast.error(parseApiError(error)),
+    onSettled: () => {
+      setDeletingSocietyId(null)
+    },
+  })
+
   // Delete admin user
   const deleteMutation = useMutation({
     mutationFn: (id) => userApi.delete(id),
@@ -578,6 +675,7 @@ export default function SocietyAdmins() {
 
   const openCreate = () => {
     setEditingAdmin(null)
+    setAssignmentSociety(null)
     setFormError('')
     setShowPassword(false)
     setShowModal(true)
@@ -585,6 +683,15 @@ export default function SocietyAdmins() {
 
   const openEdit = (admin) => {
     setEditingAdmin(admin)
+    setAssignmentSociety(null)
+    setFormError('')
+    setShowPassword(false)
+    setShowModal(true)
+  }
+
+  const openAssign = (society) => {
+    setEditingAdmin(null)
+    setAssignmentSociety(society)
     setFormError('')
     setShowPassword(false)
     setShowModal(true)
@@ -606,6 +713,35 @@ export default function SocietyAdmins() {
     })
     if (confirmed) {
       deleteMutation.mutate(admin.id)
+    }
+  }
+
+  const handleDeleteSociety = async (society) => {
+    const confirmed = await confirmDialog({
+      title: 'Delete Society',
+      message: `Delete society "${society.name}"? This action cannot be undone.`,
+      confirmText: 'Delete',
+      tone: 'danger',
+      details: [
+        { label: 'Society', value: society.name || '-' },
+        { label: 'City', value: society.city || '-' },
+        { label: 'Organization', value: hasOrganization(society) ? (society.organizationName || society.organization?.name || society.organization || 'Linked') : 'Unassigned' },
+      ],
+      impacts: [
+        {
+          label: 'Configured Units',
+          count:
+            (society.totalFlats || society.actualFlats || 0)
+            + (society.totalShops || society.actualShops || 0)
+            + (society.totalOffices || society.actualOffices || 0),
+        },
+        { label: 'Society Record', count: 1 },
+      ],
+      caution: 'Deleting a society may affect linked users and records.',
+    })
+
+    if (confirmed) {
+      deleteSocietyMutation.mutate(society.id)
     }
   }
 
@@ -638,6 +774,10 @@ export default function SocietyAdmins() {
         : {}),
     }
 
+    const selectedOrganizationId = isPlatformOwner && fd.get('organizationId')
+      ? parseInt(fd.get('organizationId'), 10)
+      : null
+
     if (!adminData.name || !adminData.email || !adminData.phone) {
       setFormError('Admin name, email, and phone are required')
       return
@@ -645,6 +785,15 @@ export default function SocietyAdmins() {
 
     if (!editingAdmin && !adminData.password) {
       setFormError('Admin password is required while creating')
+      return
+    }
+
+    if (assignmentSociety && !editingAdmin) {
+      assignMutation.mutate({
+        society: assignmentSociety,
+        adminData,
+        organizationId: selectedOrganizationId,
+      })
       return
     }
 
@@ -663,11 +812,6 @@ export default function SocietyAdmins() {
       Number.isNaN(societyData.totalWings)
     ) {
       setFormError('All society fields are mandatory. Fill every field before submitting.')
-      return
-    }
-
-    if (isPlatformOwner && !societyData.organizationId) {
-      setFormError('Please select an organization for this society')
       return
     }
 
@@ -697,6 +841,19 @@ export default function SocietyAdmins() {
 
   const orgOptions = organizations.map(o => ({ value: String(o.id), label: o.name }))
 
+  const showSkeleton = useMinLoadingTime(usersLoading || usersError)
+
+  if (showSkeleton) {
+    return (
+      <div className="sa-page">
+        <WakeUpBanner show />
+        <HeroSkeleton statCount={3} />
+        <FiltersSkeleton filterCount={2} />
+        <CardGridSkeleton count={6} />
+      </div>
+    )
+  }
+
   return (
     <div className="sa-page">
       {/* Header */}
@@ -707,16 +864,20 @@ export default function SocietyAdmins() {
               <UserCheck size={28} />
               Society Admins
             </h1>
-            <p className="sa-hero__subtitle">Manage society administrators and their societies</p>
+            <p className="sa-hero__subtitle">Manage society administrators, assignments, and organization links</p>
           </div>
           <div className="sa-hero__stats">
             <div className="sa-hero__stat">
               <span className="sa-hero__stat-value">{societyAdmins.length}</span>
-              <span className="sa-hero__stat-label">Admins</span>
+              <span className="sa-hero__stat-label">Assigned Admins</span>
             </div>
             <div className="sa-hero__stat">
               <span className="sa-hero__stat-value">{societies.length}</span>
-              <span className="sa-hero__stat-label">Societies</span>
+              <span className="sa-hero__stat-label">Total Societies</span>
+            </div>
+            <div className="sa-hero__stat">
+              <span className="sa-hero__stat-value">{societiesNeedingAssignment.length}</span>
+              <span className="sa-hero__stat-label">Needs Assignment</span>
             </div>
           </div>
           {canManageSocietyAdmins && (
@@ -751,12 +912,82 @@ export default function SocietyAdmins() {
             </button>
           )}
         </div>
+        <div className="sa-filters">
+          <button
+            type="button"
+            className={`sa-filter-btn ${adminFilter === 'all' ? 'sa-filter-btn--active' : ''}`}
+            onClick={() => setAdminFilter('all')}
+          >
+            All
+          </button>
+          <button
+            type="button"
+            className={`sa-filter-btn ${adminFilter === 'assigned' ? 'sa-filter-btn--active' : ''}`}
+            onClick={() => setAdminFilter('assigned')}
+          >
+            Linked Org
+          </button>
+          <button
+            type="button"
+            className={`sa-filter-btn ${adminFilter === 'unassigned' ? 'sa-filter-btn--active' : ''}`}
+            onClick={() => setAdminFilter('unassigned')}
+          >
+            No Org
+          </button>
+        </div>
       </div>
 
+      {societiesNeedingAssignment.length > 0 && (
+        <section className="sa-unassigned">
+          <div className="sa-unassigned__header">
+            <h3>Societies Requiring Assignment</h3>
+            <span>{societiesNeedingAssignment.length}</span>
+          </div>
+          <div className="sa-unassigned__grid">
+            {societiesNeedingAssignment.map((society) => {
+              const missingAdmin = !assignedSocietyIds.has(society.id)
+              const missingOrg = !hasOrganization(society)
+
+              return (
+                <div key={society.id} className="sa-unassigned__card">
+                  <div className="sa-unassigned__top">
+                    <div>
+                      <p className="sa-unassigned__name">{society.name}</p>
+                      <p className="sa-unassigned__meta">{society.city || 'N/A'}{society.state ? `, ${society.state}` : ''}</p>
+                    </div>
+                    <div className="sa-unassigned__actions">
+                      <button
+                        type="button"
+                        className="sa-unassigned__assign-btn"
+                        onClick={() => openAssign(society)}
+                      >
+                        <Plus size={14} />
+                        Assign Admin
+                      </button>
+                      <button
+                        type="button"
+                        className="sa-icon-btn sa-icon-btn--delete"
+                        title={deletingSocietyId === society.id ? 'Deleting...' : 'Delete society'}
+                        onClick={() => handleDeleteSociety(society)}
+                        disabled={deletingSocietyId === society.id || deleteSocietyMutation.isPending}
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  </div>
+                  <div className="sa-unassigned__badges">
+                    {missingAdmin && <span className="sa-unassigned__badge sa-unassigned__badge--warn">No Society Admin</span>}
+                    {missingOrg && <span className="sa-unassigned__badge">No Organization</span>}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </section>
+      )}
+
       {/* Content */}
-      {usersLoading ? (
-        <div className="sa-empty">Loading society admins...</div>
-      ) : filteredAdmins.length === 0 ? (
+      {filteredAdmins.length === 0 ? (
         <div className="sa-empty">
           <UserCheck size={48} className="sa-empty__icon" />
           <h3>No society admins found</h3>
@@ -827,6 +1058,7 @@ export default function SocietyAdmins() {
                     <div className="sa-card__society-stats">
                       <span><Home size={12} /> {society.actualFlats ?? society.totalFlats ?? 0} Flats</span>
                       <span><Store size={12} /> {society.actualShops ?? society.totalShops ?? 0} Shops</span>
+                      <span><Building2 size={12} /> {society.actualOffices ?? society.totalOffices ?? 0} Offices</span>
                       <span><Layers size={12} /> {society.actualWings ?? society.totalWings ?? 0} Wings</span>
                     </div>
                   </div>
@@ -848,8 +1080,8 @@ export default function SocietyAdmins() {
           <div className="sa-modal__panel">
             <div className="sa-modal__header">
               <div>
-                <h3>{editingAdmin ? 'Edit Society Admin' : 'Create Society + Admin'}</h3>
-                <p>{editingAdmin ? 'Update society and admin details' : 'Create a new society with its administrator'}</p>
+                <h3>{editingAdmin ? 'Edit Society Admin' : assignmentSociety ? 'Assign Society Admin' : 'Create Society + Admin'}</h3>
+                <p>{editingAdmin ? 'Update society and admin details' : assignmentSociety ? 'Assign an individual society admin and optionally link an organization' : 'Create a new society with its administrator'}</p>
               </div>
               <button onClick={() => { setShowModal(false); setShowPassword(false) }} className="sa-modal__close">
                 <X size={20} />
@@ -899,33 +1131,32 @@ export default function SocietyAdmins() {
                       label="Organization"
                       name="organizationId"
                       options={orgOptions}
-                      defaultValue={editingSociety?.organizationId ? String(editingSociety.organizationId) : ''}
-                      required
-                      placeholder="Select organization..."
+                      defaultValue={activeSociety?.organizationId ? String(activeSociety.organizationId) : ''}
+                      placeholder="Select organization (optional)..."
                     />
                   )}
-                  <FormInput label="Society Name" name="societyName" defaultValue={editingSociety?.name || ''} required />
-                  <FormInput label="Address" name="address" defaultValue={editingSociety?.address || ''} required />
+                  <FormInput label="Society Name" name="societyName" defaultValue={activeSociety?.name || ''} required />
+                  <FormInput label="Address" name="address" defaultValue={activeSociety?.address || ''} required />
                   <StateCitySelector
-                    stateDefaultValue={editingSociety?.state || ''}
-                    cityDefaultValue={editingSociety?.city || ''}
+                    stateDefaultValue={activeSociety?.state || ''}
+                    cityDefaultValue={activeSociety?.city || ''}
                     stateRequired
                     cityRequired
                   />
-                  <PincodeInput label="Pincode" name="pincode" defaultValue={editingSociety?.pincode || ''} required />
-                  <FormInput label="Registration Number" name="registrationNumber" defaultValue={editingSociety?.registrationNumber || ''} required />
-                  <FormInput label="Society Email" name="societyEmail" type="email" defaultValue={editingSociety?.email || ''} required />
-                  <PhoneInput label="Society Phone" name="telephone" defaultValue={editingSociety?.telephone || ''} required />
+                  <PincodeInput label="Pincode" name="pincode" defaultValue={activeSociety?.pincode || ''} required />
+                  <FormInput label="Registration Number" name="registrationNumber" defaultValue={activeSociety?.registrationNumber || ''} required />
+                  <FormInput label="Society Email" name="societyEmail" type="email" defaultValue={activeSociety?.email || ''} required />
+                  <PhoneInput label="Society Phone" name="telephone" defaultValue={activeSociety?.telephone || ''} required />
                 </div>
               </div>
 
               <div className="sa-form__section">
                 <h4><Home size={16} /> Property Capacity</h4>
                 <div className="sa-form__grid sa-form__grid--4">
-                  <NumberInput label="Flats" name="totalFlats" min={0} defaultValue={editingSociety?.totalFlats ?? 0} required />
-                  <NumberInput label="Shops" name="totalShops" min={0} defaultValue={editingSociety?.totalShops ?? 0} required />
-                  <NumberInput label="Offices" name="totalOffices" min={0} defaultValue={editingSociety?.totalOffices ?? 0} required />
-                  <NumberInput label="Wings" name="totalWings" min={0} defaultValue={editingSociety?.totalWings ?? 0} required />
+                  <NumberInput label="Flats" name="totalFlats" min={0} defaultValue={activeSociety?.totalFlats ?? 0} required />
+                  <NumberInput label="Shops" name="totalShops" min={0} defaultValue={activeSociety?.totalShops ?? 0} required />
+                  <NumberInput label="Offices" name="totalOffices" min={0} defaultValue={activeSociety?.totalOffices ?? 0} required />
+                  <NumberInput label="Wings" name="totalWings" min={0} defaultValue={activeSociety?.totalWings ?? 0} required />
                 </div>
               </div>
 
@@ -933,9 +1164,14 @@ export default function SocietyAdmins() {
                 <button type="button" onClick={() => { setShowModal(false); setShowPassword(false) }} className="sa-btn">
                   Cancel
                 </button>
-                <button type="submit" className="sa-btn sa-btn--primary">
-                  {editingAdmin ? 'Update Admin' : 'Create Society + Admin'}
-                </button>
+                <AsyncButton
+                  type="submit"
+                  className="sa-btn sa-btn--primary"
+                  isLoading={createMutation.isPending || updateMutation.isPending || assignMutation.isPending}
+                  loadingText="Saving..."
+                >
+                  {editingAdmin ? 'Update Admin' : assignmentSociety ? 'Assign Admin' : 'Create Society + Admin'}
+                </AsyncButton>
               </div>
             </form>
           </div>

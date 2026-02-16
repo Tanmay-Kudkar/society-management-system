@@ -16,5 +16,5 @@ public interface SocietyService {
 
     SocietyResponse update(Long id, SocietyRequest request);
 
-    void delete(Long id);
+    void delete(Long id, boolean force);
 }

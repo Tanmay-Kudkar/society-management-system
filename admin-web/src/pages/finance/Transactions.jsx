@@ -1,11 +1,13 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '../../context'
 import { useToast } from '../../context'
 import { transactionApi, exportApi, downloadBlob, flatApi } from '../../../../api'
 import { Plus, Search, X, TrendingUp, TrendingDown, DollarSign, FileSpreadsheet, Home } from 'lucide-react'
 import clsx from 'clsx'
-import { PermissionDenied } from '../../components'
+import { PermissionDenied, AsyncButton } from '../../components'
+import { HeroSkeleton, FinancePageSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
+import useMinLoadingTime from '../../hooks/useMinLoadingTime'
 
 export default function Transactions() {
   const { user, canManageTransactions } = useAuth()
@@ -27,10 +29,9 @@ export default function Transactions() {
   const [formCategory, setFormCategory] = useState('MAINTENANCE')
   const [formFlatId, setFormFlatId] = useState('')
 
-  const { data: transactions = [], isLoading } = useQuery({
+  const { data: transactions = [], isLoading, isError } = useQuery({
     queryKey: ['transactions'],
     queryFn: () => transactionApi.getAll().then(res => res.data),
-    placeholderData: [],
   })
 
   // Fetch flats for the society
@@ -63,17 +64,25 @@ export default function Transactions() {
     },
   })
 
-  const filteredTransactions = transactions.filter(t => {
-    const matchesSearch = t.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         t.category?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         t.flatNumber?.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesType = !filterType || t.transactionType === filterType
-    const matchesMode = !filterMode || t.paymentMode === filterMode
-    return matchesSearch && matchesType && matchesMode
-  })
+  const filteredTransactions = useMemo(() => {
+    return transactions.filter(t => {
+      const matchesSearch = t.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           t.category?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           t.flatNumber?.toLowerCase().includes(searchTerm.toLowerCase())
+      const matchesType = !filterType || t.transactionType === filterType
+      const matchesMode = !filterMode || t.paymentMode === filterMode
+      return matchesSearch && matchesType && matchesMode
+    })
+  }, [transactions, searchTerm, filterType, filterMode])
 
-  const totalIncome = transactions.filter(t => t.transactionType === 'INCOME').reduce((sum, t) => sum + (t.amount || 0), 0)
-  const totalExpense = transactions.filter(t => t.transactionType === 'EXPENSE').reduce((sum, t) => sum + (t.amount || 0), 0)
+  const totalIncome = useMemo(
+    () => transactions.filter(t => t.transactionType === 'INCOME').reduce((sum, t) => sum + (t.amount || 0), 0),
+    [transactions],
+  )
+  const totalExpense = useMemo(
+    () => transactions.filter(t => t.transactionType === 'EXPENSE').reduce((sum, t) => sum + (t.amount || 0), 0),
+    [transactions],
+  )
 
   const handleSubmit = (e) => {
     e.preventDefault()
@@ -114,6 +123,18 @@ export default function Transactions() {
     } finally {
       setIsExporting(false)
     }
+  }
+
+  const showSkeleton = useMinLoadingTime(isLoading || isError)
+
+  if (showSkeleton) {
+    return (
+      <div className="transactions-page">
+        <WakeUpBanner />
+        <HeroSkeleton />
+        <FinancePageSkeleton summaryCount={2} rows={8} cols={5} />
+      </div>
+    )
   }
 
   return (
@@ -226,11 +247,6 @@ export default function Transactions() {
 
       {/* Table */}
       <div className="transactions-table-card">
-        {isLoading ? (
-          <div className="transactions-loading">
-            <div className="transactions-spinner" />
-          </div>
-        ) : (
           <div className="transactions-table-scroll">
             <table className="transactions-table">
               <thead className="transactions-thead">
@@ -285,7 +301,6 @@ export default function Transactions() {
               </tbody>
             </table>
           </div>
-        )}
       </div>
 
       {/* Modal */}
@@ -398,7 +413,14 @@ export default function Transactions() {
               </div>
               <div className="transactions-form-actions">
                 <button type="button" onClick={() => setShowModal(false)} className="transactions-cancel-button">Cancel</button>
-                <button type="submit" className="transactions-submit-button">Create</button>
+                <AsyncButton
+                  type="submit"
+                  className="transactions-submit-button"
+                  isLoading={createMutation.isPending}
+                  loadingText="Creating..."
+                >
+                  Create
+                </AsyncButton>
               </div>
             </form>
           </div>

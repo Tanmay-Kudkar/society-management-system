@@ -15,9 +15,11 @@ import { Layout } from '../../constants';
 import { complaintAPI } from '../../services/api';
 import { Ionicons } from '@expo/vector-icons';
 import { TouchableOpacity } from 'react-native';
+import { useAuth } from '../../context/AuthContext';
 
 const CreateComplaintScreen = ({ navigation }) => {
   const { theme } = useTheme();
+  const { user } = useAuth();
   
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -63,7 +65,7 @@ const CreateComplaintScreen = ({ navigation }) => {
 
     setLoading(true);
     try {
-      await complaintAPI.createComplaint(formData);
+      await complaintAPI.createComplaint(formData, user?.id);
       Alert.alert(
         'Success',
         'Your complaint has been submitted successfully.',

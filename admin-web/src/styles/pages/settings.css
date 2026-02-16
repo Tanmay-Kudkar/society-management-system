@@ -82,7 +82,7 @@
   max-width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: 1rem;
 }
 
 .settings-section-header {
@@ -92,35 +92,36 @@
 }
 
 .settings-section-title {
-  font-size: 1rem;
-  font-weight: 600;
+  font-size: 1.12rem;
+  font-weight: 700;
   color: var(--text-primary);
 }
 
 .settings-section-subtitle {
-  font-size: 0.8rem;
-  color: var(--text-tertiary);
+  font-size: 0.94rem;
+  font-weight: 600;
+  color: var(--text-secondary);
 }
 
 /* ── Profile Header ───────────────────────── */
 .settings-profile-header {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  padding: 1.25rem;
+  gap: 0.85rem;
+  padding: 1rem;
   border-radius: 12px;
   background: linear-gradient(135deg, color-mix(in srgb, var(--accent-primary) 8%, var(--bg-tertiary)), var(--bg-tertiary));
   border: 1px solid var(--border-light);
 }
 
 .settings-avatar {
-  width: 4.5rem;
-  height: 4.5rem;
+  width: 4rem;
+  height: 4rem;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.6rem;
+  font-size: 1.5rem;
   font-weight: 700;
   color: #fff;
   background: linear-gradient(135deg, var(--accent-primary), color-mix(in srgb, var(--accent-primary) 75%, #7c3aed));
@@ -131,19 +132,23 @@
 .settings-profile-info {
   display: flex;
   flex-direction: column;
-  gap: 0.2rem;
+  gap: 0.08rem;
   min-width: 0;
 }
 
 .settings-profile-name {
-  font-size: 1.1rem;
-  font-weight: 700;
+  margin: 0;
+  font-size: 1.9rem;
+  font-weight: 800;
+  line-height: 1.1;
   color: var(--text-primary);
 }
 
 .settings-profile-email {
-  font-size: 0.8rem;
-  color: var(--text-tertiary);
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-secondary);
   display: flex;
   align-items: center;
   gap: 0.35rem;
@@ -153,11 +158,11 @@
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
-  margin-top: 0.15rem;
-  padding: 0.15rem 0.55rem;
+  margin-top: 0.2rem;
+  padding: 0.22rem 0.65rem;
   border-radius: 999px;
-  font-size: 0.65rem;
-  font-weight: 600;
+  font-size: 0.72rem;
+  font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.03em;
   background: color-mix(in srgb, var(--accent-primary) 12%, transparent);
@@ -194,8 +199,8 @@
 .settings-form-grid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 1rem;
-  padding-top: 1rem;
+  gap: 0.8rem;
+  padding-top: 0.75rem;
   border-top: 1px solid var(--border-light);
 }
 
@@ -208,13 +213,13 @@
 .settings-field {
   display: flex;
   flex-direction: column;
-  gap: 0.3rem;
+  gap: 0.35rem;
 }
 
 .settings-label {
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: var(--text-secondary);
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary);
   display: flex;
   align-items: center;
   gap: 0.35rem;
@@ -222,12 +227,14 @@
 
 .settings-input {
   width: 100%;
-  padding: 0.5rem 0.75rem;
+  min-height: 2.55rem;
+  padding: 0.58rem 0.8rem;
   border-radius: 8px;
   border: 1px solid var(--border-light);
   background: var(--bg-card);
   color: var(--text-primary);
-  font-size: 0.85rem;
+  font-size: 0.98rem;
+  font-weight: 600;
   font-family: inherit;
   transition: border-color 0.2s, box-shadow 0.2s;
 }
@@ -240,7 +247,9 @@
 
 .settings-input--disabled {
   background: var(--bg-tertiary);
-  color: var(--text-tertiary);
+  color: var(--text-secondary);
+  border-color: color-mix(in srgb, var(--border-light) 85%, var(--text-secondary));
+  font-weight: 600;
   cursor: not-allowed;
 }
 
@@ -275,8 +284,29 @@
   display: flex;
   align-items: center;
   gap: 0.25rem;
-  font-size: 0.7rem;
-  color: var(--text-tertiary);
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.settings-field .phone-row {
+  align-items: stretch;
+}
+
+.settings-field .phone-prefix {
+  min-height: 2.55rem;
+  padding: 0 0.8rem;
+  border: 1px solid var(--border-light);
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
+.settings-field .phone-input {
+  min-height: 2.55rem;
+  font-size: 0.98rem;
+  font-weight: 600;
 }
 
 /* ── Input Wrapper (for eye toggle) ───────── */
@@ -348,11 +378,11 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.25rem 0.6rem;
+  padding: 0.55rem 0.8rem;
   border-radius: 6px;
   background: var(--bg-tertiary);
   border: 1px solid var(--border-light);
-  gap: 0.5rem;
+  gap: 0.7rem;
   transition: background 0.15s;
 }
 
@@ -363,15 +393,17 @@
 .settings-toggle-card__left {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.7rem;
   min-width: 0;
 }
 
 .settings-toggle-card__icon {
-  font-size: 0.9rem;
+  font-size: 1.15rem;
+  font-weight: 700;
+  line-height: 1;
   flex-shrink: 0;
-  width: 1.35rem;
-  height: 1.35rem;
+  width: 1.9rem;
+  height: 1.9rem;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -381,16 +413,17 @@
 }
 
 .settings-toggle-title {
-  font-size: 0.78rem;
-  font-weight: 600;
+  font-size: 0.98rem;
+  font-weight: 700;
   color: var(--text-primary);
-  line-height: 1.1;
+  line-height: 1.25;
 }
 
 .settings-toggle-text {
-  font-size: 0.68rem;
+  font-size: 0.88rem;
+  font-weight: 500;
   color: var(--text-tertiary);
-  line-height: 1.2;
+  line-height: 1.35;
 }
 
 /* ── Password Strength ────────────────────── */
@@ -487,9 +520,9 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.75rem 1rem;
+  padding: 0.95rem 1.1rem;
   border-radius: 10px;
-  background: var(--bg-tertiary);
+  background: color-mix(in srgb, var(--bg-tertiary) 86%, var(--bg-card));
   border: 1px solid var(--border-light);
   gap: 0.75rem;
   flex-wrap: wrap;
@@ -504,13 +537,13 @@
 }
 
 .settings-session-card__icon {
-  width: 2.25rem;
-  height: 2.25rem;
+  width: 2.5rem;
+  height: 2.5rem;
   border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: color-mix(in srgb, var(--accent-primary) 10%, transparent);
+  background: color-mix(in srgb, var(--accent-primary) 16%, transparent);
   color: var(--accent-primary);
   flex-shrink: 0;
 }
@@ -523,14 +556,15 @@
 }
 
 .settings-session-title {
-  font-size: 0.85rem;
-  font-weight: 600;
+  font-size: 1rem;
+  font-weight: 700;
   color: var(--text-primary);
 }
 
 .settings-session-text {
-  font-size: 0.72rem;
-  color: var(--text-tertiary);
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: var(--text-secondary);
 }
 
 .settings-session-details {
@@ -544,9 +578,9 @@
   display: inline-flex;
   align-items: center;
   gap: 0.3rem;
-  font-size: 0.72rem;
-  color: var(--text-secondary);
-  font-weight: 500;
+  font-size: 0.84rem;
+  color: var(--text-primary);
+  font-weight: 650;
   white-space: nowrap;
 }
 
@@ -559,12 +593,12 @@
 
 .settings-session-chip--active {
   color: #16a34a;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .settings-session-separator {
-  color: var(--text-muted);
-  font-size: 0.65rem;
+  color: var(--text-secondary);
+  font-size: 0.78rem;
   user-select: none;
 }
 
@@ -572,12 +606,12 @@
   display: inline-flex;
   align-items: center;
   gap: 0.3rem;
-  padding: 0.15rem 0.55rem;
+  padding: 0.24rem 0.62rem;
   border-radius: 999px;
-  background: rgba(22, 163, 74, 0.12);
+  background: rgba(22, 163, 74, 0.18);
   color: #16a34a;
-  font-size: 0.7rem;
-  font-weight: 600;
+  font-size: 0.8rem;
+  font-weight: 700;
   white-space: nowrap;
 }
 
@@ -600,10 +634,10 @@
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  padding: 0.75rem 1rem;
+  padding: 0.95rem 1.1rem;
   border-radius: 10px;
   border: 1px solid #fca5a5;
-  background: rgba(239, 68, 68, 0.04);
+  background: rgba(239, 68, 68, 0.08);
   flex-wrap: wrap;
 }
 
@@ -619,27 +653,28 @@
 }
 
 .settings-danger-title {
-  font-size: 0.85rem;
-  font-weight: 600;
+  font-size: 1rem;
+  font-weight: 700;
   color: #dc2626;
 }
 
 .settings-danger-text {
-  font-size: 0.72rem;
-  color: var(--text-tertiary);
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text-secondary);
 }
 
 .settings-danger-button {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  padding: 0.45rem 0.85rem;
+  padding: 0.56rem 0.95rem;
   border-radius: 8px;
   border: 1px solid #fca5a5;
   color: #dc2626;
   background: transparent;
-  font-size: 0.8rem;
-  font-weight: 600;
+  font-size: 0.9rem;
+  font-weight: 700;
   font-family: inherit;
   cursor: pointer;
   transition: background 0.2s;
@@ -665,7 +700,7 @@
 
 .settings-theme-card {
   position: relative;
-  padding: 0.75rem;
+  padding: 0.9rem;
   border-radius: 10px;
   border: 2px solid var(--border-light);
   background: var(--bg-card);
@@ -676,7 +711,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.35rem;
+  gap: 0.45rem;
 }
 
 .settings-theme-card:hover {
@@ -690,7 +725,7 @@
 
 .settings-theme-preview {
   width: 100%;
-  height: 4rem;
+  height: 4.5rem;
   border-radius: 8px;
   display: flex;
   align-items: center;
@@ -699,7 +734,7 @@
 }
 
 .settings-theme-preview__icon {
-  opacity: 0.5;
+  opacity: 0.8;
 }
 
 /* FIX: Explicit colors for theme previews so they look correct in any theme */
@@ -722,14 +757,35 @@
 }
 
 .settings-theme-label {
-  font-size: 0.82rem;
-  font-weight: 600;
+  font-size: 1rem;
+  font-weight: 700;
   color: var(--text-primary);
 }
 
 .settings-theme-desc {
-  font-size: 0.7rem;
-  color: var(--text-tertiary);
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.dark .settings-danger-zone {
+  border-color: #ef4444;
+  background: rgba(127, 29, 29, 0.32);
+}
+
+.dark .settings-danger-title,
+.dark .settings-danger-button {
+  color: #fca5a5;
+}
+
+.light .settings-danger-zone {
+  border-color: #f87171;
+  background: rgba(254, 226, 226, 0.92);
+}
+
+.light .settings-danger-title,
+.light .settings-danger-button {
+  color: #b91c1c;
 }
 
 .settings-theme-active {
@@ -781,6 +837,25 @@
   .settings-section {
     gap: 1rem;
   }
+
+  .settings-profile-name {
+    font-size: 1.55rem;
+  }
+
+  .settings-profile-email {
+    font-size: 0.92rem;
+  }
+
+  .settings-label {
+    font-size: 0.92rem;
+  }
+
+  .settings-input,
+  .settings-field .phone-input,
+  .settings-field .phone-prefix {
+    min-height: 2.35rem;
+    font-size: 0.9rem;
+  }
   
   .settings-tabs-nav {
     scrollbar-width: thin;
@@ -792,26 +867,26 @@
   }
   
   .settings-toggle-card {
-    padding: 0.2rem 0.5rem;
-    gap: 0.4rem;
+    padding: 0.5rem 0.7rem;
+    gap: 0.6rem;
   }
   
   .settings-toggle-card__left {
-    gap: 0.45rem;
+    gap: 0.6rem;
   }
   
   .settings-toggle-card__icon {
-    width: 1.25rem;
-    height: 1.25rem;
-    font-size: 0.85rem;
+    width: 1.7rem;
+    height: 1.7rem;
+    font-size: 1.05rem;
   }
   
   .settings-toggle-title {
-    font-size: 0.75rem;
+    font-size: 0.9rem;
   }
   
   .settings-toggle-text {
-    font-size: 0.65rem;
+    font-size: 0.82rem;
   }
   
   .settings-theme-grid {
@@ -836,6 +911,25 @@
   .settings-section {
     gap: 0.9rem;
   }
+
+  .settings-profile-name {
+    font-size: 1.35rem;
+  }
+
+  .settings-profile-email {
+    font-size: 0.86rem;
+  }
+
+  .settings-label {
+    font-size: 0.86rem;
+  }
+
+  .settings-input,
+  .settings-field .phone-input,
+  .settings-field .phone-prefix {
+    min-height: 2.2rem;
+    font-size: 0.84rem;
+  }
   
   .settings-tab {
     padding: 0.6rem 0.85rem;
@@ -844,26 +938,26 @@
   }
   
   .settings-toggle-card {
-    padding: 0.2rem 0.45rem;
-    gap: 0.35rem;
+    padding: 0.45rem 0.65rem;
+    gap: 0.5rem;
   }
   
   .settings-toggle-card__left {
-    gap: 0.4rem;
+    gap: 0.5rem;
   }
   
   .settings-toggle-card__icon {
-    width: 1.2rem;
-    height: 1.2rem;
-    font-size: 0.8rem;
+    width: 1.55rem;
+    height: 1.55rem;
+    font-size: 0.98rem;
   }
   
   .settings-toggle-title {
-    font-size: 0.72rem;
+    font-size: 0.84rem;
   }
   
   .settings-toggle-text {
-    font-size: 0.62rem;
+    font-size: 0.76rem;
   }
 }
 

@@ -5,8 +5,9 @@ import { useAuth } from '../../context'
 import { useConfirmDialog } from '../../context'
 import { vehicleApi, flatApi } from '../../../../api'
 import { Plus, Edit, Trash2, Search, X, Car, Bike, Upload } from 'lucide-react'
-import { FormInput, SmartSelect } from '../../components'
-import { BulkImportModal } from '../../components'
+import { FormInput, SmartSelect, BulkImportModal, AsyncButton } from '../../components'
+import { HeroSkeleton, StatCardSkeleton, CardGridSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
+import useMinLoadingTime from '../../hooks/useMinLoadingTime'
 
 export default function Vehicles() {
   const { user, canManageVehicles } = useAuth()
@@ -29,10 +30,9 @@ export default function Vehicles() {
   const effectiveSocietyId = isPlatformLevel && societyIdFromUrl ? parseInt(societyIdFromUrl) : user?.societyId
   const canEditVehicles = canManageVehicles()
 
-  const { data: allVehicles = [], isLoading } = useQuery({
+  const { data: allVehicles = [], isLoading, isError } = useQuery({
     queryKey: ['vehicles'],
     queryFn: () => vehicleApi.getAll().then(res => res.data),
-    placeholderData: [],
   })
 
   // Filter vehicles by society
@@ -69,13 +69,23 @@ export default function Vehicles() {
     onSuccess: () => queryClient.invalidateQueries(['vehicles']),
   })
 
-  const filteredVehicles = vehicles.filter(v => {
-    const matchesSearch = v.vehicleNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         v.ownerName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         v.brand?.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesType = !filterType || v.vehicleType === filterType
-    return matchesSearch && matchesType
-  })
+  const filteredVehicles = useMemo(() => {
+    return vehicles.filter(v => {
+      const matchesSearch = v.vehicleNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           v.ownerName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           v.brand?.toLowerCase().includes(searchTerm.toLowerCase())
+      const matchesType = !filterType || v.vehicleType === filterType
+      return matchesSearch && matchesType
+    })
+  }, [vehicles, searchTerm, filterType])
+
+  const vehicleStats = useMemo(() => {
+    return {
+      fourWheelers: vehicles.filter(v => v.vehicleType === 'FOUR_WHEELER').length,
+      twoWheelers: vehicles.filter(v => v.vehicleType === 'TWO_WHEELER').length,
+      total: vehicles.length,
+    }
+  }, [vehicles])
 
   const handleSubmit = (e) => {
     e.preventDefault()
@@ -111,6 +121,20 @@ export default function Vehicles() {
     }
     return <Car className="vehicles-icon-svg vehicles-icon-svg--blue" />
   } 
+
+  const showSkeleton = useMinLoadingTime(isLoading || isError)
+
+  if (showSkeleton) {
+    return (
+      <div className="vehicles-page">
+        <WakeUpBanner />
+        <HeroSkeleton />
+        <StatCardSkeleton count={3} />
+        <div style={{height:20}} />
+        <CardGridSkeleton count={6} />
+      </div>
+    )
+  }
 
   return (
     <div className="vehicles-page">
@@ -174,7 +198,7 @@ export default function Vehicles() {
             </div>
             <div>
               <p className="vehicles-stat-value">
-                {vehicles.filter(v => v.vehicleType === 'FOUR_WHEELER').length}
+                {vehicleStats.fourWheelers}
               </p>
               <p className="vehicles-stat-label">Four Wheelers</p>
             </div>
@@ -187,7 +211,7 @@ export default function Vehicles() {
             </div>
             <div>
               <p className="vehicles-stat-value">
-                {vehicles.filter(v => v.vehicleType === 'TWO_WHEELER').length}
+                {vehicleStats.twoWheelers}
               </p>
               <p className="vehicles-stat-label">Two Wheelers</p>
             </div>
@@ -199,7 +223,7 @@ export default function Vehicles() {
               <Car className="vehicles-stat-icon-svg" />
             </div>
             <div>
-              <p className="vehicles-stat-value">{vehicles.length}</p>
+              <p className="vehicles-stat-value">{vehicleStats.total}</p>
               <p className="vehicles-stat-label">Total Vehicles</p>
             </div>
           </div>
@@ -208,11 +232,6 @@ export default function Vehicles() {
 
       {/* Table */}
       <div className="vehicles-table-card">
-        {isLoading ? (
-          <div className="vehicles-loading">
-            <div className="vehicles-spinner" />
-          </div>
-        ) : (
           <div className="vehicles-table-scroll">
             <table className="vehicles-table">
               <thead className="vehicles-thead">
@@ -312,7 +331,6 @@ export default function Vehicles() {
               </tbody>
             </table>
           </div>
-        )}
       </div>
 
       {/* Modal */}
@@ -412,13 +430,14 @@ export default function Vehicles() {
                 >
                   Cancel
                 </button>
-                <button
+                <AsyncButton
                   type="submit"
-                  disabled={createMutation.isPending || updateMutation.isPending}
                   className="vehicles-submit-button"
+                  isLoading={createMutation.isPending || updateMutation.isPending}
+                  loadingText="Saving..."
                 >
-                  {createMutation.isPending || updateMutation.isPending ? 'Saving...' : 'Save'}
-                </button>
+                  Save
+                </AsyncButton>
               </div>
             </form>
           </div>

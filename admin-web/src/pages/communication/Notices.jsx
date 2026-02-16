@@ -1,11 +1,14 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '../../context'
+import { useConfirmDialog } from '../../context'
 import { noticeApi } from '../../../../api'
 import { Plus, Search, X, Megaphone, Edit, Trash2 } from 'lucide-react'
 import clsx from 'clsx'
-import { FormInput, SmartSelect, FormTextarea } from '../../components'
+import { FormInput, SmartSelect, FormTextarea, AsyncButton } from '../../components'
+import { HeroSkeleton, FiltersSkeleton, CardGridSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
+import useMinLoadingTime from '../../hooks/useMinLoadingTime'
 
 const priorityClasses = {
   LOW: 'notices-priority notices-priority--low',
@@ -16,6 +19,7 @@ const priorityClasses = {
 
 export default function Notices() {
   const { user, canManageNotices } = useAuth()
+  const confirmDialog = useConfirmDialog()
   const queryClient = useQueryClient()
   const [searchParams] = useSearchParams()
   const [showModal, setShowModal] = useState(false)
@@ -31,12 +35,11 @@ export default function Notices() {
   // Determine effective society ID for filtering
   const effectiveSocietyId = isPlatformLevel && societyIdFromUrl ? parseInt(societyIdFromUrl) : user?.societyId
 
-  const { data: notices = [], isLoading } = useQuery({
+  const { data: notices = [], isLoading, isError } = useQuery({
     queryKey: ['notices', effectiveSocietyId],
     queryFn: () => effectiveSocietyId
       ? noticeApi.getBySociety(effectiveSocietyId).then(res => res.data)
       : noticeApi.getAll().then(res => res.data),
-    placeholderData: [],
   })
 
 
@@ -62,14 +65,31 @@ export default function Notices() {
     onSuccess: () => queryClient.invalidateQueries(['notices']),
   })
 
-  const filteredNotices = notices.filter(n => {
+  const filteredNotices = useMemo(() => notices.filter(n => {
     const matchesSearch = n.title?.toLowerCase().includes(searchTerm.toLowerCase())
     return matchesSearch
-  })
+  }), [notices, searchTerm])
 
   const closeModal = () => {
     setShowModal(false)
     setEditingNotice(null)
+  }
+
+  const confirmAndDeleteNotice = async (notice) => {
+    const confirmed = await confirmDialog({
+      title: 'Delete Notice',
+      message: 'Are you sure you want to delete this notice? This action cannot be undone.',
+      confirmText: 'Delete',
+      tone: 'danger',
+      details: [
+        { label: 'Title', value: notice.title || '-' },
+        { label: 'Priority', value: notice.priority || '-' },
+      ],
+      caution: 'This action permanently removes the notice.',
+    })
+    if (confirmed) {
+      deleteMutation.mutate(notice.id)
+    }
   }
 
   const handleSubmit = (e) => {
@@ -88,6 +108,17 @@ export default function Notices() {
       createMutation.mutate(data)
     }
   }
+
+  const showSkeleton = useMinLoadingTime(isLoading || isError)
+
+  if (showSkeleton) return (
+    <div className="notices-page">
+      <WakeUpBanner />
+      <HeroSkeleton statCount={0} />
+      <FiltersSkeleton filterCount={1} />
+      <CardGridSkeleton count={6} showAvatar={false} />
+    </div>
+  )
 
   return (
     <div className="notices-page">
@@ -125,11 +156,7 @@ export default function Notices() {
       </div>
 
       {/* Notices Grid */}
-      {isLoading ? (
-        <div className="notices-loading">
-          <div className="notices-spinner" />
-        </div>
-      ) : (
+      {(
         <div className="notices-grid">
           {filteredNotices.map((notice) => (
             <div key={notice.id} className="notices-card">
@@ -151,7 +178,7 @@ export default function Notices() {
                       <Edit size={16} />
                     </button>
                     <button
-                      onClick={() => deleteMutation.mutate(notice.id)}
+                      onClick={() => confirmAndDeleteNotice(notice)}
                       className="notices-delete-button"
                     >
                       <Trash2 size={16} />
@@ -224,9 +251,14 @@ export default function Notices() {
               </div>
               <div className="notices-form-actions">
                 <button type="button" onClick={closeModal} className="notices-cancel-button">Cancel</button>
-                <button type="submit" className="notices-submit-button">
+                <AsyncButton
+                  type="submit"
+                  className="notices-submit-button"
+                  isLoading={createMutation.isPending || updateMutation.isPending}
+                  loadingText="Saving..."
+                >
                   {editingNotice ? 'Update' : 'Create'}
-                </button>
+                </AsyncButton>
               </div>
             </form>
           </div>
