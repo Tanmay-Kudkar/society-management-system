@@ -208,8 +208,9 @@ public class UserServiceImpl implements UserService {
                 user.setFlat(flat);
                 log.info("Auto-assigned TENANT {} to MEMBER's flat {}", request.getEmail(), flat.getFlatNumber());
             } else {
+                // Flat is mandatory for MEMBER and TENANT roles
                 throw new ApiException(HttpStatus.BAD_REQUEST,
-                        "Flat/Unit assignment is required for MEMBER, TENANT, CHAIRMAN, SECRETARY, TREASURER, and COMMITTEE roles");
+                        "Flat/Unit assignment is required for MEMBER and TENANT roles");
             }
 
             // Update flat ownership for MEMBER role (not TENANT - they don't own the flat)
@@ -233,8 +234,20 @@ public class UserServiceImpl implements UserService {
                 flatRepository.save(flat);
             }
         } else if (request.getFlatId() != null) {
-            throw new ApiException(HttpStatus.BAD_REQUEST,
-                    targetRole.name() + " role cannot be assigned to a unit");
+            // Optional flat assignment for management roles (CHAIRMAN, SECRETARY, TREASURER, COMMITTEE)
+            if (targetRole == Role.CHAIRMAN || targetRole == Role.SECRETARY || 
+                targetRole == Role.TREASURER || targetRole == Role.COMMITTEE) {
+                Flat flat = flatRepository.findById(request.getFlatId())
+                        .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND,
+                                "Unit/Flat not found with ID: " + request.getFlatId()));
+                user.setFlat(flat);
+                flat.setIsOccupied(true);
+                flatRepository.save(flat);
+                log.info("Optionally assigned {} role {} to flat {}", targetRole, request.getEmail(), flat.getFlatNumber());
+            } else {
+                throw new ApiException(HttpStatus.BAD_REQUEST,
+                        targetRole.name() + " role cannot be assigned to a unit");
+            }
         }
 
         User saved = userRepository.save(user);
@@ -596,12 +609,10 @@ public class UserServiceImpl implements UserService {
     }
 
     private boolean isResidentUnitRole(Role role) {
+        // Only MEMBER and TENANT require mandatory flat assignment
+        // CHAIRMAN, SECRETARY, TREASURER, COMMITTEE can be society-wide (optional flat)
         return role == Role.MEMBER
-                || role == Role.TENANT
-                || role == Role.CHAIRMAN
-                || role == Role.SECRETARY
-                || role == Role.TREASURER
-                || role == Role.COMMITTEE;
+                || role == Role.TENANT;
     }
 
     private Role getCurrentUserRole() {
