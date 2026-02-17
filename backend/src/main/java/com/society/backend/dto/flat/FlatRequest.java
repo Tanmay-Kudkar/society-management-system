@@ -32,13 +32,10 @@ public class FlatRequest {
     @NotNull(message = "Area is required")
     private BigDecimal area; // in sq ft
 
-    @NotBlank(message = "Owner name is required")
     private String ownerName;
 
-    @NotBlank(message = "Owner email is required")
     @Email(message = "Invalid owner email format")
     private String ownerEmail;
 
-    @NotBlank(message = "Owner phone is required")
     private String ownerPhone;
 }
