@@ -10,6 +10,8 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.society.backend.dto.auth.LoginRequest;
 import com.society.backend.dto.auth.LoginResponse;
@@ -34,6 +36,8 @@ import com.society.backend.service.common.EmailService;
  */
 @Service
 public class AuthServiceImpl implements AuthService {
+
+    private static final Logger logger = LoggerFactory.getLogger(AuthServiceImpl.class);
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
@@ -196,7 +200,7 @@ public class AuthServiceImpl implements AuthService {
         try {
             emailService.sendPasswordResetEmail(user.getEmail(), user.getName(), token);
         } catch (Exception e) {
-            System.err.println("Failed to send password reset email: " + e.getMessage());
+            logger.error("Failed to send password reset email to {}: {}", user.getEmail(), e.getMessage());
             // Don't expose email sending failures to the user
         }
     }

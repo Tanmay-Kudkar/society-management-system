@@ -29,7 +29,9 @@ api.interceptors.response.use(
     if (error.response?.status === 401) {
       localStorage.removeItem('token')
       localStorage.removeItem('user')
-      window.location.href = '/login'
+      // Do NOT use window.location.href in web apps - it bypasses React Router
+      // and causes 404 on SPAs. Let the app's auth context/router handle redirects.
+      // Mobile apps may need to handle 401 differently in their own interceptor.
     }
     return Promise.reject(error)
   }

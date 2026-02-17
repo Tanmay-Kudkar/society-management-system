@@ -5,6 +5,8 @@ import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.crypto.SecretKey;
 import java.security.MessageDigest;
@@ -13,6 +15,8 @@ import java.util.Date;
 
 @Component
 public class JwtUtils {
+
+    private static final Logger logger = LoggerFactory.getLogger(JwtUtils.class);
 
     @Value("${jwt.secret}")
     private String jwtSecret;
@@ -31,7 +35,7 @@ public class JwtUtils {
         // key using SHA-256 of the secret. This preserves compatibility while
         // ensuring a secure key length without requiring changes to environment vars.
         if (keyBytes.length < 32) {
-            System.err.println("⚠️ JWT secret is shorter than recommended (" + keyBytes.length + " bytes). Deriving a 256-bit key via SHA-256.");
+            logger.warn("JWT secret is shorter than recommended ({} bytes). Deriving a 256-bit key via SHA-256.", keyBytes.length);
             try {
                 MessageDigest digest = MessageDigest.getInstance("SHA-256");
                 keyBytes = digest.digest(keyBytes);
@@ -95,13 +99,13 @@ public class JwtUtils {
                     .parseSignedClaims(token);
             return true;
         } catch (MalformedJwtException e) {
-            System.err.println("Invalid JWT token: " + e.getMessage());
+            logger.error("Invalid JWT token: {}", e.getMessage());
         } catch (ExpiredJwtException e) {
-            System.err.println("JWT token is expired: " + e.getMessage());
+            logger.debug("JWT token is expired: {}", e.getMessage());
         } catch (UnsupportedJwtException e) {
-            System.err.println("JWT token is unsupported: " + e.getMessage());
+            logger.error("JWT token is unsupported: {}", e.getMessage());
         } catch (IllegalArgumentException e) {
-            System.err.println("JWT claims string is empty: " + e.getMessage());
+            logger.error("JWT claims string is empty: {}", e.getMessage());
         }
         return false;
     }

@@ -1,0 +1,87 @@
+services:
+  - type: web
+    name: society-backend
+    env: docker
+    rootDir: backend
+    dockerfilePath: ./Dockerfile
+    plan: free
+    healthCheckPath: /actuator/health
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+      
+      # Database Configuration (Auto-populated from Render PostgreSQL)
+      - key: DB_URL
+        fromDatabase:
+          name: societyhub
+          property: connectionString
+      - key: DB_USERNAME
+        fromDatabase:
+          name: societyhub
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: societyhub
+          property: password
+      
+      # Frontend URL (Auto-populated from Render static site)
+      - key: APP_FRONTEND_URL
+        fromService:
+          name: society-admin-web
+          type: web
+          property: url
+      
+      # CORS Configuration (Auto-populated from frontend URL)
+      - key: APP_CORS_ALLOWED_ORIGINS
+        fromService:
+          name: society-admin-web
+          type: web
+          property: url
+      
+      # Security Configuration
+      - key: JWT_COOKIE_SECURE
+        value: "true"
+      
+      # **MANUAL SETUP REQUIRED** - Set these in Render Dashboard
+      # Go to: society-backend → Environment → Add Secret File or Environment Group
+      - key: JWT_SECRET
+        sync: false  # ⚠️ MUST SET MANUALLY - Generate strong 32+ char random string
+      
+      # Email Configuration (Gmail SMTP)
+      - key: MAIL_USERNAME
+        sync: false  # ⚠️ MUST SET MANUALLY - Your Gmail address
+      - key: MAIL_PASSWORD
+        sync: false  # ⚠️ MUST SET MANUALLY - Gmail App Password (not your Gmail password!)
+      
+      # Payment Gateway (Razorpay)
+      - key: RAZORPAY_KEY_ID
+        sync: false  # ⚠️ MUST SET MANUALLY - Production Razorpay Key ID (NOT test keys)
+      - key: RAZORPAY_KEY_SECRET
+        sync: false  # ⚠️ MUST SET MANUALLY - Production Razorpay Secret
+      
+      # Admin Configuration
+      - key: APP_ADMIN_EMAIL
+        value: admin@example.com  # ⚠️ Change to your production admin email
+
+  - type: web
+    name: society-admin-web
+    env: static
+    rootDir: admin-web
+    plan: free
+    buildCommand: npm ci ; npm run build
+    staticPublishPath: dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: VITE_API_URL
+        fromService:
+          name: society-backend
+          type: web
+          property: url
+
+databases:
+  - name: societyhub-db 
+    databaseName: societyhub
+    user: society_user

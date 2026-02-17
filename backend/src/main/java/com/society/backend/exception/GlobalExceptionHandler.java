@@ -175,7 +175,7 @@ public class GlobalExceptionHandler {
                         Exception ex,
                         HttpServletRequest request) {
                 // Log the actual error for debugging
-                ex.printStackTrace();
+                log.error("Unexpected error occurred", ex);
                 
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
                                 new ErrorResponse(

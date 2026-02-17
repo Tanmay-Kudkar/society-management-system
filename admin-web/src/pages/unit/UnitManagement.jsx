@@ -1521,10 +1521,27 @@ export default function UnitManagement() {
                         onChange={(e) => { if (e.target.files[0]) { setBulkImportFile(e.target.files[0]); setBulkImportError('') } }} />
                     </div>
                     <div className="units-user-import-template-row">
-                      <a href={`/api/users/bulk-import/template?societyId=${effectiveSocietyId}&userId=${user?.id}`}
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          try {
+                            const response = await userApi.downloadImportTemplate()
+                            const blob = response.data
+                            const url = window.URL.createObjectURL(blob)
+                            const link = document.createElement('a')
+                            link.href = url
+                            link.download = 'user-import-template.xlsx'
+                            document.body.appendChild(link)
+                            link.click()
+                            document.body.removeChild(link)
+                            window.URL.revokeObjectURL(url)
+                          } catch (error) {
+                            console.error('Failed to download template:', error)
+                          }
+                        }}
                         className="units-user-import-template-link">
                         <Download size={16} />Download Template
-                      </a>
+                      </button>
                     </div>
                   </>
                 ) : (

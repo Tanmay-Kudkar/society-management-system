@@ -6,6 +6,8 @@ import com.society.backend.repository.user.UserRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Initializes the PLATFORM_OWNER user on application startup.
@@ -34,6 +36,8 @@ import org.springframework.stereotype.Component;
 @Component
 public class DataInitializer implements CommandLineRunner {
 
+    private static final Logger logger = LoggerFactory.getLogger(DataInitializer.class);
+
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
@@ -56,14 +60,14 @@ public class DataInitializer implements CommandLineRunner {
             platformOwner.setIsActive(true);
             platformOwner.setAccountType("platform");
             userRepository.save(platformOwner);
-            System.out.println("═══════════════════════════════════════════════════════════════");
-            System.out.println("✅ PLATFORM OWNER CREATED");
-            System.out.println("   Email:    admin@example.com");
-            System.out.println("   Password: admin123");
-            System.out.println("   ⚠️  Please change this password after first login!");
-            System.out.println("═══════════════════════════════════════════════════════════════");
+            logger.info("═══════════════════════════════════════════════════════════════");
+            logger.info("✅ PLATFORM OWNER CREATED");
+            logger.info("   Email:    admin@example.com");
+            logger.info("   Password: admin123");
+            logger.warn("   ⚠️  Please change this password after first login!");
+            logger.info("═══════════════════════════════════════════════════════════════");
         } else {
-            System.out.println("✓ Platform Owner already exists");
+            logger.info("✓ Platform Owner already exists");
         }
     }
 }
