@@ -55,8 +55,9 @@ public class WingController {
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAnyRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'MANAGER')")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
-        wingService.delete(id);
+    public ResponseEntity<Void> delete(@PathVariable Long id,
+            @RequestParam(defaultValue = "false") boolean force) {
+        wingService.delete(id, force);
         return ResponseEntity.ok().build();
     }
 

@@ -16,5 +16,5 @@ public interface FlatService {
 
     FlatResponse update(Long id, FlatRequest request);
 
-    void delete(Long id);
+    void delete(Long id, boolean force);
 }

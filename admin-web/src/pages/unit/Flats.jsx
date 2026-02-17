@@ -104,8 +104,11 @@ export default function Flats() {
   })
 
   const deleteMutation = useMutation({
-    mutationFn: (id) => flatApi.delete(id, user.id),
+    mutationFn: ({ id, force = false }) => flatApi.delete(id, user.id, force),
     onSuccess: () => queryClient.invalidateQueries(['flats']),
+    onError: (error) => {
+      toast.error(error.response?.data?.message || 'Failed to delete unit')
+    },
   })
 
   const filteredFlats = useMemo(() => flats.filter(f => {
@@ -374,8 +377,23 @@ export default function Flats() {
                             ],
                             caution: 'This action permanently removes this unit.',
                           })
-                          if (confirmed) {
-                            deleteMutation.mutate(flat.id)
+                          if (!confirmed) return
+
+                          try {
+                            await deleteMutation.mutateAsync({ id: flat.id, force: false })
+                          } catch (error) {
+                            const msg = error?.response?.data?.message || ''
+                            if (error?.response?.status === 409 && msg.toLowerCase().includes('force delete')) {
+                              const forceConfirmed = await confirmDialog({
+                                title: 'Force Delete Unit',
+                                message: `${msg}\n\nForce delete will remove all linked records. Continue?`,
+                                confirmText: 'Force Delete',
+                                tone: 'danger',
+                              })
+                              if (forceConfirmed) {
+                                deleteMutation.mutate({ id: flat.id, force: true })
+                              }
+                            }
                           }
                         }}
                           className="flats-action-button flats-action-delete"

@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '../../context'
 import { useConfirmDialog } from '../../context'
+import { useToast } from '../../context'
 import { documentTemplateApi } from '../../../../api'
 import { Plus, Search, X, FileText, Edit, Trash2 } from 'lucide-react'
 import clsx from 'clsx'
@@ -21,6 +22,7 @@ const templateTypeClasses = {
 export default function Documents() {
   const { user, canManageDocuments } = useAuth()
   const confirmDialog = useConfirmDialog()
+  const toast = useToast()
   const queryClient = useQueryClient()
   const [showModal, setShowModal] = useState(false)
   const [editingDocument, setEditingDocument] = useState(null)
@@ -51,6 +53,9 @@ export default function Documents() {
   const deleteMutation = useMutation({
     mutationFn: (id) => documentTemplateApi.delete(id, user.id),
     onSuccess: () => queryClient.invalidateQueries(['documentTemplates']),
+    onError: (error) => {
+      toast.error(error.response?.data?.message || 'Failed to delete document template')
+    },
   })
 
   const filteredDocuments = useMemo(() => {

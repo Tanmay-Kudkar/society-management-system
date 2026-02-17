@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '../../context'
 import { useConfirmDialog } from '../../context'
+import { useToast } from '../../context'
 import { vehicleApi, flatApi } from '../../../../api'
 import { Plus, Edit, Trash2, Search, X, Car, Bike, Upload } from 'lucide-react'
 import { FormInput, SmartSelect, BulkImportModal, AsyncButton } from '../../components'
@@ -12,6 +13,7 @@ import useMinLoadingTime from '../../hooks/useMinLoadingTime'
 export default function Vehicles() {
   const { user, canManageVehicles } = useAuth()
   const confirmDialog = useConfirmDialog()
+  const toast = useToast()
   const queryClient = useQueryClient()
   const [searchParams] = useSearchParams()
   const [showModal, setShowModal] = useState(false)
@@ -67,6 +69,9 @@ export default function Vehicles() {
   const deleteMutation = useMutation({
     mutationFn: (id) => vehicleApi.delete(id, user.id),
     onSuccess: () => queryClient.invalidateQueries(['vehicles']),
+    onError: (error) => {
+      toast.error(error.response?.data?.message || 'Failed to delete vehicle')
+    },
   })
 
   const filteredVehicles = useMemo(() => {

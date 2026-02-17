@@ -90,15 +90,25 @@ public class GlobalExceptionHandler {
                         } 
                         // Check for foreign key violations (less specific, check after unique)
                         else if (lowerCause.contains("foreign key") || lowerCause.contains("fk_") || 
-                                 lowerCause.contains("references")) {
-                                if (lowerCause.contains("society_id") || lowerCause.contains("fk_user_society")) {
+                                 lowerCause.contains("references") || lowerCause.contains("is still referenced") ||
+                                 lowerCause.contains("violates foreign key constraint")) {
+                                if (lowerCause.contains("is still referenced")) {
+                                        // Deletion blocked by FK constraint
+                                        message = "Cannot delete this record because it is referenced by other records. Use force delete to auto-clean linked records.";
+                                } else if (lowerCause.contains("society_id") || lowerCause.contains("fk_user_society")) {
                                         message = "Invalid society reference. Please select a valid society.";
                                 } else if (lowerCause.contains("flat_id") || lowerCause.contains("fk_user_flat")) {
                                         message = "Invalid flat reference. Please select a valid flat.";
                                 } else if (lowerCause.contains("user_id")) {
                                         message = "Invalid user reference.";
+                                } else if (lowerCause.contains("vendor_id")) {
+                                        message = "Cannot delete vendor because it has linked bills or contracts. Use force delete to auto-clean.";
+                                } else if (lowerCause.contains("wing_id")) {
+                                        message = "Cannot delete wing because it has linked units. Use force delete to auto-clean.";
+                                } else if (lowerCause.contains("organization_id")) {
+                                        message = "Cannot delete organization because it has linked records. Use force delete to auto-clean.";
                                 } else {
-                                        message = "Invalid reference. Please check your selections.";
+                                        message = "Cannot complete this action due to linked records. Use force delete if available.";
                                 }
                         }
                         // Handle not-null constraint violations

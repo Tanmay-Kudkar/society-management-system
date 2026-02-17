@@ -9,6 +9,7 @@ import com.society.backend.exception.ApiException;
 import com.society.backend.repository.WingRepository;
 import com.society.backend.repository.flat.FlatRepository;
 import com.society.backend.repository.society.SocietyRepository;
+import com.society.backend.service.common.ReferenceCleanupService;
 import com.society.backend.service.common.RoleService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -16,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -26,6 +28,7 @@ public class WingServiceImpl implements WingService {
     private final SocietyRepository societyRepository;
     private final FlatRepository flatRepository;
     private final RoleService roleService;
+    private final ReferenceCleanupService referenceCleanupService;
 
     @Override
     public List<WingResponse> getAll() {
@@ -137,12 +140,25 @@ public class WingServiceImpl implements WingService {
 
     @Override
     @Transactional
-    public void delete(Long id) {
+    public void delete(Long id, boolean force) {
         var wing = wingRepository.findById(id)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Wing not found"));
         if (wing.getSociety() != null) {
             roleService.enforceSocietyScope(roleService.getCurrentUser(), wing.getSociety().getId());
         }
+
+        // Check for linked flats
+        long linkedFlats = flatRepository.countByWingId(id);
+        if (!force && linkedFlats > 0) {
+            throw new ApiException(HttpStatus.CONFLICT,
+                    String.format("Cannot delete wing '%s'. It has %d linked unit(s). Use force delete to auto-clean.",
+                            wing.getName(), linkedFlats));
+        }
+
+        if (force) {
+            referenceCleanupService.clearReferences("wing_id", id, false, Set.of("wings"));
+        }
+
         wingRepository.deleteById(id);
     }
 

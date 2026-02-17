@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '../../context'
 import { useConfirmDialog } from '../../context'
+import { useToast } from '../../context'
 import { vendorBillApi, vendorApi } from '../../../../api'
 import { Plus, Edit, Trash2, Search, X, Receipt, CheckCircle, Clock, AlertCircle } from 'lucide-react'
 import clsx from 'clsx'
@@ -24,6 +25,7 @@ const statusIcons = {
 export default function VendorBills() {
   const { user, canManageVendorBills } = useAuth()
   const confirmDialog = useConfirmDialog()
+  const toast = useToast()
   const queryClient = useQueryClient()
   const [showModal, setShowModal] = useState(false)
   const [showPaymentModal, setShowPaymentModal] = useState(false)
@@ -62,6 +64,9 @@ export default function VendorBills() {
   const deleteMutation = useMutation({
     mutationFn: (id) => vendorBillApi.delete(id, user.id),
     onSuccess: () => queryClient.invalidateQueries(['vendorBills']),
+    onError: (error) => {
+      toast.error(error.response?.data?.message || 'Failed to delete vendor bill')
+    },
   })
 
   const filteredBills = useMemo(() => bills.filter(b => {

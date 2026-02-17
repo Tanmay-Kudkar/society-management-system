@@ -109,7 +109,7 @@ export default function Wings() {
 
   // Delete mutation
   const deleteMutation = useMutation({
-    mutationFn: (id) => wingApi.delete(id),
+    mutationFn: ({ id, force = false }) => wingApi.delete(id, force),
     onSuccess: () => {
       queryClient.invalidateQueries(['wings'])
       queryClient.invalidateQueries(['society', effectiveSocietyIdNum])
@@ -408,8 +408,23 @@ export default function Wings() {
                         ],
                         caution: 'This action permanently removes the wing.',
                       })
-                      if (confirmed) {
-                        deleteMutation.mutate(wing.id)
+                      if (!confirmed) return
+
+                      try {
+                        await deleteMutation.mutateAsync({ id: wing.id, force: false })
+                      } catch (error) {
+                        const msg = error?.response?.data?.message || ''
+                        if (error?.response?.status === 409 && msg.toLowerCase().includes('force delete')) {
+                          const forceConfirmed = await confirmDialog({
+                            title: 'Force Delete Wing',
+                            message: `${msg}\n\nForce delete will remove all linked units. Continue?`,
+                            confirmText: 'Force Delete',
+                            tone: 'danger',
+                          })
+                          if (forceConfirmed) {
+                            deleteMutation.mutate({ id: wing.id, force: true })
+                          }
+                        }
                       }
                     }}
                     className="wings-card__btn wings-card__btn--delete"

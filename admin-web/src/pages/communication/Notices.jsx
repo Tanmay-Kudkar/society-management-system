@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '../../context'
 import { useConfirmDialog } from '../../context'
+import { useToast } from '../../context'
 import { noticeApi } from '../../../../api'
 import { Plus, Search, X, Megaphone, Edit, Trash2 } from 'lucide-react'
 import clsx from 'clsx'
@@ -20,6 +21,7 @@ const priorityClasses = {
 export default function Notices() {
   const { user, canManageNotices } = useAuth()
   const confirmDialog = useConfirmDialog()
+  const toast = useToast()
   const queryClient = useQueryClient()
   const [searchParams] = useSearchParams()
   const [showModal, setShowModal] = useState(false)
@@ -63,6 +65,9 @@ export default function Notices() {
   const deleteMutation = useMutation({
     mutationFn: (id) => noticeApi.delete(id, user.id),
     onSuccess: () => queryClient.invalidateQueries(['notices']),
+    onError: (error) => {
+      toast.error(error.response?.data?.message || 'Failed to delete notice')
+    },
   })
 
   const filteredNotices = useMemo(() => notices.filter(n => {

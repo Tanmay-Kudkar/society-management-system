@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '../../context'
 import { useConfirmDialog } from '../../context'
+import { useToast } from '../../context'
 import { contractApi, vendorApi } from '../../../../api'
 import { Plus, Edit, Trash2, Search, X, FileText, AlertTriangle, CheckCircle } from 'lucide-react'
 import { FormInput, SmartSelect, NumberInput, FormTextarea, AsyncButton } from '../../components'
@@ -16,6 +17,7 @@ const contractTypes = [
 export default function Contracts() {
   const { user, canManageContracts } = useAuth()
   const confirmDialog = useConfirmDialog()
+  const toast = useToast()
   const queryClient = useQueryClient()
   const [showModal, setShowModal] = useState(false)
   const [editingContract, setEditingContract] = useState(null)
@@ -57,6 +59,9 @@ export default function Contracts() {
   const deleteMutation = useMutation({
     mutationFn: (id) => contractApi.delete(id, user.id),
     onSuccess: () => queryClient.invalidateQueries(['contracts']),
+    onError: (error) => {
+      toast.error(error.response?.data?.message || 'Failed to delete contract')
+    },
   })
 
   const filteredContracts = useMemo(() => contracts.filter(c => {

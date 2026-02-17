@@ -9,8 +9,10 @@ import com.society.backend.entity.User;
 import com.society.backend.entity.Vendor;
 import com.society.backend.exception.ApiException;
 import com.society.backend.repository.society.SocietyRepository;
+import com.society.backend.repository.vendor.VendorBillRepository;
 import com.society.backend.repository.vendor.VendorRepository;
 import com.society.backend.service.SecurityLogService;
+import com.society.backend.service.common.ReferenceCleanupService;
 import com.society.backend.service.common.RoleService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,9 +30,11 @@ import java.util.stream.Collectors;
 public class VendorServiceImpl implements VendorService {
 
     private final VendorRepository vendorRepository;
+    private final VendorBillRepository vendorBillRepository;
     private final SocietyRepository societyRepository;
     private final RoleService roleService;
     private final SecurityLogService securityLogService;
+    private final ReferenceCleanupService referenceCleanupService;
 
     /**
      * Roles that trigger automatic vendor approval.
@@ -221,12 +225,24 @@ public class VendorServiceImpl implements VendorService {
 
     @Override
     @Transactional
-    public void delete(Long id, Long userId) {
+    public void delete(Long id, Long userId, boolean force) {
         roleService.requireAdminOrCommittee(userId);
 
-        if (!vendorRepository.existsById(id)) {
-            throw new ApiException(HttpStatus.NOT_FOUND, "Vendor not found");
+        Vendor vendor = vendorRepository.findById(id)
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Vendor not found"));
+
+        // Check for linked records
+        int billCount = vendorBillRepository.findByVendorId(id).size();
+        if (!force && billCount > 0) {
+            throw new ApiException(HttpStatus.CONFLICT,
+                    String.format("Cannot delete vendor '%s'. It has %d linked bill(s). Use force delete to auto-clean.",
+                            vendor.getName(), billCount));
         }
+
+        if (force) {
+            referenceCleanupService.clearReferences("vendor_id", id, true, Set.of("vendors"));
+        }
+
         vendorRepository.deleteById(id);
     }
 

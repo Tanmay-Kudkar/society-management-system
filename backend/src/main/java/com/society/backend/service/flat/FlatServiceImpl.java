@@ -12,13 +12,17 @@ import com.society.backend.repository.WingRepository;
 import com.society.backend.repository.flat.FlatRepository;
 import com.society.backend.repository.society.SocietyRepository;
 import com.society.backend.repository.user.UserRepository;
+import com.society.backend.service.common.ReferenceCleanupService;
 import com.society.backend.service.common.RoleService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -31,6 +35,7 @@ public class FlatServiceImpl implements FlatService {
     private final UserRepository userRepository;
     private final WingRepository wingRepository;
     private final RoleService roleService;
+    private final ReferenceCleanupService referenceCleanupService;
 
     @Override
     public FlatResponse create(FlatRequest request) {
@@ -105,10 +110,31 @@ public class FlatServiceImpl implements FlatService {
     }
 
     @Override
-    public void delete(Long id) {
-        if (!flatRepository.existsById(id)) {
-            throw new ApiException(HttpStatus.NOT_FOUND, "Flat not found");
+    @Transactional
+    public void delete(Long id, boolean force) {
+        Flat flat = flatRepository.findById(id)
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Flat not found"));
+
+        if (flat.getSociety() != null) {
+            roleService.enforceSocietyScope(roleService.getCurrentUser(), flat.getSociety().getId());
         }
+
+        // Check for linked records
+        List<String> associations = new ArrayList<>();
+        long linkedUsers = userRepository.countByFlatId(id);
+        if (linkedUsers > 0) associations.add(linkedUsers + " user(s)");
+
+        if (!force && !associations.isEmpty()) {
+            throw new ApiException(HttpStatus.CONFLICT,
+                    String.format("Cannot delete unit '%s'. Linked records: %s. Use force delete to auto-clean.",
+                            flat.getFlatNumber(), String.join(", ", associations)));
+        }
+
+        if (force) {
+            // Clear all FK references to this flat
+            referenceCleanupService.clearReferences("flat_id", id, true, Set.of("flats"));
+        }
+
         flatRepository.deleteById(id);
     }
 

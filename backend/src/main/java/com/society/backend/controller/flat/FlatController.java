@@ -71,9 +71,10 @@ public class FlatController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(
             @PathVariable Long id,
-            @RequestParam Long userId) {
+            @RequestParam Long userId,
+            @RequestParam(defaultValue = "false") boolean force) {
         roleService.canManageFlats(userId);
-        flatService.delete(id);
+        flatService.delete(id, force);
         return ResponseEntity.noContent().build();
     }
 

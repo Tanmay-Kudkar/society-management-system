@@ -326,7 +326,7 @@ export default function SocietyAdmins() {
   )
 
   const societiesNeedingAssignment = useMemo(
-    () => societies.filter((society) => !assignedSocietyIds.has(society.id) || !hasOrganization(society)),
+    () => societies.filter((society) => !assignedSocietyIds.has(society.id)),
     [societies, assignedSocietyIds]
   )
 
@@ -648,14 +648,14 @@ export default function SocietyAdmins() {
   })
 
   const deleteSocietyMutation = useMutation({
-    mutationFn: (id) => societyApi.delete(id, user.id),
-    onMutate: (id) => {
+    mutationFn: ({ id, force = false }) => societyApi.delete(id, user.id, force),
+    onMutate: ({ id }) => {
       setDeletingSocietyId(id)
     },
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries(['societies'])
       queryClient.invalidateQueries(['users'])
-      toast.success('Society deleted successfully')
+      toast.success(variables?.force ? 'Society force-deleted successfully' : 'Society deleted successfully')
     },
     onError: (error) => toast.error(parseApiError(error)),
     onSettled: () => {
@@ -665,10 +665,10 @@ export default function SocietyAdmins() {
 
   // Delete admin user
   const deleteMutation = useMutation({
-    mutationFn: (id) => userApi.delete(id),
-    onSuccess: () => {
+    mutationFn: ({ id, force = false }) => userApi.delete(id, force),
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries(['users'])
-      toast.success('Society Admin deleted successfully')
+  toast.success(variables?.force ? 'Society Admin force-deleted successfully' : 'Society Admin deleted successfully')
     },
     onError: (error) => toast.error(parseApiError(error)),
   })
@@ -711,8 +711,43 @@ export default function SocietyAdmins() {
       ],
       caution: 'This action permanently removes admin access.',
     })
-    if (confirmed) {
-      deleteMutation.mutate(admin.id)
+
+    if (!confirmed) return
+
+    try {
+      await deleteMutation.mutateAsync({ id: admin.id, force: false })
+    } catch (error) {
+      const serverMessage = error?.response?.data?.message || parseApiError(error)
+      const shouldOfferForceDelete =
+        error?.response?.status === 409 &&
+        String(serverMessage).toLowerCase().includes('use force delete')
+
+      if (!shouldOfferForceDelete) {
+        toast.error(serverMessage)
+        return
+      }
+
+      const finalWarning = await confirmDialog({
+        title: 'Final Warning: Force Delete Admin',
+        message: `This will permanently delete admin "${admin.name}" and remove all related records. Continue?`,
+        confirmText: 'Force Delete',
+        cancelText: 'Cancel',
+        tone: 'danger',
+        details: [
+          { label: 'Name', value: admin.name || '-' },
+          { label: 'Email', value: admin.email || '-' },
+          { label: 'Society', value: admin.societyName || '-' },
+        ],
+        caution: 'This action is irreversible and will remove admin access, password reset tokens, and related records.',
+      })
+
+      if (!finalWarning) return
+
+      try {
+        await deleteMutation.mutateAsync({ id: admin.id, force: true })
+      } catch (forceError) {
+        toast.error(parseApiError(forceError))
+      }
     }
   }
 
@@ -740,8 +775,41 @@ export default function SocietyAdmins() {
       caution: 'Deleting a society may affect linked users and records.',
     })
 
-    if (confirmed) {
-      deleteSocietyMutation.mutate(society.id)
+    if (!confirmed) return
+
+    try {
+      await deleteSocietyMutation.mutateAsync({ id: society.id, force: false })
+    } catch (error) {
+      const serverMessage = error?.response?.data?.message || parseApiError(error)
+      const shouldOfferForceDelete =
+        error?.response?.status === 409 &&
+        String(serverMessage).toLowerCase().includes('use force delete')
+
+      if (!shouldOfferForceDelete) {
+        return
+      }
+
+      const finalWarning = await confirmDialog({
+        title: 'Final Warning: Force Delete Society',
+        message: `This will permanently delete "${society.name}" and unlink all related records from this society reference. Continue?`,
+        confirmText: 'Force Delete',
+        cancelText: 'Cancel',
+        tone: 'danger',
+        details: [
+          { label: 'Society', value: society.name || '-' },
+          { label: 'City', value: society.city || '-' },
+          { label: 'Organization', value: hasOrganization(society) ? (society.organizationName || society.organization?.name || society.organization || 'Linked') : 'Unassigned' },
+        ],
+        caution: 'This action is irreversible and may impact units, users, bills, and society-scoped records.',
+      })
+
+      if (!finalWarning) return
+
+      try {
+        await deleteSocietyMutation.mutateAsync({ id: society.id, force: true })
+      } catch (forceError) {
+        toast.error(parseApiError(forceError))
+      }
     }
   }
 

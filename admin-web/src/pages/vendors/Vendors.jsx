@@ -67,8 +67,11 @@ export default function Vendors() {
   })
 
   const deleteMutation = useMutation({
-    mutationFn: (id) => vendorApi.delete(id, user.id),
+    mutationFn: ({ id, force = false }) => vendorApi.delete(id, user.id, force),
     onSuccess: () => queryClient.invalidateQueries(['vendors']),
+    onError: (error) => {
+      toast.error(error.response?.data?.message || 'Failed to delete vendor')
+    },
   })
 
   const approveMutation = useMutation({
@@ -272,7 +275,21 @@ export default function Vendors() {
                         caution: 'This action permanently removes vendor records.',
                       })
                       if (confirmed) {
-                        deleteMutation.mutate(vendor.id)
+                        deleteMutation.mutate({ id: vendor.id, force: false }, {
+                          onError: async (error) => {
+                            const msg = error.response?.data?.message || ''
+                            if (error.response?.status === 409 && msg.toLowerCase().includes('force')) {
+                              const forceConfirmed = await confirm({
+                                title: 'Force Delete Vendor?',
+                                message: msg + '\n\nThis will also remove all related bills and contracts. Continue?',
+                                tone: 'danger',
+                              })
+                              if (forceConfirmed) {
+                                deleteMutation.mutate({ id: vendor.id, force: true })
+                              }
+                            }
+                          }
+                        })
                       }
                     }}
                     className="vendors-card-action vendors-card-action--delete"

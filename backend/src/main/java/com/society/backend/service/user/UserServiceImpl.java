@@ -19,6 +19,7 @@ import com.society.backend.entity.Flat;
 import com.society.backend.entity.Role;
 import com.society.backend.entity.User;
 import com.society.backend.exception.ApiException;
+import com.society.backend.repository.PasswordResetTokenRepository;
 import com.society.backend.repository.complaint.ComplaintRepository;
 import com.society.backend.repository.flat.FlatRepository;
 import com.society.backend.repository.organization.OrganizationRepository;
@@ -41,12 +42,14 @@ public class UserServiceImpl implements UserService {
     private final FlatRepository flatRepository;
     private final OrganizationRepository organizationRepository;
     private final ReferenceCleanupService referenceCleanupService;
+    private final PasswordResetTokenRepository passwordResetTokenRepository;
 
     public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder,
             ComplaintRepository complaintRepository, TicketRepository ticketRepository,
             SocietyRepository societyRepository, FlatRepository flatRepository,
             OrganizationRepository organizationRepository,
-            ReferenceCleanupService referenceCleanupService) {
+            ReferenceCleanupService referenceCleanupService,
+            PasswordResetTokenRepository passwordResetTokenRepository) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.complaintRepository = complaintRepository;
@@ -55,6 +58,7 @@ public class UserServiceImpl implements UserService {
         this.flatRepository = flatRepository;
         this.organizationRepository = organizationRepository;
         this.referenceCleanupService = referenceCleanupService;
+        this.passwordResetTokenRepository = passwordResetTokenRepository;
     }
 
     @Override
@@ -584,14 +588,29 @@ public class UserServiceImpl implements UserService {
             String message = "Cannot delete user '" + user.getName() + "'. User is associated with: "
                     + String.join(", ", associations)
                     + ". Please reassign or delete these records first. Use force delete to auto-clean linked records.";
-            throw new ApiException(HttpStatus.BAD_REQUEST, message);
+            throw new ApiException(HttpStatus.CONFLICT, message);
         }
+
+        // Always clean up password reset tokens (non-nullable FK, must be removed)
+        passwordResetTokenRepository.deleteByUser(user);
+
+        // Clean up notification preferences (non-nullable FK user_id UNIQUE)
+        referenceCleanupService.clearReferences("user_id", id, true, Set.of("users"));
 
         if (force) {
             referenceCleanupService.clearReferences("owner_user_id", id, false, Set.of("users"));
             referenceCleanupService.clearReferences("assigned_to_id", id, false, Set.of("users"));
             referenceCleanupService.clearReferences("raised_by_id", id, true, Set.of("users"));
-            referenceCleanupService.clearReferences("user_id", id, true, Set.of("users"));
+        }
+
+        // Clear flat ownership if this user owned a flat
+        if (user.getFlat() != null) {
+            Flat flat = user.getFlat();
+            if (flat.getOwner() != null && flat.getOwner().getId().equals(id)) {
+                flat.setOwner(null);
+                flat.setIsOccupied(false);
+                flatRepository.save(flat);
+            }
         }
 
         userRepository.delete(user);

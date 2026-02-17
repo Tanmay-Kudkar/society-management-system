@@ -280,7 +280,7 @@ export default function UnitManagement() {
   })
 
   const deleteUnitMutation = useMutation({
-    mutationFn: (id) => flatApi.delete(id, user.id),
+    mutationFn: ({ id, force = false }) => flatApi.delete(id, user.id, force),
     onSuccess: () => queryClient.invalidateQueries(['flats']),
     onError: (err) => {
       setApiError(parseApiError(err))
@@ -1018,8 +1018,23 @@ export default function UnitManagement() {
                           ],
                           caution: 'This action permanently removes this unit.',
                         })
-                        if (confirmed) {
-                          deleteUnitMutation.mutate(unit.id)
+                        if (!confirmed) return
+
+                        try {
+                          await deleteUnitMutation.mutateAsync({ id: unit.id, force: false })
+                        } catch (error) {
+                          const msg = error?.response?.data?.message || ''
+                          if (error?.response?.status === 409 && msg.toLowerCase().includes('force delete')) {
+                            const forceConfirmed = await confirmDialog({
+                              title: 'Force Delete Unit',
+                              message: `${msg}\n\nForce delete will remove all linked users and records. Continue?`,
+                              confirmText: 'Force Delete',
+                              tone: 'danger',
+                            })
+                            if (forceConfirmed) {
+                              deleteUnitMutation.mutate({ id: unit.id, force: true })
+                            }
+                          }
                         }
                       }}
                       className="units-card-delete"
@@ -1142,8 +1157,23 @@ export default function UnitManagement() {
                                 ],
                                 caution: 'This action permanently removes this unit.',
                               })
-                              if (confirmed) {
-                                deleteUnitMutation.mutate(unit.id)
+                              if (!confirmed) return
+
+                              try {
+                                await deleteUnitMutation.mutateAsync({ id: unit.id, force: false })
+                              } catch (error) {
+                                const msg = error?.response?.data?.message || ''
+                                if (error?.response?.status === 409 && msg.toLowerCase().includes('force delete')) {
+                                  const forceConfirmed = await confirmDialog({
+                                    title: 'Force Delete Unit',
+                                    message: `${msg}\n\nForce delete will remove all linked users and records. Continue?`,
+                                    confirmText: 'Force Delete',
+                                    tone: 'danger',
+                                  })
+                                  if (forceConfirmed) {
+                                    deleteUnitMutation.mutate({ id: unit.id, force: true })
+                                  }
+                                }
                               }
                             }}
                             className="units-table-action units-table-action--delete"

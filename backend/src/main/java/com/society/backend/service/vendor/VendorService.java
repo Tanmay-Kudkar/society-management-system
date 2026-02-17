@@ -22,7 +22,7 @@ public interface VendorService {
 
     VendorResponse deactivate(Long id, Long userId);
 
-    void delete(Long id, Long userId);
+    void delete(Long id, Long userId, boolean force);
 
     VendorResponse approveVendor(Long id, Long userId);
 

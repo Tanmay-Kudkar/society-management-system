@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '../../context'
 import { useConfirmDialog } from '../../context'
+import { useToast } from '../../context'
 import { bannerApi } from '../../../../api'
 import { Plus, Search, X, Image, Edit, Trash2, Eye, EyeOff } from 'lucide-react'
 import clsx from 'clsx'
@@ -12,6 +13,7 @@ import useMinLoadingTime from '../../hooks/useMinLoadingTime'
 export default function Banners() {
   const { user, canManageBanners } = useAuth()
   const confirmDialog = useConfirmDialog()
+  const toast = useToast()
   const queryClient = useQueryClient()
   const [showModal, setShowModal] = useState(false)
   const [editingBanner, setEditingBanner] = useState(null)
@@ -47,6 +49,9 @@ export default function Banners() {
   const deleteMutation = useMutation({
     mutationFn: (id) => bannerApi.delete(id, user.id),
     onSuccess: () => queryClient.invalidateQueries(['banners']),
+    onError: (error) => {
+      toast.error(error.response?.data?.message || 'Failed to delete banner')
+    },
   })
 
   const toggleMutation = useMutation({

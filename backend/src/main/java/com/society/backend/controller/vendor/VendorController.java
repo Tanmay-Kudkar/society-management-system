@@ -79,8 +79,9 @@ public class VendorController {
     @PreAuthorize("hasAnyRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY')")
     public ResponseEntity<Void> delete(
             @PathVariable Long id,
-            @RequestParam Long userId) {
-        vendorService.delete(id, userId);
+            @RequestParam Long userId,
+            @RequestParam(defaultValue = "false") boolean force) {
+        vendorService.delete(id, userId, force);
         return ResponseEntity.noContent().build();
     }
 

@@ -237,12 +237,13 @@ export default function Users() {
 
   const deleteMutation = useMutation({
     mutationFn: ({ id, force = false }) => userApi.delete(id, force),
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries(['users'])
       setDeleteError('')
+      toast.success(variables?.force ? 'User force-deleted successfully' : 'User deleted successfully')
     },
     onError: (err) => {
-      setDeleteError(err.response?.data?.message || 'Failed to delete user')
+      setDeleteError(parseApiError(err))
     },
   })
 
@@ -276,7 +277,7 @@ export default function Users() {
     } catch (error) {
       const serverMessage = error?.response?.data?.message || parseApiError(error)
       const shouldOfferForceDelete =
-        error?.response?.status === 400 &&
+        error?.response?.status === 409 &&
         String(serverMessage).toLowerCase().includes('use force delete')
 
       if (!shouldOfferForceDelete) {
