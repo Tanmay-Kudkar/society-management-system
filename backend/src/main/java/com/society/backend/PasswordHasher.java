@@ -9,7 +9,7 @@ public class PasswordHasher {
         System.out.println("Hash for admin123: " + hash);
 
         // Update the password for the user
-        updatePassword("admin@society.com", hash);
+        updatePassword("admin@example.com", "admin123");
     }
 
     public static void updatePassword(String email, String newPassword) {

@@ -46,10 +46,10 @@ public class DataInitializer implements CommandLineRunner {
     public void run(String... args) {
         // Create Platform Owner if not exists
         // This is the ONLY hardcoded user - all others are created through dashboard
-        if (userRepository.findByEmail("admin@society.com").isEmpty()) {
+        if (userRepository.findByEmail("admin@example.com").isEmpty()) {
             User platformOwner = new User();
             platformOwner.setName("Platform Owner");
-            platformOwner.setEmail("admin@society.com");
+            platformOwner.setEmail("admin@example.com");
             platformOwner.setPassword(passwordEncoder.encode("admin123"));
             platformOwner.setRole(Role.PLATFORM_OWNER);
             platformOwner.setPhone("9999999999");
@@ -58,7 +58,7 @@ public class DataInitializer implements CommandLineRunner {
             userRepository.save(platformOwner);
             System.out.println("═══════════════════════════════════════════════════════════════");
             System.out.println("✅ PLATFORM OWNER CREATED");
-            System.out.println("   Email:    admin@society.com");
+            System.out.println("   Email:    admin@example.com");
             System.out.println("   Password: admin123");
             System.out.println("   ⚠️  Please change this password after first login!");
             System.out.println("═══════════════════════════════════════════════════════════════");

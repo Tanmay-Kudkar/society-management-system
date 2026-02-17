@@ -7,6 +7,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Date;
 
 @Component
@@ -23,6 +25,22 @@ public class JwtUtils {
 
     private SecretKey getSigningKey() {
         byte[] keyBytes = Decoders.BASE64.decode(jwtSecret);
+
+        // Enforce minimum key length of 32 bytes (256 bits) for HMAC-SHA algorithms.
+        // If the provided secret decodes to fewer than 32 bytes, derive a 32-byte
+        // key using SHA-256 of the secret. This preserves compatibility while
+        // ensuring a secure key length without requiring changes to environment vars.
+        if (keyBytes.length < 32) {
+            System.err.println("⚠️ JWT secret is shorter than recommended (" + keyBytes.length + " bytes). Deriving a 256-bit key via SHA-256.");
+            try {
+                MessageDigest digest = MessageDigest.getInstance("SHA-256");
+                keyBytes = digest.digest(keyBytes);
+            } catch (NoSuchAlgorithmException e) {
+                // SHA-256 should always be available; rethrow as runtime if not.
+                throw new IllegalStateException("SHA-256 algorithm not available for JWT key derivation", e);
+            }
+        }
+
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
