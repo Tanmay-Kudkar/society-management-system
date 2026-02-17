@@ -54,7 +54,9 @@ public class AuthController {
         jwtCookie.setSecure(cookieSecure);
         jwtCookie.setPath("/");
         jwtCookie.setMaxAge(maxAge);
-        jwtCookie.setAttribute("SameSite", "Lax");
+        // Cross-origin deployments (e.g. Render) require SameSite=None + Secure
+        // Localhost dev uses SameSite=Lax (cookieSecure is false locally)
+        jwtCookie.setAttribute("SameSite", cookieSecure ? "None" : "Lax");
         response.addCookie(jwtCookie);
 
         return ResponseEntity.ok(loginResponse);
@@ -68,6 +70,7 @@ public class AuthController {
         jwtCookie.setSecure(cookieSecure);
         jwtCookie.setPath("/");
         jwtCookie.setMaxAge(0); // Immediately expire
+        jwtCookie.setAttribute("SameSite", cookieSecure ? "None" : "Lax");
         response.addCookie(jwtCookie);
 
         return ResponseEntity.ok().build();
