@@ -86,10 +86,19 @@ public final class RolePermissions {
                 // CREATE PERMISSIONS - Per Permission Matrix
                 // ═══════════════════════════════════════════════════════════════
 
-                // PLATFORM_OWNER - Creates ORGANIZATION_OWNER and SOCIETY_ADMIN
+                // PLATFORM_OWNER - Full CRUD on all roles below
                 ALLOWED_CREATIONS.put(Role.PLATFORM_OWNER, EnumSet.of(
                                 Role.ORGANIZATION_OWNER,
-                                Role.SOCIETY_ADMIN));
+                                Role.SOCIETY_ADMIN,
+                                Role.CHAIRMAN,
+                                Role.SECRETARY,
+                                Role.TREASURER,
+                                Role.COMMITTEE,
+                                Role.MANAGER,
+                                Role.EMPLOYEE,
+                                Role.MEMBER,
+                                Role.TENANT,
+                                Role.VISITOR));
 
                 // ORGANIZATION_OWNER - Creates SOCIETY_ADMIN in own org
                 ALLOWED_CREATIONS.put(Role.ORGANIZATION_OWNER, EnumSet.of(Role.SOCIETY_ADMIN));
@@ -106,15 +115,15 @@ public final class RolePermissions {
                                 Role.TENANT,
                                 Role.VISITOR));
 
-                // CHAIRMAN - Creates SECRETARY and TREASURER
+                // CHAIRMAN - Can create SECRETARY and TREASURER
                 ALLOWED_CREATIONS.put(Role.CHAIRMAN, EnumSet.of(
                                 Role.SECRETARY,
                                 Role.TREASURER));
 
-                // SECRETARY - Creates COMMITTEE only
+                // SECRETARY - Can create COMMITTEE
                 ALLOWED_CREATIONS.put(Role.SECRETARY, EnumSet.of(Role.COMMITTEE));
 
-                // TREASURER - Creates COMMITTEE only
+                // TREASURER - Can create COMMITTEE
                 ALLOWED_CREATIONS.put(Role.TREASURER, EnumSet.of(Role.COMMITTEE));
 
                 // COMMITTEE - Creates EMPLOYEE and MEMBER
@@ -139,10 +148,19 @@ public final class RolePermissions {
                 // UPDATE/DELETE PERMISSIONS - Per Permission Matrix
                 // ═══════════════════════════════════════════════════════════════
 
-                // PLATFORM_OWNER - Can update/delete ORGANIZATION_OWNER and SOCIETY_ADMIN
+                // PLATFORM_OWNER - Full CRUD on all roles below
                 ALLOWED_UPDATES.put(Role.PLATFORM_OWNER, EnumSet.of(
                                 Role.ORGANIZATION_OWNER,
-                                Role.SOCIETY_ADMIN));
+                                Role.SOCIETY_ADMIN,
+                                Role.CHAIRMAN,
+                                Role.SECRETARY,
+                                Role.TREASURER,
+                                Role.COMMITTEE,
+                                Role.MANAGER,
+                                Role.EMPLOYEE,
+                                Role.MEMBER,
+                                Role.TENANT,
+                                Role.VISITOR));
 
                 // ORGANIZATION_OWNER - Can update/delete SOCIETY_ADMIN in own org
                 ALLOWED_UPDATES.put(Role.ORGANIZATION_OWNER, EnumSet.of(Role.SOCIETY_ADMIN));
@@ -159,15 +177,15 @@ public final class RolePermissions {
                                 Role.TENANT,
                                 Role.VISITOR));
 
-                // CHAIRMAN - Can update/delete SECRETARY and TREASURER only
+                // CHAIRMAN - Can update/delete SECRETARY and TREASURER
                 ALLOWED_UPDATES.put(Role.CHAIRMAN, EnumSet.of(
                                 Role.SECRETARY,
                                 Role.TREASURER));
 
-                // SECRETARY - Can update/delete COMMITTEE only
+                // SECRETARY - Can update/delete COMMITTEE
                 ALLOWED_UPDATES.put(Role.SECRETARY, EnumSet.of(Role.COMMITTEE));
 
-                // TREASURER - Can update/delete COMMITTEE only
+                // TREASURER - Can update/delete COMMITTEE
                 ALLOWED_UPDATES.put(Role.TREASURER, EnumSet.of(Role.COMMITTEE));
 
                 // COMMITTEE - Can update/delete EMPLOYEE and MEMBER
@@ -266,11 +284,21 @@ public final class RolePermissions {
                 // Utility class, prevent instantiation
         }
 
+        private static Role normalizeRole(Role role) {
+                if (role == null) {
+                        return null;
+                }
+                if (role == Role.MASTER_ADMIN) {
+                        return Role.PLATFORM_OWNER;
+                }
+                return role;
+        }
+
         /**
          * Check if a user with the given role can CREATE a user with the target role.
          */
         public static boolean canCreate(Role creatorRole, Role targetRole) {
-                Set<Role> allowed = ALLOWED_CREATIONS.get(creatorRole);
+                Set<Role> allowed = ALLOWED_CREATIONS.get(normalizeRole(creatorRole));
                 return allowed != null && allowed.contains(targetRole);
         }
 
@@ -278,7 +306,7 @@ public final class RolePermissions {
          * Check if a user with the given role can UPDATE a user with the target role.
          */
         public static boolean canUpdate(Role updaterRole, Role targetRole) {
-                Set<Role> allowed = ALLOWED_UPDATES.get(updaterRole);
+                Set<Role> allowed = ALLOWED_UPDATES.get(normalizeRole(updaterRole));
                 return allowed != null && allowed.contains(targetRole);
         }
 
@@ -293,7 +321,7 @@ public final class RolePermissions {
          * Check if a user with the given role can READ a user with the target role.
          */
         public static boolean canRead(Role readerRole, Role targetRole) {
-                Set<Role> allowed = ALLOWED_READS.get(readerRole);
+                Set<Role> allowed = ALLOWED_READS.get(normalizeRole(readerRole));
                 return allowed != null && allowed.contains(targetRole);
         }
 
@@ -301,21 +329,21 @@ public final class RolePermissions {
          * Get the set of roles that a user with the given role can CREATE.
          */
         public static Set<Role> getAllowedRolesToCreate(Role creatorRole) {
-                return ALLOWED_CREATIONS.getOrDefault(creatorRole, EnumSet.noneOf(Role.class));
+                return ALLOWED_CREATIONS.getOrDefault(normalizeRole(creatorRole), EnumSet.noneOf(Role.class));
         }
 
         /**
          * Get the set of roles that a user with the given role can UPDATE/DELETE.
          */
         public static Set<Role> getAllowedRolesToUpdate(Role updaterRole) {
-                return ALLOWED_UPDATES.getOrDefault(updaterRole, EnumSet.noneOf(Role.class));
+                return ALLOWED_UPDATES.getOrDefault(normalizeRole(updaterRole), EnumSet.noneOf(Role.class));
         }
 
         /**
          * Get the set of roles that a user with the given role can READ.
          */
         public static Set<Role> getAllowedRolesToRead(Role readerRole) {
-                return ALLOWED_READS.getOrDefault(readerRole, EnumSet.noneOf(Role.class));
+                return ALLOWED_READS.getOrDefault(normalizeRole(readerRole), EnumSet.noneOf(Role.class));
         }
 
         /**

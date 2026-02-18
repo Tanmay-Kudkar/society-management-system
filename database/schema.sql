@@ -1,32 +1,9 @@
 -- ═══════════════════════════════════════════════════════════════
 -- PLATFORM OWNERSHIP MODEL
 -- ═══════════════════════════════════════════════════════════════
--- Global Platform Owner (invisible to clients, owns infrastructure)
--- Organization Owner → manages multiple societies (subscription-based)
--- SocietyAdmin → manages single society
--- Society-level roles: Chairman → Secretary/Treasurer → Committee → Manager/Employee/Member → Tenant/Visitor
--- ═══════════════════════════════════════════════════════════════
-
--- Organizations table (for multi-society management)
-CREATE TABLE organizations (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(200) NOT NULL,
-    owner_name VARCHAR(100),
-    owner_email VARCHAR(100) UNIQUE,
-    owner_phone VARCHAR(20),
-    subscription_type VARCHAR(20) DEFAULT 'FREE' CHECK (subscription_type IN ('FREE', 'BASIC', 'PREMIUM', 'LIFETIME')),
-    subscription_status VARCHAR(20) DEFAULT 'ACTIVE' CHECK (subscription_status IN ('ACTIVE', 'EXPIRED', 'SUSPENDED', 'CANCELLED')),
-    subscription_start_date DATE,
-    subscription_end_date DATE,
-    max_societies INT DEFAULT 1,
-    is_founding_member BOOLEAN DEFAULT FALSE,
-    is_active BOOLEAN DEFAULT TRUE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
 
 CREATE TABLE societies (
     id SERIAL PRIMARY KEY,
-    organization_id INT REFERENCES organizations(id),
     name VARCHAR(100),
     address TEXT,
     city VARCHAR(100),
@@ -49,10 +26,9 @@ CREATE TABLE users (
     password VARCHAR(255),
     phone VARCHAR(20),
     society_id INT REFERENCES societies(id),
-    organization_id INT REFERENCES organizations(id),
     flat_id INT,
-    account_type VARCHAR(30) CHECK (account_type IN ('SOCIETY_ADMIN', 'ORGANIZATION_OWNER')),
-    role VARCHAR(50) CHECK (role IN ('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'MANAGER', 'EMPLOYEE', 'MEMBER', 'TENANT', 'VISITOR')),
+    account_type VARCHAR(30) CHECK (account_type IN ('SOCIETY_ADMIN') OR account_type IS NULL),
+    role VARCHAR(50) CHECK (role IN ('MASTER_ADMIN', 'PLATFORM_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'MANAGER', 'EMPLOYEE', 'MEMBER', 'TENANT', 'VISITOR')),
     is_active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

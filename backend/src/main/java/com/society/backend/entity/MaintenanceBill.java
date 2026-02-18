@@ -29,8 +29,7 @@ public class MaintenanceBill {
     @JoinColumn(name = "society_id")
     private Society society;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "organization_id")
+    @Transient
     private Organization organization;
 
     @Column(name = "bill_month", nullable = false)

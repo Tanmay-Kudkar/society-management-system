@@ -1108,6 +1108,11 @@ export default function Dashboard() {
 
       {isMemberOrTenant && (
         <div className="dashboard-member">
+          <div className="dashboard-section">
+            <Activity className="dashboard-section__icon" />
+            <h2 className="dashboard-section__title">My Summary</h2>
+          </div>
+
           <div className="dashboard-member__stats">
             <StatCard
               title="My Pending Bills"
@@ -1205,6 +1210,13 @@ export default function Dashboard() {
 
       {!isMemberOrTenant && (
         <>
+          <div className="dashboard-section">
+            <Building2 className="dashboard-section__icon" />
+            <h2 className="dashboard-section__title">
+              {isPlatformOwner ? 'Platform Summary' : isOrgOwner ? 'Organization Summary' : 'Society Summary'}
+            </h2>
+          </div>
+
           <div className="dashboard-admin__stats">
             {adminStatCards.map((card, index) => (
               <StatCard

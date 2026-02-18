@@ -2,14 +2,9 @@ import '../../styles/pages/roles-permissions.css'
 
 const roleResponsibilities = [
   {
-    role: 'PLATFORM_OWNER',
-    authority: 'Platform Owner',
-    responsibility: 'Manages all societies and organizations',
-  },
-  {
-    role: 'ORGANIZATION_OWNER',
-    authority: 'Organization Owner',
-    responsibility: 'Manages multiple societies under an organization',
+    role: 'MASTER_ADMIN',
+    authority: 'Master Admin',
+    responsibility: 'Manages all societies and platform-level operations',
   },
   {
     role: 'MANAGER',
@@ -65,16 +60,10 @@ const roleResponsibilities = [
 
 const permissionMatrix = [
   {
-    role: 'PLATFORM_OWNER',
-    create: 'ORGANIZATION_OWNER, SOCIETY_ADMIN',
-    updateDelete: 'ORGANIZATION_OWNER, SOCIETY_ADMIN',
+    role: 'MASTER_ADMIN',
+    create: 'SOCIETY_ADMIN',
+    updateDelete: 'SOCIETY_ADMIN',
     read: 'ALL roles',
-  },
-  {
-    role: 'ORGANIZATION_OWNER',
-    create: 'SOCIETY_ADMIN in own org',
-    updateDelete: 'SOCIETY_ADMIN in own org',
-    read: 'Own org roles',
   },
   {
     role: 'SOCIETY_ADMIN',
@@ -148,7 +137,7 @@ export default function RolesPermissions() {
           <p className="roles-hero__eyebrow">Access Governance</p>
           <h1 className="roles-hero__title">Roles, Permissions, and Responsibilities</h1>
           <p className="roles-hero__subtitle">
-            A strict, auditable access model for platform, organization, and society governance.
+            A strict, auditable access model for master admin and society governance.
           </p>
         </div>
         <div className="roles-hero__glow" />

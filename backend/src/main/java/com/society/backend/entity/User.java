@@ -50,8 +50,7 @@ public class User {
      * - SOCIETY_ADMIN: optionally linked if created by an org owner
      * - Others: null (they belong to society, not org directly)
      */
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "organization_id")
+    @Transient
     private Organization organization;
 
     /**

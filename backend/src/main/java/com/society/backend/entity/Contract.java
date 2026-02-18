@@ -23,8 +23,7 @@ public class Contract {
     @JoinColumn(name = "society_id", nullable = false)
     private Society society;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "organization_id")
+    @Transient
     private Organization organization;
 
     @ManyToOne(fetch = FetchType.LAZY)

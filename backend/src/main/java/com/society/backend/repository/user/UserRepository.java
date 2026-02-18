@@ -27,10 +27,10 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Query("SELECT u FROM User u LEFT JOIN FETCH u.society WHERE u.email = :email")
     Optional<User> findByEmailWithSociety(@Param("email") String email);
     
-    @Query("SELECT u FROM User u LEFT JOIN FETCH u.organization WHERE u.email = :email")
+    @Query("SELECT u FROM User u LEFT JOIN FETCH u.society WHERE u.email = :email")
     Optional<User> findByEmailWithOrganization(@Param("email") String email);
 
-    @Query("SELECT u FROM User u LEFT JOIN FETCH u.society s LEFT JOIN FETCH s.organization LEFT JOIN FETCH u.organization WHERE u.email = :email")
+    @Query("SELECT u FROM User u LEFT JOIN FETCH u.society WHERE u.email = :email")
     Optional<User> findByEmailWithSocietyAndOrganization(@Param("email") String email);
 
     @Query("SELECT u FROM User u LEFT JOIN FETCH u.society LEFT JOIN FETCH u.flat WHERE u.email = :email")
@@ -54,6 +54,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Query("SELECT CASE WHEN COUNT(u) > 0 THEN true ELSE false END FROM User u WHERE u.society.id = :societyId AND u.role = :role")
     boolean existsBySocietyIdAndRole(@Param("societyId") Long societyId, @Param("role") Role role);
 
-    @Query("SELECT COUNT(u) FROM User u WHERE u.organization.id = :organizationId")
+    @Query("SELECT 0L")
     long countByOrganizationId(@Param("organizationId") Long organizationId);
 }

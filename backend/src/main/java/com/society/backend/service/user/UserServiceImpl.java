@@ -22,7 +22,6 @@ import com.society.backend.exception.ApiException;
 import com.society.backend.repository.PasswordResetTokenRepository;
 import com.society.backend.repository.complaint.ComplaintRepository;
 import com.society.backend.repository.flat.FlatRepository;
-import com.society.backend.repository.organization.OrganizationRepository;
 import com.society.backend.repository.ticket.TicketRepository;
 import com.society.backend.repository.user.UserRepository;
 import com.society.backend.repository.society.SocietyRepository;
@@ -40,14 +39,12 @@ public class UserServiceImpl implements UserService {
     private final TicketRepository ticketRepository;
     private final SocietyRepository societyRepository;
     private final FlatRepository flatRepository;
-    private final OrganizationRepository organizationRepository;
     private final ReferenceCleanupService referenceCleanupService;
     private final PasswordResetTokenRepository passwordResetTokenRepository;
 
     public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder,
             ComplaintRepository complaintRepository, TicketRepository ticketRepository,
             SocietyRepository societyRepository, FlatRepository flatRepository,
-            OrganizationRepository organizationRepository,
             ReferenceCleanupService referenceCleanupService,
             PasswordResetTokenRepository passwordResetTokenRepository) {
         this.userRepository = userRepository;
@@ -56,7 +53,6 @@ public class UserServiceImpl implements UserService {
         this.ticketRepository = ticketRepository;
         this.societyRepository = societyRepository;
         this.flatRepository = flatRepository;
-        this.organizationRepository = organizationRepository;
         this.referenceCleanupService = referenceCleanupService;
         this.passwordResetTokenRepository = passwordResetTokenRepository;
     }
@@ -92,22 +88,13 @@ public class UserServiceImpl implements UserService {
             throw new ApiException(HttpStatus.FORBIDDEN, "PLATFORM_OWNER cannot be created. Only one exists.");
         }
 
-        // Prevent creating ORGANIZATION_OWNER through user API
-        // (they register through a separate signup flow)
-        if (targetRole == Role.ORGANIZATION_OWNER && creatorRole != Role.PLATFORM_OWNER) {
-            throw new ApiException(HttpStatus.FORBIDDEN, "ORGANIZATION_OWNER can only be created by PLATFORM_OWNER");
+        if (targetRole == Role.ORGANIZATION_OWNER) {
+            throw new ApiException(HttpStatus.FORBIDDEN,
+                    "ORGANIZATION_OWNER cannot be created directly from this flow.");
         }
 
         // Validate societyId is required when PLATFORM_OWNER creates SOCIETY_ADMIN
         if (creatorRole == Role.PLATFORM_OWNER && targetRole == Role.SOCIETY_ADMIN) {
-            if (request.getSocietyId() == null) {
-                throw new ApiException(HttpStatus.BAD_REQUEST,
-                        "Society selection is required when creating a Society Admin");
-            }
-        }
-
-        // Validate societyId when ORGANIZATION_OWNER creates SOCIETY_ADMIN
-        if (creatorRole == Role.ORGANIZATION_OWNER && targetRole == Role.SOCIETY_ADMIN) {
             if (request.getSocietyId() == null) {
                 throw new ApiException(HttpStatus.BAD_REQUEST,
                         "Society selection is required when creating a Society Admin");
@@ -135,21 +122,10 @@ public class UserServiceImpl implements UserService {
         // Assign society based on context
         User currentUser = getCurrentUser();
 
-        // If PLATFORM_OWNER or ORGANIZATION_OWNER is creating any user and provides
-        // societyId, use it
-        if ((creatorRole == Role.PLATFORM_OWNER || creatorRole == Role.ORGANIZATION_OWNER)
+        if (creatorRole == Role.PLATFORM_OWNER
                 && request.getSocietyId() != null) {
             var society = societyRepository.findById(request.getSocietyId())
                     .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Society not found"));
-            // If ORGANIZATION_OWNER, verify the society belongs to their organization
-            if (creatorRole == Role.ORGANIZATION_OWNER && currentUser != null
-                    && currentUser.getOrganization() != null) {
-                if (society.getOrganization() == null
-                        || !society.getOrganization().getId().equals(currentUser.getOrganization().getId())) {
-                    throw new ApiException(HttpStatus.FORBIDDEN,
-                            "Cannot assign user to a society outside your organization");
-                }
-            }
             user.setSociety(society);
 
             // If this is a Society Admin, also update the society's telephone
@@ -158,41 +134,9 @@ public class UserServiceImpl implements UserService {
                 societyRepository.save(society);
             }
         }
-        // If creator is not PLATFORM_OWNER/ORGANIZATION_OWNER but has a society,
-        // inherit it
+        // If creator is not top-level admin but has a society, inherit it
         else if (currentUser != null && currentUser.getSociety() != null) {
             user.setSociety(currentUser.getSociety());
-        }
-
-        // Assign organization based on context
-        if (targetRole == Role.ORGANIZATION_OWNER) {
-            // Creating an ORGANIZATION_OWNER: link to existing org or auto-create one
-            if (request.getOrganizationId() != null) {
-                // Link to existing organization
-                var org = organizationRepository.findById(request.getOrganizationId())
-                        .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Organization not found"));
-                user.setOrganization(org);
-            } else {
-                // Auto-create a new organization for this owner
-                var org = new com.society.backend.entity.Organization();
-                org.setName(request.getOrganizationName() != null && !request.getOrganizationName().isBlank()
-                        ? request.getOrganizationName()
-                        : request.getName() + "'s Organization");
-                org.setOwnerName(request.getName());
-                org.setOwnerEmail(request.getEmail());
-                org.setOwnerPhone(request.getPhone());
-                org.setSubscriptionType("FREE");
-                org.setSubscriptionStatus("ACTIVE");
-                org.setMaxSocieties(1);
-                org.setIsActive(true);
-                org.setCreatedAt(LocalDateTime.now());
-                org = organizationRepository.save(org);
-                user.setOrganization(org);
-                log.info("Auto-created organization '{}' for ORGANIZATION_OWNER {}", org.getName(), request.getEmail());
-            }
-        } else if (currentUser != null && currentUser.getOrganization() != null) {
-            // Inherit organization from creator if applicable
-            user.setOrganization(currentUser.getOrganization());
         }
 
         // Handle flat assignment for resident unit roles
@@ -272,30 +216,6 @@ public class UserServiceImpl implements UserService {
                     .toList();
         }
 
-        // ORGANIZATION_OWNER sees all users in their organization's societies
-        if (currentRole == Role.ORGANIZATION_OWNER && currentUser != null && currentUser.getOrganization() != null) {
-            Long orgId = currentUser.getOrganization().getId();
-            // Get all societies in this organization
-            List<Long> orgSocietyIds = societyRepository.findByOrganizationId(orgId)
-                    .stream()
-                    .map(s -> s.getId())
-                    .toList();
-            return userRepository.findAll()
-                    .stream()
-                    .filter(u -> u.getRole() != Role.PLATFORM_OWNER) // Exclude PLATFORM_OWNER
-                    .filter(u -> {
-                        // Include users from org's societies
-                        if (u.getSociety() != null && orgSocietyIds.contains(u.getSociety().getId()))
-                            return true;
-                        // Include users directly in this organization (like society admins)
-                        if (u.getOrganization() != null && u.getOrganization().getId().equals(orgId))
-                            return true;
-                        return false;
-                    })
-                    .map(this::mapToResponse)
-                    .toList();
-        }
-
         // SOCIETY_ADMIN and below see only users in their society (excluding
         // PLATFORM_OWNER)
         if (currentUser != null && currentUser.getSociety() != null) {
@@ -303,7 +223,6 @@ public class UserServiceImpl implements UserService {
             return userRepository.findBySocietyId(societyId)
                     .stream()
                     .filter(u -> u.getRole() != Role.PLATFORM_OWNER) // Exclude PLATFORM_OWNER
-                    .filter(u -> u.getRole() != Role.ORGANIZATION_OWNER) // Exclude ORGANIZATION_OWNER
                     .filter(u -> u.getSociety() != null && u.getSociety().getId().equals(societyId)) // Double-check
                                                                                                      // society match
                     .map(this::mapToResponse)
@@ -460,26 +379,12 @@ public class UserServiceImpl implements UserService {
                         RolePermissions.getUpdatePermissionDeniedMessage(currentRole, targetRole));
             }
 
-            // For non-PLATFORM_OWNER/ORGANIZATION_OWNER, verify same society
-            if (currentRole != Role.PLATFORM_OWNER && currentRole != Role.ORGANIZATION_OWNER
+            // For non-master users, verify same society
+                if (currentRole != Role.PLATFORM_OWNER
                     && currentUser != null && currentUser.getSociety() != null) {
                 if (user.getSociety() == null || !user.getSociety().getId().equals(currentUser.getSociety().getId())) {
                     throw new ApiException(HttpStatus.FORBIDDEN, "Cannot update users from different society");
                 }
-            }
-        }
-
-        // For ORGANIZATION_OWNER, verify user belongs to their organization
-        if (currentRole == Role.ORGANIZATION_OWNER && currentUser != null && currentUser.getOrganization() != null) {
-            Long orgId = currentUser.getOrganization().getId();
-            boolean belongsToOrg = false;
-            if (user.getOrganization() != null && user.getOrganization().getId().equals(orgId))
-                belongsToOrg = true;
-            if (user.getSociety() != null && user.getSociety().getOrganization() != null
-                    && user.getSociety().getOrganization().getId().equals(orgId))
-                belongsToOrg = true;
-            if (!belongsToOrg) {
-                throw new ApiException(HttpStatus.FORBIDDEN, "Cannot update users from different organization");
             }
         }
 
@@ -513,19 +418,11 @@ public class UserServiceImpl implements UserService {
             user.setRole(newRole);
         }
 
-        // Allow PLATFORM_OWNER and ORGANIZATION_OWNER to update society assignment
+        // Allow top-level admins to update society assignment
         if (request.getSocietyId() != null &&
-                (getCurrentUserRole() == Role.PLATFORM_OWNER || getCurrentUserRole() == Role.ORGANIZATION_OWNER)) {
+            getCurrentUserRole() == Role.PLATFORM_OWNER) {
             user.setSociety(societyRepository.findById(request.getSocietyId())
                     .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Society not found")));
-        }
-
-        // Allow PLATFORM_OWNER to update organization name for ORGANIZATION_OWNER
-        if (getCurrentUserRole() == Role.PLATFORM_OWNER && user.getRole() == Role.ORGANIZATION_OWNER
-                && user.getOrganization() != null && request.getOrganizationName() != null
-                && !request.getOrganizationName().isBlank()) {
-            user.getOrganization().setName(request.getOrganizationName());
-            organizationRepository.save(user.getOrganization());
         }
 
         User saved = userRepository.save(user);
@@ -554,9 +451,9 @@ public class UserServiceImpl implements UserService {
                     RolePermissions.getDeletePermissionDeniedMessage(currentRole, targetRole));
         }
 
-        // For non-PLATFORM_OWNER/ORGANIZATION_OWNER, verify same society
+        // For non-master users, verify same society
         User currentUser = getCurrentUser();
-        if (currentRole != Role.PLATFORM_OWNER && currentRole != Role.ORGANIZATION_OWNER
+        if (currentRole != Role.PLATFORM_OWNER
                 && currentUser != null && currentUser.getSociety() != null) {
             if (user.getSociety() == null || !user.getSociety().getId().equals(currentUser.getSociety().getId())) {
                 throw new ApiException(HttpStatus.FORBIDDEN, "Cannot delete users from different society");

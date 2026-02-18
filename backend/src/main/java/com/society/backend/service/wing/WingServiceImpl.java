@@ -40,8 +40,6 @@ public class WingServiceImpl implements WingService {
         List<Wing> wings;
         if (currentUser.getRole() == Role.PLATFORM_OWNER) {
             wings = wingRepository.findAll();
-        } else if (currentUser.getRole() == Role.ORGANIZATION_OWNER && currentUser.getOrganization() != null) {
-            wings = wingRepository.findByOrganizationId(currentUser.getOrganization().getId());
         } else if (currentUser.getSociety() != null) {
             roleService.enforceSocietyScope(currentUser, currentUser.getSociety().getId());
             wings = wingRepository.findBySocietyId(currentUser.getSociety().getId());

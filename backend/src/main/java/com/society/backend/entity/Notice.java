@@ -23,8 +23,7 @@ public class Notice {
     @JoinColumn(name = "society_id")
     private Society society;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "organization_id")
+    @Transient
     private Organization organization;
 
     @Column(nullable = false)

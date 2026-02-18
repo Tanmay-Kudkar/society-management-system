@@ -48,7 +48,7 @@ public class AuthServiceImpl implements AuthService {
 
     // Portal → allowed roles mapping
     private static final Set<Role> ADMIN_ROLES = Set.of(
-            Role.PLATFORM_OWNER, Role.ORGANIZATION_OWNER, Role.SOCIETY_ADMIN);
+            Role.MASTER_ADMIN, Role.PLATFORM_OWNER, Role.SOCIETY_ADMIN);
     private static final Set<Role> MANAGEMENT_ROLES = Set.of(
             Role.CHAIRMAN, Role.SECRETARY, Role.TREASURER,
             Role.COMMITTEE, Role.MANAGER, Role.EMPLOYEE);

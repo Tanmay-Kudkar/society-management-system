@@ -41,7 +41,6 @@ const routePrefetchMap = {
   '/users': () => import('../pages/users/Users'),
   '/roles-permissions': () => import('../pages/users/RolesPermissions'),
   '/societies': () => import('../pages/society/Societies'),
-  '/organizations': () => import('../pages/society/Organizations'),
   '/society-admins': () => import('../pages/society/SocietyAdmins'),
   '/unit-management': () => import('../pages/unit/UnitManagement'),
   '/wings': () => import('../pages/unit/Wings'),
@@ -83,10 +82,10 @@ const platformOwnerMenu = [
     path: '/',
   },
   {
-    id: 'organizations',
-    label: 'Organizations',
+    id: 'societies',
+    label: 'Societies',
     icon: Layers,
-    path: '/organizations',
+    path: '/societies',
   },
   {
     id: 'society-admins',
@@ -99,40 +98,6 @@ const platformOwnerMenu = [
     label: 'Settings',
     icon: Settings,
     path: '/settings',
-  },
-]
-
-// ORGANIZATION_OWNER specific menu - manages multiple societies
-const orgOwnerMenu = [
-  {
-    id: 'dashboard',
-    label: 'Dashboard',
-    icon: LayoutDashboard,
-    path: '/',
-  },
-  {
-    id: 'societies',
-    label: 'Societies',
-    icon: Building2,
-    path: '/societies',
-  },
-  {
-    id: 'users',
-    label: 'Society Admins',
-    icon: UserCheck,
-    path: '/society-admins',
-  },
-  {
-    id: 'settings',
-    label: 'Settings',
-    icon: Settings,
-    path: '/settings',
-  },
-  {
-    id: 'roles-permissions',
-    label: 'Roles & Access',
-    icon: FileCheck,
-    path: '/roles-permissions',
   },
 ]
 
@@ -512,9 +477,8 @@ export default function Layout() {
   const [sidebarOpen, setSidebarOpen] = useState(null)
 
   // Determine which menu to show based on user role
-  const isPlatformOwner = user?.role === 'PLATFORM_OWNER'
-  const isOrgOwner = user?.role === 'ORGANIZATION_OWNER'
-  const menuGroups = isPlatformOwner ? platformOwnerMenu : (isOrgOwner ? orgOwnerMenu : standardMenuGroups)
+  const isMasterAdmin = user?.role === 'MASTER_ADMIN' || user?.role === 'PLATFORM_OWNER'
+  const menuGroups = isMasterAdmin ? platformOwnerMenu : standardMenuGroups
 
   const handleLogout = () => {
     logout()

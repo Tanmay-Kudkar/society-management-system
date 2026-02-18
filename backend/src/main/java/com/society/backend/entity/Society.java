@@ -23,8 +23,7 @@ public class Society {
      * - null if created by a standalone SocietyAdmin
      * - linked to Organization if created by an Organization Owner
      */
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "organization_id")
+    @Transient
     private Organization organization;
 
     @Column(nullable = false)

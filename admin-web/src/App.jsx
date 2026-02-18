@@ -25,8 +25,6 @@ const Users = lazyWithMinDelay(() => import('./pages/users/Users'))
 const RolesPermissions = lazyWithMinDelay(() => import('./pages/users/RolesPermissions'))
 
 const Societies = lazyWithMinDelay(() => import('./pages/society/Societies'))
-const Organizations = lazyWithMinDelay(() => import('./pages/society/Organizations'))
-const OrganizationDetail = lazyWithMinDelay(() => import('./pages/society/OrganizationDetail'))
 const SocietyAdmins = lazyWithMinDelay(() => import('./pages/society/SocietyAdmins'))
 const SocietyDetail = lazyWithMinDelay(() => import('./pages/society/SocietyDetail'))
 
@@ -112,7 +110,6 @@ const PAGE_TITLES = {
   '/': 'Dashboard',
   '/users': 'Users',
   '/societies': 'Societies',
-  '/organizations': 'Organizations',
   '/society-admins': 'Society Admins',
   '/wings': 'Wings',
   '/unit-management': 'Unit & User Management',
@@ -144,7 +141,6 @@ const DynamicTitle = () => {
 
   useEffect(() => {
     const title = PAGE_TITLES[pathname]
-      || (pathname.startsWith('/organizations/') ? 'Organization Details' : null)
       || (pathname.startsWith('/societies/') ? 'Society Details' : null)
     document.title = title ? `${title} - SocietyHub` : 'SocietyHub'
   }, [pathname])
@@ -168,10 +164,9 @@ function App() {
       () => import('./pages/communication/Notices'),
     ]
 
-    if (role === 'PLATFORM_OWNER' || role === 'ORGANIZATION_OWNER') {
+    if (role === 'MASTER_ADMIN' || role === 'PLATFORM_OWNER') {
       importers.push(
         () => import('./pages/society/Societies'),
-        () => import('./pages/society/Organizations'),
         () => import('./pages/society/SocietyAdmins'),
         () => import('./pages/users/Users'),
         () => import('./pages/core/Reports'),
@@ -272,8 +267,6 @@ function App() {
                 <Route index element={<Dashboard />} />
                 <Route path="users" element={<Users />} />
                 <Route path="societies" element={<Societies />} />
-                <Route path="organizations" element={<Organizations />} />
-                <Route path="organizations/:id" element={<OrganizationDetail />} />
                 <Route path="society-admins" element={<SocietyAdmins />} />
                 <Route path="societies/:id" element={<SocietyDetail />} />
                 <Route path="wings" element={<Wings />} />

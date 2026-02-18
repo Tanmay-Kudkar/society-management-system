@@ -23,8 +23,7 @@ public class Vendor {
     @JoinColumn(name = "society_id")
     private Society society; // null means common/partner vendor
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "organization_id")
+    @Transient
     private Organization organization;
 
     @Column(nullable = false)

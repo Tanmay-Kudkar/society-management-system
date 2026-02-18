@@ -35,8 +35,7 @@ export default function Vendors() {
   const [searchTerm, setSearchTerm] = useState('')
   const [viewingVendor, setViewingVendor] = useState(null)
 
-  // Check if current user is PLATFORM_OWNER
-  const isPlatformLevel = user?.role === 'PLATFORM_OWNER' || user?.role === 'ORGANIZATION_OWNER'
+  const isPlatformLevel = user?.role === 'PLATFORM_OWNER' || user?.role === 'MASTER_ADMIN'
 
   const { data: vendors = [], isLoading, isError } = useQuery({
     queryKey: ['vendors'],

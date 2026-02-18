@@ -24,8 +24,7 @@ public class Transaction {
     @JoinColumn(name = "society_id", nullable = false)
     private Society society;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "organization_id")
+    @Transient
     private Organization organization;
 
     @Column(name = "transaction_type", nullable = false)

@@ -8,7 +8,6 @@ import com.society.backend.entity.User;
 import com.society.backend.exception.ApiException;
 import com.society.backend.repository.WingRepository;
 import com.society.backend.repository.flat.FlatRepository;
-import com.society.backend.repository.organization.OrganizationRepository;
 import com.society.backend.repository.society.SocietyRepository;
 import com.society.backend.repository.user.UserRepository;
 import com.society.backend.service.common.ReferenceCleanupService;
@@ -29,7 +28,6 @@ public class SocietyServiceImpl implements SocietyService {
     private final SocietyRepository societyRepository;
     private final FlatRepository flatRepository;
     private final WingRepository wingRepository;
-    private final OrganizationRepository organizationRepository;
     private final UserRepository userRepository;
     private final ReferenceCleanupService referenceCleanupService;
     private final RoleService roleService;
@@ -39,35 +37,6 @@ public class SocietyServiceImpl implements SocietyService {
         Society society = new Society();
         mapRequestToEntity(request, society);
 
-        var currentUser = roleService.getCurrentUser();
-
-        // If organizationId is provided, link society to organization
-        if (request.getOrganizationId() != null) {
-            var org = organizationRepository.findById(request.getOrganizationId())
-                    .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Organization not found"));
-            if (currentUser != null && currentUser.getRole() == Role.ORGANIZATION_OWNER) {
-                roleService.enforceOrganizationScope(currentUser, org.getId());
-            }
-            long currentCount = societyRepository.countByOrganizationId(org.getId());
-            if (!org.canCreateMoreSocieties(currentCount)) {
-                throw new ApiException(HttpStatus.FORBIDDEN,
-                        "Organization has reached its maximum number of societies");
-            }
-            society.setOrganization(org);
-        } else {
-            // Check if current user is ORGANIZATION_OWNER - auto-assign their org
-            if (currentUser != null && currentUser.getRole() == Role.ORGANIZATION_OWNER
-                    && currentUser.getOrganization() != null) {
-                var org = currentUser.getOrganization();
-                long currentCount = societyRepository.countByOrganizationId(org.getId());
-                if (!org.canCreateMoreSocieties(currentCount)) {
-                    throw new ApiException(HttpStatus.FORBIDDEN,
-                            "Organization has reached its maximum number of societies");
-                }
-                society.setOrganization(org);
-            }
-        }
-
         Society saved = societyRepository.save(society);
         return toResponse(saved);
     }
@@ -76,20 +45,7 @@ public class SocietyServiceImpl implements SocietyService {
     public List<SocietyResponse> getAll() {
         User currentUser = roleService.getCurrentUser();
 
-        // ORGANIZATION_OWNER sees only their organization's societies
-        if (currentUser != null && currentUser.getRole() == Role.ORGANIZATION_OWNER) {
-            if (currentUser.getOrganization() != null) {
-                return societyRepository.findByOrganizationId(currentUser.getOrganization().getId())
-                        .stream()
-                        .map(this::toResponse)
-                        .collect(Collectors.toList());
-            }
-            // No organization linked yet - return empty list (not all societies)
-            return List.of();
-        }
-
-        // PLATFORM_OWNER sees all societies
-        if (currentUser != null && currentUser.getRole() == Role.PLATFORM_OWNER) {
+        if (currentUser != null && (currentUser.getRole() == Role.PLATFORM_OWNER || currentUser.getRole() == Role.MASTER_ADMIN)) {
             return societyRepository.findAll().stream()
                     .map(this::toResponse)
                     .collect(Collectors.toList());
@@ -120,14 +76,7 @@ public class SocietyServiceImpl implements SocietyService {
     @Override
     @Transactional(readOnly = true)
     public List<SocietyResponse> getByOrganizationId(Long organizationId) {
-        var currentUser = roleService.getCurrentUser();
-        if (currentUser != null && currentUser.getRole() == Role.ORGANIZATION_OWNER) {
-            roleService.enforceOrganizationScope(currentUser, organizationId);
-        }
-        return societyRepository.findByOrganizationIdWithOrg(organizationId)
-                .stream()
-                .map(this::toResponse)
-                .collect(Collectors.toList());
+        return List.of();
     }
 
     @Override
@@ -232,12 +181,6 @@ public class SocietyServiceImpl implements SocietyService {
         response.setOccupiedFlats(flatRepository.countBySocietyIdAndUnitTypeAndIsOccupied(societyId, "FLAT", true));
         response.setOccupiedShops(flatRepository.countBySocietyIdAndUnitTypeAndIsOccupied(societyId, "SHOP", true));
         response.setOccupiedOffices(flatRepository.countBySocietyIdAndUnitTypeAndIsOccupied(societyId, "OFFICE", true));
-
-        // Organization info
-        if (society.getOrganization() != null) {
-            response.setOrganizationId(society.getOrganization().getId());
-            response.setOrganizationName(society.getOrganization().getName());
-        }
 
         return response;
     }

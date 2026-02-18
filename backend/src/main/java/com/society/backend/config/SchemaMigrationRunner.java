@@ -19,9 +19,16 @@ public class SchemaMigrationRunner {
         return args -> {
             try {
                 jdbcTemplate.execute("ALTER TABLE users DROP CONSTRAINT IF EXISTS users_role_check");
+                jdbcTemplate.execute("UPDATE users SET role = 'PLATFORM_OWNER' WHERE role = 'MASTER_ADMIN'");
+                jdbcTemplate.execute(
+                    "UPDATE users SET role = 'VISITOR' " +
+                    "WHERE role IS NULL OR role NOT IN ('PLATFORM_OWNER','ORGANIZATION_OWNER','SOCIETY_ADMIN','CHAIRMAN','SECRETARY','TREASURER','COMMITTEE','MANAGER','EMPLOYEE','MEMBER','TENANT','VISITOR')"
+                );
+                jdbcTemplate.execute("UPDATE users SET account_type = 'SOCIETY_ADMIN' WHERE account_type = 'ORGANIZATION_OWNER'");
+                jdbcTemplate.execute("UPDATE users SET account_type = NULL WHERE account_type IS NOT NULL AND account_type <> 'SOCIETY_ADMIN'");
                 jdbcTemplate.execute(
                         "ALTER TABLE users ADD CONSTRAINT users_role_check " +
-                        "CHECK (role IN ('PLATFORM_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'EMPLOYEE', 'MEMBER', 'TENANT', 'VISITOR'))"
+                    "CHECK (role IN ('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'MANAGER', 'EMPLOYEE', 'MEMBER', 'TENANT', 'VISITOR'))"
                 );
                 log.info("users_role_check constraint verified/updated");
             } catch (Exception ex) {

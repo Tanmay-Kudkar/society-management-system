@@ -78,12 +78,14 @@
 | 11 | [🌐 API Reference](#-api-reference) | Complete endpoint documentation |
 | 12 | [📦 Response Formats](#-response-formats) | JSON response structure examples |
 | 13 | [✨ Features & Capabilities](#-features--capabilities) | Detailed feature breakdown |
-| 14 | [🚀 Getting Started](#-getting-started) | Setup & installation guide |
-| 15 | [🌍 Environment Variables](#-environment-variables) | Configuration reference |
-| 16 | [☁️ Deployment](#️-deployment) | Render cloud deployment |
-| 17 | [📂 Project Structure Overview](#-project-structure-overview) | Complete monorepo file tree |
-| 18 | [🤝 Contributing](#-contributing) | Contribution guidelines |
-| 19 | [📄 License](#-license) | MIT License |
+| 14 | [🧭 Blueprint Roadmap (Merged)](#-blueprint-roadmap-merged) | 77-feature implementation roadmap |
+| 15 | [📱 Native Apps Parallel Roadmap (TODO)](#-native-apps-parallel-roadmap-todo) | Android Native + iOS Swift parallel plan |
+| 16 | [🚀 Getting Started](#-getting-started) | Setup & installation guide |
+| 17 | [🌍 Environment Variables](#-environment-variables) | Configuration reference |
+| 18 | [☁️ Deployment](#️-deployment) | Render cloud deployment |
+| 19 | [📂 Project Structure Overview](#-project-structure-overview) | Complete monorepo file tree |
+| 20 | [🤝 Contributing](#-contributing) | Contribution guidelines |
+| 21 | [📄 License](#-license) | MIT License |
 
 </details>
 
@@ -2110,7 +2112,379 @@ CREATE TABLE security_logs (
 ---
 
 <!-- ════════════════════════════════════════════════════════════════════════ -->
-<!--                      14. GETTING STARTED                               -->
+<!--              14. BLUEPRINT ROADMAP (MERGED FROM docs/Blueprint.md)     -->
+<!-- ════════════════════════════════════════════════════════════════════════ -->
+
+## 🧭 Blueprint Roadmap (Merged)
+
+> This section merges the implementation blueprint into the main README so planning + execution stay in one place.
+
+### 🎯 Blueprint Snapshot
+
+| Metric | Value |
+|:-------|:------|
+| Total Planned Features | **77** |
+| Delivery Phases | **12** |
+| New Database Tables | **59** |
+| New API Endpoints | **~200** |
+| Planned Timeline | **~35 Weeks** |
+| Compliance Target | **RERA + GST + Co-operative Society workflow** |
+
+### 🗓️ Phase Plan (Week-wise)
+
+| Phase | Weeks | Feature IDs | Primary Goal |
+|:------|:------|:------------|:-------------|
+| Phase 1 — Core Foundation | 1–3 | F01–F07 | Role redesign, permission rebuild, auth/controller alignment |
+| Phase 2 — Finance Engine | 4–8 | F08–F17 | Itemized billing, PDF/Excel/Print, bank accounts, penalties |
+| Phase 3 — Approval & Governance | 9–11 | F18–F23 | Generic approval engine, polls, AGM, elections |
+| Phase 4 — Communication & Tickets | 12–14 | F24–F29 | Unified tickets, reminders, messaging, events, legal demand flow |
+| Phase 5 — Security & Visitors | 15–16 | F30–F34 | Visitor, OTP, SOS, patrol, gate-log enhancements |
+| Phase 6 — Operations & Maintenance | 17–19 | F35–F40 | Work orders, assets, schedules, staff shifts, bookings, NOC |
+| Phase 7 — Resident Services | 20–21 | F41–F45 | Move lifecycle, penalties, pets, classifieds, bylaws |
+| Phase 8 — Vendor Ecosystem | 22–23 | F46–F50 | Vendor portal, reviews, invoice submission, TDS compliance |
+| Phase 9 — Advanced Finance & Compliance | 24–26 | F51–F56 | Reconciliation, statements, budgets, ledger, defaulter reports |
+| Phase 10 — Documents & Reports | 27–28 | F57–F61 | Repository, minutes PDF, dashboard/report/export enhancement |
+| Phase 11 — Platform Infrastructure | 29–31 | F62–F68 | 2FA, rate limiting, audit, push notifications, i18n, backups |
+| Phase 12 — Modern Enhancements | 32–35 | F69–F77 | WhatsApp/SMS, OAuth, EV charging, federation mode, AI insights |
+
+### 📈 Delivery Graph (Mermaid Gantt)
+
+```mermaid
+gantt
+  title Society Management System — 12 Phase Delivery Plan
+  dateFormat  YYYY-MM-DD
+  axisFormat  %b %d
+  section Foundation
+  Phase 1 Core Foundation            :done,    p1, 2026-01-05, 21d
+  section Finance
+  Phase 2 Finance Engine             :active,  p2, after p1, 35d
+  section Governance
+  Phase 3 Approval & Governance      :         p3, after p2, 21d
+  section Communication
+  Phase 4 Communication & Tickets    :         p4, after p3, 21d
+  section Security
+  Phase 5 Security & Visitor Mgmt    :         p5, after p4, 14d
+  section Operations
+  Phase 6 Ops & Maintenance          :         p6, after p5, 21d
+  section Resident Experience
+  Phase 7 Resident Services          :         p7, after p6, 14d
+  section Vendor
+  Phase 8 Vendor Ecosystem           :         p8, after p7, 14d
+  section Compliance
+  Phase 9 Advanced Finance           :         p9, after p8, 21d
+  section Documents
+  Phase 10 Documents & Reports       :         p10, after p9, 14d
+  section Platform
+  Phase 11 Infrastructure            :         p11, after p10, 21d
+  section Modern
+  Phase 12 Modern Enhancements       :         p12, after p11, 28d
+```
+
+### 📚 Full Feature Index (F01–F77)
+
+<details>
+<summary><b>Phase 1 · F01–F07</b></summary>
+
+- F01 Role Redesign (12 Roles)
+- F02 Legacy Role Cleanup
+- F03 Permission Matrix Rebuild
+- F04 Head Role Write Access Restore
+- F05 Controller @PreAuthorize Alignment
+- F06 Frontend Auth Alignment
+- F07 Shared Format Utilities
+
+</details>
+
+<details>
+<summary><b>Phase 2 · F08–F17</b></summary>
+
+- F08 Society Rate Configuration
+- F09 Itemized Bill Line Items
+- F10 Professional Bill Generation
+- F11 Parking Slot Management
+- F12 Interest & Penalty Calculation
+- F13 Sequential Receipt/Bill Numbers
+- F14 PDF Generation (Bills / Receipts)
+- F15 Export to Excel Everywhere
+- F16 Print to PDF Everywhere
+- F17 Multi-Bank Account Management
+
+</details>
+
+<details>
+<summary><b>Phase 3 · F18–F23</b></summary>
+
+- F18 Approval Workflow Engine
+- F19 Expense Approval Chain
+- F20 Rate Change Proposals
+- F21 Polls & Voting
+- F22 AGM / Meeting Management
+- F23 Committee Elections
+
+</details>
+
+<details>
+<summary><b>Phase 4 · F24–F29</b></summary>
+
+- F24 Unified Ticket System
+- F25 Configurable Deadline Reminders
+- F26 Internal Messaging / Helpdesk
+- F27 Notice Read Receipts
+- F28 Event Management
+- F29 Demand Notice & Legal Recovery
+
+</details>
+
+<details>
+<summary><b>Phase 5 · F30–F34</b></summary>
+
+- F30 Visitor Management Enhancement
+- F31 Delivery & Cab OTP
+- F32 SOS / Emergency Alert
+- F33 Guard Patrol & Duty Roster
+- F34 Gate Log Enhancement
+
+</details>
+
+<details>
+<summary><b>Phase 6 · F35–F40</b></summary>
+
+- F35 Work Order System
+- F36 Asset / Inventory Management
+- F37 Common Area Maintenance Schedule
+- F38 Staff Attendance & Shifts
+- F39 Facility / Amenity Booking
+- F40 Renovation NOC
+
+</details>
+
+<details>
+<summary><b>Phase 7 · F41–F45</b></summary>
+
+- F41 Move-In / Move-Out Tracking
+- F42 Penalty & Fine System
+- F43 Pet Registration
+- F44 Classified / Internal Marketplace
+- F45 Society Rules / Bylaws Repository
+
+</details>
+
+<details>
+<summary><b>Phase 8 · F46–F50</b></summary>
+
+- F46 Vendor Login & Portal
+- F47 Vendor Rating & Review
+- F48 Vendor Invoice Submission
+- F49 Vendor Work Status Tracking
+- F50 Vendor Bill TDS Compliance
+
+</details>
+
+<details>
+<summary><b>Phase 9 · F51–F56</b></summary>
+
+- F51 Bank Reconciliation
+- F52 Accounting Statements
+- F53 Annual Budget Planning
+- F54 Treasurer Dashboard & Ledger
+- F55 Receipt Book
+- F56 Collection Report & Defaulters
+
+</details>
+
+<details>
+<summary><b>Phase 10 · F57–F61</b></summary>
+
+- F57 Society Document Repository
+- F58 Meeting Minutes PDF
+- F59 Dashboard Enhancements
+- F60 Report Enhancements
+- F61 Export Enhancements
+
+</details>
+
+<details>
+<summary><b>Phase 11 · F62–F68</b></summary>
+
+- F62 Two-Factor Authentication
+- F63 Rate Limiting
+- F64 Comprehensive Audit Trail
+- F65 Firebase Push Notifications
+- F66 Multi-language (i18n)
+- F67 Data Export & Right to Erasure
+- F68 Automated Backup
+
+</details>
+
+<details>
+<summary><b>Phase 12 · F69–F77</b></summary>
+
+- F69 WhatsApp/SMS Integration
+- F70 OAuth / Social Login
+- F71 EV Charging Management
+- F72 Township / Federation Mode
+- F73 AI-powered Insights
+- F74 Offline Mode (Mobile)
+- F75 SaaS / Subscription Billing
+- F76 Deep Linking (Mobile)
+- F77 Mobile Vendor Portal
+
+</details>
+
+### 🧩 Blueprint ER Growth (New Tables by Phase)
+
+| Phase | New Tables |
+|:------|-----------:|
+| Phase 1 | 0 |
+| Phase 2 | 6 |
+| Phase 3 | 15 |
+| Phase 4 | 7 |
+| Phase 5 | 4 |
+| Phase 6 | 9 |
+| Phase 7 | 6 |
+| Phase 8 | 2 |
+| Phase 9 | 4 |
+| Phase 10 | 1 |
+| Phase 11 | 0 |
+| Phase 12 | 5 |
+| **Total** | **59** |
+
+### 🔌 Blueprint API Endpoint Expansion
+
+| Phase | New Endpoints | Key Controllers |
+|:------|--------------:|:----------------|
+| Phase 1 | ~0 (modifications) | Existing controllers |
+| Phase 2 | ~25 | SocietySettingController, PdfExportController, ParkingSlotController |
+| Phase 3 | ~30 | ApprovalController, PollController, MeetingController, ElectionController |
+| Phase 4 | ~20 | MessageController, EventController, DemandNoticeController |
+| Phase 5 | ~15 | EmergencyAlertController, PatrolController, DutyRosterController |
+| Phase 6 | ~25 | WorkOrderController, AssetController, ScheduleController, BookingController |
+| Phase 7 | ~15 | MoveRecordController, PenaltyController, PetController, RuleController |
+| Phase 8 | ~15 | VendorPortalController, ReviewController, TdsController |
+| Phase 9 | ~20 | ReconciliationController, BudgetController, LedgerController |
+| Phase 10 | ~10 | DocumentController extensions, ReportController extensions |
+| Phase 11 | ~10 | TwoFactorController, DataExportController |
+| Phase 12 | ~15 | EvChargingController, FederationController |
+| **Total** | **~200** | |
+
+### 📈 Scalability Notes (Merged)
+
+#### Database Scalability
+
+| Concern | Solution |
+|:--------|:---------|
+| Bill line items grow fast | Index on `maintenance_bill_id`; partition by year at high volume |
+| High message volume from broadcasts | Pagination + archive policy + `recipient_id/read_at` indexes |
+| High-frequency patrol logs | Time-based archival + indexes on guard and scan time |
+| Audit log growth | Store JSONB deltas + monthly partitions + optional search index |
+| Bank statement matching queries | Index `statement_id`, `matched_transaction_id`, `match_status` |
+| Approval request lookup cost | Composite index on workflow/status/current-step |
+
+#### Application Scalability
+
+| Concern | Solution |
+|:--------|:---------|
+| Bill generation for large societies | Batch processing via async jobs + progress polling |
+| PDF generation load spikes | Queue async generation + temporary cache |
+| Reminder scheduler fan-out | Chunk society processing and stagger cron windows |
+| Large Excel exports | Stream with `SXSSFWorkbook` (Apache POI streaming) |
+| Real-time messaging growth | Start with polling, move to WebSocket when scale demands |
+| Broadcast push scale | FCM topic messaging for bulk notifications |
+
+#### Infrastructure Scalability
+
+| Scale | Recommendation |
+|:------|:---------------|
+| Single society (<500 units) | Single app + PostgreSQL host |
+| 10 societies (<5000 units) | Dedicated DB host + tuned HikariCP pooling |
+| 50+ societies | Read replicas + Redis cache + CDN for generated files |
+| 100+ societies (SaaS) | Multi-tenant design + container orchestration + object storage |
+
+### 🔑 Key Decisions (Merged)
+
+| Decision | Choice | Rationale |
+|:---------|:-------|:----------|
+| PDF generation library | OpenPDF | Commercial-friendly licensing model |
+| Approval system model | Generic workflow engine | Reusable across expenses, vendor onboarding, NOC, rate change |
+| Billing data model | Line-items table | Extensible without schema churn |
+| Receipt numbering | Sequential per financial year | Auditability and compliance readiness |
+| Push stack | Firebase Cloud Messaging | Production-grade delivery for scale |
+| Rate limiting | Bucket4j | Simple Spring Boot integration |
+| i18n stack | Backend `MessageSource` + frontend `react-i18next` | Mature, standard ecosystem |
+| Bank reconciliation | Auto-match + manual review | Improves accuracy while keeping control |
+| Vendor identity model | User + Vendor profile split | Cleaner domain model boundaries |
+| Role model | 12-role hierarchy | Simplifies access design and governance |
+
+### 📎 Source Reference
+
+- Full planning source also remains available in [docs/Blueprint.md](docs/Blueprint.md).
+
+---
+
+<!-- ════════════════════════════════════════════════════════════════════════ -->
+<!--             15. NATIVE APPS PARALLEL ROADMAP (ANDROID + IOS)          -->
+<!-- ════════════════════════════════════════════════════════════════════════ -->
+
+## 📱 Native Apps Parallel Roadmap (TODO)
+
+> Parallel work for **Android Native (Kotlin)** and **iOS Native (Swift)** is planned and tracked below.
+
+### ✅ Scope Decision
+
+| Track | Current Status | Notes |
+|:------|:---------------|:------|
+| React Native App | ✅ In progress | Existing cross-platform app continues |
+| Android Native App (Kotlin) | 🟡 TODO (Parallel Track) | Build native app with shared backend APIs |
+| iOS Native App (Swift/SwiftUI) | 🟡 TODO (Parallel Track) | Build native app with shared backend APIs |
+
+### 🧭 Parallel Delivery Flowchart
+
+```mermaid
+flowchart LR
+  A[Shared Product Requirements] --> B[Shared Backend APIs]
+  B --> C[Web Admin - React]
+  B --> D[Mobile - React Native]
+  B --> E[Android Native - Kotlin TODO]
+  B --> F[iOS Native - Swift TODO]
+  E --> G[Play Store Release]
+  F --> H[App Store Release]
+```
+
+### 📦 Native App Work Breakdown (Parallel)
+
+| Sprint | Android Native (Kotlin) | iOS Native (Swift/SwiftUI) | Shared Dependencies |
+|:-------|:-------------------------|:---------------------------|:--------------------|
+| Sprint N1 | Project setup, auth screens, token storage | Project setup, auth screens, keychain storage | API contract freeze |
+| Sprint N2 | Dashboard + bills + notices | Dashboard + bills + notices | Unified design tokens |
+| Sprint N3 | Tickets + complaints + visitors | Tickets + complaints + visitors | Notification payload schema |
+| Sprint N4 | Payments + offline cache + deep links | Payments + offline cache + deep links | Razorpay + telemetry standards |
+| Sprint N5 | QA, performance, Play Store checklist | QA, performance, App Store checklist | Security audit + release sign-off |
+
+### 📝 Native App TODO Checklist
+
+- [ ] Finalize API compatibility matrix for Android Native and iOS Swift
+- [ ] Publish Kotlin API SDK wrapper module
+- [ ] Publish Swift API client package
+- [ ] Define shared error-code mapping for native apps
+- [ ] Add device analytics events parity with web/mobile RN
+- [ ] Add native CI pipelines (Android + iOS)
+- [ ] Add store-release runbooks and rollout strategy
+
+### 📊 Platform Split Vision
+
+```mermaid
+pie title Planned Mobile Platform Strategy
+  "React Native (current shared app)" : 50
+  "Android Native Kotlin (parallel)" : 25
+  "iOS Swift Native (parallel)" : 25
+```
+
+<br/>
+
+---
+
+<!-- ════════════════════════════════════════════════════════════════════════ -->
+<!--                      16. GETTING STARTED                               -->
 <!-- ════════════════════════════════════════════════════════════════════════ -->
 
 ## 🚀 Getting Started
@@ -2215,7 +2589,7 @@ After first startup, a default Platform Owner is created:
 ---
 
 <!-- ════════════════════════════════════════════════════════════════════════ -->
-<!--                   15. ENVIRONMENT VARIABLES                            -->
+<!--                   17. ENVIRONMENT VARIABLES                            -->
 <!-- ════════════════════════════════════════════════════════════════════════ -->
 
 ## 🌍 Environment Variables
@@ -2257,7 +2631,7 @@ After first startup, a default Platform Owner is created:
 ---
 
 <!-- ════════════════════════════════════════════════════════════════════════ -->
-<!--                        16. DEPLOYMENT                                  -->
+<!--                        18. DEPLOYMENT                                  -->
 <!-- ════════════════════════════════════════════════════════════════════════ -->
 
 ## ☁️ Deployment
@@ -2335,7 +2709,7 @@ databases:
 ---
 
 <!-- ════════════════════════════════════════════════════════════════════════ -->
-<!--                  17. PROJECT STRUCTURE OVERVIEW                        -->
+<!--                  19. PROJECT STRUCTURE OVERVIEW                        -->
 <!-- ════════════════════════════════════════════════════════════════════════ -->
 
 ## 📂 Project Structure Overview
@@ -2430,7 +2804,7 @@ databases:
 ---
 
 <!-- ════════════════════════════════════════════════════════════════════════ -->
-<!--                       18. CONTRIBUTING                                 -->
+<!--                       20. CONTRIBUTING                                 -->
 <!-- ════════════════════════════════════════════════════════════════════════ -->
 
 ## 🤝 Contributing
@@ -2470,7 +2844,7 @@ Contributions are welcome! Please follow these guidelines:
 ---
 
 <!-- ════════════════════════════════════════════════════════════════════════ -->
-<!--                         19. LICENSE                                    -->
+<!--                         21. LICENSE                                    -->
 <!-- ════════════════════════════════════════════════════════════════════════ -->
 
 ## 📄 License

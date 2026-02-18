@@ -35,8 +35,7 @@ export default function Wings() {
   const [formErrors, setFormErrors] = useState({})
   const [pageError, setPageError] = useState('')
 
-  // Check if user is PLATFORM_OWNER
-  const isPlatformLevel = user?.role === 'PLATFORM_OWNER' || user?.role === 'ORGANIZATION_OWNER'
+  const isPlatformLevel = user?.role === 'PLATFORM_OWNER' || user?.role === 'MASTER_ADMIN'
 
   // Determine the effective society ID
   const effectiveSocietyId = isPlatformLevel ? filterSociety : user?.societyId

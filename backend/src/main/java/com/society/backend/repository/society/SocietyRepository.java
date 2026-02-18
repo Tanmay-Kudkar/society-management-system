@@ -11,10 +11,12 @@ import java.util.List;
 @Repository
 public interface SocietyRepository extends JpaRepository<Society, Long> {
 
+    @Query("SELECT s FROM Society s WHERE 1 = 0")
     List<Society> findByOrganizationId(Long organizationId);
 
-    @Query("SELECT s FROM Society s LEFT JOIN FETCH s.organization WHERE s.organization.id = :organizationId")
+    @Query("SELECT s FROM Society s WHERE 1 = 0")
     List<Society> findByOrganizationIdWithOrg(@Param("organizationId") Long organizationId);
 
-    long countByOrganizationId(Long organizationId);
+    @Query("SELECT 0L")
+    long countByOrganizationId(@Param("organizationId") Long organizationId);
 }

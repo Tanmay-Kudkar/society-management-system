@@ -10,7 +10,5 @@ import java.util.List;
 public interface WingRepository extends JpaRepository<Wing, Long> {
     List<Wing> findBySocietyId(Long societyId);
 
-    List<Wing> findByOrganizationId(Long organizationId);
-
     long countBySocietyId(Long societyId);
 }

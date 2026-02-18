@@ -15,7 +15,7 @@ public class SecurityLog {
     @Column(name = "society_id")
     private Long societyId;
 
-    @Column(name = "organization_id")
+    @Transient
     private Long organizationId;
 
     @Column(nullable = false)

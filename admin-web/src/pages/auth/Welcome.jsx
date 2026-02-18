@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { Building2, Shield, Users, CreditCard, Bell, ArrowRight, CheckCircle, ChevronDown, Car, Phone, MessageSquare, Key, Sun, Moon, Menu, X, Github, Twitter, Linkedin, Monitor, Sparkles } from 'lucide-react'
+import { Building2, Shield, Users, CreditCard, Bell, ArrowRight, CheckCircle, ChevronDown, Car, Phone, MessageSquare, Key, Sun, Moon, Menu, X, Twitter, Linkedin, Monitor, Sparkles, Mail, Link2, Youtube } from 'lucide-react'
 import { useTheme } from '../../context'
 
 /* Scroll-reveal hook */
@@ -26,6 +26,11 @@ export default function Welcome() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [themeMenuOpen, setThemeMenuOpen] = useState(false)
   const themeMenuRef = useRef(null)
+
+  const [enrollName, setEnrollName] = useState('')
+  const [enrollPhone, setEnrollPhone] = useState('')
+  const [enrollReason, setEnrollReason] = useState('')
+  const [enrollError, setEnrollError] = useState('')
 
   useEffect(() => {
     const handler = (e) => {
@@ -69,10 +74,11 @@ export default function Welcome() {
     { value: '24/7', label: 'Support' },
   ]
 
-  const socialLinks = [
+  const footerSocialLinks = [
     { icon: Twitter, href: 'https://x.com', label: 'X' },
-    { icon: Github, href: 'https://github.com', label: 'GitHub' },
+    { icon: Youtube, href: 'https://www.youtube.com', label: 'YouTube' },
     { icon: Linkedin, href: 'https://www.linkedin.com', label: 'LinkedIn' },
+    { icon: Link2, href: '#', label: 'Website' },
   ]
 
   // Scroll-reveal refs
@@ -83,6 +89,26 @@ export default function Welcome() {
   const scrollTo = (id) => {
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' })
     setMobileMenuOpen(false)
+  }
+
+  const handleEnrollSubmit = (e) => {
+    e.preventDefault()
+    const nameOk = enrollName.trim().length >= 2
+    const phoneOk = enrollPhone.trim().length >= 8
+
+    if (!nameOk || !phoneOk) {
+      setEnrollError('Please enter your name and phone number.')
+      return
+    }
+
+    setEnrollError('')
+    navigate('/contact', {
+      state: {
+        name: enrollName.trim(),
+        phone: enrollPhone.trim(),
+        reason: enrollReason || null,
+      },
+    })
   }
 
   return (
@@ -98,14 +124,17 @@ export default function Welcome() {
           </button>
 
           <div className="welcome-nav-links">
-            {['Features', 'Stats', 'Contact'].map((item) => (
-              <button key={item} onClick={() => scrollTo(item.toLowerCase())} className="welcome-nav-link">
-                {item}
-              </button>
-            ))}
+            <button onClick={() => navigate('/about')} className="welcome-nav-link">About Us</button>
+            <button onClick={() => scrollTo('features')} className="welcome-nav-link">Features</button>
+            <button onClick={() => navigate('/pricing')} className="welcome-nav-link">Pricing</button>
+            <button onClick={() => navigate('/contact')} className="welcome-nav-link">Contact</button>
           </div>
 
           <div className="welcome-nav-actions">
+            <a className="welcome-nav-phone" href="tel:+919119300000" aria-label="Call SocietyHub">
+              +91 91193 00000
+            </a>
+
             {/* Theme dropdown */}
             <div className="welcome-theme-wrap" ref={themeMenuRef}>
               <button onClick={() => setThemeMenuOpen(!themeMenuOpen)} className="welcome-theme-btn" aria-label="Theme">
@@ -132,9 +161,12 @@ export default function Welcome() {
               {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
             </button>
 
-            <button onClick={() => navigate('/login')} className="welcome-cta-btn">
-              <Key size={14} />
-              Login
+            <button onClick={() => navigate('/login')} className="welcome-cta-btn welcome-cta-btn--outline">
+              Society Login
+            </button>
+            <button onClick={() => scrollTo('hero')} className="welcome-cta-btn">
+              Enroll your society
+              <ArrowRight size={14} />
             </button>
           </div>
         </div>
@@ -142,14 +174,14 @@ export default function Welcome() {
         {/* Mobile menu */}
         {mobileMenuOpen && (
           <div className="welcome-mobile-menu">
-            {['Features', 'Stats', 'Contact'].map((item) => (
-              <button key={item} onClick={() => scrollTo(item.toLowerCase())} className="welcome-mobile-link">
-                {item}
+              <button onClick={() => { navigate('/about'); setMobileMenuOpen(false) }} className="welcome-mobile-link">About Us</button>
+              <button onClick={() => scrollTo('features')} className="welcome-mobile-link">Features</button>
+              <button onClick={() => { navigate('/pricing'); setMobileMenuOpen(false) }} className="welcome-mobile-link">Pricing</button>
+              <button onClick={() => { navigate('/contact'); setMobileMenuOpen(false) }} className="welcome-mobile-link">Contact</button>
+
+              <button onClick={() => { navigate('/login'); setMobileMenuOpen(false) }} className="welcome-mobile-cta">
+                Society Login
               </button>
-            ))}
-            <button onClick={() => { navigate('/login'); setMobileMenuOpen(false) }} className="welcome-mobile-cta">
-              Login to Dashboard
-            </button>
           </div>
         )}
       </nav>
@@ -157,30 +189,111 @@ export default function Welcome() {
       {/* Hero */}
       <section id="hero" className="welcome-hero">
         <div className="welcome-hero-inner">
-          <div className={`welcome-hero-badge ${isLoaded ? 'is-visible' : ''}`}>
-            <span className="welcome-hero-badge-dot" />
-            Trusted by 500+ Housing Societies
-          </div>
+          <div className="welcome-hero-grid">
+            <div className="welcome-hero-copy">
+              <div className={`welcome-hero-badge ${isLoaded ? 'is-visible' : ''}`}>
+                <span className="welcome-hero-badge-dot" />
+                Trusted by housing communities across India
+              </div>
 
-          <h1 className={`welcome-hero-title ${isLoaded ? 'is-visible' : ''}`}>
-            Your Society,<br />
-            <span className="welcome-hero-gradient">Simplified</span>
-          </h1>
+              <h1 className={`welcome-hero-title ${isLoaded ? 'is-visible' : ''}`}>
+                Visitor, Society and Accounting<br />
+                <span className="welcome-hero-gradient">Management System</span>
+              </h1>
 
-          <p className={`welcome-hero-subtitle ${isLoaded ? 'is-visible' : ''}`}>
-            The complete digital ecosystem for modern housing societies.
-            Manage bills, complaints, notices, and residents — all in one powerful platform.
-          </p>
+              <p className={`welcome-hero-subtitle ${isLoaded ? 'is-visible' : ''}`}>
+                A complete platform to manage residents, bills, complaints, notices, and daily operations —
+                built for modern housing societies.
+              </p>
 
-          <div className={`welcome-hero-actions ${isLoaded ? 'is-visible' : ''}`}>
-            <button onClick={() => navigate('/login')} className="welcome-btn-primary">
-              Get Started Free
-              <ArrowRight size={16} />
-            </button>
-            <button onClick={() => scrollTo('features')} className="welcome-btn-secondary">
-              Explore Features
-              <ChevronDown size={16} />
-            </button>
+              <form className={`welcome-enroll ${isLoaded ? 'is-visible' : ''}`} onSubmit={handleEnrollSubmit}>
+                <div className="welcome-enroll__grid">
+                  <label className="welcome-enroll__field">
+                    <span className="welcome-enroll__label">Name</span>
+                    <input
+                      value={enrollName}
+                      onChange={(e) => setEnrollName(e.target.value)}
+                      className="welcome-enroll__input"
+                      placeholder="Your name"
+                      autoComplete="name"
+                    />
+                  </label>
+
+                  <label className="welcome-enroll__field">
+                    <span className="welcome-enroll__label">Phone</span>
+                    <div className="welcome-enroll__phone">
+                      <span className="welcome-enroll__prefix">+91</span>
+                      <input
+                        value={enrollPhone}
+                        onChange={(e) => setEnrollPhone(e.target.value)}
+                        className="welcome-enroll__input welcome-enroll__input--phone"
+                        placeholder="Enter phone number"
+                        inputMode="tel"
+                        autoComplete="tel"
+                      />
+                    </div>
+                  </label>
+
+                  <label className="welcome-enroll__field">
+                    <span className="welcome-enroll__label">Select Reason</span>
+                    <select
+                      value={enrollReason}
+                      onChange={(e) => setEnrollReason(e.target.value)}
+                      className="welcome-enroll__select"
+                    >
+                      <option value="">Select reason</option>
+                      <option value="DEMO">Request a demo</option>
+                      <option value="ONBOARDING">New society onboarding</option>
+                      <option value="PRICING">Pricing enquiry</option>
+                    </select>
+                  </label>
+
+                  <button type="submit" className="welcome-enroll__submit">
+                    Enroll your society
+                    <ArrowRight size={16} />
+                  </button>
+                </div>
+
+                {enrollError && <p className="welcome-enroll__error">{enrollError}</p>}
+              </form>
+
+              <div className={`welcome-hero-actions ${isLoaded ? 'is-visible' : ''}`}>
+                <button onClick={() => navigate('/login')} className="welcome-btn-secondary">
+                  Society Login
+                  <Key size={16} />
+                </button>
+                <button onClick={() => scrollTo('features')} className="welcome-btn-secondary">
+                  Explore Features
+                  <ChevronDown size={16} />
+                </button>
+              </div>
+            </div>
+
+            <div className="welcome-hero-art" aria-hidden="true">
+              <div className="welcome-hero-art__card">
+                <div className="welcome-hero-art__row">
+                  <div className="welcome-hero-art__chip">
+                    <Shield size={18} />
+                    Secure
+                  </div>
+                  <div className="welcome-hero-art__chip">
+                    <Users size={18} />
+                    Residents
+                  </div>
+                </div>
+                <div className="welcome-hero-art__illustration" />
+                <div className="welcome-hero-art__row">
+                  <div className="welcome-hero-art__chip">
+                    <CreditCard size={18} />
+                    Payments
+                  </div>
+                  <div className="welcome-hero-art__chip">
+                    <Bell size={18} />
+                    Notices
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -256,30 +369,45 @@ export default function Welcome() {
       {/* Footer */}
       <footer id="contact" className="welcome-footer">
         <div className="welcome-section-inner">
-          <div className="welcome-footer-grid">
-            <div className="welcome-footer-brand">
-              <div className="welcome-footer-logo">
+          <div className="welcome-footer-grid welcome-footer-grid--nbh">
+            <div className="welcome-footer-brand welcome-footer-brand--nbh">
+              <div className="welcome-footer-logo welcome-footer-logo--nbh">
                 <div className="welcome-footer-badge">
                   <Building2 size={16} />
                 </div>
-                <span className="welcome-footer-name">SocietyHub</span>
+                <div className="welcome-footer-brand-stack">
+                  <span className="welcome-footer-name">SocietyHub</span>
+                  <span className="welcome-footer-byline">By SocietyHub Technologies</span>
+                </div>
               </div>
               <p className="welcome-footer-text">
-                The complete digital solution for modern housing society management.
+                SocietyHub is aimed at making life in your residential society easy and secure.
+                Manage visitor access, domestic help and services, and much more.
               </p>
-              <div className="welcome-footer-socials">
-                {socialLinks.map((item, i) => (
-                  <a key={i} href={item.href} target="_blank" rel="noreferrer" className="welcome-social-link" aria-label={`Open ${item.label} in new tab`}>
-                    <item.icon size={16} />
-                  </a>
-                ))}
-              </div>
             </div>
 
             {[
-              { title: 'Product', links: [{ label: 'Features', action: () => scrollTo('features') }, { label: 'Pricing', action: () => navigate('/pricing') }, { label: 'Demo', action: () => navigate('/demo') }] },
-              { title: 'Company', links: [{ label: 'About', action: () => navigate('/about') }, { label: 'Contact', action: () => navigate('/contact') }, { label: 'Blog', action: () => navigate('/blog') }] },
-              { title: 'Legal', links: [{ label: 'Privacy', action: () => navigate('/privacy') }, { label: 'Terms', action: () => navigate('/terms') }, { label: 'Help', action: () => navigate('/help') }] },
+              {
+                title: 'Company',
+                links: [
+                  { label: 'About Us', action: () => navigate('/about') },
+                  { label: 'Privacy Policy', action: () => navigate('/privacy') },
+                  { label: 'Terms & Conditions', action: () => navigate('/terms') },
+                  { label: 'Blog', action: () => navigate('/blog') },
+                  { label: 'Sitemap', action: () => navigate('/help') },
+                ],
+              },
+              {
+                title: 'Solution',
+                links: [
+                  { label: 'Society Accounting System', action: () => scrollTo('features') },
+                  { label: 'Society Management System', action: () => scrollTo('features') },
+                  { label: 'Apartment Management Software', action: () => scrollTo('features') },
+                  { label: 'Visitor Management System', action: () => scrollTo('features') },
+                  { label: 'Parking Management System', action: () => scrollTo('features') },
+                  { label: 'Housing Society', action: () => scrollTo('features') },
+                ],
+              },
             ].map((g, i) => (
               <div key={i} className="welcome-footer-col">
                 <h4 className="welcome-footer-heading">{g.title}</h4>
@@ -292,10 +420,43 @@ export default function Welcome() {
                 </ul>
               </div>
             ))}
+
+            <div className="welcome-footer-col">
+              <h4 className="welcome-footer-heading">Contact Us</h4>
+              <ul className="welcome-footer-links welcome-footer-links--contact">
+                <li>
+                  <a href="mailto:assist@societyhub.com" className="welcome-footer-link welcome-footer-link--icon">
+                    <Mail size={14} />
+                    assist@societyhub.com
+                  </a>
+                </li>
+                <li>
+                  <a href="tel:+919119300000" className="welcome-footer-link welcome-footer-link--icon">
+                    <Phone size={14} />
+                    +91 91193 00000
+                  </a>
+                </li>
+              </ul>
+            </div>
+
+            <div className="welcome-footer-col">
+              <h4 className="welcome-footer-heading">Get the Mobile App</h4>
+              <div className="welcome-footer-apps">
+                <button type="button" className="welcome-store-badge">Get it on Google Play</button>
+                <button type="button" className="welcome-store-badge">Download on the App Store</button>
+              </div>
+              <div className="welcome-footer-socials">
+                {footerSocialLinks.map((item, i) => (
+                  <a key={i} href={item.href} target="_blank" rel="noreferrer" className="welcome-social-link" aria-label={`Open ${item.label} in new tab`}>
+                    <item.icon size={14} />
+                  </a>
+                ))}
+              </div>
+            </div>
           </div>
 
           <div className="welcome-footer-bottom">
-            <p> &copy; 2026 SocietyHub. All rights reserved.</p>
+            <p>2017 – 2026 SocietyHub Technologies Pvt. Ltd. – All Rights Reserved.</p>
           </div>
         </div>
       </footer>

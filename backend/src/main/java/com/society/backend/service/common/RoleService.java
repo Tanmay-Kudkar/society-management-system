@@ -33,7 +33,7 @@ public class RoleService {
     }
 
     /**
-     * Get the currently authenticated user with society and organization loaded.
+     * Get the currently authenticated user.
      */
     public User getCurrentUser() {
         var auth = SecurityContextHolder.getContext().getAuthentication();
@@ -62,16 +62,20 @@ public class RoleService {
         if (user.getRole() == Role.PLATFORM_OWNER) {
             return;
         }
-        if (organizationId == null) {
-            throw new AccessDeniedException("Access denied. Organization scope required.");
+        if (user.getRole() == Role.ORGANIZATION_OWNER) {
+            if (organizationId == null) {
+                throw new AccessDeniedException("Access denied. Organization scope required.");
+            }
+            if (user.getOrganization() == null || !organizationId.equals(user.getOrganization().getId())) {
+                throw new AccessDeniedException("Access denied. Organization scope mismatch.");
+            }
+            return;
         }
-        if (user.getOrganization() == null || !organizationId.equals(user.getOrganization().getId())) {
-            throw new AccessDeniedException("Access denied. Organization scope mismatch.");
-        }
+        throw new AccessDeniedException("Access denied. Organization scope not allowed for this role.");
     }
 
     /**
-     * Enforce society scope for the current user, including org owners.
+     * Enforce society scope for the current user.
      */
     public void enforceSocietyScope(User user, Long societyId) {
         if (user == null) {
@@ -84,13 +88,15 @@ public class RoleService {
             throw new AccessDeniedException("Access denied. Society scope required.");
         }
 
-        // Organization owner can access any society in their organization
-        if (user.getRole() == Role.ORGANIZATION_OWNER && user.getOrganization() != null) {
+        if (user.getRole() == Role.ORGANIZATION_OWNER) {
+            if (user.getOrganization() == null) {
+                throw new AccessDeniedException("Access denied. No organization assigned.");
+            }
             var society = societyRepository.findById(societyId)
-                    .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Society not found"));
+                    .orElseThrow(() -> new AccessDeniedException("Access denied. Society not found."));
             if (society.getOrganization() == null
-                    || !society.getOrganization().getId().equals(user.getOrganization().getId())) {
-                throw new AccessDeniedException("Access denied. Society is outside your organization.");
+                    || !user.getOrganization().getId().equals(society.getOrganization().getId())) {
+                throw new AccessDeniedException("Access denied. Society not in your organization.");
             }
             return;
         }
@@ -133,8 +139,7 @@ public class RoleService {
      * COMMITTEE
      */
     public void requireAdminOrCommittee(Long userId) {
-        checkRole(userId, Role.PLATFORM_OWNER, Role.ORGANIZATION_OWNER, Role.SOCIETY_ADMIN, Role.CHAIRMAN,
-                Role.SECRETARY, Role.TREASURER,
+        checkRole(userId, Role.PLATFORM_OWNER, Role.ORGANIZATION_OWNER, Role.SOCIETY_ADMIN,
                 Role.COMMITTEE, Role.MANAGER);
     }
 
@@ -143,8 +148,7 @@ public class RoleService {
      * COMMITTEE, MANAGER, or EMPLOYEE
      */
     public void requireStaff(Long userId) {
-        checkRole(userId, Role.PLATFORM_OWNER, Role.ORGANIZATION_OWNER, Role.SOCIETY_ADMIN, Role.CHAIRMAN,
-                Role.SECRETARY, Role.TREASURER,
+        checkRole(userId, Role.PLATFORM_OWNER, Role.ORGANIZATION_OWNER, Role.SOCIETY_ADMIN,
                 Role.COMMITTEE, Role.MANAGER, Role.EMPLOYEE);
     }
 

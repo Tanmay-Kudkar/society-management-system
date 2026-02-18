@@ -3,6 +3,7 @@ package com.society.backend.config;
 import com.society.backend.security.CustomUserDetailsService;
 import com.society.backend.security.JwtAuthenticationEntryPoint;
 import com.society.backend.security.JwtAuthenticationFilter;
+import com.society.backend.security.ReadOnlyHeadRoleWriteBlockFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -29,17 +30,20 @@ public class SecurityConfig {
         private final PasswordEncoder passwordEncoder;
         private final JwtAuthenticationEntryPoint authenticationEntryPoint;
         private final CorsConfigurationSource corsConfigurationSource;
+        private final ReadOnlyHeadRoleWriteBlockFilter readOnlyHeadRoleWriteBlockFilter;
 
         public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter,
                         CustomUserDetailsService userDetailsService,
                         PasswordEncoder passwordEncoder,
                         JwtAuthenticationEntryPoint authenticationEntryPoint,
-                        CorsConfigurationSource corsConfigurationSource) {
+                        CorsConfigurationSource corsConfigurationSource,
+                        ReadOnlyHeadRoleWriteBlockFilter readOnlyHeadRoleWriteBlockFilter) {
                 this.jwtAuthenticationFilter = jwtAuthenticationFilter;
                 this.userDetailsService = userDetailsService;
                 this.passwordEncoder = passwordEncoder;
                 this.authenticationEntryPoint = authenticationEntryPoint;
                 this.corsConfigurationSource = corsConfigurationSource;
+                this.readOnlyHeadRoleWriteBlockFilter = readOnlyHeadRoleWriteBlockFilter;
         }
 
         @Bean
@@ -208,7 +212,8 @@ public class SecurityConfig {
                                                 // Any other request requires authentication
                                                 .anyRequest().authenticated())
                                 .authenticationProvider(authenticationProvider())
-                                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+                                                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                                                .addFilterAfter(readOnlyHeadRoleWriteBlockFilter, JwtAuthenticationFilter.class);
 
                 return http.build();
         }
