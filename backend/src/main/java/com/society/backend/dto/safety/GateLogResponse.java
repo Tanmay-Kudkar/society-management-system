@@ -1,0 +1,25 @@
+package com.society.backend.dto.safety;
+
+import lombok.*;
+import java.time.LocalDateTime;
+
+@Getter @Setter @AllArgsConstructor @NoArgsConstructor
+public class GateLogResponse {
+    private Long id;
+    private String entryType;
+    private String personName;
+    private String personPhone;
+    private String vehicleNumber;
+    private Long flatId;
+    private String flatNumber;
+    private Long societyId;
+    private String societyName;
+    private LocalDateTime entryTime;
+    private LocalDateTime exitTime;
+    private String entryGate;
+    private String exitGate;
+    private String purpose;
+    private String status;
+    private String notes;
+    private LocalDateTime createdAt;
+}

@@ -27,6 +27,8 @@ import {
   BarChart3,
   Layers,
   Wallet,
+  Shield,
+  Siren,
 } from 'lucide-react'
 import clsx from 'clsx'
 
@@ -58,6 +60,9 @@ const routePrefetchMap = {
   '/complaints': () => import('../pages/communication/Complaints'),
   '/emergency-contacts': () => import('../pages/communication/EmergencyContacts'),
   '/documents': () => import('../pages/communication/Documents'),
+  '/visitors': () => import('../pages/security/Visitors'),
+  '/domestic-staff': () => import('../pages/security/DomesticStaff'),
+  '/safety': () => import('../pages/security/Safety'),
 }
 
 const prefetchRoute = (path) => {
@@ -190,6 +195,16 @@ const standardMenuGroups = [
     items: [
       { path: '/emergency-contacts', icon: Phone, label: 'Emergency Contacts' },
       { path: '/documents', icon: FileCheck, label: 'Documents' },
+    ],
+  },
+  {
+    id: 'security',
+    label: 'Security',
+    icon: Shield,
+    items: [
+      { path: '/visitors', icon: UserCheck, label: 'Visitors' },
+      { path: '/domestic-staff', icon: Users, label: 'Domestic Staff' },
+      { path: '/safety', icon: Siren, label: 'Safety & SOS' },
     ],
   },
   {

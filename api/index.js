@@ -505,6 +505,62 @@ export const exportApi = {
     api.get(`/api/export/all-tickets${status ? `?status=${status}` : ''}`, { responseType: 'blob' }),
 }
 
+// Visitor API
+export const visitorApi = {
+  getAll: (userId) => api.get(`/visitors?userId=${userId}`),
+  getById: (id, userId) => api.get(`/visitors/${id}?userId=${userId}`),
+  getBySociety: (societyId, userId) => api.get(`/visitors/society/${societyId}?userId=${userId}`),
+  getByFlat: (flatId, userId) => api.get(`/visitors/flat/${flatId}?userId=${userId}`),
+  getByStatus: (status, userId) => api.get(`/visitors/status/${status}?userId=${userId}`),
+  getByType: (type, userId) => api.get(`/visitors/type/${type}?userId=${userId}`),
+  create: (userId, data) => api.post(`/visitors?userId=${userId}`, data),
+  checkIn: (id, userId) => api.patch(`/visitors/${id}/check-in?userId=${userId}`),
+  checkOut: (id, userId) => api.patch(`/visitors/${id}/check-out?userId=${userId}`),
+  updateStatus: (id, userId, status) => api.patch(`/visitors/${id}/status?userId=${userId}&status=${status}`),
+  delete: (id, userId) => api.delete(`/visitors/${id}?userId=${userId}`),
+}
+
+// Domestic Staff API
+export const domesticStaffApi = {
+  getAll: (userId) => api.get(`/domestic-staff?userId=${userId}`),
+  getById: (id, userId) => api.get(`/domestic-staff/${id}?userId=${userId}`),
+  getBySociety: (societyId, userId) => api.get(`/domestic-staff/society/${societyId}?userId=${userId}`),
+  getActiveBySociety: (societyId, userId) => api.get(`/domestic-staff/society/${societyId}/active?userId=${userId}`),
+  getByType: (societyId, type, userId) => api.get(`/domestic-staff/society/${societyId}/type/${type}?userId=${userId}`),
+  create: (userId, data) => api.post(`/domestic-staff?userId=${userId}`, data),
+  update: (id, userId, data) => api.put(`/domestic-staff/${id}?userId=${userId}`, data),
+  toggleStatus: (id, userId) => api.patch(`/domestic-staff/${id}/toggle-status?userId=${userId}`),
+  verify: (id, userId) => api.patch(`/domestic-staff/${id}/verify?userId=${userId}`),
+  delete: (id, userId) => api.delete(`/domestic-staff/${id}?userId=${userId}`),
+  // Attendance
+  recordAttendance: (userId, data) => api.post(`/domestic-staff/attendance?userId=${userId}`, data),
+  getAttendanceBySociety: (societyId, userId, date) => api.get(`/domestic-staff/attendance/society/${societyId}?userId=${userId}${date ? `&date=${date}` : ''}`),
+  getAttendanceByStaff: (staffId, userId, startDate, endDate) => api.get(`/domestic-staff/attendance/staff/${staffId}?userId=${userId}&startDate=${startDate}&endDate=${endDate}`),
+  getAttendanceByFlat: (flatId, userId) => api.get(`/domestic-staff/attendance/flat/${flatId}?userId=${userId}`),
+  markCheckOut: (attendanceId, userId) => api.patch(`/domestic-staff/attendance/${attendanceId}/check-out?userId=${userId}`),
+}
+
+// Safety API (SOS Alerts + Gate Logs)
+export const safetyApi = {
+  // SOS Alerts
+  createAlert: (userId, data) => api.post(`/safety/sos?userId=${userId}`, data),
+  getAllAlerts: (userId) => api.get(`/safety/sos?userId=${userId}`),
+  getAlertsBySociety: (societyId, userId) => api.get(`/safety/sos/society/${societyId}?userId=${userId}`),
+  getAlertsByStatus: (societyId, status, userId) => api.get(`/safety/sos/society/${societyId}/status/${status}?userId=${userId}`),
+  getAlertById: (id, userId) => api.get(`/safety/sos/${id}?userId=${userId}`),
+  acknowledgeAlert: (id, userId) => api.patch(`/safety/sos/${id}/acknowledge?userId=${userId}`),
+  resolveAlert: (id, userId, notes) => api.patch(`/safety/sos/${id}/resolve?userId=${userId}${notes ? `&resolutionNotes=${encodeURIComponent(notes)}` : ''}`),
+  markFalseAlarm: (id, userId) => api.patch(`/safety/sos/${id}/false-alarm?userId=${userId}`),
+  // Gate Logs
+  createGateLog: (userId, data) => api.post(`/safety/gate-log?userId=${userId}`, data),
+  getGateLogsBySociety: (societyId, userId) => api.get(`/safety/gate-log/society/${societyId}?userId=${userId}`),
+  getGateLogsByFlat: (flatId, userId) => api.get(`/safety/gate-log/flat/${flatId}?userId=${userId}`),
+  getGateLogsByDateRange: (societyId, userId, start, end) => api.get(`/safety/gate-log/society/${societyId}/range?userId=${userId}&start=${start}&end=${end}`),
+  getGateLogById: (id, userId) => api.get(`/safety/gate-log/${id}?userId=${userId}`),
+  markExit: (id, userId) => api.patch(`/safety/gate-log/${id}/exit?userId=${userId}`),
+  deleteGateLog: (id, userId) => api.delete(`/safety/gate-log/${id}?userId=${userId}`),
+}
+
 // Helper function to download blob as file
 export const downloadBlob = (blob, filename) => {
   const url = window.URL.createObjectURL(blob);

@@ -61,6 +61,9 @@
 @import "./pages/blog.css";
 @import "./pages/demo.css";
 @import "./pages/help.css";
+@import "./pages/visitors.css";
+@import "./pages/domestic-staff.css";
+@import "./pages/safety.css";
 
 /* Utility replacements for Tailwind classes */
 @import "./utils/layout.css";

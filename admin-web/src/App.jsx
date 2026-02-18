@@ -51,6 +51,10 @@ const Documents = lazyWithMinDelay(() => import('./pages/communication/Documents
 
 const Vendors = lazyWithMinDelay(() => import('./pages/vendors/Vendors'))
 
+const Visitors = lazyWithMinDelay(() => import('./pages/security/Visitors'))
+const DomesticStaff = lazyWithMinDelay(() => import('./pages/security/DomesticStaff'))
+const Safety = lazyWithMinDelay(() => import('./pages/security/Safety'))
+
 const About = lazyWithMinDelay(() => import('./pages/footer/About'))
 const Privacy = lazyWithMinDelay(() => import('./pages/footer/Privacy'))
 const Terms = lazyWithMinDelay(() => import('./pages/footer/Terms'))
@@ -129,6 +133,9 @@ const PAGE_TITLES = {
   '/complaints': 'Complaints',
   '/emergency-contacts': 'Emergency Contacts',
   '/documents': 'Documents',
+  '/visitors': 'Visitors',
+  '/domestic-staff': 'Domestic Staff',
+  '/safety': 'Safety & Security',
   '/settings': 'Settings',
 }
 
@@ -289,6 +296,9 @@ function App() {
                 <Route path="complaints" element={<Complaints />} />
                 <Route path="emergency-contacts" element={<EmergencyContacts />} />
                 <Route path="documents" element={<Documents />} />
+                <Route path="visitors" element={<Visitors />} />
+                <Route path="domestic-staff" element={<DomesticStaff />} />
+                <Route path="safety" element={<Safety />} />
                 <Route path="settings" element={<Settings />} />
               </Route>
 
