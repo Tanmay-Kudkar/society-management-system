@@ -77,11 +77,11 @@ export default function MaintenanceBills() {
     })
   }
 
-  // Get society filter from URL (for PLATFORM_OWNER viewing specific society)
+  // Get society filter from URL (for MASTER_ADMIN viewing specific society)
   const societyIdFromUrl = searchParams.get('society')
 
-  // Check if current user is PLATFORM_OWNER or ORGANIZATION_OWNER
-  const isPlatformLevel = user?.role === 'PLATFORM_OWNER' || user?.role === 'ORGANIZATION_OWNER'
+  // Check if current user is MASTER_ADMIN or SOCIETY_ADMIN
+  const isPlatformLevel = user?.role === 'MASTER_ADMIN'
 
   // Determine effective society ID for filtering
   const effectiveSocietyId = isPlatformLevel && societyIdFromUrl ? parseInt(societyIdFromUrl) : user?.societyId

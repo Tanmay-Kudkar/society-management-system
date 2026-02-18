@@ -223,7 +223,7 @@ export default function Organizations() {
   const queryClient = useQueryClient()
   const toast = useToast()
   const navigate = useNavigate()
-  const isPlatformOwner = user?.role === 'PLATFORM_OWNER'
+  const isPlatformOwner = user?.role === 'MASTER_ADMIN'
   const [showModal, setShowModal] = useState(false)
   const [showBulkImport, setShowBulkImport] = useState(false)
   const [editingOrg, setEditingOrg] = useState(null)

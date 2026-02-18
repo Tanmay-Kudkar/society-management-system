@@ -24,7 +24,7 @@ public class ComplaintController {
         this.roleService = roleService;
     }
 
-    // All registered users can raise complaints (PLATFORM_OWNER to TENANT)
+    // All registered users can raise complaints (MASTER_ADMIN to TENANT)
     @PostMapping
     public ResponseEntity<ComplaintResponse> create(
             @RequestParam Long userId,

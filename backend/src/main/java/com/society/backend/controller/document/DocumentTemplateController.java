@@ -22,7 +22,7 @@ public class DocumentTemplateController {
     private final DocumentTemplateService documentTemplateService;
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY')")
+    @PreAuthorize("hasAnyRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY')")
     public ResponseEntity<DocumentTemplateResponse> create(
             @Valid @RequestBody DocumentTemplateRequest request,
             @RequestParam Long userId) {
@@ -45,7 +45,7 @@ public class DocumentTemplateController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY')")
+    @PreAuthorize("hasAnyRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY')")
     public ResponseEntity<DocumentTemplateResponse> update(
             @PathVariable Long id,
             @Valid @RequestBody DocumentTemplateRequest request,
@@ -54,7 +54,7 @@ public class DocumentTemplateController {
     }
 
     @PatchMapping("/{id}/deactivate")
-    @PreAuthorize("hasAnyRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY')")
+    @PreAuthorize("hasAnyRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY')")
     public ResponseEntity<DocumentTemplateResponse> deactivate(
             @PathVariable Long id,
             @RequestParam Long userId) {
@@ -62,7 +62,7 @@ public class DocumentTemplateController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY')")
+    @PreAuthorize("hasAnyRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY')")
     public ResponseEntity<Void> delete(
             @PathVariable Long id,
             @RequestParam Long userId) {

@@ -57,13 +57,8 @@ public class NoticeServiceImpl implements NoticeService {
 
         return noticeRepository.findAllByOrderByCreatedAtDesc().stream()
                 .filter(n -> {
-                    if (currentUser.getRole() == com.society.backend.entity.Role.PLATFORM_OWNER) {
+                    if (currentUser.getRole() == com.society.backend.entity.Role.MASTER_ADMIN) {
                         return true;
-                    }
-                    if (currentUser.getRole() == com.society.backend.entity.Role.ORGANIZATION_OWNER
-                            && currentUser.getOrganization() != null) {
-                        return n.getSociety() != null && n.getSociety().getOrganization() != null
-                                && n.getSociety().getOrganization().getId().equals(currentUser.getOrganization().getId());
                     }
                     return n.getSociety() != null && currentUser.getSociety() != null
                             && n.getSociety().getId().equals(currentUser.getSociety().getId());

@@ -28,9 +28,9 @@ export default function Payments() {
     return <PermissionDenied message="You don't have permission to view payments" />
   }
 
-  // Get society filter from URL (for PLATFORM_OWNER viewing specific society)
+  // Get society filter from URL (for MASTER_ADMIN viewing specific society)
   const societyIdFromUrl = searchParams.get('society')
-  const isPlatformLevel = user?.role === 'PLATFORM_OWNER' || user?.role === 'ORGANIZATION_OWNER'
+  const isPlatformLevel = user?.role === 'MASTER_ADMIN'
   const effectiveSocietyId = isPlatformLevel && societyIdFromUrl ? parseInt(societyIdFromUrl) : user?.societyId
 
   // Fetch payments based on user role

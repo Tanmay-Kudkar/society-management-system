@@ -48,7 +48,7 @@ public class AuthServiceImpl implements AuthService {
 
     // Portal → allowed roles mapping
     private static final Set<Role> ADMIN_ROLES = Set.of(
-            Role.MASTER_ADMIN, Role.PLATFORM_OWNER, Role.SOCIETY_ADMIN);
+            Role.MASTER_ADMIN, Role.SOCIETY_ADMIN);
     private static final Set<Role> MANAGEMENT_ROLES = Set.of(
             Role.CHAIRMAN, Role.SECRETARY, Role.TREASURER,
             Role.COMMITTEE, Role.MANAGER, Role.EMPLOYEE);
@@ -129,7 +129,7 @@ public class AuthServiceImpl implements AuthService {
         String token = jwtUtils.generateToken(user.getEmail(), user.getRole().name(), user.getId(), rememberMe);
 
         // Get organizationId if user belongs to an organization
-        Long organizationId = user.getOrganization() != null ? user.getOrganization().getId() : null;
+        Long organizationId = (user.getSociety() != null && user.getSociety().getOrganization() != null) ? user.getSociety().getOrganization().getId() : null;
         // Get societyId if user belongs to a society
         Long societyId = user.getSociety() != null ? user.getSociety().getId() : null;
         // Get flatId if user has a flat assigned
@@ -157,7 +157,7 @@ public class AuthServiceImpl implements AuthService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new ApiException(HttpStatus.UNAUTHORIZED, "User not found"));
 
-        Long organizationId = user.getOrganization() != null ? user.getOrganization().getId() : null;
+        Long organizationId = (user.getSociety() != null && user.getSociety().getOrganization() != null) ? user.getSociety().getOrganization().getId() : null;
         Long societyId = user.getSociety() != null ? user.getSociety().getId() : null;
         Long flatId = user.getFlat() != null ? user.getFlat().getId() : null;
 

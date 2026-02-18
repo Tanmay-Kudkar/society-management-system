@@ -55,8 +55,8 @@ public class ComplaintServiceImpl implements ComplaintService {
             complaint.setOrganization(user.getSociety().getOrganization());
         }
 
-        if (complaint.getOrganization() == null && user.getOrganization() != null) {
-            complaint.setOrganization(user.getOrganization());
+        if (complaint.getOrganization() == null && user.getSociety() != null && user.getSociety().getOrganization() != null) {
+            complaint.setOrganization(user.getSociety().getOrganization());
         }
 
         Complaint saved = complaintRepository.save(complaint);
@@ -68,20 +68,11 @@ public class ComplaintServiceImpl implements ComplaintService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "User not found"));
 
-        // PLATFORM_OWNER sees all complaints
-        if (user.getRole().name().equals("PLATFORM_OWNER")) {
+        // MASTER_ADMIN sees all complaints
+        if (user.getRole().name().equals("MASTER_ADMIN")) {
             return complaintRepository.findAll().stream()
                     .map(this::toResponse)
                     .collect(Collectors.toList());
-        }
-
-        if (user.getRole().name().equals("ORGANIZATION_OWNER") && user.getOrganization() != null) {
-            Long orgId = user.getOrganization().getId();
-            return complaintRepository.findAll().stream()
-                .filter(c -> c.getSociety() != null && c.getSociety().getOrganization() != null
-                    && c.getSociety().getOrganization().getId().equals(orgId))
-                .map(this::toResponse)
-                .collect(Collectors.toList());
         }
 
         // Others see only complaints from their society
@@ -106,7 +97,7 @@ public class ComplaintServiceImpl implements ComplaintService {
     @Override
     public List<ComplaintResponse> getByUser(Long userId) {
         var currentUser = roleService.getCurrentUser();
-        if (currentUser != null && currentUser.getRole() != com.society.backend.entity.Role.PLATFORM_OWNER) {
+        if (currentUser != null && currentUser.getRole() != com.society.backend.entity.Role.MASTER_ADMIN) {
             if (!currentUser.getId().equals(userId)) {
                 throw new ApiException(HttpStatus.FORBIDDEN, "Cannot access other users' complaints");
             }

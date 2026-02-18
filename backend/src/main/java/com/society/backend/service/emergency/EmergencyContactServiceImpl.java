@@ -91,13 +91,8 @@ public class EmergencyContactServiceImpl implements EmergencyContactService {
 
         return emergencyContactRepository.findAll().stream()
                 .filter(c -> {
-                    if (currentUser.getRole() == Role.PLATFORM_OWNER) {
+                    if (currentUser.getRole() == Role.MASTER_ADMIN) {
                         return true;
-                    }
-                    if (currentUser.getRole() == Role.ORGANIZATION_OWNER
-                            && currentUser.getOrganization() != null) {
-                        return c.getSociety() != null && c.getSociety().getOrganization() != null
-                                && c.getSociety().getOrganization().getId().equals(currentUser.getOrganization().getId());
                     }
                     return c.getSociety() != null && currentUser.getSociety() != null
                             && c.getSociety().getId().equals(currentUser.getSociety().getId());
@@ -170,7 +165,7 @@ public class EmergencyContactServiceImpl implements EmergencyContactService {
      * Check if the role is admin or committee level
      */
     private boolean isAdminOrCommitteeRole(Role role) {
-        return role == Role.PLATFORM_OWNER || 
+        return role == Role.MASTER_ADMIN || 
                role == Role.SOCIETY_ADMIN || 
                role == Role.CHAIRMAN || 
                role == Role.SECRETARY || 

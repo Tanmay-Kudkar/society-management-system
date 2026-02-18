@@ -14,8 +14,8 @@ import useMinLoadingTime from '../../hooks/useMinLoadingTime'
 export default function Societies() {
   const { user, canManageSocieties } = useAuth()
   const confirmDialog = useConfirmDialog()
-  const isPlatformOwner = user?.role === 'PLATFORM_OWNER'
-  const isOrganizationOwner = user?.role === 'ORGANIZATION_OWNER'
+  const isPlatformOwner = user?.role === 'MASTER_ADMIN'
+  const isOrganizationOwner = user?.role === 'SOCIETY_ADMIN'
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const toast = useToast()

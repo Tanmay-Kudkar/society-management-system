@@ -85,16 +85,8 @@ public class VisitorServiceImpl implements VisitorService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "User not found"));
 
-        if (user.getRole().name().equals("PLATFORM_OWNER")) {
+        if (user.getRole().name().equals("MASTER_ADMIN")) {
             return visitorRepository.findAll().stream()
-                    .map(this::toResponse).collect(Collectors.toList());
-        }
-
-        if (user.getRole().name().equals("ORGANIZATION_OWNER") && user.getOrganization() != null) {
-            Long orgId = user.getOrganization().getId();
-            return visitorRepository.findAll().stream()
-                    .filter(v -> v.getSociety() != null && v.getSociety().getOrganization() != null
-                            && v.getSociety().getOrganization().getId().equals(orgId))
                     .map(this::toResponse).collect(Collectors.toList());
         }
 

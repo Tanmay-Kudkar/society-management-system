@@ -24,7 +24,7 @@ public class NoticeController {
         this.roleService = roleService;
     }
 
-    // PLATFORM_OWNER, COMMITTEE, EMPLOYEE can create
+    // MASTER_ADMIN, COMMITTEE, EMPLOYEE can create
     @PostMapping
     public ResponseEntity<NoticeResponse> create(
             @RequestParam Long userId,
@@ -49,7 +49,7 @@ public class NoticeController {
         return ResponseEntity.ok(noticeService.getBySocietyId(societyId));
     }
 
-    // PLATFORM_OWNER, COMMITTEE, EMPLOYEE can update
+    // MASTER_ADMIN, COMMITTEE, EMPLOYEE can update
     @PutMapping("/{id}")
     public ResponseEntity<NoticeResponse> update(
             @PathVariable Long id,
@@ -59,7 +59,7 @@ public class NoticeController {
         return ResponseEntity.ok(noticeService.update(id, request));
     }
 
-    // PLATFORM_OWNER, COMMITTEE, EMPLOYEE can delete
+    // MASTER_ADMIN, COMMITTEE, EMPLOYEE can delete
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(
             @PathVariable Long id,

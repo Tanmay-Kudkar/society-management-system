@@ -160,8 +160,7 @@ public class TransactionServiceImpl implements TransactionService {
 
         return transactionRepository.findAll().stream()
                 .filter(t -> {
-                    if (currentUser.getRole() == com.society.backend.entity.Role.PLATFORM_OWNER
-                            || currentUser.getRole() == com.society.backend.entity.Role.MASTER_ADMIN) {
+                    if (currentUser.getRole() == com.society.backend.entity.Role.MASTER_ADMIN) {
                         return true;
                     }
                     return t.getSociety() != null && currentUser.getSociety() != null

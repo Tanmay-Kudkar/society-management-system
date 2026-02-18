@@ -57,8 +57,8 @@ public class FlatServiceImpl implements FlatService {
         User currentUser = userRepository.findById(userId)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "User not found"));
 
-        // PLATFORM_OWNER can see all flats
-        if (currentUser.getRole() == Role.PLATFORM_OWNER) {
+        // MASTER_ADMIN can see all flats
+        if (currentUser.getRole() == Role.MASTER_ADMIN) {
             return flatRepository.findAll().stream()
                     .map(this::toResponse)
                     .collect(Collectors.toList());

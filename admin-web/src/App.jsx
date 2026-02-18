@@ -164,7 +164,7 @@ function App() {
       () => import('./pages/communication/Notices'),
     ]
 
-    if (role === 'MASTER_ADMIN' || role === 'PLATFORM_OWNER') {
+    if (role === 'MASTER_ADMIN' || role === 'MASTER_ADMIN') {
       importers.push(
         () => import('./pages/society/Societies'),
         () => import('./pages/society/SocietyAdmins'),

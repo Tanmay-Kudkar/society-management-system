@@ -84,16 +84,8 @@ public class SafetyServiceImpl implements SafetyService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "User not found"));
 
-        if (user.getRole().name().equals("PLATFORM_OWNER")) {
+        if (user.getRole().name().equals("MASTER_ADMIN")) {
             return sosAlertRepository.findAll().stream()
-                    .map(this::toAlertResponse).collect(Collectors.toList());
-        }
-
-        if (user.getRole().name().equals("ORGANIZATION_OWNER") && user.getOrganization() != null) {
-            Long orgId = user.getOrganization().getId();
-            return sosAlertRepository.findAll().stream()
-                    .filter(a -> a.getSociety() != null && a.getSociety().getOrganization() != null
-                            && a.getSociety().getOrganization().getId().equals(orgId))
                     .map(this::toAlertResponse).collect(Collectors.toList());
         }
 

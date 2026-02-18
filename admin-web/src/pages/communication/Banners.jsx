@@ -20,8 +20,8 @@ export default function Banners() {
   const [searchTerm, setSearchTerm] = useState('')
   const [filterStatus, setFilterStatus] = useState('')
 
-  // Check if current user is PLATFORM_OWNER
-  const isPlatformLevel = user?.role === 'PLATFORM_OWNER' || user?.role === 'ORGANIZATION_OWNER'
+  // Check if current user is MASTER_ADMIN
+  const isPlatformLevel = user?.role === 'MASTER_ADMIN'
 
   const { data: banners = [], isLoading, isError } = useQuery({
     queryKey: ['banners'],

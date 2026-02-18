@@ -35,14 +35,14 @@ export default function Wings() {
   const [formErrors, setFormErrors] = useState({})
   const [pageError, setPageError] = useState('')
 
-  const isPlatformLevel = user?.role === 'PLATFORM_OWNER' || user?.role === 'MASTER_ADMIN'
+  const isPlatformLevel = user?.role === 'MASTER_ADMIN' || user?.role === 'MASTER_ADMIN'
 
   // Determine the effective society ID
   const effectiveSocietyId = isPlatformLevel ? filterSociety : user?.societyId
   const effectiveSocietyIdNum = effectiveSocietyId ? Number(effectiveSocietyId) : null
   const canEditWings = canManageWings()
 
-  // Fetch societies (for PLATFORM_OWNER dropdown)
+  // Fetch societies (for MASTER_ADMIN dropdown)
   const { data: societies = [] } = useQuery({
     queryKey: ['societies'],
     queryFn: () => societyApi.getAll().then(res => res.data),
@@ -452,7 +452,7 @@ export default function Wings() {
             <form onSubmit={handleSubmit} className="wings-modal__form">
               <FormErrorSummary message={formErrors.capacity} />
               
-              {/* Society field - only show dropdown for PLATFORM_OWNER */}
+              {/* Society field - only show dropdown for MASTER_ADMIN */}
               {isPlatformLevel ? (
                 <SmartSelect
                   label="Society"

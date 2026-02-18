@@ -81,16 +81,11 @@ public class BannerServiceImpl implements BannerService {
 
         return bannerRepository.findAll().stream()
                 .filter(b -> {
-                    if (currentUser.getRole() == com.society.backend.entity.Role.PLATFORM_OWNER) {
+                    if (currentUser.getRole() == com.society.backend.entity.Role.MASTER_ADMIN) {
                         return true;
                     }
                     if (b.getSociety() == null) {
                         return true;
-                    }
-                    if (currentUser.getRole() == com.society.backend.entity.Role.ORGANIZATION_OWNER
-                            && currentUser.getOrganization() != null) {
-                        return b.getSociety().getOrganization() != null
-                                && b.getSociety().getOrganization().getId().equals(currentUser.getOrganization().getId());
                     }
                     return currentUser.getSociety() != null
                             && b.getSociety().getId().equals(currentUser.getSociety().getId());

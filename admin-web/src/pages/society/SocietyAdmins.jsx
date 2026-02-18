@@ -269,8 +269,8 @@ const buildTemplateWorkbook = () => {
 export default function SocietyAdmins() {
   const { user } = useAuth()
   const confirmDialog = useConfirmDialog()
-  const isPlatformOwner = user?.role === 'PLATFORM_OWNER'
-  const isOrgOwner = user?.role === 'ORGANIZATION_OWNER'
+  const isPlatformOwner = user?.role === 'MASTER_ADMIN'
+  const isOrgOwner = user?.role === 'SOCIETY_ADMIN'
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const toast = useToast()
@@ -299,7 +299,7 @@ export default function SocietyAdmins() {
     placeholderData: [],
   })
 
-  // Fetch organizations for PLATFORM_OWNER
+  // Fetch organizations for MASTER_ADMIN
   const { data: organizations = [] } = useQuery({
     queryKey: ['organizations', user?.id],
     queryFn: () => organizationApi.getAll().then(res => res.data).catch(() => []),

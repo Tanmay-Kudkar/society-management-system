@@ -15,8 +15,8 @@
 ![React](https://img.shields.io/badge/React-19.2.0-61DAFB?style=for-the-badge&logo=react&logoColor=white)
 ![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.5.10-6DB33F?style=for-the-badge&logo=springboot&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
-![React Native](https://img.shields.io/badge/React_Native-0.81.5-61DAFB?style=for-the-badge&logo=react&logoColor=white)
-![Expo](https://img.shields.io/badge/Expo-54.0.32-000020?style=for-the-badge&logo=expo&logoColor=white)
+![Kotlin](https://img.shields.io/badge/Kotlin-Android-7F52FF?style=for-the-badge&logo=kotlin&logoColor=white)
+![Swift](https://img.shields.io/badge/Swift-iOS-F05138?style=for-the-badge&logo=swift&logoColor=white)
 
 ![Java](https://img.shields.io/badge/Java-21-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white)
 ![Vite](https://img.shields.io/badge/Vite-7.2.4-646CFF?style=for-the-badge&logo=vite&logoColor=white)
@@ -34,7 +34,6 @@
 ![Apache POI](https://img.shields.io/badge/Apache_POI-5.2.5-blue?style=for-the-badge)
 ![Lucide](https://img.shields.io/badge/Lucide_React-0.563.0-F56565?style=for-the-badge)
 ![React Router](https://img.shields.io/badge/React_Router-7.13.0-CA4245?style=for-the-badge&logo=reactrouter&logoColor=white)
-![React Navigation](https://img.shields.io/badge/React_Navigation-7.x-6B52AE?style=for-the-badge)
 
 <br/>
 
@@ -72,14 +71,14 @@
 | 5 | [🔐 Permission Matrix](#-permission-matrix) | Fine-grained CRUD access per role |
 | 6 | [📜 Access Control Rules](#-access-control-rules) | Security enforcement rules |
 | 7 | [🖥️ Frontend — Admin Web Panel](#️-frontend--admin-web-panel) | React SPA structure and details |
-| 8 | [📱 Mobile App — React Native](#-mobile-app--react-native) | Expo-based resident app |
+| 8 | [📱 Mobile Apps — Native (Android + iOS)](#-mobile-apps--native-android--ios) | Dedicated native apps (Kotlin & Swift) |
 | 9 | [⚙️ Backend — Spring Boot API](#️-backend--spring-boot-api) | Java backend architecture |
 | 10 | [🗄️ Database Design](#️-database-design) | PostgreSQL schema and ER diagram |
 | 11 | [🌐 API Reference](#-api-reference) | Complete endpoint documentation |
 | 12 | [📦 Response Formats](#-response-formats) | JSON response structure examples |
 | 13 | [✨ Features & Capabilities](#-features--capabilities) | Detailed feature breakdown |
 | 14 | [🧭 Blueprint Roadmap (Merged)](#-blueprint-roadmap-merged) | 77-feature implementation roadmap |
-| 15 | [📱 Native Apps Parallel Roadmap (TODO)](#-native-apps-parallel-roadmap-todo) | Android Native + iOS Swift parallel plan |
+| 15 | [📱 Native Apps Roadmap (Android + iOS)](#-native-apps-roadmap-android--ios) | Dedicated Android & iOS native app plan |
 | 16 | [🚀 Getting Started](#-getting-started) | Setup & installation guide |
 | 17 | [🌍 Environment Variables](#-environment-variables) | Configuration reference |
 | 18 | [☁️ Deployment](#️-deployment) | Render cloud deployment |
@@ -105,12 +104,12 @@
 |:--------:|---------|
 | 🏢 **Purpose** | End-to-end management platform for residential housing societies |
 | 🌐 **Admin Web** | React 19 SPA with Vite — dashboards, finance, RBAC, bulk operations |
-| 📱 **Mobile App** | React Native + Expo — resident portal with payments & notifications |
+| 📱 **Mobile Apps** | Native Android (Kotlin) + iOS (Swift) — dedicated resident apps |
 | ⚙️ **Backend** | Spring Boot 3.5 REST API — JWT auth, RBAC, email, Razorpay |
 | 🗄️ **Database** | PostgreSQL 16 with 20+ relational tables |
-| 👥 **Roles** | 12-level RBAC hierarchy from Platform Owner → Visitor |
+| 👥 **Roles** | 12-role RBAC hierarchy from Master Admin → Visitor |
 | 💳 **Payments** | Razorpay payment gateway integration (INR) |
-| 📧 **Notifications** | Email via Gmail SMTP + push notifications on mobile |
+| 📧 **Notifications** | Email via Gmail SMTP + Firebase push notifications |
 | 📊 **Analytics** | Financial reports, MTD/YTD, category breakdowns, Excel exports |
 | 🔄 **Bulk Ops** | Excel import/export for users, flats, wings, vendors, tenants, vehicles |
 | 🚀 **Deployment** | Render Blueprint — backend + static frontend + managed PostgreSQL |
@@ -142,18 +141,16 @@
 | ![XLSX](https://img.shields.io/badge/-SheetJS-green?style=flat-square) | `0.18.5` | Excel file parsing for bulk imports |
 | ![clsx](https://img.shields.io/badge/-clsx-gray?style=flat-square) | `2.1.1` | Conditional className utility |
 
-### 📱 Mobile App
+### 📱 Mobile Apps (Native)
 
-| Technology | Version | Purpose |
-|:----------:|:-------:|---------|
-| ![React Native](https://img.shields.io/badge/-React_Native-61DAFB?logo=react&logoColor=white&style=flat-square) | `0.81.5` | Cross-platform mobile framework |
-| ![Expo](https://img.shields.io/badge/-Expo-000020?logo=expo&logoColor=white&style=flat-square) | `54.0.32` | Managed workflow & native APIs |
-| ![React Navigation](https://img.shields.io/badge/-React_Navigation-6B52AE?style=flat-square) | `7.x` | Screen navigation (stack + bottom tabs) |
-| ![Bottom Tabs](https://img.shields.io/badge/-Bottom_Tabs-6B52AE?style=flat-square) | `7.10.1` | Tab-based navigation |
-| ![Expo Notifications](https://img.shields.io/badge/-Notifications-000020?style=flat-square) | `0.32.16` | Push notification handling |
-| ![Expo SecureStore](https://img.shields.io/badge/-SecureStore-000020?style=flat-square) | `15.0.8` | Encrypted token storage |
-| ![Reanimated](https://img.shields.io/badge/-Reanimated-7B61FF?style=flat-square) | `4.1.1` | Smooth animations |
-| ![Linear Gradient](https://img.shields.io/badge/-LinearGradient-000020?style=flat-square) | `15.0.8` | Gradient backgrounds |
+| Technology | Platform | Purpose |
+|:----------:|:--------:|---------|
+| ![Kotlin](https://img.shields.io/badge/-Kotlin-7F52FF?logo=kotlin&logoColor=white&style=flat-square) | Android | Native Android app (Jetpack Compose) |
+| ![Swift](https://img.shields.io/badge/-Swift-F05138?logo=swift&logoColor=white&style=flat-square) | iOS | Native iOS app (SwiftUI) |
+| ![Firebase](https://img.shields.io/badge/-Firebase-FFCA28?logo=firebase&logoColor=black&style=flat-square) | Both | Push notifications via FCM |
+| ![Retrofit](https://img.shields.io/badge/-Retrofit-3DDC84?style=flat-square) | Android | HTTP client for REST APIs |
+| ![URLSession](https://img.shields.io/badge/-URLSession-F05138?style=flat-square) | iOS | Networking layer |
+| ![Keychain](https://img.shields.io/badge/-Keychain/Keystore-gray?style=flat-square) | Both | Secure token storage |
 
 ### ⚙️ Backend
 
@@ -164,7 +161,7 @@
 | ![Spring Security](https://img.shields.io/badge/-Spring_Security-6DB33F?logo=springsecurity&logoColor=white&style=flat-square) | `6.x` | Authentication & authorization |
 | ![Spring Data JPA](https://img.shields.io/badge/-Spring_Data_JPA-6DB33F?style=flat-square) | `3.5.x` | ORM & repository pattern |
 | ![PostgreSQL Driver](https://img.shields.io/badge/-PostgreSQL-4169E1?logo=postgresql&logoColor=white&style=flat-square) | `42.x` | JDBC database driver |
-| ![JJWT](https://img.shields.io/badge/-JJWT-000000?style=flat-square) | `0.12.5` | JWT token creation & validation |
+| ![JWT](https://img.shields.io/badge/-JWT-000000?style=flat-square) | `0.12.5` | JWT token creation & validation |
 | ![Apache POI](https://img.shields.io/badge/-Apache_POI-blue?style=flat-square) | `5.2.5` | Excel export generation |
 | ![Flyway](https://img.shields.io/badge/-Flyway-CC0200?logo=flyway&logoColor=white&style=flat-square) | `11.20.3` | Database migration management |
 | ![Razorpay Java](https://img.shields.io/badge/-Razorpay-0C2451?logo=razorpay&logoColor=white&style=flat-square) | `1.4.6` | Payment gateway SDK |
@@ -197,21 +194,21 @@
 ║                         System Architecture v2.0                                ║
 ╚══════════════════════════════════════════════════════════════════════════════════╝
 
-  ┌─────────────────────────┐          ┌─────────────────────────┐
-  │    🖥️ ADMIN WEB PANEL   │          │   📱 MOBILE APP          │
-  │                         │          │                         │
-  │  React 19 + Vite 7      │          │  React Native 0.81      │
-  │  React Router 7          │          │  Expo 54                │
-  │  TanStack Query 5        │          │  React Navigation 7     │
-  │  Recharts + Lucide       │          │  Expo Notifications     │
-  │  XLSX (Bulk Import)      │          │  Secure Store           │
-  │                         │          │                         │
-  │  Port: 5173 (dev)       │          │  Expo Go / APK          │
-  └───────────┬─────────────┘          └───────────┬─────────────┘
-              │                                    │
-              │         HTTPS / REST JSON          │
-              └──────────────┬─────────────────────┘
-                             │
+  ┌─────────────────────────┐     ┌──────────────────────┐     ┌──────────────────────┐
+  │    🖥️ ADMIN WEB PANEL   │     │  📱 ANDROID APP      │     │  📱 iOS APP           │
+  │                         │     │                      │     │                      │
+  │  React 19 + Vite 7      │     │  Kotlin              │     │  Swift / SwiftUI      │
+  │  React Router 7          │     │  Jetpack Compose     │     │  UIKit + SwiftUI     │
+  │  TanStack Query 5        │     │  Retrofit + OkHttp   │     │  URLSession          │
+  │  Recharts + Lucide       │     │  Firebase FCM        │     │  Firebase FCM        │
+  │  XLSX (Bulk Import)      │     │  Android Keystore    │     │  iOS Keychain        │
+  │                         │     │                      │     │                      │
+  │  Port: 5173 (dev)       │     │  Play Store          │     │  App Store           │
+  └───────────┬─────────────┘     └──────────┬───────────┘     └──────────┬───────────┘
+              │                               │                           │
+              │              HTTPS / REST JSON │                           │
+              └───────────────┬───────────────┘───────────────────────────┘
+                              │
                      ┌───────▼───────┐
                      │  📡 API LAYER │
                      │               │
@@ -253,9 +250,9 @@
               ╚═════════════════╪═══════════════════════════════════╝
                                 │
                      ┌──────────▼──────────┐
-                     │  🗄️ POSTGRESQL 16    │
+                     │  🗄️ POSTGRESQL 18    │
                      │                     │
-                     │  20+ Tables         │
+                     │  60+ Tables         │
                      │  Foreign Keys       │
                      │  CHECK Constraints  │
                      │  Indexes            │
@@ -282,42 +279,32 @@
 
 ## 👥 Role Hierarchy & RBAC
 
-The system implements a **12-level Role-Based Access Control** hierarchy. Each role has strictly defined permissions for user management and data access.
+The system implements a **12-role Role-Based Access Control** hierarchy. Each role has strictly defined permissions for user management and data access. Legacy `PLATFORM_OWNER` and `ORGANIZATION_OWNER` roles have been removed — `MASTER_ADMIN` is the sole top-level role.
 
 ```
 ╔═══════════════════════════════════════════════════════════════════════════════╗
 ║                           ROLE HIERARCHY TREE                                ║
-║                     (12-Level Access Control System)                         ║
+║                      (12-Role Access Control System)                         ║
 ╚═══════════════════════════════════════════════════════════════════════════════╝
 
                     ╔══════════════════════╗
-                    ║   PLATFORM_OWNER     ║  Level 0 — Invisible Platform Creator
-                    ║   👑 God Mode        ║  Manages ALL organizations & societies
+                    ║    MASTER_ADMIN      ║  Level 0 — Platform Super Admin
+                    ║   👑 Full Access     ║  Manages ALL organizations & societies
                     ╚══════════╤═══════════╝
                                │
                     ╔══════════▼═══════════╗
-                    ║ ORGANIZATION_OWNER   ║  Level 1 — Multi-Society Manager
-                    ║   🏢 Org Admin       ║  Manages societies under own organization
-                    ╚══════════╤═══════════╝
-                               │
-                    ╔══════════▼═══════════╗
-                    ║   SOCIETY_ADMIN      ║  Level 2 — Single Society Super Admin
+                    ║   SOCIETY_ADMIN      ║  Level 1 — Single Society Super Admin
                     ║   🔧 Full Control    ║  FULL CRUD on ALL roles below
                     ╚══════════╤═══════════╝
                                │
-                    ╔══════════▼═══════════╗
-                    ║     CHAIRMAN         ║  Level 3 — Governing Body Head
-                    ║   🎖️ Presides        ║  Final approvals, bank signatory
-                    ╚══════════╤═══════════╝
-                               │
               ┌────────────────┼────────────────┐
-              │                                 │
-   ╔══════════▼═══════════╗          ╔══════════▼═══════════╗
-   ║     SECRETARY        ║          ║     TREASURER        ║
-   ║   📝 Admin Head      ║          ║   💰 Finance Head    ║
-   ╚══════════╤═══════════╝          ╚══════════╤═══════════╝
-              │                                 │       Level 4
-              └────────────────┬────────────────┘
+              │                │                 │
+   ╔══════════▼═══════════╗ ╔═▼════════════╗ ╔══▼═════════════════╗
+   ║     CHAIRMAN         ║ ║  SECRETARY   ║ ║     TREASURER      ║
+   ║   🎖️ Presides        ║ ║  📝 Admin    ║ ║   💰 Finance Head  ║
+   ╚══════════╤═══════════╝ ╚══╤═══════════╝ ╚══════╤═════════════╝
+              └────────────────┼──────────────────────┘
+                               │  Level 2 — Governing Body (shared CRUD)
                                │
               ┌────────────────┼────────────────┐
               │                                 │
@@ -325,37 +312,46 @@ The system implements a **12-level Role-Based Access Control** hierarchy. Each r
    ║     COMMITTEE        ║          ║      MANAGER         ║
    ║   📋 Committee Mbr   ║          ║   🔨 Operations      ║
    ╚══════════╤═══════════╝          ╚═══════════════════════╝
-              │                                          Level 5
+              │                                          Level 3
               │
    ┌──────────┼──────────┐
    │                     │
 ╔══▼═══════════════╗  ╔══▼═══════════════╗
 ║    EMPLOYEE      ║  ║     MEMBER       ║
-║  👷 Staff        ║  ║  🏠 Flat Owner   ║  Level 6
-╚══════════╤═══════╝  ╚══════════╤═══════╝
-           │                     │
-╔══════════▼═══════════╗  ╔══════▼═══════════════╗
-║     VISITOR          ║  ║      TENANT          ║
-║  🚶 Guest            ║  ║  🔑 Renter           ║  Level 7-8
-╚══════════════════════╝  ╚══════════════════════╝
+║  👷 Staff        ║  ║  🏠 Flat Owner   ║  Level 4
+╚══════════════════╝  ╚══════════════════╝
+                               │
+              ┌────────────────┼────────────────┐
+              │                                 │
+   ╔══════════▼═══════════╗          ╔══════════▼═══════════╗
+   ║      TENANT          ║          ║      VENDOR          ║
+   ║   🔑 Renter          ║          ║   🏪 Service Provider║
+   ╚══════════════════════╝          ╚══════════════════════╝
+                                                         Level 5
+                    ╔══════════════════════╗
+                    ║      VISITOR         ║
+                    ║   🚶 Guest           ║  Level 6
+                    ╚══════════════════════╝
 ```
+
+> **12 roles total.** Legacy `PLATFORM_OWNER` and `ORGANIZATION_OWNER` have been removed. `MASTER_ADMIN` is the sole top role. `VENDOR` was added as a new login-capable role.
 
 ### 🏷️ Role Descriptions
 
 | Level | Role | Description | Key Responsibilities |
 |:-----:|:----:|:------------|:--------------------|
-| 0 | `PLATFORM_OWNER` | 👑 Platform Creator | Manages ALL organizations & societies, creates org owners |
-| 1 | `ORGANIZATION_OWNER` | 🏢 Organization Admin | Manages multiple societies under an organization |
-| 2 | `SOCIETY_ADMIN` | 🔧 Society Super Admin | Full control over single society, ALL CRUD on roles below |
-| 3 | `CHAIRMAN` | 🎖️ Governing Body Head | Presides meetings, final approval authority, bank signatory |
-| 4 | `SECRETARY` | 📝 Administrative Head | Documentation, records, day-to-day operations |
-| 4 | `TREASURER` | 💰 Financial Head | Finances, billing, payments, accounts management |
-| 5 | `COMMITTEE` | 📋 Committee Member | Intermediate management, task assignment |
-| 5 | `MANAGER` | 🔨 Operations Manager | Day-to-day management (NO user CRUD rights) |
-| 6 | `EMPLOYEE` | 👷 Staff / Security | Handles visitors, basic operational tasks |
-| 6 | `MEMBER` | 🏠 Flat Owner | Views own data, raises tickets & complaints |
-| 7 | `TENANT` | 🔑 Renter | Limited access — own profile & bills only |
-| 8 | `VISITOR` | 🚶 Guest | Minimal read-only access |
+| 0 | `MASTER_ADMIN` | 👑 Platform Super Admin | Manages ALL organizations, societies, and users platform-wide |
+| 1 | `SOCIETY_ADMIN` | 🔧 Society Super Admin | Full control over single society, ALL CRUD on roles below |
+| 2 | `CHAIRMAN` | 🎖️ Governing Body Head | Presides meetings, final approval authority, bank signatory |
+| 2 | `SECRETARY` | 📝 Administrative Head | Documentation, records, day-to-day operations |
+| 2 | `TREASURER` | 💰 Financial Head | Finances, billing, payments, accounts management |
+| 3 | `COMMITTEE` | 📋 Committee Member | View all + limited write (tickets, notices — NO finance writes) |
+| 3 | `MANAGER` | 🔨 Operations Manager | Operational management (NO user CRUD rights) |
+| 4 | `EMPLOYEE` | 👷 Staff / Security | Handles visitors, gate logs, basic operational tasks |
+| 4 | `MEMBER` | 🏠 Flat Owner | Views own data, raises tickets & complaints |
+| 5 | `TENANT` | 🔑 Renter | Limited access — own profile, raise tickets |
+| 5 | `VENDOR` | 🏪 External Vendor | Own bills, invoices, work status |
+| 6 | `VISITOR` | 🚶 Guest | Minimal access — own profile only |
 
 <br/>
 
@@ -369,38 +365,38 @@ The system implements a **12-level Role-Based Access Control** hierarchy. Each r
 
 ### User Management CRUD Permissions
 
-> Each role can only **create**, **update/delete**, and **read** the roles specified below. `SOCIETY_ADMIN` is the exception — full CRUD on everything below Level 2.
+> Each role can only **create**, **update/delete**, and **read** the roles specified below. `MASTER_ADMIN` has full CRUD on everything. `SOCIETY_ADMIN` has full CRUD on all roles below Level 1.
 
 | Role | Can CREATE | Can UPDATE / DELETE | Can READ |
 |:-----|:-----------|:--------------------|:---------|
-| `PLATFORM_OWNER` | `ORGANIZATION_OWNER`, `SOCIETY_ADMIN` | `ORGANIZATION_OWNER`, `SOCIETY_ADMIN` | **ALL roles** |
-| `ORGANIZATION_OWNER` | `SOCIETY_ADMIN` (own org) | `SOCIETY_ADMIN` (own org) | Own org roles |
-| `SOCIETY_ADMIN` | **ALL below** (9 roles) | **ALL below** (9 roles) | ALL in society |
-| `CHAIRMAN` | `SECRETARY`, `TREASURER` | `SECRETARY`, `TREASURER` | All below |
-| `SECRETARY` | `COMMITTEE` | `COMMITTEE` | `COMMITTEE` and below |
-| `TREASURER` | `COMMITTEE` | `COMMITTEE` | `COMMITTEE` and below |
-| `COMMITTEE` | `EMPLOYEE`, `MEMBER` | `EMPLOYEE`, `MEMBER` | `EMPLOYEE`, `MEMBER` + |
-| `EMPLOYEE` | `VISITOR` | `VISITOR` | `VISITOR` |
-| `MEMBER` | `TENANT` | `TENANT` | `TENANT` |
+| `MASTER_ADMIN` | **ALL roles** (11 roles) | **ALL roles** (11 roles) | **ALL roles** |
+| `SOCIETY_ADMIN` | CHAIRMAN → VISITOR + VENDOR (10 roles) | CHAIRMAN → VISITOR + VENDOR (10 roles) | ALL in society |
+| `CHAIRMAN` | COMMITTEE, MANAGER, EMPLOYEE, MEMBER, TENANT, VISITOR | Same | All below |
+| `SECRETARY` | COMMITTEE, MANAGER, EMPLOYEE, MEMBER, TENANT, VISITOR | Same | All below |
+| `TREASURER` | COMMITTEE, MANAGER, EMPLOYEE, MEMBER, TENANT, VISITOR | Same | All below |
+| `COMMITTEE` | EMPLOYEE, MEMBER | EMPLOYEE, MEMBER | EMPLOYEE, MEMBER + below |
+| `EMPLOYEE` | VISITOR | VISITOR | VISITOR |
+| `MEMBER` | TENANT | TENANT | TENANT |
+| `MANAGER` | ❌ None | ❌ None | Operations scope |
+| `VENDOR` | ❌ None | ❌ None | Own data only |
 | `TENANT` | ❌ None | ❌ None | Own profile only |
 | `VISITOR` | ❌ None | ❌ None | Own profile only |
-| `MANAGER` | ❌ None | ❌ None | Operations scope |
 
 ### Module Access Matrix
 
-| Module | PLATFORM_OWNER | ORG_OWNER | SOCIETY_ADMIN | CHAIRMAN | SECRETARY | TREASURER | COMMITTEE | MEMBER | TENANT |
-|:-------|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
-| Organizations | ✅ CRUD | ✅ Read | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| Societies | ✅ CRUD | ✅ CRUD | ✅ Read | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| Users | ✅ CRUD | ✅ CRUD | ✅ CRUD | ✅ CRUD | ✅ CRUD | ✅ CRUD | ✅ CRUD | ✅ Limited | ❌ |
-| Flats / Wings | ✅ | ✅ | ✅ CRUD | ✅ CRUD | ✅ CRUD | ✅ Read | ✅ Read | ✅ Own | ✅ Own |
-| Finance | ✅ | ✅ | ✅ CRUD | ✅ CRUD | ✅ Read | ✅ CRUD | ✅ Read | ✅ Own Bills | ✅ Own |
-| Vendors | ✅ | ✅ | ✅ CRUD | ✅ CRUD | ✅ CRUD | ✅ CRUD | ✅ Read | ❌ | ❌ |
-| Complaints | ✅ | ✅ | ✅ CRUD | ✅ CRUD | ✅ CRUD | ✅ Read | ✅ CRUD | ✅ Own | ✅ Own |
-| Tickets | ✅ | ✅ | ✅ CRUD | ✅ CRUD | ✅ CRUD | ✅ Read | ✅ CRUD | ✅ Create | ❌ |
-| Notices | ✅ | ✅ | ✅ CRUD | ✅ CRUD | ✅ CRUD | ✅ Read | ✅ Read | ✅ Read | ✅ Read |
-| Reports | ✅ | ✅ | ✅ Full | ✅ Full | ✅ Full | ✅ Full | ✅ Limited | ❌ | ❌ |
-| Settings | ✅ | ✅ | ✅ Full | ✅ Limited | ✅ Limited | ✅ Limited | ❌ | ❌ | ❌ |
+| Module | MASTER_ADMIN | SOCIETY_ADMIN | CHAIRMAN | SECRETARY | TREASURER | COMMITTEE | MANAGER | EMPLOYEE | MEMBER | VENDOR | TENANT | VISITOR |
+|:-------|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
+| Organizations | ✅ CRUD | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Societies | ✅ CRUD | ✅ Read | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Users | ✅ CRUD | ✅ CRUD | ✅ CRUD | ✅ CRUD | ✅ CRUD | ✅ CRUD | ❌ | ✅ Limited | ✅ Limited | ❌ | ❌ | ❌ |
+| Flats / Wings | ✅ | ✅ CRUD | ✅ CRUD | ✅ CRUD | ✅ CRUD | ✅ Read | ✅ CRUD | ✅ Read | ✅ Own | ❌ | ✅ Own | ❌ |
+| Finance | ✅ | ✅ CRUD | ✅ CRUD | ✅ CRUD | ✅ CRUD | ✅ Read | ❌ | ❌ | ✅ Own Bills | ❌ | ✅ Own | ❌ |
+| Vendors | ✅ | ✅ CRUD | ✅ CRUD | ✅ CRUD | ✅ CRUD | ✅ Read | ✅ CRUD | ❌ | ❌ | ✅ Own | ❌ | ❌ |
+| Complaints | ✅ | ✅ CRUD | ✅ CRUD | ✅ CRUD | ✅ CRUD | ✅ CRUD | ✅ Read | ❌ | ✅ Own | ❌ | ✅ Own | ❌ |
+| Tickets | ✅ | ✅ CRUD | ✅ CRUD | ✅ CRUD | ✅ CRUD | ✅ CRUD | ✅ CRUD | ✅ Create | ✅ Create | ❌ | ✅ Create | ❌ |
+| Notices | ✅ | ✅ CRUD | ✅ CRUD | ✅ CRUD | ✅ CRUD | ✅ Read | ✅ CRUD | ✅ Read | ✅ Read | ❌ | ✅ Read | ✅ Read |
+| Reports | ✅ | ✅ Full | ✅ Full | ✅ Full | ✅ Full | ✅ Limited | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Settings | ✅ | ✅ Full | ✅ Limited | ✅ Limited | ✅ Limited | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
 
 <br/>
 
@@ -420,18 +416,20 @@ The system implements a **12-level Role-Based Access Control** hierarchy. Each r
 
 | # | Rule | Description |
 |:-:|:-----|:------------|
-| 1 | **Parent Creates Direct Children Only** | Each role can only create the roles specified in the permission matrix above — no skipping levels |
+| 1 | **Hierarchical User CRUD** | Each role can only create/manage the roles specified in the permission matrix — no skipping levels |
 | 2 | **Read Access Flows Downward** | A parent role can read all descendant roles in the hierarchy |
-| 3 | **Update/Delete Limited to Direct Children** | Modification access is strictly limited to direct child roles |
-| 4 | **SOCIETY_ADMIN Exception** | Society Admin has **full CRUD** on ALL 9 roles below Level 2 |
-| 5 | **MANAGER Has No User CRUD** | Manager role exists for operations only — no user creation/modification rights |
-| 6 | **Organization Data Isolation** | Data is strictly isolated between organizations — no cross-org access |
-| 7 | **Society Data Isolation** | Within an org, society data is isolated — users can only access their society |
-| 8 | **Least-Privilege Enforcement** | Every request is validated against the minimum required permissions |
-| 9 | **JWT Token Validation** | Every API call requires a valid JWT token (except auth endpoints) |
-| 10 | **Force Delete Protection** | Cascade deletes require explicit `force=true` flag to prevent accidental data loss |
-| 11 | **Vendor Approval Workflow** | Vendors require admin approval before being active — PENDING → APPROVED/REJECTED |
-| 12 | **Ticket Assignment Control** | Tickets can only be assigned by authorized roles (admin/committee and above) |
+| 3 | **Update/Delete Scoped by Matrix** | Modification access is limited to the roles each role can manage |
+| 4 | **MASTER_ADMIN Full Access** | Master Admin has **full CRUD** on ALL 11 roles below Level 0 |
+| 5 | **SOCIETY_ADMIN Exception** | Society Admin has **full CRUD** on ALL 10 roles below Level 1 |
+| 6 | **Head Roles Share Level 2** | Chairman, Secretary, and Treasurer are peers — they cannot manage each other, but share CRUD on roles below |
+| 7 | **MANAGER Has No User CRUD** | Manager role exists for operations only — no user creation/modification rights |
+| 8 | **COMMITTEE No Finance Writes** | Committee members can read financial data but cannot create/modify financial records |
+| 9 | **Society Data Isolation** | Data is strictly isolated per society — users can only access their own society's data |
+| 10 | **Least-Privilege Enforcement** | Every request is validated against the minimum required permissions |
+| 11 | **JWT Token Validation** | Every API call requires a valid JWT token (except auth endpoints) |
+| 12 | **Force Delete Protection** | Cascade deletes require explicit `force=true` flag to prevent accidental data loss |
+| 13 | **Vendor Approval Workflow** | Vendors require admin approval before being active — PENDING → APPROVED/REJECTED |
+| 14 | **Ticket Assignment Control** | Tickets can only be assigned by authorized roles (admin/committee and above) |
 
 <br/>
 
@@ -625,7 +623,7 @@ The frontend uses a **shared centralized API layer** (`api/index.js`) that provi
 
 ```javascript
 // ═══════════════════════════════════════════════════════════════
-// Shared Axios Instance — used by both admin-web and mobile-app
+// Shared Axios Instance — used by admin-web
 // ═══════════════════════════════════════════════════════════════
 
 import axios from 'axios'
@@ -693,142 +691,79 @@ api.interceptors.response.use(
 ---
 
 <!-- ════════════════════════════════════════════════════════════════════════ -->
-<!--                   8. MOBILE APP — REACT NATIVE                         -->
+<!--                   8. MOBILE APPS — NATIVE (ANDROID + iOS)              -->
 <!-- ════════════════════════════════════════════════════════════════════════ -->
 
-## 📱 Mobile App — React Native
+## 📱 Mobile Apps — Native (Android + iOS)
 
-### 📁 Directory Structure
+> The mobile layer consists of **two dedicated native codebases** — Android (Kotlin) and iOS (Swift). Both consume the same Spring Boot REST API.
+
+### 📱 Platform Overview
+
+| Platform | Language | UI Framework | HTTP Client | Auth Storage | Push | Target |
+|:---------|:---------|:-------------|:------------|:-------------|:-----|:-------|
+| **Android** | Kotlin | Jetpack Compose | Retrofit + OkHttp | Android Keystore | Firebase FCM | Play Store |
+| **iOS** | Swift | SwiftUI | URLSession | iOS Keychain | Firebase FCM | App Store |
+
+### 📁 Planned Directory Structure
 
 ```
-📁 mobile-app/
-├── 📄 App.js                              # Root component — providers & navigator
-├── 📄 app.json                            # Expo configuration
-├── 📄 babel.config.js                     # Babel presets (Expo)
-├── 📄 package.json                        # Dependencies & scripts
-├── 📁 assets/                             # App icons, splash screen images
-└── 📁 src/
-    ├── 📁 components/
-    │   └── 📁 common/                     # Shared UI components
-    │       ├── 📄 index.js                # Barrel export
-    │       ├── 📄 Avatar.js               # User avatar with initials fallback
-    │       ├── 📄 Badge.js                # Status badge component
-    │       ├── 📄 Button.js               # Styled button with variants
-    │       ├── 📄 Card.js                 # Card container with shadow
-    │       ├── 📄 EmptyState.js           # Empty list placeholder
-    │       ├── 📄 ErrorState.js           # Error display with retry
-    │       ├── 📄 Header.js               # Screen header with back button
-    │       ├── 📄 Input.js                # Text input with validation
-    │       ├── 📄 ListItem.js             # List row component
-    │       ├── 📄 Loading.js              # Loading spinner overlay
-    │       └── 📄 Skeleton.js             # Skeleton loading placeholder
-    │
-    ├── 📁 constants/                      # App-wide constants
-    │   ├── 📄 index.js                    # Barrel export
-    │   ├── 📄 Colors.js                   # Color palette (light + dark themes)
-    │   └── 📄 Layout.js                   # Layout dimensions & spacing
-    │
-    ├── 📁 context/                        # React context providers
-    │   ├── 📄 AuthContext.js              # JWT auth — SecureStore token persistence
-    │   ├── 📄 NotificationContext.js      # Push notification management
-    │   └── 📄 ThemeContext.js             # Theme toggle (light/dark)
-    │
-    ├── 📁 hooks/                          # Custom hooks
-    │   └── 📄 useMinLoadingTime.js        # Shared min-loading-time hook
-    │
-    ├── 📁 navigation/                     # Navigation configuration
-    │   └── 📄 AppNavigator.js             # Stack + Bottom Tab navigator setup
-    │
-    ├── 📁 screens/                        # App screens
-    │   ├── 📄 index.js                    # Barrel export
-    │   ├── 📄 SplashScreen.js             # Splash/loading screen
-    │   │
-    │   ├── 📁 auth/                       # Authentication
-    │   │   ├── 📄 LoginScreen.js          # Login with email/password
-    │   │   └── 📄 OTPVerificationScreen.js # OTP verification flow
-    │   │
-    │   ├── 📁 dashboard/                  # Role-based dashboards
-    │   │   ├── 📄 AdminDashboard.js       # Admin overview with stats
-    │   │   ├── 📄 MemberDashboard.js      # Member view — bills, notices
-    │   │   └── 📄 StaffDashboard.js       # Staff view — tasks, visitors
-    │   │
-    │   ├── 📁 complaints/                 # Complaint management
-    │   │   ├── 📄 ComplaintsScreen.js     # Complaint list view
-    │   │   └── 📄 CreateComplaintScreen.js # New complaint form
-    │   │
-    │   ├── 📁 maintenance/               # Maintenance bills
-    │   │   └── 📄 MaintenanceScreen.js    # Bill list + payment status
-    │   │
-    │   ├── 📁 notices/                    # Notices
-    │   │   └── 📄 NoticesScreen.js        # Society notice board
-    │   │
-    │   ├── 📁 payments/                   # Payment history
-    │   │   └── 📄 PaymentHistoryScreen.js # Payment transaction list
-    │   │
-    │   ├── 📁 vehicles/                   # Vehicles
-    │   │   └── 📄 VehiclesScreen.js       # Registered vehicle list
-    │   │
-    │   ├── 📁 visitors/                   # Visitor management
-    │   │   ├── 📄 VisitorsScreen.js       # Visitor log
-    │   │   └── 📄 AddVisitorScreen.js     # Register new visitor
-    │   │
-    │   ├── 📁 documents/                  # Documents
-    │   │   └── 📄 DocumentsScreen.js      # Document template access
-    │   │
-    │   ├── 📁 emergency/                  # Emergency contacts
-    │   │   └── 📄 EmergencyContactsScreen.js # Emergency directory
-    │   │
-    │   ├── 📁 notifications/             # Notifications
-    │   │   └── 📄 NotificationsScreen.js  # Push notification inbox
-    │   │
-    │   ├── 📁 profile/                    # User profile
-    │   │   └── 📄 ProfileScreen.js        # Profile view + edit
-    │   │
-    │   └── 📁 settings/                   # Settings
-    │       └── 📄 SettingsScreen.js       # App preferences
-    │
-    └── 📁 services/                       # API service layer
+📁 android-app/                            # 🤖 Android Native (Kotlin)
+├── 📄 build.gradle.kts                    # Gradle build config
+├── 📁 app/src/main/
+│   ├── 📁 java/.../societyapp/
+│   │   ├── 📁 ui/                         # Jetpack Compose screens
+│   │   │   ├── 📁 auth/                   # Login, OTP verification
+│   │   │   ├── 📁 dashboard/              # Role-based dashboards
+│   │   │   ├── 📁 bills/                  # Maintenance bills & payments
+│   │   │   ├── 📁 complaints/             # Complaint management
+│   │   │   ├── 📁 visitors/               # Visitor log
+│   │   │   └── 📁 settings/               # App preferences
+│   │   ├── 📁 data/                       # Repository + API layer
+│   │   │   ├── 📁 api/                    # Retrofit service interfaces
+│   │   │   ├── 📁 model/                  # Data classes / DTOs
+│   │   │   └── 📁 repository/             # Repository pattern impl
+│   │   ├── 📁 di/                         # Hilt dependency injection
+│   │   └── 📁 util/                       # Extensions, formatters
+│   └── 📁 res/                            # Android resources
+│
+📁 ios-app/                                # 🍎 iOS Native (Swift)
+├── 📄 Package.swift                       # Swift Package Manager
+├── 📁 SocietyApp/
+│   ├── 📁 Views/                          # SwiftUI views
+│   │   ├── 📁 Auth/                       # Login, OTP verification
+│   │   ├── 📁 Dashboard/                  # Role-based dashboards
+│   │   ├── 📁 Bills/                      # Maintenance bills & payments
+│   │   ├── 📁 Complaints/                 # Complaint management
+│   │   ├── 📁 Visitors/                   # Visitor log
+│   │   └── 📁 Settings/                   # App preferences
+│   ├── 📁 Services/                       # API client layer
+│   ├── 📁 Models/                         # Codable data models
+│   ├── 📁 Repositories/                   # Data access layer
+│   └── 📁 Utils/                          # Helpers, extensions
+└── 📁 SocietyAppTests/                    # Unit & UI tests
 ```
 
-### 📱 Screen Components
+### 📱 Core Screens (Both Platforms)
 
-| # | Screen | Location | Features |
-|:-:|:-------|:---------|:---------|
-| 1 | `SplashScreen` | `screens/` | Animated splash with auth check redirect |
-| 2 | `LoginScreen` | `screens/auth/` | Email/password login with validation |
-| 3 | `OTPVerificationScreen` | `screens/auth/` | OTP-based verification flow |
-| 4 | `AdminDashboard` | `screens/dashboard/` | Admin stats — societies, users, tickets overview |
-| 5 | `MemberDashboard` | `screens/dashboard/` | Member view — pending bills, recent notices |
-| 6 | `StaffDashboard` | `screens/dashboard/` | Staff view — assigned tasks, visitor log |
-| 7 | `ComplaintsScreen` | `screens/complaints/` | Complaint list with status filters |
-| 8 | `CreateComplaintScreen` | `screens/complaints/` | File new complaint with category & description |
-| 9 | `MaintenanceScreen` | `screens/maintenance/` | Monthly maintenance bills + payment status |
-| 10 | `NoticesScreen` | `screens/notices/` | Society notice board — scrollable list |
-| 11 | `PaymentHistoryScreen` | `screens/payments/` | Payment transaction history |
-| 12 | `VehiclesScreen` | `screens/vehicles/` | Registered vehicle list per flat |
-| 13 | `VisitorsScreen` | `screens/visitors/` | Visitor log with check-in/out |
-| 14 | `AddVisitorScreen` | `screens/visitors/` | Register new visitor entry |
-| 15 | `DocumentsScreen` | `screens/documents/` | Access document templates |
-| 16 | `EmergencyContactsScreen` | `screens/emergency/` | Emergency contact directory |
-| 17 | `NotificationsScreen` | `screens/notifications/` | Push notification inbox |
-| 18 | `ProfileScreen` | `screens/profile/` | View & edit user profile |
-| 19 | `SettingsScreen` | `screens/settings/` | App preferences & theme toggle |
-
-### 🧩 Mobile Component Library
-
-| Component | File | Description |
-|:----------|:-----|:------------|
-| `Avatar` | `Avatar.js` | User avatar with image or initials fallback with gradient background |
-| `Badge` | `Badge.js` | Colored status badge — success, warning, error, info variants |
-| `Button` | `Button.js` | Styled touchable button — primary, secondary, outline, danger variants |
-| `Card` | `Card.js` | Shadow card container with padding and rounded corners |
-| `EmptyState` | `EmptyState.js` | Centered illustration + message when list has no items |
-| `ErrorState` | `ErrorState.js` | Error display with retry button and error message |
-| `Header` | `Header.js` | Screen header — title, back arrow, optional right action buttons |
-| `Input` | `Input.js` | Text input with label, error message, icon prefix support |
-| `ListItem` | `ListItem.js` | Pressable list row with icon, title, subtitle, right chevron |
-| `Loading` | `Loading.js` | Full-screen loading spinner overlay with message |
-| `Skeleton` | `Skeleton.js` | Animated placeholder shimmer for loading states |
+| # | Screen | Features |
+|:-:|:-------|:---------|
+| 1 | **Login** | Email/password login with JWT token storage |
+| 2 | **Admin Dashboard** | Society stats — users, tickets, bills overview |
+| 3 | **Member Dashboard** | Pending bills, recent notices, quick actions |
+| 4 | **Staff Dashboard** | Assigned tasks, visitor log, daily summary |
+| 5 | **Maintenance Bills** | Bill list, payment status, online payment (Razorpay) |
+| 6 | **Complaints** | File complaints, track status, view resolution |
+| 7 | **Tickets** | Create/view tickets, status filters |
+| 8 | **Notices** | Society notice board |
+| 9 | **Visitors** | Visitor log, register new visitors |
+| 10 | **Vehicles** | Registered vehicle list per flat |
+| 11 | **Payments** | Payment history, Razorpay checkout |
+| 12 | **Documents** | Access document templates |
+| 13 | **Emergency Contacts** | Emergency contact directory |
+| 14 | **Notifications** | Push notification inbox |
+| 15 | **Profile** | View & edit user profile |
+| 16 | **Settings** | App preferences, theme toggle |
 
 <br/>
 
@@ -1131,7 +1066,7 @@ api.interceptors.response.use(
 | 20 | `NotificationPreference` | `notification_preferences` | id, userId, emailTickets, emailComplaints, emailPayments, emailContracts |
 | 21 | `SecurityLog` | `security_logs` | id, societyId, type, event, status, createdAt |
 | 22 | `PasswordResetToken` | — | id, token, userId, expiryDate |
-| 23 | `Role` | — | Enum: PLATFORM_OWNER, ORGANIZATION_OWNER, SOCIETY_ADMIN, CHAIRMAN, SECRETARY, TREASURER, COMMITTEE, MANAGER, EMPLOYEE, MEMBER, TENANT, VISITOR |
+| 23 | `Role` | — | Enum: MASTER_ADMIN, SOCIETY_ADMIN, CHAIRMAN, SECRETARY, TREASURER, COMMITTEE, MANAGER, EMPLOYEE, MEMBER, TENANT, VENDOR, VISITOR |
 
 ### 🔐 Security Architecture
 
@@ -1150,7 +1085,7 @@ api.interceptors.response.use(
 | Class | Purpose |
 |:------|:--------|
 | `CorsConfig` | CORS allowed origins from `APP_CORS_ALLOWED_ORIGINS` env var + frontend URL |
-| `DataInitializer` | Seeds default PLATFORM_OWNER user on first application startup |
+| `DataInitializer` | Seeds default MASTER_ADMIN user on first application startup |
 | `DeleteForceCleanupInterceptor` | Intercept handler — enables cascade/force delete via `?force=true` query param |
 | `PasswordConfig` | Exposes `BCryptPasswordEncoder` as Spring bean |
 | `RazorpayConfig` | Initializes `RazorpayClient` with key ID and secret from properties |
@@ -1199,213 +1134,259 @@ api.interceptors.response.use(
 
 ### Entity Relationship Diagram
 
-```
-╔═══════════════════════════════════════════════════════════════════════════════════╗
-║                        ENTITY RELATIONSHIP DIAGRAM                               ║
-║                           PostgreSQL Schema v2.0                                 ║
-╚═══════════════════════════════════════════════════════════════════════════════════╝
+```mermaid
+erDiagram
+    SOCIETIES ||--o{ WINGS : contains
+    SOCIETIES ||--o{ USERS : "has members"
+    SOCIETIES ||--o{ FLATS : manages
+    SOCIETIES ||--o{ COMPLAINTS : receives
+    SOCIETIES ||--o{ TICKETS : tracks
+    SOCIETIES ||--o{ VENDORS : registers
+    SOCIETIES ||--o{ NOTICES : publishes
+    SOCIETIES ||--o{ BANNERS : displays
+    SOCIETIES ||--o{ TRANSACTIONS : records
+    SOCIETIES ||--o{ EMERGENCY_CONTACTS : stores
+    SOCIETIES ||--o{ SECURITY_LOGS : audits
+    SOCIETIES ||--o{ VENDOR_BILLS : tracks
+    SOCIETIES ||--o{ CONTRACTS : holds
 
-  ┌──────────────────┐
-  │  organizations   │
-  │──────────────────│        1:N
-  │  id (PK)         │────────────────┐
-  │  name            │                │
-  │  email           │                │
-  │  subscription_   │                │
-  │    plan          │                │
-  │  subscription_   │                │
-  │    expiry        │                │
-  └──────────────────┘                │
-                                      │
-                           ┌──────────▼──────────┐
-                           │     societies       │
-                           │─────────────────────│        1:N
-                           │  id (PK)            │───────────────────────┐
-                           │  organization_id(FK)│                       │
-                           │  name               │                       │
-                           │  registration_number│                       │
-                           │  address            │                       │
-                           │  city, state, zip   │                       │
-                           └─────────────────────┘                       │
-                                      │                                  │
-                   ┌──────────────────┤                                  │
-                   │     1:N          │     1:N                          │
-          ┌────────▼────────┐   ┌─────▼──────────────┐                  │
-          │     wings       │   │      users         │                  │
-          │─────────────────│   │────────────────────│                  │
-          │  id (PK)        │   │  id (PK)           │                  │
-          │  society_id(FK) │   │  society_id (FK)   │                  │
-          │  name           │   │  organization_id   │                  │
-          │  total_floors   │   │  flat_id (FK)      │                  │
-          │  total_flats    │   │  full_name         │                  │
-          └────────┬────────┘   │  email (UNIQUE)    │                  │
-                   │            │  role (12 values)  │                  │
-                   │ 1:N        └───────┬────────────┘                  │
-          ┌────────▼────────┐           │                               │
-          │     flats       │           │ 1:N                           │
-          │─────────────────│    ┌──────┴────────────────┐              │
-          │  id (PK)        │    │                       │              │
-          │  society_id(FK) │    │              ┌────────▼──────────┐   │
-          │  wing_id (FK)   │    │              │   complaints     │   │
-          │  flat_number    │    │              │──────────────────│   │
-          │  floor          │    │              │  id (PK)         │   │
-          │  property_type  │    │              │  user_id (FK)    │   │
-          │  area           │    │              │  society_id (FK) │   │
-          └──┬──────────┬───┘    │              │  category        │   │
-             │          │        │              │  status          │   │
-             │ 1:N      │ 1:N   │              └──────────────────┘   │
-             │          │       │                                      │
-    ┌────────▼───┐  ┌───▼────────────┐  ┌──────────────────┐          │
-    │  tenants   │  │   vehicles     │  │     tickets      │          │
-    │────────────│  │────────────────│  │──────────────────│          │
-    │ id (PK)    │  │ id (PK)        │  │ id (PK)          │          │
-    │ flat_id    │  │ flat_id (FK)   │  │ society_id (FK)  │◄─────────┤
-    │ tenant_name│  │ vehicle_number │  │ raised_by (FK)   │          │
-    │ phone      │  │ vehicle_type   │  │ assigned_to (FK) │          │
-    │ lease_start│  │ owner_name     │  │ status           │          │
-    │ lease_end  │  └────────────────┘  │ priority         │          │
-    │ rent_amount│                      │ progress         │          │
-    │ is_active  │                      └──────────────────┘          │
-    └────────────┘                                                     │
-                                                                       │
-    ┌──────────────────┐  ┌──────────────────┐  ┌──────────────────┐  │
-    │    vendors       │  │     notices      │  │    banners       │  │
-    │──────────────────│  │──────────────────│  │──────────────────│  │
-    │ id (PK)          │  │ id (PK)          │  │ id (PK)          │  │
-    │ society_id (FK)  │◄─│ society_id (FK)  │  │ society_id (FK)  │◄─┤
-    │ name             │  │ title            │  │ title            │  │
-    │ service_type     │  │ content          │  │ image_url        │  │
-    │ approval_status  │  │ priority         │  │ redirect_url     │  │
-    │ gst_number       │  │ start_date       │  │ display_order    │  │
-    │ bank_details     │  │ end_date         │  │ is_active        │  │
-    └──────┬───────────┘  └──────────────────┘  └──────────────────┘  │
-           │                                                           │
-    ┌──────┤ 1:N                                                       │
-    │      │                                                           │
-    │  ┌───▼───────────────┐  ┌──────────────────┐                    │
-    │  │  vendor_bills     │  │    contracts     │                    │
-    │  │───────────────────│  │──────────────────│                    │
-    │  │ id (PK)           │  │ id (PK)          │                    │
-    │  │ vendor_id (FK)    │  │ vendor_id (FK)   │                    │
-    │  │ society_id (FK)   │  │ society_id (FK)  │◄───────────────────┘
-    │  │ bill_number       │  │ contract_type    │
-    │  │ amount            │  │ start_date       │
-    │  │ status            │  │ end_date         │
-    │  │ due_date          │  │ amount           │
-    │  └───────────────────┘  │ status           │
-    │                         └──────────────────┘
-    │
-    │  ┌──────────────────────┐  ┌────────────────────────┐  ┌──────────────────────┐
-    │  │  maintenance_bills   │  │    transactions       │  │  emergency_contacts  │
-    │  │──────────────────────│  │────────────────────────│  │──────────────────────│
-    │  │ id (PK)              │  │ id (PK)                │  │ id (PK)              │
-    │  │ flat_id (FK)         │  │ society_id (FK)        │  │ society_id (FK)      │
-    │  │ bill_month           │  │ transaction_type       │  │ contact_type         │
-    │  │ amount               │  │ payment_mode           │  │ name                 │
-    │  │ due_date             │  │ amount                 │  │ phone                │
-    │  │ status               │  │ category               │  │ is_active            │
-    │  │ payment_mode         │  │ description            │  └──────────────────────┘
-    │  │ receipt_number       │  │ transaction_date       │
-    │  └──────────────────────┘  └────────────────────────┘
-    │
-    │  ┌──────────────────────┐  ┌────────────────────────┐  ┌──────────────────────┐
-    │  │  document_templates  │  │ notification_prefs     │  │   security_logs      │
-    │  │──────────────────────│  │────────────────────────│  │──────────────────────│
-    │  │ id (PK)              │  │ id (PK)                │  │ id (PK)              │
-    │  │ template_type        │  │ user_id (FK, UNIQUE)   │  │ society_id (FK)      │
-    │  │ title                │  │ email_tickets          │  │ type                 │
-    │  │ content              │  │ email_complaints       │  │ event                │
-    │  │ is_active            │  │ email_payments         │  │ status               │
-    │  └──────────────────────┘  │ email_contracts        │  │ created_at           │
-    │                            └────────────────────────┘  └──────────────────────┘
-    │
-    │  ┌──────────────────────┐
-    │  │     payments         │
-    │  │──────────────────────│
-    │  │ id (PK)              │
-    │  │ razorpay_order_id    │
-    │  │ razorpay_payment_id  │
-    │  │ amount               │
-    │  │ status               │
-    │  │ user_id (FK)         │
-    │  │ bill_id              │
-    │  └──────────────────────┘
+    WINGS ||--o{ FLATS : groups
+
+    USERS ||--o{ COMPLAINTS : files
+    USERS ||--o{ TICKETS : raises
+    USERS ||--o| NOTIFICATION_PREFERENCES : configures
+    USERS ||--o{ PAYMENTS : makes
+
+    FLATS ||--o{ VEHICLES : registers
+    FLATS ||--o{ TENANTS : houses
+    FLATS ||--o{ MAINTENANCE_BILLS : receives
+
+    VENDORS ||--o{ VENDOR_BILLS : submits
+    VENDORS ||--o{ CONTRACTS : signs
+
+    MAINTENANCE_BILLS ||--o{ PAYMENTS : "paid via"
+
+    SOCIETIES {
+        int id PK
+        string name
+        string registration_number
+        string email
+        string city
+        string state
+        int total_flats
+        int total_wings
+        timestamp created_at
+    }
+    USERS {
+        int id PK
+        int society_id FK
+        int flat_id FK
+        string name
+        string email UK
+        string phone
+        string role "12-role RBAC"
+        boolean is_active
+        timestamp created_at
+    }
+    WINGS {
+        int id PK
+        int society_id FK
+        string name
+        int total_floors
+    }
+    FLATS {
+        int id PK
+        int society_id FK
+        int wing_id FK
+        string flat_number
+        int floor
+        string property_type
+        decimal area
+        boolean is_occupied
+    }
+    COMPLAINTS {
+        int id PK
+        int user_id FK
+        int society_id FK
+        string subject
+        string category
+        string status
+        timestamp created_at
+    }
+    TICKETS {
+        int id PK
+        int society_id FK
+        int raised_by FK
+        int assigned_to FK
+        string title
+        string status
+        string priority
+        int progress
+    }
+    VENDORS {
+        int id PK
+        int society_id FK
+        string name
+        string service_type
+        string approval_status
+        string gst_number
+        boolean is_active
+    }
+    VENDOR_BILLS {
+        int id PK
+        int vendor_id FK
+        int society_id FK
+        string bill_number
+        decimal amount
+        string status
+        date due_date
+    }
+    CONTRACTS {
+        int id PK
+        int society_id FK
+        int vendor_id FK
+        string contract_type
+        date start_date
+        date end_date
+        boolean is_active
+    }
+    MAINTENANCE_BILLS {
+        int id PK
+        int flat_id FK
+        string bill_month
+        decimal amount
+        string status
+        string payment_mode
+    }
+    TRANSACTIONS {
+        int id PK
+        int society_id FK
+        string transaction_type
+        string payment_mode
+        decimal amount
+        string category
+        date transaction_date
+    }
+    PAYMENTS {
+        int id PK
+        int user_id FK
+        int bill_id FK
+        string razorpay_order_id
+        string razorpay_payment_id
+        decimal amount
+        string status
+    }
+    TENANTS {
+        int id PK
+        int flat_id FK
+        string name
+        string phone
+        date agreement_start
+        date agreement_end
+        boolean is_active
+    }
+    VEHICLES {
+        int id PK
+        int flat_id FK
+        string vehicle_number
+        string vehicle_type
+        string brand
+    }
+    NOTICES {
+        int id PK
+        int society_id FK
+        string title
+        string priority
+        date expiry_date
+        boolean is_active
+    }
+    BANNERS {
+        int id PK
+        int society_id FK
+        string title
+        string image_url
+        int display_order
+        boolean is_active
+    }
+    EMERGENCY_CONTACTS {
+        int id PK
+        int society_id FK
+        string contact_type
+        string name
+        string phone
+        boolean is_active
+    }
+    NOTIFICATION_PREFERENCES {
+        int id PK
+        int user_id FK
+        boolean email_tickets
+        boolean email_complaints
+        boolean email_payments
+        boolean email_contracts
+    }
+    SECURITY_LOGS {
+        int id PK
+        int society_id FK
+        string type
+        string event
+        string status
+        timestamp created_at
+    }
+    DOCUMENT_TEMPLATES {
+        int id PK
+        string template_type
+        string title
+        string content
+        boolean is_active
+    }
 ```
 
 ### 📊 Database Tables Overview
 
-| # | Table | Rows Key | Foreign Keys | Purpose |
-|:-:|:------|:---------|:-------------|:--------|
-| 1 | `organizations` | Primary entity | — | Multi-organization support with subscription |
-| 2 | `societies` | Per organization | `organization_id` → organizations | Housing society management |
-| 3 | `users` | Per society/org | `society_id`, `organization_id`, `flat_id` | User accounts with 12-role RBAC |
-| 4 | `flats` | Per society | `society_id`, `wing_id` | Residential unit records |
-| 5 | `wings` | Per society | `society_id` | Building wing/block management |
-| 6 | `tenants` | Per flat | `flat_id` | Tenant lease records |
-| 7 | `vehicles` | Per flat | `flat_id` | Vehicle parking registration |
-| 8 | `vendors` | Per society | `society_id` | Vendor directory with approval |
-| 9 | `vendor_bills` | Per vendor | `vendor_id`, `society_id` | Vendor invoice tracking |
-| 10 | `contracts` | Per vendor | `vendor_id`, `society_id` | Service contract lifecycle |
-| 11 | `maintenance_bills` | Per flat | `flat_id` | Monthly maintenance billing |
-| 12 | `transactions` | Per society | `society_id` | Income/expense ledger |
-| 13 | `payments` | Per user/bill | `user_id`, `bill_id` | Razorpay payment records |
-| 14 | `complaints` | Per user | `user_id`, `society_id` | Complaint register |
-| 15 | `tickets` | Per society | `society_id`, `raised_by`, `assigned_to` | Support ticket system |
-| 16 | `notices` | Per society | `society_id` | Notice board content |
-| 17 | `banners` | Per society | `society_id` | Display banner management |
-| 18 | `emergency_contacts` | Per society | `society_id` | Emergency contact directory |
-| 19 | `document_templates` | Global | — | Document template library |
-| 20 | `notification_preferences` | Per user | `user_id` (UNIQUE) | Email notification settings |
-| 21 | `security_logs` | Per society | `society_id` | Security audit trail |
+| # | Table | Scope | Foreign Keys | Purpose |
+|:-:|:------|:------|:-------------|:--------|
+| 1 | `societies` | Root entity | — | Housing society management |
+| 2 | `users` | Per society | `society_id`, `flat_id` | User accounts with 12-role RBAC |
+| 3 | `flats` | Per society | `society_id`, `wing_id` | Residential unit records |
+| 4 | `wings` | Per society | `society_id` | Building wing/block management |
+| 5 | `tenants` | Per flat | `flat_id` | Tenant lease records |
+| 6 | `vehicles` | Per flat | `flat_id` | Vehicle parking registration |
+| 7 | `vendors` | Per society | `society_id` | Vendor directory with approval |
+| 8 | `vendor_bills` | Per vendor | `vendor_id`, `society_id` | Vendor invoice tracking |
+| 9 | `contracts` | Per vendor | `vendor_id`, `society_id` | Service contract lifecycle |
+| 10 | `maintenance_bills` | Per flat | `flat_id` | Monthly maintenance billing |
+| 11 | `transactions` | Per society | `society_id` | Income/expense ledger |
+| 12 | `payments` | Per user/bill | `user_id`, `bill_id` | Razorpay payment records |
+| 13 | `complaints` | Per user | `user_id`, `society_id` | Complaint register |
+| 14 | `tickets` | Per society | `society_id`, `raised_by`, `assigned_to` | Support ticket system |
+| 15 | `notices` | Per society | `society_id` | Notice board content |
+| 16 | `banners` | Per society | `society_id` | Display banner management |
+| 17 | `emergency_contacts` | Per society | `society_id` | Emergency contact directory |
+| 18 | `document_templates` | Global | — | Document template library |
+| 19 | `notification_preferences` | Per user | `user_id` (UNIQUE) | Email notification settings |
+| 20 | `security_logs` | Per society | `society_id` | Security audit trail |
 
 ### 📝 SQL Schema Examples
 
 <details>
-<summary><b>🏢 Organizations Table</b></summary>
-
-```sql
-CREATE TABLE organizations (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(200) NOT NULL,
-    description TEXT,
-    email VARCHAR(100),
-    phone VARCHAR(20),
-    address TEXT,
-    city VARCHAR(100),
-    state VARCHAR(100),
-    zip_code VARCHAR(10),
-    country VARCHAR(50) DEFAULT 'India',
-    website VARCHAR(200),
-    logo_url VARCHAR(500),
-    subscription_plan VARCHAR(50),
-    subscription_expiry TIMESTAMP,
-    is_active BOOLEAN DEFAULT TRUE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP
-);
-```
-</details>
-
-<details>
-<summary><b>🏘️ Societies Table</b></summary>
+<summary><b>�️ Societies Table</b></summary>
 
 ```sql
 CREATE TABLE societies (
     id SERIAL PRIMARY KEY,
-    organization_id INT REFERENCES organizations(id),
-    name VARCHAR(200) NOT NULL,
-    registration_number VARCHAR(100),
+    name VARCHAR(100),
     address TEXT,
     city VARCHAR(100),
     state VARCHAR(100),
-    zip_code VARCHAR(10),
+    pincode VARCHAR(10),
+    registration_number VARCHAR(50),
     email VARCHAR(100),
-    phone VARCHAR(20),
-    total_flats INT,
-    established_date DATE,
-    is_active BOOLEAN DEFAULT TRUE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP
+    telephone VARCHAR(20),
+    total_flats INT DEFAULT 0,
+    total_shops INT DEFAULT 0,
+    total_offices INT DEFAULT 0,
+    total_wings INT DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 ```
 </details>
@@ -1416,22 +1397,20 @@ CREATE TABLE societies (
 ```sql
 CREATE TABLE users (
     id SERIAL PRIMARY KEY,
-    organization_id INT REFERENCES organizations(id),
+    name VARCHAR(100),
+    email VARCHAR(100) UNIQUE,
+    password VARCHAR(255),
+    phone VARCHAR(20),
     society_id INT REFERENCES societies(id),
     flat_id INT,
-    full_name VARCHAR(100) NOT NULL,
-    email VARCHAR(100) UNIQUE NOT NULL,
-    password VARCHAR(255) NOT NULL,
-    phone VARCHAR(20),
-    role VARCHAR(30) NOT NULL CHECK (role IN (
-        'PLATFORM_OWNER','ORGANIZATION_OWNER','SOCIETY_ADMIN',
-        'CHAIRMAN','SECRETARY','TREASURER','COMMITTEE',
-        'MANAGER','EMPLOYEE','MEMBER','TENANT','VISITOR'
+    account_type VARCHAR(30) CHECK (account_type IN ('SOCIETY_ADMIN') OR account_type IS NULL),
+    role VARCHAR(50) CHECK (role IN (
+        'MASTER_ADMIN','SOCIETY_ADMIN','CHAIRMAN',
+        'SECRETARY','TREASURER','COMMITTEE',
+        'MANAGER','EMPLOYEE','MEMBER','TENANT','VENDOR','VISITOR'
     )),
-    profile_image VARCHAR(500),
     is_active BOOLEAN DEFAULT TRUE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 ```
 </details>
@@ -1820,7 +1799,7 @@ CREATE TABLE security_logs (
     "fullName": "Tanmay Kudkar",
     "email": "admin@society.com",
     "phone": "+91 9876543210",
-    "role": "PLATFORM_OWNER",
+    "role": "MASTER_ADMIN",
     "organizationId": null,
     "societyId": null,
     "flatId": null,
@@ -1961,7 +1940,7 @@ CREATE TABLE security_logs (
   "errors": {
     "email": "Email is required",
     "fullName": "Full name must be at least 2 characters",
-    "role": "Role must be one of: PLATFORM_OWNER, ORGANIZATION_OWNER, ..."
+    "role": "Role must be one of: MASTER_ADMIN, SOCIETY_ADMIN, CHAIRMAN, ..."
   },
   "timestamp": "2025-06-15T10:30:00"
 }
@@ -2096,7 +2075,7 @@ CREATE TABLE security_logs (
 | **CORS Protection** | Configurable allowed origins whitelist |
 | **Force Delete Guard** | Cascade deletes require explicit `force=true` confirmation |
 | **Security Audit Log** | Audit trail for security events per society |
-| **Token Secure Storage** | Mobile app uses Expo SecureStore for encrypted token persistence |
+| **Token Secure Storage** | Android Keystore / iOS Keychain for encrypted token persistence |
 
 ### ⏰ Automated Tasks
 
@@ -2132,20 +2111,20 @@ CREATE TABLE security_logs (
 
 ### 🗓️ Phase Plan (Week-wise)
 
-| Phase | Weeks | Feature IDs | Primary Goal |
-|:------|:------|:------------|:-------------|
-| Phase 1 — Core Foundation | 1–3 | F01–F07 | Role redesign, permission rebuild, auth/controller alignment |
-| Phase 2 — Finance Engine | 4–8 | F08–F17 | Itemized billing, PDF/Excel/Print, bank accounts, penalties |
-| Phase 3 — Approval & Governance | 9–11 | F18–F23 | Generic approval engine, polls, AGM, elections |
-| Phase 4 — Communication & Tickets | 12–14 | F24–F29 | Unified tickets, reminders, messaging, events, legal demand flow |
-| Phase 5 — Security & Visitors | 15–16 | F30–F34 | Visitor, OTP, SOS, patrol, gate-log enhancements |
-| Phase 6 — Operations & Maintenance | 17–19 | F35–F40 | Work orders, assets, schedules, staff shifts, bookings, NOC |
-| Phase 7 — Resident Services | 20–21 | F41–F45 | Move lifecycle, penalties, pets, classifieds, bylaws |
-| Phase 8 — Vendor Ecosystem | 22–23 | F46–F50 | Vendor portal, reviews, invoice submission, TDS compliance |
-| Phase 9 — Advanced Finance & Compliance | 24–26 | F51–F56 | Reconciliation, statements, budgets, ledger, defaulter reports |
-| Phase 10 — Documents & Reports | 27–28 | F57–F61 | Repository, minutes PDF, dashboard/report/export enhancement |
-| Phase 11 — Platform Infrastructure | 29–31 | F62–F68 | 2FA, rate limiting, audit, push notifications, i18n, backups |
-| Phase 12 — Modern Enhancements | 32–35 | F69–F77 | WhatsApp/SMS, OAuth, EV charging, federation mode, AI insights |
+| Phase | Weeks | Feature IDs | Primary Goal | Status |
+|:------|:------|:------------|:-------------|:------:|
+| Phase 1 — Core Foundation | 1–3 | F01–F07 | Role redesign, permission rebuild, auth/controller alignment | ✅ Complete |
+| Phase 2 — Finance Engine | 4–8 | F08–F17 | Itemized billing, PDF/Excel/Print, bank accounts, penalties | 🔜 Next |
+| Phase 3 — Approval & Governance | 9–11 | F18–F23 | Generic approval engine, polls, AGM, elections | ⬜ Planned |
+| Phase 4 — Communication & Tickets | 12–14 | F24–F29 | Unified tickets, reminders, messaging, events, legal demand flow | ⬜ Planned |
+| Phase 5 — Security & Visitors | 15–16 | F30–F34 | Visitor, OTP, SOS, patrol, gate-log enhancements | ⬜ Planned |
+| Phase 6 — Operations & Maintenance | 17–19 | F35–F40 | Work orders, assets, schedules, staff shifts, bookings, NOC | ⬜ Planned |
+| Phase 7 — Resident Services | 20–21 | F41–F45 | Move lifecycle, penalties, pets, classifieds, bylaws | ⬜ Planned |
+| Phase 8 — Vendor Ecosystem | 22–23 | F46–F50 | Vendor portal, reviews, invoice submission, TDS compliance | ⬜ Planned |
+| Phase 9 — Advanced Finance & Compliance | 24–26 | F51–F56 | Reconciliation, statements, budgets, ledger, defaulter reports | ⬜ Planned |
+| Phase 10 — Documents & Reports | 27–28 | F57–F61 | Repository, minutes PDF, dashboard/report/export enhancement | ⬜ Planned |
+| Phase 11 — Platform Infrastructure | 29–31 | F62–F68 | 2FA, rate limiting, audit, push notifications, i18n, backups | ⬜ Planned |
+| Phase 12 — Modern Enhancements | 32–35 | F69–F77 | WhatsApp/SMS, OAuth, EV charging, federation mode, AI insights | ⬜ Planned |
 
 ### 📈 Delivery Graph (Mermaid Gantt)
 
@@ -2183,15 +2162,15 @@ gantt
 ### 📚 Full Feature Index (F01–F77)
 
 <details>
-<summary><b>Phase 1 · F01–F07</b></summary>
+<summary><b>Phase 1 · F01–F07 ✅ COMPLETE</b></summary>
 
-- F01 Role Redesign (12 Roles)
-- F02 Legacy Role Cleanup
-- F03 Permission Matrix Rebuild
-- F04 Head Role Write Access Restore
-- F05 Controller @PreAuthorize Alignment
-- F06 Frontend Auth Alignment
-- F07 Shared Format Utilities
+- ✅ F01 Role Redesign (12 Roles)
+- ✅ F02 Legacy Role Cleanup
+- ✅ F03 Permission Matrix Rebuild
+- ✅ F04 Head Role Write Access Restore
+- ✅ F05 Controller @PreAuthorize Alignment
+- ✅ F06 Frontend Auth Alignment
+- ✅ F07 Shared Format Utilities
 
 </details>
 
@@ -2425,32 +2404,30 @@ gantt
 <!--             15. NATIVE APPS PARALLEL ROADMAP (ANDROID + IOS)          -->
 <!-- ════════════════════════════════════════════════════════════════════════ -->
 
-## 📱 Native Apps Parallel Roadmap (TODO)
+## 📱 Native Apps Roadmap (Android + iOS)
 
-> Parallel work for **Android Native (Kotlin)** and **iOS Native (Swift)** is planned and tracked below.
+> Dedicated native codebases for **Android (Kotlin)** and **iOS (Swift)** — no cross-platform framework.
 
-### ✅ Scope Decision
+### ✅ Platform Decision
 
-| Track | Current Status | Notes |
-|:------|:---------------|:------|
-| React Native App | ✅ In progress | Existing cross-platform app continues |
-| Android Native App (Kotlin) | 🟡 TODO (Parallel Track) | Build native app with shared backend APIs |
-| iOS Native App (Swift/SwiftUI) | 🟡 TODO (Parallel Track) | Build native app with shared backend APIs |
+| Track | Status | Notes |
+|:------|:-------|:------|
+| Android Native App (Kotlin) | 🟡 TODO | Jetpack Compose UI, Retrofit networking, Hilt DI |
+| iOS Native App (Swift/SwiftUI) | 🟡 TODO | SwiftUI views, URLSession networking, native patterns |
 
-### 🧭 Parallel Delivery Flowchart
+### 🧭 Delivery Flowchart
 
 ```mermaid
 flowchart LR
   A[Shared Product Requirements] --> B[Shared Backend APIs]
   B --> C[Web Admin - React]
-  B --> D[Mobile - React Native]
-  B --> E[Android Native - Kotlin TODO]
-  B --> F[iOS Native - Swift TODO]
-  E --> G[Play Store Release]
-  F --> H[App Store Release]
+  B --> D[Android Native - Kotlin]
+  B --> E[iOS Native - Swift]
+  D --> F[Play Store Release]
+  E --> G[App Store Release]
 ```
 
-### 📦 Native App Work Breakdown (Parallel)
+### 📦 Native App Work Breakdown
 
 | Sprint | Android Native (Kotlin) | iOS Native (Swift/SwiftUI) | Shared Dependencies |
 |:-------|:-------------------------|:---------------------------|:--------------------|
@@ -2462,21 +2439,20 @@ flowchart LR
 
 ### 📝 Native App TODO Checklist
 
-- [ ] Finalize API compatibility matrix for Android Native and iOS Swift
+- [ ] Finalize API compatibility matrix for Android and iOS
 - [ ] Publish Kotlin API SDK wrapper module
 - [ ] Publish Swift API client package
 - [ ] Define shared error-code mapping for native apps
-- [ ] Add device analytics events parity with web/mobile RN
+- [ ] Add device analytics events parity with web
 - [ ] Add native CI pipelines (Android + iOS)
 - [ ] Add store-release runbooks and rollout strategy
 
-### 📊 Platform Split Vision
+### 📊 Platform Strategy
 
 ```mermaid
-pie title Planned Mobile Platform Strategy
-  "React Native (current shared app)" : 50
-  "Android Native Kotlin (parallel)" : 25
-  "iOS Swift Native (parallel)" : 25
+pie title Mobile Platform Strategy
+  "Android Native (Kotlin)" : 50
+  "iOS Native (Swift)" : 50
 ```
 
 <br/>
@@ -2497,7 +2473,8 @@ pie title Planned Mobile Platform Strategy
 | **Node.js** | 18+ | [nodejs.org](https://nodejs.org/) |
 | **PostgreSQL** | 14+ | [postgresql.org](https://www.postgresql.org/download/) |
 | **Maven** | 3.9+ | Included via `mvnw` wrapper |
-| **Expo CLI** | Latest | `npm install -g expo-cli` |
+| **Android Studio** | Latest | [developer.android.com](https://developer.android.com/studio) (for Android app) |
+| **Xcode** | 15+ | Mac App Store (for iOS app) |
 | **Git** | Latest | [git-scm.com](https://git-scm.com/) |
 
 ### 1️⃣ Clone the Repository
@@ -2553,36 +2530,31 @@ npm run dev
 ### 5️⃣ Mobile App Setup
 
 ```bash
-cd mobile-app
+# Android (Kotlin)
+# Open android-app/ in Android Studio
+# Sync Gradle, configure API base URL, run on emulator/device
 
-# Install dependencies
-npm install
-
-# Start Expo development server
-npx expo start
-
-# Run on device options:
-# Press 'a' for Android emulator
-# Press 'i' for iOS simulator
-# Scan QR code with Expo Go app for physical device
+# iOS (Swift)
+# Open ios-app/SocietyApp.xcodeproj in Xcode
+# Configure API base URL in Config.plist, run on simulator/device
 ```
 
 ### 6️⃣ API Layer (Shared)
 
 ```bash
-# The api/ directory contains shared API modules used by both admin-web and mobile-app
-# No separate setup required — imported directly by each frontend
+# The api/ directory contains shared API modules used by admin-web
+# Native apps have their own API client layers (Retrofit / URLSession)
 ```
 
 ### 7️⃣ Default Login
 
-After first startup, a default Platform Owner is created:
+After first startup, a default Master Admin is created:
 
 | Field | Value |
 |:------|:------|
 | **Email** | Configured via `APP_ADMIN_EMAIL` env var |
 | **Password** | Set during `DataInitializer` first run |
-| **Role** | `PLATFORM_OWNER` |
+| **Role** | `MASTER_ADMIN` |
 
 <br/>
 
@@ -2606,7 +2578,7 @@ After first startup, a default Platform Owner is created:
 | `JWT_COOKIE_SECURE` | `false` | Set `true` in production (HTTPS) |
 | `MAIL_USERNAME` | — | Gmail SMTP sender email |
 | `MAIL_PASSWORD` | — | Gmail app-specific password |
-| `APP_ADMIN_EMAIL` | — | Default platform owner email |
+| `APP_ADMIN_EMAIL` | — | Default master admin email |
 | `APP_FRONTEND_URL` | `http://localhost:5173` | Frontend URL for CORS & email links |
 | `APP_CORS_ALLOWED_ORIGINS` | — | Additional CORS origins (comma-separated) |
 | `RAZORPAY_KEY_ID` | `rzp_test_xxxxxxx` | Razorpay key ID |
@@ -2748,15 +2720,13 @@ databases:
 │       ├── 📁 exception/ (4 classes)        # Error handling
 │       └── 📁 scheduler/ (1 class)          # Cron jobs
 │
-├── 📁 mobile-app/                           # 📱 React Native Mobile App
-│   ├── 📄 package.json                      # Mobile dependencies
-│   ├── 📄 App.js                            # Root component
-│   └── 📁 src/
-│       ├── 📁 components/common/ (12 files) # Shared mobile components
-│       ├── 📁 context/ (3 files)            # Auth, notifications, theme
-│       ├── 📁 screens/ (19 screens)         # App screens
-│       ├── 📁 navigation/ (1 file)          # Navigator setup
-│       └── 📁 constants/ (3 files)          # Colors, layout
+├── 📁 android-app/                          # 🤖 Android Native App (Kotlin)
+│   ├── 📄 build.gradle.kts                  # Gradle dependencies
+│   └── 📁 app/src/main/                     # Compose UI, Retrofit, Hilt
+│
+├── 📁 ios-app/                              # 🍎 iOS Native App (Swift)
+│   ├── 📄 Package.swift                     # Swift Package Manager
+│   └── 📁 SocietyApp/                       # SwiftUI views, services, models
 │
 ├── 📁 database/                             # 🗄️ Database Scripts
 │   ├── 📄 schema.sql (287 lines)            # Full database schema
@@ -2784,7 +2754,7 @@ databases:
 | Metric | Count |
 |:-------|------:|
 | **Total Frontend Pages** | 36 |
-| **Total Mobile Screens** | 19 |
+| **Mobile Platforms** | 2 (Android + iOS) |
 | **Backend Controllers** | 26 |
 | **JPA Entities** | 23 |
 | **DTOs (Request/Response)** | 47+ |
@@ -2881,7 +2851,7 @@ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
 
 <br/>
 
-**Built with ❤️ using React • Spring Boot • PostgreSQL • React Native**
+**Built with ❤️ using React • Spring Boot • PostgreSQL • Kotlin • Swift**
 
 <br/>
 

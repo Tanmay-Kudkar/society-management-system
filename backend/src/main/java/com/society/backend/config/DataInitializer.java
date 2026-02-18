@@ -24,26 +24,26 @@ public class DataInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        // Create Platform Owner if not exists
+        // Create Master Admin if not exists
         // This is the ONLY hardcoded user - all others are created through dashboard
         if (userRepository.findByEmail("master@society.com").isEmpty()) {
-            User platformOwner = new User();
-            platformOwner.setName("Platform Owner");
-            platformOwner.setEmail("master@society.com");
-            platformOwner.setPassword(passwordEncoder.encode("master"));
-            platformOwner.setRole(Role.PLATFORM_OWNER);
-            platformOwner.setPhone(null);
-            platformOwner.setIsActive(true);
-            platformOwner.setAccountType("platform");
-            userRepository.save(platformOwner);
+            User masterAdmin = new User();
+            masterAdmin.setName("Master Admin");
+            masterAdmin.setEmail("master@society.com");
+            masterAdmin.setPassword(passwordEncoder.encode("master"));
+            masterAdmin.setRole(Role.MASTER_ADMIN);
+            masterAdmin.setPhone(null);
+            masterAdmin.setIsActive(true);
+            masterAdmin.setAccountType(null);
+            userRepository.save(masterAdmin);
             logger.info("═══════════════════════════════════════════════════════════════");
-            logger.info("✅ Platform Owner Created Successfully!");
+            logger.info("✅ Master Admin Created Successfully!");
             logger.info("   Email: master@society.com");
             logger.info("   Password: master");
             logger.warn("   ⚠️  Please change this password after first login!");
             logger.info("═══════════════════════════════════════════════════════════════");
         } else {
-            logger.info("✓ Platform Owner already exists");
+            logger.info("✓ Master Admin already exists");
         }
     }
 }

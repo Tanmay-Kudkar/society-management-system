@@ -42,19 +42,19 @@ public class WingController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'MANAGER')")
+    @PreAuthorize("hasAnyRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'MANAGER')")
     public ResponseEntity<WingResponse> create(@Valid @RequestBody WingRequest request) {
         return ResponseEntity.ok(wingService.create(request));
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'MANAGER')")
+    @PreAuthorize("hasAnyRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'MANAGER')")
     public ResponseEntity<WingResponse> update(@PathVariable Long id, @Valid @RequestBody WingRequest request) {
         return ResponseEntity.ok(wingService.update(id, request));
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'MANAGER')")
+    @PreAuthorize("hasAnyRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'MANAGER')")
     public ResponseEntity<Void> delete(@PathVariable Long id,
             @RequestParam(defaultValue = "false") boolean force) {
         wingService.delete(id, force);
@@ -62,7 +62,7 @@ public class WingController {
     }
 
     @PostMapping("/bulk-import/validate")
-    @PreAuthorize("hasAnyRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'MANAGER')")
+    @PreAuthorize("hasAnyRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'MANAGER')")
     public ResponseEntity<BulkWingImportResponse> validateBulkImport(
             @RequestParam("file") MultipartFile file,
             @RequestParam("societyId") Long societyId) throws java.io.IOException {
@@ -72,7 +72,7 @@ public class WingController {
     }
 
     @PostMapping("/bulk-import")
-    @PreAuthorize("hasAnyRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'MANAGER')")
+    @PreAuthorize("hasAnyRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'MANAGER')")
     public ResponseEntity<BulkWingImportResponse> processBulkImport(
             @RequestParam("file") MultipartFile file,
             @RequestParam("societyId") Long societyId) throws java.io.IOException {
@@ -87,7 +87,7 @@ public class WingController {
     }
 
     @GetMapping("/bulk-import/template")
-    @PreAuthorize("hasAnyRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'MANAGER')")
+    @PreAuthorize("hasAnyRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'MANAGER')")
     public ResponseEntity<byte[]> downloadImportTemplate() {
         byte[] template = bulkWingImportService.generateTemplate();
         return ResponseEntity.ok()

@@ -24,7 +24,7 @@ public class SocietyController {
         this.roleService = roleService;
     }
 
-    // PLATFORM_OWNER only
+    // MASTER_ADMIN only
     @PostMapping
     public ResponseEntity<SocietyResponse> create(
             @RequestParam Long userId,
@@ -49,7 +49,7 @@ public class SocietyController {
         return ResponseEntity.ok(societyService.getByOrganizationId(organizationId));
     }
 
-    // PLATFORM_OWNER only
+    // MASTER_ADMIN only
     @PutMapping("/{id}")
     public ResponseEntity<SocietyResponse> update(
             @PathVariable Long id,
@@ -59,7 +59,7 @@ public class SocietyController {
         return ResponseEntity.ok(societyService.update(id, request));
     }
 
-    // PLATFORM_OWNER only
+    // MASTER_ADMIN only
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(
             @PathVariable Long id,

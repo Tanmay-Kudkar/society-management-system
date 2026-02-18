@@ -44,63 +44,28 @@ public class RoleService {
     }
 
     /**
-     * Require PLATFORM_OWNER for sensitive operations.
+     * Require MASTER_ADMIN for platform-wide operations.
      */
     public void requireMasterAdmin(User user) {
-        if (user == null || user.getRole() != Role.PLATFORM_OWNER) {
-            throw new AccessDeniedException("Access denied. PLATFORM_OWNER only.");
+        if (user == null || user.getRole() != Role.MASTER_ADMIN) {
+            throw new AccessDeniedException("Access denied. MASTER_ADMIN only.");
         }
-    }
-
-    /**
-     * Enforce organization scope for the current user.
-     */
-    public void enforceOrganizationScope(User user, Long organizationId) {
-        if (user == null) {
-            throw new AccessDeniedException("Access denied. Not authenticated.");
-        }
-        if (user.getRole() == Role.PLATFORM_OWNER) {
-            return;
-        }
-        if (user.getRole() == Role.ORGANIZATION_OWNER) {
-            if (organizationId == null) {
-                throw new AccessDeniedException("Access denied. Organization scope required.");
-            }
-            if (user.getOrganization() == null || !organizationId.equals(user.getOrganization().getId())) {
-                throw new AccessDeniedException("Access denied. Organization scope mismatch.");
-            }
-            return;
-        }
-        throw new AccessDeniedException("Access denied. Organization scope not allowed for this role.");
     }
 
     /**
      * Enforce society scope for the current user.
+     * MASTER_ADMIN bypasses all scope checks.
      */
     public void enforceSocietyScope(User user, Long societyId) {
         if (user == null) {
             throw new AccessDeniedException("Access denied. Not authenticated.");
         }
-        if (user.getRole() == Role.PLATFORM_OWNER) {
-            return;
+        if (user.getRole() == Role.MASTER_ADMIN) {
+            return; // MASTER_ADMIN has access to all societies
         }
         if (societyId == null) {
             throw new AccessDeniedException("Access denied. Society scope required.");
         }
-
-        if (user.getRole() == Role.ORGANIZATION_OWNER) {
-            if (user.getOrganization() == null) {
-                throw new AccessDeniedException("Access denied. No organization assigned.");
-            }
-            var society = societyRepository.findById(societyId)
-                    .orElseThrow(() -> new AccessDeniedException("Access denied. Society not found."));
-            if (society.getOrganization() == null
-                    || !user.getOrganization().getId().equals(society.getOrganization().getId())) {
-                throw new AccessDeniedException("Access denied. Society not in your organization.");
-            }
-            return;
-        }
-
         // Society-level roles must match their own society
         if (user.getSociety() == null || !societyId.equals(user.getSociety().getId())) {
             throw new AccessDeniedException("Access denied. Society scope mismatch.");
@@ -121,143 +86,148 @@ public class RoleService {
     }
 
     /**
-     * Check if user is PLATFORM_OWNER
+     * Check if user is MASTER_ADMIN
      */
     public void requireMasterAdmin(Long userId) {
-        checkRole(userId, Role.PLATFORM_OWNER);
+        checkRole(userId, Role.MASTER_ADMIN);
     }
 
     /**
-     * Check if user is PLATFORM_OWNER or ORGANIZATION_OWNER
+     * Check if user is MASTER_ADMIN or SOCIETY_ADMIN
      */
-    public void requirePlatformOrOrgOwner(Long userId) {
-        checkRole(userId, Role.PLATFORM_OWNER, Role.ORGANIZATION_OWNER);
+    public void requireAdminOrAbove(Long userId) {
+        checkRole(userId, Role.MASTER_ADMIN, Role.SOCIETY_ADMIN);
     }
 
     /**
-     * Check if user is PLATFORM_OWNER, ORGANIZATION_OWNER, SOCIETY_ADMIN, or
-     * COMMITTEE
+     * Check if user is MASTER_ADMIN, SOCIETY_ADMIN, or any head/committee role
      */
     public void requireAdminOrCommittee(Long userId) {
-        checkRole(userId, Role.PLATFORM_OWNER, Role.ORGANIZATION_OWNER, Role.SOCIETY_ADMIN,
+        checkRole(userId, Role.MASTER_ADMIN, Role.SOCIETY_ADMIN,
+                Role.CHAIRMAN, Role.SECRETARY, Role.TREASURER,
                 Role.COMMITTEE, Role.MANAGER);
     }
 
     /**
-     * Check if user is PLATFORM_OWNER, ORGANIZATION_OWNER, SOCIETY_ADMIN,
-     * COMMITTEE, MANAGER, or EMPLOYEE
+     * Check if user is MASTER_ADMIN, SOCIETY_ADMIN, head roles, COMMITTEE,
+     * MANAGER, or EMPLOYEE
      */
     public void requireStaff(Long userId) {
-        checkRole(userId, Role.PLATFORM_OWNER, Role.ORGANIZATION_OWNER, Role.SOCIETY_ADMIN,
+        checkRole(userId, Role.MASTER_ADMIN, Role.SOCIETY_ADMIN,
+                Role.CHAIRMAN, Role.SECRETARY, Role.TREASURER,
                 Role.COMMITTEE, Role.MANAGER, Role.EMPLOYEE);
     }
 
     /**
-     * Check if user is any registered member (not visitor)
+     * Check if user is any registered member (not VISITOR or VENDOR)
      */
     public void requireMember(Long userId) {
         User user = getUser(userId);
-        if (user.getRole() == Role.VISITOR) {
+        if (user.getRole() == Role.VISITOR || user.getRole() == Role.VENDOR) {
             throw new AccessDeniedException(
-                    "Access denied. VISITOR cannot perform this action.");
+                    "Access denied. VISITOR and VENDOR cannot perform this action.");
         }
     }
 
     /**
-     * Check if user can manage societies (PLATFORM_OWNER and ORGANIZATION_OWNER)
+     * Check if user can manage societies (MASTER_ADMIN only)
      */
     public void canManageSocieties(Long userId) {
-        requirePlatformOrOrgOwner(userId);
+        requireMasterAdmin(userId);
     }
 
     /**
-     * Check if user can manage flats (PLATFORM_OWNER, COMMITTEE)
+     * Check if user can manage flats
      */
     public void canManageFlats(Long userId) {
         requireAdminOrCommittee(userId);
     }
 
     /**
-     * Check if user can manage notices (PLATFORM_OWNER, COMMITTEE, EMPLOYEE)
+     * Check if user can manage notices
      */
     public void canManageNotices(Long userId) {
         requireStaff(userId);
     }
 
     /**
-     * Check if user can manage documents (PLATFORM_OWNER, COMMITTEE, EMPLOYEE)
+     * Check if user can manage documents
      */
     public void canManageDocuments(Long userId) {
         requireStaff(userId);
     }
 
     /**
-     * Check if user can update complaint status (PLATFORM_OWNER,
-     * ORGANIZATION_OWNER, SOCIETY_ADMIN,
-     * COMMITTEE, MANAGER, EMPLOYEE for status updates)
+     * Check if user can update complaint status
      */
     public void canUpdateComplaintStatus(Long userId) {
-        checkRole(userId, Role.PLATFORM_OWNER, Role.ORGANIZATION_OWNER, Role.SOCIETY_ADMIN, Role.COMMITTEE,
-                Role.MANAGER, Role.EMPLOYEE);
+        checkRole(userId, Role.MASTER_ADMIN, Role.SOCIETY_ADMIN,
+                Role.CHAIRMAN, Role.SECRETARY, Role.TREASURER,
+                Role.COMMITTEE, Role.MANAGER, Role.EMPLOYEE);
     }
 
     /**
-     * Check if user can create complaints (all except VISITOR)
+     * Check if user can create complaints (all except VISITOR and VENDOR)
      */
     public void canCreateComplaint(Long userId) {
         requireMember(userId);
     }
 
     /**
-     * Check if user can view all data (PLATFORM_OWNER, COMMITTEE, EMPLOYEE)
+     * Check if user can view all data
      */
     public void canViewAll(Long userId) {
         requireStaff(userId);
     }
 
     /**
-     * Check if user can manage vehicles (PLATFORM_OWNER, SOCIETY_ADMIN, CHAIRMAN,
-     * SECRETARY, TREASURER, COMMITTEE, MANAGER, EMPLOYEE, MEMBER)
+     * Check if user can manage vehicles
      */
     public void canManageVehicles(Long userId) {
-        checkRole(userId, Role.PLATFORM_OWNER, Role.ORGANIZATION_OWNER, Role.SOCIETY_ADMIN,
+        checkRole(userId, Role.MASTER_ADMIN, Role.SOCIETY_ADMIN,
                 Role.CHAIRMAN, Role.SECRETARY, Role.TREASURER, Role.COMMITTEE,
                 Role.MANAGER, Role.EMPLOYEE, Role.MEMBER);
     }
 
     /**
-     * Check if user can manage wings (PLATFORM_OWNER, SOCIETY_ADMIN, CHAIRMAN,
-     * SECRETARY, TREASURER, COMMITTEE, MANAGER)
+     * Check if user can manage wings
      */
     public void canManageWings(Long userId) {
         requireAdminOrCommittee(userId);
     }
 
     /**
-     * Check if user can view financial reports (PLATFORM_OWNER, SOCIETY_ADMIN,
-     * CHAIRMAN, SECRETARY, TREASURER, COMMITTEE, MANAGER)
+     * Check if user can view financial reports
      */
     public void canViewReports(Long userId) {
-        checkRole(userId, Role.PLATFORM_OWNER, Role.ORGANIZATION_OWNER, Role.SOCIETY_ADMIN,
-                Role.CHAIRMAN, Role.SECRETARY, Role.TREASURER, Role.COMMITTEE, Role.MANAGER);
+        checkRole(userId, Role.MASTER_ADMIN, Role.SOCIETY_ADMIN,
+                Role.CHAIRMAN, Role.SECRETARY, Role.TREASURER,
+                Role.COMMITTEE, Role.MANAGER);
     }
 
     /**
      * Check if user can manage complaints (view all, update status, delete)
-     * (PLATFORM_OWNER, SOCIETY_ADMIN, CHAIRMAN, SECRETARY, TREASURER, COMMITTEE,
-     * MANAGER)
      */
     public void canManageComplaints(Long userId) {
-        checkRole(userId, Role.PLATFORM_OWNER, Role.ORGANIZATION_OWNER, Role.SOCIETY_ADMIN,
-                Role.CHAIRMAN, Role.SECRETARY, Role.TREASURER, Role.COMMITTEE, Role.MANAGER);
+        checkRole(userId, Role.MASTER_ADMIN, Role.SOCIETY_ADMIN,
+                Role.CHAIRMAN, Role.SECRETARY, Role.TREASURER,
+                Role.COMMITTEE, Role.MANAGER);
     }
 
     /**
-     * Check if user can raise complaints (all except VISITOR and TENANT)
+     * Check if user can raise complaints (all except VISITOR and VENDOR)
      */
     public void canRaiseComplaints(Long userId) {
-        checkRole(userId, Role.PLATFORM_OWNER, Role.ORGANIZATION_OWNER, Role.SOCIETY_ADMIN,
+        checkRole(userId, Role.MASTER_ADMIN, Role.SOCIETY_ADMIN,
                 Role.CHAIRMAN, Role.SECRETARY, Role.TREASURER, Role.COMMITTEE,
                 Role.MANAGER, Role.EMPLOYEE, Role.MEMBER, Role.TENANT);
+    }
+
+    /**
+     * Check if user can manage financials (no COMMITTEE write access)
+     */
+    public void canManageFinancials(Long userId) {
+        checkRole(userId, Role.MASTER_ADMIN, Role.SOCIETY_ADMIN,
+                Role.CHAIRMAN, Role.SECRETARY, Role.TREASURER);
     }
 }

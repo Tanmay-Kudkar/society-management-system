@@ -45,7 +45,7 @@ public class SocietyServiceImpl implements SocietyService {
     public List<SocietyResponse> getAll() {
         User currentUser = roleService.getCurrentUser();
 
-        if (currentUser != null && (currentUser.getRole() == Role.PLATFORM_OWNER || currentUser.getRole() == Role.MASTER_ADMIN)) {
+        if (currentUser != null && currentUser.getRole() == Role.MASTER_ADMIN) {
             return societyRepository.findAll().stream()
                     .map(this::toResponse)
                     .collect(Collectors.toList());

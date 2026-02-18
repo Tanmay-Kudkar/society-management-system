@@ -50,7 +50,7 @@ export const authApi = {
   changePassword: (currentPassword, newPassword) => api.post('/auth/change-password', { currentPassword, newPassword }),
 }
 
-// Society API - requires userId for create/update/delete (PLATFORM_OWNER and ORGANIZATION_OWNER)
+// Society API - requires userId for create/update/delete (MASTER_ADMIN)
 export const societyApi = {
   getAll: () => api.get('/societies'),
   getById: (id) => api.get(`/societies/${id}`),
@@ -61,7 +61,7 @@ export const societyApi = {
     api.delete(`/societies/${id}?userId=${userId}${force ? '&force=true' : ''}`),
 }
 
-// Organization API - PLATFORM_OWNER and ORGANIZATION_OWNER
+// Organization API - MASTER_ADMIN only
 export const organizationApi = {
   getAll: () => api.get('/organizations'),
   getById: (id) => api.get(`/organizations/${id}`),

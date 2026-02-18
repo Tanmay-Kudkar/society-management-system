@@ -26,7 +26,7 @@ public class VendorController {
     private final BulkVendorImportService bulkVendorImportService;
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'MANAGER')")
+    @PreAuthorize("hasAnyRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'MANAGER')")
     public ResponseEntity<VendorResponse> create(
             @Valid @RequestBody VendorRequest request,
             @RequestParam Long userId) {
@@ -59,7 +59,7 @@ public class VendorController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'MANAGER')")
+    @PreAuthorize("hasAnyRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'MANAGER')")
     public ResponseEntity<VendorResponse> update(
             @PathVariable Long id,
             @Valid @RequestBody VendorRequest request,
@@ -68,7 +68,7 @@ public class VendorController {
     }
 
     @PatchMapping("/{id}/deactivate")
-    @PreAuthorize("hasAnyRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'MANAGER')")
+    @PreAuthorize("hasAnyRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'MANAGER')")
     public ResponseEntity<VendorResponse> deactivate(
             @PathVariable Long id,
             @RequestParam Long userId) {
@@ -76,7 +76,7 @@ public class VendorController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY')")
+    @PreAuthorize("hasAnyRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY')")
     public ResponseEntity<Void> delete(
             @PathVariable Long id,
             @RequestParam Long userId,
@@ -86,7 +86,7 @@ public class VendorController {
     }
 
     @PatchMapping("/{id}/approve")
-    @PreAuthorize("hasAnyRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY')")
+    @PreAuthorize("hasAnyRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY')")
     public ResponseEntity<VendorResponse> approveVendor(
             @PathVariable Long id,
             @RequestParam Long userId) {
@@ -95,7 +95,7 @@ public class VendorController {
     }
 
     @PatchMapping("/{id}/reject")
-    @PreAuthorize("hasAnyRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY')")
+    @PreAuthorize("hasAnyRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY')")
     public ResponseEntity<VendorResponse> rejectVendor(
             @PathVariable Long id,
             @RequestParam Long userId) {
@@ -111,7 +111,7 @@ public class VendorController {
     }
 
     @PostMapping("/bulk-import/validate")
-    @PreAuthorize("hasAnyRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'MANAGER')")
+    @PreAuthorize("hasAnyRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'MANAGER')")
     public ResponseEntity<BulkVendorImportResponse> validateBulkImport(
             @RequestParam("file") MultipartFile file,
             @RequestParam("societyId") Long societyId) throws java.io.IOException {
@@ -121,7 +121,7 @@ public class VendorController {
     }
 
     @PostMapping("/bulk-import")
-    @PreAuthorize("hasAnyRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'MANAGER')")
+    @PreAuthorize("hasAnyRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'MANAGER')")
     public ResponseEntity<BulkVendorImportResponse> processBulkImport(
             @RequestParam("file") MultipartFile file,
             @RequestParam("societyId") Long societyId) throws java.io.IOException {
@@ -136,7 +136,7 @@ public class VendorController {
     }
 
     @GetMapping("/bulk-import/template")
-    @PreAuthorize("hasAnyRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'MANAGER')")
+    @PreAuthorize("hasAnyRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'MANAGER')")
     public ResponseEntity<byte[]> downloadImportTemplate() {
         byte[] template = bulkVendorImportService.generateTemplate();
         return ResponseEntity.ok()

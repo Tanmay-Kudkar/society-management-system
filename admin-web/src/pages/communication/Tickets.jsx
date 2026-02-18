@@ -43,8 +43,8 @@ export default function Tickets() {
   const [showOverdueOnly, setShowOverdueOnly] = useState(false)
   const [isExporting, setIsExporting] = useState(false)
 
-  // Check if current user is PLATFORM_OWNER
-  const isPlatformLevel = user?.role === 'PLATFORM_OWNER' || user?.role === 'ORGANIZATION_OWNER'
+  // Check if current user is MASTER_ADMIN
+  const isPlatformLevel = user?.role === 'MASTER_ADMIN'
 
   const { data: tickets = [], isLoading, isError } = useQuery({
     queryKey: ['tickets'],

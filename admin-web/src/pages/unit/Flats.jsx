@@ -55,11 +55,11 @@ export default function Flats() {
     }
   }, [selectedUnitType, editingFlat])
 
-  // Get society filter from URL (for PLATFORM_OWNER viewing specific society)
+  // Get society filter from URL (for MASTER_ADMIN viewing specific society)
   const societyIdFromUrl = searchParams.get('society')
 
-  // Check if current user is PLATFORM_OWNER or ORGANIZATION_OWNER
-  const isPlatformLevel = user?.role === 'PLATFORM_OWNER' || user?.role === 'ORGANIZATION_OWNER'
+  // Check if current user is MASTER_ADMIN or SOCIETY_ADMIN
+  const isPlatformLevel = user?.role === 'MASTER_ADMIN'
 
   // Determine effective society ID for filtering
   const effectiveSocietyId = isPlatformLevel && societyIdFromUrl ? parseInt(societyIdFromUrl) : user?.societyId
@@ -74,7 +74,7 @@ export default function Flats() {
   const { data: societies = [] } = useQuery({
     queryKey: ['societies'],
     queryFn: () => societyApi.getAll().then(res => res.data),
-    enabled: isPlatformLevel, // Only fetch if PLATFORM_OWNER
+    enabled: isPlatformLevel, // Only fetch if MASTER_ADMIN
   })
 
   // Fetch wings for the effective society
@@ -205,7 +205,7 @@ export default function Flats() {
     }
     setFormErrors({})
     
-    // For non-PLATFORM_OWNER, use user's societyId directly
+    // For non-MASTER_ADMIN, use user's societyId directly
     const societyId = isPlatformLevel 
       ? parseInt(formData.get('societyId')) 
       : user?.societyId
@@ -279,7 +279,7 @@ export default function Flats() {
               className="flats-search-input"
             />
           </div>
-          {/* Only show society filter for PLATFORM_OWNER */}
+          {/* Only show society filter for MASTER_ADMIN */}
           {isPlatformLevel && (
             <select
               value={filterSociety}
@@ -420,7 +420,7 @@ export default function Flats() {
               </button>
             </div>
             <form onSubmit={handleSubmit} className="flats-modal-body">
-              {/* Society field - only show dropdown for PLATFORM_OWNER, auto-set for others */}
+              {/* Society field - only show dropdown for MASTER_ADMIN, auto-set for others */}
               {isPlatformLevel ? (
                 <SmartSelect
                   label="Society"

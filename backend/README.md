@@ -12,11 +12,18 @@ Spring Boot 3.5.10 REST API for Society Management System with role-based access
 - BCrypt Password Encoding
 
 ## Roles
-- **PLATFORM_OWNER** - Full system access
-- **COMMITTEE** - Society management access  
-- **EMPLOYEE** - Task/ticket management access
-- **MEMBER** - Member-level access
-- **VISITOR** - Read-only access
+- **MASTER_ADMIN** - Full platform-wide access
+- **SOCIETY_ADMIN** - Full access within own society
+- **CHAIRMAN** - Governing body head, final approvals
+- **SECRETARY** - Administrative head, records management
+- **TREASURER** - Financial head, billing and accounts
+- **COMMITTEE** - Committee member, limited write access
+- **MANAGER** - Operations management
+- **EMPLOYEE** - Staff/security, task management access
+- **MEMBER** - Flat owner, member-level access
+- **TENANT** - Renter, limited access
+- **VENDOR** - External vendor, own data access
+- **VISITOR** - Minimal read-only access
 
 ## Running the Application
 ```bash
@@ -230,25 +237,30 @@ Server runs on `http://localhost:8080`
 | **SECRETARY** | Administrative Head | Manages documentation, records, day-to-day operations |
 | **TREASURER** | Financial Head | Handles finances, billing, payments, accounts |
 
-### 🔐 STRICT Hierarchy Rules
+### 🔐 Hierarchy Rules
 
-1. **Parent creates DIRECT CHILDREN only** - No skip-level creation
-2. **Read access flows DOWNWARD** - Parents can read all descendants
-3. **Update/Delete LIMITED to direct children** - No skip-level modification
-4. **EXCEPTION: SOCIETY_ADMIN has FULL CRUD** - Can manage all roles below
+1. **Hierarchical User CRUD** — Each role manages roles below it per the permission matrix
+2. **Read access flows DOWNWARD** — Parents can read all descendants
+3. **Head Roles share Level 2** — Chairman, Secretary, Treasurer are peers with shared CRUD
+4. **MASTER_ADMIN has FULL CRUD** — Can manage all 11 roles below
+5. **SOCIETY_ADMIN has FULL CRUD** — Can manage all 10 roles below within society
+6. **COMMITTEE no finance writes** — Read-only access to financial modules
+7. **MANAGER no user CRUD** — Operations only, no user management
 
 ### User CRUD Permissions
 
 | Role | Can CREATE | Can UPDATE/DELETE | Can READ |
 |------|------------|-------------------|----------|
-| `PLATFORM_OWNER` | SOCIETY_ADMIN only | SOCIETY_ADMIN only | ALL roles |
-| `SOCIETY_ADMIN` | ALL below (exception) | ALL below (exception) | ALL in society |
-| `CHAIRMAN` | SECRETARY, TREASURER | SECRETARY, TREASURER | All below |
-| `SECRETARY` | COMMITTEE only | COMMITTEE only | COMMITTEE and below |
-| `TREASURER` | COMMITTEE only | COMMITTEE only | COMMITTEE and below |
+| `MASTER_ADMIN` | ALL roles | ALL roles | ALL roles |
+| `SOCIETY_ADMIN` | ALL below (10 roles) | ALL below (10 roles) | ALL in society |
+| `CHAIRMAN` | COMMITTEE, MANAGER, EMPLOYEE, MEMBER, TENANT, VISITOR | Same | All below |
+| `SECRETARY` | COMMITTEE, MANAGER, EMPLOYEE, MEMBER, TENANT, VISITOR | Same | All below |
+| `TREASURER` | COMMITTEE, MANAGER, EMPLOYEE, MEMBER, TENANT, VISITOR | Same | All below |
 | `COMMITTEE` | EMPLOYEE, MEMBER | EMPLOYEE, MEMBER | EMPLOYEE, MEMBER and below |
 | `EMPLOYEE` | VISITOR only | VISITOR only | VISITOR |
 | `MEMBER` | TENANT only | TENANT only | TENANT |
+| `MANAGER` | ❌ None | ❌ None | Operations scope |
+| `VENDOR` | ❌ None | ❌ None | Own data |
 | `TENANT` | ❌ None | ❌ None | Own profile |
 | `VISITOR` | ❌ None | ❌ None | Own profile |
 
@@ -256,20 +268,20 @@ Server runs on `http://localhost:8080`
 
 All write operations require `userId` parameter for role verification:
 
-| Feature | PLATFORM_OWNER | SOCIETY_ADMIN | CHAIRMAN | SECRETARY | TREASURER | COMMITTEE | EMPLOYEE | MEMBER |
-|---------|:------------:|:-------------:|:--------:|:---------:|:---------:|:---------:|:--------:|:------:|
-| Manage Societies | ✓ | - | - | - | - | - | - | - |
-| Manage Users | Direct child | ALL below | Direct child | Direct child | Direct child | Direct child | Direct child | Direct child |
-| Manage Flats | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | - | - |
-| Manage Vehicles | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| Manage Tenants | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| Manage Tickets | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| Assign Tickets | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | - | - |
-| Manage Vendors | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | - | - |
-| Manage Billing | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | - | - |
-| Manage Contracts | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | - | - |
-| Manage Templates | ✓ | - | - | - | - | - | - | - |
-| Manage Banners | ✓ | - | - | - | - | - | - | - |
+| Feature | MASTER_ADMIN | SOCIETY_ADMIN | CHAIRMAN | SECRETARY | TREASURER | COMMITTEE | MANAGER | EMPLOYEE | MEMBER | VENDOR |
+|---------|:------------:|:-------------:|:--------:|:---------:|:---------:|:---------:|:-------:|:--------:|:------:|:------:|
+| Manage Societies | ✓ | - | - | - | - | - | - | - | - | - |
+| Manage Users | ALL | ALL below | Below L2 | Below L2 | Below L2 | EMP/MBR | - | VISITOR | TENANT | - |
+| Manage Flats | ✓ | ✓ | ✓ | ✓ | ✓ | Read | ✓ | Read | Own | - |
+| Manage Vehicles | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | - |
+| Manage Tenants | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | - |
+| Manage Tickets | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | Create | - |
+| Assign Tickets | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | - | - | - | - |
+| Manage Vendors | ✓ | ✓ | ✓ | ✓ | ✓ | Read | ✓ | - | - | Own |
+| Manage Billing | ✓ | ✓ | ✓ | ✓ | ✓ | Read | - | - | Own | - |
+| Manage Contracts | ✓ | ✓ | ✓ | ✓ | ✓ | Read | - | - | - | - |
+| Manage Templates | ✓ | ✓ | ✓ | ✓ | ✓ | - | - | - | - | - |
+| Manage Banners | ✓ | ✓ | ✓ | ✓ | - | - | ✓ | - | - | - |
 
 ## Database Configuration
 

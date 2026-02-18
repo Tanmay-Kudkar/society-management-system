@@ -35,7 +35,7 @@ export default function Vendors() {
   const [searchTerm, setSearchTerm] = useState('')
   const [viewingVendor, setViewingVendor] = useState(null)
 
-  const isPlatformLevel = user?.role === 'PLATFORM_OWNER' || user?.role === 'MASTER_ADMIN'
+  const isPlatformLevel = user?.role === 'MASTER_ADMIN' || user?.role === 'MASTER_ADMIN'
 
   const { data: vendors = [], isLoading, isError } = useQuery({
     queryKey: ['vendors'],
@@ -138,7 +138,7 @@ export default function Vendors() {
     e.preventDefault()
     const formData = new FormData(e.target)
     
-    // For non-PLATFORM_OWNER, always set societyId to user's society
+    // For non-MASTER_ADMIN, always set societyId to user's society
     const societyId = isPlatformLevel 
       ? parseInt(formData.get('societyId'))
       : user?.societyId
@@ -373,7 +373,7 @@ export default function Vendors() {
                 placeholder="Select Type"
               />
               
-              {/* Society dropdown - only show for PLATFORM_OWNER */}
+              {/* Society dropdown - only show for MASTER_ADMIN */}
               {isPlatformLevel && (
                 <SmartSelect
                   label="Society"
@@ -575,7 +575,7 @@ export default function Vendors() {
                   </div>
                 </div>
 
-                {/* Society Info - only show for PLATFORM_OWNER */}
+                {/* Society Info - only show for MASTER_ADMIN */}
                 {isPlatformLevel && viewingVendor.societyName && (
                   <div className="vendors-society-card">
                     <div className="vendors-society-row">

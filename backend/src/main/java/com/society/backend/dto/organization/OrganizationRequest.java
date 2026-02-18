@@ -24,7 +24,7 @@ public class OrganizationRequest {
     @Pattern(regexp = "^(\\+91)?[6-9]\\d{9}$", message = "Invalid owner phone format")
     private String ownerPhone;
 
-    /** Password for the ORGANIZATION_OWNER user (only used on create) */
+    /** Password for the SOCIETY_ADMIN user (only used on create) */
     private String ownerPassword;
 
     private String subscriptionType; // FREE, BASIC, PREMIUM, LIFETIME

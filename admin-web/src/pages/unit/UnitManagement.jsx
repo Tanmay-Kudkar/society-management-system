@@ -30,8 +30,8 @@ const unitTypeClasses = {
 }
 
 const roleColors = {
-  PLATFORM_OWNER: 'units-role-tag',
-  ORGANIZATION_OWNER: 'units-role-tag',
+  MASTER_ADMIN: 'units-role-tag',
+  SOCIETY_ADMIN: 'units-role-tag',
   CHAIRMAN: 'units-role-tag',
   SECRETARY: 'units-role-tag',
   TREASURER: 'units-role-tag',
@@ -55,7 +55,7 @@ export default function UnitManagement() {
   const societyIdFromUrl = searchParams.get('society')
   const unitTypeFromUrl = searchParams.get('unitType')
   const tabFromUrl = searchParams.get('tab')
-  const isPlatformLevel = user?.role === 'PLATFORM_OWNER' || user?.role === 'ORGANIZATION_OWNER'
+  const isPlatformLevel = user?.role === 'MASTER_ADMIN'
   const effectiveSocietyId = isPlatformLevel && societyIdFromUrl ? parseInt(societyIdFromUrl) : user?.societyId
   const currentUserSocietyId = user?.societyId ? String(user.societyId) : ''
 
@@ -155,7 +155,7 @@ export default function UnitManagement() {
     enabled: !!user?.id,
   })
 
-  // Fetch societies (for PLATFORM_OWNER)
+  // Fetch societies (for MASTER_ADMIN)
   const { data: societies = [] } = useQuery({
     queryKey: ['societies'],
     queryFn: () => societyApi.getAll().then(res => res.data),
@@ -1266,7 +1266,7 @@ export default function UnitManagement() {
               />
             </div>
 
-            {user?.role === 'PLATFORM_OWNER' && (
+            {user?.role === 'MASTER_ADMIN' && (
               <select
                 value={filterOrganization}
                 onChange={(e) => {
@@ -1336,7 +1336,7 @@ export default function UnitManagement() {
                 <tbody className="units-users-table__tbody">
                   {filteredTabUsers.map((u) => {
                     const canEdit = u.id === user?.id || updatableRoles.includes(u.role)
-                    const canDelete = u.role !== 'PLATFORM_OWNER' && u.id !== user?.id && updatableRoles.includes(u.role)
+                    const canDelete = u.role !== 'MASTER_ADMIN' && u.id !== user?.id && updatableRoles.includes(u.role)
                     const isSelf = u.id === user?.id
                     const userFlat = flats.find(f => f.id === u.flatId)
 
@@ -1826,7 +1826,7 @@ function UnitFormModal({ unit, societies, wings, isPlatformLevel, userSocietyId,
         {errors.capacity && <div className="units-modal-alert"><FormErrorSummary message={errors.capacity} /></div>}
 
         <form onSubmit={onSubmit} className="units-modal-body">
-          {/* Society (PLATFORM_OWNER only) */}
+          {/* Society (MASTER_ADMIN only) */}
           {isPlatformLevel ? (
             <SmartSelect
               label="Society"

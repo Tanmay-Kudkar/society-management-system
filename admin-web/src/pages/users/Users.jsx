@@ -15,8 +15,7 @@ import { HeroSkeleton, FiltersSkeleton, TableSkeleton, WakeUpBanner } from '../.
 import useMinLoadingTime from '../../hooks/useMinLoadingTime'
 
 const roleColors = {
-  PLATFORM_OWNER: 'role-tag role-tag--platform-owner',
-  ORGANIZATION_OWNER: 'role-tag role-tag--organization-owner',
+  MASTER_ADMIN: 'role-tag role-tag--platform-owner',
   SOCIETY_ADMIN: 'role-tag role-tag--society-admin',
   CHAIRMAN: 'role-tag role-tag--chairman',
   SECRETARY: 'role-tag role-tag--secretary',
@@ -26,12 +25,12 @@ const roleColors = {
   EMPLOYEE: 'role-tag role-tag--employee',
   MEMBER: 'role-tag role-tag--member',
   TENANT: 'role-tag role-tag--tenant',
+  VENDOR: 'role-tag role-tag--vendor',
   VISITOR: 'role-tag role-tag--visitor',
 }
 
 const roleAccentColors = {
-  PLATFORM_OWNER: 'var(--role-platform-owner)',
-  ORGANIZATION_OWNER: 'var(--role-organization-owner)',
+  MASTER_ADMIN: 'var(--role-platform-owner)',
   SOCIETY_ADMIN: 'var(--role-society-admin)',
   CHAIRMAN: 'var(--role-chairman)',
   SECRETARY: 'var(--role-secretary)',
@@ -41,6 +40,7 @@ const roleAccentColors = {
   EMPLOYEE: 'var(--role-employee)',
   MEMBER: 'var(--role-member)',
   TENANT: 'var(--role-tenant)',
+  VENDOR: 'var(--role-vendor)',
   VISITOR: 'var(--role-visitor)',
 }
 
@@ -106,8 +106,8 @@ export default function Users() {
     window.URL.revokeObjectURL(url)
   }
   
-  // Check if current user is PLATFORM_OWNER
-  const isPlatformLevel = user?.role === 'PLATFORM_OWNER' || user?.role === 'ORGANIZATION_OWNER'
+  // Check if current user is MASTER_ADMIN
+  const isPlatformLevel = user?.role === 'MASTER_ADMIN'
   
   // Check if current user is MEMBER (for tenant assignment logic)
   // Check from session, profile API response, or users list
@@ -350,8 +350,8 @@ export default function Users() {
     },
   })
 
-  // For PLATFORM_OWNER, show ORGANIZATION_OWNER and SOCIETY_ADMIN (their manageable users)
-  // For ORGANIZATION_OWNER, show only SOCIETY_ADMIN users in their org
+  // For MASTER_ADMIN, show SOCIETY_ADMIN and SOCIETY_ADMIN (their manageable users)
+  // For SOCIETY_ADMIN, show only SOCIETY_ADMIN users in their org
   // UNLESS viewing a specific society from URL - then show all users in that society
   // For others, show all users they can see
   let displayUsers = users
@@ -360,16 +360,9 @@ export default function Users() {
   // Apply society filter from URL if present
   if (urlSocietyId) {
     displayUsers = displayUsers.filter(u => String(u.societyId) === urlSocietyId)
-  } else if (user?.role === 'PLATFORM_OWNER') {
-    // Platform Owner sees both Organization Owners and Society Admins
-    displayUsers = displayUsers.filter(u => u.role === 'ORGANIZATION_OWNER' || u.role === 'SOCIETY_ADMIN')
-  } else if (user?.role === 'ORGANIZATION_OWNER') {
-    // Organization Owner sees only Society Admins scoped to societies in their organization
-    displayUsers = displayUsers.filter(u =>
-      u.role === 'SOCIETY_ADMIN' &&
-      ((u.societyId && scopedSocietyIds.has(u.societyId)) ||
-        (u.organizationId && user?.organizationId && u.organizationId === user.organizationId))
-    )
+  } else if (user?.role === 'MASTER_ADMIN') {
+    // Master Admin sees all Society Admins
+    displayUsers = displayUsers.filter(u => u.role === 'SOCIETY_ADMIN')
   }
 
   const filteredUsers = displayUsers.filter(u => {
@@ -410,8 +403,8 @@ export default function Users() {
       return
     }
 
-    // Validate societyId is required for SOCIETY_ADMIN creation (by PLATFORM_OWNER or ORGANIZATION_OWNER)
-    if ((user?.role === 'PLATFORM_OWNER' || user?.role === 'ORGANIZATION_OWNER') && roleValue === 'SOCIETY_ADMIN' && !data.societyId) {
+    // Validate societyId is required for SOCIETY_ADMIN creation (by MASTER_ADMIN or SOCIETY_ADMIN)
+    if ((user?.role === 'MASTER_ADMIN') && roleValue === 'SOCIETY_ADMIN' && !data.societyId) {
       setError('Please select a society for the Society Admin')
       return
     }
@@ -474,10 +467,10 @@ export default function Users() {
     if (urlSocietyId) {
       return 'Society Users'
     }
-    if (user?.role === 'PLATFORM_OWNER') {
+    if (user?.role === 'MASTER_ADMIN') {
       return 'Manage Users'
     }
-    if (user?.role === 'ORGANIZATION_OWNER') {
+    if (user?.role === 'SOCIETY_ADMIN') {
       return 'Society Admins'
     }
     return 'Users'
@@ -490,10 +483,10 @@ export default function Users() {
     if (urlSocietyId) {
       return 'View users in this society'
     }
-    if (user?.role === 'PLATFORM_OWNER') {
-      return 'Manage organization owners and society administrators'
+    if (user?.role === 'MASTER_ADMIN') {
+      return 'Manage society administrators'
     }
-    if (user?.role === 'ORGANIZATION_OWNER') {
+    if (user?.role === 'SOCIETY_ADMIN') {
       return 'Manage society administrators'
     }
     return 'Manage system users and roles'
@@ -627,8 +620,8 @@ export default function Users() {
               className="users-search__input"
             />
           </div>
-          {/* Show role filter when there are manageable roles (hide for Organization Owner as they only manage Society Admins) */}
-          {updatableRoles.length > 0 && user?.role !== 'ORGANIZATION_OWNER' && (
+          {/* Show role filter when there are manageable roles */}
+          {updatableRoles.length > 0 && user?.role !== 'SOCIETY_ADMIN' && (
             <select
               value={filterRole}
               onChange={(e) => setFilterRole(e.target.value)}
@@ -646,12 +639,12 @@ export default function Users() {
         </div>
       </div>
 
-      {/* PLATFORM_OWNER/ORG_OWNER sees user cards with navigation (unless viewing specific society) */}
+      {/* MASTER_ADMIN sees user cards with navigation (unless viewing specific society) */}
       {isPlatformLevel && !urlSocietyId ? (
         <div className="users-section">
           <h2 className="users-section__title">
             <UsersIcon size={20} />
-            {user?.role === 'PLATFORM_OWNER' ? 'Organization Owners & Society Administrators' : 'Society Administrators'}
+            Society Administrators
             <span className="users-section__count">({filteredUsers.length})</span>
           </h2>
           
@@ -659,13 +652,13 @@ export default function Users() {
             <div className="users-empty">
               <UsersIcon className="users-empty__icon" size={48} />
               <p className="users-empty__text">No users found</p>
-              <p className="users-empty__subtext">{user?.role === 'PLATFORM_OWNER' ? 'Create an Organization Owner or Society Admin to get started' : 'Create a new Society Admin to get started'}</p>
+              <p className="users-empty__subtext">Create a new Society Admin to get started</p>
             </div>
           ) : (
             <div className="user-grid">
               {filteredUsers.map((u) => {
                 const canEdit = updatableRoles.includes(u.role)
-                const canDelete = u.role !== 'PLATFORM_OWNER' && updatableRoles.includes(u.role)
+                const canDelete = u.role !== 'MASTER_ADMIN' && updatableRoles.includes(u.role)
                 const societyName = getSocietyName(u.societyId)
                 
                 return (
@@ -748,7 +741,7 @@ export default function Users() {
           )}
         </div>
       ) : (
-      /* Card-row view for non-PLATFORM_OWNER users */
+      /* Card-row view for non-MASTER_ADMIN users */
       <div className="utbl">
         {(
           <>
@@ -766,7 +759,7 @@ export default function Users() {
           <div className="utbl__body">
             {filteredUsers.map((u) => {
               const canEdit = u.id === user?.id || updatableRoles.includes(u.role)
-              const canDelete = u.role !== 'PLATFORM_OWNER' && updatableRoles.includes(u.role)
+              const canDelete = u.role !== 'MASTER_ADMIN' && updatableRoles.includes(u.role)
               const isSelf = u.id === user?.id
               const userFlat = flats.find(f => f.id === u.flatId)
               const accentColor = roleAccentColors[u.role] || 'var(--role-member)'
@@ -900,7 +893,7 @@ export default function Users() {
                 icon={Shield}
                 emptyMessage="No roles available to create"
               />
-              {user?.role === 'PLATFORM_OWNER' && (selectedRole || editingUser?.role) === 'ORGANIZATION_OWNER' && (
+              {user?.role === 'MASTER_ADMIN' && (selectedRole || editingUser?.role) === 'SOCIETY_ADMIN' && (
                 <div>
                   <label className="form-label">Organization Name</label>
                   <input
@@ -913,7 +906,7 @@ export default function Users() {
                   <p className="form-help">Leave empty to auto-generate from the owner's name</p>
                 </div>
               )}
-              {(user?.role === 'PLATFORM_OWNER' || user?.role === 'ORGANIZATION_OWNER') && (selectedRole || editingUser?.role) === 'SOCIETY_ADMIN' && (
+              {(user?.role === 'MASTER_ADMIN') && (selectedRole || editingUser?.role) === 'SOCIETY_ADMIN' && (
                 <SmartSelect
                   label="Society"
                   name="societyId"

@@ -226,8 +226,8 @@ export default function Dashboard() {
     canManageTenants,
     canManageContracts,
   } = useAuth();
-  const isPlatformOwner = hasRole("PLATFORM_OWNER");
-  const isOrgOwner = hasRole("ORGANIZATION_OWNER");
+  const isPlatformOwner = hasRole("MASTER_ADMIN");
+  const isOrgOwner = hasRole("SOCIETY_ADMIN");
   const isPlatformLevel = isPlatformOwner || isOrgOwner;
   const isMemberOrTenant = user?.role === "MEMBER" || user?.role === "TENANT";
   const isSocietyOpsLevel = !isPlatformLevel && !isMemberOrTenant;
@@ -431,7 +431,7 @@ export default function Dashboard() {
       societyAdminsCount: platformUsers.filter((u) => u.role === "SOCIETY_ADMIN").length,
       tenantsCount: platformUsers.filter((u) => u.role === "TENANT").length,
       membersCount: platformUsers.filter((u) => u.role === "MEMBER").length,
-      organizationOwnersCount: platformUsers.filter((u) => u.role === "ORGANIZATION_OWNER").length,
+      organizationOwnersCount: platformUsers.filter((u) => u.role === "SOCIETY_ADMIN").length,
     };
   }, [platformUsers]);
 

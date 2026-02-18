@@ -26,7 +26,7 @@ public class TenantController {
     private final BulkTenantImportService bulkTenantImportService;
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'COMMITTEE', 'MANAGER', 'MEMBER')")
+    @PreAuthorize("hasAnyRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'COMMITTEE', 'MANAGER', 'MEMBER')")
     public ResponseEntity<TenantResponse> create(
             @Valid @RequestBody TenantRequest request,
             @RequestParam Long userId) {
@@ -54,7 +54,7 @@ public class TenantController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'COMMITTEE', 'MANAGER', 'MEMBER')")
+    @PreAuthorize("hasAnyRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'COMMITTEE', 'MANAGER', 'MEMBER')")
     public ResponseEntity<TenantResponse> update(
             @PathVariable Long id,
             @Valid @RequestBody TenantRequest request,
@@ -63,7 +63,7 @@ public class TenantController {
     }
 
     @PatchMapping("/{id}/deactivate")
-    @PreAuthorize("hasAnyRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'COMMITTEE', 'MANAGER', 'MEMBER')")
+    @PreAuthorize("hasAnyRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'COMMITTEE', 'MANAGER', 'MEMBER')")
     public ResponseEntity<TenantResponse> deactivate(
             @PathVariable Long id,
             @RequestParam Long userId) {
@@ -71,7 +71,7 @@ public class TenantController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'COMMITTEE', 'MANAGER')")
+    @PreAuthorize("hasAnyRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'COMMITTEE', 'MANAGER')")
     public ResponseEntity<Void> delete(
             @PathVariable Long id,
             @RequestParam Long userId) {
@@ -80,7 +80,7 @@ public class TenantController {
     }
 
     @PostMapping("/bulk-import/validate")
-    @PreAuthorize("hasAnyRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'COMMITTEE', 'MANAGER')")
+    @PreAuthorize("hasAnyRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'COMMITTEE', 'MANAGER')")
     public ResponseEntity<BulkTenantImportResponse> validateBulkImport(
             @RequestParam("file") MultipartFile file,
             @RequestParam("societyId") Long societyId) throws java.io.IOException {
@@ -90,7 +90,7 @@ public class TenantController {
     }
 
     @PostMapping("/bulk-import")
-    @PreAuthorize("hasAnyRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'COMMITTEE', 'MANAGER')")
+    @PreAuthorize("hasAnyRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'COMMITTEE', 'MANAGER')")
     public ResponseEntity<BulkTenantImportResponse> processBulkImport(
             @RequestParam("file") MultipartFile file,
             @RequestParam("societyId") Long societyId) throws java.io.IOException {
@@ -105,7 +105,7 @@ public class TenantController {
     }
 
     @GetMapping("/bulk-import/template")
-    @PreAuthorize("hasAnyRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'COMMITTEE', 'MANAGER')")
+    @PreAuthorize("hasAnyRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'COMMITTEE', 'MANAGER')")
     public ResponseEntity<byte[]> downloadImportTemplate() {
         byte[] template = bulkTenantImportService.generateTemplate();
         return ResponseEntity.ok()

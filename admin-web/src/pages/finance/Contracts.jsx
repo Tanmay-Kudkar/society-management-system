@@ -24,8 +24,8 @@ export default function Contracts() {
   const [searchTerm, setSearchTerm] = useState('')
   const [filterType, setFilterType] = useState('')
 
-  // Check if current user is PLATFORM_OWNER
-  const isPlatformLevel = user?.role === 'PLATFORM_OWNER' || user?.role === 'ORGANIZATION_OWNER'
+  // Check if current user is MASTER_ADMIN
+  const isPlatformLevel = user?.role === 'MASTER_ADMIN'
 
   const { data: contracts = [], isLoading, isError } = useQuery({
     queryKey: ['contracts'],

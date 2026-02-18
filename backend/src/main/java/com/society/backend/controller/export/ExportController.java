@@ -15,7 +15,7 @@ import java.time.format.DateTimeFormatter;
 @RestController
 @RequestMapping("/api/export")
 @RequiredArgsConstructor
-@PreAuthorize("hasAnyRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE')")
+@PreAuthorize("hasAnyRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE')")
 public class ExportController {
 
         private final ExcelExportService excelExportService;

@@ -74,8 +74,8 @@ public class PaymentService {
             if (user.getSociety() != null) {
                 payment.setSociety(user.getSociety());
             }
-            if (user.getOrganization() != null) {
-                payment.setOrganization(user.getOrganization());
+            if (user.getSociety() != null && user.getSociety().getOrganization() != null) {
+                payment.setOrganization(user.getSociety().getOrganization());
             }
 
             if (request.getMaintenanceBillId() != null) {

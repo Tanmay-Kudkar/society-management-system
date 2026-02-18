@@ -267,7 +267,7 @@ public class EmailService {
     }
 
     /**
-     * Send escalation email to PLATFORM_OWNER
+     * Send escalation email to MASTER_ADMIN
      * Used by SOCIETY_ADMIN when they cannot handle an issue
      */
     public void sendEscalationToMasterAdmin(String masterAdminEmail, String societyName,
@@ -294,7 +294,7 @@ public class EmailService {
     }
 
     /**
-     * Send society registration notification to PLATFORM_OWNER
+     * Send society registration notification to MASTER_ADMIN
      */
     public void sendNewSocietyRegistration(String masterAdminEmail, String societyName,
             String societyAddress, String adminName, String adminEmail) {

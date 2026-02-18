@@ -38,10 +38,10 @@ public class VendorServiceImpl implements VendorService {
 
     /**
      * Roles that trigger automatic vendor approval.
-     * Society Admin, Organization Owner, Platform Owner, and other higher authority roles.
+     * Master Admin, Society Admin, and other higher authority roles.
      */
     private static final Set<Role> AUTO_APPROVE_ROLES = Set.of(
-            Role.PLATFORM_OWNER, Role.ORGANIZATION_OWNER, Role.SOCIETY_ADMIN,
+            Role.MASTER_ADMIN, Role.SOCIETY_ADMIN,
             Role.CHAIRMAN, Role.SECRETARY
     );
 
@@ -148,13 +148,8 @@ public class VendorServiceImpl implements VendorService {
 
         return vendorRepository.findAll().stream()
                 .filter(v -> {
-                    if (currentUser.getRole() == com.society.backend.entity.Role.PLATFORM_OWNER) {
+                    if (currentUser.getRole() == com.society.backend.entity.Role.MASTER_ADMIN) {
                         return true;
-                    }
-                    if (currentUser.getRole() == com.society.backend.entity.Role.ORGANIZATION_OWNER
-                            && currentUser.getOrganization() != null) {
-                        return v.getSociety() != null && v.getSociety().getOrganization() != null
-                                && v.getSociety().getOrganization().getId().equals(currentUser.getOrganization().getId());
                     }
                     return v.getSociety() != null && currentUser.getSociety() != null
                             && v.getSociety().getId().equals(currentUser.getSociety().getId());

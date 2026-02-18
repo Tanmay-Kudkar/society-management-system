@@ -42,28 +42,24 @@ public class OrganizationServiceImpl implements OrganizationService {
         mapRequestToEntity(request, org, true);
         Organization saved = organizationRepository.save(org);
 
-        // Create ORGANIZATION_OWNER user if ownerEmail and ownerPassword are provided
+        // Create MASTER_ADMIN user if ownerEmail and ownerPassword are provided
         if (request.getOwnerEmail() != null && !request.getOwnerEmail().isBlank()
                 && request.getOwnerPassword() != null && !request.getOwnerPassword().isBlank()) {
 
             // Check if a user with this email already exists
             var existingUser = userRepository.findByEmail(request.getOwnerEmail());
             if (existingUser.isPresent()) {
-                // Link existing user to org if they don't already belong to one
+                // Link existing user to org as SOCIETY_ADMIN
                 User existing = existingUser.get();
-                if (existing.getOrganization() == null) {
-                    existing.setOrganization(saved);
-                    existing.setRole(Role.ORGANIZATION_OWNER);
-                    userRepository.save(existing);
-                }
+                existing.setRole(Role.SOCIETY_ADMIN);
+                userRepository.save(existing);
             } else {
                 User ownerUser = new User();
                 ownerUser.setName(request.getOwnerName() != null ? request.getOwnerName() : request.getName() + " Owner");
                 ownerUser.setEmail(request.getOwnerEmail());
                 ownerUser.setPhone(request.getOwnerPhone());
                 ownerUser.setPassword(passwordEncoder.encode(request.getOwnerPassword()));
-                ownerUser.setRole(Role.ORGANIZATION_OWNER);
-                ownerUser.setOrganization(saved);
+                ownerUser.setRole(Role.SOCIETY_ADMIN);
                 ownerUser.setIsActive(true);
                 ownerUser.setCreatedAt(LocalDateTime.now());
                 userRepository.save(ownerUser);
@@ -80,15 +76,10 @@ public class OrganizationServiceImpl implements OrganizationService {
             throw new ApiException(HttpStatus.UNAUTHORIZED, "Not authenticated");
         }
 
-        if (currentUser.getRole() == com.society.backend.entity.Role.PLATFORM_OWNER) {
+        if (currentUser.getRole() == com.society.backend.entity.Role.MASTER_ADMIN) {
             return organizationRepository.findAll().stream()
                     .map(this::toResponse)
                     .collect(Collectors.toList());
-        }
-
-        if (currentUser.getRole() == com.society.backend.entity.Role.ORGANIZATION_OWNER
-                && currentUser.getOrganization() != null) {
-            return List.of(toResponse(currentUser.getOrganization()));
         }
 
         return List.of();
@@ -101,8 +92,8 @@ public class OrganizationServiceImpl implements OrganizationService {
             throw new ApiException(HttpStatus.UNAUTHORIZED, "Not authenticated");
         }
 
-        if (currentUser.getRole() == com.society.backend.entity.Role.ORGANIZATION_OWNER) {
-            roleService.enforceOrganizationScope(currentUser, id);
+        if (currentUser.getRole() == com.society.backend.entity.Role.MASTER_ADMIN) {
+            // MASTER_ADMIN can access any org
         }
 
         Organization org = organizationRepository.findById(id)
@@ -117,9 +108,9 @@ public class OrganizationServiceImpl implements OrganizationService {
             throw new ApiException(HttpStatus.UNAUTHORIZED, "Not authenticated");
         }
 
-        boolean allowSubscriptionEdit = currentUser.getRole() == com.society.backend.entity.Role.PLATFORM_OWNER;
+        boolean allowSubscriptionEdit = currentUser.getRole() == com.society.backend.entity.Role.MASTER_ADMIN;
         if (!allowSubscriptionEdit) {
-            roleService.enforceOrganizationScope(currentUser, id);
+            throw new ApiException(HttpStatus.FORBIDDEN, "Only MASTER_ADMIN can update organizations");
         }
 
         Organization org = organizationRepository.findById(id)
@@ -169,11 +160,8 @@ public class OrganizationServiceImpl implements OrganizationService {
             throw new ApiException(HttpStatus.UNAUTHORIZED, "Not authenticated");
         }
 
-        if (currentUser.getRole() == com.society.backend.entity.Role.ORGANIZATION_OWNER
-                && currentUser.getOrganization() != null) {
-            if (!email.equalsIgnoreCase(currentUser.getOrganization().getOwnerEmail())) {
-                throw new ApiException(HttpStatus.FORBIDDEN, "Cannot access other organizations");
-            }
+        if (currentUser.getRole() != com.society.backend.entity.Role.MASTER_ADMIN) {
+            throw new ApiException(HttpStatus.FORBIDDEN, "Only MASTER_ADMIN can access organizations");
         }
 
         return organizationRepository.findByOwnerEmail(email)

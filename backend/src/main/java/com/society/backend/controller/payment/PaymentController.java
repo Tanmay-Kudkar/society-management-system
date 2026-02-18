@@ -78,7 +78,7 @@ public class PaymentController {
      * Get all payments for a society
      */
     @GetMapping("/society/{societyId}")
-    @PreAuthorize("hasAnyRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER')")
+    @PreAuthorize("hasAnyRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER')")
     public ResponseEntity<List<PaymentResponse>> getPaymentsBySociety(@PathVariable Long societyId) {
         return ResponseEntity.ok(paymentService.getPaymentsBySociety(societyId));
     }

@@ -31,7 +31,7 @@ public class FlatController {
         this.bulkFlatImportService = bulkFlatImportService;
     }
 
-    // PLATFORM_OWNER, COMMITTEE only
+    // MASTER_ADMIN, COMMITTEE only
     @PostMapping
     public ResponseEntity<FlatResponse> create(
             @RequestParam Long userId,
@@ -41,7 +41,7 @@ public class FlatController {
     }
 
     // All authenticated users can view (filtered by their society if not
-    // PLATFORM_OWNER)
+    // MASTER_ADMIN)
     @GetMapping
     public ResponseEntity<List<FlatResponse>> getAll(@RequestParam Long userId) {
         return ResponseEntity.ok(flatService.getAll(userId));
@@ -57,7 +57,7 @@ public class FlatController {
         return ResponseEntity.ok(flatService.getById(id));
     }
 
-    // PLATFORM_OWNER, COMMITTEE only
+    // MASTER_ADMIN, COMMITTEE only
     @PutMapping("/{id}")
     public ResponseEntity<FlatResponse> update(
             @PathVariable Long id,
@@ -67,7 +67,7 @@ public class FlatController {
         return ResponseEntity.ok(flatService.update(id, request));
     }
 
-    // PLATFORM_OWNER, COMMITTEE only
+    // MASTER_ADMIN, COMMITTEE only
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(
             @PathVariable Long id,

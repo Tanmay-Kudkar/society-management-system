@@ -17,7 +17,7 @@ public class SecurityLogController {
     private final SecurityLogService service;
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN')")
+    @PreAuthorize("hasAnyRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN')")
     public ResponseEntity<List<SecurityLog>> getRecentLogs(
             @RequestParam Long societyId,
             @RequestParam(defaultValue = "10") int limit) {
@@ -25,7 +25,7 @@ public class SecurityLogController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'MANAGER')")
+    @PreAuthorize("hasAnyRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'MANAGER')")
     public ResponseEntity<SecurityLog> createLog(@RequestBody SecurityLog log) {
         return ResponseEntity.ok(service.createLog(log));
     }

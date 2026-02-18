@@ -109,13 +109,8 @@ public class TicketServiceImpl implements TicketService {
 
         return ticketRepository.findAll().stream()
                 .filter(t -> {
-                    if (currentUser.getRole() == com.society.backend.entity.Role.PLATFORM_OWNER) {
+                    if (currentUser.getRole() == com.society.backend.entity.Role.MASTER_ADMIN) {
                         return true;
-                    }
-                    if (currentUser.getRole() == com.society.backend.entity.Role.ORGANIZATION_OWNER
-                            && currentUser.getOrganization() != null) {
-                        return t.getSociety() != null && t.getSociety().getOrganization() != null
-                                && t.getSociety().getOrganization().getId().equals(currentUser.getOrganization().getId());
                     }
                     return t.getSociety() != null && currentUser.getSociety() != null
                             && t.getSociety().getId().equals(currentUser.getSociety().getId());

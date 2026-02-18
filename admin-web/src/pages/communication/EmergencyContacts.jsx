@@ -33,8 +33,8 @@ export default function EmergencyContacts() {
   const [searchTerm, setSearchTerm] = useState('')
   const [filterCategory, setFilterCategory] = useState('')
 
-  // Check if current user is PLATFORM_OWNER
-  const isPlatformLevel = user?.role === 'PLATFORM_OWNER' || user?.role === 'ORGANIZATION_OWNER'
+  // Check if current user is MASTER_ADMIN
+  const isPlatformLevel = user?.role === 'MASTER_ADMIN'
   
   // Check if user can delete a specific contact
   const canDelete = (contact) => {

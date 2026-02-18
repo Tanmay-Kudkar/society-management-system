@@ -59,7 +59,7 @@ public class NotificationPreferenceService {
 
         NotificationPreference pref = new NotificationPreference(user);
         pref.setSociety(user.getSociety());
-        pref.setOrganization(user.getOrganization());
+        pref.setOrganization(user.getSociety() != null ? user.getSociety().getOrganization() : null);
         return preferenceRepository.save(pref);
     }
 

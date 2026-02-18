@@ -73,7 +73,7 @@ const prefetchRoute = (path) => {
   importer().catch(() => null)
 }
 
-// PLATFORM_OWNER specific menu - simplified for platform management
+// MASTER_ADMIN specific menu - simplified for platform management
 const platformOwnerMenu = [
   {
     id: 'dashboard',
@@ -477,7 +477,7 @@ export default function Layout() {
   const [sidebarOpen, setSidebarOpen] = useState(null)
 
   // Determine which menu to show based on user role
-  const isMasterAdmin = user?.role === 'MASTER_ADMIN' || user?.role === 'PLATFORM_OWNER'
+  const isMasterAdmin = user?.role === 'MASTER_ADMIN' || user?.role === 'MASTER_ADMIN'
   const menuGroups = isMasterAdmin ? platformOwnerMenu : standardMenuGroups
 
   const handleLogout = () => {

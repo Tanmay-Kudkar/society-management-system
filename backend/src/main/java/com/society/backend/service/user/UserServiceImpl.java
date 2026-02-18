@@ -83,18 +83,13 @@ public class UserServiceImpl implements UserService {
                     RolePermissions.getPermissionDeniedMessage(creatorRole, targetRole));
         }
 
-        // Prevent creating PLATFORM_OWNER - there can only be one (hardcoded)
-        if (targetRole == Role.PLATFORM_OWNER) {
-            throw new ApiException(HttpStatus.FORBIDDEN, "PLATFORM_OWNER cannot be created. Only one exists.");
+        // Prevent creating MASTER_ADMIN - there can only be one (hardcoded)
+        if (targetRole == Role.MASTER_ADMIN) {
+            throw new ApiException(HttpStatus.FORBIDDEN, "MASTER_ADMIN cannot be created. Only one exists.");
         }
 
-        if (targetRole == Role.ORGANIZATION_OWNER) {
-            throw new ApiException(HttpStatus.FORBIDDEN,
-                    "ORGANIZATION_OWNER cannot be created directly from this flow.");
-        }
-
-        // Validate societyId is required when PLATFORM_OWNER creates SOCIETY_ADMIN
-        if (creatorRole == Role.PLATFORM_OWNER && targetRole == Role.SOCIETY_ADMIN) {
+        // Validate societyId is required when MASTER_ADMIN creates SOCIETY_ADMIN
+        if (creatorRole == Role.MASTER_ADMIN && targetRole == Role.SOCIETY_ADMIN) {
             if (request.getSocietyId() == null) {
                 throw new ApiException(HttpStatus.BAD_REQUEST,
                         "Society selection is required when creating a Society Admin");
@@ -122,7 +117,7 @@ public class UserServiceImpl implements UserService {
         // Assign society based on context
         User currentUser = getCurrentUser();
 
-        if (creatorRole == Role.PLATFORM_OWNER
+        if (creatorRole == Role.MASTER_ADMIN
                 && request.getSocietyId() != null) {
             var society = societyRepository.findById(request.getSocietyId())
                     .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Society not found"));
@@ -156,9 +151,9 @@ public class UserServiceImpl implements UserService {
                 user.setFlat(flat);
                 log.info("Auto-assigned TENANT {} to MEMBER's flat {}", request.getEmail(), flat.getFlatNumber());
             } else {
-                // Flat is mandatory for MEMBER and TENANT roles
+                // Flat is mandatory for resident unit roles
                 throw new ApiException(HttpStatus.BAD_REQUEST,
-                        "Flat/Unit assignment is required for MEMBER and TENANT roles");
+                        "Flat/Unit assignment is required for MEMBER, TENANT, CHAIRMAN, SECRETARY, TREASURER, and COMMITTEE roles");
             }
 
             // Update flat ownership for MEMBER role (not TENANT - they don't own the flat)
@@ -208,8 +203,8 @@ public class UserServiceImpl implements UserService {
         Role currentRole = getCurrentUserRole();
         User currentUser = getCurrentUser();
 
-        // PLATFORM_OWNER sees all users
-        if (currentRole == Role.PLATFORM_OWNER) {
+        // MASTER_ADMIN sees all users
+        if (currentRole == Role.MASTER_ADMIN) {
             return userRepository.findAll()
                     .stream()
                     .map(this::mapToResponse)
@@ -217,12 +212,12 @@ public class UserServiceImpl implements UserService {
         }
 
         // SOCIETY_ADMIN and below see only users in their society (excluding
-        // PLATFORM_OWNER)
+        // MASTER_ADMIN)
         if (currentUser != null && currentUser.getSociety() != null) {
             Long societyId = currentUser.getSociety().getId();
             return userRepository.findBySocietyId(societyId)
                     .stream()
-                    .filter(u -> u.getRole() != Role.PLATFORM_OWNER) // Exclude PLATFORM_OWNER
+                    .filter(u -> u.getRole() != Role.MASTER_ADMIN) // Exclude MASTER_ADMIN
                     .filter(u -> u.getSociety() != null && u.getSociety().getId().equals(societyId)) // Double-check
                                                                                                      // society match
                     .map(this::mapToResponse)
@@ -242,7 +237,7 @@ public class UserServiceImpl implements UserService {
     public List<UserResponse> getUsersBySociety(Long societyId) {
         return userRepository.findBySocietyId(societyId)
                 .stream()
-                .filter(u -> u.getRole() != Role.PLATFORM_OWNER)
+                .filter(u -> u.getRole() != Role.MASTER_ADMIN)
                 .map(this::mapToResponse)
                 .toList();
     }
@@ -380,7 +375,7 @@ public class UserServiceImpl implements UserService {
             }
 
             // For non-master users, verify same society
-                if (currentRole != Role.PLATFORM_OWNER
+                if (currentRole != Role.MASTER_ADMIN
                     && currentUser != null && currentUser.getSociety() != null) {
                 if (user.getSociety() == null || !user.getSociety().getId().equals(currentUser.getSociety().getId())) {
                     throw new ApiException(HttpStatus.FORBIDDEN, "Cannot update users from different society");
@@ -420,7 +415,7 @@ public class UserServiceImpl implements UserService {
 
         // Allow top-level admins to update society assignment
         if (request.getSocietyId() != null &&
-            getCurrentUserRole() == Role.PLATFORM_OWNER) {
+            getCurrentUserRole() == Role.MASTER_ADMIN) {
             user.setSociety(societyRepository.findById(request.getSocietyId())
                     .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Society not found")));
         }
@@ -435,9 +430,9 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "User not found"));
 
-        // Prevent deleting PLATFORM_OWNER
-        if (user.getRole() == Role.PLATFORM_OWNER) {
-            throw new ApiException(HttpStatus.FORBIDDEN, "Cannot delete PLATFORM_OWNER");
+        // Prevent deleting MASTER_ADMIN
+        if (user.getRole() == Role.MASTER_ADMIN) {
+            throw new ApiException(HttpStatus.FORBIDDEN, "Cannot delete MASTER_ADMIN");
         }
 
         // Get current user's role and validate DELETE permission
@@ -453,7 +448,7 @@ public class UserServiceImpl implements UserService {
 
         // For non-master users, verify same society
         User currentUser = getCurrentUser();
-        if (currentRole != Role.PLATFORM_OWNER
+        if (currentRole != Role.MASTER_ADMIN
                 && currentUser != null && currentUser.getSociety() != null) {
             if (user.getSociety() == null || !user.getSociety().getId().equals(currentUser.getSociety().getId())) {
                 throw new ApiException(HttpStatus.FORBIDDEN, "Cannot delete users from different society");
@@ -525,10 +520,13 @@ public class UserServiceImpl implements UserService {
     }
 
     private boolean isResidentUnitRole(Role role) {
-        // Only MEMBER and TENANT require mandatory flat assignment
-        // CHAIRMAN, SECRETARY, TREASURER, COMMITTEE can be society-wide (optional flat)
+        // MEMBER, TENANT, CHAIRMAN, SECRETARY, TREASURER, COMMITTEE require flat assignment
         return role == Role.MEMBER
-                || role == Role.TENANT;
+                || role == Role.TENANT
+                || role == Role.CHAIRMAN
+                || role == Role.SECRETARY
+                || role == Role.TREASURER
+                || role == Role.COMMITTEE;
     }
 
     private Role getCurrentUserRole() {
@@ -574,9 +572,9 @@ public class UserServiceImpl implements UserService {
 
         // Add organization information if available
         response.setAccountType(user.getAccountType());
-        if (user.getOrganization() != null) {
-            response.setOrganizationId(user.getOrganization().getId());
-            response.setOrganizationName(user.getOrganization().getName());
+        if (user.getSociety() != null && user.getSociety().getOrganization() != null) {
+            response.setOrganizationId(user.getSociety().getOrganization().getId());
+            response.setOrganizationName(user.getSociety().getOrganization().getName());
         }
 
         return response;

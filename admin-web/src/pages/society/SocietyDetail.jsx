@@ -31,7 +31,7 @@ import useMinLoadingTime from '../../hooks/useMinLoadingTime'
 
 // Role colors matching the main app
 const roleColors = {
-  PLATFORM_OWNER: 'society-role-color society-role-color--platform-owner',
+  MASTER_ADMIN: 'society-role-color society-role-color--platform-owner',
   SOCIETY_ADMIN: 'society-role-color society-role-color--society-admin',
   CHAIRMAN: 'society-role-color society-role-color--chairman',
   SECRETARY: 'society-role-color society-role-color--secretary',
