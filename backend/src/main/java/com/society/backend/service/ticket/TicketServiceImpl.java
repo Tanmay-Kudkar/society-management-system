@@ -44,7 +44,6 @@ public class TicketServiceImpl implements TicketService {
         Ticket ticket = new Ticket();
         ticket.setRaisedBy(raisedBy);
         ticket.setSociety(society);
-        ticket.setOrganization(society.getOrganization());
         ticket.setType(request.getType());
         ticket.setTitle(request.getTitle());
         ticket.setDescription(request.getDescription());

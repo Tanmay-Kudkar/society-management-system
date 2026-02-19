@@ -18,14 +18,6 @@ public class Society {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    /**
-     * Organization this society belongs to.
-     * - null if created by a standalone SocietyAdmin
-     * - linked to Organization if created by an Organization Owner
-     */
-    @Transient
-    private Organization organization;
-
     @Column(nullable = false)
     private String name;
 

@@ -9,6 +9,8 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "maintenance_bills")
@@ -29,14 +31,36 @@ public class MaintenanceBill {
     @JoinColumn(name = "society_id")
     private Society society;
 
-    @Transient
-    private Organization organization;
-
     @Column(name = "bill_month", nullable = false)
     private String billMonth; // e.g., "2026-01"
 
+    @Column(name = "bill_number")
+    private String billNumber;
+
+    // Legacy amount field retained for backward compatibility.
     @Column(nullable = false)
     private BigDecimal amount;
+
+    @Column(name = "subtotal", nullable = false)
+    private BigDecimal subtotal = BigDecimal.ZERO;
+
+    @Column(name = "tax_amount", nullable = false)
+    private BigDecimal taxAmount = BigDecimal.ZERO;
+
+    @Column(name = "interest_amount", nullable = false)
+    private BigDecimal interestAmount = BigDecimal.ZERO;
+
+    @Column(name = "penalty_amount", nullable = false)
+    private BigDecimal penaltyAmount = BigDecimal.ZERO;
+
+    @Column(name = "total_amount", nullable = false)
+    private BigDecimal totalAmount = BigDecimal.ZERO;
+
+    @Column(name = "previous_balance", nullable = false)
+    private BigDecimal previousBalance = BigDecimal.ZERO;
+
+    @Column(name = "advance_balance", nullable = false)
+    private BigDecimal advanceBalance = BigDecimal.ZERO;
 
     @Column(name = "paid_amount")
     private BigDecimal paidAmount = BigDecimal.ZERO;
@@ -58,6 +82,10 @@ public class MaintenanceBill {
 
     @Column(name = "reference_number")
     private String referenceNumber;
+
+    @OneToMany(mappedBy = "maintenanceBill", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("displayOrder ASC")
+    private List<BillLineItem> lineItems = new ArrayList<>();
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
@@ -89,10 +117,13 @@ public class MaintenanceBill {
 
     @Transient
     public BigDecimal getPendingAmount() {
+        BigDecimal payableAmount = (totalAmount != null && totalAmount.compareTo(BigDecimal.ZERO) > 0)
+                ? totalAmount
+                : amount;
         if (paidAmount == null) {
-            return amount;
+            return payableAmount;
         }
-        return amount.subtract(paidAmount);
+        return payableAmount.subtract(paidAmount);
     }
 
     @Transient

@@ -22,9 +22,6 @@ public class EmergencyContact {
     @JoinColumn(name = "society_id", nullable = false)
     private Society society;
 
-    @Transient
-    private Organization organization;
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by_id")
     private User createdBy;

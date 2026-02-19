@@ -30,9 +30,6 @@ public class Ticket {
     @JoinColumn(name = "society_id", nullable = false)
     private Society society;
 
-    @Transient
-    private Organization organization;
-
     @Column(nullable = false)
     private String type; // COMPLAINT, REQUEST, ISSUE
 

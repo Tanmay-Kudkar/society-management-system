@@ -17,8 +17,6 @@ public class UserResponse {
     private String accountType;
     private String phone;
     private Boolean isActive;
-    private Long organizationId;
-    private String organizationName;
     private Long societyId;
     private String societyName;
     private Long flatId;

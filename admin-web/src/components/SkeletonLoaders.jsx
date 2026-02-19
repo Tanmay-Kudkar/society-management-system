@@ -187,7 +187,7 @@ export const ListSkeleton = ({ count = 5, showAvatar = true }) => (
   </div>
 )
 
-/* ─── Detail Page Skeleton (OrganizationDetail, SocietyDetail) ─── */
+/* ─── Detail Page Skeleton (SocietyDetail) ─── */
 export const DetailPageSkeleton = ({ infoCards = 3, listItems = 4 }) => (
   <div className="skeleton-container">
     <HeroSkeleton statCount={3} />

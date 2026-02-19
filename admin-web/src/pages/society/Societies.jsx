@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context'
 import { useToast } from '../../context'
 import { useConfirmDialog } from '../../context'
-import { societyApi, userApi, organizationApi } from '../../../../api'
+import { societyApi, userApi } from '../../../../api'
 import { parseApiError } from '../../utils'
 import { Plus, Edit, Trash2, Search, X, Building2, Eye, EyeOff, ChevronRight, Home, Store, Briefcase, Layers } from 'lucide-react'
 import { FormInput, PhoneInput, PincodeInput, NumberInput, FormTextarea, StateCitySelector } from '../../components'
@@ -15,7 +15,7 @@ export default function Societies() {
   const { user, canManageSocieties } = useAuth()
   const confirmDialog = useConfirmDialog()
   const isPlatformOwner = user?.role === 'MASTER_ADMIN'
-  const isOrganizationOwner = user?.role === 'SOCIETY_ADMIN'
+  const isSocietyAdmin = user?.role === 'SOCIETY_ADMIN'
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const toast = useToast()
@@ -24,18 +24,10 @@ export default function Societies() {
   const [searchTerm, setSearchTerm] = useState('')
   const [formError, setFormError] = useState('')
   const [showAdminPassword, setShowAdminPassword] = useState(false)
-  const [organizationFilter, setOrganizationFilter] = useState('all')
 
   const { data: societies = [], isLoading, isError } = useQuery({
     queryKey: ['societies'],
     queryFn: () => societyApi.getAll().then(res => res.data),
-  })
-
-  const { data: organizations = [] } = useQuery({
-    queryKey: ['organizations', user?.id],
-    queryFn: () => organizationApi.getAll().then(res => res.data).catch(() => []),
-    enabled: isPlatformOwner,
-    placeholderData: [],
   })
 
   const createMutation = useMutation({
@@ -144,32 +136,13 @@ export default function Societies() {
     }
   }
 
-  const hasOrganization = (society) => Boolean(
-    society?.organizationId
-    || society?.organizationName
-    || society?.organization?.id
-    || society?.organization?.name
-    || (typeof society?.organization === 'string' && society.organization.trim())
-  )
-
   const filteredSocieties = societies.filter((society) => {
     const matchesSearch =
       society.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       society.address?.toLowerCase().includes(searchTerm.toLowerCase())
 
-    if (!matchesSearch) return false
-
-    if (organizationFilter === 'assigned') return hasOrganization(society)
-    if (organizationFilter === 'unassigned') return !hasOrganization(society)
-    return true
+    return matchesSearch
   })
-
-  const getOrganizationLabel = (society) => (
-    society.organizationName
-    || society.organization?.name
-    || society.organization
-    || null
-  )
 
   const handleSubmit = (e) => {
     e.preventDefault()
@@ -187,12 +160,9 @@ export default function Societies() {
       totalShops: parseInt(formData.get('totalShops')) || 0,
       totalOffices: parseInt(formData.get('totalOffices')) || 0,
       totalWings: parseInt(formData.get('totalWings')) || 0,
-      ...(isPlatformOwner && formData.get('organizationId')
-        ? { organizationId: parseInt(formData.get('organizationId'), 10) }
-        : {}),
     }
 
-    const shouldCreateAdmin = !editingSociety && (isPlatformOwner || isOrganizationOwner)
+    const shouldCreateAdmin = !editingSociety && (isPlatformOwner || isSocietyAdmin)
     const adminData = shouldCreateAdmin
       ? {
           name: formData.get('adminName')?.trim(),
@@ -262,29 +232,6 @@ export default function Societies() {
             className="societies-search-input"
           />
         </div>
-        <div className="societies-filters">
-          <button
-            type="button"
-            className={`societies-filter-btn ${organizationFilter === 'all' ? 'societies-filter-btn--active' : ''}`}
-            onClick={() => setOrganizationFilter('all')}
-          >
-            All
-          </button>
-          <button
-            type="button"
-            className={`societies-filter-btn ${organizationFilter === 'assigned' ? 'societies-filter-btn--active' : ''}`}
-            onClick={() => setOrganizationFilter('assigned')}
-          >
-            Assigned
-          </button>
-          <button
-            type="button"
-            className={`societies-filter-btn ${organizationFilter === 'unassigned' ? 'societies-filter-btn--active' : ''}`}
-            onClick={() => setOrganizationFilter('unassigned')}
-          >
-            Unassigned
-          </button>
-        </div>
       </div>
 
       {/* Cards Grid */}
@@ -306,8 +253,6 @@ export default function Societies() {
       ) : (
         <div className="societies-grid">
           {filteredSocieties.map((society, index) => {
-            const organizationLabel = getOrganizationLabel(society)
-
             return (
             <div 
               key={society.id} 
@@ -392,12 +337,6 @@ export default function Societies() {
               {/* Contact Info */}
               <div className="societies-contact">
                 <p className="societies-contact-row">
-                  <span className="societies-contact-icon">🏢</span>
-                  <span className={`societies-org-badge ${organizationLabel ? 'societies-org-badge--linked' : 'societies-org-badge--unassigned'}`}>
-                    {organizationLabel || 'Unassigned'}
-                  </span>
-                </p>
-                <p className="societies-contact-row">
                   <span className="societies-contact-icon">📍</span> 
                   {society.city}{society.state ? `, ${society.state}` : ''}
                 </p>
@@ -457,24 +396,6 @@ export default function Societies() {
                   Basic Information
                 </h4>
                 <div className="societies-modal-grid">
-                  {isPlatformOwner && !editingSociety && (
-                    <div className="societies-modal-full">
-                      <label className="form-label">Organization</label>
-                      <select
-                        name="organizationId"
-                        defaultValue=""
-                        className="form-input"
-                      >
-                        <option value="">No organization (optional)</option>
-                        {organizations.map((organization) => (
-                          <option key={organization.id} value={organization.id}>
-                            {organization.name}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  )}
-
                   <div className="societies-modal-full">
                     <FormInput
                       label="Society Name"

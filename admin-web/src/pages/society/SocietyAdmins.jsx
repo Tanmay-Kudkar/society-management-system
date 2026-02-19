@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context'
 import { useToast } from '../../context'
 import { useConfirmDialog } from '../../context'
-import { societyApi, userApi, organizationApi } from '../../../../api'
+import { societyApi, userApi } from '../../../../api'
 import { parseApiError } from '../../utils'
 import * as XLSX from 'xlsx'
 import {
@@ -29,7 +29,6 @@ const BULK_FIELD_CONFIG = [
   { key: 'adminEmail', label: 'Admin Email', required: true, description: 'Login email for admin account', sample: 'rahul.sharma@example.com', aliases: ['adminemail', 'admin_email'] },
   { key: 'adminPassword', label: 'Admin Password', required: true, description: 'Minimum 6 characters', sample: 'Admin@123', aliases: ['adminpassword', 'admin_password'] },
   { key: 'adminPhone', label: 'Admin Phone', required: true, description: '10-digit Indian mobile number', sample: '9876543210', aliases: ['adminphone', 'admin_phone'] },
-  { key: 'organization', label: 'Organization', required: false, description: 'Optional (organization ID or exact name)', sample: '1', aliases: ['organization', 'organizationid', 'organization_id', 'organizationname', 'organization_name'] },
   { key: 'societyName', label: 'Society Name', required: true, description: 'Name of the new society', sample: 'Green Heights CHS', aliases: ['societyname', 'society_name'] },
   { key: 'address', label: 'Address', required: true, description: 'Complete society address', sample: 'Plot 18, Sector 7, Nerul', aliases: ['address'] },
   { key: 'state', label: 'State', required: true, description: 'State name', sample: 'Maharashtra', aliases: ['state'] },
@@ -101,22 +100,7 @@ const parseWorkbookRows = async (file) => {
   return { rows, missingHeaders }
 }
 
-const resolveOrganizationId = (organizationValue, organizations) => {
-  const raw = normalizeText(organizationValue)
-  if (!raw) return null
-
-  const numericId = Number(raw)
-  if (Number.isInteger(numericId) && numericId > 0) {
-    const matchedById = organizations.find((org) => org.id === numericId)
-    return matchedById ? matchedById.id : null
-  }
-
-  const normalized = raw.toLowerCase()
-  const matchedByName = organizations.find((org) => normalizeText(org.name).toLowerCase() === normalized)
-  return matchedByName?.id ?? null
-}
-
-const validateBulkRows = ({ rows, isPlatformOwner, organizations, existingAdminEmails, existingSocietyEmails, existingRegistrationNumbers }) => {
+const validateBulkRows = ({ rows, isPlatformOwner, existingAdminEmails, existingSocietyEmails, existingRegistrationNumbers }) => {
   const seenEmails = new Set()
   const seenRegistrationNumbers = new Set()
 
@@ -180,12 +164,6 @@ const validateBulkRows = ({ rows, isPlatformOwner, organizations, existingAdminE
       }
     })
 
-    const organizationRaw = normalizeText(row.organization)
-    const organizationId = resolveOrganizationId(organizationRaw, organizations)
-    if (organizationRaw && !organizationId) {
-      errors.push('Organization must match an existing organization (ID or exact name), or be left blank')
-    }
-
     if (adminEmail) {
       if (seenEmails.has(adminEmail)) {
         errors.push('Duplicate admin email in uploaded file')
@@ -231,8 +209,6 @@ const validateBulkRows = ({ rows, isPlatformOwner, organizations, existingAdminE
       totalShops: parsedNumbers.totalShops,
       totalOffices: parsedNumbers.totalOffices,
       totalWings: parsedNumbers.totalWings,
-      organizationId,
-      organization: normalizeText(row.organization),
     }
 
     return {
@@ -240,7 +216,6 @@ const validateBulkRows = ({ rows, isPlatformOwner, organizations, existingAdminE
       adminName: normalizedRow.adminName,
       adminEmail: normalizedRow.adminEmail,
       societyName: normalizedRow.societyName,
-      organization: normalizedRow.organization || (organizationId ? String(organizationId) : '-'),
       success: errors.length === 0,
       errorMessage: errors.join(', '),
       normalizedRow,
@@ -299,25 +274,9 @@ export default function SocietyAdmins() {
     placeholderData: [],
   })
 
-  // Fetch organizations for MASTER_ADMIN
-  const { data: organizations = [] } = useQuery({
-    queryKey: ['organizations', user?.id],
-    queryFn: () => organizationApi.getAll().then(res => res.data).catch(() => []),
-    enabled: isPlatformOwner,
-    placeholderData: [],
-  })
-
   const societyAdmins = useMemo(() =>
     allUsers.filter(u => u.role === 'SOCIETY_ADMIN'),
     [allUsers]
-  )
-
-  const hasOrganization = (society) => Boolean(
-    society?.organizationId
-    || society?.organizationName
-    || society?.organization?.id
-    || society?.organization?.name
-    || (typeof society?.organization === 'string' && society.organization.trim())
   )
 
   const assignedSocietyIds = useMemo(
@@ -342,28 +301,12 @@ export default function SocietyAdmins() {
 
   const filteredAdmins = useMemo(() => {
     const q = searchTerm.toLowerCase()
-    const base = societyAdmins.filter(a =>
+    return societyAdmins.filter(a =>
       a.name?.toLowerCase().includes(q) ||
       a.email?.toLowerCase().includes(q) ||
       a.societyName?.toLowerCase().includes(q)
     )
-
-    if (adminFilter === 'assigned') {
-      return base.filter((admin) => {
-        const linkedSociety = societyMap[admin.societyId]
-        return linkedSociety ? hasOrganization(linkedSociety) : false
-      })
-    }
-
-    if (adminFilter === 'unassigned') {
-      return base.filter((admin) => {
-        const linkedSociety = societyMap[admin.societyId]
-        return !linkedSociety || !hasOrganization(linkedSociety)
-      })
-    }
-
-    return base
-  }, [societyAdmins, searchTerm, adminFilter, societyMap])
+  }, [societyAdmins, searchTerm])
 
   const canManageSocietyAdmins = isPlatformOwner || isOrgOwner
 
@@ -397,7 +340,6 @@ export default function SocietyAdmins() {
       { key: 'adminName', label: 'Admin Name' },
       { key: 'adminEmail', label: 'Admin Email' },
       { key: 'societyName', label: 'Society Name' },
-      { key: 'organization', label: 'Organization' },
     ],
     []
   )
@@ -424,7 +366,6 @@ export default function SocietyAdmins() {
       data: validateBulkRows({
         rows,
         isPlatformOwner,
-        organizations,
         existingAdminEmails,
         existingSocietyEmails,
         existingRegistrationNumbers,
@@ -449,7 +390,6 @@ export default function SocietyAdmins() {
     const validation = validateBulkRows({
       rows,
       isPlatformOwner,
-      organizations,
       existingAdminEmails,
       existingSocietyEmails,
       existingRegistrationNumbers,
@@ -486,7 +426,6 @@ export default function SocietyAdmins() {
           totalShops: row.totalShops,
           totalOffices: row.totalOffices,
           totalWings: row.totalWings,
-          ...(isPlatformOwner ? { organizationId: row.organizationId } : {}),
         }
 
         const societyRes = await societyApi.create(societyPayload, user.id)
@@ -509,7 +448,6 @@ export default function SocietyAdmins() {
           adminName: row.adminName,
           adminEmail: row.adminEmail,
           societyName: row.societyName,
-          organization: row.organization || (row.organizationId ? String(row.organizationId) : ''),
           errorMessage: parseApiError(error),
         })
       }
@@ -538,13 +476,12 @@ export default function SocietyAdmins() {
       throw createApiError('No failed rows available for error report download.')
     }
 
-    const header = ['Row', 'Admin Name', 'Admin Email', 'Society Name', 'Organization', 'Error']
+    const header = ['Row', 'Admin Name', 'Admin Email', 'Society Name', 'Error']
     const rows = bulkImportFailedRows.map((item) => [
       item.rowNumber,
       item.adminName || '',
       item.adminEmail || '',
       item.societyName || '',
-      item.organization || '',
       item.errorMessage || '',
     ])
 
@@ -607,25 +544,7 @@ export default function SocietyAdmins() {
   })
 
   const assignMutation = useMutation({
-    mutationFn: async ({ society, adminData, organizationId }) => {
-      if (isPlatformOwner && organizationId && society.organizationId !== organizationId) {
-        await societyApi.update(society.id, {
-          name: society.name,
-          address: society.address,
-          city: society.city,
-          state: society.state,
-          pincode: society.pincode,
-          registrationNumber: society.registrationNumber,
-          email: society.email,
-          telephone: society.telephone,
-          totalFlats: society.totalFlats ?? society.actualFlats ?? 0,
-          totalShops: society.totalShops ?? society.actualShops ?? 0,
-          totalOffices: society.totalOffices ?? society.actualOffices ?? 0,
-          totalWings: society.totalWings ?? society.actualWings ?? 0,
-          organizationId,
-        }, user.id)
-      }
-
+    mutationFn: async ({ society, adminData }) => {
       await userApi.create({
         name: adminData.name,
         email: adminData.email,
@@ -760,7 +679,6 @@ export default function SocietyAdmins() {
       details: [
         { label: 'Society', value: society.name || '-' },
         { label: 'City', value: society.city || '-' },
-        { label: 'Organization', value: hasOrganization(society) ? (society.organizationName || society.organization?.name || society.organization || 'Linked') : 'Unassigned' },
       ],
       impacts: [
         {
@@ -798,7 +716,6 @@ export default function SocietyAdmins() {
         details: [
           { label: 'Society', value: society.name || '-' },
           { label: 'City', value: society.city || '-' },
-          { label: 'Organization', value: hasOrganization(society) ? (society.organizationName || society.organization?.name || society.organization || 'Linked') : 'Unassigned' },
         ],
         caution: 'This action is irreversible and may impact units, users, bills, and society-scoped records.',
       })
@@ -837,14 +754,7 @@ export default function SocietyAdmins() {
       totalShops: parseInt(fd.get('totalShops'), 10),
       totalOffices: parseInt(fd.get('totalOffices'), 10),
       totalWings: parseInt(fd.get('totalWings'), 10),
-      ...(isPlatformOwner && fd.get('organizationId')
-        ? { organizationId: parseInt(fd.get('organizationId'), 10) }
-        : {}),
     }
-
-    const selectedOrganizationId = isPlatformOwner && fd.get('organizationId')
-      ? parseInt(fd.get('organizationId'), 10)
-      : null
 
     if (!adminData.name || !adminData.email || !adminData.phone) {
       setFormError('Admin name, email, and phone are required')
@@ -860,7 +770,6 @@ export default function SocietyAdmins() {
       assignMutation.mutate({
         society: assignmentSociety,
         adminData,
-        organizationId: selectedOrganizationId,
       })
       return
     }
@@ -907,8 +816,6 @@ export default function SocietyAdmins() {
     createMutation.mutate({ societyData, adminData })
   }
 
-  const orgOptions = organizations.map(o => ({ value: String(o.id), label: o.name }))
-
   const showSkeleton = useMinLoadingTime(usersLoading || usersError)
 
   if (showSkeleton) {
@@ -932,7 +839,7 @@ export default function SocietyAdmins() {
               <UserCheck size={28} />
               Society Admins
             </h1>
-            <p className="sa-hero__subtitle">Manage society administrators, assignments, and organization links</p>
+            <p className="sa-hero__subtitle">Manage society administrators and assignments</p>
           </div>
           <div className="sa-hero__stats">
             <div className="sa-hero__stat">
@@ -980,29 +887,7 @@ export default function SocietyAdmins() {
             </button>
           )}
         </div>
-        <div className="sa-filters">
-          <button
-            type="button"
-            className={`sa-filter-btn ${adminFilter === 'all' ? 'sa-filter-btn--active' : ''}`}
-            onClick={() => setAdminFilter('all')}
-          >
-            All
-          </button>
-          <button
-            type="button"
-            className={`sa-filter-btn ${adminFilter === 'assigned' ? 'sa-filter-btn--active' : ''}`}
-            onClick={() => setAdminFilter('assigned')}
-          >
-            Linked Org
-          </button>
-          <button
-            type="button"
-            className={`sa-filter-btn ${adminFilter === 'unassigned' ? 'sa-filter-btn--active' : ''}`}
-            onClick={() => setAdminFilter('unassigned')}
-          >
-            No Org
-          </button>
-        </div>
+
       </div>
 
       {societiesNeedingAssignment.length > 0 && (
@@ -1013,9 +898,6 @@ export default function SocietyAdmins() {
           </div>
           <div className="sa-unassigned__grid">
             {societiesNeedingAssignment.map((society) => {
-              const missingAdmin = !assignedSocietyIds.has(society.id)
-              const missingOrg = !hasOrganization(society)
-
               return (
                 <div key={society.id} className="sa-unassigned__card">
                   <div className="sa-unassigned__top">
@@ -1044,8 +926,7 @@ export default function SocietyAdmins() {
                     </div>
                   </div>
                   <div className="sa-unassigned__badges">
-                    {missingAdmin && <span className="sa-unassigned__badge sa-unassigned__badge--warn">No Society Admin</span>}
-                    {missingOrg && <span className="sa-unassigned__badge">No Organization</span>}
+                    {!assignedSocietyIds.has(society.id) && <span className="sa-unassigned__badge sa-unassigned__badge--warn">No Society Admin</span>}
                   </div>
                 </div>
               )
@@ -1149,7 +1030,7 @@ export default function SocietyAdmins() {
             <div className="sa-modal__header">
               <div>
                 <h3>{editingAdmin ? 'Edit Society Admin' : assignmentSociety ? 'Assign Society Admin' : 'Create Society + Admin'}</h3>
-                <p>{editingAdmin ? 'Update society and admin details' : assignmentSociety ? 'Assign an individual society admin and optionally link an organization' : 'Create a new society with its administrator'}</p>
+                <p>{editingAdmin ? 'Update society and admin details' : assignmentSociety ? 'Assign an individual society admin' : 'Create a new society with its administrator'}</p>
               </div>
               <button onClick={() => { setShowModal(false); setShowPassword(false) }} className="sa-modal__close">
                 <X size={20} />
@@ -1194,15 +1075,6 @@ export default function SocietyAdmins() {
               <div className="sa-form__section">
                 <h4><Building2 size={16} /> Society Information</h4>
                 <div className="sa-form__grid">
-                  {isPlatformOwner && (
-                    <SmartSelect
-                      label="Organization"
-                      name="organizationId"
-                      options={orgOptions}
-                      defaultValue={activeSociety?.organizationId ? String(activeSociety.organizationId) : ''}
-                      placeholder="Select organization (optional)..."
-                    />
-                  )}
                   <FormInput label="Society Name" name="societyName" defaultValue={activeSociety?.name || ''} required />
                   <FormInput label="Address" name="address" defaultValue={activeSociety?.address || ''} required />
                   <StateCitySelector

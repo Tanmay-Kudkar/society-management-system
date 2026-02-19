@@ -48,7 +48,6 @@ public class VendorBillServiceImpl implements VendorBillService {
         VendorBill bill = new VendorBill();
         bill.setVendor(vendor);
         bill.setSociety(society);
-        bill.setOrganization(society.getOrganization());
         bill.setBillNumber(request.getBillNumber());
         bill.setAmount(request.getAmount());
         bill.setPaidAmount(request.getPaidAmount() != null ? request.getPaidAmount() : BigDecimal.ZERO);

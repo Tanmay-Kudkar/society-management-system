@@ -38,7 +38,6 @@ import {
 import axios from "axios";
 import {
   societyApi,
-  organizationApi,
   userApi,
   flatApi,
   contractApi,
@@ -262,17 +261,6 @@ export default function Dashboard() {
     enabled: isPlatformLevel,
   });
 
-  const { data: organizations = [] } = useQuery({
-    queryKey: ["organizations"],
-    queryFn: () =>
-      organizationApi
-        .getAll()
-        .then((res) => res.data)
-        .catch(() => []),
-    enabled: isPlatformLevel,
-    placeholderData: [],
-  });
-
   const { data: platformUsers = [] } = useQuery({
     queryKey: ["dashboard-platform-users"],
     queryFn: () =>
@@ -426,20 +414,20 @@ export default function Dashboard() {
     [complaints],
   );
 
-  const { societyAdminsCount, tenantsCount, membersCount, organizationOwnersCount } = useMemo(() => {
+  const { societyAdminsCount, tenantsCount, membersCount } = useMemo(() => {
     return {
       societyAdminsCount: platformUsers.filter((u) => u.role === "SOCIETY_ADMIN").length,
       tenantsCount: platformUsers.filter((u) => u.role === "TENANT").length,
       membersCount: platformUsers.filter((u) => u.role === "MEMBER").length,
-      organizationOwnersCount: platformUsers.filter((u) => u.role === "SOCIETY_ADMIN").length,
     };
   }, [platformUsers]);
 
   const roleBreakdown = useMemo(() => {
     if (isPlatformOwner) {
       return [
-        { label: "Org Owners", value: organizationOwnersCount, color: "#14b8a6" },
         { label: "Society Admins", value: societyAdminsCount, color: "#3b82f6" },
+        { label: "Members", value: membersCount, color: "#8b5cf6" },
+        { label: "Tenants", value: tenantsCount, color: "#f97316" },
       ];
     }
     return [
@@ -447,7 +435,7 @@ export default function Dashboard() {
       { label: "Members", value: membersCount, color: "#8b5cf6" },
       { label: "Tenants", value: tenantsCount, color: "#f97316" },
     ];
-  }, [isPlatformOwner, organizationOwnersCount, societyAdminsCount, membersCount, tenantsCount]);
+  }, [isPlatformOwner, societyAdminsCount, membersCount, tenantsCount]);
 
   const roleBreakdownTotal = useMemo(
     () => roleBreakdown.reduce((sum, item) => sum + item.value, 0),
@@ -463,16 +451,6 @@ export default function Dashboard() {
           : 0,
     }));
   }, [roleBreakdown, roleBreakdownTotal]);
-
-  const orgSocietyStats = useMemo(() => {
-    return organizations
-      .map((org) => ({
-        name: org.name || `Org ${org.id}`,
-        count: societies.filter((s) => s.organizationId === org.id).length,
-      }))
-      .sort((a, b) => b.count - a.count)
-      .slice(0, 6);
-  }, [organizations, societies]);
 
   const usersPerSociety = useMemo(() => {
     return societies
@@ -738,13 +716,6 @@ export default function Dashboard() {
 
   if (isPlatformOwner) {
     adminStatCards.push(
-      {
-        key: "total-organizations",
-        title: "Total Organizations",
-        value: organizations.length,
-        icon: Layers,
-        variant: "teal",
-      },
       {
         key: "total-societies",
         title: "Total Societies",
@@ -1213,7 +1184,7 @@ export default function Dashboard() {
           <div className="dashboard-section">
             <Building2 className="dashboard-section__icon" />
             <h2 className="dashboard-section__title">
-              {isPlatformOwner ? 'Platform Summary' : isOrgOwner ? 'Organization Summary' : 'Society Summary'}
+              {isPlatformOwner ? 'Platform Summary' : 'Society Summary'}
             </h2>
           </div>
 
@@ -1236,7 +1207,7 @@ export default function Dashboard() {
               <div className="dashboard-section">
                 <BarChart3 className="dashboard-section__icon" />
                 <h2 className="dashboard-section__title">
-                  {isPlatformOwner ? "Platform Analytics" : "Organization Analytics"}
+                  {isPlatformOwner ? "Platform Analytics" : "Society Analytics"}
                 </h2>
               </div>
 
@@ -1295,35 +1266,6 @@ export default function Dashboard() {
                           ))}
                         </div>
                       )}
-                    </div>
-
-                    {/* Organizations by Societies - Bar Chart */}
-                    <div className="dashboard-chart-card">
-                      <h3 className="dashboard-chart-card__title">
-                        <span className="dashboard-chart-card__dot dashboard-chart-card__dot--teal" />
-                        Organizations by Societies
-                      </h3>
-                      <div className="dashboard-chart-card__body">
-                        {orgSocietyStats.length > 0 ? (
-                          <ResponsiveContainer width="100%" height={280} debounce={100}>
-                            <BarChart data={orgSocietyStats} layout="vertical" margin={{ left: 0, right: 20, top: 5, bottom: 5 }}>
-                              <defs>
-                                <linearGradient id="barGradient" x1="0" y1="0" x2="1" y2="0">
-                                  <stop offset="0%" stopColor="#3b82f6" stopOpacity={0.9} />
-                                  <stop offset="100%" stopColor="#06b6d4" stopOpacity={0.9} />
-                                </linearGradient>
-                              </defs>
-                              <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.1)" horizontal={false} />
-                              <XAxis type="number" tick={{ fill: "#94a3b8", fontSize: 11 }} axisLine={{ stroke: "rgba(148,163,184,0.15)" }} allowDecimals={false} />
-                              <YAxis dataKey="name" type="category" width={130} tick={{ fill: "#94a3b8", fontSize: 11 }} axisLine={false} tickLine={false} />
-                              <RechartsTooltip content={<ChartTooltipContent />} cursor={{ fill: "rgba(59,130,246,0.06)" }} />
-                              <Bar dataKey="count" fill="url(#barGradient)" radius={[0, 6, 6, 0]} isAnimationActive={animatePlatformCharts} animationDuration={850} animationBegin={0} barSize={32} name="Societies" />
-                            </BarChart>
-                          </ResponsiveContainer>
-                        ) : (
-                          <p className="dashboard-chart-card__empty">No organization data available</p>
-                        )}
-                      </div>
                     </div>
 
                     {/* Users per Society - Area Chart */}

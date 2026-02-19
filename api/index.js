@@ -54,21 +54,10 @@ export const authApi = {
 export const societyApi = {
   getAll: () => api.get('/societies'),
   getById: (id) => api.get(`/societies/${id}`),
-  getByOrganizationId: (orgId) => api.get(`/societies/by-organization/${orgId}`),
   create: (data, userId) => api.post(`/societies?userId=${userId}`, data),
   update: (id, data, userId) => api.put(`/societies/${id}?userId=${userId}`, data),
   delete: (id, userId, force = false) =>
     api.delete(`/societies/${id}?userId=${userId}${force ? '&force=true' : ''}`),
-}
-
-// Organization API - MASTER_ADMIN only
-export const organizationApi = {
-  getAll: () => api.get('/organizations'),
-  getById: (id) => api.get(`/organizations/${id}`),
-  getByOwnerEmail: (email) => api.get(`/organizations/by-owner?email=${encodeURIComponent(email)}`),
-  create: (data) => api.post('/organizations', data),
-  update: (id, data) => api.put(`/organizations/${id}`, data),
-  delete: (id, force = false) => api.delete(`/organizations/${id}${force ? '?force=true' : ''}`),
 }
 
 // User API - No userId needed, backend gets user from JWT token
@@ -245,6 +234,12 @@ export const maintenanceBillApi = {
   getGenerationPreview: (societyId, billMonth, propertyType) =>
     api.get(`/maintenance-bills/generate/preview?societyId=${societyId}&billMonth=${billMonth}${propertyType ? '&propertyType=' + propertyType : ''}`),
   delete: (id, userId, force = true) => api.delete(`/maintenance-bills/${id}?userId=${userId}${force ? '&force=true' : ''}`),
+}
+
+// Society Settings API (Phase 2 - F08)
+export const societySettingApi = {
+  getBySocietyId: (societyId, userId) => api.get(`/society-settings/${societyId}?userId=${userId}`),
+  upsertBySocietyId: (societyId, data, userId) => api.put(`/society-settings/${societyId}?userId=${userId}`, data),
 }
 
 // Transaction API
@@ -559,6 +554,28 @@ export const safetyApi = {
   getGateLogById: (id, userId) => api.get(`/safety/gate-log/${id}?userId=${userId}`),
   markExit: (id, userId) => api.patch(`/safety/gate-log/${id}/exit?userId=${userId}`),
   deleteGateLog: (id, userId) => api.delete(`/safety/gate-log/${id}?userId=${userId}`),
+}
+
+// ===================== APPROVALS =====================
+export const approvalApi = {
+  // Workflows
+  createWorkflow: (userId, data) => api.post(`/approvals/workflows?userId=${userId}`, data),
+  getWorkflowById: (id) => api.get(`/approvals/workflows/${id}`),
+  getWorkflowsBySociety: (societyId) => api.get(`/approvals/workflows/society/${societyId}`),
+  getWorkflowsBySocietyAndType: (societyId, entityType) => api.get(`/approvals/workflows/society/${societyId}/type/${entityType}`),
+  updateWorkflow: (id, userId, data) => api.put(`/approvals/workflows/${id}?userId=${userId}`, data),
+  deleteWorkflow: (id, userId) => api.delete(`/approvals/workflows/${id}?userId=${userId}`),
+  // Approval Requests
+  createRequest: (userId, data) => api.post(`/approvals/requests?userId=${userId}`, data),
+  getRequestById: (id) => api.get(`/approvals/requests/${id}`),
+  getRequestsBySociety: (societyId) => api.get(`/approvals/requests/society/${societyId}`),
+  getRequestsByStatus: (societyId, status) => api.get(`/approvals/requests/society/${societyId}/status/${status}`),
+  getRequestsByEntityType: (societyId, entityType) => api.get(`/approvals/requests/society/${societyId}/type/${entityType}`),
+  getRequestsByUser: (userId) => api.get(`/approvals/requests/user/${userId}`),
+  getPendingForApprover: (societyId, userId) => api.get(`/approvals/requests/pending/${societyId}?userId=${userId}`),
+  // Actions
+  takeAction: (requestId, userId, data) => api.post(`/approvals/requests/${requestId}/action?userId=${userId}`, data),
+  cancelRequest: (requestId, userId) => api.post(`/approvals/requests/${requestId}/cancel?userId=${userId}`),
 }
 
 // Helper function to download blob as file

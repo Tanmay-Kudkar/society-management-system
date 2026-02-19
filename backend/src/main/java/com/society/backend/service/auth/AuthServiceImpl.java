@@ -128,8 +128,6 @@ public class AuthServiceImpl implements AuthService {
         boolean rememberMe = request.isRememberMe();
         String token = jwtUtils.generateToken(user.getEmail(), user.getRole().name(), user.getId(), rememberMe);
 
-        // Get organizationId if user belongs to an organization
-        Long organizationId = (user.getSociety() != null && user.getSociety().getOrganization() != null) ? user.getSociety().getOrganization().getId() : null;
         // Get societyId if user belongs to a society
         Long societyId = user.getSociety() != null ? user.getSociety().getId() : null;
         // Get flatId if user has a flat assigned
@@ -141,7 +139,6 @@ public class AuthServiceImpl implements AuthService {
                 user.getEmail(),
                 user.getRole().name(),
                 user.getAccountType(),
-                organizationId,
                 societyId,
                 flatId,
                 token);
@@ -157,7 +154,6 @@ public class AuthServiceImpl implements AuthService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new ApiException(HttpStatus.UNAUTHORIZED, "User not found"));
 
-        Long organizationId = (user.getSociety() != null && user.getSociety().getOrganization() != null) ? user.getSociety().getOrganization().getId() : null;
         Long societyId = user.getSociety() != null ? user.getSociety().getId() : null;
         Long flatId = user.getFlat() != null ? user.getFlat().getId() : null;
 
@@ -168,7 +164,6 @@ public class AuthServiceImpl implements AuthService {
                 user.getRole().name(),
                 societyId);
         response.setAccountType(user.getAccountType());
-        response.setOrganizationId(organizationId);
         response.setFlatId(flatId);
 
         return response;

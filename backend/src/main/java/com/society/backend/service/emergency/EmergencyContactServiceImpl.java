@@ -42,7 +42,6 @@ public class EmergencyContactServiceImpl implements EmergencyContactService {
 
         EmergencyContact contact = new EmergencyContact();
         contact.setSociety(society);
-        contact.setOrganization(society.getOrganization());
         contact.setCreatedBy(user); // Track who created this contact
         contact.setContactType(request.getContactType());
         contact.setName(request.getName());

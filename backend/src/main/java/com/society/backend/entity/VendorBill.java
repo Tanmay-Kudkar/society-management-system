@@ -29,9 +29,6 @@ public class VendorBill {
     @JoinColumn(name = "society_id", nullable = false)
     private Society society;
 
-    @Transient
-    private Organization organization;
-
     @Column(name = "bill_number")
     private String billNumber;
 

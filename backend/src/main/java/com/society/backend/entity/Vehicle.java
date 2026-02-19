@@ -24,9 +24,6 @@ public class Vehicle {
     @JoinColumn(name = "society_id")
     private Society society;
 
-    @Transient
-    private Organization organization;
-
     @Column(name = "vehicle_type", nullable = false)
     private String vehicleType; // TWO_WHEELER, FOUR_WHEELER
 

@@ -40,7 +40,6 @@ public class ContractServiceImpl implements ContractService {
 
         Contract contract = new Contract();
         contract.setSociety(society);
-        contract.setOrganization(society.getOrganization());
 
         if (request.getVendorId() != null) {
             Vendor vendor = vendorRepository.findById(request.getVendorId())

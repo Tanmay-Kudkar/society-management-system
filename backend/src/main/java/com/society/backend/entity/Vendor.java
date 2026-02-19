@@ -23,9 +23,6 @@ public class Vendor {
     @JoinColumn(name = "society_id")
     private Society society; // null means common/partner vendor
 
-    @Transient
-    private Organization organization;
-
     @Column(nullable = false)
     private String name;
 

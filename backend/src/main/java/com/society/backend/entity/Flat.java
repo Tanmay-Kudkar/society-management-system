@@ -22,9 +22,6 @@ public class Flat {
     @JoinColumn(name = "society_id", nullable = false)
     private Society society;
 
-    @Transient
-    private Organization organization;
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "wing_id")
     private Wing wing;

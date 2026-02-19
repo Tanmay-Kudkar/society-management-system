@@ -34,7 +34,6 @@ public class DocumentTemplateServiceImpl implements DocumentTemplateService {
         template.setTitle(request.getTitle());
         template.setContent(request.getContent());
         template.setSociety(user.getSociety());
-        template.setOrganization(user.getSociety() != null ? user.getSociety().getOrganization() : null);
         template.setIsActive(true);
 
         DocumentTemplate saved = documentTemplateRepository.save(template);

@@ -440,18 +440,71 @@
   border: 1px solid transparent;
 }
 
-.role-pill--platform-owner { background: rgba(139, 92, 246, 0.15); color: #c4b5fd; border-color: rgba(139, 92, 246, 0.3); }
-.role-pill--organization-owner { background: rgba(124, 58, 237, 0.15); color: #c4b5fd; border-color: rgba(124, 58, 237, 0.3); }
-.role-pill--society-admin { background: rgba(59, 130, 246, 0.15); color: #93c5fd; border-color: rgba(59, 130, 246, 0.3); }
-.role-pill--chairman { background: rgba(16, 185, 129, 0.15); color: #6ee7b7; border-color: rgba(16, 185, 129, 0.3); }
-.role-pill--secretary { background: rgba(6, 182, 212, 0.15); color: #67e8f9; border-color: rgba(6, 182, 212, 0.3); }
-.role-pill--treasurer { background: rgba(251, 191, 36, 0.15); color: #fcd34d; border-color: rgba(251, 191, 36, 0.3); }
-.role-pill--committee { background: rgba(168, 85, 247, 0.15); color: #c084fc; border-color: rgba(168, 85, 247, 0.3); }
-.role-pill--manager { background: rgba(249, 115, 22, 0.15); color: #fdba74; border-color: rgba(249, 115, 22, 0.3); }
-.role-pill--employee { background: rgba(251, 146, 60, 0.15); color: #fed7aa; border-color: rgba(251, 146, 60, 0.3); }
-.role-pill--member { background: rgba(148, 163, 184, 0.15); color: #cbd5e1; border-color: rgba(148, 163, 184, 0.3); }
-.role-pill--tenant { background: rgba(236, 72, 153, 0.15); color: #f9a8d4; border-color: rgba(236, 72, 153, 0.3); }
-.role-pill--visitor { background: rgba(239, 68, 68, 0.15); color: #fca5a5; border-color: rgba(239, 68, 68, 0.3); }
+.role-pill--platform-owner {
+  background: rgba(139, 92, 246, 0.15);
+  color: #c4b5fd;
+  border-color: rgba(139, 92, 246, 0.3);
+}
+
+.role-pill--society-admin {
+  background: rgba(59, 130, 246, 0.15);
+  color: #93c5fd;
+  border-color: rgba(59, 130, 246, 0.3);
+}
+
+.role-pill--chairman {
+  background: rgba(16, 185, 129, 0.15);
+  color: #6ee7b7;
+  border-color: rgba(16, 185, 129, 0.3);
+}
+
+.role-pill--secretary {
+  background: rgba(6, 182, 212, 0.15);
+  color: #67e8f9;
+  border-color: rgba(6, 182, 212, 0.3);
+}
+
+.role-pill--treasurer {
+  background: rgba(251, 191, 36, 0.15);
+  color: #fcd34d;
+  border-color: rgba(251, 191, 36, 0.3);
+}
+
+.role-pill--committee {
+  background: rgba(168, 85, 247, 0.15);
+  color: #c084fc;
+  border-color: rgba(168, 85, 247, 0.3);
+}
+
+.role-pill--manager {
+  background: rgba(249, 115, 22, 0.15);
+  color: #fdba74;
+  border-color: rgba(249, 115, 22, 0.3);
+}
+
+.role-pill--employee {
+  background: rgba(251, 146, 60, 0.15);
+  color: #fed7aa;
+  border-color: rgba(251, 146, 60, 0.3);
+}
+
+.role-pill--member {
+  background: rgba(148, 163, 184, 0.15);
+  color: #cbd5e1;
+  border-color: rgba(148, 163, 184, 0.3);
+}
+
+.role-pill--tenant {
+  background: rgba(236, 72, 153, 0.15);
+  color: #f9a8d4;
+  border-color: rgba(236, 72, 153, 0.3);
+}
+
+.role-pill--visitor {
+  background: rgba(239, 68, 68, 0.15);
+  color: #fca5a5;
+  border-color: rgba(239, 68, 68, 0.3);
+}
 
 .user-card__society {
   display: flex;
@@ -536,7 +589,6 @@
 
 :root {
   --role-platform-owner: #8b5cf6;
-  --role-organization-owner: #7c3aed;
   --role-society-admin: #3b82f6;
   --role-chairman: #10b981;
   --role-secretary: #06b6d4;
@@ -594,7 +646,8 @@
   align-items: center;
   padding: 14px 18px 14px 30px;
   border-radius: 12px;
-  background: var(--bg-card); /* Should be white (light) or dark gray/black (dark) */
+  background: var(--bg-card);
+  /* Should be white (light) or dark gray/black (dark) */
   border: 1px solid var(--border-light);
   transition: border-color 0.2s ease, box-shadow 0.25s ease, transform 0.2s ease, background-color 0.2s ease;
   overflow: hidden;
@@ -828,18 +881,60 @@
   flex-shrink: 0;
 }
 
-.role-tag--platform-owner .role-tag__dot { background: var(--role-platform-owner); box-shadow: 0 0 6px var(--role-platform-owner); }
-.role-tag--organization-owner .role-tag__dot { background: var(--role-organization-owner); box-shadow: 0 0 6px var(--role-organization-owner); }
-.role-tag--society-admin .role-tag__dot { background: var(--role-society-admin); box-shadow: 0 0 6px var(--role-society-admin); }
-.role-tag--chairman .role-tag__dot { background: var(--role-chairman); box-shadow: 0 0 6px var(--role-chairman); }
-.role-tag--secretary .role-tag__dot { background: var(--role-secretary); box-shadow: 0 0 6px var(--role-secretary); }
-.role-tag--treasurer .role-tag__dot { background: var(--role-treasurer); box-shadow: 0 0 6px var(--role-treasurer); }
-.role-tag--committee .role-tag__dot { background: var(--role-committee); box-shadow: 0 0 6px var(--role-committee); }
-.role-tag--manager .role-tag__dot { background: var(--role-manager); box-shadow: 0 0 6px var(--role-manager); }
-.role-tag--employee .role-tag__dot { background: var(--role-employee); box-shadow: 0 0 6px var(--role-employee); }
-.role-tag--member .role-tag__dot { background: var(--role-member); box-shadow: 0 0 6px var(--role-member); }
-.role-tag--tenant .role-tag__dot { background: var(--role-tenant); box-shadow: 0 0 6px var(--role-tenant); }
-.role-tag--visitor .role-tag__dot { background: var(--role-visitor); box-shadow: 0 0 6px var(--role-visitor); }
+.role-tag--platform-owner .role-tag__dot {
+  background: var(--role-platform-owner);
+  box-shadow: 0 0 6px var(--role-platform-owner);
+}
+
+.role-tag--society-admin .role-tag__dot {
+  background: var(--role-society-admin);
+  box-shadow: 0 0 6px var(--role-society-admin);
+}
+
+.role-tag--chairman .role-tag__dot {
+  background: var(--role-chairman);
+  box-shadow: 0 0 6px var(--role-chairman);
+}
+
+.role-tag--secretary .role-tag__dot {
+  background: var(--role-secretary);
+  box-shadow: 0 0 6px var(--role-secretary);
+}
+
+.role-tag--treasurer .role-tag__dot {
+  background: var(--role-treasurer);
+  box-shadow: 0 0 6px var(--role-treasurer);
+}
+
+.role-tag--committee .role-tag__dot {
+  background: var(--role-committee);
+  box-shadow: 0 0 6px var(--role-committee);
+}
+
+.role-tag--manager .role-tag__dot {
+  background: var(--role-manager);
+  box-shadow: 0 0 6px var(--role-manager);
+}
+
+.role-tag--employee .role-tag__dot {
+  background: var(--role-employee);
+  box-shadow: 0 0 6px var(--role-employee);
+}
+
+.role-tag--member .role-tag__dot {
+  background: var(--role-member);
+  box-shadow: 0 0 6px var(--role-member);
+}
+
+.role-tag--tenant .role-tag__dot {
+  background: var(--role-tenant);
+  box-shadow: 0 0 6px var(--role-tenant);
+}
+
+.role-tag--visitor .role-tag__dot {
+  background: var(--role-visitor);
+  box-shadow: 0 0 6px var(--role-visitor);
+}
 
 /* ---- Responsive: stack on smaller screens ---- */
 @media (max-width: 900px) {
@@ -854,12 +949,30 @@
     padding: 14px 14px 14px 24px;
   }
 
-  .utbl__col--name { grid-column: 1 / -1; }
-  .utbl__col--email { grid-column: 1 / -1; }
-  .utbl__col--role { grid-column: 1; }
-  .utbl__col--prop { grid-column: 2; justify-content: flex-end; }
-  .utbl__col--phone { grid-column: 1; }
-  .utbl__col--acts { grid-column: 2; }
+  .utbl__col--name {
+    grid-column: 1 / -1;
+  }
+
+  .utbl__col--email {
+    grid-column: 1 / -1;
+  }
+
+  .utbl__col--role {
+    grid-column: 1;
+  }
+
+  .utbl__col--prop {
+    grid-column: 2;
+    justify-content: flex-end;
+  }
+
+  .utbl__col--phone {
+    grid-column: 1;
+  }
+
+  .utbl__col--acts {
+    grid-column: 2;
+  }
 }
 
 @media (max-width: 480px) {
@@ -877,7 +990,8 @@
 
 /* ThemeContext toggles `.dark` on <html>, so use that (not prefers-color-scheme). */
 .dark .utbl__row {
-  background: #09090b; /* Very dark zinc/black */
+  background: #09090b;
+  /* Very dark zinc/black */
   border-color: #27272a;
 }
 

@@ -55,7 +55,4 @@ public class SocietyRequest {
     @NotNull(message = "Total wings is required")
     @Min(value = 0, message = "Total wings cannot be negative")
     private Integer totalWings;
-
-    // Organization ID (for societies created under an organization)
-    private Long organizationId;
 }

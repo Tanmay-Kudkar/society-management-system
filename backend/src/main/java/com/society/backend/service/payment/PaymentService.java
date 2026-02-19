@@ -74,9 +74,6 @@ public class PaymentService {
             if (user.getSociety() != null) {
                 payment.setSociety(user.getSociety());
             }
-            if (user.getSociety() != null && user.getSociety().getOrganization() != null) {
-                payment.setOrganization(user.getSociety().getOrganization());
-            }
 
             if (request.getMaintenanceBillId() != null) {
                 MaintenanceBill bill = maintenanceBillRepository.findById(request.getMaintenanceBillId())
@@ -88,15 +85,6 @@ public class PaymentService {
                     payment.setSociety(bill.getSociety());
                 } else if (bill.getFlat() != null && bill.getFlat().getSociety() != null) {
                     payment.setSociety(bill.getFlat().getSociety());
-                }
-                
-                // Get organization from bill, or from flat/society if null
-                if (bill.getOrganization() != null) {
-                    payment.setOrganization(bill.getOrganization());
-                } else if (bill.getFlat() != null && bill.getFlat().getOrganization() != null) {
-                    payment.setOrganization(bill.getFlat().getOrganization());
-                } else if (payment.getSociety() != null && payment.getSociety().getOrganization() != null) {
-                    payment.setOrganization(payment.getSociety().getOrganization());
                 }
             }
 

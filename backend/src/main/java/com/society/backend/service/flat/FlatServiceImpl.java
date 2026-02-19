@@ -165,7 +165,6 @@ public class FlatServiceImpl implements FlatService {
 
     private void mapRequestToEntity(FlatRequest request, Flat flat, Society society) {
         flat.setSociety(society);
-        flat.setOrganization(society.getOrganization());
         flat.setFlatNumber(request.getFlatNumber());
         flat.setUnitType(request.getUnitType() != null ? request.getUnitType() : "FLAT");
         flat.setFlatType(request.getFlatType());

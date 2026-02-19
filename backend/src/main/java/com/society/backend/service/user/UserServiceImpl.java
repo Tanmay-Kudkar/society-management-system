@@ -570,12 +570,7 @@ public class UserServiceImpl implements UserService {
             response.setFlatNumber(user.getFlat().getFlatNumber());
         }
 
-        // Add organization information if available
         response.setAccountType(user.getAccountType());
-        if (user.getSociety() != null && user.getSociety().getOrganization() != null) {
-            response.setOrganizationId(user.getSociety().getOrganization().getId());
-            response.setOrganizationName(user.getSociety().getOrganization().getName());
-        }
 
         return response;
     }

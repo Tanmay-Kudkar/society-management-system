@@ -1,6 +1,7 @@
 export { default as VendorBills } from './VendorBills'
 export { default as Contracts } from './Contracts'
 export { default as MaintenanceBills } from './MaintenanceBills'
+export { default as SocietySettings } from './SocietySettings'
 export { default as Payments } from './Payments'
 export { default as MyBills } from './MyBills'
 export { default as Transactions } from './Transactions'

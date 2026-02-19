@@ -35,9 +35,6 @@ public class TenantServiceImpl implements TenantService {
         Tenant tenant = new Tenant();
         tenant.setFlat(flat);
         tenant.setSociety(flat.getSociety());
-        if (flat.getSociety() != null) {
-            tenant.setOrganization(flat.getSociety().getOrganization());
-        }
         tenant.setName(request.getName());
         tenant.setPhone(request.getPhone());
         tenant.setEmail(request.getEmail());
@@ -94,9 +91,6 @@ public class TenantServiceImpl implements TenantService {
                     .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Flat not found"));
             tenant.setFlat(flat);
             tenant.setSociety(flat.getSociety());
-            if (flat.getSociety() != null) {
-                tenant.setOrganization(flat.getSociety().getOrganization());
-            }
         }
 
         if (request.getName() != null)

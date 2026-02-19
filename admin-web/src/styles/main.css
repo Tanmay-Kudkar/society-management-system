@@ -34,6 +34,7 @@
 @import "./pages/vendors.css";
 @import "./pages/vendor-bills.css";
 @import "./pages/complaints.css";
+@import "./pages/approvals.css";
 @import "./pages/dashboard.css";
 @import "./pages/welcome.css";
 @import "./pages/login.css";
@@ -44,6 +45,7 @@
 @import "./pages/reset-password.css";
 @import "./pages/notices.css";
 @import "./pages/maintenance-bills.css";
+@import "./pages/society-settings.css";
 @import "./pages/tickets.css";
 @import "./pages/transactions.css";
 @import "./pages/reports.css";

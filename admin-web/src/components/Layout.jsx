@@ -29,6 +29,7 @@ import {
   Wallet,
   Shield,
   Siren,
+  SlidersHorizontal,
 } from 'lucide-react'
 import clsx from 'clsx'
 
@@ -50,6 +51,7 @@ const routePrefetchMap = {
   '/vendor-bills': () => import('../pages/finance/VendorBills'),
   '/contracts': () => import('../pages/finance/Contracts'),
   '/maintenance-bills': () => import('../pages/finance/MaintenanceBills'),
+  '/society-settings': () => import('../pages/finance/SocietySettings'),
   '/payments': () => import('../pages/finance/Payments'),
   '/my-bills': () => import('../pages/finance/MyBills'),
   '/transactions': () => import('../pages/finance/Transactions'),
@@ -57,6 +59,7 @@ const routePrefetchMap = {
   '/banners': () => import('../pages/communication/Banners'),
   '/tickets': () => import('../pages/communication/Tickets'),
   '/complaints': () => import('../pages/communication/Complaints'),
+  '/approvals': () => import('../pages/communication/Approvals'),
   '/emergency-contacts': () => import('../pages/communication/EmergencyContacts'),
   '/documents': () => import('../pages/communication/Documents'),
   '/visitors': () => import('../pages/security/Visitors'),
@@ -80,12 +83,6 @@ const platformOwnerMenu = [
     label: 'Dashboard',
     icon: LayoutDashboard,
     path: '/',
-  },
-  {
-    id: 'societies',
-    label: 'Societies',
-    icon: Layers,
-    path: '/societies',
   },
   {
     id: 'society-admins',
@@ -131,12 +128,13 @@ const standardMenuGroups = [
     id: 'finance',
     label: 'Finance',
     icon: DollarSign,
-    roles: ['SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER'],
+    roles: ['MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER'],
     items: [
       { path: '/vendors', icon: Truck, label: 'Vendors', roles: ['SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER'] },
       { path: '/vendor-bills', icon: Receipt, label: 'Vendor Bills', roles: ['SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER'] },
       { path: '/contracts', icon: FileText, label: 'Contracts', roles: ['SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER'] },
       { path: '/maintenance-bills', icon: CreditCard, label: 'Maintenance Bills', roles: ['SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE'] },
+      { path: '/society-settings', icon: SlidersHorizontal, label: 'Society Settings', roles: ['MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER'] },
       { path: '/payments', icon: Wallet, label: 'Online Payments', roles: ['SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER'] },
       { path: '/transactions', icon: DollarSign, label: 'Transactions', roles: ['SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER'] },
       { path: '/reports', icon: BarChart3, label: 'Reports', roles: ['SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER'] },
@@ -151,6 +149,7 @@ const standardMenuGroups = [
       { path: '/banners', icon: Image, label: 'Banners', roles: ['SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'MANAGER'] },
       { path: '/tickets', icon: Ticket, label: 'Tickets' },
       { path: '/complaints', icon: MessageSquare, label: 'Complaints' },
+      { path: '/approvals', icon: FileCheck, label: 'Approvals', roles: ['SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'MANAGER'] },
     ],
   },
   {

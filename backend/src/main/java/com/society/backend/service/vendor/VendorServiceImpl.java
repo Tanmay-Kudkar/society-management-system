@@ -61,7 +61,6 @@ public class VendorServiceImpl implements VendorService {
 
         Vendor vendor = new Vendor();
         vendor.setSociety(society);
-        vendor.setOrganization(society.getOrganization());
         vendor.setName(request.getName());
         vendor.setServiceType(request.getServiceType());
         vendor.setContactPerson(request.getContactPerson());
@@ -171,7 +170,6 @@ public class VendorServiceImpl implements VendorService {
                     .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Society not found"));
             roleService.enforceSocietyScope(roleService.getUser(userId), society.getId());
             vendor.setSociety(society);
-            vendor.setOrganization(society.getOrganization());
         }
 
         if (request.getName() != null)

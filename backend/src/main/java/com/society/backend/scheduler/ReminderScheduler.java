@@ -101,7 +101,7 @@ public class ReminderScheduler {
     private void sendToSocietyCommittee(Society society, String subject, String body) {
         List<String> emails = getSocietyCommitteeEmails(society);
         if (emails.isEmpty()) {
-            // Fallback to society admin or master admin
+// Fallback to society admin or master admin
             emailService.sendSimpleEmail(getSocietyAdminEmail(society), subject, body);
         } else {
             for (String email : emails) {
@@ -110,7 +110,7 @@ public class ReminderScheduler {
         }
     }
 
-    /**
+    /**            
      * Check for expiring contracts daily at 9 AM
      * Sends reminders to SOCIETY_ADMIN and committee of that specific society
      * - AMC expiry

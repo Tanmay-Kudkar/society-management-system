@@ -393,7 +393,6 @@ export default function Users() {
       phone: formData.get('phone'),
       societyId: formData.get('societyId') ? parseInt(formData.get('societyId')) : null,
       flatId: formData.get('flatId') ? parseInt(formData.get('flatId')) : null,
-      organizationName: formData.get('organizationName') || null,
     }
 
     // Frontend validation - Fix: use !!editingUser instead of !editingUser
@@ -564,7 +563,7 @@ export default function Users() {
           <div>
             <h3 className="users-permissions__title">Your Permissions ({user?.role?.replace('_', ' ')})</h3>
             <p className="users-permissions__text">
-              Access scope is based on your current role and organization/society assignment.
+              Access scope is based on your current role and society assignment.
             </p>
             <div className="users-permissions__meta">
               {creatableRoles.length > 0 && (
@@ -893,19 +892,6 @@ export default function Users() {
                 icon={Shield}
                 emptyMessage="No roles available to create"
               />
-              {user?.role === 'MASTER_ADMIN' && (selectedRole || editingUser?.role) === 'SOCIETY_ADMIN' && (
-                <div>
-                  <label className="form-label">Organization Name</label>
-                  <input
-                    type="text"
-                    name="organizationName"
-                    defaultValue={editingUser?.organizationName || ''}
-                    placeholder="e.g. ABC Housing Group"
-                    className="form-input"
-                  />
-                  <p className="form-help">Leave empty to auto-generate from the owner's name</p>
-                </div>
-              )}
               {(user?.role === 'MASTER_ADMIN') && (selectedRole || editingUser?.role) === 'SOCIETY_ADMIN' && (
                 <SmartSelect
                   label="Society"

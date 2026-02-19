@@ -35,9 +35,6 @@ public class VehicleServiceImpl implements VehicleService {
         Vehicle vehicle = new Vehicle();
         vehicle.setFlat(flat);
         vehicle.setSociety(flat.getSociety());
-        if (flat.getSociety() != null) {
-            vehicle.setOrganization(flat.getSociety().getOrganization());
-        }
         vehicle.setVehicleType(request.getVehicleType());
         vehicle.setVehicleNumber(request.getVehicleNumber());
         vehicle.setBrand(request.getBrand());
@@ -84,9 +81,6 @@ public class VehicleServiceImpl implements VehicleService {
                     .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Flat not found"));
             vehicle.setFlat(flat);
             vehicle.setSociety(flat.getSociety());
-            if (flat.getSociety() != null) {
-                vehicle.setOrganization(flat.getSociety().getOrganization());
-            }
         }
 
         if (request.getVehicleType() != null)

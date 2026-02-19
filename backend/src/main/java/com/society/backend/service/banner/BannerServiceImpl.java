@@ -36,7 +36,6 @@ public class BannerServiceImpl implements BannerService {
             Society society = societyRepository.findById(request.getSocietyId())
                     .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Society not found"));
             banner.setSociety(society);
-            banner.setOrganization(society.getOrganization());
         }
 
         banner.setTitle(request.getTitle());
@@ -106,7 +105,6 @@ public class BannerServiceImpl implements BannerService {
             Society society = societyRepository.findById(request.getSocietyId())
                     .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Society not found"));
             banner.setSociety(society);
-            banner.setOrganization(society.getOrganization());
         }
 
         if (request.getTitle() != null)

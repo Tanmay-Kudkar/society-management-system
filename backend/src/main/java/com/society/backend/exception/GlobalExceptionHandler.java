@@ -105,8 +105,6 @@ public class GlobalExceptionHandler {
                                         message = "Cannot delete vendor because it has linked bills or contracts. Use force delete to auto-clean.";
                                 } else if (lowerCause.contains("wing_id")) {
                                         message = "Cannot delete wing because it has linked units. Use force delete to auto-clean.";
-                                } else if (lowerCause.contains("organization_id")) {
-                                        message = "Cannot delete organization because it has linked records. Use force delete to auto-clean.";
                                 } else {
                                         message = "Cannot complete this action due to linked records. Use force delete if available.";
                                 }

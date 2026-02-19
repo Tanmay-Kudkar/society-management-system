@@ -70,7 +70,6 @@ public class DomesticStaffServiceImpl implements DomesticStaffService {
         staff.setIdProofType(request.getIdProofType());
         staff.setIdProofNumber(request.getIdProofNumber());
         staff.setSociety(society);
-        staff.setOrganization(society.getOrganization());
         staff.setAddress(request.getAddress());
 
         DomesticStaff saved = staffRepository.save(staff);

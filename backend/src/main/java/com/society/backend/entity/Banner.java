@@ -23,9 +23,6 @@ public class Banner {
     @JoinColumn(name = "society_id")
     private Society society; // null means global banner
 
-    @Transient
-    private Organization organization;
-
     @Column(nullable = false)
     private String title;
 

@@ -23,9 +23,6 @@ public class Contract {
     @JoinColumn(name = "society_id", nullable = false)
     private Society society;
 
-    @Transient
-    private Organization organization;
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "vendor_id")
     private Vendor vendor;

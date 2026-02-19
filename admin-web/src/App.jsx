@@ -36,6 +36,7 @@ const Vehicles = lazyWithMinDelay(() => import('./pages/unit/Vehicles'))
 const VendorBills = lazyWithMinDelay(() => import('./pages/finance/VendorBills'))
 const Contracts = lazyWithMinDelay(() => import('./pages/finance/Contracts'))
 const MaintenanceBills = lazyWithMinDelay(() => import('./pages/finance/MaintenanceBills'))
+const SocietySettings = lazyWithMinDelay(() => import('./pages/finance/SocietySettings'))
 const Transactions = lazyWithMinDelay(() => import('./pages/finance/Transactions'))
 const Payments = lazyWithMinDelay(() => import('./pages/finance/Payments'))
 const MyBills = lazyWithMinDelay(() => import('./pages/finance/MyBills'))
@@ -44,6 +45,7 @@ const Notices = lazyWithMinDelay(() => import('./pages/communication/Notices'))
 const Banners = lazyWithMinDelay(() => import('./pages/communication/Banners'))
 const Tickets = lazyWithMinDelay(() => import('./pages/communication/Tickets'))
 const Complaints = lazyWithMinDelay(() => import('./pages/communication/Complaints'))
+const Approvals = lazyWithMinDelay(() => import('./pages/communication/Approvals'))
 const EmergencyContacts = lazyWithMinDelay(() => import('./pages/communication/EmergencyContacts'))
 const Documents = lazyWithMinDelay(() => import('./pages/communication/Documents'))
 
@@ -119,6 +121,7 @@ const PAGE_TITLES = {
   '/vendor-bills': 'Vendor Bills',
   '/contracts': 'Contracts',
   '/maintenance-bills': 'Maintenance Bills',
+  '/society-settings': 'Society Settings',
   '/payments': 'Online Payments',
   '/my-bills': 'My Bills',
   '/transactions': 'Transactions',
@@ -128,6 +131,7 @@ const PAGE_TITLES = {
   '/banners': 'Banners',
   '/tickets': 'Tickets',
   '/complaints': 'Complaints',
+  '/approvals': 'Approvals',
   '/emergency-contacts': 'Emergency Contacts',
   '/documents': 'Documents',
   '/visitors': 'Visitors',
@@ -278,6 +282,7 @@ function App() {
                 <Route path="vendor-bills" element={<VendorBills />} />
                 <Route path="contracts" element={<Contracts />} />
                 <Route path="maintenance-bills" element={<MaintenanceBills />} />
+                <Route path="society-settings" element={<SocietySettings />} />
                 <Route path="payments" element={<Payments />} />
                 <Route path="my-bills" element={<MyBills />} />
                 <Route path="transactions" element={<Transactions />} />
@@ -287,6 +292,7 @@ function App() {
                 <Route path="banners" element={<Banners />} />
                 <Route path="tickets" element={<Tickets />} />
                 <Route path="complaints" element={<Complaints />} />
+                <Route path="approvals" element={<Approvals />} />
                 <Route path="emergency-contacts" element={<EmergencyContacts />} />
                 <Route path="documents" element={<Documents />} />
                 <Route path="visitors" element={<Visitors />} />

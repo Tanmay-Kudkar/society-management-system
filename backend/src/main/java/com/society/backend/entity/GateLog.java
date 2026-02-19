@@ -38,10 +38,6 @@ public class GateLog {
     @JoinColumn(name = "society_id", nullable = false)
     private Society society;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "organization_id")
-    private Organization organization;
-
     @Column(name = "entry_time")
     private LocalDateTime entryTime;
 

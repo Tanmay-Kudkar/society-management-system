@@ -8,7 +8,6 @@ import com.society.backend.entity.User;
 import com.society.backend.exception.ApiException;
 import com.society.backend.repository.complaint.ComplaintRepository;
 import com.society.backend.repository.flat.FlatRepository;
-import com.society.backend.repository.organization.OrganizationRepository;
 import com.society.backend.repository.society.SocietyRepository;
 import com.society.backend.repository.ticket.TicketRepository;
 import com.society.backend.repository.user.UserRepository;
@@ -54,9 +53,6 @@ class UserServiceImplTest {
 
     @Mock
     private FlatRepository flatRepository;
-
-    @Mock
-    private OrganizationRepository organizationRepository;
 
     @InjectMocks
     private UserServiceImpl userService;

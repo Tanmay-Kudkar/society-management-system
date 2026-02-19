@@ -1,15 +1,35 @@
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, Fragment } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '../../context'
 import { maintenanceBillApi, flatApi } from '../../../../api'
-import { Plus, Search, X, CreditCard, CheckCircle, Clock, AlertCircle, Info, Wallet } from 'lucide-react'
+import { Plus, Search, X, CreditCard, CheckCircle, Clock, AlertCircle, Info, Wallet, ChevronRight } from 'lucide-react'
 import clsx from 'clsx'
 import { PermissionDenied, AsyncButton } from '../../components'
 import { HeroSkeleton, FinancePageSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
 import { useRazorpay } from '../../hooks/useRazorpay'
 import useMinLoadingTime from '../../hooks/useMinLoadingTime'
 import { useToast } from '../../context'
+
+const defaultLineItem = () => ({
+  chargeType: 'MAINTENANCE',
+  description: '',
+  rate: '',
+  quantity: '1',
+  isTaxable: true,
+})
+
+const toNumber = (value, fallback = 0) => {
+  const parsed = Number(value)
+  return Number.isFinite(parsed) ? parsed : fallback
+}
+
+const getBillTotal = (bill) => {
+  const total = toNumber(bill?.totalAmount)
+  return total > 0 ? total : toNumber(bill?.amount)
+}
+const getBillPaid = (bill) => toNumber(bill?.paidAmount)
+const getBillBalance = (bill) => Math.max(0, getBillTotal(bill) - getBillPaid(bill))
 
 const statusClasses = {
   PENDING: 'maintenance-status maintenance-status--pending',
@@ -20,13 +40,10 @@ const statusClasses = {
 
 export default function MaintenanceBills() {
   const { user, canManageMaintenanceBills } = useAuth()
+  const hasManagePermission = canManageMaintenanceBills()
   const queryClient = useQueryClient()
   const toast = useToast()
-  
-  // Permission check
-  if (!canManageMaintenanceBills()) {
-    return <PermissionDenied message="You don't have permission to manage maintenance bills" />
-  }
+
   const [searchParams] = useSearchParams()
   const [showModal, setShowModal] = useState(false)
   const [showPaymentModal, setShowPaymentModal] = useState(false)
@@ -34,6 +51,9 @@ export default function MaintenanceBills() {
   const [selectedBill, setSelectedBill] = useState(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [filterStatus, setFilterStatus] = useState('')
+  const [expandedBillId, setExpandedBillId] = useState(null)
+  const [useItemizedMode, setUseItemizedMode] = useState(true)
+  const [lineItems, setLineItems] = useState([defaultLineItem()])
   
   // Individual bill state
   const [billMonth, setBillMonth] = useState('')
@@ -44,9 +64,16 @@ export default function MaintenanceBills() {
   const [previewCount, setPreviewCount] = useState(null)
   const [isLoadingPreview, setIsLoadingPreview] = useState(false)
 
+  const resetCreateModalState = () => {
+    setShowModal(false)
+    setBillMonth('')
+    setUseItemizedMode(true)
+    setLineItems([defaultLineItem()])
+  }
+
   // Razorpay integration
-  const { initiatePayment, isLoading: isPaymentLoading, error: paymentError } = useRazorpay({
-    onSuccess: (paymentData) => {
+  const { initiatePayment, isLoading: isPaymentLoading } = useRazorpay({
+    onSuccess: () => {
       toast.success('Payment successful! Bill has been updated.')
       queryClient.invalidateQueries(['maintenanceBills'])
       setShowPaymentModal(false)
@@ -62,7 +89,11 @@ export default function MaintenanceBills() {
 
   // Handle online payment via Razorpay
   const handleOnlinePayment = (bill) => {
-    const balance = bill.amount - (bill.paidAmount || 0)
+    const balance = getBillBalance(bill)
+    if (balance <= 0) {
+      toast.info('No outstanding balance for this bill')
+      return
+    }
     initiatePayment({
       amount: balance,
       maintenanceBillId: bill.id,
@@ -89,6 +120,7 @@ export default function MaintenanceBills() {
   const { data: allBills = [], isLoading, isError } = useQuery({
     queryKey: ['maintenanceBills'],
     queryFn: () => maintenanceBillApi.getAll().then(res => res.data),
+    enabled: hasManagePermission,
   })
 
   // Filter bills by society
@@ -100,15 +132,18 @@ export default function MaintenanceBills() {
   const { data: flats = [] } = useQuery({
     queryKey: ['flats', effectiveSocietyId],
     queryFn: () => flatApi.getBySociety(effectiveSocietyId).then(res => res.data),
-    enabled: !!effectiveSocietyId,
+    enabled: !!effectiveSocietyId && hasManagePermission,
   })
 
   const createMutation = useMutation({
     mutationFn: (data) => maintenanceBillApi.create(data, user.id),
     onSuccess: () => {
       queryClient.invalidateQueries(['maintenanceBills'])
-      setShowModal(false)
-      setBillMonth('')
+      resetCreateModalState()
+      toast.success('Maintenance bill created successfully')
+    },
+    onError: (error) => {
+      toast.error(error?.response?.data?.message || 'Failed to create maintenance bill')
     },
   })
 
@@ -131,6 +166,10 @@ export default function MaintenanceBills() {
       queryClient.invalidateQueries(['maintenanceBills'])
       setShowPaymentModal(false)
       setSelectedBill(null)
+      toast.success('Payment recorded successfully')
+    },
+    onError: (error) => {
+      toast.error(error?.response?.data?.message || 'Failed to record payment')
     },
   })
 
@@ -143,13 +182,62 @@ export default function MaintenanceBills() {
     })
   }, [bills, searchTerm, filterStatus])
 
+  const lineItemsTotal = useMemo(() => {
+    return lineItems.reduce((sum, item) => sum + (toNumber(item.rate) * toNumber(item.quantity, 1)), 0)
+  }, [lineItems])
+
+  const updateLineItem = (index, key, value) => {
+    setLineItems(prev => prev.map((item, itemIndex) => (
+      itemIndex === index ? { ...item, [key]: value } : item
+    )))
+  }
+
+  const addLineItem = () => {
+    setLineItems(prev => [...prev, defaultLineItem()])
+  }
+
+  const removeLineItem = (index) => {
+    setLineItems(prev => {
+      if (prev.length <= 1) return prev
+      return prev.filter((_, itemIndex) => itemIndex !== index)
+    })
+  }
+
   const handleSubmit = (e) => {
     e.preventDefault()
     const formData = new FormData(e.target)
+    let amount = toNumber(formData.get('amount'))
+    let payloadLineItems = null
+
+    if (useItemizedMode) {
+      payloadLineItems = lineItems
+        .map(item => ({
+          chargeType: item.chargeType,
+          description: item.description?.trim() || item.chargeType,
+          rate: toNumber(item.rate),
+          quantity: toNumber(item.quantity, 1),
+          isTaxable: item.isTaxable,
+        }))
+        .filter(item => item.rate > 0 && item.quantity > 0)
+
+      if (payloadLineItems.length === 0) {
+        toast.error('Add at least one valid line item')
+        return
+      }
+
+      amount = payloadLineItems.reduce((sum, item) => sum + (item.rate * item.quantity), 0)
+    }
+
+    if (amount <= 0) {
+      toast.error('Amount must be greater than 0')
+      return
+    }
+
     const data = {
       flatId: parseInt(formData.get('flatId')),
       billMonth: formData.get('billMonth'),
-      amount: parseFloat(formData.get('amount')),
+      amount,
+      ...(payloadLineItems ? { lineItems: payloadLineItems } : {}),
       dueDate: formData.get('dueDate'),
     }
     createMutation.mutate(data)
@@ -161,7 +249,7 @@ export default function MaintenanceBills() {
     bulkGenerateMutation.mutate({
       societyId: effectiveSocietyId,
       billMonth: formData.get('billMonth'),
-      amount: parseFloat(formData.get('amount')),
+      amount: toNumber(formData.get('amount')),
       propertyType: bulkPropertyType !== 'ALL' ? bulkPropertyType : null,
     })
   }
@@ -205,6 +293,10 @@ export default function MaintenanceBills() {
   }
 
   const showSkeleton = useMinLoadingTime(isLoading || isError)
+
+  if (!hasManagePermission) {
+    return <PermissionDenied message="You don't have permission to manage maintenance bills" />
+  }
 
   if (showSkeleton) {
     return (
@@ -259,7 +351,7 @@ export default function MaintenanceBills() {
         </div>
         <div className="maintenance-summary-card">
           <p className="maintenance-summary-label">Total Amount</p>
-          <p className="maintenance-summary-value">₹{bills.reduce((sum, b) => sum + (b.amount || 0), 0).toLocaleString()}</p>
+          <p className="maintenance-summary-value">₹{bills.reduce((sum, b) => sum + getBillTotal(b), 0).toLocaleString()}</p>
         </div>
       </div>
 
@@ -295,6 +387,7 @@ export default function MaintenanceBills() {
             <table className="maintenance-table">
               <thead className="maintenance-thead">
                 <tr>
+                  <th className="maintenance-th" style={{ width: '40px' }}></th>
                   <th className="maintenance-th">Flat</th>
                   <th className="maintenance-th">Month</th>
                   <th className="maintenance-th">Amount</th>
@@ -305,48 +398,104 @@ export default function MaintenanceBills() {
               </thead>
               <tbody className="maintenance-tbody">
                 {filteredBills.map((bill) => (
-                  <tr key={bill.id} className="maintenance-row">
-                    <td className="maintenance-cell">
-                      <div className="maintenance-unit">
-                        <div className="maintenance-unit-icon">
-                          <CreditCard className="maintenance-unit-icon-svg" />
-                        </div>
-                        <div className="maintenance-unit-meta">
-                          <span className="maintenance-unit-number">{bill.flatNumber}</span>
-                          <p className="maintenance-unit-owner">{bill.ownerName || '-'}</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="maintenance-cell maintenance-cell--muted">{bill.billMonth}</td>
-                    <td className="maintenance-cell maintenance-cell--strong">₹{bill.amount?.toLocaleString()}</td>
-                    <td className="maintenance-cell maintenance-cell--muted">₹{bill.paidAmount?.toLocaleString() || 0}</td>
-                    <td className="maintenance-cell">
-                      <span className={clsx(statusClasses[bill.status] || statusClasses.PENDING)}>
-                        {bill.status}
-                      </span>
-                    </td>
-                    <td className="maintenance-cell maintenance-cell--right">
-                      {bill.status !== 'PAID' && (
-                        <div className="maintenance-actions">
+                  <Fragment key={bill.id}>
+                    <tr className={clsx("maintenance-row", expandedBillId === bill.id && "maintenance-row--expanded")}>
+                      <td className="maintenance-cell">
+                        {bill.lineItems?.length > 0 && (
                           <button
-                            onClick={() => handleOnlinePayment(bill)}
-                            disabled={isPaymentLoading}
-                            className="maintenance-pay-online-button"
-                            title="Pay Online via Razorpay"
+                            onClick={() => setExpandedBillId(expandedBillId === bill.id ? null : bill.id)}
+                            className={clsx("maintenance-expand-button", expandedBillId === bill.id && "maintenance-expand-button--active")}
                           >
-                            <Wallet size={16} />
-                            Pay Online
+                            <ChevronRight size={18} />
                           </button>
-                          <button
-                            onClick={() => { setSelectedBill(bill); setShowPaymentModal(true) }}
-                            className="maintenance-pay-button"
-                          >
-                            Record Payment
-                          </button>
+                        )}
+                      </td>
+                      <td className="maintenance-cell">
+                        <div className="maintenance-unit">
+                          <div className="maintenance-unit-icon">
+                            <CreditCard className="maintenance-unit-icon-svg" />
+                          </div>
+                          <div className="maintenance-unit-meta">
+                            <span className="maintenance-unit-number">{bill.flatNumber}</span>
+                            <p className="maintenance-unit-owner">{bill.ownerName || '-'}</p>
+                          </div>
                         </div>
-                      )}
-                    </td>
-                  </tr>
+                      </td>
+                      <td className="maintenance-cell maintenance-cell--muted">{bill.billMonth}</td>
+                      <td className="maintenance-cell maintenance-cell--strong">₹{getBillTotal(bill).toLocaleString()}</td>
+                      <td className="maintenance-cell maintenance-cell--muted">₹{getBillPaid(bill).toLocaleString()}</td>
+                      <td className="maintenance-cell">
+                        <span className={clsx(statusClasses[bill.status] || statusClasses.PENDING)}>
+                          {bill.status}
+                        </span>
+                      </td>
+                      <td className="maintenance-cell maintenance-cell--right">
+                        {bill.status !== 'PAID' && (
+                          <div className="maintenance-actions">
+                            <button
+                              onClick={() => handleOnlinePayment(bill)}
+                              disabled={isPaymentLoading}
+                              className="maintenance-pay-online-button"
+                              title="Pay Online via Razorpay"
+                            >
+                              <Wallet size={16} />
+                              Pay Online
+                            </button>
+                            <button
+                              onClick={() => { setSelectedBill(bill); setShowPaymentModal(true) }}
+                              className="maintenance-pay-button"
+                            >
+                              Record Payment
+                            </button>
+                          </div>
+                        )}
+                      </td>
+                    </tr>
+                    {expandedBillId === bill.id && bill.lineItems?.length > 0 && (
+                      <tr className="maintenance-expanded-content">
+                        <td colSpan={7}>
+                          <div className="maintenance-details-wrapper">
+                            <div className="maintenance-details-title">
+                              <Info size={14} />
+                              <span>Bill Breakdown</span>
+                            </div>
+                            <table className="maintenance-item-details-table">
+                              <thead>
+                                <tr>
+                                  <th className="maintenance-item-details-th">Type</th>
+                                  <th className="maintenance-item-details-th">Description</th>
+                                  <th className="maintenance-item-details-th">Rate</th>
+                                  <th className="maintenance-item-details-th">Qty</th>
+                                  <th className="maintenance-item-details-th" style={{ textAlign: 'right' }}>Total</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {bill.lineItems.map((item, idx) => (
+                                  <tr key={idx} className="maintenance-item-details-tr">
+                                    <td className="maintenance-item-details-td">
+                                      <span className="maintenance-item-type-tag">{item.chargeType}</span>
+                                    </td>
+                                    <td className="maintenance-item-details-td">{item.description}</td>
+                                    <td className="maintenance-item-details-td">₹{toNumber(item.rate).toLocaleString()}</td>
+                                    <td className="maintenance-item-details-td">{item.quantity}</td>
+                                    <td className="maintenance-item-details-td" style={{ textAlign: 'right', fontWeight: '600' }}>
+                                      ₹{(toNumber(item.rate) * toNumber(item.quantity, 1)).toLocaleString()}
+                                    </td>
+                                  </tr>
+                                ))}
+                                <tr className="maintenance-item-details-tr">
+                                  <td colSpan={4} className="maintenance-item-details-td" style={{ textAlign: 'right', fontWeight: '700' }}>Grand Total:</td>
+                                  <td className="maintenance-item-details-td" style={{ textAlign: 'right', fontWeight: '700', color: 'var(--text-primary)' }}>
+                                    ₹{getBillTotal(bill).toLocaleString()}
+                                  </td>
+                                </tr>
+                              </tbody>
+                            </table>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </Fragment>
                 ))}
               </tbody>
             </table>
@@ -391,17 +540,101 @@ export default function MaintenanceBills() {
                     className="maintenance-input"
                   />
                 </div>
+              </div>
+              <div className="maintenance-itemized-toggle-row">
+                <label className="maintenance-itemized-toggle-label">
+                  <input
+                    type="checkbox"
+                    checked={useItemizedMode}
+                    onChange={(e) => setUseItemizedMode(e.target.checked)}
+                  />
+                  <span>Use itemized bill</span>
+                </label>
+                {useItemizedMode && (
+                  <p className="maintenance-itemized-total">Subtotal: ₹{lineItemsTotal.toLocaleString()}</p>
+                )}
+              </div>
+              {useItemizedMode ? (
+                <div className="maintenance-line-items">
+                  {lineItems.map((item, index) => (
+                    <div key={`item-${index}`} className="maintenance-line-item-row">
+                      <select
+                        value={item.chargeType}
+                        onChange={(e) => updateLineItem(index, 'chargeType', e.target.value)}
+                        className="maintenance-input"
+                      >
+                        <option value="MAINTENANCE">Maintenance</option>
+                        <option value="SINKING_FUND">Sinking Fund</option>
+                        <option value="SERVICE_CHARGE">Service Charge</option>
+                        <option value="PARKING">Parking</option>
+                        <option value="WATER">Water</option>
+                        <option value="ELECTRICITY">Electricity</option>
+                        <option value="OTHER">Other</option>
+                      </select>
+                      <input
+                        type="text"
+                        placeholder="Description"
+                        value={item.description}
+                        onChange={(e) => updateLineItem(index, 'description', e.target.value)}
+                        className="maintenance-input"
+                      />
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        placeholder="Rate"
+                        value={item.rate}
+                        onChange={(e) => updateLineItem(index, 'rate', e.target.value)}
+                        className="maintenance-input"
+                      />
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        placeholder="Qty"
+                        value={item.quantity}
+                        onChange={(e) => updateLineItem(index, 'quantity', e.target.value)}
+                        className="maintenance-input"
+                      />
+                      <label className="maintenance-line-item-taxable">
+                        <input
+                          type="checkbox"
+                          checked={item.isTaxable}
+                          onChange={(e) => updateLineItem(index, 'isTaxable', e.target.checked)}
+                        />
+                        Taxable
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => removeLineItem(index)}
+                        className="maintenance-line-item-remove"
+                        disabled={lineItems.length <= 1}
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={addLineItem}
+                    className="maintenance-line-item-add"
+                  >
+                    + Add Line Item
+                  </button>
+                </div>
+              ) : (
                 <div className="maintenance-field">
                   <label className="maintenance-label">Amount</label>
                   <input
                     type="number"
                     name="amount"
                     step="0.01"
-                    required
+                    min="0"
+                    required={!useItemizedMode}
                     className="maintenance-input"
                   />
                 </div>
-              </div>
+              )}
               <div className="maintenance-field">
                 <label className="maintenance-label">Due Date</label>
                 <input
@@ -455,16 +688,20 @@ export default function MaintenanceBills() {
                   />
                 </div>
                 <div className="maintenance-field">
-                  <label className="maintenance-label">Amount per Unit</label>
+                  <label className="maintenance-label">Amount per Unit (fallback)</label>
                   <input
                     type="number"
                     name="amount"
                     step="0.01"
-                    required
+                    min="0"
+                    defaultValue="0"
                     className="maintenance-input"
                   />
                 </div>
               </div>
+              <p className="maintenance-bulk-help-text">
+                Used only when society line-item settings are not configured.
+              </p>
               
               {/* Property Type Filter */}
               <div className="maintenance-field">
@@ -542,8 +779,8 @@ export default function MaintenanceBills() {
               <div className="maintenance-payment-summary">
                 <p className="maintenance-payment-row">Flat: <span className="maintenance-payment-strong">{selectedBill.flatNumber}</span></p>
                 <p className="maintenance-payment-row">Month: <span className="maintenance-payment-strong">{selectedBill.billMonth}</span></p>
-                <p className="maintenance-payment-row">Total: <span className="maintenance-payment-strong">₹{selectedBill.amount?.toLocaleString()}</span></p>
-                <p className="maintenance-payment-row">Balance: <span className="maintenance-payment-balance">₹{(selectedBill.amount - (selectedBill.paidAmount || 0)).toLocaleString()}</span></p>
+                <p className="maintenance-payment-row">Total: <span className="maintenance-payment-strong">₹{getBillTotal(selectedBill).toLocaleString()}</span></p>
+                <p className="maintenance-payment-row">Balance: <span className="maintenance-payment-balance">₹{getBillBalance(selectedBill).toLocaleString()}</span></p>
               </div>
               <div className="maintenance-field">
                 <label className="maintenance-label">Amount</label>
@@ -551,7 +788,7 @@ export default function MaintenanceBills() {
                   type="number"
                   name="amount"
                   step="0.01"
-                  max={selectedBill.amount - (selectedBill.paidAmount || 0)}
+                  max={getBillBalance(selectedBill)}
                   required
                   className="maintenance-input"
                 />

@@ -55,13 +55,6 @@ export default function SocietyDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
 
-  const getOrganizationLabel = (item) => (
-    item?.organizationName
-    || item?.organization?.name
-    || item?.organization
-    || null
-  )
-
   // Fetch society details
   const { data: society, isLoading: societyLoading, isError: societyError } = useQuery({
     queryKey: ['society', id],
@@ -215,8 +208,6 @@ export default function SocietyDetail() {
     )
   }
 
-  const organizationLabel = getOrganizationLabel(society)
-
   return (
     <div className="animate-fadeIn">
       {/* Header Section */}
@@ -259,14 +250,6 @@ export default function SocietyDetail() {
                 <FileText size={16} />
               </div>
               <span>Reg: {society.registrationNumber || 'N/A'}</span>
-            </div>
-            <div className="society-meta-item">
-              <div className="society-meta-icon">
-                <Building2 size={16} />
-              </div>
-              <span className={`society-org-badge ${organizationLabel ? 'society-org-badge--linked' : 'society-org-badge--unassigned'}`}>
-                {organizationLabel || 'Unassigned'}
-              </span>
             </div>
           </div>
         </div>

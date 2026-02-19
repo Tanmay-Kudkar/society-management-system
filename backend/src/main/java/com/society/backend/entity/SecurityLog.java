@@ -15,9 +15,6 @@ public class SecurityLog {
     @Column(name = "society_id")
     private Long societyId;
 
-    @Transient
-    private Long organizationId;
-
     @Column(nullable = false)
     private String event;
 

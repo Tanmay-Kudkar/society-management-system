@@ -32,8 +32,4 @@ public class UserRequest {
     private Long societyId; // Required when MASTER_ADMIN creates SOCIETY_ADMIN
 
     private Long flatId; // Required for MEMBER, TENANT, CHAIRMAN, SECRETARY, TREASURER, COMMITTEE roles
-
-    private Long organizationId; // Optional: assign to existing organization (for SOCIETY_ADMIN)
-
-    private String organizationName; // Optional: create new organization with this name (for SOCIETY_ADMIN)
 }

@@ -40,7 +40,7 @@ public class RoleService {
         if (auth == null || auth.getName() == null) {
             return null;
         }
-        return userRepository.findByEmailWithSocietyAndOrganization(auth.getName()).orElse(null);
+        return userRepository.findByEmailWithSociety(auth.getName()).orElse(null);
     }
 
     /**

@@ -67,7 +67,6 @@ public class SafetyServiceImpl implements SafetyService {
         alert.setDescription(request.getDescription());
         alert.setRaisedBy(user);
         alert.setSociety(society);
-        alert.setOrganization(society.getOrganization());
         alert.setPriority(request.getPriority() != null ? request.getPriority() : "HIGH");
 
         if (request.getFlatId() != null) {
@@ -177,7 +176,6 @@ public class SafetyServiceImpl implements SafetyService {
         log.setPersonPhone(request.getPersonPhone());
         log.setVehicleNumber(request.getVehicleNumber());
         log.setSociety(society);
-        log.setOrganization(society.getOrganization());
         log.setEntryTime(request.getEntryTime() != null ? request.getEntryTime() : LocalDateTime.now());
         log.setExitTime(request.getExitTime());
         log.setEntryGate(request.getEntryGate());

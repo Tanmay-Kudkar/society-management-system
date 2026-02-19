@@ -54,7 +54,7 @@ public class UserController {
     /**
      * Get all users visible to the current user.
      * - MASTER_ADMIN sees all users
-     * - SOCIETY_ADMIN sees users in their organization's societies
+     * - SOCIETY_ADMIN sees users in their society
      * - Others see only users in their society
      */
     @GetMapping

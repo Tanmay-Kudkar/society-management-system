@@ -37,7 +37,6 @@ public class NoticeServiceImpl implements NoticeService {
 
         Notice notice = new Notice();
         notice.setSociety(society);
-        notice.setOrganization(society.getOrganization());
         notice.setTitle(request.getTitle());
         notice.setContent(request.getContent());
         notice.setPriority(request.getPriority() != null ? request.getPriority() : "MEDIUM");
@@ -91,7 +90,6 @@ public class NoticeServiceImpl implements NoticeService {
                     .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Society not found"));
             roleService.enforceSocietyScope(roleService.getCurrentUser(), society.getId());
             notice.setSociety(society);
-            notice.setOrganization(society.getOrganization());
         }
 
         notice.setTitle(request.getTitle());

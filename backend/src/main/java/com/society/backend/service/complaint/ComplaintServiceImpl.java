@@ -49,14 +49,8 @@ public class ComplaintServiceImpl implements ComplaintService {
                     .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Society not found"));
             roleService.enforceSocietyScope(user, society.getId());
             complaint.setSociety(society);
-            complaint.setOrganization(society.getOrganization());
         } else if (user.getSociety() != null) {
             complaint.setSociety(user.getSociety());
-            complaint.setOrganization(user.getSociety().getOrganization());
-        }
-
-        if (complaint.getOrganization() == null && user.getSociety() != null && user.getSociety().getOrganization() != null) {
-            complaint.setOrganization(user.getSociety().getOrganization());
         }
 
         Complaint saved = complaintRepository.save(complaint);

@@ -4,7 +4,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context'
 import { useToast } from '../../context'
 import { useConfirmDialog } from '../../context'
-import { flatApi, societyApi, wingApi, userApi, organizationApi } from '../../../../api'
+import { flatApi, societyApi, wingApi, userApi } from '../../../../api'
 import { 
   Plus, Edit, Trash2, Search, X, Home, Store, Briefcase, Layers, 
   Users, UserPlus, UserCheck, UserX, Upload, Download, AlertCircle,
@@ -40,8 +40,6 @@ const roleColors = {
   TENANT: 'units-role-tag',
   default: 'units-role-tag',
 }
-
-const UNLINKED_ORGANIZATION_FILTER = '__UNLINKED__'
 
 export default function UnitManagement() {
   const { user, isCommitteeLevel, canManageDocuments } = useAuth()
@@ -86,7 +84,6 @@ export default function UnitManagement() {
   const [editingStandaloneUser, setEditingStandaloneUser] = useState(null)
   const [userSearchTerm, setUserSearchTerm] = useState('')
   const [filterRole, setFilterRole] = useState('')
-  const [filterOrganization, setFilterOrganization] = useState('')
   const [filterSociety, setFilterSociety] = useState(societyIdFromUrl || '')
   const [userError, setUserError] = useState('')
   const [deleteError, setDeleteError] = useState('')
@@ -162,12 +159,6 @@ export default function UnitManagement() {
     enabled: isPlatformLevel,
   })
 
-  const { data: organizations = [] } = useQuery({
-    queryKey: ['organizations'],
-    queryFn: () => organizationApi.getAll().then(res => res.data),
-    enabled: isPlatformLevel,
-  })
-
   // Fetch current society details for capacity limits
   const { data: currentSociety } = useQuery({
     queryKey: ['society', effectiveSocietyId],
@@ -189,35 +180,12 @@ export default function UnitManagement() {
 
     if (filterSociety) {
       usersInScope = usersInScope.filter(u => String(u.societyId || '') === filterSociety)
-    } else if (isPlatformLevel && filterOrganization) {
-      if (filterOrganization === UNLINKED_ORGANIZATION_FILTER) {
-        const unlinkedSocietyIds = new Set(
-          societies
-            .filter(s => !s.organizationId)
-            .map(s => String(s.id))
-        )
-
-        usersInScope = usersInScope.filter(u =>
-          unlinkedSocietyIds.has(String(u.societyId || ''))
-        )
-      } else {
-      const orgSocietyIds = new Set(
-        societies
-          .filter(s => String(s.organizationId || '') === filterOrganization)
-          .map(s => String(s.id))
-      )
-
-      usersInScope = usersInScope.filter(u =>
-        String(u.organizationId || '') === filterOrganization ||
-        orgSocietyIds.has(String(u.societyId || ''))
-      )
-      }
     } else if (!isPlatformLevel && currentUserSocietyId) {
       usersInScope = usersInScope.filter(u => String(u.societyId || '') === currentUserSocietyId)
     }
 
     return usersInScope
-  }, [users, filterSociety, isPlatformLevel, filterOrganization, societies, currentUserSocietyId])
+  }, [users, filterSociety, isPlatformLevel, currentUserSocietyId])
 
   // Filter members for linking to units
   const memberUsers = useMemo(() => {
@@ -443,34 +411,9 @@ export default function UnitManagement() {
     })
   }, [scopedUsers, userSearchTerm, filterRole])
 
-  const organizationOptions = useMemo(() => {
-    if (organizations.length) {
-      return organizations.map(org => ({
-        id: String(org.id),
-        name: org.name,
-      }))
-    }
-
-    const seen = new Set()
-    return societies
-      .filter(s => s.organizationId && !seen.has(s.organizationId) && seen.add(s.organizationId))
-      .map(s => ({
-        id: String(s.organizationId),
-        name: s.organizationName || `Organization ${s.organizationId}`,
-      }))
-  }, [organizations, societies])
-
-  const hasUnlinkedSocieties = useMemo(() => {
-    return societies.some(s => !s.organizationId)
-  }, [societies])
-
   const societyOptions = useMemo(() => {
-    if (filterOrganization === UNLINKED_ORGANIZATION_FILTER) {
-      return societies.filter(s => !s.organizationId)
-    }
-    if (!filterOrganization) return societies
-    return societies.filter(s => String(s.organizationId || '') === filterOrganization)
-  }, [societies, filterOrganization])
+    return societies
+  }, [societies])
 
   const roleFilterOptions = useMemo(() => {
     const roles = new Set(scopedUsers.map(u => u.role).filter(Boolean))
@@ -498,7 +441,6 @@ export default function UnitManagement() {
       phone: formData.get('phone'),
       societyId: formData.get('societyId') ? parseInt(formData.get('societyId')) : (user?.societyId || null),
       flatId: formData.get('flatId') ? parseInt(formData.get('flatId')) : null,
-      organizationName: formData.get('organizationName') || null,
     }
 
     // Frontend validation
@@ -1265,25 +1207,6 @@ export default function UnitManagement() {
                 className="units-search-input"
               />
             </div>
-
-            {user?.role === 'MASTER_ADMIN' && (
-              <select
-                value={filterOrganization}
-                onChange={(e) => {
-                  setFilterOrganization(e.target.value)
-                  setFilterSociety('')
-                }}
-                className="units-filter-select"
-              >
-                <option value="">All Organizations</option>
-                {organizationOptions.map(org => (
-                  <option key={org.id} value={org.id}>{org.name}</option>
-                ))}
-                {hasUnlinkedSocieties && (
-                  <option value={UNLINKED_ORGANIZATION_FILTER}>Unlinked Societies</option>
-                )}
-              </select>
-            )}
 
             {isPlatformLevel && (
               <select

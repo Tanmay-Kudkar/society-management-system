@@ -90,7 +90,6 @@ public class WingServiceImpl implements WingService {
 
         Wing wing = new Wing();
         wing.setSociety(society);
-        wing.setOrganization(society.getOrganization());
         wing.setName(request.getName());
         wing.setDescription(request.getDescription());
         wing.setTotalFloors(request.getTotalFloors());
@@ -126,7 +125,6 @@ public class WingServiceImpl implements WingService {
         }
 
         wing.setSociety(society);
-        wing.setOrganization(society.getOrganization());
 
         wing.setName(request.getName());
         wing.setDescription(request.getDescription());

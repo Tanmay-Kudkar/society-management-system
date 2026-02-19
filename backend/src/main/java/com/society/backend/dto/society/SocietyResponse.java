@@ -34,8 +34,4 @@ public class SocietyResponse {
     private Long occupiedFlats;
     private Long occupiedShops;
     private Long occupiedOffices;
-
-    // Organization info
-    private Long organizationId;
-    private String organizationName;
 }

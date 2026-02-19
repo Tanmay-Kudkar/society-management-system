@@ -24,9 +24,6 @@ public class NotificationPreference {
     @JoinColumn(name = "society_id")
     private Society society;
 
-    @Transient
-    private Organization organization;
-
     @Column(name = "email_tickets", nullable = false)
     private Boolean emailTickets = true;
 

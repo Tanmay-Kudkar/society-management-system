@@ -62,7 +62,6 @@ export const AuthProvider = ({ children }) => {
               prevUser.email === userData.email &&
               prevUser.role === userData.role &&
               prevUser.accountType === userData.accountType &&
-              prevUser.organizationId === userData.organizationId &&
               prevUser.societyId === userData.societyId &&
               prevUser.flatId === userData.flatId
 
@@ -83,9 +82,9 @@ export const AuthProvider = ({ children }) => {
   const login = useCallback(async (email, password, { portalType, rememberMe } = {}) => {
     try {
       const response = await authApi.login({ email, password, portalType, rememberMe })
-      const { token, id, name, email: userEmail, role, accountType, organizationId, societyId, flatId } = response.data
+      const { token, id, name, email: userEmail, role, accountType, societyId, flatId } = response.data
       
-      const userData = { id, name, email: userEmail, role, accountType, organizationId, societyId, flatId }
+      const userData = { id, name, email: userEmail, role, accountType, societyId, flatId }
       
       localStorage.setItem('token', token)
       localStorage.setItem('user', JSON.stringify(userData))
@@ -115,7 +114,7 @@ export const AuthProvider = ({ children }) => {
 
   const isPlatformOwner = useCallback(() => hasRole('MASTER_ADMIN'), [hasRole])
   const isMasterAdmin = useCallback(() => hasRole('MASTER_ADMIN'), [hasRole])
-  const isOrganizationOwner = useCallback(() => false, []) // Deprecated: kept for backward compat
+  const isOrganizationOwner = useCallback(() => false, []) // Deprecated: removed
   const isSocietyAdmin = useCallback(() => hasRole('SOCIETY_ADMIN'), [hasRole])
   const isChairman = useCallback(() => hasRole('CHAIRMAN'), [hasRole])
   const isSecretary = useCallback(() => hasRole('SECRETARY'), [hasRole])

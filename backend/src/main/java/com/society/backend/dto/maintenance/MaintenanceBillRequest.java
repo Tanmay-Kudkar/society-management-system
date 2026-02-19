@@ -2,12 +2,12 @@ package com.society.backend.dto.maintenance;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 
 @Getter
 @Setter
@@ -18,12 +18,14 @@ public class MaintenanceBillRequest {
     @NotBlank(message = "Bill month is required")
     private String billMonth; // Format: YYYY-MM
 
-    @NotNull(message = "Amount is required")
-    @Positive(message = "Amount must be positive")
+    // Optional in itemized mode (calculated from line items)
     private BigDecimal amount;
+
+    private List<BillLineItemRequest> lineItems;
 
     private LocalDate dueDate;
     private BigDecimal paidAmount;
     private String paymentMode;
     private String referenceNumber;
 }
+

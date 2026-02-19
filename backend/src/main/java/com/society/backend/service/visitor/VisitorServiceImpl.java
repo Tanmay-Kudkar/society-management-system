@@ -59,7 +59,6 @@ public class VisitorServiceImpl implements VisitorService {
         visitor.setVisitorType(request.getVisitorType());
         visitor.setPurpose(request.getPurpose());
         visitor.setSociety(society);
-        visitor.setOrganization(society.getOrganization());
         visitor.setVehicleNumber(request.getVehicleNumber());
         visitor.setExpectedArrival(request.getExpectedArrival());
         visitor.setNotes(request.getNotes());

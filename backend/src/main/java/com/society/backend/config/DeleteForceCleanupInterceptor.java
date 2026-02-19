@@ -32,7 +32,7 @@ public class DeleteForceCleanupInterceptor implements HandlerInterceptor {
         }
 
         switch (parsed.resource) {
-            case "users", "organizations", "societies" -> {
+            case "users", "societies" -> {
                 return true;
             }
             case "flats" -> referenceCleanupService.clearReferences("flat_id", parsed.id, true, Set.of("flats"));

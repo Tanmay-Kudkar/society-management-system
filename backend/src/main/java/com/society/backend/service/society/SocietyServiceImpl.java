@@ -74,12 +74,6 @@ public class SocietyServiceImpl implements SocietyService {
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public List<SocietyResponse> getByOrganizationId(Long organizationId) {
-        return List.of();
-    }
-
-    @Override
     public SocietyResponse update(Long id, SocietyRequest request) {
         var currentUser = roleService.getCurrentUser();
         if (currentUser != null) {

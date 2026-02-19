@@ -26,9 +26,6 @@ public class Tenant {
     @JoinColumn(name = "society_id")
     private Society society;
 
-    @Transient
-    private Organization organization;
-
     @Column(nullable = false)
     private String name;
 

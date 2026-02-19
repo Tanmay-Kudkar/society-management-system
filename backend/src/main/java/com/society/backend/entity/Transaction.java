@@ -24,9 +24,6 @@ public class Transaction {
     @JoinColumn(name = "society_id", nullable = false)
     private Society society;
 
-    @Transient
-    private Organization organization;
-
     @Column(name = "transaction_type", nullable = false)
     private String transactionType; // INCOME, EXPENSE
 
