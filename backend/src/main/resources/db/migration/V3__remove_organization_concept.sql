@@ -16,6 +16,11 @@ UPDATE users
 SET account_type = 'SOCIETY_ADMIN'
 WHERE account_type = 'ORGANIZATION_OWNER';
 
+-- Normalize any remaining account_type values so the new constraint passes
+UPDATE users
+SET account_type = 'SOCIETY_ADMIN'
+WHERE account_type IS NOT NULL AND account_type != 'SOCIETY_ADMIN';
+
 -- Recreate constraints without organization role concepts
 ALTER TABLE users
     ADD CONSTRAINT users_role_check
