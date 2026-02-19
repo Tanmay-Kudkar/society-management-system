@@ -515,8 +515,15 @@
 }
 
 @keyframes loginDropIn {
-  from { opacity: 0; transform: translateY(-4px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .login-dropdown-item {
@@ -625,14 +632,16 @@
 .login-spinner {
   width: 18px;
   height: 18px;
-  border: 2px solid rgba(255,255,255,0.3);
+  border: 2px solid rgba(255, 255, 255, 0.3);
   border-top-color: white;
   border-radius: 50%;
   animation: loginSpin 0.6s linear infinite;
 }
 
 @keyframes loginSpin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* Footer */
@@ -665,6 +674,7 @@
     opacity: 0;
     transform: translateY(8px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -718,7 +728,7 @@
   .login-page {
     padding: 1rem;
   }
-  
+
   .login-main {
     padding: 1.5rem;
   }
@@ -734,4 +744,3 @@
   outline: 2px solid color-mix(in srgb, var(--accent-primary) 60%, white 40%);
   outline-offset: 2px;
 }
-

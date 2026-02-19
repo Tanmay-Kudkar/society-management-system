@@ -468,37 +468,129 @@
   white-space: nowrap;
 }
 
-.society-user-avatar--blue { background: linear-gradient(135deg, #3b82f6, #4f46e5); }
-.society-user-avatar--emerald { background: linear-gradient(135deg, #10b981, #14b8a6); }
-.society-user-avatar--purple { background: linear-gradient(135deg, #8b5cf6, #ec4899); }
-.society-user-avatar--orange { background: linear-gradient(135deg, #f59e0b, #ef4444); }
-.society-user-avatar--cyan { background: linear-gradient(135deg, #06b6d4, #3b82f6); }
+.society-user-avatar--blue {
+  background: linear-gradient(135deg, #3b82f6, #4f46e5);
+}
 
-.society-role-color--platform-owner { background: rgba(139, 92, 246, 0.18); color: #c4b5fd; }
-.society-role-color--society-admin { background: rgba(59, 130, 246, 0.18); color: #93c5fd; }
-.society-role-color--chairman { background: rgba(99, 102, 241, 0.18); color: #a5b4fc; }
-.society-role-color--secretary { background: rgba(6, 182, 212, 0.18); color: #67e8f9; }
-.society-role-color--treasurer { background: rgba(34, 197, 94, 0.18); color: #86efac; }
-.society-role-color--committee { background: rgba(245, 158, 11, 0.18); color: #fcd34d; }
-.society-role-color--employee { background: rgba(249, 115, 22, 0.18); color: #fdba74; }
-.society-role-color--member { background: rgba(148, 163, 184, 0.2); color: #cbd5e1; }
-.society-role-color--tenant { background: rgba(236, 72, 153, 0.18); color: #f9a8d4; }
-.society-role-color--visitor { background: rgba(239, 68, 68, 0.18); color: #fca5a5; }
+.society-user-avatar--emerald {
+  background: linear-gradient(135deg, #10b981, #14b8a6);
+}
+
+.society-user-avatar--purple {
+  background: linear-gradient(135deg, #8b5cf6, #ec4899);
+}
+
+.society-user-avatar--orange {
+  background: linear-gradient(135deg, #f59e0b, #ef4444);
+}
+
+.society-user-avatar--cyan {
+  background: linear-gradient(135deg, #06b6d4, #3b82f6);
+}
+
+.society-role-color--platform-owner {
+  background: rgba(139, 92, 246, 0.18);
+  color: #c4b5fd;
+}
+
+.society-role-color--society-admin {
+  background: rgba(59, 130, 246, 0.18);
+  color: #93c5fd;
+}
+
+.society-role-color--chairman {
+  background: rgba(99, 102, 241, 0.18);
+  color: #a5b4fc;
+}
+
+.society-role-color--secretary {
+  background: rgba(6, 182, 212, 0.18);
+  color: #67e8f9;
+}
+
+.society-role-color--treasurer {
+  background: rgba(34, 197, 94, 0.18);
+  color: #86efac;
+}
+
+.society-role-color--committee {
+  background: rgba(245, 158, 11, 0.18);
+  color: #fcd34d;
+}
+
+.society-role-color--employee {
+  background: rgba(249, 115, 22, 0.18);
+  color: #fdba74;
+}
+
+.society-role-color--member {
+  background: rgba(148, 163, 184, 0.2);
+  color: #cbd5e1;
+}
+
+.society-role-color--tenant {
+  background: rgba(236, 72, 153, 0.18);
+  color: #f9a8d4;
+}
+
+.society-role-color--visitor {
+  background: rgba(239, 68, 68, 0.18);
+  color: #fca5a5;
+}
 
 .light .society-user-role {
   font-weight: 700;
 }
 
-.light .society-role-color--platform-owner { background: rgba(139, 92, 246, 0.2); color: #5b21b6; }
-.light .society-role-color--society-admin { background: rgba(59, 130, 246, 0.2); color: #1d4ed8; }
-.light .society-role-color--chairman { background: rgba(99, 102, 241, 0.2); color: #3730a3; }
-.light .society-role-color--secretary { background: rgba(6, 182, 212, 0.2); color: #0f766e; }
-.light .society-role-color--treasurer { background: rgba(34, 197, 94, 0.2); color: #166534; }
-.light .society-role-color--committee { background: rgba(245, 158, 11, 0.2); color: #92400e; }
-.light .society-role-color--employee { background: rgba(249, 115, 22, 0.2); color: #9a3412; }
-.light .society-role-color--member { background: rgba(148, 163, 184, 0.24); color: #334155; }
-.light .society-role-color--tenant { background: rgba(236, 72, 153, 0.2); color: #9d174d; }
-.light .society-role-color--visitor { background: rgba(239, 68, 68, 0.2); color: #991b1b; }
+.light .society-role-color--platform-owner {
+  background: rgba(139, 92, 246, 0.2);
+  color: #5b21b6;
+}
+
+.light .society-role-color--society-admin {
+  background: rgba(59, 130, 246, 0.2);
+  color: #1d4ed8;
+}
+
+.light .society-role-color--chairman {
+  background: rgba(99, 102, 241, 0.2);
+  color: #3730a3;
+}
+
+.light .society-role-color--secretary {
+  background: rgba(6, 182, 212, 0.2);
+  color: #0f766e;
+}
+
+.light .society-role-color--treasurer {
+  background: rgba(34, 197, 94, 0.2);
+  color: #166534;
+}
+
+.light .society-role-color--committee {
+  background: rgba(245, 158, 11, 0.2);
+  color: #92400e;
+}
+
+.light .society-role-color--employee {
+  background: rgba(249, 115, 22, 0.2);
+  color: #9a3412;
+}
+
+.light .society-role-color--member {
+  background: rgba(148, 163, 184, 0.24);
+  color: #334155;
+}
+
+.light .society-role-color--tenant {
+  background: rgba(236, 72, 153, 0.2);
+  color: #9d174d;
+}
+
+.light .society-role-color--visitor {
+  background: rgba(239, 68, 68, 0.2);
+  color: #991b1b;
+}
 
 .society-user-meta {
   display: flex;

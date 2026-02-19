@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '../../context'
 import { visitorApi } from '../../../../api'
-import { Plus, Search, X, UserCheck, UserX, Clock, LogIn, LogOut } from 'lucide-react'
+import { Plus, Search, X, UserX, Clock, LogIn, LogOut, AlertTriangle } from 'lucide-react'
 import clsx from 'clsx'
 import { FormInput, SmartSelect, FormTextarea, AsyncButton } from '../../components'
 import { PermissionDenied } from '../../components'
@@ -26,6 +26,8 @@ export default function Visitors() {
   const [searchTerm, setSearchTerm] = useState('')
   const [filterStatus, setFilterStatus] = useState('')
   const [filterType, setFilterType] = useState('')
+  const [viewMode, setViewMode] = useState('all')
+  const [overstayThreshold, setOverstayThreshold] = useState('4')
 
   const isMember = user?.role && user.role !== 'VISITOR'
   if (!isMember) {
@@ -34,12 +36,23 @@ export default function Visitors() {
 
   const isPlatformLevel = user?.role === 'MASTER_ADMIN'
   const isStaff = ['MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'MANAGER', 'EMPLOYEE'].includes(user?.role)
+  const canGenerateOtp = isMember
   const societyIdFromUrl = searchParams.get('society')
   const effectiveSocietyId = isPlatformLevel && societyIdFromUrl ? societyIdFromUrl : user?.societyId
 
+  const queryFnByMode = () => {
+    if (viewMode === 'today') {
+      return visitorApi.getTodayArrivals(effectiveSocietyId, user.id).then(res => res.data)
+    }
+    if (viewMode === 'overstayed') {
+      return visitorApi.getOverstayed(effectiveSocietyId, user.id, Number(overstayThreshold)).then(res => res.data)
+    }
+    return visitorApi.getBySociety(effectiveSocietyId, user.id).then(res => res.data)
+  }
+
   const { data: visitors = [], isLoading, isError } = useQuery({
-    queryKey: ['visitors', user?.id, effectiveSocietyId],
-    queryFn: () => visitorApi.getBySociety(effectiveSocietyId, user.id).then(res => res.data),
+    queryKey: ['visitors', user?.id, effectiveSocietyId, viewMode, overstayThreshold],
+    queryFn: queryFnByMode,
     enabled: !!user?.id && !!effectiveSocietyId,
   })
 
@@ -60,6 +73,16 @@ export default function Visitors() {
 
   const rejectMutation = useMutation({
     mutationFn: (id) => visitorApi.updateStatus(id, user.id, 'REJECTED'),
+    onSuccess: () => queryClient.invalidateQueries(['visitors']),
+  })
+
+  const generateOtpMutation = useMutation({
+    mutationFn: (id) => visitorApi.generateOtp(id, user.id),
+    onSuccess: () => queryClient.invalidateQueries(['visitors']),
+  })
+
+  const verifyOtpMutation = useMutation({
+    mutationFn: ({ id, otpCode }) => visitorApi.verifyOtp(id, user.id, otpCode),
     onSuccess: () => queryClient.invalidateQueries(['visitors']),
   })
 
@@ -85,6 +108,14 @@ export default function Visitors() {
       societyId: user.societyId,
       isPreApproved: formData.get('isPreApproved') === 'on',
     })
+  }
+
+  const requiresOtp = (visitorType) => ['DELIVERY', 'CAB'].includes(visitorType)
+
+  const handleVerifyOtp = (visitor) => {
+    const otpCode = prompt(`Enter OTP for ${visitor.visitorName}`)
+    if (!otpCode) return
+    verifyOtpMutation.mutate({ id: visitor.id, otpCode })
   }
 
   const showSkeleton = useMinLoadingTime(isLoading || isError)
@@ -130,6 +161,10 @@ export default function Visitors() {
           <p className="visitors-summary-label">Total</p>
           <p className="visitors-summary-value visitors-summary-value--total">{visitors.length}</p>
         </div>
+        <div className="visitors-summary-card">
+          <p className="visitors-summary-label">Overstayed</p>
+          <p className="visitors-summary-value visitors-summary-value--overstayed">{visitors.filter(v => v.status === 'CHECKED_IN' && v.checkInTime && (Date.now() - new Date(v.checkInTime).getTime()) >= (Number(overstayThreshold) * 60 * 60 * 1000)).length}</p>
+        </div>
       </div>
 
       <div className="visitors-filters">
@@ -154,6 +189,45 @@ export default function Visitors() {
             <option value="SERVICE">Service</option>
             <option value="OTHER">Other</option>
           </select>
+
+          <div className="visitors-view-switch" role="group" aria-label="Visitor quick views">
+            <button
+              type="button"
+              className={clsx('visitors-view-btn', viewMode === 'all' && 'visitors-view-btn--active')}
+              onClick={() => setViewMode('all')}
+            >
+              All
+            </button>
+            <button
+              type="button"
+              className={clsx('visitors-view-btn', viewMode === 'today' && 'visitors-view-btn--active')}
+              onClick={() => setViewMode('today')}
+            >
+              Today
+            </button>
+            {isStaff && (
+              <button
+                type="button"
+                className={clsx('visitors-view-btn', viewMode === 'overstayed' && 'visitors-view-btn--active')}
+                onClick={() => setViewMode('overstayed')}
+              >
+                <AlertTriangle size={14} /> Overstayed
+              </button>
+            )}
+          </div>
+
+          {viewMode === 'overstayed' && isStaff && (
+            <select
+              value={overstayThreshold}
+              onChange={(e) => setOverstayThreshold(e.target.value)}
+              className="visitors-select"
+            >
+              <option value="2">2h threshold</option>
+              <option value="4">4h threshold</option>
+              <option value="6">6h threshold</option>
+              <option value="8">8h threshold</option>
+            </select>
+          )}
         </div>
       </div>
 
@@ -193,6 +267,7 @@ export default function Visitors() {
                       )}>{visitor.status?.replace('_', ' ')}</span>
                       <span className="visitors-type-badge">{visitor.visitorType}</span>
                       {visitor.isPreApproved && <span className="visitors-status-badge visitors-status--expected">PRE-APPROVED</span>}
+                      {visitor.otpVerifiedAt && <span className="visitors-status-badge visitors-status--checked_out">OTP VERIFIED</span>}
                     </div>
                     <h3 className="visitors-item-title">{visitor.visitorName}</h3>
                     {visitor.purpose && <p className="visitors-item-description">{visitor.purpose}</p>}
@@ -200,24 +275,44 @@ export default function Visitors() {
                       {visitor.visitorPhone && <span className="visitors-item-footer-text">Phone: {visitor.visitorPhone}</span>}
                       {visitor.flatNumber && <span className="visitors-item-footer-text">Flat: {visitor.flatNumber}</span>}
                       {visitor.vehicleNumber && <span className="visitors-item-footer-text">Vehicle: {visitor.vehicleNumber}</span>}
+                      {visitor.expectedArrival && <span className="visitors-item-footer-text">Expected: {new Date(visitor.expectedArrival).toLocaleString()}</span>}
                       {visitor.approvalCode && <span className="visitors-item-footer-text">Code: {visitor.approvalCode}</span>}
+                      {requiresOtp(visitor.visitorType) && visitor.status === 'EXPECTED' && visitor.otpCode && (
+                        <span className="visitors-item-footer-text visitors-item-footer-text--otp">OTP: {visitor.otpCode} {visitor.otpExpiresAt ? `(valid till ${new Date(visitor.otpExpiresAt).toLocaleTimeString()})` : ''}</span>
+                      )}
                       <span className="visitors-item-footer-text">{visitor.createdAt && new Date(visitor.createdAt).toLocaleString()}</span>
                     </div>
                   </div>
                 </div>
-                {isStaff && (
-                  <div className="visitors-item-actions">
-                    {(visitor.status === 'EXPECTED') && (
-                      <>
+                <div className="visitors-item-actions">
+                  {visitor.status === 'EXPECTED' && requiresOtp(visitor.visitorType) && canGenerateOtp && (
+                    <button
+                      onClick={() => generateOtpMutation.mutate(visitor.id)}
+                      className="visitors-btn visitors-btn--otp"
+                    >
+                      {visitor.otpCode ? 'Regenerate OTP' : 'Generate OTP'}
+                    </button>
+                  )}
+
+                  {isStaff && visitor.status === 'EXPECTED' && requiresOtp(visitor.visitorType) && !visitor.otpVerifiedAt && (
+                    <button onClick={() => handleVerifyOtp(visitor)} className="visitors-btn visitors-btn--verify">
+                      Verify OTP
+                    </button>
+                  )}
+
+                  {isStaff && visitor.status === 'EXPECTED' && (
+                    <>
+                      {(!requiresOtp(visitor.visitorType) || visitor.otpVerifiedAt) && (
                         <button onClick={() => checkInMutation.mutate(visitor.id)} className="visitors-btn visitors-btn--checkin">Check In</button>
-                        <button onClick={() => rejectMutation.mutate(visitor.id)} className="visitors-btn visitors-btn--reject">Reject</button>
-                      </>
-                    )}
-                    {visitor.status === 'CHECKED_IN' && (
-                      <button onClick={() => checkOutMutation.mutate(visitor.id)} className="visitors-btn visitors-btn--checkout">Check Out</button>
-                    )}
-                  </div>
-                )}
+                      )}
+                      <button onClick={() => rejectMutation.mutate(visitor.id)} className="visitors-btn visitors-btn--reject">Reject</button>
+                    </>
+                  )}
+
+                  {isStaff && visitor.status === 'CHECKED_IN' && (
+                    <button onClick={() => checkOutMutation.mutate(visitor.id)} className="visitors-btn visitors-btn--checkout">Check Out</button>
+                  )}
+                </div>
               </div>
             </div>
           )

@@ -2,6 +2,68 @@
    PAGE SHELL — GitHub-style CSS Variables
    ============================================ */
 
+.admin-page-shell {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.admin-page-shell__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.admin-page-shell__heading {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.admin-page-shell__icon-wrap {
+  width: 2rem;
+  height: 2rem;
+  border-radius: var(--radius-md, 8px);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, var(--accent-primary) 15%, transparent);
+  color: var(--accent-primary);
+}
+
+.admin-page-shell__icon {
+  width: 1.1rem;
+  height: 1.1rem;
+}
+
+.admin-page-shell__title {
+  margin: 0;
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  line-height: 1.15;
+}
+
+.admin-page-shell__subtitle {
+  margin: 0.35rem 0 0;
+  color: var(--text-secondary);
+  font-size: 1rem;
+}
+
+.admin-page-shell__actions {
+  display: inline-flex;
+  gap: 0.65rem;
+  align-items: center;
+}
+
+.admin-page-shell__loading {
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  padding: 1rem 0;
+}
+
 .page-shell {
   min-height: 100vh;
   display: flex;

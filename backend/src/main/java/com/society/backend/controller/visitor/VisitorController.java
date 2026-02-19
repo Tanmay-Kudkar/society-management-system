@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -44,6 +45,33 @@ public class VisitorController {
             @RequestParam Long userId) {
         roleService.requireMember(userId);
         return ResponseEntity.ok(visitorService.getBySociety(societyId));
+    }
+
+    @GetMapping("/society/{societyId}/today")
+    public ResponseEntity<List<VisitorResponse>> getTodayArrivals(
+            @PathVariable Long societyId,
+            @RequestParam Long userId) {
+        roleService.requireMember(userId);
+        return ResponseEntity.ok(visitorService.getTodayArrivals(societyId, userId));
+    }
+
+    @GetMapping("/society/{societyId}/overstayed")
+    public ResponseEntity<List<VisitorResponse>> getOverstayed(
+            @PathVariable Long societyId,
+            @RequestParam Long userId,
+            @RequestParam(required = false) Integer thresholdHours) {
+        roleService.requireStaff(userId);
+        return ResponseEntity.ok(visitorService.getOverstayed(societyId, userId, thresholdHours));
+    }
+
+    @GetMapping("/society/{societyId}/range")
+    public ResponseEntity<List<VisitorResponse>> getByDateRange(
+            @PathVariable Long societyId,
+            @RequestParam Long userId,
+            @RequestParam LocalDate fromDate,
+            @RequestParam LocalDate toDate) {
+        roleService.requireMember(userId);
+        return ResponseEntity.ok(visitorService.getBySocietyAndDateRange(societyId, userId, fromDate, toDate));
     }
 
     @GetMapping("/flat/{flatId}")
@@ -94,6 +122,23 @@ public class VisitorController {
         return ResponseEntity.ok(visitorService.checkOut(id, userId));
     }
 
+    @PostMapping("/{id}/otp/generate")
+    public ResponseEntity<VisitorResponse> generateOtp(
+            @PathVariable Long id,
+            @RequestParam Long userId) {
+        roleService.requireMember(userId);
+        return ResponseEntity.ok(visitorService.generateOtp(id, userId));
+    }
+
+    @PostMapping("/{id}/otp/verify")
+    public ResponseEntity<VisitorResponse> verifyOtp(
+            @PathVariable Long id,
+            @RequestParam Long userId,
+            @RequestParam String otpCode) {
+        roleService.requireStaff(userId);
+        return ResponseEntity.ok(visitorService.verifyOtp(id, userId, otpCode));
+    }
+
     @PatchMapping("/{id}/status")
     public ResponseEntity<VisitorResponse> updateStatus(
             @PathVariable Long id,
@@ -108,7 +153,7 @@ public class VisitorController {
             @PathVariable Long id,
             @RequestParam Long userId) {
         roleService.requireAdminOrCommittee(userId);
-        visitorService.delete(id);
+        visitorService.delete(id, userId);
         return ResponseEntity.noContent().build();
     }
 }

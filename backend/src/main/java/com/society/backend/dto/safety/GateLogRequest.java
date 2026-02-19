@@ -26,4 +26,10 @@ public class GateLogRequest {
     private String exitGate;
     private String purpose;
     private String notes;
+    private String imageUrl;
+    private Long visitorId;
+    private String idType;
+    private String idNumber;
+    private String companyName;
+    private String itemsCarried;
 }

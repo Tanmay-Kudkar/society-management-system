@@ -13,7 +13,9 @@ public interface GateLogRepository extends JpaRepository<GateLog, Long> {
     List<GateLog> findByFlatId(Long flatId);
     List<GateLog> findByStatus(String status);
     List<GateLog> findBySocietyIdAndStatus(Long societyId, String status);
+    List<GateLog> findBySocietyIdAndStatusOrderByEntryTimeDesc(Long societyId, String status);
     List<GateLog> findByEntryType(String entryType);
+    List<GateLog> findBySocietyIdAndEntryTypeOrderByEntryTimeDesc(Long societyId, String entryType);
     List<GateLog> findBySocietyIdAndEntryTimeBetween(Long societyId, LocalDateTime start, LocalDateTime end);
     List<GateLog> findBySocietyIdOrderByEntryTimeDesc(Long societyId);
 }

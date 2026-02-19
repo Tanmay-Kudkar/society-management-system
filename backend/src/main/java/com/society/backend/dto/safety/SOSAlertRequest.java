@@ -15,4 +15,5 @@ public class SOSAlertRequest {
     private Long flatId;
     private Long societyId;
     private String priority;
+    private String location;
 }

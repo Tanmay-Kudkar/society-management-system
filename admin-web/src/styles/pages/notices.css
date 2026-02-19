@@ -192,10 +192,25 @@
   font-weight: 600;
 }
 
-.notices-priority--low { background: var(--bg-tertiary); color: var(--text-secondary); }
-.notices-priority--medium { background: #dbeafe; color: #1d4ed8; }
-.notices-priority--high { background: #ffedd5; color: #c2410c; }
-.notices-priority--urgent { background: #fee2e2; color: #b91c1c; }
+.notices-priority--low {
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+}
+
+.notices-priority--medium {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.notices-priority--high {
+  background: #ffedd5;
+  color: #c2410c;
+}
+
+.notices-priority--urgent {
+  background: #fee2e2;
+  color: #b91c1c;
+}
 
 .notices-card-actions {
   display: flex;

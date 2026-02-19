@@ -8,7 +8,47 @@ import { useState, useRef, useEffect } from 'react'
  * Shared shell for public pages (About, Contact, Privacy, Terms, Pricing, Blog, Demo, Help)
  * Provides consistent navbar, footer, and theme toggle using CSS variables.
  */
-export default function PageShell({ children }) {
+
+export default function PageShell({
+  children,
+  title,
+  subtitle,
+  icon: Icon,
+  loading,
+  actions,
+  className,
+}) {
+  const isAdminMode = title !== undefined || subtitle !== undefined || Icon !== undefined || actions !== undefined || loading !== undefined
+
+  if (isAdminMode) {
+    return (
+      <section className={clsx('admin-page-shell', className)}>
+        {(title || subtitle || Icon || actions) && (
+          <header className="admin-page-shell__header">
+            <div className="admin-page-shell__heading">
+              {Icon && (
+                <span className="admin-page-shell__icon-wrap" aria-hidden="true">
+                  <Icon className="admin-page-shell__icon" />
+                </span>
+              )}
+              <div>
+                {title && <h1 className="admin-page-shell__title">{title}</h1>}
+                {subtitle && <p className="admin-page-shell__subtitle">{subtitle}</p>}
+              </div>
+            </div>
+            {actions ? <div className="admin-page-shell__actions">{actions}</div> : null}
+          </header>
+        )}
+
+        {loading ? (
+          <div className="admin-page-shell__loading">Loading...</div>
+        ) : (
+          children
+        )}
+      </section>
+    )
+  }
+
   const location = useLocation()
   const { isDark, theme, setTheme, resetToSystemTheme, isManual } = useTheme()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)

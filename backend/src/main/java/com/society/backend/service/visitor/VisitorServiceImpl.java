@@ -15,8 +15,10 @@ import com.society.backend.service.common.RoleService;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
 @Service
@@ -105,6 +107,51 @@ public class VisitorServiceImpl implements VisitorService {
     }
 
     @Override
+    public List<VisitorResponse> getTodayArrivals(Long societyId, Long userId) {
+        User user = roleService.getUser(userId);
+        roleService.enforceSocietyScope(user, societyId);
+
+        LocalDateTime start = LocalDate.now().atStartOfDay();
+        LocalDateTime end = start.plusDays(1).minusNanos(1);
+
+        return visitorRepository.findBySocietyIdAndExpectedArrivalBetweenOrderByExpectedArrivalAsc(societyId, start, end)
+                .stream().map(this::toResponse).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<VisitorResponse> getOverstayed(Long societyId, Long userId, Integer thresholdHours) {
+        User user = roleService.getUser(userId);
+        roleService.enforceSocietyScope(user, societyId);
+
+        int effectiveHours = thresholdHours != null && thresholdHours > 0 ? thresholdHours : 4;
+        LocalDateTime cutoff = LocalDateTime.now().minusHours(effectiveHours);
+
+        return visitorRepository.findBySocietyIdAndStatusAndCheckInTimeBeforeOrderByCheckInTimeAsc(
+                        societyId,
+                        "CHECKED_IN",
+                        cutoff
+                ).stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<VisitorResponse> getBySocietyAndDateRange(Long societyId, Long userId, LocalDate fromDate, LocalDate toDate) {
+        User user = roleService.getUser(userId);
+        roleService.enforceSocietyScope(user, societyId);
+
+        if (fromDate == null || toDate == null || fromDate.isAfter(toDate)) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Invalid date range");
+        }
+
+        LocalDateTime start = fromDate.atStartOfDay();
+        LocalDateTime end = toDate.plusDays(1).atStartOfDay().minusNanos(1);
+
+        return visitorRepository.findBySocietyIdAndExpectedArrivalBetweenOrderByExpectedArrivalAsc(societyId, start, end)
+                .stream().map(this::toResponse).collect(Collectors.toList());
+    }
+
+    @Override
     public List<VisitorResponse> getByFlat(Long flatId) {
         return visitorRepository.findByFlatId(flatId).stream()
                 .map(this::toResponse).collect(Collectors.toList());
@@ -132,8 +179,26 @@ public class VisitorServiceImpl implements VisitorService {
 
     @Override
     public VisitorResponse checkIn(Long id, Long userId) {
+        User user = roleService.getUser(userId);
         Visitor visitor = visitorRepository.findById(id)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Visitor not found"));
+
+        roleService.enforceSocietyScope(user, visitor.getSociety().getId());
+        if (!"EXPECTED".equals(visitor.getStatus())) {
+            throw new ApiException(HttpStatus.BAD_REQUEST,
+                    "Visitor can only be checked in from EXPECTED status");
+        }
+
+        if (requiresOtp(visitor.getVisitorType())) {
+            if (visitor.getOtpCode() == null || visitor.getOtpVerifiedAt() == null) {
+                throw new ApiException(HttpStatus.BAD_REQUEST,
+                        "OTP verification is required before check-in for DELIVERY and CAB visitors");
+            }
+            if (visitor.getOtpExpiresAt() != null && visitor.getOtpExpiresAt().isBefore(LocalDateTime.now())) {
+                throw new ApiException(HttpStatus.BAD_REQUEST, "OTP expired. Generate and verify a new OTP");
+            }
+        }
+
         visitor.setCheckInTime(LocalDateTime.now());
         visitor.setStatus("CHECKED_IN");
         return toResponse(visitorRepository.save(visitor));
@@ -141,33 +206,125 @@ public class VisitorServiceImpl implements VisitorService {
 
     @Override
     public VisitorResponse checkOut(Long id, Long userId) {
+        User user = roleService.getUser(userId);
         Visitor visitor = visitorRepository.findById(id)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Visitor not found"));
+
+        roleService.enforceSocietyScope(user, visitor.getSociety().getId());
+        if (!"CHECKED_IN".equals(visitor.getStatus())) {
+            throw new ApiException(HttpStatus.BAD_REQUEST,
+                    "Visitor can only be checked out from CHECKED_IN status");
+        }
+
         visitor.setCheckOutTime(LocalDateTime.now());
         visitor.setStatus("CHECKED_OUT");
         return toResponse(visitorRepository.save(visitor));
     }
 
     @Override
-    public VisitorResponse updateStatus(Long id, String status, Long userId) {
+    public VisitorResponse generateOtp(Long id, Long userId) {
+        User user = roleService.getUser(userId);
         Visitor visitor = visitorRepository.findById(id)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Visitor not found"));
-        visitor.setStatus(status);
-        if ("CHECKED_IN".equals(status) && visitor.getCheckInTime() == null) {
+
+        roleService.enforceSocietyScope(user, visitor.getSociety().getId());
+        if (!requiresOtp(visitor.getVisitorType())) {
+            throw new ApiException(HttpStatus.BAD_REQUEST,
+                    "OTP is only supported for DELIVERY and CAB visitor types");
+        }
+        if (!"EXPECTED".equals(visitor.getStatus())) {
+            throw new ApiException(HttpStatus.BAD_REQUEST,
+                    "OTP can only be generated while visitor status is EXPECTED");
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+        if (visitor.getOtpLastGeneratedAt() != null && visitor.getOtpLastGeneratedAt().plusSeconds(30).isAfter(now)) {
+            throw new ApiException(HttpStatus.TOO_MANY_REQUESTS,
+                    "Please wait before generating another OTP");
+        }
+
+        String otp = String.format("%06d", ThreadLocalRandom.current().nextInt(0, 1_000_000));
+        visitor.setOtpCode(otp);
+        visitor.setOtpExpiresAt(now.plusMinutes(15));
+        visitor.setOtpVerifiedAt(null);
+        visitor.setOtpAttempts(0);
+        visitor.setOtpLastGeneratedAt(now);
+
+        return toResponse(visitorRepository.save(visitor));
+    }
+
+    @Override
+    public VisitorResponse verifyOtp(Long id, Long userId, String otpCode) {
+        User user = roleService.getUser(userId);
+        Visitor visitor = visitorRepository.findById(id)
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Visitor not found"));
+
+        roleService.enforceSocietyScope(user, visitor.getSociety().getId());
+        if (!requiresOtp(visitor.getVisitorType())) {
+            throw new ApiException(HttpStatus.BAD_REQUEST,
+                    "OTP verification is only supported for DELIVERY and CAB visitor types");
+        }
+        if (!"EXPECTED".equals(visitor.getStatus())) {
+            throw new ApiException(HttpStatus.BAD_REQUEST,
+                    "OTP can only be verified while visitor status is EXPECTED");
+        }
+        if (visitor.getOtpCode() == null || visitor.getOtpExpiresAt() == null) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "No OTP found. Please generate OTP first");
+        }
+        if (visitor.getOtpExpiresAt().isBefore(LocalDateTime.now())) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "OTP expired. Please generate OTP again");
+        }
+
+        String normalized = otpCode == null ? "" : otpCode.trim();
+        if (!visitor.getOtpCode().equals(normalized)) {
+            int attempts = visitor.getOtpAttempts() == null ? 0 : visitor.getOtpAttempts();
+            visitor.setOtpAttempts(attempts + 1);
+            visitorRepository.save(visitor);
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Invalid OTP");
+        }
+
+        visitor.setOtpVerifiedAt(LocalDateTime.now());
+        return toResponse(visitorRepository.save(visitor));
+    }
+
+    @Override
+    public VisitorResponse updateStatus(Long id, String status, Long userId) {
+        User user = roleService.getUser(userId);
+        Visitor visitor = visitorRepository.findById(id)
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Visitor not found"));
+
+        roleService.enforceSocietyScope(user, visitor.getSociety().getId());
+
+        String normalizedStatus = status == null ? "" : status.toUpperCase();
+        if (!List.of("EXPECTED", "CHECKED_IN", "CHECKED_OUT", "REJECTED", "CANCELLED").contains(normalizedStatus)) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Invalid visitor status: " + status);
+        }
+
+        if ("CHECKED_OUT".equals(normalizedStatus) && visitor.getCheckInTime() == null) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Cannot check out visitor without check-in");
+        }
+
+        if ("CHECKED_IN".equals(normalizedStatus) && "CHECKED_OUT".equals(visitor.getStatus())) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Cannot move visitor from CHECKED_OUT back to CHECKED_IN");
+        }
+
+        visitor.setStatus(normalizedStatus);
+        if ("CHECKED_IN".equals(normalizedStatus) && visitor.getCheckInTime() == null) {
             visitor.setCheckInTime(LocalDateTime.now());
         }
-        if ("CHECKED_OUT".equals(status) && visitor.getCheckOutTime() == null) {
+        if ("CHECKED_OUT".equals(normalizedStatus) && visitor.getCheckOutTime() == null) {
             visitor.setCheckOutTime(LocalDateTime.now());
         }
         return toResponse(visitorRepository.save(visitor));
     }
 
     @Override
-    public void delete(Long id) {
-        if (!visitorRepository.existsById(id)) {
-            throw new ApiException(HttpStatus.NOT_FOUND, "Visitor not found");
-        }
-        visitorRepository.deleteById(id);
+    public void delete(Long id, Long userId) {
+        User user = roleService.getUser(userId);
+        Visitor visitor = visitorRepository.findById(id)
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Visitor not found"));
+        roleService.enforceSocietyScope(user, visitor.getSociety().getId());
+        visitorRepository.delete(visitor);
     }
 
     private VisitorResponse toResponse(Visitor visitor) {
@@ -190,11 +347,22 @@ public class VisitorServiceImpl implements VisitorService {
         response.setStatus(visitor.getStatus());
         response.setIsPreApproved(visitor.getIsPreApproved());
         response.setApprovalCode(visitor.getApprovalCode());
+        response.setOtpCode(visitor.getOtpCode());
+        response.setOtpExpiresAt(visitor.getOtpExpiresAt());
+        response.setOtpVerifiedAt(visitor.getOtpVerifiedAt());
+        response.setOtpAttempts(visitor.getOtpAttempts());
         if (visitor.getApprovedBy() != null) {
             response.setApprovedByName(visitor.getApprovedBy().getName());
         }
         response.setNotes(visitor.getNotes());
         response.setCreatedAt(visitor.getCreatedAt());
         return response;
+    }
+
+    private boolean requiresOtp(String visitorType) {
+        if (visitorType == null) {
+            return false;
+        }
+        return "DELIVERY".equalsIgnoreCase(visitorType) || "CAB".equalsIgnoreCase(visitorType);
     }
 }

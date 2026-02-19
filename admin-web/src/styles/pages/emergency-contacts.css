@@ -254,15 +254,50 @@
   height: 1.25rem;
 }
 
-.emergency-type--police { background: #dbeafe; color: #1d4ed8; }
-.emergency-type--fire { background: #fee2e2; color: #b91c1c; }
-.emergency-type--ambulance { background: #dcfce7; color: #15803d; }
-.emergency-type--hospital { background: #ede9fe; color: #6d28d9; }
-.emergency-type--doctor { background: #fce7f3; color: #be185d; }
-.emergency-type--security { background: #ffedd5; color: #c2410c; }
-.emergency-type--electrician { background: #fef9c3; color: #a16207; }
-.emergency-type--plumber { background: #cffafe; color: #0e7490; }
-.emergency-type--other { background: var(--bg-tertiary); color: var(--text-secondary); }
+.emergency-type--police {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.emergency-type--fire {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.emergency-type--ambulance {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.emergency-type--hospital {
+  background: #ede9fe;
+  color: #6d28d9;
+}
+
+.emergency-type--doctor {
+  background: #fce7f3;
+  color: #be185d;
+}
+
+.emergency-type--security {
+  background: #ffedd5;
+  color: #c2410c;
+}
+
+.emergency-type--electrician {
+  background: #fef9c3;
+  color: #a16207;
+}
+
+.emergency-type--plumber {
+  background: #cffafe;
+  color: #0e7490;
+}
+
+.emergency-type--other {
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+}
 
 .emergency-item-info {
   display: grid;

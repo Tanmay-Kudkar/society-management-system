@@ -13,4 +13,8 @@ public interface SOSAlertRepository extends JpaRepository<SOSAlert, Long> {
     List<SOSAlert> findByStatus(String status);
     List<SOSAlert> findBySocietyIdAndStatus(Long societyId, String status);
     List<SOSAlert> findBySocietyIdOrderByCreatedAtDesc(Long societyId);
+    List<SOSAlert> findBySocietyIdAndPriorityOrderByCreatedAtDesc(Long societyId, String priority);
+    List<SOSAlert> findBySocietyIdAndStatusInOrderByCreatedAtDesc(Long societyId, List<String> statuses);
+    long countBySocietyIdAndStatus(Long societyId, String status);
+    long countBySocietyIdAndStatusIn(Long societyId, List<String> statuses);
 }

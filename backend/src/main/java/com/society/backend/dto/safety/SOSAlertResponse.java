@@ -18,6 +18,11 @@ public class SOSAlertResponse {
     private String priority;
     private String resolvedByName;
     private String resolutionNotes;
+    private String location;
+    private int escalationLevel;
+    private LocalDateTime escalatedAt;
+    private String acknowledgedByName;
+    private Integer responseTimeSeconds;
     private LocalDateTime createdAt;
     private LocalDateTime acknowledgedAt;
     private LocalDateTime resolvedAt;

@@ -21,5 +21,12 @@ public class GateLogResponse {
     private String purpose;
     private String status;
     private String notes;
+    private String imageUrl;
+    private Long visitorId;
+    private String approvedByName;
+    private String idType;
+    private String idNumber;
+    private String companyName;
+    private String itemsCarried;
     private LocalDateTime createdAt;
 }

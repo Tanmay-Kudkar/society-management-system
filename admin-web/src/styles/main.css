@@ -66,6 +66,18 @@
 @import "./pages/visitors.css";
 @import "./pages/domestic-staff.css";
 @import "./pages/safety.css";
+@import "./pages/guard-patrol.css";
+@import "./pages/work-orders.css";
+@import "./pages/assets.css";
+@import "./pages/common-areas.css";
+@import "./pages/staff-shifts.css";
+@import "./pages/facility-booking.css";
+@import "./pages/renovation-nocs.css";
+@import "./pages/move-tracking.css";
+@import "./pages/penalties.css";
+@import "./pages/pet-registrations.css";
+@import "./pages/classifieds.css";
+@import "./pages/society-rules.css";
 
 /* Utility replacements for Tailwind classes */
 @import "./utils/layout.css";

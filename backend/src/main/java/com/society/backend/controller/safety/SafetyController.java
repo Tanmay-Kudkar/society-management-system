@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/safety")
@@ -93,6 +94,39 @@ public class SafetyController {
         return ResponseEntity.ok(safetyService.markFalseAlarm(id, userId));
     }
 
+    @PatchMapping("/sos/{id}/escalate")
+    public ResponseEntity<SOSAlertResponse> escalateAlert(
+            @PathVariable Long id,
+            @RequestParam Long userId) {
+        roleService.requireStaff(userId);
+        return ResponseEntity.ok(safetyService.escalateAlert(id, userId));
+    }
+
+    @GetMapping("/sos/society/{societyId}/priority/{priority}")
+    public ResponseEntity<List<SOSAlertResponse>> getAlertsByPriority(
+            @PathVariable Long societyId,
+            @PathVariable String priority,
+            @RequestParam Long userId) {
+        roleService.requireMember(userId);
+        return ResponseEntity.ok(safetyService.getAlertsByPriority(societyId, priority));
+    }
+
+    @GetMapping("/sos/society/{societyId}/active")
+    public ResponseEntity<List<SOSAlertResponse>> getActiveAndAcknowledgedAlerts(
+            @PathVariable Long societyId,
+            @RequestParam Long userId) {
+        roleService.requireMember(userId);
+        return ResponseEntity.ok(safetyService.getActiveAndAcknowledgedAlerts(societyId));
+    }
+
+    @GetMapping("/sos/society/{societyId}/counts")
+    public ResponseEntity<Map<String, Long>> getAlertCounts(
+            @PathVariable Long societyId,
+            @RequestParam Long userId) {
+        roleService.requireMember(userId);
+        return ResponseEntity.ok(safetyService.getAlertCounts(societyId));
+    }
+
     // --- Gate Logs ---
 
     @PostMapping("/gate-log")
@@ -128,6 +162,24 @@ public class SafetyController {
         roleService.requireStaff(userId);
         return ResponseEntity.ok(safetyService.getGateLogsByDateRange(societyId,
                 LocalDateTime.parse(start), LocalDateTime.parse(end)));
+    }
+
+    @GetMapping("/gate-log/society/{societyId}/type/{entryType}")
+    public ResponseEntity<List<GateLogResponse>> getGateLogsByEntryType(
+            @PathVariable Long societyId,
+            @PathVariable String entryType,
+            @RequestParam Long userId) {
+        roleService.requireStaff(userId);
+        return ResponseEntity.ok(safetyService.getGateLogsByEntryType(societyId, entryType));
+    }
+
+    @GetMapping("/gate-log/society/{societyId}/status/{status}")
+    public ResponseEntity<List<GateLogResponse>> getGateLogsByStatus(
+            @PathVariable Long societyId,
+            @PathVariable String status,
+            @RequestParam Long userId) {
+        roleService.requireStaff(userId);
+        return ResponseEntity.ok(safetyService.getGateLogsByStatus(societyId, status));
     }
 
     @GetMapping("/gate-log/{id}")

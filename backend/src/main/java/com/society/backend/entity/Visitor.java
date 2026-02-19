@@ -63,6 +63,21 @@ public class Visitor {
     @Column(name = "approval_code")
     private String approvalCode;
 
+    @Column(name = "otp_code", length = 10)
+    private String otpCode;
+
+    @Column(name = "otp_expires_at")
+    private LocalDateTime otpExpiresAt;
+
+    @Column(name = "otp_verified_at")
+    private LocalDateTime otpVerifiedAt;
+
+    @Column(name = "otp_attempts", nullable = false)
+    private Integer otpAttempts = 0;
+
+    @Column(name = "otp_last_generated_at")
+    private LocalDateTime otpLastGeneratedAt;
+
     @Column(columnDefinition = "TEXT")
     private String notes;
 

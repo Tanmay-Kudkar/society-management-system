@@ -49,6 +49,22 @@ public class SOSAlert {
     @Column(name = "resolution_notes", columnDefinition = "TEXT")
     private String resolutionNotes;
 
+    @Column
+    private String location;
+
+    @Column(name = "escalation_level", nullable = false)
+    private int escalationLevel = 0;
+
+    @Column(name = "escalated_at")
+    private LocalDateTime escalatedAt;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "acknowledged_by_id")
+    private User acknowledgedBy;
+
+    @Column(name = "response_time_seconds")
+    private Integer responseTimeSeconds;
+
     @Column(name = "acknowledged_at")
     private LocalDateTime acknowledgedAt;
 

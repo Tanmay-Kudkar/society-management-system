@@ -59,6 +59,29 @@ public class GateLog {
     @Column(columnDefinition = "TEXT")
     private String notes;
 
+    @Column(name = "image_url")
+    private String imageUrl;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "visitor_id")
+    private Visitor visitor;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "approved_by_id")
+    private User approvedBy;
+
+    @Column(name = "id_type")
+    private String idType; // AADHAAR, PAN, DRIVING_LICENSE, PASSPORT, OTHER
+
+    @Column(name = "id_number")
+    private String idNumber;
+
+    @Column(name = "company_name")
+    private String companyName;
+
+    @Column(name = "items_carried", columnDefinition = "TEXT")
+    private String itemsCarried;
+
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 

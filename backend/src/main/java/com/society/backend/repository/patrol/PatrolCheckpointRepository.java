@@ -1,0 +1,13 @@
+package com.society.backend.repository.patrol;
+
+import com.society.backend.entity.PatrolCheckpoint;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+
+@Repository
+public interface PatrolCheckpointRepository extends JpaRepository<PatrolCheckpoint, Long> {
+    List<PatrolCheckpoint> findBySocietyIdAndIsActiveTrueOrderByDisplayOrderAsc(Long societyId);
+    List<PatrolCheckpoint> findBySocietyIdOrderByDisplayOrderAsc(Long societyId);
+}

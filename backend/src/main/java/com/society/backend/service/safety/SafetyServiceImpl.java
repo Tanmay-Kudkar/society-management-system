@@ -9,18 +9,23 @@ import com.society.backend.entity.GateLog;
 import com.society.backend.entity.SOSAlert;
 import com.society.backend.entity.Society;
 import com.society.backend.entity.User;
+import com.society.backend.entity.Visitor;
 import com.society.backend.exception.ApiException;
 import com.society.backend.repository.flat.FlatRepository;
 import com.society.backend.repository.safety.GateLogRepository;
 import com.society.backend.repository.safety.SOSAlertRepository;
 import com.society.backend.repository.society.SocietyRepository;
 import com.society.backend.repository.user.UserRepository;
+import com.society.backend.repository.visitor.VisitorRepository;
 import com.society.backend.service.common.RoleService;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -31,16 +36,18 @@ public class SafetyServiceImpl implements SafetyService {
     private final UserRepository userRepository;
     private final SocietyRepository societyRepository;
     private final FlatRepository flatRepository;
+    private final VisitorRepository visitorRepository;
     private final RoleService roleService;
 
     public SafetyServiceImpl(SOSAlertRepository sosAlertRepository, GateLogRepository gateLogRepository,
             UserRepository userRepository, SocietyRepository societyRepository,
-            FlatRepository flatRepository, RoleService roleService) {
+            FlatRepository flatRepository, VisitorRepository visitorRepository, RoleService roleService) {
         this.sosAlertRepository = sosAlertRepository;
         this.gateLogRepository = gateLogRepository;
         this.userRepository = userRepository;
         this.societyRepository = societyRepository;
         this.flatRepository = flatRepository;
+        this.visitorRepository = visitorRepository;
         this.roleService = roleService;
     }
 
@@ -68,6 +75,7 @@ public class SafetyServiceImpl implements SafetyService {
         alert.setRaisedBy(user);
         alert.setSociety(society);
         alert.setPriority(request.getPriority() != null ? request.getPriority() : "HIGH");
+        alert.setLocation(request.getLocation());
 
         if (request.getFlatId() != null) {
             Flat flat = flatRepository.findById(request.getFlatId())
@@ -111,6 +119,33 @@ public class SafetyServiceImpl implements SafetyService {
     }
 
     @Override
+    public List<SOSAlertResponse> getAlertsByPriority(Long societyId, String priority) {
+        roleService.enforceSocietyScope(roleService.getCurrentUser(), societyId);
+        return sosAlertRepository.findBySocietyIdAndPriorityOrderByCreatedAtDesc(societyId, priority).stream()
+                .map(this::toAlertResponse).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<SOSAlertResponse> getActiveAndAcknowledgedAlerts(Long societyId) {
+        roleService.enforceSocietyScope(roleService.getCurrentUser(), societyId);
+        return sosAlertRepository.findBySocietyIdAndStatusInOrderByCreatedAtDesc(
+                    societyId, List.of("ACTIVE", "ACKNOWLEDGED")).stream()
+                .map(this::toAlertResponse).collect(Collectors.toList());
+    }
+
+    @Override
+    public Map<String, Long> getAlertCounts(Long societyId) {
+        roleService.enforceSocietyScope(roleService.getCurrentUser(), societyId);
+        Map<String, Long> counts = new HashMap<>();
+        counts.put("active", sosAlertRepository.countBySocietyIdAndStatus(societyId, "ACTIVE"));
+        counts.put("acknowledged", sosAlertRepository.countBySocietyIdAndStatus(societyId, "ACKNOWLEDGED"));
+        counts.put("resolved", sosAlertRepository.countBySocietyIdAndStatus(societyId, "RESOLVED"));
+        counts.put("falseAlarm", sosAlertRepository.countBySocietyIdAndStatus(societyId, "FALSE_ALARM"));
+        counts.put("pending", sosAlertRepository.countBySocietyIdAndStatusIn(societyId, List.of("ACTIVE", "ACKNOWLEDGED")));
+        return counts;
+    }
+
+    @Override
     public SOSAlertResponse getAlertById(Long id) {
         SOSAlert alert = sosAlertRepository.findById(id)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "SOS Alert not found"));
@@ -122,8 +157,23 @@ public class SafetyServiceImpl implements SafetyService {
     public SOSAlertResponse acknowledgeAlert(Long id, Long userId) {
         SOSAlert alert = sosAlertRepository.findById(id)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "SOS Alert not found"));
+        roleService.enforceSocietyScope(roleService.getCurrentUser(), alert.getSociety().getId());
+
+        if (!"ACTIVE".equals(alert.getStatus())) {
+            throw new ApiException(HttpStatus.BAD_REQUEST,
+                    "Only ACTIVE alerts can be acknowledged. Current status: " + alert.getStatus());
+        }
+
+        User acknowledger = userRepository.findById(userId)
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "User not found"));
         alert.setStatus("ACKNOWLEDGED");
+        alert.setAcknowledgedBy(acknowledger);
         alert.setAcknowledgedAt(LocalDateTime.now());
+
+        // Compute response time in seconds from creation
+        long seconds = ChronoUnit.SECONDS.between(alert.getCreatedAt(), LocalDateTime.now());
+        alert.setResponseTimeSeconds((int) seconds);
+
         return toAlertResponse(sosAlertRepository.save(alert));
     }
 
@@ -131,12 +181,26 @@ public class SafetyServiceImpl implements SafetyService {
     public SOSAlertResponse resolveAlert(Long id, Long userId, String resolutionNotes) {
         SOSAlert alert = sosAlertRepository.findById(id)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "SOS Alert not found"));
+        roleService.enforceSocietyScope(roleService.getCurrentUser(), alert.getSociety().getId());
+
+        if ("RESOLVED".equals(alert.getStatus()) || "FALSE_ALARM".equals(alert.getStatus())) {
+            throw new ApiException(HttpStatus.BAD_REQUEST,
+                    "Alert is already " + alert.getStatus() + " and cannot be resolved again.");
+        }
+
         User resolver = userRepository.findById(userId)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "User not found"));
         alert.setStatus("RESOLVED");
         alert.setResolvedBy(resolver);
         alert.setResolutionNotes(resolutionNotes);
         alert.setResolvedAt(LocalDateTime.now());
+
+        // Set response time if not yet set (direct resolve without acknowledge)
+        if (alert.getResponseTimeSeconds() == null) {
+            long seconds = ChronoUnit.SECONDS.between(alert.getCreatedAt(), LocalDateTime.now());
+            alert.setResponseTimeSeconds((int) seconds);
+        }
+
         return toAlertResponse(sosAlertRepository.save(alert));
     }
 
@@ -144,11 +208,43 @@ public class SafetyServiceImpl implements SafetyService {
     public SOSAlertResponse markFalseAlarm(Long id, Long userId) {
         SOSAlert alert = sosAlertRepository.findById(id)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "SOS Alert not found"));
+        roleService.enforceSocietyScope(roleService.getCurrentUser(), alert.getSociety().getId());
+
+        if ("RESOLVED".equals(alert.getStatus()) || "FALSE_ALARM".equals(alert.getStatus())) {
+            throw new ApiException(HttpStatus.BAD_REQUEST,
+                    "Alert is already " + alert.getStatus() + " and cannot be changed.");
+        }
+
         User resolver = userRepository.findById(userId)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "User not found"));
         alert.setStatus("FALSE_ALARM");
         alert.setResolvedBy(resolver);
         alert.setResolvedAt(LocalDateTime.now());
+        return toAlertResponse(sosAlertRepository.save(alert));
+    }
+
+    @Override
+    public SOSAlertResponse escalateAlert(Long id, Long userId) {
+        SOSAlert alert = sosAlertRepository.findById(id)
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "SOS Alert not found"));
+        roleService.enforceSocietyScope(roleService.getCurrentUser(), alert.getSociety().getId());
+
+        if ("RESOLVED".equals(alert.getStatus()) || "FALSE_ALARM".equals(alert.getStatus())) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Cannot escalate a closed alert.");
+        }
+
+        // Bump escalation level (max 4)
+        int newLevel = Math.min(alert.getEscalationLevel() + 1, 4);
+        alert.setEscalationLevel(newLevel);
+        alert.setEscalatedAt(LocalDateTime.now());
+
+        // Auto-bump priority on escalation
+        String[] priorities = { "LOW", "MEDIUM", "HIGH", "CRITICAL" };
+        int currentIdx = java.util.Arrays.asList(priorities).indexOf(alert.getPriority());
+        if (currentIdx >= 0 && currentIdx < priorities.length - 1) {
+            alert.setPriority(priorities[currentIdx + 1]);
+        }
+
         return toAlertResponse(sosAlertRepository.save(alert));
     }
 
@@ -183,12 +279,28 @@ public class SafetyServiceImpl implements SafetyService {
         log.setPurpose(request.getPurpose());
         log.setNotes(request.getNotes());
         log.setStatus("IN");
+        log.setImageUrl(request.getImageUrl());
+        log.setIdType(request.getIdType());
+        log.setIdNumber(request.getIdNumber());
+        log.setCompanyName(request.getCompanyName());
+        log.setItemsCarried(request.getItemsCarried());
 
         if (request.getFlatId() != null) {
             Flat flat = flatRepository.findById(request.getFlatId())
                     .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Flat not found"));
             log.setFlat(flat);
         }
+
+        if (request.getVisitorId() != null) {
+            Visitor visitor = visitorRepository.findById(request.getVisitorId())
+                    .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Visitor not found"));
+            log.setVisitor(visitor);
+        }
+
+        // Set approvedBy to current user creating the log
+        User approver = userRepository.findById(userId)
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "User not found"));
+        log.setApprovedBy(approver);
 
         return toGateLogResponse(gateLogRepository.save(log));
     }
@@ -210,6 +322,20 @@ public class SafetyServiceImpl implements SafetyService {
     public List<GateLogResponse> getGateLogsByDateRange(Long societyId, LocalDateTime start, LocalDateTime end) {
         roleService.enforceSocietyScope(roleService.getCurrentUser(), societyId);
         return gateLogRepository.findBySocietyIdAndEntryTimeBetween(societyId, start, end).stream()
+                .map(this::toGateLogResponse).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<GateLogResponse> getGateLogsByEntryType(Long societyId, String entryType) {
+        roleService.enforceSocietyScope(roleService.getCurrentUser(), societyId);
+        return gateLogRepository.findBySocietyIdAndEntryTypeOrderByEntryTimeDesc(societyId, entryType).stream()
+                .map(this::toGateLogResponse).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<GateLogResponse> getGateLogsByStatus(Long societyId, String status) {
+        roleService.enforceSocietyScope(roleService.getCurrentUser(), societyId);
+        return gateLogRepository.findBySocietyIdAndStatusOrderByEntryTimeDesc(societyId, status).stream()
                 .map(this::toGateLogResponse).collect(Collectors.toList());
     }
 
@@ -259,6 +385,13 @@ public class SafetyServiceImpl implements SafetyService {
             response.setResolvedByName(alert.getResolvedBy().getName());
         }
         response.setResolutionNotes(alert.getResolutionNotes());
+        response.setLocation(alert.getLocation());
+        response.setEscalationLevel(alert.getEscalationLevel());
+        response.setEscalatedAt(alert.getEscalatedAt());
+        if (alert.getAcknowledgedBy() != null) {
+            response.setAcknowledgedByName(alert.getAcknowledgedBy().getName());
+        }
+        response.setResponseTimeSeconds(alert.getResponseTimeSeconds());
         response.setCreatedAt(alert.getCreatedAt());
         response.setAcknowledgedAt(alert.getAcknowledgedAt());
         response.setResolvedAt(alert.getResolvedAt());
@@ -285,6 +418,17 @@ public class SafetyServiceImpl implements SafetyService {
         response.setPurpose(log.getPurpose());
         response.setStatus(log.getStatus());
         response.setNotes(log.getNotes());
+        response.setImageUrl(log.getImageUrl());
+        response.setIdType(log.getIdType());
+        response.setIdNumber(log.getIdNumber());
+        response.setCompanyName(log.getCompanyName());
+        response.setItemsCarried(log.getItemsCarried());
+        if (log.getVisitor() != null) {
+            response.setVisitorId(log.getVisitor().getId());
+        }
+        if (log.getApprovedBy() != null) {
+            response.setApprovedByName(log.getApprovedBy().getName());
+        }
         response.setCreatedAt(log.getCreatedAt());
         return response;
     }

@@ -181,7 +181,9 @@
   font-weight: 500;
 }
 
-.settings-alert__icon { flex-shrink: 0; }
+.settings-alert__icon {
+  flex-shrink: 0;
+}
 
 .settings-alert--error {
   background: #fee2e2;
@@ -448,10 +450,21 @@
   transition: width 0.3s ease, background 0.3s ease;
 }
 
-.settings-pw-strength__fill--weak   { background: #ef4444; }
-.settings-pw-strength__fill--fair   { background: #f59e0b; }
-.settings-pw-strength__fill--good   { background: #3b82f6; }
-.settings-pw-strength__fill--strong { background: #22c55e; }
+.settings-pw-strength__fill--weak {
+  background: #ef4444;
+}
+
+.settings-pw-strength__fill--fair {
+  background: #f59e0b;
+}
+
+.settings-pw-strength__fill--good {
+  background: #3b82f6;
+}
+
+.settings-pw-strength__fill--strong {
+  background: #22c55e;
+}
 
 .settings-pw-strength__label {
   font-size: 0.7rem;
@@ -459,10 +472,21 @@
   min-width: 3rem;
 }
 
-.settings-pw-strength__label--weak   { color: #ef4444; }
-.settings-pw-strength__label--fair   { color: #f59e0b; }
-.settings-pw-strength__label--good   { color: #3b82f6; }
-.settings-pw-strength__label--strong { color: #22c55e; }
+.settings-pw-strength__label--weak {
+  color: #ef4444;
+}
+
+.settings-pw-strength__label--fair {
+  color: #f59e0b;
+}
+
+.settings-pw-strength__label--good {
+  color: #3b82f6;
+}
+
+.settings-pw-strength__label--strong {
+  color: #22c55e;
+}
 
 /* ── Password Checklist ───────────────────── */
 .settings-pw-checklist {
@@ -624,8 +648,15 @@
 }
 
 @keyframes settings-pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.4; }
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.4;
+  }
 }
 
 /* ── Danger Zone ──────────────────────────── */
@@ -808,8 +839,15 @@
 }
 
 @keyframes settingsFadeIn {
-  from { opacity: 0; transform: translateY(6px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* ── Phone input inside settings ──────────── */
@@ -829,11 +867,11 @@
   .settings-page {
     padding: 20px;
   }
-  
+
   .settings-content {
     padding: 1.25rem;
   }
-  
+
   .settings-section {
     gap: 1rem;
   }
@@ -856,39 +894,39 @@
     min-height: 2.35rem;
     font-size: 0.9rem;
   }
-  
+
   .settings-tabs-nav {
     scrollbar-width: thin;
   }
-  
+
   .settings-tab {
     padding: 0.65rem 1rem;
     font-size: 0.8rem;
   }
-  
+
   .settings-toggle-card {
     padding: 0.5rem 0.7rem;
     gap: 0.6rem;
   }
-  
+
   .settings-toggle-card__left {
     gap: 0.6rem;
   }
-  
+
   .settings-toggle-card__icon {
     width: 1.7rem;
     height: 1.7rem;
     font-size: 1.05rem;
   }
-  
+
   .settings-toggle-title {
     font-size: 0.9rem;
   }
-  
+
   .settings-toggle-text {
     font-size: 0.82rem;
   }
-  
+
   .settings-theme-grid {
     grid-template-columns: 1fr;
   }
@@ -899,15 +937,15 @@
   .settings-page {
     padding: 16px;
   }
-  
+
   .settings-title {
     font-size: 1.35rem;
   }
-  
+
   .settings-content {
     padding: 1rem;
   }
-  
+
   .settings-section {
     gap: 0.9rem;
   }
@@ -930,32 +968,32 @@
     min-height: 2.2rem;
     font-size: 0.84rem;
   }
-  
+
   .settings-tab {
     padding: 0.6rem 0.85rem;
     font-size: 0.75rem;
     gap: 0.35rem;
   }
-  
+
   .settings-toggle-card {
     padding: 0.45rem 0.65rem;
     gap: 0.5rem;
   }
-  
+
   .settings-toggle-card__left {
     gap: 0.5rem;
   }
-  
+
   .settings-toggle-card__icon {
     width: 1.55rem;
     height: 1.55rem;
     font-size: 0.98rem;
   }
-  
+
   .settings-toggle-title {
     font-size: 0.84rem;
   }
-  
+
   .settings-toggle-text {
     font-size: 0.76rem;
   }
@@ -966,43 +1004,43 @@
   .settings-page {
     padding: 14px;
   }
-  
+
   .settings-content {
     padding: 0.85rem;
   }
-  
+
   .settings-profile-header {
     flex-direction: column;
     text-align: center;
   }
-  
+
   .settings-role-badge {
     margin-inline: auto;
   }
-  
+
   .settings-danger-zone {
     flex-direction: column;
     align-items: stretch;
   }
-  
+
   .settings-danger-button {
     width: 100%;
     justify-content: center;
   }
-  
+
   .settings-pw-checklist {
     grid-template-columns: 1fr;
   }
-  
+
   .settings-toggle-list {
     gap: 0.25rem;
   }
-  
+
   .settings-toggle-card__left {
     flex-direction: row;
     align-items: center;
   }
-  
+
   .settings-primary-button {
     width: 100%;
     justify-content: center;

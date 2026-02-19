@@ -270,7 +270,9 @@
 }
 
 @keyframes vehiclesSpin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .vehicles-table-scroll {
@@ -305,7 +307,7 @@
   background: transparent;
 }
 
-.vehicles-tbody > .vehicles-row + .vehicles-row {
+.vehicles-tbody>.vehicles-row+.vehicles-row {
   border-top: 1px solid var(--border-light);
 }
 

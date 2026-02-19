@@ -399,6 +399,7 @@
 }
 
 @keyframes ticketsPulse {
+
   0%,
   100% {
     transform: scale(1);
@@ -697,4 +698,3 @@
   font-weight: 600;
   color: var(--text-primary);
 }
-
