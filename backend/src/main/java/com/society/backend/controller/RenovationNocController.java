@@ -6,7 +6,6 @@ import com.society.backend.service.RenovationNocService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -19,88 +18,84 @@ public class RenovationNocController {
 
     private final RenovationNocService renovationNocService;
 
-    private Long getUserId(Authentication auth) {
-        return Long.parseLong(auth.getName());
-    }
-
     @PostMapping
     public ResponseEntity<RenovationNocResponse> create(@Valid @RequestBody RenovationNocRequest request,
-                                                         Authentication auth) {
-        return ResponseEntity.ok(renovationNocService.create(request, getUserId(auth)));
+                                                         @RequestParam Long userId) {
+        return ResponseEntity.ok(renovationNocService.create(request, userId));
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<RenovationNocResponse> update(@PathVariable Long id,
                                                          @Valid @RequestBody RenovationNocRequest request,
-                                                         Authentication auth) {
-        return ResponseEntity.ok(renovationNocService.update(id, request, getUserId(auth)));
+                                                         @RequestParam Long userId) {
+        return ResponseEntity.ok(renovationNocService.update(id, request, userId));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<RenovationNocResponse> getById(@PathVariable Long id, Authentication auth) {
-        return ResponseEntity.ok(renovationNocService.getById(id, getUserId(auth)));
+    public ResponseEntity<RenovationNocResponse> getById(@PathVariable Long id, @RequestParam Long userId) {
+        return ResponseEntity.ok(renovationNocService.getById(id, userId));
     }
 
     @GetMapping("/society/{societyId}")
     public ResponseEntity<List<RenovationNocResponse>> getBySociety(@PathVariable Long societyId,
-                                                                      Authentication auth) {
-        return ResponseEntity.ok(renovationNocService.getBySociety(societyId, getUserId(auth)));
+                                                                      @RequestParam Long userId) {
+        return ResponseEntity.ok(renovationNocService.getBySociety(societyId, userId));
     }
 
     @GetMapping("/society/{societyId}/status/{status}")
     public ResponseEntity<List<RenovationNocResponse>> getByStatus(@PathVariable Long societyId,
                                                                      @PathVariable String status,
-                                                                     Authentication auth) {
-        return ResponseEntity.ok(renovationNocService.getByStatus(societyId, status, getUserId(auth)));
+                                                                     @RequestParam Long userId) {
+        return ResponseEntity.ok(renovationNocService.getByStatus(societyId, status, userId));
     }
 
     @GetMapping("/society/{societyId}/type/{renovationType}")
     public ResponseEntity<List<RenovationNocResponse>> getByType(@PathVariable Long societyId,
                                                                    @PathVariable String renovationType,
-                                                                   Authentication auth) {
-        return ResponseEntity.ok(renovationNocService.getByType(societyId, renovationType, getUserId(auth)));
+                                                                   @RequestParam Long userId) {
+        return ResponseEntity.ok(renovationNocService.getByType(societyId, renovationType, userId));
     }
 
     @GetMapping("/user/{requestedById}")
     public ResponseEntity<List<RenovationNocResponse>> getByUser(@PathVariable Long requestedById,
-                                                                   Authentication auth) {
-        return ResponseEntity.ok(renovationNocService.getByUser(requestedById, getUserId(auth)));
+                                                                   @RequestParam Long userId) {
+        return ResponseEntity.ok(renovationNocService.getByUser(requestedById, userId));
     }
 
     @PatchMapping("/{id}/approve")
     public ResponseEntity<RenovationNocResponse> approve(@PathVariable Long id,
                                                           @RequestBody(required = false) Map<String, String> body,
-                                                          Authentication auth) {
+                                                          @RequestParam Long userId) {
         String notes = body != null ? body.get("adminNotes") : null;
-        return ResponseEntity.ok(renovationNocService.approve(id, notes, getUserId(auth)));
+        return ResponseEntity.ok(renovationNocService.approve(id, notes, userId));
     }
 
     @PatchMapping("/{id}/reject")
     public ResponseEntity<RenovationNocResponse> reject(@PathVariable Long id,
                                                          @RequestBody(required = false) Map<String, String> body,
-                                                         Authentication auth) {
+                                                         @RequestParam Long userId) {
         String reason = body != null ? body.get("reason") : null;
-        return ResponseEntity.ok(renovationNocService.reject(id, reason, getUserId(auth)));
+        return ResponseEntity.ok(renovationNocService.reject(id, reason, userId));
     }
 
     @PatchMapping("/{id}/in-progress")
-    public ResponseEntity<RenovationNocResponse> markInProgress(@PathVariable Long id, Authentication auth) {
-        return ResponseEntity.ok(renovationNocService.markInProgress(id, getUserId(auth)));
+    public ResponseEntity<RenovationNocResponse> markInProgress(@PathVariable Long id, @RequestParam Long userId) {
+        return ResponseEntity.ok(renovationNocService.markInProgress(id, userId));
     }
 
     @PatchMapping("/{id}/completed")
-    public ResponseEntity<RenovationNocResponse> markCompleted(@PathVariable Long id, Authentication auth) {
-        return ResponseEntity.ok(renovationNocService.markCompleted(id, getUserId(auth)));
+    public ResponseEntity<RenovationNocResponse> markCompleted(@PathVariable Long id, @RequestParam Long userId) {
+        return ResponseEntity.ok(renovationNocService.markCompleted(id, userId));
     }
 
     @GetMapping("/society/{societyId}/counts")
-    public ResponseEntity<Map<String, Long>> getCounts(@PathVariable Long societyId, Authentication auth) {
-        return ResponseEntity.ok(renovationNocService.getCounts(societyId, getUserId(auth)));
+    public ResponseEntity<Map<String, Long>> getCounts(@PathVariable Long societyId, @RequestParam Long userId) {
+        return ResponseEntity.ok(renovationNocService.getCounts(societyId, userId));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id, Authentication auth) {
-        renovationNocService.delete(id, getUserId(auth));
+    public ResponseEntity<Void> delete(@PathVariable Long id, @RequestParam Long userId) {
+        renovationNocService.delete(id, userId);
         return ResponseEntity.noContent().build();
     }
 }
