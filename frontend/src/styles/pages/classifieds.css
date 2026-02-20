@@ -11,9 +11,9 @@
     flex-direction: column;
     align-items: center;
     padding: 1rem 0.75rem;
-    border-radius: var(--radius-lg, 12px);
+    border-radius: 12px;
     background: var(--card);
-    border: 1px solid var(--border);
+    border: 1px solid var(--border-default);
 }
 
 .cl-card--active {
@@ -57,8 +57,8 @@
     align-items: center;
     gap: 0.4rem;
     background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-md, 8px);
+    border: 1px solid var(--border-default);
+    border-radius: 8px;
     padding: 0.4rem 0.75rem;
     flex: 1;
     min-width: 180px;
@@ -75,8 +75,8 @@
 
 .cl-filter {
     padding: 0.45rem 0.75rem;
-    border: 1px solid var(--border);
-    border-radius: var(--radius-md, 8px);
+    border: 1px solid var(--border-default);
+    border-radius: 8px;
     background: var(--card);
     color: var(--text-primary);
     font-size: 0.88rem;
@@ -88,7 +88,7 @@
     gap: 0.35rem;
     padding: 0.42rem 0.9rem;
     border: none;
-    border-radius: var(--radius-md, 8px);
+    border-radius: 8px;
     font-size: 0.85rem;
     font-weight: 600;
     cursor: pointer;
@@ -107,7 +107,7 @@
 .cl-btn--secondary {
     background: var(--card);
     color: var(--text-primary);
-    border: 1px solid var(--border);
+    border: 1px solid var(--border-default);
 }
 
 .cl-btn--sold {
@@ -133,7 +133,7 @@
 .cl-btn--edit {
     background: var(--card);
     color: var(--text-primary);
-    border: 1px solid var(--border);
+    border: 1px solid var(--border-default);
 }
 
 .cl-btn--delete {
@@ -156,8 +156,8 @@
 
 .cl-item {
     background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg, 12px);
+    border: 1px solid var(--border-default);
+    border-radius: 12px;
     padding: 1rem 1.2rem;
 }
 
@@ -198,7 +198,7 @@
 .cl-item-cat {
     font-size: 0.78rem;
     color: var(--text-secondary);
-    background: var(--background);
+    background: var(--bg-card);
     padding: 0.15rem 0.55rem;
     border-radius: 999px;
 }
@@ -280,8 +280,8 @@
     position: relative;
     isolation: isolate;
     background: var(--bg-secondary, #ffffff);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg, 12px);
+    border: 1px solid var(--border-default);
+    border-radius: 12px;
     width: 95%;
     max-width: 600px;
     max-height: 90vh;
@@ -294,7 +294,7 @@
     justify-content: space-between;
     align-items: center;
     padding: 1rem 1.25rem;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid var(--border-default);
 }
 
 .cl-modal-header h3 {
@@ -340,9 +340,9 @@
 .cl-field select,
 .cl-field textarea {
     padding: 0.45rem 0.7rem;
-    border: 1px solid var(--border);
-    border-radius: var(--radius-md, 8px);
-    background: var(--background);
+    border: 1px solid var(--border-default);
+    border-radius: 8px;
+    background: var(--bg-card);
     color: var(--text-primary);
     font-size: 0.9rem;
 }
@@ -353,7 +353,7 @@
     gap: 0.65rem;
     margin-top: 1.25rem;
     padding-top: 1rem;
-    border-top: 1px solid var(--border);
+    border-top: 1px solid var(--border-default);
 }
 
 @media (max-width: 600px) {
