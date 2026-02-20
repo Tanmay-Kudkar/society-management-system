@@ -69,7 +69,7 @@
 | 4 | [👥 Role Hierarchy & RBAC](#-role-hierarchy--rbac) | 12-role hierarchy with permissions |
 | 5 | [🔐 Permission Matrix](#-permission-matrix) | Fine-grained CRUD access per role |
 | 6 | [📜 Access Control Rules](#-access-control-rules) | Security enforcement rules |
-| 7 | [🖥️ Frontend — Admin Web Panel](#️-frontend--admin-web-panel) | React SPA structure and details |
+| 7 | [🖥️ Frontend — Web Panel](#️-frontend--web-panel) | React SPA structure and details |
 | 8 | [📱 Mobile Apps — Native (Android + iOS)](#-mobile-apps--native-android--ios) | Dedicated native apps (Kotlin & Swift) |
 | 9 | [⚙️ Backend — Spring Boot API](#️-backend--spring-boot-api) | Java backend architecture |
 | 10 | [🗄️ Database Design](#️-database-design) | PostgreSQL schema and ER diagram |
@@ -434,15 +434,15 @@ The system implements a **12-role Role-Based Access Control** hierarchy. Each ro
 ---
 
 <!-- ════════════════════════════════════════════════════════════════════════ -->
-<!--                 7. FRONTEND — ADMIN WEB PANEL                          -->
+<!--                   7. FRONTEND — WEB PANEL                              -->
 <!-- ════════════════════════════════════════════════════════════════════════ -->
 
-## 🖥️ Frontend — Admin Web Panel
+## 🖥️ Frontend — Web Panel
 
 ### 📁 Directory Structure
 
 ```
-📁 admin-web/
+📁 frontend/
 ├── 📄 index.html                          # SPA entry point
 ├── 📄 package.json                        # Dependencies & scripts
 ├── 📄 vite.config.js                      # Vite build configuration
@@ -621,7 +621,7 @@ The frontend uses a **shared centralized API layer** (`api/index.js`) that provi
 
 ```javascript
 // ═══════════════════════════════════════════════════════════════
-// Shared Axios Instance — used by admin-web
+// Shared Axios Instance — used by frontend
 // ═══════════════════════════════════════════════════════════════
 
 import axios from 'axios'
@@ -648,7 +648,7 @@ api.interceptors.response.use(
     if (error.response?.status === 401) {
       localStorage.removeItem('token')
       localStorage.removeItem('user')
-      window.location.href = '/login'
+      window.location.href = '/#/login'
     }
     return Promise.reject(error)
   }
@@ -2112,17 +2112,32 @@ CREATE TABLE security_logs (
 | Phase | Weeks | Feature IDs | Primary Goal | Status |
 |:------|:------|:------------|:-------------|:------:|
 | Phase 1 — Core Foundation | 1–3 | F01–F07 | Role redesign, permission rebuild, auth/controller alignment | ✅ Complete |
-| Phase 2 — Finance Engine | 4–8 | F08–F17 | Itemized billing, PDF/Excel/Print, bank accounts, penalties | 🔜 Next |
-| Phase 3 — Approval & Governance | 9–11 | F18–F23 | Generic approval engine, polls, AGM, elections | ⬜ Planned |
-| Phase 4 — Communication & Tickets | 12–14 | F24–F29 | Unified tickets, reminders, messaging, events, legal demand flow | ⬜ Planned |
-| Phase 5 — Security & Visitors | 15–16 | F30–F34 | Visitor, OTP, SOS, patrol, gate-log enhancements | ⬜ Planned |
-| Phase 6 — Operations & Maintenance | 17–19 | F35–F40 | Work orders, assets, schedules, staff shifts, bookings, NOC | ⬜ Planned |
-| Phase 7 — Resident Services | 20–21 | F41–F45 | Move lifecycle, penalties, pets, classifieds, bylaws | ⬜ Planned |
-| Phase 8 — Vendor Ecosystem | 22–23 | F46–F50 | Vendor portal, reviews, invoice submission, TDS compliance | ⬜ Planned |
+| Phase 2 — Finance Engine | 4–8 | F08–F17 | Itemized billing, PDF/Excel/Print, bank accounts, penalties | 🔄 In Progress |
+| Phase 3 — Approval & Governance | 9–11 | F18–F23 | Generic approval engine, polls, AGM, elections | 🔄 In Progress |
+| Phase 4 — Communication & Tickets | 12–14 | F24–F29 | Unified tickets, reminders, messaging, events, legal demand flow | 🟡 Partial |
+| Phase 5 — Security & Visitors | 15–16 | F30–F34 | Visitor, OTP, SOS, patrol, gate-log enhancements | 🟡 Partial |
+| Phase 6 — Operations & Maintenance | 17–19 | F35–F40 | Work orders, assets, schedules, staff shifts, bookings, NOC | ✅ Implemented |
+| Phase 7 — Resident Services | 20–21 | F41–F45 | Move lifecycle, penalties, pets, classifieds, bylaws | ✅ Implemented |
+| Phase 8 — Vendor Ecosystem | 22–23 | F46–F50 | Vendor portal, reviews, invoice submission, TDS compliance | 🟡 Partial |
 | Phase 9 — Advanced Finance & Compliance | 24–26 | F51–F56 | Reconciliation, statements, budgets, ledger, defaulter reports | ⬜ Planned |
-| Phase 10 — Documents & Reports | 27–28 | F57–F61 | Repository, minutes PDF, dashboard/report/export enhancement | ⬜ Planned |
+| Phase 10 — Documents & Reports | 27–28 | F57–F61 | Repository, minutes PDF, dashboard/report/export enhancement | 🟡 Partial |
 | Phase 11 — Platform Infrastructure | 29–31 | F62–F68 | 2FA, rate limiting, audit, push notifications, i18n, backups | ⬜ Planned |
 | Phase 12 — Modern Enhancements | 32–35 | F69–F77 | WhatsApp/SMS, OAuth, EV charging, federation mode, AI insights | ⬜ Planned |
+
+### ✅ Current Implementation Status (Client View)
+
+| Area | Status | Notes |
+|:-----|:------:|:------|
+| RBAC + Auth Foundation | ✅ Implemented | 12-role hierarchy, JWT auth, permission enforcement |
+| Core Finance | ✅ Implemented | Maintenance bills, transactions, vendor bills, contracts, payments, reports |
+| Approvals & Governance | 🟡 Partial | Approval workflow present; polls/AGM/elections pending |
+| Communication | ✅ Implemented | Notices, banners, tickets, complaints, emergency contacts, documents |
+| Security & Entry Ops | 🟡 Partial | Visitors, patrol, safety available; advanced OTP/SOS enhancements pending |
+| Maintenance Operations | ✅ Implemented | Work orders, assets, staff shifts, common area schedule, facility booking, NOC |
+| Resident Services | ✅ Implemented | Move tracking, penalties, pet registration, classifieds, society rules |
+| Vendor Ecosystem | 🟡 Partial | Vendor CRUD + approvals + billing in place; ratings/TDS/portal depth pending |
+| Advanced Compliance Finance | ⬜ Planned | Reconciliation, budgeting, ledger enhancements pending |
+| Platform Hardening | ⬜ Planned | 2FA, rate limiting, i18n, backups, push rollout pending |
 
 ### 📈 Delivery Graph (Mermaid Gantt)
 
@@ -2514,7 +2529,7 @@ java -jar target/backend-0.0.1-SNAPSHOT.jar
 ### 4️⃣ Frontend Setup
 
 ```bash
-cd admin-web
+cd frontend
 
 # Install dependencies
 npm install
@@ -2540,7 +2555,7 @@ npm run dev
 ### 6️⃣ API Layer (Shared)
 
 ```bash
-# The api/ directory contains shared API modules used by admin-web
+# The api/ directory contains shared API modules used by frontend
 # Native apps have their own API client layers (Retrofit / URLSession)
 ```
 
@@ -2624,9 +2639,9 @@ services:
 
   # ─── Static Frontend ───
   - type: web
-    name: society-admin-web
+    name: societyhub-webapp
     env: static
-    rootDir: admin-web
+    rootDir: frontend
     plan: free
     buildCommand: npm ci ; npm run build
     staticPublishPath: dist
@@ -2648,7 +2663,7 @@ databases:
 ┌──────────────────── RENDER CLOUD ────────────────────┐
 │                                                       │
 │  ┌─────────────────┐    ┌───────────────────────┐    │
-│  │ society-backend  │    │ society-admin-web     │    │
+│  │ society-backend  │    │ societyhub-webapp     │    │
 │  │ (Java Web Svc)  │    │ (Static Site)         │    │
 │  │                 │    │                       │    │
 │  │ Spring Boot     │    │ Vite Build → dist/    │    │
@@ -2690,7 +2705,7 @@ databases:
 ├── 📄 README.md                             # This documentation file
 ├── 📄 render.yaml                           # Render deployment blueprint
 │
-├── 📁 admin-web/                            # 🖥️ React Admin Panel (Vite)
+├── 📁 frontend/                             # 🖥️ React Web Panel (Vite)
 │   ├── 📄 package.json                      # Frontend dependencies
 │   ├── 📄 vite.config.js                    # Build configuration
 │   ├── 📄 index.html                        # SPA entry point
@@ -2698,7 +2713,7 @@ databases:
 │       ├── 📁 components/ (8 files)         # Shared UI components
 │       ├── 📁 context/ (5 files)            # React context providers
 │       ├── 📁 hooks/ (3 files)              # Custom React hooks
-│       ├── 📁 pages/ (36 pages)             # Page components
+│       ├── 📁 pages/ (55 pages)             # Page components
 │       ├── 📁 styles/                       # CSS architecture
 │       └── 📁 utils/ (3 files)              # Utility functions
 │
@@ -2710,7 +2725,7 @@ databases:
 │   └── 📁 src/main/java/.../backend/
 │       ├── 📁 config/ (9 files)             # Configuration classes
 │       ├── 📁 security/ (6 files)           # JWT + RBAC security
-│       ├── 📁 controller/ (26 controllers)  # REST API endpoints
+│       ├── 📁 controller/ (42 controllers)  # REST API endpoints
 │       ├── 📁 entity/ (23 classes)          # JPA entity models
 │       ├── 📁 dto/ (47+ DTOs)              # Request/Response objects
 │       ├── 📁 repository/ (19 repos)        # Data access layer
@@ -2751,9 +2766,9 @@ databases:
 
 | Metric | Count |
 |:-------|------:|
-| **Total Frontend Pages** | 36 |
+| **Total Frontend Pages** | 55 |
 | **Mobile Platforms** | 2 (Android + iOS) |
-| **Backend Controllers** | 26 |
+| **Backend Controllers** | 42 |
 | **JPA Entities** | 23 |
 | **DTOs (Request/Response)** | 47+ |
 | **Repository Interfaces** | 19 |
@@ -2763,7 +2778,7 @@ databases:
 | **User Roles (RBAC)** | 12 |
 | **Bulk Import Modules** | 7 |
 | **Excel Export Types** | 8 |
-| **Shared API Layer** | 518 lines |
+| **Shared API Layer** | 755 lines |
 | **Role Permission Matrix** | 368 lines |
 | **Database Schema** | 287 lines |
 

@@ -1,5 +1,5 @@
 import { createRoot } from 'react-dom/client'
-import { BrowserRouter } from 'react-router-dom'
+import { HashRouter } from 'react-router-dom'
 import { QueryClient, QueryClientProvider, MutationCache } from '@tanstack/react-query'
 import { AuthProvider, SettingsProvider } from './context'
 import App from './App.jsx'
@@ -40,12 +40,12 @@ const queryClient = new QueryClient({
 
 createRoot(document.getElementById('root')).render(
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
+      <HashRouter>
         <AuthProvider>
           <SettingsProvider>
             <App />
           </SettingsProvider>
         </AuthProvider>
-      </BrowserRouter>
+      </HashRouter>
     </QueryClientProvider>,
 )
