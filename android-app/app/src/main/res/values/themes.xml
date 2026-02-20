@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.SocietyManager" parent="android:Theme.Material.Light.NoActionBar" />
+    <style name="Theme.SocietyManager.Splash" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/primary</item>
+        <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher</item>
+        <item name="postSplashScreenTheme">@style/Theme.SocietyManager</item>
+    </style>
+
+    <color name="primary">#1976D2</color>
+    <color name="primary_dark">#1565C0</color>
+    <color name="accent">#FF6F00</color>
+    <color name="white">#FFFFFF</color>
+    <color name="black">#000000</color>
+</resources>
