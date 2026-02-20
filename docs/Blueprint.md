@@ -48,7 +48,6 @@
 | **Frontend (Mobile)** | React Native / Expo | — | Member & Staff mobile app |
 | **Database** | PostgreSQL | 16.x | Primary datastore |
 | **ORM** | Hibernate / JPA | 6.x | Object-relational mapping |
-| **Migrations** | Flyway | 11.x | Schema versioning |
 | **Auth** | JWT + Spring Security | — | Stateless auth, HTTP-only cookies |
 | **Payments** | Razorpay Java SDK | 1.4.x | Online payment gateway |
 | **Email** | Spring Mail + Gmail SMTP | — | Transactional emails |

@@ -26,7 +26,6 @@
 
 ![JWT](https://img.shields.io/badge/JWT-Auth-000000?style=for-the-badge&logo=jsonwebtokens&logoColor=white)
 ![Axios](https://img.shields.io/badge/Axios-1.13.3-5A29E4?style=for-the-badge&logo=axios&logoColor=white)
-![Flyway](https://img.shields.io/badge/Flyway-11.20.3-CC0200?style=for-the-badge&logo=flyway&logoColor=white)
 ![Recharts](https://img.shields.io/badge/Recharts-3.7.0-FF6384?style=for-the-badge&logo=chart.js&logoColor=white)
 ![Render](https://img.shields.io/badge/Render-Deploy-46E3B7?style=for-the-badge&logo=render&logoColor=white)
 
@@ -163,7 +162,6 @@
 | ![PostgreSQL Driver](https://img.shields.io/badge/-PostgreSQL-4169E1?logo=postgresql&logoColor=white&style=flat-square) | `42.x` | JDBC database driver |
 | ![JWT](https://img.shields.io/badge/-JWT-000000?style=flat-square) | `0.12.5` | JWT token creation & validation |
 | ![Apache POI](https://img.shields.io/badge/-Apache_POI-blue?style=flat-square) | `5.2.5` | Excel export generation |
-| ![Flyway](https://img.shields.io/badge/-Flyway-CC0200?logo=flyway&logoColor=white&style=flat-square) | `11.20.3` | Database migration management |
 | ![Razorpay Java](https://img.shields.io/badge/-Razorpay-0C2451?logo=razorpay&logoColor=white&style=flat-square) | `1.4.6` | Payment gateway SDK |
 | ![Lombok](https://img.shields.io/badge/-Lombok-red?style=flat-square) | `1.18.32` | Boilerplate code reduction |
 | ![Spring Mail](https://img.shields.io/badge/-Spring_Mail-6DB33F?style=flat-square) | `3.5.x` | SMTP email service |
@@ -1001,7 +999,7 @@ api.interceptors.response.use(
     │   │
     │   └── 📁 resources/
     │       ├── 📄 application.properties          # App configuration
-    │       └── 📁 db/migration/                   # Flyway SQL migrations
+    │       └── 📁 db/migration/                   # SQL migration scripts
     │
     └── 📁 test/
         └── 📁 java/com/society/backend/

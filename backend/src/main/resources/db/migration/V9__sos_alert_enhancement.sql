@@ -1,5 +1,5 @@
 -- F32: SOS / Emergency Alert Enhancement
--- Create sos_alerts and gate_logs tables if not present (for Flyway tracking),
+-- Create sos_alerts and gate_logs tables if not present,
 -- then add enhancement columns for escalation, location, response tracking.
 
 CREATE TABLE IF NOT EXISTS sos_alerts (
