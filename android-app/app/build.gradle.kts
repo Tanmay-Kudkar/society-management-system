@@ -13,7 +13,7 @@ android {
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.society.android"
+        applicationId = "com.societyhub"
         minSdk = 24
         targetSdk = 35
         versionCode = 1

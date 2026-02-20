@@ -143,6 +143,7 @@ export default function PageShell({
             </button>
 
             <Link to="/login" className="page-shell__login">Login</Link>
+            <Link to="/login" className="page-shell__login">Admin Portal</Link>
           </div>
         </div>
 
@@ -160,6 +161,9 @@ export default function PageShell({
             ))}
             <Link to="/login" onClick={() => setMobileMenuOpen(false)} className="page-shell__mobile-login">
               Login
+            </Link>
+            <Link to="/login" onClick={() => setMobileMenuOpen(false)} className="page-shell__mobile-login">
+              Admin Portal
             </Link>
           </div>
         </div>

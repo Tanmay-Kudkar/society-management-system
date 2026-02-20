@@ -26,7 +26,6 @@ export default function Login() {
   const [isLoaded, setIsLoaded] = useState(false)
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const [fieldErrors, setFieldErrors] = useState({})
-  const [isDesktopView, setIsDesktopView] = useState(() => window.matchMedia('(min-width: 1024px)').matches)
   const dropdownRef = useRef(null)
   const { login, user, loading: authLoading } = useAuth()
   const { theme, setTheme, resetToSystemTheme, isManual } = useTheme()
@@ -50,17 +49,6 @@ export default function Login() {
       setPortalType(savedPortal)
     }
   }, [])
-
-  useEffect(() => {
-    const mq = window.matchMedia('(min-width: 1024px)')
-    const handler = () => setIsDesktopView(mq.matches)
-    mq.addEventListener('change', handler)
-    return () => mq.removeEventListener('change', handler)
-  }, [])
-
-  useEffect(() => {
-    if (!isDesktopView && portalType === 'admin') setPortalType('')
-  }, [isDesktopView, portalType])
 
   useEffect(() => {
     if (!authLoading && user) navigate('/', { replace: true })
@@ -211,7 +199,7 @@ export default function Login() {
                     </button>
                     {dropdownOpen && (
                       <div className="login-dropdown">
-                        {(isDesktopView ? PORTALS : PORTALS.filter(p => p.key !== 'admin')).map((p) => (
+                        {PORTALS.map((p) => (
                           <button
                             key={p.key}
                             type="button"

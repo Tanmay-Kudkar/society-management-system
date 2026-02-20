@@ -114,7 +114,7 @@ export default function Welcome() {
   return (
     <div className="welcome-page">
       {/* Nav */}
-      <nav className={`welcome-nav ${scrolled ? 'is-scrolled' : ''} ${isLoaded ? 'is-visible' : ''}`}>
+      <nav className={`welcome-nav ${scrolled ? 'is-scrolled' : ''} ${isLoaded ? 'is-visible' : ''} ${mobileMenuOpen ? 'is-menu-open' : ''}`}>
         <div className="welcome-nav-inner">
           <button className="welcome-logo" onClick={() => scrollTo('hero')}>
             <div className="welcome-logo-badge">
@@ -164,6 +164,9 @@ export default function Welcome() {
             <button onClick={() => navigate('/login')} className="welcome-cta-btn welcome-cta-btn--outline">
               Society Login
             </button>
+            <button onClick={() => navigate('/login')} className="welcome-cta-btn welcome-cta-btn--outline">
+              Admin Portal
+            </button>
             <button onClick={() => scrollTo('hero')} className="welcome-cta-btn">
               Enroll your society
               <ArrowRight size={14} />
@@ -174,14 +177,17 @@ export default function Welcome() {
         {/* Mobile menu */}
         {mobileMenuOpen && (
           <div className="welcome-mobile-menu">
-              <button onClick={() => { navigate('/about'); setMobileMenuOpen(false) }} className="welcome-mobile-link">About Us</button>
-              <button onClick={() => scrollTo('features')} className="welcome-mobile-link">Features</button>
-              <button onClick={() => { navigate('/pricing'); setMobileMenuOpen(false) }} className="welcome-mobile-link">Pricing</button>
-              <button onClick={() => { navigate('/contact'); setMobileMenuOpen(false) }} className="welcome-mobile-link">Contact</button>
+            <button onClick={() => { navigate('/about'); setMobileMenuOpen(false) }} className="welcome-mobile-link">About Us</button>
+            <button onClick={() => { scrollTo('features'); setMobileMenuOpen(false) }} className="welcome-mobile-link">Features</button>
+            <button onClick={() => { navigate('/pricing'); setMobileMenuOpen(false) }} className="welcome-mobile-link">Pricing</button>
+            <button onClick={() => { navigate('/contact'); setMobileMenuOpen(false) }} className="welcome-mobile-link">Contact</button>
 
-              <button onClick={() => { navigate('/login'); setMobileMenuOpen(false) }} className="welcome-mobile-cta">
-                Society Login
-              </button>
+            <button onClick={() => { navigate('/login'); setMobileMenuOpen(false) }} className="welcome-mobile-cta welcome-mobile-cta--outline">
+              Society Login
+            </button>
+            <button onClick={() => { navigate('/login'); setMobileMenuOpen(false) }} className="welcome-mobile-cta">
+              Admin Portal
+            </button>
           </div>
         )}
       </nav>

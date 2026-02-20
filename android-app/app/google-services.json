@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "66630553347",
+    "project_id": "society-management-system-app",
+    "storage_bucket": "society-management-system-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:66630553347:android:0b8f6270f7ddb9fc406336",
+        "android_client_info": {
+          "package_name": "com.societyhub"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBqUvHMiH4N9BF-krN6WRncSVjB1Bluruc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -26,7 +26,8 @@
   padding: 0.75rem 1rem;
   height: auto;
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  align-items: stretch;
   background: color-mix(in srgb, var(--bg-primary) 88%, transparent);
   border-bottom: 1px solid transparent;
   backdrop-filter: blur(8px);
@@ -72,6 +73,15 @@
   border: none;
   color: inherit;
   padding: 0;
+  transition: opacity 0.2s;
+}
+
+.welcome-logo:hover {
+  opacity: 0.85;
+}
+
+.welcome-logo:hover .welcome-logo-badge {
+  transform: scale(1.08) rotate(-3deg);
 }
 
 .welcome-logo-badge {
@@ -83,6 +93,7 @@
   align-items: center;
   justify-content: center;
   color: #fff;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .welcome-logo-text {
@@ -113,12 +124,30 @@
   cursor: pointer;
   padding: 0.375rem 0.75rem;
   border-radius: var(--radius-md);
-  transition: color 0.15s, background 0.15s;
+  transition: color 0.2s, background 0.2s, transform 0.15s;
+  position: relative;
+}
+
+.welcome-nav-link::after {
+  content: '';
+  position: absolute;
+  bottom: 2px;
+  left: 50%;
+  width: 0;
+  height: 2px;
+  background: var(--accent-primary);
+  border-radius: 1px;
+  transition: width 0.25s cubic-bezier(0.16, 1, 0.3, 1), left 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .welcome-nav-link:hover {
   color: var(--text-primary);
   background: var(--bg-tertiary);
+}
+
+.welcome-nav-link:hover::after {
+  width: 60%;
+  left: 20%;
 }
 
 .welcome-nav-link:focus-visible,
@@ -192,7 +221,8 @@
   min-width: 140px;
   box-shadow: var(--shadow-lg);
   z-index: 50;
-  animation: welcomeDropIn 0.15s ease;
+  animation: welcomeDropIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  transform-origin: top right;
 }
 
 .welcome-theme-option {
@@ -236,6 +266,16 @@
   border-radius: var(--radius-md);
   color: var(--text-secondary);
   cursor: pointer;
+  transition: color 0.2s, background 0.2s, transform 0.2s;
+}
+
+.welcome-mobile-toggle:hover {
+  color: var(--text-primary);
+  background: var(--bg-tertiary);
+}
+
+.welcome-mobile-toggle:active {
+  transform: scale(0.92);
 }
 
 @media (max-width: 768px) {
@@ -257,7 +297,7 @@
   border: none;
   border-radius: var(--radius-md);
   cursor: pointer;
-  transition: background 0.15s;
+  transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
 }
 
 .welcome-cta-btn--outline {
@@ -268,10 +308,18 @@
 
 .welcome-cta-btn--outline:hover {
   background: var(--bg-tertiary);
+  border-color: var(--border-muted);
 }
 
 .welcome-cta-btn:hover {
   background: var(--accent-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--accent-primary) 25%, transparent);
+}
+
+.welcome-cta-btn:active {
+  transform: translateY(0);
+  box-shadow: none;
 }
 
 @media (max-width: 768px) {
@@ -280,14 +328,30 @@
   }
 }
 
-/* Mobile menu */
+/* Nav becomes opaque when mobile menu is open */
+.welcome-nav.is-menu-open {
+  background: var(--bg-primary);
+  backdrop-filter: none;
+}
+
+/* Mobile menu — inside nav, flows below nav-inner */
 .welcome-mobile-menu {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
   padding: 0.75rem 1rem 1rem;
-  border-top: 1px solid var(--border-default);
-  background: var(--bg-secondary);
+  animation: welcomeMobileSlide 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes welcomeMobileSlide {
+  from {
+    opacity: 0;
+    transform: translateY(-12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .welcome-mobile-link {
@@ -300,12 +364,35 @@
   padding: 0.625rem 0.75rem;
   border-radius: var(--radius-md);
   cursor: pointer;
-  transition: background 0.15s, color 0.15s;
+  transition: background 0.2s, color 0.2s, transform 0.2s, padding-left 0.2s;
+  opacity: 0;
+  animation: welcomeMenuItemIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
+
+.welcome-mobile-link:nth-child(1) { animation-delay: 0.04s; }
+.welcome-mobile-link:nth-child(2) { animation-delay: 0.08s; }
+.welcome-mobile-link:nth-child(3) { animation-delay: 0.12s; }
+.welcome-mobile-link:nth-child(4) { animation-delay: 0.16s; }
 
 .welcome-mobile-link:hover {
   color: var(--text-primary);
   background: var(--bg-tertiary);
+  padding-left: 1rem;
+}
+
+.welcome-mobile-link:active {
+  transform: scale(0.98);
+}
+
+@keyframes welcomeMenuItemIn {
+  from {
+    opacity: 0;
+    transform: translateX(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
 .welcome-mobile-cta {
@@ -318,11 +405,36 @@
   border: none;
   border-radius: var(--radius-md);
   cursor: pointer;
-  transition: background 0.15s;
+  transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
+  opacity: 0;
+  animation: welcomeMenuItemIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation-delay: 0.2s;
+}
+
+.welcome-mobile-cta + .welcome-mobile-cta {
+  animation-delay: 0.25s;
+}
+
+.welcome-mobile-cta--outline {
+  color: var(--accent-primary);
+  background: transparent;
+  border: 1.5px solid var(--accent-primary);
+}
+
+.welcome-mobile-cta--outline:hover {
+  background: color-mix(in srgb, var(--accent-primary) 12%, transparent);
+  transform: translateY(-1px);
 }
 
 .welcome-mobile-cta:hover {
   background: var(--accent-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--accent-primary) 25%, transparent);
+}
+
+.welcome-mobile-cta:active {
+  transform: translateY(0) scale(0.98);
+  box-shadow: none;
 }
 
 /*  Hero  */
@@ -556,12 +668,18 @@
   color: #fff;
   font-weight: 800;
   font-size: 0.95rem;
-  transition: background 0.15s, transform 0.15s;
+  transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
 }
 
 .welcome-enroll__submit:hover {
   background: var(--accent-hover);
-  transform: translateY(-1px);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px color-mix(in srgb, var(--accent-primary) 25%, transparent);
+}
+
+.welcome-enroll__submit:active {
+  transform: translateY(0);
+  box-shadow: none;
 }
 
 .welcome-enroll__error {
@@ -636,8 +754,13 @@
 
 .welcome-btn-primary:hover {
   background: var(--accent-hover);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 16px color-mix(in srgb, var(--accent-primary) 30%, transparent);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px color-mix(in srgb, var(--accent-primary) 30%, transparent);
+}
+
+.welcome-btn-primary:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--accent-primary) 20%, transparent);
 }
 
 .welcome-btn-primary.welcome-btn-lg {
@@ -743,15 +866,15 @@
   background: var(--bg-card);
   border: 1px solid var(--border-default);
   border-radius: var(--radius-lg);
-  transition: border-color 0.3s, box-shadow 0.3s, transform 0.3s;
+  transition: border-color 0.3s, box-shadow 0.3s, transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   position: relative;
 }
 
 .welcome-feature-card:hover {
   border-color: var(--accent-primary);
-  box-shadow: 0 4px 24px color-mix(in srgb, var(--accent-primary) 12%, transparent),
+  box-shadow: 0 8px 30px color-mix(in srgb, var(--accent-primary) 12%, transparent),
     0 0 0 1px color-mix(in srgb, var(--accent-primary) 20%, transparent);
-  transform: translateY(-3px);
+  transform: translateY(-4px);
 }
 
 .welcome-feature-card:hover .welcome-feature-icon {
@@ -1143,23 +1266,41 @@
 @keyframes welcomeDropIn {
   from {
     opacity: 0;
-    transform: translateY(-4px);
+    transform: scale(0.95) translateY(-4px);
   }
-
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: scale(1) translateY(0);
   }
 }
 
 @keyframes heroPulse {
-
-  0%,
-  100% {
+  0%, 100% {
     opacity: 1;
+    transform: scale(1);
   }
-
   50% {
     opacity: 0.4;
+    transform: scale(1.2);
+  }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .welcome-nav,
+  .welcome-hero-badge,
+  .welcome-hero-title,
+  .welcome-hero-subtitle,
+  .welcome-hero-actions,
+  .welcome-enroll,
+  .welcome-hidden,
+  .welcome-reveal,
+  .welcome-mobile-menu,
+  .welcome-mobile-link,
+  .welcome-mobile-cta {
+    animation: none !important;
+    transition: none !important;
+    opacity: 1 !important;
+    transform: none !important;
   }
 }
