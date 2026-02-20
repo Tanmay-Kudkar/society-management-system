@@ -1,5 +1,7 @@
 ######################################################################
+
 # 🚫 GLOBAL & OS FILES
+
 ######################################################################
 .DS_Store
 .DS_Store?
@@ -9,121 +11,238 @@
 ehthumbs.db
 Thumbs.db
 desktop.ini
+$RECYCLE.BIN/
 
 ######################################################################
+
 # 🧠 IDE & EDITOR CONFIGURATIONS
+
 ######################################################################
+
 # VS Code
-.vscode/
+
+.vscode/*
+!.vscode/extensions.json
 *.code-workspace
 .history/
 
-# IntelliJ / JetBrains
+# JetBrains / Android Studio / IntelliJ
+
 .idea/
 *.iws
 *.iml
 *.ipr
 out/
 
-# Eclipse
+# Eclipse / STS
+
 .classpath
 .project
 .settings/
 .springBeans
 bin/
 
-# Generic Editor Backups
+# Visual Studio / Windows
+
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+
+# Other editors
+
 *.swp
+*.swo
+*.sw?
 *~
 *.bak
 *.tmp
 
 ######################################################################
-# ☕ BACKEND: JAVA & SPRING BOOT
+
+# 🧪 LOGS
+
 ######################################################################
-# Compiled files
-*.class
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+######################################################################
+
+# ☕ BACKEND: JAVA / SPRING BOOT / MAVEN / GRADLE
+
+######################################################################
 target/
 build/
+.gradle/
+.gradle-cache/
+*.class
 
 # Maven
-.mvn/wrapper/maven-wrapper.properties
-.mvn/wrapper/maven-wrapper.jar
-# Do not ignore mvnw scripts, but ignore the log
+
 .mvn/wrapper/maven-wrapper.log
 dependency-reduced-pom.xml
 
-# Spring Boot Logs
-logs/
-*.log
-tms.log
+# JVM crash
+
 hs_err_pid*
 
-# Local Configuration & Secrets (Backend)
-application-local.yml
-application-local.properties
-application-dev.yml
-application-dev.properties
-application-prod.yml
-application-prod.properties
-application-secret.yml
-application-secret.properties
+# Spring profiles & secrets
+
+application-local.*
+application-dev.*
+application-prod.*
+application-secret.*
 
 ######################################################################
-# 🌐 FRONTEND: REACT / VITE
+
+# 🌐 FRONTEND: NODE / REACT / VITE / NEXT
+
 ######################################################################
+
 # Dependencies
-node_modules/
 
-# Build Output
+node_modules/
+.pnpm-store/
+.npm/
+.yarn/
+.yarn/cache/
+.yarn/unplugged/
+.yarn/build-state.yml
+.yarn/install-state.gz
+
+# Build outputs
+
 dist/
 dist-ssr/
+build/
+.next/
+out/
+storybook-static/
 
-# Temporary / Cache
+# Cache
+
 .vite/
-.eslintcache
 .cache/
+.eslintcache
+.parcel-cache/
+turbo/
 
-# Environment Variables (Local overrides)
+# Env
+
+.env
 .env.local
 .env.*.local
-.env.development.local
-.env.test.local
-.env.production.local
-# Keep .env and .env.example tracked, ignore .env only if it contains secrets
-# (User's choice, often .env is local-only)
-.env
+*.local
 
 ######################################################################
-# 📱 MOBILE: REACT NATIVE / EXPO
+
+# 📱 ANDROID (JAVA / KOTLIN)
+
 ######################################################################
-# Expo
+
+# Gradle
+
+.gradle/
+build/
+
+# Local SDK
+
+local.properties
+
+# Build outputs
+
+*.apk
+*.aab
+*.ap_
+
+# Native build
+
+.externalNativeBuild/
+.cxx/
+
+# Generated
+
+captures/
+
+# Signing keys
+
+*.keystore
+*.jks
+*.p12
+*.key
+
+# Android Studio workspace
+
+.navigation/
+.idea/caches/
+.idea/libraries/
+.idea/modules.xml
+.idea/workspace.xml
+.idea/navEditor.xml
+.idea/assetWizardSettings.xml
+
+######################################################################
+
+# 🍎 iOS (SWIFT / XCODE)
+
+######################################################################
+
+# Build
+
+build/
+DerivedData/
+
+# CocoaPods
+
+Pods/
+
+# SwiftPM
+
+.swiftpm/
+.build/
+
+# User workspace
+
+*.xcworkspace
+*.xcworkspace/*
+*.xcodeproj/xcuserdata
+*.xcuserstate
+*.xcscmblueprint
+
+# Release artifacts
+
+*.ipa
+*.dSYM
+*.dSYM.zip
+
+######################################################################
+
+# 📱 REACT NATIVE / EXPO
+
+######################################################################
 .expo/
 .expo-shared/
 web-build/
 
-# React Native
-*.jks
-*.keystore
-*.p12
-*.key
-android/app/debug.keystore
-
-# Native Build Outputs
-android/app/build/
 android/.gradle/
+android/app/build/
+android/build/
+
 ios/build/
 ios/Pods/
-ios/*.xcworkspace
-ios/*.xcodeproj/project.xcworkspace
-ios/*.xcodeproj/xcuserdata
 
-# Metro
 .metro-health
 metro-file-map-cache/
 
 ######################################################################
+
 # 🗄️ DATABASE & STORAGE
+
 ######################################################################
 *.sqlite
 *.sqlite3
@@ -134,7 +253,41 @@ metro-file-map-cache/
 schema_backup.sql
 
 ######################################################################
-# 📦 ARCHIVES & PACKAGES
+
+# 🐳 DEVOPS / INFRA
+
+######################################################################
+
+# Docker
+
+.docker/
+docker-compose.override.yml
+*.env.docker
+
+# Terraform
+
+.terraform/
+.terraform.lock.hcl
+*.tfstate
+*.tfstate.backup
+crash.log
+
+######################################################################
+
+# 🧪 TESTING / COVERAGE
+
+######################################################################
+coverage/
+*.lcov
+.nyc_output/
+reports/
+junit.xml
+test-results/
+
+######################################################################
+
+# 📦 ARCHIVES & ARTIFACTS
+
 ######################################################################
 *.zip
 *.tar
@@ -146,25 +299,26 @@ schema_backup.sql
 *.ear
 
 ######################################################################
-# 🧪 LOGS & COVERAGE
-######################################################################
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
-coverage/
-*.lcov
-reports/
-tmp/
-temp/
 
-######################################################################
 # 🔐 CERTIFICATES & KEYS
+
 ######################################################################
 *.pem
 *.crt
 *.cer
 *.key
+*.p12
+*.pfx
 id_rsa
 id_rsa.pub
+
+######################################################################
+
+# 📊 MISC
+
+######################################################################
+tmp/
+temp/
+*.pid
+*.seed
+*.pid.lock
