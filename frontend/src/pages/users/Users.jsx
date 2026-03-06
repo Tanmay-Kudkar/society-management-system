@@ -233,17 +233,14 @@ export default function Users() {
     },
   })
 
-  const [deleteError, setDeleteError] = useState('')
-
   const deleteMutation = useMutation({
     mutationFn: ({ id, force = false }) => userApi.delete(id, force),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries(['users'])
-      setDeleteError('')
       toast.success(variables?.force ? 'User force-deleted successfully' : 'User deleted successfully')
     },
     onError: (err) => {
-      setDeleteError(parseApiError(err))
+      toast.error(parseApiError(err))
     },
   })
 
@@ -304,7 +301,7 @@ export default function Users() {
       try {
         await deleteMutation.mutateAsync({ id: targetUser.id, force: true })
       } catch (forceError) {
-        setDeleteError(parseApiError(forceError))
+        toast.error(parseApiError(forceError))
       }
     }
   }
@@ -381,6 +378,7 @@ export default function Users() {
   const handleSubmit = (e) => {
     e.preventDefault()
     const formData = new FormData(e.target)
+    const passwordValue = (formData.get('password') || '').toString().trim()
     
     // Use the single role if only one is available
     const roleValue = creatableRoles.length === 1 ? creatableRoles[0] : formData.get('role')
@@ -388,7 +386,8 @@ export default function Users() {
     const data = {
       name: formData.get('name'),
       email: formData.get('email'),
-      password: formData.get('password'),
+      // Keep password optional on edit by omitting blank values.
+      password: editingUser ? (passwordValue ? passwordValue : undefined) : passwordValue,
       role: roleValue,
       phone: formData.get('phone'),
       societyId: formData.get('societyId') ? parseInt(formData.get('societyId')) : null,
@@ -589,22 +588,6 @@ export default function Users() {
           </div>
         </div>
       </div>
-
-      {/* Delete Error Alert */}
-      {deleteError && (
-        <div className="users-alert">
-          <div className="users-alert__content">
-            <AlertCircle size={20} />
-            <span>{deleteError}</span>
-          </div>
-          <button 
-            onClick={() => setDeleteError('')}
-            className="users-alert__close"
-          >
-            <X size={18} />
-          </button>
-        </div>
-      )}
 
       {/* Filters */}
       <div className="users-filters">

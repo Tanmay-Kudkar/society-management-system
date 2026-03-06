@@ -1,8 +1,8 @@
 package com.society.backend.controller.asset;
 
-import com.society.backend.dto.asset.AssetRequest;
-import com.society.backend.dto.asset.AssetResponse;
-import com.society.backend.service.asset.AssetService;
+import com.society.backend.society.dto.AssetRequest;
+import com.society.backend.society.dto.AssetResponse;
+import com.society.backend.society.service.AssetService;
 import com.society.backend.service.common.RoleService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;

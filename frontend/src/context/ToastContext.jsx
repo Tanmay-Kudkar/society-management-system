@@ -19,7 +19,7 @@ export function ToastProvider({ children }) {
   const addToast = useCallback((message, type = 'info', duration = 4000) => {
     const id = Date.now() + Math.random()
     
-    setToasts(prev => [...prev, { id, message, type, isExiting: false }])
+    setToasts(prev => [...prev, { id, message, type, duration, isExiting: false }])
 
     setTimeout(() => {
       setToasts(prev => 
@@ -73,20 +73,24 @@ function ToastContainer({ toasts, removeToast }) {
 }
 
 function Toast({ toast, onClose }) {
-  const { message, type, isExiting } = toast
+  const { message, type, duration = 4000, isExiting } = toast
 
   const configs = {
     success: {
       icon: CheckCircle,
+      title: 'Success',
     },
     error: {
       icon: XCircle,
+      title: 'Error',
     },
     warning: {
       icon: AlertTriangle,
+      title: 'Warning',
     },
     info: {
       icon: Info,
+      title: 'Info',
     },
   }
 
@@ -105,6 +109,7 @@ function Toast({ toast, onClose }) {
       <div
         className={clsx(
           'toast__icon',
+          `toast__icon--${type}`,
           type === 'success' && !isExiting && 'toast__icon--success',
           type === 'error' && !isExiting && 'toast__icon--error'
         )}
@@ -113,9 +118,8 @@ function Toast({ toast, onClose }) {
       </div>
       
       <div className="toast__content">
-        <p className="toast__message">
-          {message}
-        </p>
+        <p className="toast__title">{config.title}</p>
+        <p className="toast__message">{message}</p>
       </div>
 
       <button
@@ -127,7 +131,10 @@ function Toast({ toast, onClose }) {
 
       {/* Progress bar */}
       <div className="toast__progress">
-        <div className="toast__progress-bar" />
+        <div
+          className={clsx('toast__progress-bar', `toast__progress-bar--${type}`)}
+          style={{ animationDuration: `${duration}ms` }}
+        />
       </div>
     </div>
   )

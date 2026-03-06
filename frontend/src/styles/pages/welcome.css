@@ -868,6 +868,23 @@
   border-radius: var(--radius-lg);
   transition: border-color 0.3s, box-shadow 0.3s, transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   position: relative;
+  overflow: hidden;
+}
+
+.welcome-feature-portal-shimmer {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius-lg);
+  opacity: 0.4;
+  z-index: 0;
+}
+
+.welcome-feature-card .welcome-feature-icon,
+.welcome-feature-card .welcome-feature-title,
+.welcome-feature-card .welcome-feature-desc {
+  position: relative;
+  z-index: 1;
 }
 
 .welcome-feature-card:hover {

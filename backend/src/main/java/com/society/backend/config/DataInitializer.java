@@ -2,7 +2,7 @@ package com.society.backend.config;
 
 import com.society.backend.entity.Role;
 import com.society.backend.entity.User;
-import com.society.backend.repository.user.UserRepository;
+import com.society.backend.user.repository.UserRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;

@@ -26,6 +26,18 @@ export default function Welcome() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [themeMenuOpen, setThemeMenuOpen] = useState(false)
   const themeMenuRef = useRef(null)
+  const [featureHover, setFeatureHover] = useState({})
+  const featureCardRefs = useRef([])
+
+  const handleFeatureMouseMove = (e, i) => {
+    const el = featureCardRefs.current[i]
+    if (!el) return
+    const rect = el.getBoundingClientRect()
+    setFeatureHover(prev => ({ ...prev, [i]: { x: e.clientX - rect.left, y: e.clientY - rect.top, active: true } }))
+  }
+  const handleFeatureMouseLeave = (i) => {
+    setFeatureHover(prev => ({ ...prev, [i]: { ...prev[i], active: false } }))
+  }
 
   const [enrollName, setEnrollName] = useState('')
   const [enrollPhone, setEnrollPhone] = useState('')
@@ -314,19 +326,41 @@ export default function Welcome() {
           </div>
 
           <div className="welcome-features-grid">
-            {features.map((f, i) => (
-              <div
-                key={i}
-                className={`welcome-feature-card ${featVisible ? 'welcome-reveal' : 'welcome-hidden'}`}
-                style={{ transitionDelay: featVisible ? `${i * 80}ms` : '0ms' }}
-              >
-                <div className="welcome-feature-icon" style={{ background: `color-mix(in srgb, ${f.color} 12%, transparent)`, color: f.color }}>
-                  <f.icon size={22} />
+            {features.map((f, i) => {
+              const h = featureHover[i]
+              const isHovered = h?.active
+              return (
+                <div
+                  key={i}
+                  ref={el => featureCardRefs.current[i] = el}
+                  onMouseMove={e => handleFeatureMouseMove(e, i)}
+                  onMouseLeave={() => handleFeatureMouseLeave(i)}
+                  className={`welcome-feature-card ${featVisible ? 'welcome-reveal' : 'welcome-hidden'}`}
+                  style={{
+                    transitionDelay: featVisible ? `${i * 80}ms` : '0ms',
+                    background: isHovered
+                      ? `radial-gradient(circle 180px at ${h.x}px ${h.y}px, color-mix(in srgb, ${f.color} 18%, var(--bg-card)) 0%, var(--bg-card) 100%)`
+                      : undefined,
+                    borderColor: isHovered ? `color-mix(in srgb, ${f.color} 55%, transparent)` : undefined,
+                    boxShadow: isHovered
+                      ? `0 0 0 1px color-mix(in srgb, ${f.color} 30%, transparent), 0 8px 32px color-mix(in srgb, ${f.color} 18%, transparent)`
+                      : undefined,
+                  }}
+                >
+                  {isHovered && (
+                    <span
+                      className="welcome-feature-portal-shimmer"
+                      style={{ background: `radial-gradient(circle 80px at ${h.x}px ${h.y}px, color-mix(in srgb, ${f.color} 35%, transparent), transparent 70%)` }}
+                    />
+                  )}
+                  <div className="welcome-feature-icon" style={{ background: `color-mix(in srgb, ${f.color} 12%, transparent)`, color: f.color }}>
+                    <f.icon size={22} />
+                  </div>
+                  <h3 className="welcome-feature-title">{f.title}</h3>
+                  <p className="welcome-feature-desc">{f.desc}</p>
                 </div>
-                <h3 className="welcome-feature-title">{f.title}</h3>
-                <p className="welcome-feature-desc">{f.desc}</p>
-              </div>
-            ))}
+              )
+            })}
           </div>
         </div>
       </section>
