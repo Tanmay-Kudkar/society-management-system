@@ -104,6 +104,7 @@ public final class RolePermissions {
                                 Role.EMPLOYEE,
                                 Role.MEMBER,
                                 Role.TENANT,
+                                Role.VENDOR,
                                 Role.VISITOR));
 
                 // CHAIRMAN - Creates SECRETARY and TREASURER
@@ -131,6 +132,9 @@ public final class RolePermissions {
                 // MEMBER - Creates TENANT only
                 ALLOWED_CREATIONS.put(Role.MEMBER, EnumSet.of(Role.TENANT));
 
+                // VENDOR - No user creation rights
+                ALLOWED_CREATIONS.put(Role.VENDOR, EnumSet.noneOf(Role.class));
+
                 // TENANT and VISITOR - Cannot create anyone
                 ALLOWED_CREATIONS.put(Role.TENANT, EnumSet.noneOf(Role.class));
                 ALLOWED_CREATIONS.put(Role.VISITOR, EnumSet.noneOf(Role.class));
@@ -157,6 +161,7 @@ public final class RolePermissions {
                                 Role.EMPLOYEE,
                                 Role.MEMBER,
                                 Role.TENANT,
+                                Role.VENDOR,
                                 Role.VISITOR));
 
                 // CHAIRMAN - Can update/delete SECRETARY and TREASURER only
@@ -184,6 +189,9 @@ public final class RolePermissions {
                 // MEMBER - Can update/delete TENANT only
                 ALLOWED_UPDATES.put(Role.MEMBER, EnumSet.of(Role.TENANT));
 
+                // VENDOR - No user update/delete rights
+                ALLOWED_UPDATES.put(Role.VENDOR, EnumSet.noneOf(Role.class));
+
                 // TENANT and VISITOR - Cannot update/delete anyone
                 ALLOWED_UPDATES.put(Role.TENANT, EnumSet.noneOf(Role.class));
                 ALLOWED_UPDATES.put(Role.VISITOR, EnumSet.noneOf(Role.class));
@@ -207,6 +215,7 @@ public final class RolePermissions {
                                 Role.EMPLOYEE,
                                 Role.MEMBER,
                                 Role.TENANT,
+                                Role.VENDOR,
                                 Role.VISITOR));
 
                 // SOCIETY_ADMIN - Can read ALL in society
@@ -220,25 +229,26 @@ public final class RolePermissions {
                                 Role.EMPLOYEE,
                                 Role.MEMBER,
                                 Role.TENANT,
+                                Role.VENDOR,
                                 Role.VISITOR));
 
                 // CHAIRMAN - Can read all below
                 ALLOWED_READS.put(Role.CHAIRMAN, EnumSet.of(
                                 Role.CHAIRMAN, Role.SECRETARY, Role.TREASURER,
                                 Role.COMMITTEE, Role.MANAGER, Role.EMPLOYEE, Role.MEMBER,
-                                Role.TENANT, Role.VISITOR));
+                                Role.TENANT, Role.VENDOR, Role.VISITOR));
 
                 // SECRETARY - Can read COMMITTEE and below
                 ALLOWED_READS.put(Role.SECRETARY, EnumSet.of(
                                 Role.SECRETARY, Role.COMMITTEE, Role.MANAGER,
                                 Role.EMPLOYEE, Role.MEMBER,
-                                Role.TENANT, Role.VISITOR));
+                                Role.TENANT, Role.VENDOR, Role.VISITOR));
 
                 // TREASURER - Can read COMMITTEE and below
                 ALLOWED_READS.put(Role.TREASURER, EnumSet.of(
                                 Role.TREASURER, Role.COMMITTEE, Role.MANAGER,
                                 Role.EMPLOYEE, Role.MEMBER,
-                                Role.TENANT, Role.VISITOR));
+                                Role.TENANT, Role.VENDOR, Role.VISITOR));
 
                 // COMMITTEE - Can read EMPLOYEE, MEMBER, and below
                 ALLOWED_READS.put(Role.COMMITTEE, EnumSet.of(
@@ -257,6 +267,9 @@ public final class RolePermissions {
 
                 // TENANT - Can only read own profile
                 ALLOWED_READS.put(Role.TENANT, EnumSet.of(Role.TENANT));
+
+                // VENDOR - Can only read own profile
+                ALLOWED_READS.put(Role.VENDOR, EnumSet.of(Role.VENDOR));
 
                 // VISITOR - Can only read own profile
                 ALLOWED_READS.put(Role.VISITOR, EnumSet.of(Role.VISITOR));

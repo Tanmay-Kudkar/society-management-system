@@ -149,13 +149,13 @@ public class RoleService {
     }
 
     /**
-     * Check if user is any registered member (not visitor)
+     * Check if user is any registered member (not visitor or vendor)
      */
     public void requireMember(Long userId) {
         User user = getUser(userId);
-        if (user.getRole() == Role.VISITOR) {
+        if (user.getRole() == Role.VISITOR || user.getRole() == Role.VENDOR) {
             throw new AccessDeniedException(
-                    "Access denied. VISITOR cannot perform this action.");
+                    "Access denied. " + user.getRole() + " cannot perform this action.");
         }
     }
 

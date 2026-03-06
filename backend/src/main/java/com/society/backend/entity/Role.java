@@ -79,6 +79,7 @@ package com.society.backend.entity;
  * Level 6: EMPLOYEE - Staff / security | MEMBER - Flat owner
  * Level 7: TENANT - Renter without ownership rights
  * Level 8: VISITOR - Temporary access only
+ * Level 5: VENDOR - External vendor/contractor - own bills, invoices, work status
  */
 
 public enum Role {
@@ -93,6 +94,7 @@ public enum Role {
     EMPLOYEE, // Level 6: Staff/Security - handles visitors, basic operations
     MEMBER, // Level 6: Flat Owner - views own data, raises tickets/complaints
     TENANT, // Level 7: Renter - limited access to own profile & bills
+    VENDOR, // Level 5: External Vendor - own bills, invoices, work status
     VISITOR, // Level 8: Guest - minimal access, read-only
     MASTER_ADMIN // Legacy role - mapped to PLATFORM_OWNER (for backward compatibility)
 }

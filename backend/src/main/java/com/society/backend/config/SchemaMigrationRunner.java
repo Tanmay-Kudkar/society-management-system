@@ -21,7 +21,7 @@ public class SchemaMigrationRunner {
                 jdbcTemplate.execute("ALTER TABLE users DROP CONSTRAINT IF EXISTS users_role_check");
                 jdbcTemplate.execute(
                         "ALTER TABLE users ADD CONSTRAINT users_role_check " +
-                        "CHECK (role IN ('PLATFORM_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'EMPLOYEE', 'MEMBER', 'TENANT', 'VISITOR'))"
+                        "CHECK (role IN ('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'MANAGER', 'EMPLOYEE', 'MEMBER', 'TENANT', 'VENDOR', 'VISITOR', 'MASTER_ADMIN'))"
                 );
                 log.info("users_role_check constraint verified/updated");
             } catch (Exception ex) {

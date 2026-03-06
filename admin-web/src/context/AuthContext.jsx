@@ -122,6 +122,7 @@ export const AuthProvider = ({ children }) => {
   const isCommittee = useCallback(() => hasRole('COMMITTEE'), [hasRole])
   const isManager = useCallback(() => hasRole('MANAGER'), [hasRole])
   const isMember = useCallback(() => hasRole('MEMBER'), [hasRole])
+  const isVendor = useCallback(() => hasRole('VENDOR'), [hasRole])
   
   const isAdminLevel = useCallback(() => hasRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN'), [hasRole])
   const isCommitteeLevel = useCallback(() => hasRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'MANAGER'), [hasRole])
@@ -138,7 +139,7 @@ export const AuthProvider = ({ children }) => {
   const canCreateTickets = useCallback(() => hasRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'MANAGER', 'EMPLOYEE', 'MEMBER', 'TENANT'), [hasRole])
   const canManageTransactions = useCallback(() => hasRole('SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER'), [hasRole])
   const canManageVendors = useCallback(() => hasRole('SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'MANAGER'), [hasRole])
-  const canManageVendorBills = useCallback(() => hasRole('SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER'), [hasRole])
+  const canManageVendorBills = useCallback(() => hasRole('SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'VENDOR'), [hasRole])
   const canViewSecurityLogs = useCallback(() => hasRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN'), [hasRole])
   const canExportData = useCallback(() => hasRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'MANAGER'), [hasRole])
   const canManageSocieties = useCallback(() => hasRole('PLATFORM_OWNER', 'ORGANIZATION_OWNER'), [hasRole])
@@ -172,6 +173,7 @@ export const AuthProvider = ({ children }) => {
     isCommittee,
     isManager,
     isMember,
+    isVendor,
     isAdminLevel,
     isCommitteeLevel,
     canManageNotices,
@@ -200,7 +202,7 @@ export const AuthProvider = ({ children }) => {
     canViewReports,
   }), [user, loading, login, logout, updateUser, hasRole,
     isPlatformOwner, isOrganizationOwner, isSocietyAdmin, isChairman, isSecretary,
-    isTreasurer, isCommittee, isManager, isMember, isAdminLevel, isCommitteeLevel,
+    isTreasurer, isCommittee, isManager, isMember, isVendor, isAdminLevel, isCommitteeLevel,
     canManageNotices, canManageDocuments, canViewFinancials, canManageBanners,
     canManageContracts, canManageEmergencyContacts, canManageMaintenanceBills,
     canManageTenants, canManageTickets, canCreateTickets, canManageTransactions,

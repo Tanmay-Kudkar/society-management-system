@@ -140,7 +140,7 @@ public class SecurityConfig {
                                                                 "CHAIRMAN", "SECRETARY", "TREASURER", "COMMITTEE")
                                                 .requestMatchers("/vendor-bills/**")
                                                 .hasAnyRole("PLATFORM_OWNER", "ORGANIZATION_OWNER", "SOCIETY_ADMIN",
-                                                                "CHAIRMAN", "TREASURER", "COMMITTEE")
+                                                                "CHAIRMAN", "TREASURER", "COMMITTEE", "VENDOR")
                                                 .requestMatchers(HttpMethod.PUT, "/contracts/**")
                                                 .hasAnyRole("PLATFORM_OWNER", "ORGANIZATION_OWNER", "SOCIETY_ADMIN",
                                                                 "CHAIRMAN", "SECRETARY", "COMMITTEE")
