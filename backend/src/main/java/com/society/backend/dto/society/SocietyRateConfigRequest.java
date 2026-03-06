@@ -1,4 +1,4 @@
-package com.society.backend.dto.maintenance;
+package com.society.backend.dto.society;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -9,11 +9,15 @@ import lombok.Setter;
 import java.math.BigDecimal;
 
 /**
- * Request DTO for creating/updating a bill line item.
+ * Request DTO for creating/updating a society rate configuration.
+ * F08 — Society Rate Configuration
  */
 @Getter
 @Setter
-public class BillLineItemRequest {
+public class SocietyRateConfigRequest {
+
+    @NotNull(message = "Society ID is required")
+    private Long societyId;
 
     @NotBlank(message = "Charge type is required")
     private String chargeType;
@@ -21,13 +25,17 @@ public class BillLineItemRequest {
     @NotBlank(message = "Description is required")
     private String description;
 
-    @Positive(message = "Unit price must be positive")
-    private BigDecimal unitPrice;
-
-    @Positive(message = "Quantity must be positive")
-    private BigDecimal quantity;
-
     @NotNull(message = "Amount is required")
     @Positive(message = "Amount must be positive")
     private BigDecimal amount;
+
+    /** ALL, FLAT, SHOP, OFFICE */
+    private String applicableTo;
+
+    /** Whether the amount is per sqft */
+    private Boolean isPerSqft;
+
+    private Integer displayOrder;
+
+    private Boolean isActive;
 }
