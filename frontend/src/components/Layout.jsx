@@ -43,6 +43,7 @@ import {
   PawPrint,
   Store,
   BookOpen,
+  Settings2,
 } from "lucide-react";
 import clsx from "clsx";
 
@@ -68,6 +69,7 @@ const routePrefetchMap = {
   "/payments": () => import("../pages/finance/Payments"),
   "/my-bills": () => import("../pages/finance/MyBills"),
   "/transactions": () => import("../pages/finance/Transactions"),
+  "/rate-config": () => import("../pages/finance/SocietyRateConfig"),
   "/notices": () => import("../pages/communication/Notices"),
   "/banners": () => import("../pages/communication/Banners"),
   "/tickets": () => import("../pages/communication/Tickets"),
@@ -257,6 +259,12 @@ const standardMenuGroups = [
         path: "/transactions",
         icon: DollarSign,
         label: "Transactions",
+        roles: ["SOCIETY_ADMIN", "CHAIRMAN", "SECRETARY", "TREASURER"],
+      },
+      {
+        path: "/rate-config",
+        icon: Settings2,
+        label: "Rate Config",
         roles: ["SOCIETY_ADMIN", "CHAIRMAN", "SECRETARY", "TREASURER"],
       },
       {

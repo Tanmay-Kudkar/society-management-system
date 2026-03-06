@@ -63,6 +63,9 @@ const SocietySettings = lazyWithMinDelay(
 const Transactions = lazyWithMinDelay(
   () => import("./pages/finance/Transactions"),
 );
+const SocietyRateConfig = lazyWithMinDelay(
+  () => import("./pages/finance/SocietyRateConfig"),
+);
 const Payments = lazyWithMinDelay(() => import("./pages/finance/Payments"));
 const MyBills = lazyWithMinDelay(() => import("./pages/finance/MyBills"));
 
@@ -385,6 +388,7 @@ function App() {
                 <Route path="payments" element={<Payments />} />
                 <Route path="my-bills" element={<MyBills />} />
                 <Route path="transactions" element={<Transactions />} />
+                <Route path="rate-config" element={<SocietyRateConfig />} />
                 <Route path="reports" element={<Reports />} />
                 <Route
                   path="roles-permissions"

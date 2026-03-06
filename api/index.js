@@ -231,9 +231,26 @@ export const maintenanceBillApi = {
     api.post(`/maintenance-bills/${id}/payment?amount=${amount}&paymentMode=${paymentMode}&referenceNumber=${encodeURIComponent(referenceNumber || '')}&userId=${userId}`),
   generateForSociety: (societyId, billMonth, amount, userId, propertyType) => 
     api.post(`/maintenance-bills/generate?societyId=${societyId}&billMonth=${billMonth}&amount=${amount}&userId=${userId}${propertyType ? '&propertyType=' + propertyType : ''}`),
+  generateFromRates: (societyId, billMonth, userId, propertyType) =>
+    api.post(`/maintenance-bills/generate-from-rates?societyId=${societyId}&billMonth=${billMonth}&userId=${userId}${propertyType ? '&propertyType=' + propertyType : ''}`),
   getGenerationPreview: (societyId, billMonth, propertyType) =>
     api.get(`/maintenance-bills/generate/preview?societyId=${societyId}&billMonth=${billMonth}${propertyType ? '&propertyType=' + propertyType : ''}`),
+  applyPenalty: (billId, penaltyAmount, userId) =>
+    api.post(`/maintenance-bills/${billId}/penalty?penaltyAmount=${penaltyAmount}&userId=${userId}`),
+  applyInterest: (societyId, annualInterestRate, userId) =>
+    api.post(`/maintenance-bills/apply-interest?societyId=${societyId}&annualInterestRate=${annualInterestRate}&userId=${userId}`),
   delete: (id, userId, force = true) => api.delete(`/maintenance-bills/${id}?userId=${userId}${force ? '&force=true' : ''}`),
+}
+
+// Society Rate Config API (F08)
+export const societyRateConfigApi = {
+  getBySociety: (societyId) => api.get(`/api/rate-configs/society/${societyId}`),
+  getActiveBySociety: (societyId) => api.get(`/api/rate-configs/society/${societyId}/active`),
+  getById: (id) => api.get(`/api/rate-configs/${id}`),
+  create: (data) => api.post('/api/rate-configs', data),
+  update: (id, data) => api.put(`/api/rate-configs/${id}`, data),
+  toggleActive: (id) => api.patch(`/api/rate-configs/${id}/toggle`),
+  delete: (id) => api.delete(`/api/rate-configs/${id}`),
 }
 
 // Society Settings API (Phase 2 - F08)
