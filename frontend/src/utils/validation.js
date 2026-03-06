@@ -162,6 +162,18 @@ export const validateFlatForm = (data) => {
   
   const flatNumberError = validateFlatNumber(data.flatNumber)
   if (flatNumberError) errors.flatNumber = flatNumberError
+
+  const unitTypeError = validateRequired(data.unitType, 'Unit type')
+  if (unitTypeError) errors.unitType = unitTypeError
+
+  const flatTypeError = validateRequired(data.flatType, 'Configuration')
+  if (flatTypeError) errors.flatType = flatTypeError
+
+  const floorError = validateNumber(data.floor, 'Floor', { required: true, integer: true, min: 0, max: 200 })
+  if (floorError) errors.floor = floorError
+
+  const areaError = validateNumber(data.area, 'Area', { required: true, min: 1 })
+  if (areaError) errors.area = areaError
   
   const emailError = data.ownerEmail ? validateEmail(data.ownerEmail, 'Owner email') : null
   if (emailError) errors.ownerEmail = emailError

@@ -1,8 +1,8 @@
 package com.society.backend.config;
 
-import com.society.backend.security.CustomUserDetailsService;
-import com.society.backend.security.JwtAuthenticationEntryPoint;
-import com.society.backend.security.JwtAuthenticationFilter;
+import com.society.backend.auth.security.CustomUserDetailsService;
+import com.society.backend.auth.security.JwtAuthenticationEntryPoint;
+import com.society.backend.auth.security.JwtAuthenticationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;

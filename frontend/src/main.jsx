@@ -3,6 +3,7 @@ import { HashRouter } from 'react-router-dom'
 import { QueryClient, QueryClientProvider, MutationCache } from '@tanstack/react-query'
 import { AuthProvider, SettingsProvider } from './context'
 import App from './App.jsx'
+import './styles/tailwind.css'
 import './styles/main.css'
 
 const queryClient = new QueryClient({

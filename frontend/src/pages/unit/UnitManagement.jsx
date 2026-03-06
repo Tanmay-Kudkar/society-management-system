@@ -1,6 +1,6 @@
-import { useState, useMemo, useEffect, useRef } from 'react'
+import { useState, useMemo, useRef } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { useSearchParams, useNavigate } from 'react-router-dom'
+import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '../../context'
 import { useToast } from '../../context'
 import { useConfirmDialog } from '../../context'
@@ -41,12 +41,22 @@ const roleColors = {
   default: 'units-role-tag',
 }
 
+const UNIT_ASSIGNABLE_ROLES = ['MEMBER', 'TENANT', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE']
+
+const formatRoleLabel = (role) => {
+  if (role === 'MEMBER') return 'Member (Owner)'
+  return role
+    .toLowerCase()
+    .split('_')
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ')
+}
+
 export default function UnitManagement() {
-  const { user, isCommitteeLevel, canManageDocuments } = useAuth()
+  const { user, isCommitteeLevel } = useAuth()
   const { showToast } = useToast()
   const confirmDialog = useConfirmDialog()
   const queryClient = useQueryClient()
-  const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   
   // Get URL params early (before state init that depends on them)
@@ -60,16 +70,10 @@ export default function UnitManagement() {
   // PO/OO are supervisory - they can view but not directly edit units/users within a society
   const canEditUnits = isCommitteeLevel() && !isPlatformLevel
 
-  // Active tab: 'units' or 'users'
-  const [activeTab, setActiveTab] = useState(tabFromUrl === 'users' ? 'users' : 'units')
-
-  // Sync tab with URL parameter
-  useEffect(() => {
-    setActiveTab(tabFromUrl === 'users' ? 'users' : 'units')
-  }, [tabFromUrl])
+  // Active tab derived from URL
+  const activeTab = tabFromUrl === 'users' ? 'users' : 'units'
 
   const switchTab = (tab) => {
-    setActiveTab(tab)
     const params = new URLSearchParams(searchParams)
     if (tab === 'users') {
       params.set('tab', 'users')
@@ -86,7 +90,6 @@ export default function UnitManagement() {
   const [filterRole, setFilterRole] = useState('')
   const [filterSociety, setFilterSociety] = useState(societyIdFromUrl || '')
   const [userError, setUserError] = useState('')
-  const [deleteError, setDeleteError] = useState('')
   const [selectedRole, setSelectedRole] = useState('')
   const [showStandalonePassword, setShowStandalonePassword] = useState(false)
   const fileInputRef = useRef(null)
@@ -100,7 +103,6 @@ export default function UnitManagement() {
   const [showUnitModal, setShowUnitModal] = useState(false)
   const [showUserModal, setShowUserModal] = useState(false)
   const [showEditUserModal, setShowEditUserModal] = useState(false)
-  const [showLinkModal, setShowLinkModal] = useState(false)
   const [showBulkImportModal, setShowBulkImportModal] = useState(false)
   const [showBulkCreateModal, setShowBulkCreateModal] = useState(false)
   const [bulkCreateResults, setBulkCreateResults] = useState(null)
@@ -112,7 +114,7 @@ export default function UnitManagement() {
   
   // Filter states
   const [searchTerm, setSearchTerm] = useState('')
-  const [filterType, setFilterType] = useState(unitTypeFromUrl || '')
+  const filterType = unitTypeFromUrl || ''
   const [viewMode, setViewMode] = useState('units') // 'units' or 'table'
   
   // Form states
@@ -120,20 +122,9 @@ export default function UnitManagement() {
   const [userFormErrors, setUserFormErrors] = useState({})
   const [apiError, setApiError] = useState('')
 
-  // Sync filterType with URL parameter when it changes
-  useEffect(() => {
-    setFilterType(unitTypeFromUrl || '')
-  }, [unitTypeFromUrl])
-
-  useEffect(() => {
-    if (societyIdFromUrl) {
-      setFilterSociety(String(societyIdFromUrl))
-      return
-    }
-    if (!isPlatformLevel && user?.societyId) {
-      setFilterSociety(String(user.societyId))
-    }
-  }, [societyIdFromUrl, isPlatformLevel, user?.societyId])
+  // Derive effective filter society from state + user context
+  const effectiveFilterSociety = filterSociety
+    || (!isPlatformLevel && user?.societyId ? String(user.societyId) : '')
 
   // Fetch flats/units
   // PO/OO must have effectiveSocietyId (from URL), otherwise skip
@@ -178,25 +169,25 @@ export default function UnitManagement() {
   const scopedUsers = useMemo(() => {
     let usersInScope = [...users]
 
-    if (filterSociety) {
-      usersInScope = usersInScope.filter(u => String(u.societyId || '') === filterSociety)
+    if (effectiveFilterSociety) {
+      usersInScope = usersInScope.filter(u => String(u.societyId || '') === effectiveFilterSociety)
     } else if (!isPlatformLevel && currentUserSocietyId) {
       usersInScope = usersInScope.filter(u => String(u.societyId || '') === currentUserSocietyId)
     }
 
     return usersInScope
-  }, [users, filterSociety, isPlatformLevel, currentUserSocietyId])
+  }, [users, effectiveFilterSociety, isPlatformLevel, currentUserSocietyId])
 
-  // Filter members for linking to units
+  // Users that currently occupy a unit/property
   const memberUsers = useMemo(() => {
-    return scopedUsers.filter(u => ['MEMBER', 'TENANT'].includes(u.role))
+    return scopedUsers.filter(u => u.flatId && UNIT_ASSIGNABLE_ROLES.includes(u.role))
   }, [scopedUsers])
 
   // Create unit-user mapping (1 user per unit)
   const unitUserMap = useMemo(() => {
     const map = {}
     flats.forEach(flat => {
-      // Only one user can be assigned per unit - take the first MEMBER, or first TENANT
+      // Only one user should be assigned per unit. If legacy data has multiple, show the first one returned.
       const assignedUser = memberUsers.find(u => u.flatId === flat.id)
       map[flat.id] = {
         flat,
@@ -314,18 +305,45 @@ export default function UnitManagement() {
     enabled: !!user?.id,
   })
 
+  const unitAssignableCreatableRoles = useMemo(() => {
+    const allowed = creatableRoles.filter((role) => UNIT_ASSIGNABLE_ROLES.includes(role))
+    if (allowed.length > 0) return allowed
+    return ['MEMBER', 'TENANT']
+  }, [creatableRoles])
+
+  const unitAssignableUpdatableRoles = useMemo(() => {
+    const allowed = updatableRoles.filter((role) => UNIT_ASSIGNABLE_ROLES.includes(role))
+    if (editingUser?.role && UNIT_ASSIGNABLE_ROLES.includes(editingUser.role) && !allowed.includes(editingUser.role)) {
+      return [editingUser.role, ...allowed]
+    }
+    if (allowed.length > 0) return allowed
+    return ['MEMBER', 'TENANT']
+  }, [updatableRoles, editingUser])
+
+  const handleDeleteSuccess = (force = false) => {
+    queryClient.invalidateQueries(['users'])
+    queryClient.invalidateQueries(['flats'])
+    showToast(force ? 'User force-deleted successfully' : 'User deleted successfully', 'success')
+  }
+
+  const verifyUserDeleted = async (userId) => {
+    try {
+      const response = await userApi.getAll()
+      return !response.data.some((existingUser) => existingUser.id === userId)
+    } catch {
+      return false
+    }
+  }
+
   // Delete user mutation
   const deleteUserMutation = useMutation({
-    mutationFn: (id) => userApi.delete(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries(['users'])
-      queryClient.invalidateQueries(['flats'])
-      setDeleteError('')
-      showToast('User deleted successfully', 'success')
+    mutationFn: ({ id, force = false }) => userApi.delete(id, force),
+    onSuccess: (_, variables) => {
+      handleDeleteSuccess(variables?.force)
     },
     onError: (err) => {
       const msg = err.response?.data?.message || parseApiError(err)
-      setDeleteError(msg)
+      showToast(msg, 'error')
     },
   })
 
@@ -395,11 +413,15 @@ export default function UnitManagement() {
   // Available flats for user assignment
   const availableFlats = useMemo(() => {
     return flats.filter(flat => {
-      const hasOwner = flat.ownerUserId != null
-      const isAvailable = !hasOwner || (editingStandaloneUser && editingStandaloneUser.flatId === flat.id)
+      const hasAssignedUser = scopedUsers.some((existingUser) => (
+        existingUser.flatId === flat.id
+        && UNIT_ASSIGNABLE_ROLES.includes(existingUser.role)
+        && existingUser.id !== editingStandaloneUser?.id
+      ))
+      const isAvailable = !hasAssignedUser || editingStandaloneUser?.flatId === flat.id
       return isAvailable
     })
-  }, [flats, editingStandaloneUser])
+  }, [flats, scopedUsers, editingStandaloneUser])
 
   // Filtered users for Users tab
   const filteredTabUsers = useMemo(() => {
@@ -420,23 +442,55 @@ export default function UnitManagement() {
     return Array.from(roles).sort((a, b) => a.localeCompare(b))
   }, [scopedUsers])
 
+  const standaloneRoleOptions = useMemo(() => {
+    if (!editingStandaloneUser) {
+      return creatableRoles.length > 0 ? creatableRoles : ['MEMBER']
+    }
+
+    if (editingStandaloneUser.flatId) {
+      const allowed = updatableRoles.filter((role) => UNIT_ASSIGNABLE_ROLES.includes(role))
+      if (
+        editingStandaloneUser.role
+        && UNIT_ASSIGNABLE_ROLES.includes(editingStandaloneUser.role)
+        && !allowed.includes(editingStandaloneUser.role)
+      ) {
+        return [editingStandaloneUser.role, ...allowed]
+      }
+      return allowed.length > 0 ? allowed : ['MEMBER', 'TENANT']
+    }
+
+    const allowed = [...updatableRoles]
+    if (editingStandaloneUser.role && !allowed.includes(editingStandaloneUser.role)) {
+      allowed.unshift(editingStandaloneUser.role)
+    }
+    return allowed.length > 0 ? allowed : [editingStandaloneUser.role || 'MEMBER']
+  }, [editingStandaloneUser, creatableRoles, updatableRoles])
+
   const handleOpenStandaloneUserModal = (userToEdit = null) => {
     setEditingStandaloneUser(userToEdit)
-    setSelectedRole(userToEdit?.role || (creatableRoles.length === 1 ? creatableRoles[0] : creatableRoles[0] || 'MEMBER'))
+    setSelectedRole(userToEdit?.role || creatableRoles[0] || 'MEMBER')
     setUserError('')
     setShowStandalonePassword(false)
     setShowStandaloneUserModal(true)
   }
 
+  const effectiveStandaloneRole = selectedRole || editingStandaloneUser?.role || standaloneRoleOptions[0] || 'MEMBER'
+  const isSelfRoleLocked = !!editingStandaloneUser && editingStandaloneUser.id === user?.id
+  const isRoleSelectionLocked = isSelfRoleLocked || standaloneRoleOptions.length <= 1
+
   // Handle standalone user form submission (Users tab)
   const handleStandaloneUserSubmit = (e) => {
     e.preventDefault()
     const formData = new FormData(e.target)
-    const roleValue = creatableRoles.length === 1 ? creatableRoles[0] : formData.get('role')
+    const roleValue = formData.get('role') || selectedRole || editingStandaloneUser?.role || standaloneRoleOptions[0] || 'MEMBER'
+    const passwordValue = (formData.get('password') || '').toString().trim()
     const data = {
       name: formData.get('name'),
       email: formData.get('email'),
-      password: formData.get('password'),
+      // For edit flow, do not send an empty password string.
+      password: editingStandaloneUser
+        ? (passwordValue ? passwordValue : undefined)
+        : passwordValue,
       role: roleValue,
       phone: formData.get('phone'),
       societyId: formData.get('societyId') ? parseInt(formData.get('societyId')) : (user?.societyId || null),
@@ -450,8 +504,8 @@ export default function UnitManagement() {
       return
     }
 
-    // Validate flatId for member/tenant
-    if (['MEMBER', 'TENANT'].includes(roleValue) && !data.flatId) {
+    // Validate flatId for unit-assigned roles
+    if (UNIT_ASSIGNABLE_ROLES.includes(roleValue) && !data.flatId) {
       setUserError('Please select a property for the user')
       return
     }
@@ -491,14 +545,17 @@ export default function UnitManagement() {
 
     const unitType = formData.get('unitType') || 'FLAT'
 
+    const floorRaw = formData.get('floor')
+    const areaRaw = formData.get('area')
+
     const data = {
       societyId,
       wingId: formData.get('wingId') ? parseInt(formData.get('wingId')) : null,
       flatNumber: formData.get('flatNumber'),
       unitType: unitType,
       flatType: formData.get('flatType'),
-      floor: parseInt(formData.get('floor')) || 0,
-      area: parseFloat(formData.get('area')) || 0,
+      floor: floorRaw === null || floorRaw === '' ? null : parseInt(floorRaw, 10),
+      area: areaRaw === null || areaRaw === '' ? null : parseFloat(areaRaw),
       // Owner/user will be added via 'Add User' button after creating the unit
     }
 
@@ -603,6 +660,73 @@ export default function UnitManagement() {
     setShowUserModal(true)
   }
 
+  const confirmAndDeleteUser = async (targetUser, context = {}) => {
+    const propertyValue = context?.property || context?.userFlat?.flatNumber || 'Unassigned'
+
+    const confirmed = await confirmDialog({
+      title: 'Delete User',
+      message: `Are you sure you want to delete "${targetUser?.name}"? This action cannot be undone.`,
+      confirmText: 'Delete',
+      tone: 'danger',
+      details: [
+        { label: 'Name', value: targetUser?.name || '-' },
+        { label: 'Email', value: targetUser?.email || '-' },
+        { label: 'Role', value: targetUser?.role?.replace(/_/g, ' ') || '-' },
+        { label: 'Property', value: propertyValue },
+      ],
+      impacts: [
+        { label: 'User Account', count: 1 },
+        { label: 'Property Link', count: context?.userFlat ? 1 : 0 },
+      ],
+      caution: 'This action permanently removes the user account.',
+    })
+
+    if (!confirmed) return
+
+    try {
+      await deleteUserMutation.mutateAsync({ id: targetUser.id, force: false })
+    } catch (error) {
+      if (!error?.response && await verifyUserDeleted(targetUser.id)) {
+        handleDeleteSuccess(false)
+        return
+      }
+
+      const serverMessage = error?.response?.data?.message || parseApiError(error)
+      const shouldOfferForceDelete =
+        error?.response?.status === 409 &&
+        String(serverMessage).toLowerCase().includes('force delete')
+
+      if (!shouldOfferForceDelete) {
+        return
+      }
+
+      const forceConfirmed = await confirmDialog({
+        title: 'Force Delete User',
+        message: `${serverMessage}\n\nForce delete will remove or unlink linked records. Continue?`,
+        confirmText: 'Force Delete',
+        tone: 'danger',
+        details: [
+          { label: 'Name', value: targetUser?.name || '-' },
+          { label: 'Role', value: targetUser?.role?.replace(/_/g, ' ') || '-' },
+          { label: 'Property', value: propertyValue },
+        ],
+        caution: 'This will auto-clean linked references and cannot be undone.',
+      })
+
+      if (!forceConfirmed) return
+
+      try {
+        await deleteUserMutation.mutateAsync({ id: targetUser.id, force: true })
+      } catch (forceError) {
+        if (!forceError?.response && await verifyUserDeleted(targetUser.id)) {
+          handleDeleteSuccess(true)
+          return
+        }
+        showToast(forceError?.response?.data?.message || parseApiError(forceError), 'error')
+      }
+    }
+  }
+
   const openEditUserModal = (user, unit) => {
     setEditingUser(user)
     setSelectedUnit(unit)
@@ -615,28 +739,23 @@ export default function UnitManagement() {
   const getUnitColor = (type) => unitTypeClasses[type] || unitTypeClasses.FLAT
 
   // Stats - count units with assigned user as occupied
-  const stats = useMemo(() => {
-    const occupiedUnits = flats.filter(f => {
-      const hasAssignedUser = memberUsers.some(u => u.flatId === f.id)
-      return hasAssignedUser || f.ownerName
-    })
-    const flatCount = flats.filter(f => !f.unitType || f.unitType === 'FLAT').length
-    const shopCount = flats.filter(f => f.unitType === 'SHOP').length
-    const officeCount = flats.filter(f => f.unitType === 'OFFICE').length
-    return {
-      totalUnits: flats.length,
-      flats: flatCount,
-      shops: shopCount,
-      offices: officeCount,
-      occupied: occupiedUnits.length,
-      vacant: flats.length - occupiedUnits.length,
-      assignedUsers: memberUsers.filter(u => u.flatId).length,
-      // Capacity limits from society
-      maxFlats: currentSociety?.totalFlats || 0,
-      maxShops: currentSociety?.totalShops || 0,
-      maxOffices: currentSociety?.totalOffices || 0,
-    }
-  }, [flats, memberUsers, currentSociety])
+  const occupiedUnits = flats.filter(f => {
+    const hasAssignedUser = memberUsers.some(u => u.flatId === f.id)
+    return hasAssignedUser || f.ownerName
+  })
+  const stats = {
+    totalUnits: flats.length,
+    flats: flats.filter(f => !f.unitType || f.unitType === 'FLAT').length,
+    shops: flats.filter(f => f.unitType === 'SHOP').length,
+    offices: flats.filter(f => f.unitType === 'OFFICE').length,
+    occupied: occupiedUnits.length,
+    vacant: flats.length - occupiedUnits.length,
+    assignedUsers: memberUsers.filter(u => u.flatId).length,
+    // Capacity limits from society
+    maxFlats: currentSociety?.totalFlats || 0,
+    maxShops: currentSociety?.totalShops || 0,
+    maxOffices: currentSociety?.totalOffices || 0,
+  }
 
   const showSkeleton = useMinLoadingTime(flatsLoading || flatsError)
 
@@ -802,7 +921,15 @@ export default function UnitManagement() {
           </div>
           <select
             value={filterType}
-            onChange={(e) => setFilterType(e.target.value)}
+            onChange={(e) => {
+              const params = new URLSearchParams(searchParams)
+              if (e.target.value) {
+                params.set('unitType', e.target.value)
+              } else {
+                params.delete('unitType')
+              }
+              setSearchParams(params, { replace: true })
+            }}
             className="units-filter-select"
           >
             <option value="">All Types</option>
@@ -903,9 +1030,13 @@ export default function UnitManagement() {
                       </div>
                       <span className={clsx(
                         'units-assigned-role',
-                        assignedUser.role === 'MEMBER' ? 'is-owner' : 'is-tenant'
+                        assignedUser.role === 'MEMBER'
+                          ? 'is-owner'
+                          : assignedUser.role === 'TENANT'
+                          ? 'is-tenant'
+                          : null
                       )}>
-                        {assignedUser.role === 'MEMBER' ? 'Owner' : 'Tenant'}
+                        {assignedUser.role === 'MEMBER' ? 'Owner' : formatRoleLabel(assignedUser.role)}
                       </span>
                       {canEditUnits && (
                         <button
@@ -1168,19 +1299,6 @@ export default function UnitManagement() {
           </div>
         </div>
 
-        {/* Delete Error Alert */}
-        {deleteError && (
-          <div className="units-inline-alert">
-            <div className="units-inline-alert__content">
-              <AlertCircle size={20} />
-              <span>{deleteError}</span>
-            </div>
-            <button onClick={() => setDeleteError('')} className="units-inline-alert__close">
-              <X size={18} />
-            </button>
-          </div>
-        )}
-
         {/* User Error Alert */}
         {userError && !showStandaloneUserModal && (
           <div className="units-inline-alert">
@@ -1313,28 +1431,7 @@ export default function UnitManagement() {
                             )}
                             {canDelete ? (
                               <button
-                                onClick={async () => {
-                                  const confirmed = await confirmDialog({
-                                    title: 'Delete User',
-                                    message: `Are you sure you want to delete "${u.name}"? This action cannot be undone.`,
-                                    confirmText: 'Delete',
-                                    tone: 'danger',
-                                    details: [
-                                      { label: 'Name', value: u.name || '-' },
-                                      { label: 'Email', value: u.email || '-' },
-                                      { label: 'Role', value: u.role?.replace(/_/g, ' ') || '-' },
-                                      { label: 'Property', value: userFlat?.flatNumber || 'Unassigned' },
-                                    ],
-                                    impacts: [
-                                      { label: 'User Account', count: 1 },
-                                      { label: 'Property Link', count: userFlat ? 1 : 0 },
-                                    ],
-                                    caution: 'This action permanently removes the user account.',
-                                  })
-                                  if (confirmed) {
-                                    deleteUserMutation.mutate(u.id)
-                                  }
-                                }}
+                                onClick={() => confirmAndDeleteUser(u, { userFlat })}
                                 className="units-users-table__icon-btn units-users-table__icon-btn--danger"
                                 title="Delete user"
                               >
@@ -1387,18 +1484,30 @@ export default function UnitManagement() {
                     {showStandalonePassword ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
                 </div>
-                <SmartSelect
-                  label="Role"
-                  name="role"
-                  value={selectedRole || editingStandaloneUser?.role || creatableRoles[0] || 'MEMBER'}
-                  onChange={(e) => setSelectedRole(e.target.value)}
-                  options={creatableRoles.map(role => ({ value: role, label: role.replace('_', ' ') }))}
-                  required
-                  icon={Shield}
-                  emptyMessage="No roles available to create"
-                />
-                {/* Property selection for MEMBER/TENANT */}
-                {['MEMBER', 'TENANT'].includes(selectedRole || creatableRoles[0]) && (
+                {isRoleSelectionLocked ? (
+                  <>
+                    <FormInput
+                      label="Role"
+                      name="roleDisplay"
+                      defaultValue={formatRoleLabel(effectiveStandaloneRole)}
+                      readOnly
+                    />
+                    <input type="hidden" name="role" value={effectiveStandaloneRole} />
+                  </>
+                ) : (
+                  <SmartSelect
+                    label="Role"
+                    name="role"
+                    value={effectiveStandaloneRole}
+                    onChange={(e) => setSelectedRole(e.target.value)}
+                    options={standaloneRoleOptions.map(role => ({ value: role, label: formatRoleLabel(role) }))}
+                    required
+                    icon={Shield}
+                    emptyMessage="No roles available"
+                  />
+                )}
+                {/* Property selection for unit-assigned roles */}
+                {UNIT_ASSIGNABLE_ROLES.includes(effectiveStandaloneRole) && (
                   <SmartSelect
                     label="Property"
                     name="flatId"
@@ -1604,6 +1713,7 @@ export default function UnitManagement() {
       {showUserModal && selectedUnit && (
         <UserFormModal
           unit={selectedUnit}
+          roleOptions={unitAssignableCreatableRoles}
           errors={userFormErrors}
           apiError={apiError}
           onSubmit={handleUserSubmit}
@@ -1622,6 +1732,7 @@ export default function UnitManagement() {
         <EditUserFormModal
           user={editingUser}
           unit={selectedUnit}
+          roleOptions={unitAssignableUpdatableRoles}
           errors={userFormErrors}
           apiError={apiError}
           onSubmit={handleEditUserSubmit}
@@ -1686,6 +1797,7 @@ export default function UnitManagement() {
 }
 
 // Stat Card Component
+// eslint-disable-next-line no-unused-vars
 function StatCard({ label, value, icon: Icon, color }) {
   const colorClasses = {
     blue: 'units-stat-icon units-stat-icon--blue',
@@ -1716,20 +1828,19 @@ function StatCard({ label, value, icon: Icon, color }) {
 function UnitFormModal({ unit, societies, wings, isPlatformLevel, userSocietyId, errors, apiError, onSubmit, onClose, isLoading }) {
   const [selectedUnitType, setSelectedUnitType] = useState(unit?.unitType || 'FLAT')
   const [selectedWingId, setSelectedWingId] = useState(unit?.wingId ? String(unit.wingId) : '')
-  const [selectedFlatType, setSelectedFlatType] = useState(unit?.flatType || '')
+  const getDefaultFlatType = (unitType) => {
+    if (unitType === 'FLAT') return '2BHK'
+    if (unitType === 'SHOP') return 'RETAIL'
+    if (unitType === 'OFFICE') return 'STANDARD'
+    return ''
+  }
+  const [selectedFlatType, setSelectedFlatType] = useState(unit?.flatType || getDefaultFlatType(selectedUnitType))
 
-  // Update flatType when unitType changes
-  useEffect(() => {
-    if (!unit) {
-      if (selectedUnitType === 'FLAT') {
-        setSelectedFlatType('2BHK')
-      } else if (selectedUnitType === 'SHOP') {
-        setSelectedFlatType('RETAIL')
-      } else if (selectedUnitType === 'OFFICE') {
-        setSelectedFlatType('STANDARD')
-      }
-    }
-  }, [selectedUnitType, unit])
+  const handleUnitTypeChange = (e) => {
+    const newType = e.target.value
+    setSelectedUnitType(newType)
+    if (!unit) setSelectedFlatType(getDefaultFlatType(newType))
+  }
 
   // Get max floor from selected wing
   const selectedWing = wings.find(w => w.id === parseInt(selectedWingId))
@@ -1771,9 +1882,10 @@ function UnitFormModal({ unit, societies, wings, isPlatformLevel, userSocietyId,
               label="Unit Type"
               name="unitType"
               value={selectedUnitType}
-              onChange={(e) => setSelectedUnitType(e.target.value)}
+              onChange={handleUnitTypeChange}
               icon={Home}
               required
+              error={errors.unitType}
               options={[
                 { value: 'FLAT', label: '🏠 Flat' },
                 { value: 'SHOP', label: '🏪 Shop' },
@@ -1814,6 +1926,7 @@ function UnitFormModal({ unit, societies, wings, isPlatformLevel, userSocietyId,
               value={selectedFlatType}
               onChange={(e) => setSelectedFlatType(e.target.value)}
               required
+              error={errors.flatType}
               options={[
                 ...(selectedUnitType === 'FLAT' ? [
                   { value: '1RK', label: '1 RK' },
@@ -1872,6 +1985,7 @@ function UnitFormModal({ unit, societies, wings, isPlatformLevel, userSocietyId,
               step={0.01}
               placeholder={selectedUnitType === 'SHOP' ? 'e.g., 500' : selectedUnitType === 'OFFICE' ? 'e.g., 800' : 'e.g., 1200'}
               required
+              error={errors.area}
             />
           </div>
 
@@ -1902,7 +2016,7 @@ function UnitFormModal({ unit, societies, wings, isPlatformLevel, userSocietyId,
 }
 
 // User Form Modal for linking user to unit
-function UserFormModal({ unit, errors, apiError, onSubmit, onClose, isLoading }) {
+function UserFormModal({ unit, roleOptions, errors, apiError, onSubmit, onClose, isLoading }) {
   return (
     <div className="units-modal">
       <div className="units-modal-card units-modal-card--compact">
@@ -1951,12 +2065,9 @@ function UserFormModal({ unit, errors, apiError, onSubmit, onClose, isLoading })
           <SmartSelect
             label="Role"
             name="role"
-            defaultValue="MEMBER"
+            defaultValue={roleOptions?.[0] || 'MEMBER'}
             required
-            options={[
-              { value: 'MEMBER', label: 'Member (Owner)' },
-              { value: 'TENANT', label: 'Tenant' },
-            ]}
+            options={(roleOptions || ['MEMBER', 'TENANT']).map((role) => ({ value: role, label: formatRoleLabel(role) }))}
           />
 
           <div className="units-modal-actions">
@@ -1983,7 +2094,7 @@ function UserFormModal({ unit, errors, apiError, onSubmit, onClose, isLoading })
 }
 
 // Edit User Form Modal for editing user linked to unit
-function EditUserFormModal({ user, unit, errors, apiError, onSubmit, onClose, isLoading }) {
+function EditUserFormModal({ user, unit, roleOptions, errors, apiError, onSubmit, onClose, isLoading }) {
   return (
     <div className="units-modal">
       <div className="units-modal-card units-modal-card--compact">
@@ -2036,10 +2147,7 @@ function EditUserFormModal({ user, unit, errors, apiError, onSubmit, onClose, is
             name="role"
             defaultValue={user.role}
             required
-            options={[
-              { value: 'MEMBER', label: 'Member (Owner)' },
-              { value: 'TENANT', label: 'Tenant' },
-            ]}
+            options={(roleOptions || ['MEMBER', 'TENANT']).map((role) => ({ value: role, label: formatRoleLabel(role) }))}
           />
 
           <div className="units-modal-actions">

@@ -1,0 +1,210 @@
+package com.society.backend.flat.service;
+
+import com.society.backend.flat.dto.FlatRequest;
+import com.society.backend.flat.dto.FlatResponse;
+import com.society.backend.entity.Flat;
+import com.society.backend.entity.Role;
+import com.society.backend.entity.Society;
+import com.society.backend.entity.User;
+import com.society.backend.entity.Wing;
+import com.society.backend.exception.ApiException;
+import com.society.backend.flat.repository.WingRepository;
+import com.society.backend.flat.repository.FlatRepository;
+import com.society.backend.society.repository.SocietyRepository;
+import com.society.backend.user.repository.UserRepository;
+import com.society.backend.service.common.ReferenceCleanupService;
+import com.society.backend.service.common.RoleService;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+@Service
+@RequiredArgsConstructor
+@Slf4j
+public class FlatServiceImpl implements FlatService {
+
+    private final FlatRepository flatRepository;
+    private final SocietyRepository societyRepository;
+    private final UserRepository userRepository;
+    private final WingRepository wingRepository;
+    private final RoleService roleService;
+    private final ReferenceCleanupService referenceCleanupService;
+
+    @Override
+    public FlatResponse create(FlatRequest request) {
+        Society society = societyRepository.findById(request.getSocietyId())
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Society not found"));
+
+        roleService.enforceSocietyScope(roleService.getCurrentUser(), society.getId());
+
+        Flat flat = new Flat();
+        mapRequestToEntity(request, flat, society);
+        Flat saved = flatRepository.save(flat);
+        log.info("Created unit {} (type: {}) in society {}", saved.getFlatNumber(), saved.getUnitType(),
+                society.getId());
+        return toResponse(saved);
+    }
+
+    @Override
+    public List<FlatResponse> getAll(Long userId) {
+        User currentUser = userRepository.findById(userId)
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "User not found"));
+
+        // MASTER_ADMIN can see all flats
+        if (currentUser.getRole() == Role.MASTER_ADMIN) {
+            return flatRepository.findAll().stream()
+                    .map(this::toResponse)
+                    .collect(Collectors.toList());
+        }
+
+        // Other users can only see flats from their society
+        if (currentUser.getSociety() == null) {
+            return List.of();
+        }
+
+        Long societyId = currentUser.getSociety().getId();
+        roleService.enforceSocietyScope(currentUser, societyId);
+        return flatRepository.findBySocietyId(societyId).stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<FlatResponse> getBySociety(Long societyId) {
+        roleService.enforceSocietyScope(roleService.getCurrentUser(), societyId);
+        return flatRepository.findBySocietyId(societyId).stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public FlatResponse getById(Long id) {
+        Flat flat = flatRepository.findById(id)
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Flat not found"));
+        if (flat.getSociety() != null) {
+            roleService.enforceSocietyScope(roleService.getCurrentUser(), flat.getSociety().getId());
+        }
+        return toResponse(flat);
+    }
+
+    @Override
+    public FlatResponse update(Long id, FlatRequest request) {
+        Flat flat = flatRepository.findById(id)
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Flat not found"));
+
+        Society society = societyRepository.findById(request.getSocietyId())
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Society not found"));
+
+        roleService.enforceSocietyScope(roleService.getCurrentUser(), society.getId());
+
+        mapRequestToEntity(request, flat, society);
+        Flat saved = flatRepository.save(flat);
+        return toResponse(saved);
+    }
+
+    @Override
+    @Transactional
+    public void delete(Long id, boolean force) {
+        Flat flat = flatRepository.findById(id)
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Flat not found"));
+
+        if (flat.getSociety() != null) {
+            roleService.enforceSocietyScope(roleService.getCurrentUser(), flat.getSociety().getId());
+        }
+
+        // Check for linked records
+        List<String> associations = new ArrayList<>();
+        long linkedUsers = userRepository.countByFlatId(id);
+        if (linkedUsers > 0) associations.add(linkedUsers + " user(s)");
+
+        if (!force && !associations.isEmpty()) {
+            throw new ApiException(HttpStatus.CONFLICT,
+                    String.format("Cannot delete unit '%s'. Linked records: %s. Use force delete to auto-clean.",
+                            flat.getFlatNumber(), String.join(", ", associations)));
+        }
+
+        if (force) {
+            // Clear all FK references to this flat
+            referenceCleanupService.clearReferences("flat_id", id, true, Set.of("flats"));
+        }
+
+        flatRepository.deleteById(id);
+    }
+
+    /**
+     * Validate that adding the specified number of units won't exceed society
+     * capacity.
+     * Society capacity = maximum number of units allowed per type (totalFlats,
+     * totalShops, totalOffices).
+     */
+    private void validateCapacity(Society society, String unitType, int countToAdd) {
+        Long societyId = society.getId();
+        long currentCount = flatRepository.countBySocietyIdAndUnitType(societyId, unitType);
+
+        int maxAllowed = switch (unitType) {
+            case "FLAT" -> society.getTotalFlats() != null ? society.getTotalFlats() : 0;
+            case "SHOP" -> society.getTotalShops() != null ? society.getTotalShops() : 0;
+            case "OFFICE" -> society.getTotalOffices() != null ? society.getTotalOffices() : 0;
+            default -> 0;
+        };
+
+        // If capacity is 0, it means unlimited (no cap configured)
+        if (maxAllowed > 0 && (currentCount + countToAdd) > maxAllowed) {
+            throw new ApiException(HttpStatus.BAD_REQUEST,
+                    String.format("Society capacity limit exceeded. Maximum allowed %s units: %d. Current: %d",
+                            unitType.toLowerCase(), maxAllowed, currentCount));
+        }
+    }
+
+    private void mapRequestToEntity(FlatRequest request, Flat flat, Society society) {
+        flat.setSociety(society);
+        flat.setFlatNumber(request.getFlatNumber());
+        flat.setUnitType(request.getUnitType() != null ? request.getUnitType() : "FLAT");
+        flat.setFlatType(request.getFlatType());
+        flat.setFloor(request.getFloor());
+        flat.setArea(request.getArea());
+        flat.setOwnerName(request.getOwnerName());
+        flat.setOwnerEmail(request.getOwnerEmail());
+        flat.setOwnerPhone(request.getOwnerPhone());
+
+        // Handle wing assignment
+        if (request.getWingId() != null) {
+            Wing wing = wingRepository.findById(request.getWingId())
+                    .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Wing not found"));
+            flat.setWing(wing);
+        } else {
+            flat.setWing(null);
+        }
+    }
+
+    private FlatResponse toResponse(Flat flat) {
+        FlatResponse response = new FlatResponse();
+        response.setId(flat.getId());
+        response.setSocietyId(flat.getSociety().getId());
+        response.setSocietyName(flat.getSociety().getName());
+
+        if (flat.getWing() != null) {
+            response.setWingId(flat.getWing().getId());
+            response.setWingName(flat.getWing().getName());
+        }
+
+        response.setFlatNumber(flat.getFlatNumber());
+        response.setUnitType(flat.getUnitType() != null ? flat.getUnitType() : "FLAT");
+        response.setFlatType(flat.getFlatType());
+        response.setFloor(flat.getFloor());
+        response.setArea(flat.getArea());
+        response.setOwnerName(flat.getOwnerName());
+        response.setOwnerEmail(flat.getOwnerEmail());
+        response.setOwnerPhone(flat.getOwnerPhone());
+        response.setOwnerUserId(flat.getOwner() != null ? flat.getOwner().getId() : null);
+        response.setIsOccupied(flat.getIsOccupied());
+        return response;
+    }
+}
