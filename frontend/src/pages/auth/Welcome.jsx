@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { Building2, Shield, Users, CreditCard, Bell, ArrowRight, CheckCircle, ChevronDown, Car, Phone, MessageSquare, Key, Sun, Moon, Menu, X, Twitter, Linkedin, Monitor, Sparkles, Mail, Link2, Youtube } from 'lucide-react'
 import { useTheme } from '../../context'
+import clsx from 'clsx'
 
 /* Scroll-reveal hook */
 function useScrollReveal() {
@@ -124,62 +125,70 @@ export default function Welcome() {
   }
 
   return (
-    <div className="welcome-page">
+    <div className="min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)] overflow-x-hidden">
       {/* Nav */}
-      <nav className={`welcome-nav ${scrolled ? 'is-scrolled' : ''} ${isLoaded ? 'is-visible' : ''} ${mobileMenuOpen ? 'is-menu-open' : ''}`}>
-        <div className="welcome-nav-inner">
-          <button className="welcome-logo" onClick={() => scrollTo('hero')}>
-            <div className="welcome-logo-badge">
+      <nav className={clsx(
+        'welcome-anim fixed top-0 left-0 right-0 z-[100] py-3 px-4 flex flex-col items-stretch backdrop-blur-[8px] transition-all duration-200 border-b border-transparent',
+        isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2',
+        scrolled ? 'border-b-[var(--border-default)] shadow-[var(--shadow-sm)]' : '',
+        mobileMenuOpen ? 'bg-[var(--bg-primary)] backdrop-blur-none' : ''
+      )} style={{ background: mobileMenuOpen ? 'var(--bg-primary)' : scrolled ? 'color-mix(in srgb, var(--bg-primary) 92%, transparent)' : 'color-mix(in srgb, var(--bg-primary) 88%, transparent)' }}>
+        <div className="max-w-[1200px] mx-auto w-full flex items-center justify-between gap-6 border border-[var(--border-default)] rounded-xl py-[0.55rem] px-3 shadow-[var(--shadow-sm)]" style={{ background: 'color-mix(in srgb, var(--bg-secondary) 88%, transparent)' }}>
+          <button className="flex items-center gap-[0.625rem] cursor-pointer bg-transparent border-none text-inherit p-0 transition-opacity hover:opacity-[0.85] group" onClick={() => scrollTo('hero')}>
+            <div className="w-8 h-8 rounded-[var(--radius-md)] bg-[var(--accent-primary)] flex items-center justify-center text-white transition-transform duration-300 group-hover:scale-[1.08] group-hover:-rotate-3">
               <Building2 size={18} />
             </div>
-            <span className="welcome-logo-text">SocietyHub</span>
+            <span className="text-[1.35rem] font-extrabold text-[var(--text-primary)] tracking-[-0.02em]">SocietyHub</span>
           </button>
 
-          <div className="welcome-nav-links">
-            <button onClick={() => navigate('/about')} className="welcome-nav-link">About Us</button>
-            <button onClick={() => scrollTo('features')} className="welcome-nav-link">Features</button>
-            <button onClick={() => navigate('/pricing')} className="welcome-nav-link">Pricing</button>
-            <button onClick={() => navigate('/contact')} className="welcome-nav-link">Contact</button>
+          <div className="flex gap-1 max-md:hidden">
+            <button onClick={() => navigate('/about')} className="text-sm font-semibold text-[var(--text-secondary)] bg-transparent border-none cursor-pointer py-[0.375rem] px-3 rounded-[var(--radius-md)] transition-colors relative hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)]">About Us</button>
+            <button onClick={() => scrollTo('features')} className="text-sm font-semibold text-[var(--text-secondary)] bg-transparent border-none cursor-pointer py-[0.375rem] px-3 rounded-[var(--radius-md)] transition-colors relative hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)]">Features</button>
+            <button onClick={() => navigate('/pricing')} className="text-sm font-semibold text-[var(--text-secondary)] bg-transparent border-none cursor-pointer py-[0.375rem] px-3 rounded-[var(--radius-md)] transition-colors relative hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)]">Pricing</button>
+            <button onClick={() => navigate('/contact')} className="text-sm font-semibold text-[var(--text-secondary)] bg-transparent border-none cursor-pointer py-[0.375rem] px-3 rounded-[var(--radius-md)] transition-colors relative hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)]">Contact</button>
           </div>
 
-          <div className="welcome-nav-actions">
-            <a className="welcome-nav-phone" href="tel:+919119300000" aria-label="Call SocietyHub">
+          <div className="flex items-center gap-2">
+            <a className="hidden min-[900px]:inline-flex items-center text-sm font-bold text-[var(--text-secondary)] no-underline py-[0.375rem] px-2 rounded-[var(--radius-md)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)]" href="tel:+919119300000" aria-label="Call SocietyHub">
               +91 91193 00000
             </a>
 
             {/* Theme dropdown */}
-            <div className="welcome-theme-wrap" ref={themeMenuRef}>
-              <button onClick={() => setThemeMenuOpen(!themeMenuOpen)} className="welcome-theme-btn" aria-label="Theme">
+            <div className="relative" ref={themeMenuRef}>
+              <button onClick={() => setThemeMenuOpen(!themeMenuOpen)} className="w-[34px] h-[34px] rounded-[var(--radius-md)] bg-[var(--bg-tertiary)] border border-[var(--border-default)] text-[var(--text-secondary)] flex items-center justify-center cursor-pointer transition-colors hover:text-[var(--text-primary)] hover:border-[var(--border-muted)]" aria-label="Theme">
                 {!isManual ? <Monitor size={16} /> : isDark ? <Moon size={16} /> : <Sun size={16} />}
               </button>
               {themeMenuOpen && (
-                <div className="welcome-theme-dropdown">
+                <div className="absolute top-[calc(100%+6px)] right-0 bg-[var(--bg-secondary)] border border-[var(--border-default)] rounded-[var(--radius-lg)] p-[0.375rem] min-w-[140px] shadow-[var(--shadow-lg)] z-50 origin-top-right" style={{ animation: 'welcomeDropIn 0.2s cubic-bezier(0.16, 1, 0.3, 1)' }}>
                   {[
                     { label: 'System', icon: Monitor, active: !isManual, action: () => { resetToSystemTheme(); setThemeMenuOpen(false) } },
                     { label: 'Light', icon: Sun, active: isManual && theme === 'light', action: () => { setTheme('light'); setThemeMenuOpen(false) } },
                     { label: 'Dark', icon: Moon, active: isManual && theme === 'dark', action: () => { setTheme('dark'); setThemeMenuOpen(false) } },
                   ].map((opt) => (
-                    <button key={opt.label} onClick={opt.action} className={`welcome-theme-option ${opt.active ? 'is-active' : ''}`}>
+                    <button key={opt.label} onClick={opt.action} className={clsx(
+                      'flex items-center gap-2 w-full py-2 px-[0.625rem] text-[0.8125rem] bg-transparent border-none rounded-[var(--radius-sm)] cursor-pointer transition-colors',
+                      opt.active ? 'text-[var(--accent-primary)]' : 'text-[var(--text-secondary)] hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-primary)]'
+                    )} style={opt.active ? { background: 'color-mix(in srgb, var(--accent-primary) 10%, transparent)' } : undefined}>
                       <opt.icon size={14} />
                       <span>{opt.label}</span>
-                      {opt.active && <CheckCircle size={14} className="welcome-theme-check" />}
+                      {opt.active && <CheckCircle size={14} className="ml-auto" />}
                     </button>
                   ))}
                 </div>
               )}
             </div>
 
-            <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="welcome-mobile-toggle">
+            <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="hidden max-md:flex w-[34px] h-[34px] items-center justify-center bg-transparent border border-[var(--border-default)] rounded-[var(--radius-md)] text-[var(--text-secondary)] cursor-pointer transition-all hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] active:scale-[0.92]">
               {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
             </button>
 
-            <button onClick={() => navigate('/login')} className="welcome-cta-btn welcome-cta-btn--outline">
+            <button onClick={() => navigate('/login')} className="flex items-center gap-[0.375rem] py-2 px-4 text-[0.8125rem] font-semibold text-[var(--text-primary)] bg-transparent border border-[var(--border-default)] rounded-[var(--radius-md)] cursor-pointer transition-all max-md:hidden hover:bg-[var(--bg-tertiary)] hover:border-[var(--border-muted)]">
               Society Login
             </button>
-            <button onClick={() => navigate('/login')} className="welcome-cta-btn welcome-cta-btn--outline">
+            <button onClick={() => navigate('/login')} className="flex items-center gap-[0.375rem] py-2 px-4 text-[0.8125rem] font-semibold text-[var(--text-primary)] bg-transparent border border-[var(--border-default)] rounded-[var(--radius-md)] cursor-pointer transition-all max-md:hidden hover:bg-[var(--bg-tertiary)] hover:border-[var(--border-muted)]">
               Admin Portal
             </button>
-            <button onClick={() => scrollTo('hero')} className="welcome-cta-btn">
+            <button onClick={() => scrollTo('hero')} className="flex items-center gap-[0.375rem] py-2 px-4 text-[0.8125rem] font-semibold text-white bg-[var(--accent-primary)] border-none rounded-[var(--radius-md)] cursor-pointer transition-all max-md:hidden hover:bg-[var(--accent-hover)] hover:-translate-y-px">
               Enroll your society
               <ArrowRight size={14} />
             </button>
@@ -188,16 +197,22 @@ export default function Welcome() {
 
         {/* Mobile menu */}
         {mobileMenuOpen && (
-          <div className="welcome-mobile-menu">
-            <button onClick={() => { navigate('/about'); setMobileMenuOpen(false) }} className="welcome-mobile-link">About Us</button>
-            <button onClick={() => { scrollTo('features'); setMobileMenuOpen(false) }} className="welcome-mobile-link">Features</button>
-            <button onClick={() => { navigate('/pricing'); setMobileMenuOpen(false) }} className="welcome-mobile-link">Pricing</button>
-            <button onClick={() => { navigate('/contact'); setMobileMenuOpen(false) }} className="welcome-mobile-link">Contact</button>
+          <div className="welcome-anim flex flex-col gap-1 py-3 px-4 pb-4" style={{ animation: 'welcomeMobileSlide 0.25s cubic-bezier(0.16, 1, 0.3, 1)' }}>
+            {[
+              { label: 'About Us', action: () => { navigate('/about'); setMobileMenuOpen(false) } },
+              { label: 'Features', action: () => { scrollTo('features'); setMobileMenuOpen(false) } },
+              { label: 'Pricing', action: () => { navigate('/pricing'); setMobileMenuOpen(false) } },
+              { label: 'Contact', action: () => { navigate('/contact'); setMobileMenuOpen(false) } },
+            ].map((item, i) => (
+              <button key={item.label} onClick={item.action} className="welcome-anim text-sm font-medium text-[var(--text-secondary)] bg-transparent border-none text-left py-[0.625rem] px-3 rounded-[var(--radius-md)] cursor-pointer transition-all hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] hover:pl-4 active:scale-[0.98]" style={{ opacity: 0, animation: `welcomeMenuItemIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) ${0.04 * (i + 1)}s forwards` }}>
+                {item.label}
+              </button>
+            ))}
 
-            <button onClick={() => { navigate('/login'); setMobileMenuOpen(false) }} className="welcome-mobile-cta welcome-mobile-cta--outline">
+            <button onClick={() => { navigate('/login'); setMobileMenuOpen(false) }} className="welcome-anim mt-2 py-[0.625rem] px-4 text-sm font-semibold text-[var(--accent-primary)] bg-transparent border-[1.5px] border-[var(--accent-primary)] rounded-[var(--radius-md)] cursor-pointer transition-all hover:-translate-y-px" style={{ opacity: 0, animation: 'welcomeMenuItemIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) 0.2s forwards' }}>
               Society Login
             </button>
-            <button onClick={() => { navigate('/login'); setMobileMenuOpen(false) }} className="welcome-mobile-cta">
+            <button onClick={() => { navigate('/login'); setMobileMenuOpen(false) }} className="welcome-anim py-[0.625rem] px-4 text-sm font-semibold text-white bg-[var(--accent-primary)] border-none rounded-[var(--radius-md)] cursor-pointer transition-all hover:bg-[var(--accent-hover)] hover:-translate-y-px active:translate-y-0 active:scale-[0.98]" style={{ opacity: 0, animation: 'welcomeMenuItemIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) 0.25s forwards' }}>
               Admin Portal
             </button>
           </div>
@@ -205,46 +220,58 @@ export default function Welcome() {
       </nav>
 
       {/* Hero */}
-      <section id="hero" className="welcome-hero">
-        <div className="welcome-hero-inner">
-          <div className="welcome-hero-grid">
-            <div className="welcome-hero-copy">
-              <div className={`welcome-hero-badge ${isLoaded ? 'is-visible' : ''}`}>
-                <span className="welcome-hero-badge-dot" />
+      <section id="hero" className="min-h-screen flex items-center justify-center pt-28 px-6 pb-16 relative overflow-hidden before:content-[''] before:absolute before:-top-[30%] before:left-1/2 before:-translate-x-1/2 before:w-[800px] before:h-[800px] before:rounded-full before:pointer-events-none" style={{ '--tw-before-bg': 'radial-gradient(circle, color-mix(in srgb, var(--accent-primary) 8%, transparent) 0%, transparent 70%)' }}>
+        <div className="max-w-[1200px] text-left relative z-[1]" style={{ position: 'relative' }}>
+          <div className="grid grid-cols-[1.2fr_0.8fr] max-[980px]:grid-cols-1 gap-8 items-center">
+            <div className="min-w-0">
+              <div className={clsx(
+                'welcome-anim inline-flex items-center gap-2 py-[0.375rem] px-[0.875rem] text-xs font-medium text-[var(--text-secondary)] bg-[var(--bg-secondary)] border border-[var(--border-default)] rounded-full mb-6 transition-all duration-500',
+                isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'
+              )} style={{ transitionDelay: '0.1s' }}>
+                <span className="welcome-anim w-[6px] h-[6px] rounded-full bg-[#3fb950]" style={{ animation: 'heroPulse 2s ease-in-out infinite' }} />
                 Trusted by housing communities across India
               </div>
 
-              <h1 className={`welcome-hero-title ${isLoaded ? 'is-visible' : ''}`}>
+              <h1 className={clsx(
+                'welcome-anim text-[clamp(2.5rem,6vw,4rem)] font-extrabold leading-[1.1] tracking-[-0.03em] text-[var(--text-primary)] mb-5 transition-all duration-500',
+                isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
+              )} style={{ transitionDelay: '0.2s' }}>
                 Visitor, Society and Accounting<br />
-                <span className="welcome-hero-gradient">Management System</span>
+                <span className="bg-gradient-to-br from-[var(--accent-primary)] via-[#58a6ff] to-[#79c0ff] bg-clip-text text-transparent">Management System</span>
               </h1>
 
-              <p className={`welcome-hero-subtitle ${isLoaded ? 'is-visible' : ''}`}>
+              <p className={clsx(
+                'welcome-anim text-lg leading-[1.65] text-[var(--text-secondary)] max-w-[560px] mb-6 transition-all duration-500',
+                isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'
+              )} style={{ transitionDelay: '0.3s' }}>
                 A complete platform to manage residents, bills, complaints, notices, and daily operations —
                 built for modern housing societies.
               </p>
 
-              <form className={`welcome-enroll ${isLoaded ? 'is-visible' : ''}`} onSubmit={handleEnrollSubmit}>
-                <div className="welcome-enroll__grid">
-                  <label className="welcome-enroll__field">
-                    <span className="welcome-enroll__label">Name</span>
+              <form className={clsx(
+                'welcome-anim mb-5 transition-all duration-500',
+                isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'
+              )} style={{ transitionDelay: '0.35s' }} onSubmit={handleEnrollSubmit}>
+                <div className="grid grid-cols-2 max-[680px]:grid-cols-1 gap-3 p-[0.875rem] rounded-xl border border-[var(--border-default)] shadow-[var(--shadow-sm)]" style={{ background: 'color-mix(in srgb, var(--bg-secondary) 88%, transparent)' }}>
+                  <label className="flex flex-col gap-[0.35rem] min-w-0">
+                    <span className="text-xs font-bold text-[var(--text-secondary)]">Name</span>
                     <input
                       value={enrollName}
                       onChange={(e) => setEnrollName(e.target.value)}
-                      className="welcome-enroll__input"
+                      className="h-[42px] py-[0.55rem] px-[0.8rem] rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--bg-primary)] text-[var(--text-primary)] text-[0.95rem] font-semibold focus:outline-2 focus:outline-[color-mix(in_srgb,var(--accent-primary)_50%,transparent)] focus:outline-offset-2"
                       placeholder="Your name"
                       autoComplete="name"
                     />
                   </label>
 
-                  <label className="welcome-enroll__field">
-                    <span className="welcome-enroll__label">Phone</span>
-                    <div className="welcome-enroll__phone">
-                      <span className="welcome-enroll__prefix">+91</span>
+                  <label className="flex flex-col gap-[0.35rem] min-w-0">
+                    <span className="text-xs font-bold text-[var(--text-secondary)]">Phone</span>
+                    <div className="flex items-stretch gap-2">
+                      <span className="inline-flex items-center px-3 rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--bg-tertiary)] text-[var(--text-secondary)] font-extrabold">+91</span>
                       <input
                         value={enrollPhone}
                         onChange={(e) => setEnrollPhone(e.target.value)}
-                        className="welcome-enroll__input welcome-enroll__input--phone"
+                        className="flex-1 h-[42px] py-[0.55rem] px-[0.8rem] rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--bg-primary)] text-[var(--text-primary)] text-[0.95rem] font-semibold focus:outline-2 focus:outline-[color-mix(in_srgb,var(--accent-primary)_50%,transparent)] focus:outline-offset-2"
                         placeholder="Enter phone number"
                         inputMode="tel"
                         autoComplete="tel"
@@ -252,12 +279,12 @@ export default function Welcome() {
                     </div>
                   </label>
 
-                  <label className="welcome-enroll__field">
-                    <span className="welcome-enroll__label">Select Reason</span>
+                  <label className="flex flex-col gap-[0.35rem] min-w-0">
+                    <span className="text-xs font-bold text-[var(--text-secondary)]">Select Reason</span>
                     <select
                       value={enrollReason}
                       onChange={(e) => setEnrollReason(e.target.value)}
-                      className="welcome-enroll__select"
+                      className="h-[42px] py-[0.55rem] px-[0.8rem] rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--bg-primary)] text-[var(--text-primary)] text-[0.95rem] font-semibold focus:outline-2 focus:outline-[color-mix(in_srgb,var(--accent-primary)_50%,transparent)] focus:outline-offset-2"
                     >
                       <option value="">Select reason</option>
                       <option value="DEMO">Request a demo</option>
@@ -266,46 +293,49 @@ export default function Welcome() {
                     </select>
                   </label>
 
-                  <button type="submit" className="welcome-enroll__submit">
+                  <button type="submit" className="h-[42px] inline-flex items-center justify-center gap-2 px-4 rounded-[var(--radius-md)] border-none cursor-pointer bg-[var(--accent-primary)] text-white font-extrabold text-[0.95rem] transition-all hover:bg-[var(--accent-hover)] hover:-translate-y-[2px] active:translate-y-0 active:shadow-none" style={{ boxShadow: 'none' }}>
                     Enroll your society
                     <ArrowRight size={16} />
                   </button>
                 </div>
 
-                {enrollError && <p className="welcome-enroll__error">{enrollError}</p>}
+                {enrollError && <p className="mt-2 text-sm font-bold" style={{ color: 'var(--danger-600, var(--text-secondary))' }}>{enrollError}</p>}
               </form>
 
-              <div className={`welcome-hero-actions ${isLoaded ? 'is-visible' : ''}`}>
-                <button onClick={() => navigate('/login')} className="welcome-btn-secondary">
+              <div className={clsx(
+                'welcome-anim flex flex-wrap justify-start gap-3 transition-all duration-500',
+                isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'
+              )} style={{ transitionDelay: '0.4s' }}>
+                <button onClick={() => navigate('/login')} className="inline-flex items-center gap-2 py-3 px-6 text-[0.9375rem] font-semibold text-[var(--text-primary)] bg-[var(--bg-secondary)] border border-[var(--border-strong)] rounded-[var(--radius-md)] cursor-pointer transition-all hover:bg-[var(--bg-tertiary)] hover:border-[var(--border-muted)]">
                   Society Login
                   <Key size={16} />
                 </button>
-                <button onClick={() => scrollTo('features')} className="welcome-btn-secondary">
+                <button onClick={() => scrollTo('features')} className="inline-flex items-center gap-2 py-3 px-6 text-[0.9375rem] font-semibold text-[var(--text-primary)] bg-[var(--bg-secondary)] border border-[var(--border-strong)] rounded-[var(--radius-md)] cursor-pointer transition-all hover:bg-[var(--bg-tertiary)] hover:border-[var(--border-muted)]">
                   Explore Features
                   <ChevronDown size={16} />
                 </button>
               </div>
             </div>
 
-            <div className="welcome-hero-art" aria-hidden="true">
-              <div className="welcome-hero-art__card">
-                <div className="welcome-hero-art__row">
-                  <div className="welcome-hero-art__chip">
+            <div className="flex justify-center" aria-hidden="true">
+              <div className="w-[min(420px,100%)] rounded-2xl border border-[var(--border-default)] shadow-[var(--shadow-md)] p-4" style={{ background: 'color-mix(in srgb, var(--bg-secondary) 90%, transparent)' }}>
+                <div className="flex gap-2 justify-between">
+                  <div className="inline-flex items-center gap-2 py-[0.55rem] px-3 rounded-full border border-[var(--border-default)] bg-[var(--bg-primary)] text-[var(--text-secondary)] font-extrabold text-[0.85rem]">
                     <Shield size={18} />
                     Secure
                   </div>
-                  <div className="welcome-hero-art__chip">
+                  <div className="inline-flex items-center gap-2 py-[0.55rem] px-3 rounded-full border border-[var(--border-default)] bg-[var(--bg-primary)] text-[var(--text-secondary)] font-extrabold text-[0.85rem]">
                     <Users size={18} />
                     Residents
                   </div>
                 </div>
-                <div className="welcome-hero-art__illustration" />
-                <div className="welcome-hero-art__row">
-                  <div className="welcome-hero-art__chip">
+                <div className="my-[0.85rem] h-[220px] rounded-xl border border-dashed border-[var(--border-default)]" style={{ background: 'color-mix(in srgb, var(--accent-primary) 6%, var(--bg-primary))' }} />
+                <div className="flex gap-2 justify-between">
+                  <div className="inline-flex items-center gap-2 py-[0.55rem] px-3 rounded-full border border-[var(--border-default)] bg-[var(--bg-primary)] text-[var(--text-secondary)] font-extrabold text-[0.85rem]">
                     <CreditCard size={18} />
                     Payments
                   </div>
-                  <div className="welcome-hero-art__chip">
+                  <div className="inline-flex items-center gap-2 py-[0.55rem] px-3 rounded-full border border-[var(--border-default)] bg-[var(--bg-primary)] text-[var(--text-secondary)] font-extrabold text-[0.85rem]">
                     <Bell size={18} />
                     Notices
                   </div>
@@ -317,12 +347,15 @@ export default function Welcome() {
       </section>
 
       {/* Features */}
-      <section id="features" className="welcome-section welcome-section--features" ref={featRef}>
-        <div className="welcome-section-inner">
-          <div className={`welcome-section-header ${featVisible ? 'welcome-reveal' : 'welcome-hidden'}`}>
-            <span className="welcome-section-tag"><Sparkles size={12} /> Features</span>
-            <h2 className="welcome-section-title">Everything Your Society Needs</h2>
-            <p className="welcome-section-desc">A complete suite of tools designed for housing society management</p>
+      <section id="features" className="py-24 px-6" ref={featRef} style={{ background: 'color-mix(in srgb, var(--accent-primary) 3%, var(--bg-primary))' }}>
+        <div className="max-w-[1100px] mx-auto">
+          <div className={clsx(
+            'text-center mb-14 transition-all duration-[600ms] ease-[cubic-bezier(0.16,1,0.3,1)]',
+            featVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'
+          )}>
+            <span className="inline-flex items-center gap-[0.375rem] py-[0.3rem] px-[0.875rem] text-xs font-semibold uppercase tracking-[0.06em] text-[var(--accent-primary)] rounded-full mb-4 border" style={{ background: 'color-mix(in srgb, var(--accent-primary) 10%, transparent)', borderColor: 'color-mix(in srgb, var(--accent-primary) 20%, transparent)' }}><Sparkles size={12} /> Features</span>
+            <h2 className="text-[clamp(1.75rem,4vw,2.5rem)] font-extrabold tracking-[-0.025em] text-[var(--text-primary)] mb-3">Everything Your Society Needs</h2>
+            <p className="text-base text-[var(--text-secondary)] max-w-[500px] mx-auto">A complete suite of tools designed for housing society management</p>
           </div>
 
           <div className="welcome-features-grid">
@@ -366,20 +399,26 @@ export default function Welcome() {
       </section>
 
       {/* Stats */}
-      <section id="stats" className="welcome-section welcome-section--stats" ref={statsRef}>
-        <div className="welcome-section-inner">
-          <div className={`welcome-stats-card ${statsVisible ? 'welcome-reveal' : 'welcome-hidden'}`}>
-            <h3 className="welcome-stats-heading">Platform Statistics</h3>
-            <p className="welcome-stats-subheading">Real-time numbers that speak for themselves</p>
-            <div className="welcome-stats-grid">
+      <section id="stats" className="py-16 px-6" ref={statsRef}>
+        <div className="max-w-[1100px] mx-auto">
+          <div className={clsx(
+            'bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl p-10 text-center relative overflow-hidden light:shadow-[var(--shadow-xs)] transition-all duration-[600ms] ease-[cubic-bezier(0.16,1,0.3,1)] after:content-[\'\'] after:absolute after:bottom-0 after:left-1/2 after:-translate-x-1/2 after:w-[40%] after:h-px after:bg-gradient-to-r after:from-transparent after:via-[var(--accent-primary)] after:to-transparent',
+            statsVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'
+          )}>
+            <h3 className="text-2xl font-bold text-[var(--text-primary)] mb-[0.375rem]">Platform Statistics</h3>
+            <p className="text-sm text-[var(--text-secondary)] mb-10">Real-time numbers that speak for themselves</p>
+            <div className="grid grid-cols-4 max-sm:grid-cols-2 gap-6">
               {stats.map((s, i) => (
                 <div
                   key={i}
-                  className={`welcome-stat ${statsVisible ? 'welcome-reveal' : 'welcome-hidden'}`}
+                  className={clsx(
+                    'flex flex-col items-center gap-1 transition-all duration-[600ms] ease-[cubic-bezier(0.16,1,0.3,1)]',
+                    statsVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'
+                  )}
                   style={{ transitionDelay: statsVisible ? `${200 + i * 120}ms` : '0ms' }}
                 >
-                  <span className="welcome-stat-value">{s.value}</span>
-                  <span className="welcome-stat-label">{s.label}</span>
+                  <span className="text-4xl font-extrabold tracking-[-0.02em] tabular-nums bg-gradient-to-br from-[var(--accent-primary)] to-[#58a6ff] bg-clip-text text-transparent">{s.value}</span>
+                  <span className="text-[0.8125rem] text-[var(--text-secondary)] font-medium">{s.label}</span>
                 </div>
               ))}
             </div>
@@ -388,17 +427,20 @@ export default function Welcome() {
       </section>
 
       {/* CTA */}
-      <section className="welcome-section welcome-section--cta" ref={ctaRef}>
-        <div className="welcome-section-inner">
-          <div className={`welcome-cta-card ${ctaVisible ? 'welcome-reveal' : 'welcome-hidden'}`}>
-            <h2 className="welcome-cta-title">Ready to Transform Your Society?</h2>
-            <p className="welcome-cta-text">Join thousands of societies already streamlining their operations</p>
-            <div className="welcome-cta-actions">
-              <button onClick={() => navigate('/login')} className="welcome-btn-primary welcome-btn-lg">
+      <section className="py-24 px-6 bg-[var(--bg-primary)]" ref={ctaRef}>
+        <div className="max-w-[1100px] mx-auto">
+          <div className={clsx(
+            'bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl py-14 px-8 text-center relative overflow-hidden light:shadow-[var(--shadow-xs)] transition-all duration-[600ms] ease-[cubic-bezier(0.16,1,0.3,1)] before:content-[\'\'] before:absolute before:top-0 before:left-1/2 before:-translate-x-1/2 before:w-[60%] before:h-px before:bg-gradient-to-r before:from-transparent before:via-[var(--accent-primary)] before:to-transparent',
+            ctaVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'
+          )}>
+            <h2 className="text-[clamp(1.5rem,3.5vw,2rem)] font-extrabold text-[var(--text-primary)] mb-3">Ready to Transform Your Society?</h2>
+            <p className="text-base text-[var(--text-secondary)] max-w-[460px] mx-auto mb-8">Join thousands of societies already streamlining their operations</p>
+            <div className="flex flex-wrap justify-center gap-3">
+              <button onClick={() => navigate('/login')} className="inline-flex items-center gap-2 py-[0.875rem] px-8 text-base font-semibold text-white bg-[var(--accent-primary)] border-none rounded-[var(--radius-md)] cursor-pointer transition-all hover:bg-[var(--accent-hover)] hover:-translate-y-[2px] active:translate-y-0">
                 Start Now — It's Free
                 <ArrowRight size={16} />
               </button>
-              <button onClick={() => navigate('/contact')} className="welcome-btn-outline">
+              <button onClick={() => navigate('/contact')} className="inline-flex items-center gap-2 py-3 px-6 text-[0.9375rem] font-semibold text-[var(--text-primary)] bg-transparent border border-[var(--border-default)] rounded-[var(--radius-md)] cursor-pointer transition-all hover:bg-[var(--bg-tertiary)] hover:border-[var(--border-muted)]">
                 Contact Sales
               </button>
             </div>
@@ -407,20 +449,20 @@ export default function Welcome() {
       </section>
 
       {/* Footer */}
-      <footer id="contact" className="welcome-footer">
-        <div className="welcome-section-inner">
-          <div className="welcome-footer-grid welcome-footer-grid--nbh">
-            <div className="welcome-footer-brand welcome-footer-brand--nbh">
-              <div className="welcome-footer-logo welcome-footer-logo--nbh">
-                <div className="welcome-footer-badge">
+      <footer id="contact" className="pt-[3.25rem] px-6 pb-4" style={{ borderTop: '1px solid color-mix(in srgb, var(--border-strong) 70%, transparent)', background: 'color-mix(in srgb, var(--bg-primary) 72%, var(--bg-overlay) 28%)' }}>
+        <div className="max-w-[1100px] mx-auto">
+          <div className="grid grid-cols-[1.35fr_1fr_1.1fr_0.9fr_1fr] max-md:grid-cols-2 max-[480px]:grid-cols-1 gap-8 items-start mb-10">
+            <div className="flex flex-col gap-4">
+              <div className="flex items-start gap-2">
+                <div className="w-7 h-7 rounded-[var(--radius-sm)] bg-[var(--accent-primary)] flex items-center justify-center text-white">
                   <Building2 size={16} />
                 </div>
-                <div className="welcome-footer-brand-stack">
-                  <span className="welcome-footer-name">SocietyHub</span>
-                  <span className="welcome-footer-byline">By SocietyHub Technologies</span>
+                <div className="flex flex-col gap-[0.1rem]">
+                  <span className="text-base font-extrabold text-[var(--text-secondary)]">SocietyHub</span>
+                  <span className="text-[0.78rem] text-[var(--text-muted)] font-semibold">By SocietyHub Technologies</span>
                 </div>
               </div>
-              <p className="welcome-footer-text">
+              <p className="text-[0.8125rem] leading-[1.7] text-[var(--text-muted)] max-w-[280px]">
                 SocietyHub is aimed at making life in your residential society easy and secure.
                 Manage visitor access, domestic help and services, and much more.
               </p>
@@ -449,29 +491,29 @@ export default function Welcome() {
                 ],
               },
             ].map((g, i) => (
-              <div key={i} className="welcome-footer-col">
-                <h4 className="welcome-footer-heading">{g.title}</h4>
-                <ul className="welcome-footer-links">
+              <div key={i} className="flex flex-col gap-3 min-w-0">
+                <h4 className="text-xs font-bold text-[var(--text-tertiary)] uppercase tracking-[0.05em]">{g.title}</h4>
+                <ul className="list-none m-0 p-0 flex flex-col gap-[0.375rem]">
                   {g.links.map((l, j) => (
                     <li key={j}>
-                      <button onClick={l.action} className="welcome-footer-link">{l.label}</button>
+                      <button onClick={l.action} className="text-[0.8125rem] text-[var(--text-muted)] bg-transparent border-none cursor-pointer p-0 text-left transition-all leading-[1.55] no-underline hover:text-[var(--text-secondary)] hover:translate-x-px">{l.label}</button>
                     </li>
                   ))}
                 </ul>
               </div>
             ))}
 
-            <div className="welcome-footer-col">
-              <h4 className="welcome-footer-heading">Contact Us</h4>
-              <ul className="welcome-footer-links welcome-footer-links--contact">
+            <div className="flex flex-col gap-3 min-w-0">
+              <h4 className="text-xs font-bold text-[var(--text-tertiary)] uppercase tracking-[0.05em]">Contact Us</h4>
+              <ul className="list-none m-0 p-0 flex flex-col gap-[0.6rem]">
                 <li>
-                  <a href="mailto:assist@societyhub.com" className="welcome-footer-link welcome-footer-link--icon">
+                  <a href="mailto:assist@societyhub.com" className="inline-flex items-center gap-[0.4rem] text-[0.8125rem] text-[var(--text-muted)] no-underline transition-colors leading-[1.55] hover:text-[var(--text-secondary)]">
                     <Mail size={14} />
                     assist@societyhub.com
                   </a>
                 </li>
                 <li>
-                  <a href="tel:+919119300000" className="welcome-footer-link welcome-footer-link--icon">
+                  <a href="tel:+919119300000" className="inline-flex items-center gap-[0.4rem] text-[0.8125rem] text-[var(--text-muted)] no-underline transition-colors leading-[1.55] hover:text-[var(--text-secondary)]">
                     <Phone size={14} />
                     +91 91193 00000
                   </a>
@@ -479,15 +521,15 @@ export default function Welcome() {
               </ul>
             </div>
 
-            <div className="welcome-footer-col">
-              <h4 className="welcome-footer-heading">Get the Mobile App</h4>
-              <div className="welcome-footer-apps">
-                <button type="button" className="welcome-store-badge">Get it on Google Play</button>
-                <button type="button" className="welcome-store-badge">Download on the App Store</button>
+            <div className="flex flex-col gap-3 min-w-0">
+              <h4 className="text-xs font-bold text-[var(--text-tertiary)] uppercase tracking-[0.05em]">Get the Mobile App</h4>
+              <div className="flex flex-col gap-[0.55rem]">
+                <button type="button" className="inline-flex items-center justify-center w-full min-h-[38px] rounded-[var(--radius-sm)] text-[var(--text-secondary)] text-[0.78rem] font-bold tracking-[0.01em] cursor-pointer" style={{ border: '1px solid color-mix(in srgb, var(--border-default) 75%, transparent)', background: 'color-mix(in srgb, var(--bg-primary) 80%, transparent)' }}>Get it on Google Play</button>
+                <button type="button" className="inline-flex items-center justify-center w-full min-h-[38px] rounded-[var(--radius-sm)] text-[var(--text-secondary)] text-[0.78rem] font-bold tracking-[0.01em] cursor-pointer" style={{ border: '1px solid color-mix(in srgb, var(--border-default) 75%, transparent)', background: 'color-mix(in srgb, var(--bg-primary) 80%, transparent)' }}>Download on the App Store</button>
               </div>
-              <div className="welcome-footer-socials">
+              <div className="flex gap-2">
                 {footerSocialLinks.map((item, i) => (
-                  <a key={i} href={item.href} target="_blank" rel="noreferrer" className="welcome-social-link" aria-label={`Open ${item.label} in new tab`}>
+                  <a key={i} href={item.href} target="_blank" rel="noreferrer" className="w-8 h-8 rounded-[var(--radius-sm)] flex items-center justify-center text-[var(--text-tertiary)] no-underline transition-colors hover:text-[var(--text-secondary)] hover:bg-[var(--bg-tertiary)]" style={{ background: 'color-mix(in srgb, var(--bg-tertiary) 86%, transparent)', border: '1px solid color-mix(in srgb, var(--border-default) 80%, transparent)' }} aria-label={`Open ${item.label} in new tab`}>
                     <item.icon size={14} />
                   </a>
                 ))}
@@ -495,8 +537,8 @@ export default function Welcome() {
             </div>
           </div>
 
-          <div className="welcome-footer-bottom">
-            <p>2017 – 2026 SocietyHub Technologies Pvt. Ltd. – All Rights Reserved.</p>
+          <div className="pt-[1.35rem] text-left" style={{ borderTop: '1px solid color-mix(in srgb, var(--border-strong) 60%, transparent)' }}>
+            <p className="text-[0.79rem] text-[var(--text-muted)]">2017 – 2026 SocietyHub Technologies Pvt. Ltd. – All Rights Reserved.</p>
           </div>
         </div>
       </footer>

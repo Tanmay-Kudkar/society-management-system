@@ -392,8 +392,10 @@ function NavDropdown({ group, hasRole, onPrefetch }) {
         onMouseEnter={() => onPrefetch?.(group.path)}
         onFocus={() => onPrefetch?.(group.path)}
         className={clsx(
-          "app-nav__link",
-          isActive ? "app-nav__link--active" : "app-nav__link--idle",
+          "inline-flex items-center gap-1.5 rounded-md border-none bg-transparent px-3.5 py-1.5 text-[13px] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-secondary)]",
+          isActive
+            ? "bg-[var(--accent-primary)] text-white"
+            : "text-[var(--text-secondary)] hover:bg-[rgba(255,255,255,0.06)]",
         )}
       >
         <group.icon size={18} />
@@ -405,14 +407,16 @@ function NavDropdown({ group, hasRole, onPrefetch }) {
   // Dropdown
   return (
     <div
-      className="app-nav__item"
+      className="relative"
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
       <button
         className={clsx(
-          "app-nav__trigger",
-          isActive ? "app-nav__trigger--active" : "app-nav__trigger--idle",
+          "inline-flex items-center gap-1.5 rounded-md border-none bg-transparent px-3.5 py-1.5 text-[13px] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-secondary)]",
+          isActive
+            ? "bg-[var(--accent-primary)] text-white"
+            : "text-[var(--text-secondary)] hover:bg-[rgba(255,255,255,0.06)]",
         )}
       >
         <group.icon size={18} />
@@ -420,16 +424,18 @@ function NavDropdown({ group, hasRole, onPrefetch }) {
         <ChevronDown
           size={14}
           className={clsx(
-            "app-nav__chevron",
-            isOpen && "app-nav__chevron--open",
+            "transition-transform duration-200",
+            isOpen && "rotate-180",
           )}
         />
       </button>
 
       <div
         className={clsx(
-          "app-nav__menu",
-          isOpen ? "app-nav__menu--open" : "app-nav__menu--closed",
+          "absolute left-0 top-full z-50 mt-1.5 min-w-[200px] origin-top rounded-lg border border-[var(--border-default)] bg-[var(--bg-secondary)] py-1 shadow-[0_8px_24px_rgba(0,0,0,0.3)] transition-all duration-150",
+          isOpen
+            ? "pointer-events-auto translate-y-0 scale-100 opacity-100"
+            : "pointer-events-none -translate-y-2 scale-95 opacity-0",
         )}
       >
         {filteredItems.map((item) => (
@@ -441,10 +447,10 @@ function NavDropdown({ group, hasRole, onPrefetch }) {
             onFocus={() => onPrefetch?.(item.path)}
             className={({ isActive }) =>
               clsx(
-                "app-nav__menu-link",
+                "mx-1.5 flex items-center gap-2.5 rounded-md px-3.5 py-2 text-[13px] font-medium no-underline transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-secondary)]",
                 isActive
-                  ? "app-nav__menu-link--active accent-bg-light accent-text"
-                  : "app-nav__menu-link--idle",
+                  ? "bg-[color-mix(in_srgb,var(--accent-primary)_10%,transparent)] text-[var(--accent-primary)] font-bold"
+                  : "text-[var(--text-secondary)] hover:bg-[rgba(255,255,255,0.06)] hover:text-[var(--text-primary)]",
               )
             }
           >
@@ -505,10 +511,10 @@ function MobileAccordion({
         onFocus={() => onPrefetch?.(group.path)}
         onClick={onNavigate}
         className={clsx(
-          "app-mobile__link",
+          "mb-0.5 flex items-center gap-[11px] whitespace-nowrap rounded-[10px] px-3.5 py-[11px] text-sm font-semibold no-underline transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-card)]",
           isActiveGroup
-            ? "app-mobile__link--active accent-bg-light accent-text"
-            : "app-mobile__link--idle",
+            ? "bg-[var(--accent-primary)] text-white"
+            : "text-[var(--text-secondary)] hover:bg-[rgba(47,129,247,0.06)] hover:text-[var(--text-primary)]",
         )}
       >
         <group.icon size={20} />
@@ -519,34 +525,34 @@ function MobileAccordion({
 
   // Accordion
   return (
-    <div className="app-mobile__accordion">
+    <div className="overflow-hidden">
       <button
         onClick={onToggle}
         className={clsx(
-          "app-mobile__trigger",
+          "mb-0.5 flex w-full items-center justify-between rounded-[10px] border-none bg-transparent px-3.5 py-[11px] text-left font-semibold whitespace-nowrap transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-card)]",
           isActiveGroup
-            ? "app-mobile__trigger--active"
-            : "app-mobile__trigger--idle",
+            ? "bg-[rgba(47,129,247,0.08)] text-[var(--accent-primary)] font-[650]"
+            : "text-[var(--text-secondary)] hover:bg-[rgba(47,129,247,0.06)] hover:text-[var(--text-primary)]",
         )}
       >
-        <div className="app-mobile__trigger-row">
+        <div className="flex min-w-0 flex-1 items-center gap-[11px]">
           <group.icon size={20} />
           <span>{group.label}</span>
         </div>
         <ChevronDown
           size={18}
           className={clsx(
-            "app-mobile__chevron",
-            isOpen && "app-mobile__chevron--open",
+            "shrink-0 opacity-50 transition-transform duration-300",
+            isOpen && "rotate-180 opacity-80",
           )}
         />
       </button>
 
       <div
-        className="app-mobile__panel"
+        className="overflow-hidden transition-[height] duration-300"
         style={{ height: isOpen ? contentHeight : 0 }}
       >
-        <div ref={contentRef} className="app-mobile__panel-inner">
+        <div ref={contentRef} className="bg-transparent px-0 pb-1.5 pt-1">
           {filteredItems.map((item) => (
             <NavLink
               key={item.path}
@@ -556,10 +562,10 @@ function MobileAccordion({
               onClick={onNavigate}
               className={({ isActive }) =>
                 clsx(
-                  "app-mobile__sublink",
+                  "mx-1.5 mb-px flex items-center gap-2.5 whitespace-nowrap rounded-lg px-3.5 py-[9px] pl-11 text-[13.5px] font-medium no-underline transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-card)]",
                   isActive
-                    ? "app-mobile__sublink--active accent-bg-light accent-text"
-                    : "app-mobile__sublink--idle",
+                    ? "bg-[rgba(47,129,247,0.1)] text-[var(--accent-primary)] font-semibold"
+                    : "text-[var(--text-secondary)] hover:bg-[rgba(47,129,247,0.08)] hover:text-[var(--text-primary)]",
                 )
               }
             >
@@ -584,8 +590,10 @@ function SidebarLink({ group, hasRole, onPrefetch }) {
       onMouseEnter={() => onPrefetch?.(group.path)}
       onFocus={() => onPrefetch?.(group.path)}
       className={clsx(
-        "app-sidebar__link",
-        isActive ? "app-sidebar__link--active" : "app-sidebar__link--idle",
+        "relative mb-[3px] flex items-center gap-[11px] whitespace-nowrap rounded-[10px] px-3.5 py-2.5 text-[13.5px] font-semibold no-underline transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-secondary)]",
+        isActive
+          ? "bg-[var(--accent-primary)] text-white font-[650] shadow-[0_2px_8px_rgba(47,129,247,0.2),var(--glow-accent,none)]"
+          : "text-[var(--text-secondary)] hover:bg-[rgba(47,129,247,0.08)] hover:text-[var(--text-primary)]",
       )}
     >
       <group.icon size={20} />
@@ -619,33 +627,33 @@ function SidebarGroup({ group, hasRole, isOpen, onToggle, onPrefetch }) {
   );
 
   return (
-    <div className="app-sidebar__group">
+    <div className="mb-1">
       <button
         onClick={onToggle}
         className={clsx(
-          "app-sidebar__trigger",
+          "relative flex w-full items-center justify-between whitespace-nowrap rounded-[10px] border-none bg-transparent px-3.5 py-2.5 text-[13.5px] font-semibold transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-secondary)]",
           isActiveGroup || isOpen
-            ? "app-sidebar__trigger--active"
-            : "app-sidebar__trigger--idle",
+            ? "text-[var(--accent-primary)] font-[650]"
+            : "text-[var(--text-secondary)] hover:bg-[rgba(47,129,247,0.08)] hover:text-[var(--text-primary)]",
         )}
       >
-        <div className="app-sidebar__trigger-left">
+        <div className="flex min-w-0 flex-1 items-center gap-[11px]">
           <group.icon size={20} />
           <span>{group.label}</span>
         </div>
         <ChevronDown
           size={16}
           className={clsx(
-            "app-sidebar__chevron",
-            isOpen && "app-sidebar__chevron--open",
+            "shrink-0 opacity-50 transition-transform duration-300",
+            isOpen && "rotate-180 opacity-80",
           )}
         />
       </button>
       <div
-        className="app-sidebar__submenu"
+        className="overflow-hidden transition-[height] duration-300"
         style={{ height: isOpen ? contentHeight : 0 }}
       >
-        <div ref={contentRef} className="app-sidebar__submenu-inner">
+        <div ref={contentRef} className="px-0 pb-1.5 pt-1">
           {filteredItems.map((item) => (
             <NavLink
               key={item.path}
@@ -654,14 +662,14 @@ function SidebarGroup({ group, hasRole, isOpen, onToggle, onPrefetch }) {
               onFocus={() => onPrefetch?.(item.path)}
               className={({ isActive }) =>
                 clsx(
-                  "app-sidebar__sublink",
+                  "mb-px flex items-center gap-2.5 whitespace-nowrap rounded-lg px-3.5 py-2 pl-[22px] text-[13px] font-medium no-underline transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-secondary)]",
                   isActive
-                    ? "app-sidebar__sublink--active"
-                    : "app-sidebar__sublink--idle",
+                    ? "bg-[rgba(47,129,247,0.1)] text-[var(--accent-primary)] font-semibold"
+                    : "text-[var(--text-secondary)] hover:bg-[rgba(47,129,247,0.08)] hover:text-[var(--text-primary)]",
                 )
               }
             >
-              <item.icon size={16} className="app-sidebar__sublink-icon" />
+              <item.icon size={16} className="shrink-0 transition-colors duration-150" />
               <span>{item.label}</span>
             </NavLink>
           ))}
@@ -691,14 +699,14 @@ export default function Layout() {
   const closeMobileMenu = () => {
     setMobileMenuOpen(false);
     // Reset accordions after drawer closes
-    setTimeout(() => setOpenAccordion(null), 300);
+    setTimeout(() => setOpenAccordion(null), 250);
   };
 
   const toggleMobileMenu = () => {
     if (mobileMenuOpen) {
       // Closing - reset accordions after transition
       setMobileMenuOpen(false);
-      setTimeout(() => setOpenAccordion(null), 300);
+      setTimeout(() => setOpenAccordion(null), 250);
     } else {
       // Opening - reset accordions immediately
       setOpenAccordion(null);
@@ -731,25 +739,25 @@ export default function Layout() {
   }, []);
 
   return (
-    <div className="app-layout">
+    <div className="min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)]">
       {/* Desktop Sidebar */}
-      <aside className="app-sidebar">
-        <div className="app-sidebar__header">
-          <div className="app-sidebar__logo" onClick={() => navigate("/")}>
-            <div className="app-sidebar__logo-mark">
-              <Building2 size={20} className="app-sidebar__logo-icon" />
+      <aside className="relative hidden before:pointer-events-none before:absolute before:left-0 before:right-0 before:top-0 before:h-[200px] before:bg-[linear-gradient(180deg,rgba(47,129,247,0.03)_0%,transparent_100%)] before:content-[''] lg:fixed lg:inset-y-0 lg:left-0 lg:z-[45] lg:flex lg:w-[260px] lg:flex-col lg:overflow-hidden lg:border-r lg:border-[var(--border-default)] lg:bg-[var(--bg-secondary)]">
+        <div className="relative border-b border-[var(--border-default)] px-5 pb-4 pt-5">
+          <div className="group flex cursor-pointer items-center gap-3" onClick={() => navigate("/")}>
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[linear-gradient(135deg,var(--accent-primary)_0%,#1d6ce0_100%)] shadow-[0_4px_16px_rgba(47,129,247,0.3)] transition-all duration-200 group-hover:scale-105 group-hover:shadow-[0_6px_20px_rgba(47,129,247,0.4)]">
+              <Building2 size={20} className="text-white" />
             </div>
-            <div className="app-sidebar__logo-text">
-              <span className="app-sidebar__brand-name">SocietyHub</span>
-              <span className="app-sidebar__brand-tag">
+            <div className="flex flex-col">
+              <span className="text-[20px] font-extrabold tracking-[-0.02em] text-[var(--text-primary)]">SocietyHub</span>
+              <span className="mt-[-2px] block text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--text-secondary)]">
                 Management Platform
               </span>
             </div>
           </div>
         </div>
 
-        <nav className="app-sidebar__nav">
-          <div className="app-sidebar__section-title">Navigation</div>
+        <nav className="flex-1 overflow-y-auto px-3 pb-4 pt-4 [scrollbar-width:thin] [&::-webkit-scrollbar-thumb]:rounded [&::-webkit-scrollbar-thumb]:bg-white/10 [&::-webkit-scrollbar]:w-1">
+          <div className="mb-1 px-3.5 pb-1.5 pt-2 text-[11px] font-bold uppercase tracking-[0.08em] text-[var(--text-tertiary)]">Navigation</div>
           {menuGroups.map((group) =>
             group.path ? (
               <SidebarLink
@@ -774,24 +782,24 @@ export default function Layout() {
       </aside>
 
       {/* Top Navbar */}
-      <header className="app-layout__header">
-        <div className="app-layout__bar">
-          <div className="app-layout__bar-inner">
+      <header className="fixed inset-x-0 top-0 z-40 lg:left-[260px]">
+        <div className="h-16 border-b border-[var(--border-default)] bg-[var(--bg-secondary)] backdrop-blur-[8px]">
+          <div className="mx-auto flex h-full max-w-[1800px] items-center justify-between gap-4 px-4 lg:justify-end lg:px-6 [&>*]:min-w-0">
             {/* Logo - visible on mobile only */}
-            <div className="app-layout__logo" onClick={() => navigate("/")}>
-              <div className="app-layout__logo-mark">
-                <Building2 size={22} className="app-layout__logo-icon" />
+            <div className="group flex cursor-pointer items-center gap-3 text-decoration-none lg:hidden" onClick={() => navigate("/")}>
+              <div className="rounded-lg bg-[var(--accent-primary)] p-2 shadow-[0_2px_6px_rgba(47,129,247,0.2)] transition-transform duration-200 group-hover:scale-[1.04]">
+                <Building2 size={22} className="text-white" />
               </div>
-              <div className="app-layout__logo-text">
-                <span className="app-layout__brand">SocietyHub</span>
-                <span className="app-layout__subtitle">
+              <div className="flex flex-col">
+                <span className="text-[20px] font-extrabold tracking-[-0.02em] text-[var(--text-primary)]">SocietyHub</span>
+                <span className="mt-[-2px] text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--text-secondary)]">
                   Management Platform
                 </span>
               </div>
             </div>
 
             {/* Desktop Navigation - hidden, sidebar replaces it */}
-            <nav className="app-layout__nav">
+            <nav className="hidden">
               {menuGroups.map((group) => (
                 <NavDropdown
                   key={group.id}
@@ -803,16 +811,16 @@ export default function Layout() {
             </nav>
 
             {/* User section - Desktop */}
-            <div className="app-layout__user">
-              <div className="app-layout__user-card">
-                <div className="app-layout__user-avatar">
-                  <span className="app-layout__user-initial">
+            <div className="hidden items-center gap-3 lg:flex">
+              <div className="flex min-h-11 items-center gap-2.5 rounded-lg border border-[var(--border-default)] px-3.5 py-1.5 transition-shadow duration-150 hover:shadow-[0_2px_8px_rgba(0,0,0,0.2)]">
+                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[var(--accent-primary)]">
+                  <span className="text-[13px] font-bold text-white">
                     {user?.name?.charAt(0)?.toUpperCase() || "U"}
                   </span>
                 </div>
-                <div className="app-layout__user-info">
-                  <p className="app-layout__user-name">{user?.name}</p>
-                  <p className="app-layout__user-role">
+                <div className="grid gap-0.5 text-right">
+                  <p className="m-0 text-[13px] font-semibold leading-[1.1] text-[var(--text-primary)]">{user?.name}</p>
+                  <p className="m-0 text-[11px] font-bold uppercase tracking-[0.04em] leading-[1.1] text-[var(--accent-primary)]">
                     {user?.role?.replace(/_/g, " ")}
                   </p>
                 </div>
@@ -820,7 +828,7 @@ export default function Layout() {
               <button
                 onClick={handleLogout}
                 title="Logout"
-                className="app-layout__logout"
+                className="rounded-md border border-[var(--border-default)] bg-transparent p-2 text-[var(--text-secondary)] transition-all duration-150 hover:border-[rgba(248,113,113,0.4)] hover:bg-[rgba(248,113,113,0.08)] hover:text-[#ef4444] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-secondary)]"
               >
                 <LogOut size={18} />
               </button>
@@ -829,25 +837,25 @@ export default function Layout() {
             {/* Hamburger - Mobile */}
             <button
               onClick={toggleMobileMenu}
-              className="app-layout__menu-button"
+              className="inline-flex items-center justify-center rounded-md border border-[var(--border-default)] bg-transparent p-2 text-[var(--text-secondary)] transition-all duration-150 hover:bg-[rgba(255,255,255,0.06)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-secondary)] lg:hidden"
             >
-              <div className="app-layout__menu-icon">
+              <div className="relative h-6 w-6">
                 <Menu
                   size={24}
                   className={clsx(
-                    "app-layout__menu-line",
+                    "absolute inset-0 transition-all duration-300",
                     mobileMenuOpen
-                      ? "app-layout__menu-line--hidden"
-                      : "app-layout__menu-line--visible",
+                      ? "rotate-90 scale-0 opacity-0"
+                      : "rotate-0 scale-100 opacity-100",
                   )}
                 />
                 <X
                   size={24}
                   className={clsx(
-                    "app-layout__menu-line",
+                    "absolute inset-0 transition-all duration-300",
                     mobileMenuOpen
-                      ? "app-layout__menu-line--visible"
-                      : "app-layout__menu-line--hidden-reverse",
+                      ? "rotate-0 scale-100 opacity-100"
+                      : "-rotate-90 scale-0 opacity-0",
                   )}
                 />
               </div>
@@ -859,19 +867,19 @@ export default function Layout() {
       {/* Mobile Menu Drawer */}
       <div
         className={clsx(
-          "app-layout__drawer-overlay",
+          "fixed inset-0 z-50 transition-opacity duration-300",
           mobileMenuOpen
-            ? "app-layout__drawer-overlay--open"
-            : "app-layout__drawer-overlay--closed",
+            ? "pointer-events-auto opacity-100"
+            : "pointer-events-none opacity-0",
         )}
       >
         {/* Backdrop */}
         <div
           className={clsx(
-            "app-layout__drawer-backdrop",
+            "absolute inset-0 bg-black/70 transition-opacity duration-300",
             mobileMenuOpen
-              ? "app-layout__drawer-backdrop--open"
-              : "app-layout__drawer-backdrop--closed",
+              ? "opacity-100"
+              : "opacity-0",
           )}
           onClick={closeMobileMenu}
         />
@@ -879,33 +887,33 @@ export default function Layout() {
         {/* Drawer */}
         <aside
           className={clsx(
-            "app-layout__drawer",
+            "absolute right-0 top-0 flex h-full w-[320px] max-w-[85vw] flex-col bg-[var(--bg-card)] shadow-[-4px_0_24px_rgba(0,0,0,0.3)] transition-transform duration-[250ms]",
             mobileMenuOpen
-              ? "app-layout__drawer--open"
-              : "app-layout__drawer--closed",
+              ? "translate-x-0"
+              : "translate-x-full",
           )}
         >
           {/* Mobile Header */}
-          <div className="app-layout__drawer-header">
-            <div className="app-layout__drawer-brand">
-              <div className="app-layout__drawer-mark">
-                <Building2 size={18} className="app-layout__drawer-icon" />
+          <div className="flex h-16 items-center justify-between border-b border-[var(--border-default)] px-4">
+            <div className="flex items-center gap-3">
+              <div className="rounded-lg bg-[var(--accent-primary)] p-2 shadow-[0_2px_6px_rgba(47,129,247,0.2)]">
+                <Building2 size={18} className="text-white" />
               </div>
-              <div className="app-layout__drawer-text">
-                <span className="app-layout__drawer-title">Menu</span>
-                <span className="app-layout__drawer-subtitle">Navigation</span>
+              <div className="flex flex-col">
+                <span className="text-lg font-bold text-[var(--text-primary)]">Menu</span>
+                <span className="mt-[-2px] text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--text-secondary)]">Navigation</span>
               </div>
             </div>
             <button
               onClick={closeMobileMenu}
-              className="app-layout__drawer-close"
+              className="rounded-md bg-transparent p-2 text-[var(--text-primary)] transition-colors duration-150 hover:bg-[color-mix(in_srgb,var(--text-primary)_8%,transparent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-card)]"
             >
               <X size={24} />
             </button>
           </div>
 
           {/* Mobile Navigation */}
-          <nav className="app-layout__drawer-nav">
+          <nav className="flex-1 overflow-y-auto px-2 pb-40 pt-3">
             {menuGroups.map((group) => (
               <MobileAccordion
                 key={group.id}
@@ -920,23 +928,23 @@ export default function Layout() {
           </nav>
 
           {/* Mobile User Section */}
-          <div className="app-layout__drawer-user">
-            <div className="app-layout__drawer-user-card">
-              <div className="app-layout__drawer-avatar">
-                <span className="app-layout__drawer-initial">
+          <div className="absolute bottom-0 left-0 right-0 border-t border-[var(--border-default)] bg-[var(--bg-card)] p-4">
+            <div className="mb-3 flex items-center gap-3 rounded-[10px] border border-[rgba(47,129,247,0.1)] bg-[rgba(47,129,247,0.04)] p-3">
+              <div className="flex h-9 w-9 items-center justify-center rounded-[10px] bg-[linear-gradient(135deg,var(--accent-primary)_0%,#1d6ce0_100%)] shadow-[0_2px_8px_rgba(47,129,247,0.2)]">
+                <span className="font-bold text-white">
                   {user?.name?.charAt(0)?.toUpperCase() || "U"}
                 </span>
               </div>
-              <div className="app-layout__drawer-info">
-                <p className="app-layout__drawer-name">{user?.name}</p>
-                <p className="app-layout__drawer-role">
+              <div className="min-w-0 flex-1">
+                <p className="m-0 truncate whitespace-nowrap text-[13px] font-bold leading-[1.2] text-[var(--text-primary)]">{user?.name}</p>
+                <p className="m-0 truncate whitespace-nowrap text-[11px] font-bold uppercase tracking-[0.03em] leading-[1.2] text-[var(--accent-primary)]">
                   {user?.role?.replace(/_/g, " ")}
                 </p>
               </div>
             </div>
             <button
               onClick={handleLogout}
-              className="app-layout__drawer-logout"
+              className="flex w-full items-center justify-center gap-2 rounded-[10px] border-none bg-[linear-gradient(135deg,#ef4444_0%,#dc2626_100%)] px-4 py-3 text-sm font-semibold text-white shadow-[0_2px_8px_rgba(239,68,68,0.25)] transition-all duration-150 hover:-translate-y-px hover:bg-[linear-gradient(135deg,#dc2626_0%,#b91c1c_100%)] hover:shadow-[0_4px_14px_rgba(239,68,68,0.35)] active:translate-y-0 active:shadow-[0_1px_4px_rgba(239,68,68,0.2)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-card)]"
             >
               <LogOut size={18} />
               <span>Logout</span>
@@ -946,8 +954,8 @@ export default function Layout() {
       </div>
 
       {/* Main content */}
-      <main className="app-layout__main">
-        <div className="app-layout__content">
+      <main className="min-h-screen pt-[65px] lg:ml-[260px]">
+        <div className="p-4 md:p-6 lg:px-7 lg:py-6">
           <Outlet />
         </div>
       </main>

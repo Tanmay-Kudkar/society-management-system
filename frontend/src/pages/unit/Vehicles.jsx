@@ -122,16 +122,16 @@ export default function Vehicles() {
 
   const VehicleIcon = ({ type }) => {
     if (type === 'TWO_WHEELER') {
-      return <Bike className="vehicles-icon-svg vehicles-icon-svg--green" />
+      return <Bike className="h-5 w-5 text-green-600" />
     }
-    return <Car className="vehicles-icon-svg vehicles-icon-svg--blue" />
+    return <Car className="h-5 w-5 text-blue-600" />
   } 
 
   const showSkeleton = useMinLoadingTime(isLoading || isError)
 
   if (showSkeleton) {
     return (
-      <div className="vehicles-page">
+      <div>
         <WakeUpBanner />
         <HeroSkeleton />
         <StatCardSkeleton count={3} />
@@ -142,25 +142,25 @@ export default function Vehicles() {
   }
 
   return (
-    <div className="vehicles-page">
+    <div>
       {/* Header */}
-      <div className="vehicles-header">
+      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="vehicles-title">Vehicles</h1>
-          <p className="vehicles-subtitle">Manage resident vehicles and parking</p>
+          <h1 className="text-2xl font-bold text-[var(--text-primary)]">Vehicles</h1>
+          <p className="mt-1 text-[var(--text-secondary)]">Manage resident vehicles and parking</p>
         </div>
         {canEditVehicles && (
-          <div className="vehicles-header-actions">
+          <div className="flex gap-2">
             <button
               onClick={() => setShowBulkImport(true)}
-              className="vehicles-bulk-button"
+              className="inline-flex items-center gap-2 rounded-lg border border-slate-900/15 bg-slate-900 px-4 py-2 font-medium text-slate-50 transition hover:shadow-[0_8px_20px_rgba(15,23,42,0.16)] dark:border-slate-400/25 dark:bg-slate-950"
             >
               <Upload size={20} />
               Bulk Import
             </button>
             <button
               onClick={() => { setEditingVehicle(null); setShowModal(true) }}
-              className="vehicles-add-button"
+              className="inline-flex items-center gap-2 rounded-lg border border-[var(--border-default)] bg-[var(--bg-card)] px-4 py-2 font-medium text-[var(--text-primary)] transition hover:bg-[color-mix(in_srgb,var(--bg-tertiary)_70%,var(--bg-card))] hover:shadow-[0_8px_20px_rgba(15,23,42,0.14)] dark:border-slate-400/25 dark:bg-slate-50 dark:text-slate-900 dark:hover:bg-white"
             >
               <Plus size={20} />
               Add Vehicle
@@ -170,22 +170,22 @@ export default function Vehicles() {
       </div>
 
       {/* Filters */}
-      <div className="vehicles-filters">
-        <div className="vehicles-filters-row">
-          <div className="vehicles-search">
-            <Search className="vehicles-search-icon" />
+      <div className="mb-6 rounded-xl border border-[var(--border-default)] bg-[var(--bg-card)] p-4 shadow-sm">
+        <div className="flex flex-col gap-4 sm:flex-row">
+          <div className="relative flex-1">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-[var(--text-tertiary)]" />
             <input
               type="text"
               placeholder="Search vehicles..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="vehicles-search-input"
+              className="w-full rounded-lg border border-[var(--border-light)] bg-[var(--bg-card)] py-2 pl-10 pr-3 text-[var(--text-primary)] outline-none transition focus:border-blue-500 focus:shadow-[0_0_0_2px_rgba(59,130,246,0.3)]"
             />
           </div>
           <select
             value={filterType}
             onChange={(e) => setFilterType(e.target.value)}
-            className="vehicles-filter-select"
+            className="rounded-lg border border-[var(--border-light)] bg-[var(--bg-card)] px-3 py-2 text-[var(--text-primary)] outline-none transition focus:border-blue-500 focus:shadow-[0_0_0_2px_rgba(59,130,246,0.3)]"
           >
             <option value="">All Types</option>
             <option value="TWO_WHEELER">Two Wheeler</option>
@@ -195,104 +195,104 @@ export default function Vehicles() {
       </div>
 
       {/* Stats */}
-      <div className="vehicles-stats">
-        <div className="vehicles-stat-card">
-          <div className="vehicles-stat-content">
-            <div className="vehicles-stat-icon vehicles-stat-icon--blue">
-              <Car className="vehicles-stat-icon-svg" />
+      <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <div className="rounded-xl border border-[var(--border-default)] bg-[var(--bg-card)] p-4 shadow-sm">
+          <div className="flex items-center gap-3">
+            <div className="rounded-lg bg-blue-500/15 p-2">
+              <Car className="h-5 w-5 text-blue-600" />
             </div>
             <div>
-              <p className="vehicles-stat-value">
+              <p className="text-2xl font-bold text-[var(--text-primary)]">
                 {vehicleStats.fourWheelers}
               </p>
-              <p className="vehicles-stat-label">Four Wheelers</p>
+              <p className="text-sm text-[var(--text-tertiary)]">Four Wheelers</p>
             </div>
           </div>
         </div>
-        <div className="vehicles-stat-card">
-          <div className="vehicles-stat-content">
-            <div className="vehicles-stat-icon vehicles-stat-icon--green">
-              <Bike className="vehicles-stat-icon-svg" />
+        <div className="rounded-xl border border-[var(--border-default)] bg-[var(--bg-card)] p-4 shadow-sm">
+          <div className="flex items-center gap-3">
+            <div className="rounded-lg bg-green-500/15 p-2">
+              <Bike className="h-5 w-5 text-green-600" />
             </div>
             <div>
-              <p className="vehicles-stat-value">
+              <p className="text-2xl font-bold text-[var(--text-primary)]">
                 {vehicleStats.twoWheelers}
               </p>
-              <p className="vehicles-stat-label">Two Wheelers</p>
+              <p className="text-sm text-[var(--text-tertiary)]">Two Wheelers</p>
             </div>
           </div>
         </div>
-        <div className="vehicles-stat-card">
-          <div className="vehicles-stat-content">
-            <div className="vehicles-stat-icon vehicles-stat-icon--purple">
-              <Car className="vehicles-stat-icon-svg" />
+        <div className="rounded-xl border border-[var(--border-default)] bg-[var(--bg-card)] p-4 shadow-sm">
+          <div className="flex items-center gap-3">
+            <div className="rounded-lg bg-violet-500/15 p-2">
+              <Car className="h-5 w-5 text-violet-600" />
             </div>
             <div>
-              <p className="vehicles-stat-value">{vehicleStats.total}</p>
-              <p className="vehicles-stat-label">Total Vehicles</p>
+              <p className="text-2xl font-bold text-[var(--text-primary)]">{vehicleStats.total}</p>
+              <p className="text-sm text-[var(--text-tertiary)]">Total Vehicles</p>
             </div>
           </div>
         </div>
       </div>
 
       {/* Table */}
-      <div className="vehicles-table-card">
-          <div className="vehicles-table-scroll">
-            <table className="vehicles-table">
-              <thead className="vehicles-thead">
+      <div className="overflow-hidden rounded-xl border border-[var(--border-default)] bg-[var(--bg-card)] shadow-sm">
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse">
+              <thead className="border-b border-[var(--border-light)] bg-[var(--bg-tertiary)]">
                 <tr>
-                  <th className="vehicles-th">Vehicle</th>
-                  <th className="vehicles-th">Type</th>
-                  <th className="vehicles-th">Flat</th>
-                  <th className="vehicles-th">Owner</th>
-                  <th className="vehicles-th">Parking</th>
-                  <th className="vehicles-th vehicles-th--right">Actions</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-[0.05em] text-[var(--text-tertiary)]">Vehicle</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-[0.05em] text-[var(--text-tertiary)]">Type</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-[0.05em] text-[var(--text-tertiary)]">Flat</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-[0.05em] text-[var(--text-tertiary)]">Owner</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-[0.05em] text-[var(--text-tertiary)]">Parking</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-[0.05em] text-[var(--text-tertiary)]">Actions</th>
                 </tr>
               </thead>
-              <tbody className="vehicles-tbody">
+              <tbody>
                 {filteredVehicles.map((vehicle) => (
-                  <tr key={vehicle.id} className="vehicles-row">
-                    <td className="vehicles-cell">
-                      <div className="vehicles-cell-vehicle">
-                        <div className="vehicles-cell-icon">
+                  <tr key={vehicle.id} className="border-t border-[var(--border-light)] transition hover:bg-[var(--bg-tertiary)]">
+                    <td className="whitespace-nowrap px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[var(--bg-tertiary)]">
                           <VehicleIcon type={vehicle.vehicleType} />
                         </div>
                         <div>
-                          <span className="vehicles-cell-number">{vehicle.vehicleNumber}</span>
-                          <p className="vehicles-cell-detail">{vehicle.brand} {vehicle.model}</p>
+                          <span className="font-medium text-[var(--text-primary)]">{vehicle.vehicleNumber}</span>
+                          <p className="text-xs text-[var(--text-tertiary)]">{vehicle.brand} {vehicle.model}</p>
                         </div>
                       </div>
                     </td>
-                    <td className="vehicles-cell">
-                      <span className={`vehicles-type-badge ${
+                    <td className="whitespace-nowrap px-6 py-4">
+                      <span className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${
                         vehicle.vehicleType === 'FOUR_WHEELER' 
-                          ? 'vehicles-type-badge--four' 
-                          : 'vehicles-type-badge--two'
+                          ? 'bg-blue-500/15 text-blue-600' 
+                          : 'bg-green-500/15 text-green-600'
                       }`}>
                         {vehicle.vehicleType === 'FOUR_WHEELER' ? 'Four Wheeler' : 'Two Wheeler'}
                       </span>
                     </td>
-                    <td className="vehicles-cell vehicles-cell--muted">
+                    <td className="whitespace-nowrap px-6 py-4 text-[var(--text-secondary)]">
                       {getFlatDisplay(vehicle.flatId)}
                     </td>
-                    <td className="vehicles-cell vehicles-cell--muted">
+                    <td className="whitespace-nowrap px-6 py-4 text-[var(--text-secondary)]">
                       {vehicle.ownerName || 'N/A'}
                     </td>
-                    <td className="vehicles-cell">
+                    <td className="whitespace-nowrap px-6 py-4">
                       {vehicle.parkingSlot ? (
-                        <span className="vehicles-parking-badge">
+                        <span className="inline-flex rounded-full bg-[var(--bg-tertiary)] px-2 py-1 text-xs font-medium text-[var(--text-secondary)]">
                           {vehicle.parkingSlot}
                         </span>
                       ) : (
-                        <span className="vehicles-parking-empty">Not assigned</span>
+                        <span className="text-[var(--text-tertiary)]">Not assigned</span>
                       )}
                     </td>
-                    <td className="vehicles-cell vehicles-cell--right">
+                    <td className="whitespace-nowrap px-6 py-4 text-right">
                       {canEditVehicles ? (
-                        <div className="vehicles-cell-actions">
+                        <div className="flex items-center justify-end gap-2">
                           <button
                             onClick={() => { setEditingVehicle(vehicle); setShowModal(true) }}
-                            className="vehicles-action-button vehicles-action-button--edit"
+                            className="rounded-lg p-2 text-[var(--text-secondary)] transition hover:bg-blue-500/10 hover:text-blue-600"
                           >
                             <Edit size={18} />
                           </button>
@@ -315,20 +315,20 @@ export default function Vehicles() {
                                 deleteMutation.mutate(vehicle.id)
                               }
                             }}
-                            className="vehicles-action-button vehicles-action-button--delete"
+                            className="rounded-lg p-2 text-[var(--text-secondary)] transition hover:bg-red-500/10 hover:text-red-600"
                           >
                             <Trash2 size={18} />
                           </button>
                         </div>
                       ) : (
-                        <span className="vehicles-cell--muted">Read only</span>
+                        <span className="text-[var(--text-secondary)]">Read only</span>
                       )}
                     </td>
                   </tr>
                 ))}
                 {filteredVehicles.length === 0 && (
                   <tr>
-                    <td colSpan="6" className="vehicles-empty">
+                    <td colSpan="6" className="px-6 py-8 text-center text-[var(--text-tertiary)]">
                       No vehicles found
                     </td>
                   </tr>
@@ -340,22 +340,22 @@ export default function Vehicles() {
 
       {/* Modal */}
       {showModal && canEditVehicles && (
-        <div className="vehicles-modal">
-          <div className="vehicles-modal-overlay" onClick={() => setShowModal(false)} />
-          <div className="vehicles-modal-card">
-            <div className="vehicles-modal-header">
-              <h2 className="vehicles-modal-title">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="fixed inset-0 bg-black/50" onClick={() => setShowModal(false)} />
+          <div className="relative w-full max-w-xl rounded-xl border border-[var(--border-default)] bg-[var(--bg-card)] p-6 shadow-xl">
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-xl font-semibold text-[var(--text-primary)]">
                 {editingVehicle ? 'Edit Vehicle' : 'Add Vehicle'}
               </h2>
               <button
                 onClick={() => { setShowModal(false); setEditingVehicle(null) }}
-                className="vehicles-modal-close"
+                className="rounded-lg p-2 text-[var(--text-tertiary)] transition hover:bg-[var(--bg-tertiary)]"
               >
                 <X size={20} />
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="vehicles-modal-body">
+            <form onSubmit={handleSubmit} className="flex flex-col gap-4">
               <SmartSelect
                 label="Flat"
                 name="flatId"
@@ -366,7 +366,7 @@ export default function Vehicles() {
                 emptyMessage="No flats available"
               />
 
-              <div className="vehicles-form-grid">
+              <div className="grid grid-cols-2 gap-4">
                 <FormInput
                   label="Vehicle Number"
                   name="vehicleNumber"
@@ -387,7 +387,7 @@ export default function Vehicles() {
                 />
               </div>
 
-              <div className="vehicles-form-grid">
+              <div className="grid grid-cols-2 gap-4">
                 <FormInput
                   label="Brand"
                   name="brand"
@@ -404,7 +404,7 @@ export default function Vehicles() {
                 />
               </div>
 
-              <div className="vehicles-form-grid">
+              <div className="grid grid-cols-2 gap-4">
                 <FormInput
                   label="Color"
                   name="color"
@@ -427,17 +427,17 @@ export default function Vehicles() {
                 required
               />
 
-              <div className="vehicles-modal-actions">
+              <div className="flex justify-end gap-3 pt-2">
                 <button
                   type="button"
                   onClick={() => { setShowModal(false); setEditingVehicle(null) }}
-                  className="vehicles-cancel-button"
+                  className="rounded-lg bg-[var(--bg-tertiary)] px-4 py-2 text-[var(--text-secondary)] transition hover:bg-[var(--bg-secondary)]"
                 >
                   Cancel
                 </button>
                 <AsyncButton
                   type="submit"
-                  className="vehicles-submit-button"
+                  className="rounded-lg border border-[var(--border-default)] bg-[var(--bg-card)] px-4 py-2 text-[var(--text-primary)] transition hover:bg-[color-mix(in_srgb,var(--bg-tertiary)_70%,var(--bg-card))] hover:shadow-[0_8px_20px_rgba(15,23,42,0.14)] dark:border-slate-400/25 dark:bg-slate-50 dark:text-slate-900 dark:hover:bg-white"
                   isLoading={createMutation.isPending || updateMutation.isPending}
                   loadingText="Saving..."
                 >

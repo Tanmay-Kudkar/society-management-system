@@ -67,30 +67,34 @@ export default function Blog() {
   return (
     <PageShell>
       {/* Hero */}
-      <section className="blog-hero">
-        <div className="blog-hero-inner">
-          <span className="blog-pill animate-fade-in-up">
-            <Calendar className="blog-pill-icon" />
+      <section className="px-4 py-16 sm:px-6 sm:py-[5.25rem]">
+        <div className="mx-auto max-w-4xl text-center">
+          <span className="animate-fade-in-up mb-6 inline-flex items-center gap-2 rounded-full border border-[color-mix(in_srgb,var(--accent-primary)_20%,transparent)] bg-[color-mix(in_srgb,var(--accent-primary)_8%,var(--bg-primary))] px-4 py-2 text-sm font-semibold text-[var(--accent-primary)]">
+            <Calendar className="h-4 w-4" />
             <span>Our Blog</span>
           </span>
-          <h1 className="blog-hero-title animate-fade-in-up" style={{ animationDelay: '100ms' }}>
+          <h1 className="animate-fade-in-up mb-6 text-[clamp(2.25rem,4vw,3.75rem)] font-black leading-[1.05] text-[var(--text-primary)]" style={{ animationDelay: '100ms' }}>
             Insights &{' '}
-            <span className="blog-hero-gradient">Resources</span>
+            <span className="bg-clip-text text-transparent" style={{ backgroundImage: 'linear-gradient(135deg,var(--accent-primary),var(--accent-secondary))' }}>Resources</span>
           </h1>
-          <p className="blog-hero-lead animate-fade-in-up" style={{ animationDelay: '200ms' }}>
+          <p className="animate-fade-in-up mx-auto max-w-[42rem] text-[1.15rem] text-[color-mix(in_srgb,var(--text-primary)_70%,var(--text-secondary))]" style={{ animationDelay: '200ms' }}>
             Expert tips, guides, and stories about modern society management.
           </p>
         </div>
       </section>
 
       {/* Categories */}
-      <section className="blog-categories">
-        <div className="blog-categories-inner">
-          <div className="blog-category-list">
+      <section className="px-4 pb-8 sm:px-6">
+        <div className="mx-auto max-w-6xl">
+          <div className="flex flex-wrap justify-center gap-2">
             {categories.map((cat, i) => (
               <button
                 key={i}
-                className={`blog-category-btn ${activeCategory === cat ? 'blog-category-btn--active' : ''}`}
+                className={`rounded-full border px-4 py-2 text-sm font-semibold transition ${
+                  activeCategory === cat
+                    ? 'border-[var(--accent-primary)] bg-[var(--accent-primary)] text-white'
+                    : 'border-[var(--border-default)] bg-[var(--bg-card)] text-[var(--text-secondary)] hover:border-[var(--border-strong)] hover:text-[var(--text-primary)]'
+                }`}
                 onClick={() => setActiveCategory(cat)}
                 type="button"
               >
@@ -102,35 +106,35 @@ export default function Blog() {
       </section>
 
       {/* Posts Grid */}
-      <section className="blog-posts-section">
-        <div className="blog-posts-inner">
-          <div className="blog-posts-grid">
+      <section className="px-4 pb-16 sm:px-6 sm:pb-24">
+        <div className="mx-auto max-w-6xl">
+          <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
             {filteredPosts.map((post, i) => (
               <article
                 key={i}
-                className="blog-post-card animate-fade-in-up"
+                className="animate-fade-in-up flex cursor-pointer flex-col rounded-2xl border border-[var(--border-default)] bg-[color-mix(in_srgb,var(--bg-card)_92%,var(--bg-secondary))] p-6 shadow-sm transition hover:-translate-y-1 hover:border-[var(--border-strong)] hover:shadow-lg"
                 style={{ animationDelay: `${i * 80}ms` }}
                 onClick={() => navigate('/contact')}
               >
-                <div className="blog-post-meta">
-                  <span className="blog-post-category">
-                    <Tag className="blog-meta-icon" />
+                <div className="mb-4 flex flex-wrap items-center gap-4">
+                  <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--accent-primary)]">
+                    <Tag className="h-3 w-3" />
                     {post.category}
                   </span>
-                  <span className="blog-post-date">
-                    <Calendar className="blog-meta-icon" />
+                  <span className="inline-flex items-center gap-1.5 text-xs text-[var(--text-secondary)]">
+                    <Calendar className="h-3 w-3" />
                     {post.date}
                   </span>
                 </div>
-                <h3 className="blog-post-title">{post.title}</h3>
-                <p className="blog-post-excerpt">{post.excerpt}</p>
-                <div className="blog-post-footer">
-                  <div className="blog-post-author">
-                    <User className="blog-meta-icon" />
+                <h3 className="mb-2.5 text-[1.0625rem] font-bold leading-[1.35] text-[var(--text-primary)]">{post.title}</h3>
+                <p className="mb-5 flex-1 text-sm leading-7 text-[color-mix(in_srgb,var(--text-primary)_66%,var(--text-secondary))]">{post.excerpt}</p>
+                <div className="flex items-center justify-between border-t border-[var(--border-light)] pt-4">
+                  <div className="inline-flex items-center gap-1.5 text-xs text-[var(--text-secondary)]">
+                    <User className="h-3 w-3" />
                     <span>{post.author}</span>
                   </div>
-                  <span className="blog-post-read">
-                    <Clock className="blog-meta-icon" />
+                  <span className="inline-flex items-center gap-1.5 text-xs text-[var(--text-secondary)]">
+                    <Clock className="h-3 w-3" />
                     {post.readTime}
                   </span>
                 </div>
@@ -141,16 +145,16 @@ export default function Blog() {
       </section>
 
       {/* Newsletter CTA */}
-      <section className="blog-cta">
-        <div className="blog-cta-inner">
-          <div className="blog-cta-card">
-            <h2 className="blog-cta-title">Stay Updated</h2>
-            <p className="blog-cta-text">Get the latest articles and society management tips delivered to your inbox.</p>
-            <div className="blog-cta-form">
-              <input type="email" placeholder="Enter your email" className="blog-cta-input" />
-              <button className="blog-cta-button">
+      <section className="px-4 pb-20 sm:px-6">
+        <div className="mx-auto max-w-[42rem]">
+          <div className="rounded-2xl border border-[color-mix(in_srgb,var(--accent-primary)_26%,var(--border-default))] bg-[linear-gradient(180deg,color-mix(in_srgb,var(--accent-primary)_16%,var(--bg-card))_0%,var(--bg-card)_100%)] px-8 py-10 text-center text-[var(--text-primary)] shadow-lg">
+            <h2 className="mb-3 text-[1.75rem] font-extrabold">Stay Updated</h2>
+            <p className="mx-auto mb-6 max-w-[28rem] text-base text-[color-mix(in_srgb,var(--text-primary)_68%,var(--text-secondary))]">Get the latest articles and society management tips delivered to your inbox.</p>
+            <div className="mx-auto flex max-w-96 flex-col gap-2 sm:flex-row">
+              <input type="email" placeholder="Enter your email" className="flex-1 rounded-lg border border-[var(--border-default)] bg-[color-mix(in_srgb,var(--bg-primary)_78%,transparent)] px-4 py-3 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] focus:border-[var(--accent-primary)] focus:outline-none focus:shadow-[0_0_0_2px_color-mix(in_srgb,var(--accent-primary)_20%,transparent)]" />
+              <button className="inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-lg bg-[linear-gradient(135deg,var(--accent-primary),var(--accent-600))] px-5 py-3 text-sm font-bold text-white transition hover:-translate-y-0.5 hover:bg-[linear-gradient(135deg,var(--accent-secondary),var(--accent-primary))]">
                 Subscribe
-                <ArrowRight className="blog-cta-arrow" />
+                <ArrowRight className="h-4 w-4" />
               </button>
             </div>
           </div>

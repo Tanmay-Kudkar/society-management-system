@@ -1,5 +1,3 @@
-import '../../styles/pages/roles-permissions.css'
-
 const roleResponsibilities = [
   {
     role: 'MASTER_ADMIN',
@@ -131,83 +129,91 @@ const accessRules = [
 
 export default function RolesPermissions() {
   return (
-    <div className="roles-page">
-      <header className="roles-hero">
-        <div className="roles-hero__content">
-          <p className="roles-hero__eyebrow">Access Governance</p>
-          <h1 className="roles-hero__title">Roles, Permissions, and Responsibilities</h1>
-          <p className="roles-hero__subtitle">
+    <div className="min-h-[calc(100vh-68px)] bg-[radial-gradient(circle_at_top,#0d1424_0%,#0b0f17_55%,#070b12_100%)] px-6 pb-12 pt-7 text-slate-100 max-md:px-4 max-md:pb-10">
+      <header className="relative flex items-center justify-between overflow-hidden rounded-[20px] border border-sky-400/20 bg-[linear-gradient(135deg,rgba(36,56,82,0.9),rgba(20,28,45,0.9))] px-9 py-8 shadow-[0_20px_60px_rgba(0,0,0,0.45)] max-[980px]:flex-col max-[980px]:items-start max-[980px]:gap-4 max-md:px-6 max-md:py-7">
+        <div className="relative z-[2] max-w-[680px]">
+          <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.32em] text-emerald-300">Access Governance</p>
+          <h1 className="mb-2.5 text-[32px] font-bold leading-tight max-md:text-[26px]">Roles, Permissions, and Responsibilities</h1>
+          <p className="text-[15px] text-slate-300">
             A strict, auditable access model for master admin and society governance.
           </p>
         </div>
-        <div className="roles-hero__glow" />
+        <div className="pointer-events-none absolute -right-[120px] -top-20 h-80 w-80 bg-[radial-gradient(circle,rgba(62,166,255,0.25),transparent_60%)] blur-md" />
       </header>
 
-      <section className="roles-section">
-        <div className="roles-section__header">
-          <h2>Role Responsibilities</h2>
-          <p>Defines the authority and primary scope for each role.</p>
+      <section className="mt-7">
+        <div className="mb-4 flex flex-col gap-1.5">
+          <h2 className="text-xl font-bold">Role Responsibilities</h2>
+          <p className="text-sm text-slate-400">Defines the authority and primary scope for each role.</p>
         </div>
-        <div className="roles-card">
-          <table className="roles-table">
+        <div className="overflow-hidden rounded-[18px] border border-slate-700 bg-slate-950/90 shadow-[0_16px_40px_rgba(0,0,0,0.35)]">
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse text-sm max-md:text-[13px]">
             <thead>
-              <tr>
-                <th>Role</th>
-                <th>Authority</th>
-                <th>Primary Responsibilities</th>
+              <tr className="bg-slate-900/90">
+                <th className="border-b border-slate-700/70 px-4 py-3.5 text-left text-xs font-bold uppercase tracking-[0.08em] text-slate-400 max-md:px-2.5 max-md:py-3">Role</th>
+                <th className="border-b border-slate-700/70 px-4 py-3.5 text-left text-xs font-bold uppercase tracking-[0.08em] text-slate-400 max-md:px-2.5 max-md:py-3">Authority</th>
+                <th className="border-b border-slate-700/70 px-4 py-3.5 text-left text-xs font-bold uppercase tracking-[0.08em] text-slate-400 max-md:px-2.5 max-md:py-3">Primary Responsibilities</th>
               </tr>
             </thead>
             <tbody>
               {roleResponsibilities.map((item) => (
-                <tr key={item.role}>
-                  <td><span className="pill pill--role">{item.role}</span></td>
-                  <td>{item.authority}</td>
-                  <td>{item.responsibility}</td>
+                <tr key={item.role} className="transition hover:bg-sky-400/10">
+                  <td className="border-b border-slate-700/70 px-4 py-3.5 text-left max-md:px-2.5 max-md:py-3">
+                    <span className="inline-flex items-center rounded-full border border-sky-400/35 bg-sky-400/15 px-2.5 py-1 text-[11px] font-bold tracking-[0.05em] text-sky-300">{item.role}</span>
+                  </td>
+                  <td className="border-b border-slate-700/70 px-4 py-3.5 text-left text-slate-100 max-md:px-2.5 max-md:py-3">{item.authority}</td>
+                  <td className="border-b border-slate-700/70 px-4 py-3.5 text-left text-slate-100 max-md:px-2.5 max-md:py-3">{item.responsibility}</td>
                 </tr>
               ))}
             </tbody>
-          </table>
+            </table>
+          </div>
         </div>
       </section>
 
-      <section className="roles-section">
-        <div className="roles-section__header">
-          <h2>Permission Matrix</h2>
-          <p>CRUD capability per role, aligned to the hierarchy rules.</p>
+      <section className="mt-7">
+        <div className="mb-4 flex flex-col gap-1.5">
+          <h2 className="text-xl font-bold">Permission Matrix</h2>
+          <p className="text-sm text-slate-400">CRUD capability per role, aligned to the hierarchy rules.</p>
         </div>
-        <div className="roles-card">
-          <table className="roles-table roles-table--matrix">
+        <div className="overflow-hidden rounded-[18px] border border-slate-700 bg-slate-950/90 shadow-[0_16px_40px_rgba(0,0,0,0.35)]">
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse text-sm max-md:text-[13px]">
             <thead>
-              <tr>
-                <th>Role</th>
-                <th>Can CREATE</th>
-                <th>Can UPDATE/DELETE</th>
-                <th>Can READ</th>
+              <tr className="bg-slate-900/90">
+                <th className="border-b border-slate-700/70 px-4 py-3.5 text-left text-xs font-bold uppercase tracking-[0.08em] text-slate-400 max-md:px-2.5 max-md:py-3">Role</th>
+                <th className="border-b border-slate-700/70 px-4 py-3.5 text-left text-xs font-bold uppercase tracking-[0.08em] text-slate-400 max-md:px-2.5 max-md:py-3">Can CREATE</th>
+                <th className="border-b border-slate-700/70 px-4 py-3.5 text-left text-xs font-bold uppercase tracking-[0.08em] text-slate-400 max-md:px-2.5 max-md:py-3">Can UPDATE/DELETE</th>
+                <th className="border-b border-slate-700/70 px-4 py-3.5 text-left text-xs font-bold uppercase tracking-[0.08em] text-slate-400 max-md:px-2.5 max-md:py-3">Can READ</th>
               </tr>
             </thead>
             <tbody>
               {permissionMatrix.map((item) => (
-                <tr key={item.role}>
-                  <td><span className="pill pill--role">{item.role}</span></td>
-                  <td>{item.create}</td>
-                  <td>{item.updateDelete}</td>
-                  <td>{item.read}</td>
+                <tr key={item.role} className="transition hover:bg-sky-400/10">
+                  <td className="border-b border-slate-700/70 px-4 py-3.5 text-left max-md:px-2.5 max-md:py-3">
+                    <span className="inline-flex items-center rounded-full border border-sky-400/35 bg-sky-400/15 px-2.5 py-1 text-[11px] font-bold tracking-[0.05em] text-sky-300">{item.role}</span>
+                  </td>
+                  <td className="border-b border-slate-700/70 px-4 py-3.5 text-left text-slate-200 max-md:px-2.5 max-md:py-3">{item.create}</td>
+                  <td className="border-b border-slate-700/70 px-4 py-3.5 text-left text-slate-200 max-md:px-2.5 max-md:py-3">{item.updateDelete}</td>
+                  <td className="border-b border-slate-700/70 px-4 py-3.5 text-left text-slate-200 max-md:px-2.5 max-md:py-3">{item.read}</td>
                 </tr>
               ))}
             </tbody>
-          </table>
+            </table>
+          </div>
         </div>
       </section>
 
-      <section className="roles-section">
-        <div className="roles-section__header">
-          <h2>Access Control Rules</h2>
-          <p>Non-negotiable rules that guarantee strict data isolation.</p>
+      <section className="mt-7">
+        <div className="mb-4 flex flex-col gap-1.5">
+          <h2 className="text-xl font-bold">Access Control Rules</h2>
+          <p className="text-sm text-slate-400">Non-negotiable rules that guarantee strict data isolation.</p>
         </div>
-        <div className="roles-card roles-card--rules">
-          <ol className="roles-rules">
+        <div className="rounded-[18px] border border-slate-700 bg-slate-950/90 px-6 py-5 shadow-[0_16px_40px_rgba(0,0,0,0.35)]">
+          <ol className="grid list-decimal gap-2.5 pl-6 text-slate-200">
             {accessRules.map((rule) => (
-              <li key={rule}>{rule}</li>
+              <li key={rule} className="leading-7 text-slate-300">{rule}</li>
             ))}
           </ol>
         </div>

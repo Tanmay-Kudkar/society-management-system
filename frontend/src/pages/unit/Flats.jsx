@@ -129,9 +129,9 @@ export default function Flats() {
 
   const getUnitToneClass = (unitType) => {
     switch (unitType) {
-      case 'SHOP': return 'flats-unit-icon flats-unit-icon--shop'
-      case 'OFFICE': return 'flats-unit-icon flats-unit-icon--office'
-      default: return 'flats-unit-icon flats-unit-icon--flat'
+      case 'SHOP': return 'w-8 h-8 rounded-xl inline-flex items-center justify-center bg-[#dcfce7] text-[#16a34a]'
+      case 'OFFICE': return 'w-8 h-8 rounded-xl inline-flex items-center justify-center bg-[#ede9fe] text-[#7c3aed]'
+      default: return 'w-8 h-8 rounded-xl inline-flex items-center justify-center bg-[#dbeafe] text-[#2563eb]'
     }
   }
 
@@ -250,16 +250,16 @@ export default function Flats() {
   }
 
   return (
-    <div className="flats-page">
+    <div>
       {/* Header */}
-      <div className="flats-header">
+      <div className="flex flex-col gap-4 mb-6 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="flats-title">Units</h1>
-          <p className="flats-subtitle">Manage society flats, shops, and offices</p>
+          <h1 className="text-2xl font-bold text-[var(--text-primary)]">Units</h1>
+          <p className="mt-1 text-[var(--text-secondary)]">Manage society flats, shops, and offices</p>
         </div>
         <button
           onClick={() => handleOpenModal(null)}
-          className="flats-add-button"
+          className="inline-flex items-center gap-2 py-2 px-4 rounded-xl bg-[#2563eb] text-white font-semibold transition-all hover:bg-[#1d4ed8] hover:-translate-y-px"
         >
           <Plus size={20} />
           Add Unit
@@ -267,16 +267,16 @@ export default function Flats() {
       </div>
 
       {/* Filters */}
-      <div className="flats-filters">
-        <div className="flats-filters-row">
-          <div className="flats-search">
-            <Search className="flats-search-icon" />
+      <div className="p-4 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-light)] shadow-[0_8px_20px_rgba(15,23,42,0.08)] mb-6">
+        <div className="flex flex-col gap-4 sm:flex-row">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 w-5 h-5 -translate-y-1/2 text-[var(--text-tertiary)]" />
             <input
               type="text"
               placeholder="Search flats..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="flats-search-input"
+              className="w-full py-2 px-3 pl-10 rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] text-[var(--text-primary)] transition-all focus:outline-none focus:border-[#2563eb] focus:shadow-[0_0_0_3px_rgba(37,99,235,0.2)]"
             />
           </div>
           {/* Only show society filter for MASTER_ADMIN */}
@@ -284,7 +284,7 @@ export default function Flats() {
             <select
               value={filterSociety}
               onChange={(e) => setFilterSociety(e.target.value)}
-              className="flats-filter-select"
+              className="w-full py-2 px-3 rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] text-[var(--text-primary)] transition-all focus:outline-none focus:border-[#2563eb] focus:shadow-[0_0_0_3px_rgba(37,99,235,0.2)]"
             >
               <option value="">All Societies</option>
               {societies.map(s => (
@@ -296,69 +296,69 @@ export default function Flats() {
       </div>
 
       {/* Table */}
-      <div className="flats-table-card">
+      <div className="rounded-2xl bg-[var(--bg-card)] border border-[var(--border-light)] overflow-hidden shadow-[0_10px_24px_rgba(15,23,42,0.08)]">
         {isLoading ? (
-          <div className="flats-loading">
-            <div className="flats-spinner" />
+          <div className="p-8 text-center">
+            <div className="w-8 h-8 mx-auto rounded-full border-[3px] border-[rgba(37,99,235,0.2)] border-t-[#2563eb] animate-spin" />
           </div>
         ) : (
-          <div className="flats-table-scroll">
-            <table className="flats-table">
-              <thead className="flats-thead">
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse">
+              <thead className="bg-[var(--bg-tertiary)] border-b border-[var(--border-light)]">
                 <tr>
-                  <th className="flats-th">Unit</th>
-                  <th className="flats-th">Wing</th>
-                  {isPlatformLevel && <th className="flats-th">Society</th>}
-                  <th className="flats-th">Owner</th>
-                  <th className="flats-th">Type</th>
-                  <th className="flats-th">Area</th>
-                  <th className="flats-th flats-th--right">Actions</th>
+                  <th className="py-3 px-6 text-left text-xs font-bold uppercase tracking-[0.08em] text-[var(--text-tertiary)]">Unit</th>
+                  <th className="py-3 px-6 text-left text-xs font-bold uppercase tracking-[0.08em] text-[var(--text-tertiary)]">Wing</th>
+                  {isPlatformLevel && <th className="py-3 px-6 text-left text-xs font-bold uppercase tracking-[0.08em] text-[var(--text-tertiary)]">Society</th>}
+                  <th className="py-3 px-6 text-left text-xs font-bold uppercase tracking-[0.08em] text-[var(--text-tertiary)]">Owner</th>
+                  <th className="py-3 px-6 text-left text-xs font-bold uppercase tracking-[0.08em] text-[var(--text-tertiary)]">Type</th>
+                  <th className="py-3 px-6 text-left text-xs font-bold uppercase tracking-[0.08em] text-[var(--text-tertiary)]">Area</th>
+                  <th className="py-3 px-6 text-right text-xs font-bold uppercase tracking-[0.08em] text-[var(--text-tertiary)]">Actions</th>
                 </tr>
               </thead>
-              <tbody className="flats-tbody">
+              <tbody className="border-t border-[var(--border-light)]">
                 {filteredFlats.map((flat) => {
                   const UnitIcon = getUnitIcon(flat.unitType)
                   return (
-                  <tr key={flat.id} className="flats-row">
-                    <td className="flats-cell">
-                      <div className="flats-unit">
+                  <tr key={flat.id} className="hover:bg-[var(--bg-tertiary)]">
+                    <td className="py-4 px-6 whitespace-nowrap text-[var(--text-primary)]">
+                      <div className="flex items-center gap-3">
                         <div className={getUnitToneClass(flat.unitType)}>
-                          <UnitIcon className="flats-unit-icon-svg" />
+                          <UnitIcon className="w-4 h-4" />
                         </div>
-                        <div className="flats-unit-meta">
-                          <span className="flats-unit-number">{flat.flatNumber}</span>
-                          <p className="flats-unit-floor">Floor {flat.floor}</p>
+                        <div className="grid">
+                          <span className="font-bold text-[var(--text-primary)]">{flat.flatNumber}</span>
+                          <p className="text-xs text-[var(--text-tertiary)]">Floor {flat.floor}</p>
                         </div>
                       </div>
                     </td>
-                    <td className="flats-cell">
+                    <td className="py-4 px-6 whitespace-nowrap text-[var(--text-primary)]">
                       {flat.wingName ? (
-                        <span className="flats-wing-badge">
-                          <Layers className="flats-wing-icon" />
+                        <span className="inline-flex items-center gap-[0.4rem] py-1 px-[0.6rem] rounded-full text-xs font-semibold bg-[#eef2ff] text-[#4338ca]">
+                          <Layers className="w-3 h-3" />
                           {flat.wingName}
                         </span>
                       ) : (
-                        <span className="flats-empty">-</span>
+                        <span className="text-[var(--text-tertiary)]">-</span>
                       )}
                     </td>
-                    {isPlatformLevel && <td className="flats-cell flats-cell--muted">{flat.societyName}</td>}
-                    <td className="flats-cell">
+                    {isPlatformLevel && <td className="py-4 px-6 whitespace-nowrap text-[var(--text-tertiary)]">{flat.societyName}</td>}
+                    <td className="py-4 px-6 whitespace-nowrap text-[var(--text-primary)]">
                       <div>
-                        <span className="flats-owner-name">{flat.ownerName || '-'}</span>
-                        <p className="flats-owner-phone">{flat.ownerPhone || ''}</p>
+                        <span className="text-[var(--text-primary)]">{flat.ownerName || '-'}</span>
+                        <p className="text-xs text-[var(--text-tertiary)]">{flat.ownerPhone || ''}</p>
                       </div>
                     </td>
-                    <td className="flats-cell">
+                    <td className="py-4 px-6 whitespace-nowrap text-[var(--text-primary)]">
                       <div>
-                        <span className="flats-type">{flat.flatType || '-'}</span>
-                        <p className="flats-type-label">{flat.unitType || 'FLAT'}</p>
+                        <span className="text-[var(--text-secondary)]">{flat.flatType || '-'}</span>
+                        <p className="text-xs text-[var(--text-tertiary)]">{flat.unitType || 'FLAT'}</p>
                       </div>
                     </td>
-                    <td className="flats-cell flats-cell--muted">{flat.area ? `${flat.area} sq.ft` : '-'}</td>
-                    <td className="flats-cell flats-cell--right">
+                    <td className="py-4 px-6 whitespace-nowrap text-[var(--text-tertiary)]">{flat.area ? `${flat.area} sq.ft` : '-'}</td>
+                    <td className="py-4 px-6 whitespace-nowrap text-right">
                       <button
                         onClick={() => handleOpenModal(flat)}
-                        className="flats-action-button flats-action-edit"
+                        className="p-[0.35rem] rounded-[0.6rem] transition-colors text-[var(--text-tertiary)] hover:text-[#2563eb] hover:bg-[rgba(37,99,235,0.1)]"
                       >
                         <Edit size={18} />
                       </button>
@@ -396,7 +396,7 @@ export default function Flats() {
                             }
                           }
                         }}
-                          className="flats-action-button flats-action-delete"
+                          className="p-[0.35rem] rounded-[0.6rem] transition-colors text-[var(--text-tertiary)] ml-2 hover:text-[#dc2626] hover:bg-[rgba(220,38,38,0.1)]"
                       >
                         <Trash2 size={18} />
                       </button>
@@ -411,15 +411,15 @@ export default function Flats() {
 
       {/* Modal */}
       {showModal && (
-        <div className="flats-modal">
-          <div className="flats-modal-card">
-            <div className="flats-modal-header">
-              <h3 className="flats-modal-title">{editingFlat ? 'Edit Unit' : 'Add Unit'}</h3>
-              <button onClick={() => { setShowModal(false); setFormErrors({}); }} className="flats-modal-close">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
+          <div className="w-full max-w-[32rem] max-h-[calc(100vh-3rem)] overflow-y-auto rounded-xl bg-[var(--bg-card)] border border-[var(--border-light)] shadow-[0_8px_24px_rgba(0,0,0,0.12)]">
+            <div className="sticky top-0 z-[2] flex items-center justify-between p-4 border-b border-[var(--border-light)] bg-inherit">
+              <h3 className="text-lg font-bold text-[var(--text-primary)]">{editingFlat ? 'Edit Unit' : 'Add Unit'}</h3>
+              <button onClick={() => { setShowModal(false); setFormErrors({}); }} className="p-1 rounded-lg text-[var(--text-tertiary)] hover:bg-[var(--bg-tertiary)]">
                 <X size={20} />
               </button>
             </div>
-            <form onSubmit={handleSubmit} className="flats-modal-body">
+            <form onSubmit={handleSubmit} className="grid gap-4 p-4">
               {/* Society field - only show dropdown for MASTER_ADMIN, auto-set for others */}
               {isPlatformLevel ? (
                 <SmartSelect
@@ -437,7 +437,7 @@ export default function Flats() {
               )}
               
               {/* Unit Type and Wing Selection */}
-              <div className="flats-form-row">
+              <div className="grid gap-4 sm:grid-cols-2">
                 <SmartSelect
                   label="Unit Type"
                   name="unitType"
@@ -463,7 +463,7 @@ export default function Flats() {
                 />
               </div>
 
-              <div className="flats-form-row">
+              <div className="grid gap-4 sm:grid-cols-2">
                 <FormInput
                   label="Unit Number"
                   name="flatNumber"
@@ -502,7 +502,7 @@ export default function Flats() {
                   }
                 />
               </div>
-              <div className="flats-form-row">
+              <div className="grid gap-4 sm:grid-cols-2">
                 <NumberInput
                   label={`Floor${selectedWingId && wings.find(w => w.id === parseInt(selectedWingId))?.totalFloors ? ` (0 to ${wings.find(w => w.id === parseInt(selectedWingId))?.totalFloors})` : ''}`}
                   name="floor"
@@ -532,7 +532,7 @@ export default function Flats() {
                 placeholder={selectedUnitType === 'SHOP' ? 'e.g., ABC Stores Pvt Ltd' : selectedUnitType === 'OFFICE' ? 'e.g., Tech Corp' : 'e.g., John Doe'}
                 required
               />
-              <div className="flats-form-row">
+              <div className="grid gap-4 sm:grid-cols-2">
                 <FormInput
                   label="Contact Email"
                   name="ownerEmail"
@@ -551,17 +551,17 @@ export default function Flats() {
                 />
               </div>
               <FormErrorSummary errors={formErrors} />
-              <div className="flats-form-actions">
+              <div className="flex gap-3 pt-2">
                 <button
                   type="button"
                   onClick={() => { setShowModal(false); setFormErrors({}); }}
-                  className="flats-cancel-button"
+                  className="flex-1 py-2 px-4 rounded-xl font-semibold border border-[var(--border-light)] bg-transparent text-[#334155] hover:bg-[var(--bg-tertiary)]"
                 >
                   Cancel
                 </button>
                 <AsyncButton
                   type="submit"
-                  className="flats-submit-button"
+                  className="flex-1 py-2 px-4 rounded-xl font-semibold border border-[var(--border-default)] bg-[var(--bg-card)] text-[var(--text-primary)] hover:opacity-90"
                   isLoading={createMutation.isPending || updateMutation.isPending}
                   loadingText="Saving..."
                 >

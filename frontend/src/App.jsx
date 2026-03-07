@@ -7,7 +7,7 @@ import {
   ConfirmDialogProvider,
 } from "./context";
 
-import { Layout } from "./components";
+import { Layout, HeroSkeleton, StatCardSkeleton } from "./components";
 
 const lazyWithMinDelay = (importer, delay = 320) =>
   lazy(() =>
@@ -109,9 +109,13 @@ const MoveTracking = lazyWithMinDelay(
   () => import("./pages/core/MoveTracking"),
 );
 const Penalties = lazyWithMinDelay(() => import("./pages/core/Penalties"));
-const PetRegistrations = lazyWithMinDelay(() => import("./pages/core/PetRegistrations"));
+const PetRegistrations = lazyWithMinDelay(
+  () => import("./pages/core/PetRegistrations"),
+);
 const Classifieds = lazyWithMinDelay(() => import("./pages/core/Classifieds"));
-const SocietyRules = lazyWithMinDelay(() => import("./pages/core/SocietyRules"));
+const SocietyRules = lazyWithMinDelay(
+  () => import("./pages/core/SocietyRules"),
+);
 
 const About = lazyWithMinDelay(() => import("./pages/footer/About"));
 const Privacy = lazyWithMinDelay(() => import("./pages/footer/Privacy"));
@@ -128,8 +132,8 @@ const ProtectedRoute = ({ children }) => {
 
   if (loading) {
     return (
-      <div className="app-loading">
-        <div className="app-loading__spinner"></div>
+      <div className="flex min-h-screen items-center justify-center bg-slate-900">
+        <div className="h-12 w-12 rounded-full border-2 border-violet-500/25 border-t-violet-500 animate-spin" />
       </div>
     );
   }
@@ -294,43 +298,9 @@ function App() {
   }, [user]);
 
   const routeFallback = (
-    <div className="skeleton-container" style={{ padding: "24px" }}>
-      <div className="skeleton-hero">
-        <div className="skeleton-row">
-          <div
-            className="skeleton-bone skeleton-bone--rounded"
-            style={{ width: 44, height: 44 }}
-          />
-          <div className="skeleton-col">
-            <div
-              className="skeleton-bone"
-              style={{ width: "35%", height: 24 }}
-            />
-            <div
-              className="skeleton-bone"
-              style={{ width: "55%", height: 14 }}
-            />
-          </div>
-        </div>
-      </div>
-      <div className="skeleton-grid skeleton-grid--4">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="skeleton-stat">
-            <div
-              className="skeleton-bone skeleton-bone--rounded"
-              style={{ width: 40, height: 40 }}
-            />
-            <div
-              className="skeleton-bone"
-              style={{ width: "55%", height: 24 }}
-            />
-            <div
-              className="skeleton-bone"
-              style={{ width: "75%", height: 13 }}
-            />
-          </div>
-        ))}
-      </div>
+    <div className="px-6 py-6">
+      <HeroSkeleton statCount={0} />
+      <StatCardSkeleton count={4} />
     </div>
   );
 
@@ -416,7 +386,10 @@ function App() {
                 <Route path="renovation-nocs" element={<RenovationNocs />} />
                 <Route path="move-tracking" element={<MoveTracking />} />
                 <Route path="penalties" element={<Penalties />} />
-                <Route path="pet-registrations" element={<PetRegistrations />} />
+                <Route
+                  path="pet-registrations"
+                  element={<PetRegistrations />}
+                />
                 <Route path="classifieds" element={<Classifieds />} />
                 <Route path="society-rules" element={<SocietyRules />} />
                 <Route path="settings" element={<Settings />} />

@@ -12,10 +12,10 @@ import { BulkImportModal } from '../../components'
 import { HeroSkeleton, FiltersSkeleton, CardGridSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
 import useMinLoadingTime from '../../hooks/useMinLoadingTime'
 
-const approvalClasses = {
-  APPROVED: 'vendors-approval-badge--approved',
-  REJECTED: 'vendors-approval-badge--rejected',
-  PENDING: 'vendors-approval-badge--pending',
+const approvalBadgeClass = {
+  APPROVED: 'bg-green-600',
+  REJECTED: 'bg-red-600',
+  PENDING: 'bg-yellow-500',
 }
 
 export default function Vendors() {
@@ -23,11 +23,6 @@ export default function Vendors() {
   const confirmDialog = useConfirmDialog()
   const toast = useToast()
   const queryClient = useQueryClient()
-  
-  // Permission check
-  if (!canManageVendors()) {
-    return <PermissionDenied message="You don't have permission to manage vendors" />
-  }
 
   const [showModal, setShowModal] = useState(false)
   const [showBulkImport, setShowBulkImport] = useState(false)
@@ -174,6 +169,11 @@ export default function Vendors() {
 
   const showSkeleton = useMinLoadingTime(isLoading || isError)
 
+  // Permission check
+  if (!canManageVendors()) {
+    return <PermissionDenied message="You don't have permission to manage vendors" />
+  }
+
   if (showSkeleton) return (
     <div>
       <WakeUpBanner />
@@ -186,16 +186,16 @@ export default function Vendors() {
   return (
     <div>
       {/* Header */}
-      <div className="vendors-header">
+      <div className="flex flex-col gap-4 mb-6 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="vendors-title">Vendors</h1>
-          <p className="vendors-subtitle">Manage service providers and contractors</p>
+          <h1 className="text-2xl font-bold text-[var(--text-primary)]">Vendors</h1>
+          <p className="mt-1 text-[var(--text-tertiary)]">Manage service providers and contractors</p>
         </div>
         {canManageVendors() && (
-          <div className="vendors-actions">
+          <div className="flex gap-2 flex-wrap">
             <button
               onClick={() => setShowBulkImport(true)}
-              className="vendors-action-button vendors-action-button--outline"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-[10px] font-semibold border border-slate-900/12 bg-slate-900 text-slate-50 transition-colors hover:shadow-lg dark:border-slate-400/26 dark:bg-slate-950"
             >
               <Upload size={20} />
               Bulk Import
@@ -205,7 +205,7 @@ export default function Vendors() {
                 setEditingVendor(null)
                 setShowModal(true) 
               }}
-              className="vendors-action-button vendors-action-button--primary"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-[10px] font-semibold border border-[var(--border-default)] bg-[var(--bg-card)] text-[var(--text-primary)] transition-colors hover:bg-[var(--bg-tertiary)] dark:border-slate-400/22 dark:bg-slate-50 dark:text-slate-900 dark:hover:bg-white"
             >
               <Plus size={20} />
               Add Vendor
@@ -215,32 +215,32 @@ export default function Vendors() {
       </div>
 
       {/* Search */}
-      <div className="vendors-filters">
-        <div className="vendors-search">
-          <Search className="vendors-search-icon" />
+      <div className="bg-[var(--bg-card)] border border-[var(--border-light)] rounded-xl p-4 mb-6 shadow-sm">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--text-tertiary)]" />
           <input
             type="text"
             placeholder="Search vendors..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="vendors-input"
+            className="w-full pl-10 pr-3 py-2 rounded-[10px] border border-[#cbd5f5] bg-[var(--bg-card)] text-[var(--text-primary)] outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
           />
         </div>
       </div>
 
       {/* Cards Grid */}
       {(
-        <div className="vendors-grid">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredVendors.map((vendor) => (
-            <div key={vendor.id} className="vendors-card">
-              <div className="vendors-card-header">
-                <div className="vendors-card-icon">
-                  <Truck className="vendors-card-icon-symbol" />
+            <div key={vendor.id} className="bg-[var(--bg-card)] border border-[var(--border-light)] rounded-2xl p-6 shadow-sm transition-all hover:shadow-xl hover:border-blue-300 hover:-translate-y-0.5 group">
+              <div className="flex items-start justify-between mb-4">
+                <div className="p-3 rounded-[14px] bg-gradient-to-br from-orange-50 to-orange-200 transition-transform group-hover:scale-105">
+                  <Truck className="w-7 h-7 text-orange-600" />
                 </div>
-                <div className="vendors-card-actions">
+                <div className="flex gap-1">
                   <button
                     onClick={() => setViewingVendor(vendor)}
-                    className="vendors-card-action vendors-card-action--view"
+                    className="inline-flex items-center justify-center p-2 rounded-[10px] bg-transparent text-[var(--text-tertiary)] transition-colors hover:bg-green-100 hover:text-green-600"
                     title="View Details"
                   >
                     <Eye size={18} />
@@ -250,7 +250,7 @@ export default function Vendors() {
                       setEditingVendor(vendor)
                       setShowModal(true) 
                     }}
-                    className="vendors-card-action vendors-card-action--edit"
+                    className="inline-flex items-center justify-center p-2 rounded-[10px] bg-transparent text-[var(--text-tertiary)] transition-colors hover:bg-blue-100/50 hover:text-blue-600"
                     title="Edit"
                   >
                     <Edit size={18} />
@@ -291,49 +291,49 @@ export default function Vendors() {
                         })
                       }
                     }}
-                    className="vendors-card-action vendors-card-action--delete"
+                    className="inline-flex items-center justify-center p-2 rounded-[10px] bg-transparent text-[var(--text-tertiary)] transition-colors hover:bg-red-100 hover:text-red-600"
                     title="Delete"
                   >
                     <Trash2 size={18} />
                   </button>
                 </div>
               </div>
-              <h3 className="vendors-card-title">{vendor.name}</h3>
-              <div className="vendors-card-tags">
-                <span className="vendors-service-badge">
+              <h3 className="text-lg font-bold text-[var(--text-primary)] mb-2 transition-colors group-hover:text-blue-600">{vendor.name}</h3>
+              <div className="flex flex-wrap gap-2 mb-3">
+                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold text-blue-700 bg-gradient-to-r from-blue-50 to-blue-100">
                   {vendor.serviceType}
                 </span>
-                <span className={clsx('vendors-approval-badge', approvalClasses[vendor.approvalStatus] || approvalClasses.PENDING)}>
+                <span className={clsx('inline-flex items-center px-3 py-1 rounded-full text-xs font-bold text-white', approvalBadgeClass[vendor.approvalStatus] || approvalBadgeClass.PENDING)}>
                   {vendor.approvalStatus === 'APPROVED' ? '✓ Approved' :
                    vendor.approvalStatus === 'REJECTED' ? 'Rejected' :
                    '⏳ Pending'}
                 </span>
               </div>
-              <div className="vendors-contact-list">
+              <div className="grid gap-2.5 mb-4 text-sm">
                 {vendor.contactPerson && (
-                  <div className="vendors-contact-card">
-                    <div className="vendors-contact-avatar">
-                      <span className="vendors-contact-initial">{vendor.contactPerson.charAt(0)}</span>
+                  <div className="flex items-center gap-2 px-3 py-2 rounded-[10px] bg-[var(--bg-tertiary)] text-slate-700">
+                    <div className="w-6 h-6 rounded-full bg-violet-100 inline-flex items-center justify-center flex-shrink-0">
+                      <span className="text-xs font-bold text-violet-700">{vendor.contactPerson.charAt(0)}</span>
                     </div>
-                    <span className="vendors-contact-name">{vendor.contactPerson}</span>
+                    <span className="font-semibold truncate">{vendor.contactPerson}</span>
                   </div>
                 )}
                 {vendor.phone && (
-                  <div className="vendors-contact-row">
-                    <Phone size={16} className="vendors-contact-icon vendors-contact-icon--phone" />
+                  <div className="flex items-center gap-2 text-[var(--text-secondary)] transition-colors hover:text-blue-600">
+                    <Phone size={16} className="flex-shrink-0 text-green-600" />
                     <span>{vendor.phone}</span>
                   </div>
                 )}
                 {vendor.email && (
-                  <div className="vendors-contact-row vendors-contact-row--email">
-                    <Mail size={16} className="vendors-contact-icon vendors-contact-icon--email" />
-                    <span className="vendors-contact-email">{vendor.email}</span>
+                  <div className="flex items-center gap-2 text-[var(--text-secondary)] overflow-hidden transition-colors hover:text-blue-600">
+                    <Mail size={16} className="flex-shrink-0 text-blue-600" />
+                    <span className="truncate">{vendor.email}</span>
                   </div>
                 )}
               </div>
               <button
                 onClick={() => setViewingVendor(vendor)}
-                className="vendors-details-button"
+                className="w-full mt-2 px-4 py-2.5 rounded-xl border-none bg-gradient-to-r from-blue-500 to-blue-600 text-white font-semibold inline-flex items-center justify-center gap-2 shadow-[0_6px_12px_rgba(37,99,235,0.2)] transition-all hover:-translate-y-px hover:shadow-[0_10px_16px_rgba(37,99,235,0.25)]"
               >
                 <Eye size={16} />
                 View Full Details
@@ -345,15 +345,15 @@ export default function Vendors() {
 
       {/* Modal */}
       {showModal && (
-        <div className="vendors-modal">
-          <div className="vendors-modal-card">
-            <div className="vendors-modal-header">
-              <h3 className="vendors-modal-title">{editingVendor ? 'Edit Vendor' : 'Add Vendor'}</h3>
-              <button onClick={() => setShowModal(false)} className="vendors-modal-close">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50">
+          <div className="w-full max-w-[540px] max-h-[90vh] overflow-y-auto bg-[var(--bg-card)] rounded-2xl shadow-[0_24px_60px_rgba(15,23,42,0.2)]">
+            <div className="sticky top-0 bg-[var(--bg-card)] flex items-center justify-between p-4 border-b border-[var(--border-light)]">
+              <h3 className="text-lg font-semibold text-[var(--text-primary)]">{editingVendor ? 'Edit Vendor' : 'Add Vendor'}</h3>
+              <button onClick={() => setShowModal(false)} className="border-none bg-transparent text-[var(--text-tertiary)] p-1 rounded-lg hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-primary)]">
                 <X size={20} />
               </button>
             </div>
-            <form onSubmit={handleSubmit} className="vendors-form">
+            <form onSubmit={handleSubmit} className="p-4 grid gap-4">
               <SmartSelect
                 label="Service Type"
                 name="serviceType"
@@ -388,12 +388,12 @@ export default function Vendors() {
               )}
               
               {/* Contact Person Section */}
-              <div className="vendors-form-section">
-                <h3 className="vendors-form-section-title">
+              <div className="border-t border-[var(--border-light)] pt-4">
+                <h3 className="text-sm font-semibold text-slate-700 mb-3 inline-flex items-center gap-2">
                   <User size={16} />
                   Contact Person Details
                 </h3>
-                <div className="vendors-form-stack">
+                <div className="grid gap-4">
                   <FormInput
                     label="Contact Person Name"
                     name="contactPerson"
@@ -401,7 +401,7 @@ export default function Vendors() {
                     placeholder="e.g., John Doe"
                     required
                   />
-                  <div className="vendors-form-grid">
+                  <div className="grid grid-cols-2 gap-4 max-sm:grid-cols-1">
                     <PhoneInput
                       label="Contact Phone"
                       name="contactPersonPhone"
@@ -421,12 +421,12 @@ export default function Vendors() {
               </div>
 
               {/* Vendor Business Contact Section */}
-              <div className="vendors-form-section">
-                <h3 className="vendors-form-section-title">
+              <div className="border-t border-[var(--border-light)] pt-4">
+                <h3 className="text-sm font-semibold text-slate-700 mb-3 inline-flex items-center gap-2">
                   <Building2 size={16} />
                   Vendor Business Contact
                 </h3>
-                <div className="vendors-form-stack">
+                <div className="grid gap-4">
                   <FormInput
                     label="Vendor Name"
                     name="name"
@@ -434,7 +434,7 @@ export default function Vendors() {
                     required
                     placeholder="Vendor's business name"
                   />
-                  <div className="vendors-form-grid">
+                  <div className="grid grid-cols-2 gap-4 max-sm:grid-cols-1">
                     <PhoneInput
                       label="Business Phone"
                       name="phone"
@@ -461,9 +461,9 @@ export default function Vendors() {
               />
 
               {/* Tax Details */}
-              <div className="vendors-form-section">
-                <h4 className="vendors-form-section-title">Tax Details</h4>
-                <div className="vendors-form-grid">
+              <div className="border-t border-[var(--border-light)] pt-4">
+                <h4 className="text-sm font-semibold text-slate-700 mb-3">Tax Details</h4>
+                <div className="grid grid-cols-2 gap-4 max-sm:grid-cols-1">
                   <FormInput
                     label="GST Number"
                     name="gstNumber"
@@ -482,9 +482,9 @@ export default function Vendors() {
               </div>
 
               {/* Banking Details */}
-              <div className="vendors-form-section">
-                <h4 className="vendors-form-section-title">Banking Details</h4>
-                <div className="vendors-form-stack">
+              <div className="border-t border-[var(--border-light)] pt-4">
+                <h4 className="text-sm font-semibold text-slate-700 mb-3">Banking Details</h4>
+                <div className="grid gap-4">
                   <FormInput
                     label="Bank Name"
                     name="bankName"
@@ -492,7 +492,7 @@ export default function Vendors() {
                     placeholder="HDFC Bank"
                     required
                   />
-                  <div className="vendors-form-grid">
+                  <div className="grid grid-cols-2 gap-4 max-sm:grid-cols-1">
                     <FormInput
                       label="Account Number"
                       name="accountNumber"
@@ -511,17 +511,17 @@ export default function Vendors() {
                 </div>
               </div>
 
-              <div className="vendors-form-actions">
+              <div className="flex gap-3 pt-4">
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="vendors-btn vendors-btn--ghost"
+                  className="flex-1 px-4 py-2 rounded-[10px] font-semibold border border-[var(--border-light)] bg-[var(--bg-card)] text-slate-700 hover:bg-[var(--bg-tertiary)] transition-colors"
                 >
                   Cancel
                 </button>
                 <AsyncButton
                   type="submit"
-                  className="vendors-btn vendors-btn--primary"
+                  className="flex-1 px-4 py-2 rounded-[10px] font-semibold border border-[var(--border-default)] bg-[var(--bg-card)] text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] transition-colors dark:border-slate-400/22 dark:bg-slate-50 dark:text-slate-900 dark:hover:bg-white"
                   isLoading={createMutation.isPending || updateMutation.isPending}
                   loadingText="Saving..."
                 >
@@ -535,56 +535,56 @@ export default function Vendors() {
 
       {/* View Details Modal */}
       {viewingVendor && (
-        <div className="vendors-view-modal">
-          <div className="vendors-view-card">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+          <div className="w-full max-w-[960px] max-h-[90vh] bg-[var(--bg-card)] rounded-[20px] overflow-hidden flex flex-col shadow-[0_30px_70px_rgba(15,23,42,0.25)]">
             {/* Header */}
-            <div className="vendors-view-header">
-              <div className="vendors-view-header-main">
-                <div className="vendors-view-header-icon">
-                  <Truck className="vendors-view-header-icon-symbol" />
+            <div className="flex items-center justify-between p-6 border-b border-[var(--border-light)] bg-gradient-to-r from-orange-50 to-orange-200">
+              <div className="flex items-center gap-4">
+                <div className="p-3 rounded-[14px] bg-[var(--bg-card)] shadow-[0_6px_14px_rgba(15,23,42,0.15)]">
+                  <Truck className="w-7 h-7 text-orange-600" />
                 </div>
                 <div>
-                  <h3 className="vendors-view-title">{viewingVendor.name}</h3>
-                  <p className="vendors-view-subtitle">Complete Vendor Information</p>
+                  <h3 className="text-2xl font-bold text-[var(--text-primary)]">{viewingVendor.name}</h3>
+                  <p className="text-sm text-[var(--text-tertiary)] mt-1">Complete Vendor Information</p>
                 </div>
               </div>
               <button 
                 onClick={() => setViewingVendor(null)} 
-                className="vendors-view-close"
+                className="border-none bg-transparent text-[var(--text-tertiary)] p-2 rounded-[10px] transition-colors hover:bg-white/70 hover:text-slate-700"
               >
                 <X size={24} />
               </button>
             </div>
             
             {/* Scrollable Content */}
-            <div className="vendors-view-content">
+            <div className="p-6 overflow-y-auto grid gap-6">
               {/* Basic Information */}
-              <div className="vendors-view-section">
-                <h4 className="vendors-view-section-title">
+              <div className="grid gap-4">
+                <h4 className="text-xs font-bold uppercase tracking-widest text-[var(--text-tertiary)] inline-flex items-center gap-2 pb-2 border-b border-[var(--border-light)]">
                   <Building2 size={16} />
                   Basic Information
                 </h4>
                 
                 {/* Service Type - Hero Card */}
-                <div className="vendors-service-hero">
-                  <div className="vendors-service-hero-circle vendors-service-hero-circle--top"></div>
-                  <div className="vendors-service-hero-circle vendors-service-hero-circle--bottom"></div>
-                  <div className="vendors-service-hero-content">
-                    <p className="vendors-service-hero-label">Service Type</p>
-                    <p className="vendors-service-hero-value">{viewingVendor.serviceType}</p>
+                <div className="relative overflow-hidden rounded-[18px] p-6 bg-gradient-to-br from-violet-600 to-indigo-600 text-white shadow-[0_16px_30px_rgba(79,70,229,0.2)]">
+                  <div className="absolute w-[120px] h-[120px] top-[-40px] right-[-40px] rounded-full bg-white/12"></div>
+                  <div className="absolute w-[100px] h-[100px] bottom-[-40px] left-[-30px] rounded-full bg-white/8"></div>
+                  <div className="relative">
+                    <p className="text-xs font-bold uppercase tracking-widest text-white/80 mb-2">Service Type</p>
+                    <p className="text-[28px] font-extrabold">{viewingVendor.serviceType}</p>
                   </div>
                 </div>
 
                 {/* Society Info - only show for MASTER_ADMIN */}
                 {isPlatformLevel && viewingVendor.societyName && (
-                  <div className="vendors-society-card">
-                    <div className="vendors-society-row">
-                      <div className="vendors-society-icon">
-                        <Building2 className="vendors-society-icon-symbol" />
+                  <div className="p-4 rounded-[14px] border-2 border-orange-200 bg-gradient-to-br from-orange-50 to-amber-50">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 rounded-[10px] bg-orange-200">
+                        <Building2 className="w-[18px] h-[18px] text-orange-700" />
                       </div>
-                      <div className="vendors-society-text">
-                        <p className="vendors-society-label">Assigned Society</p>
-                        <p className="vendors-society-name">{viewingVendor.societyName}</p>
+                      <div>
+                        <p className="text-xs font-bold text-orange-700 mb-1">Assigned Society</p>
+                        <p className="text-base font-bold text-[var(--text-primary)]">{viewingVendor.societyName}</p>
                       </div>
                     </div>
                   </div>
@@ -592,41 +592,41 @@ export default function Vendors() {
               </div>
 
               {/* Contact Information */}
-              <div className="vendors-view-section">
-                <h4 className="vendors-view-section-title">
+              <div className="grid gap-4">
+                <h4 className="text-xs font-bold uppercase tracking-widest text-[var(--text-tertiary)] inline-flex items-center gap-2 pb-2 border-b border-[var(--border-light)]">
                   <User size={16} />
                   Contact Information
                 </h4>
                 
                 {/* Contact Person Details */}
                 {viewingVendor.contactPerson && (
-                  <div className="vendors-contact-person-card">
-                    <div className="vendors-contact-person-header">
-                      <div className="vendors-contact-person-avatar">
-                        <span className="vendors-contact-person-initial">{viewingVendor.contactPerson.charAt(0).toUpperCase()}</span>
+                  <div className="p-4 rounded-[14px] border border-purple-300/30 bg-gradient-to-br from-purple-50 to-pink-50">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-violet-500 to-pink-500 inline-flex items-center justify-center text-white font-bold text-lg shadow-[0_6px_12px_rgba(139,92,246,0.3)]">
+                        {viewingVendor.contactPerson.charAt(0).toUpperCase()}
                       </div>
-                      <div className="vendors-contact-person-text">
-                        <p className="vendors-contact-person-label">PRIMARY CONTACT PERSON</p>
-                        <p className="vendors-contact-person-name">{viewingVendor.contactPerson}</p>
+                      <div>
+                        <p className="text-[11px] font-bold text-violet-700 mb-1">PRIMARY CONTACT PERSON</p>
+                        <p className="text-lg font-bold text-[var(--text-primary)]">{viewingVendor.contactPerson}</p>
                       </div>
                     </div>
                     
-                    <div className="vendors-contact-grid">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                       {viewingVendor.contactPersonPhone && (
-                        <div className="vendors-contact-info-card">
-                          <Phone className="vendors-contact-info-icon" />
+                        <div className="flex items-center gap-2 p-3 rounded-xl bg-white/70">
+                          <Phone className="w-4 h-4 text-violet-500" />
                           <div>
-                            <p className="vendors-contact-info-label">Direct Phone</p>
-                            <p className="vendors-contact-info-value">{viewingVendor.contactPersonPhone}</p>
+                            <p className="text-xs text-[var(--text-tertiary)]">Direct Phone</p>
+                            <p className="text-sm font-semibold text-[var(--text-primary)]">{viewingVendor.contactPersonPhone}</p>
                           </div>
                         </div>
                       )}
                       {viewingVendor.contactPersonEmail && (
-                        <div className="vendors-contact-info-card">
-                          <Mail className="vendors-contact-info-icon" />
-                          <div className="vendors-contact-info-text">
-                            <p className="vendors-contact-info-label">Direct Email</p>
-                            <p className="vendors-contact-info-value vendors-contact-info-value--wrap">{viewingVendor.contactPersonEmail}</p>
+                        <div className="flex items-center gap-2 p-3 rounded-xl bg-white/70">
+                          <Mail className="w-4 h-4 text-violet-500" />
+                          <div>
+                            <p className="text-xs text-[var(--text-tertiary)]">Direct Email</p>
+                            <p className="text-sm font-semibold text-[var(--text-primary)] break-words">{viewingVendor.contactPersonEmail}</p>
                           </div>
                         </div>
                       )}
@@ -635,121 +635,121 @@ export default function Vendors() {
                 )}
 
                 {/* Vendor Business Contact */}
-                <div className="vendors-business-section">
-                  <p className="vendors-business-title">Business Contact</p>
+                <div className="grid gap-3">
+                  <p className="text-xs font-bold text-[var(--text-tertiary)] uppercase tracking-[0.08em]">Business Contact</p>
                   
                   {viewingVendor.phone && (
-                    <div className="vendors-business-card vendors-business-card--phone">
-                      <div className="vendors-business-icon vendors-business-icon--phone">
-                        <Phone className="vendors-business-icon-symbol" />
+                    <div className="flex items-center gap-3 p-4 rounded-[14px] border border-green-200/50 bg-gradient-to-r from-green-50 to-green-100">
+                      <div className="p-2.5 rounded-[10px] bg-green-600/10">
+                        <Phone className="w-[18px] h-[18px] text-green-600" />
                       </div>
-                      <div className="vendors-business-text">
-                        <p className="vendors-business-label">Business Phone</p>
-                        <p className="vendors-business-value">{viewingVendor.phone}</p>
+                      <div className="flex-1">
+                        <p className="text-xs font-semibold text-[var(--text-secondary)]">Business Phone</p>
+                        <p className="text-base font-bold text-[var(--text-primary)]">{viewingVendor.phone}</p>
                       </div>
                     </div>
                   )}
                   
                   {viewingVendor.email && (
-                    <div className="vendors-business-card vendors-business-card--email">
-                      <div className="vendors-business-icon vendors-business-icon--email">
-                        <Mail className="vendors-business-icon-symbol" />
+                    <div className="flex items-center gap-3 p-4 rounded-[14px] border border-blue-200/50 bg-gradient-to-r from-blue-50 to-blue-100">
+                      <div className="p-2.5 rounded-[10px] bg-blue-600/10">
+                        <Mail className="w-[18px] h-[18px] text-blue-600" />
                       </div>
-                      <div className="vendors-business-text vendors-business-text--wrap">
-                        <p className="vendors-business-label">Business Email</p>
-                        <p className="vendors-business-value vendors-business-value--wrap">{viewingVendor.email}</p>
+                      <div className="flex-1">
+                        <p className="text-xs font-semibold text-[var(--text-secondary)]">Business Email</p>
+                        <p className="text-base font-bold text-[var(--text-primary)] break-words">{viewingVendor.email}</p>
                       </div>
                     </div>
                   )}
                   
                   {viewingVendor.address && (
-                    <div className="vendors-business-card vendors-business-card--address">
-                      <p className="vendors-business-address-label">
+                    <div className="p-4 rounded-[14px] border border-slate-300/15 bg-[var(--bg-tertiary)]">
+                      <p className="text-xs font-semibold text-[var(--text-tertiary)] inline-flex items-center gap-1.5 mb-2">
                         <MapPin size={14} />
                         Address
                       </p>
-                      <p className="vendors-business-address">{viewingVendor.address}</p>
+                      <p className="text-base font-semibold text-[var(--text-primary)]">{viewingVendor.address}</p>
                     </div>
                   )}
                 </div>
               </div>
 
               {/* Tax Details */}
-              <div className="vendors-view-section">
-                <h4 className="vendors-view-section-title">
+              <div className="grid gap-4">
+                <h4 className="text-xs font-bold uppercase tracking-widest text-[var(--text-tertiary)] inline-flex items-center gap-2 pb-2 border-b border-[var(--border-light)]">
                   <FileText size={16} />
                   Tax Details
                 </h4>
-                <div className="vendors-tax-grid">
-                  <div className="vendors-tax-card">
-                    <p className="vendors-tax-label">GST Number</p>
-                    <p className="vendors-tax-value">{viewingVendor.gstNumber || 'Not Provided'}</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="p-4 rounded-[14px] bg-gradient-to-br from-amber-50 to-amber-100 border-l-4 border-amber-400">
+                    <p className="text-xs font-semibold text-amber-700 mb-2">GST Number</p>
+                    <p className="text-base font-bold text-[var(--text-primary)] font-mono">{viewingVendor.gstNumber || 'Not Provided'}</p>
                   </div>
-                  <div className="vendors-tax-card">
-                    <p className="vendors-tax-label">PAN Number</p>
-                    <p className="vendors-tax-value">{viewingVendor.panNumber || 'Not Provided'}</p>
+                  <div className="p-4 rounded-[14px] bg-gradient-to-br from-amber-50 to-amber-100 border-l-4 border-amber-400">
+                    <p className="text-xs font-semibold text-amber-700 mb-2">PAN Number</p>
+                    <p className="text-base font-bold text-[var(--text-primary)] font-mono">{viewingVendor.panNumber || 'Not Provided'}</p>
                   </div>
                 </div>
               </div>
 
               {/* Banking Details */}
-              <div className="vendors-view-section">
-                <h4 className="vendors-view-section-title">
+              <div className="grid gap-4">
+                <h4 className="text-xs font-bold uppercase tracking-widest text-[var(--text-tertiary)] inline-flex items-center gap-2 pb-2 border-b border-[var(--border-light)]">
                   <Landmark size={16} />
                   Banking Details
                 </h4>
-                <div className="vendors-bank-stack">
-                  <div className="vendors-bank-card">
-                    <p className="vendors-bank-label">Bank Name</p>
-                    <p className="vendors-bank-value">{viewingVendor.bankName || 'Not Provided'}</p>
+                <div className="grid gap-3">
+                  <div className="p-4 rounded-[14px] bg-gradient-to-br from-indigo-100 to-indigo-200 border-l-4 border-indigo-500">
+                    <p className="text-xs font-semibold text-indigo-700 mb-2">Bank Name</p>
+                    <p className="text-base font-bold text-[var(--text-primary)] font-mono">{viewingVendor.bankName || 'Not Provided'}</p>
                   </div>
-                  <div className="vendors-bank-grid">
-                    <div className="vendors-bank-subcard">
-                      <p className="vendors-bank-label">Account Number</p>
-                      <p className="vendors-bank-value">{viewingVendor.accountNumber || 'Not Provided'}</p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div className="p-4 rounded-[14px] bg-gradient-to-br from-indigo-100 to-indigo-200 border-l-4 border-indigo-500">
+                      <p className="text-xs font-semibold text-indigo-700 mb-2">Account Number</p>
+                      <p className="text-base font-bold text-[var(--text-primary)] font-mono">{viewingVendor.accountNumber || 'Not Provided'}</p>
                     </div>
-                    <div className="vendors-bank-subcard">
-                      <p className="vendors-bank-label">IFSC Code</p>
-                      <p className="vendors-bank-value">{viewingVendor.ifscCode || 'Not Provided'}</p>
+                    <div className="p-4 rounded-[14px] bg-gradient-to-br from-indigo-100 to-indigo-200 border-l-4 border-indigo-500">
+                      <p className="text-xs font-semibold text-indigo-700 mb-2">IFSC Code</p>
+                      <p className="text-base font-bold text-[var(--text-primary)] font-mono">{viewingVendor.ifscCode || 'Not Provided'}</p>
                     </div>
                   </div>
                 </div>
               </div>
 
               {/* Status & Approval */}
-              <div className="vendors-status-card">
-                <div className="vendors-status-stack">
-                  <div className="vendors-status-row">
+              <div className="p-5 rounded-2xl bg-[var(--bg-tertiary)] border border-[var(--border-light)]">
+                <div className="grid gap-4">
+                  <div className="flex justify-between gap-4 flex-wrap">
                     <div>
-                      <p className="vendors-status-label">Approval Status</p>
-                      <span className={clsx('vendors-status-badge', approvalClasses[viewingVendor.approvalStatus] || approvalClasses.PENDING)}>
+                      <p className="text-xs font-semibold text-[var(--text-tertiary)] mb-2">Approval Status</p>
+                      <span className={clsx('inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-bold text-white shadow-[0_10px_18px_rgba(15,23,42,0.15)]', approvalBadgeClass[viewingVendor.approvalStatus] || approvalBadgeClass.PENDING)}>
                         {viewingVendor.approvalStatus === 'APPROVED' ? '✓ Approved' :
                          viewingVendor.approvalStatus === 'REJECTED' ? '✗ Rejected' :
                          '⏳ Pending Approval'}
                       </span>
                     </div>
                     <div>
-                      <p className="vendors-status-label">Active Status</p>
-                      <span className={clsx('vendors-status-badge', viewingVendor.isActive ? 'vendors-status-badge--active' : 'vendors-status-badge--inactive')}>
+                      <p className="text-xs font-semibold text-[var(--text-tertiary)] mb-2">Active Status</p>
+                      <span className={clsx('inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-bold text-white shadow-[0_10px_18px_rgba(15,23,42,0.15)]', viewingVendor.isActive ? 'bg-green-600' : 'bg-slate-500')}>
                         {viewingVendor.isActive ? '✓ Active' : '✗ Inactive'}
                       </span>
                     </div>
                   </div>
                   
-                  <div className="vendors-status-footer">
+                  <div className="flex items-center justify-between gap-4 pt-3 border-t border-[var(--border-light)] flex-wrap">
                     <div>
-                      <p className="vendors-status-meta-label">Created At</p>
-                      <p className="vendors-status-meta-value">
+                      <p className="text-xs text-[var(--text-tertiary)] mb-1">Created At</p>
+                      <p className="text-sm font-semibold text-[var(--text-primary)]">
                         {viewingVendor.createdAt ? new Date(viewingVendor.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A'}
                       </p>
                     </div>
                     
                     {/* Approval Action Buttons */}
-                    <div className="vendors-status-actions">
+                    <div className="flex gap-2 flex-wrap">
                       {viewingVendor.approvalStatus !== 'APPROVED' && (
                         <button
                           onClick={() => handleApprove(viewingVendor)}
-                          className="vendors-approve-btn"
+                          className="px-4 py-2 rounded-[10px] text-sm font-bold border-none text-white bg-green-600 hover:bg-green-700 transition-colors"
                         >
                           ✓ Approve
                         </button>
@@ -757,7 +757,7 @@ export default function Vendors() {
                       {viewingVendor.approvalStatus !== 'REJECTED' && (
                         <button
                           onClick={() => handleReject(viewingVendor)}
-                          className="vendors-reject-btn"
+                          className="px-4 py-2 rounded-[10px] text-sm font-bold border-none text-white bg-red-600 hover:bg-red-700 transition-colors"
                         >
                           ✗ Reject
                         </button>
@@ -768,22 +768,22 @@ export default function Vendors() {
               </div>
             </div>
 
-            <div className="vendors-view-footer">
-              <div className="vendors-view-footer-actions">
+            <div className="sticky bottom-0 p-6 border-t border-[var(--border-light)] bg-[var(--bg-tertiary)]">
+              <div className="flex gap-3 flex-wrap">
                 <button
                   onClick={() => { 
                     setViewingVendor(null)
                     setEditingVendor(viewingVendor)
                     setShowModal(true) 
                   }}
-                  className="vendors-view-edit-btn"
+                  className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 text-white font-semibold border-none hover:bg-blue-700 transition-colors"
                 >
                   <Edit size={18} />
                   Edit Vendor
                 </button>
                 <button
                   onClick={() => setViewingVendor(null)}
-                  className="vendors-view-close-btn"
+                  className="px-5 py-2.5 rounded-xl border border-[var(--border-light)] bg-transparent text-slate-700 font-semibold hover:bg-[var(--bg-tertiary)] transition-colors"
                 >
                   Close
                 </button>

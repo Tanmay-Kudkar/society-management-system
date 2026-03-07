@@ -36,6 +36,12 @@ const maintenanceTypeLabels = {
   WASTE_MANAGEMENT: '♻️ Waste Mgmt', OTHER: '📋 Other',
 }
 
+const badgeMap = {
+  active: 'bg-[var(--color-emerald-100)] text-[var(--color-emerald-700)]',
+  paused: 'bg-[var(--color-amber-100)] text-[var(--color-amber-700)]',
+  overdue: 'bg-[var(--color-red-100)] text-[var(--color-red-700)]',
+}
+
 export default function CommonAreas() {
   const { user } = useAuth()
   const { showToast } = useToast()
@@ -179,127 +185,127 @@ export default function CommonAreas() {
   return (
     <PageShell title="Common Area Maintenance" subtitle="Schedule and track common area upkeep">
       {/* Summary Cards */}
-      <div className="ca-summary">
-        <div className="ca-summary-card">
-          <CheckCircle size={20} className="ca-summary-icon ca-summary-icon--active" />
-          <div className="ca-summary-info">
-            <span className="ca-summary-value">{counts.active || 0}</span>
-            <span className="ca-summary-label">Active</span>
+      <div className="grid grid-cols-1 sm:grid-cols-[repeat(auto-fit,minmax(160px,1fr))] gap-4 mb-6">
+        <div className="flex items-center gap-3 px-5 py-4 bg-[var(--bg-primary)] border border-[var(--border-default)] rounded-xl">
+          <CheckCircle size={20} className="shrink-0 text-[var(--color-emerald-500)]" />
+          <div className="flex flex-col">
+            <span className="text-[1.35rem] font-bold text-[var(--text-primary)]">{counts.active || 0}</span>
+            <span className="text-[0.78rem] font-semibold text-[var(--text-secondary)]">Active</span>
           </div>
         </div>
-        <div className="ca-summary-card">
-          <PauseCircle size={20} className="ca-summary-icon ca-summary-icon--paused" />
-          <div className="ca-summary-info">
-            <span className="ca-summary-value">{counts.paused || 0}</span>
-            <span className="ca-summary-label">Paused</span>
+        <div className="flex items-center gap-3 px-5 py-4 bg-[var(--bg-primary)] border border-[var(--border-default)] rounded-xl">
+          <PauseCircle size={20} className="shrink-0 text-[var(--color-amber-500)]" />
+          <div className="flex flex-col">
+            <span className="text-[1.35rem] font-bold text-[var(--text-primary)]">{counts.paused || 0}</span>
+            <span className="text-[0.78rem] font-semibold text-[var(--text-secondary)]">Paused</span>
           </div>
         </div>
-        <div className="ca-summary-card">
-          <AlertTriangle size={20} className="ca-summary-icon ca-summary-icon--overdue" />
-          <div className="ca-summary-info">
-            <span className="ca-summary-value">{counts.overdue || 0}</span>
-            <span className="ca-summary-label">Overdue</span>
+        <div className="flex items-center gap-3 px-5 py-4 bg-[var(--bg-primary)] border border-[var(--border-default)] rounded-xl">
+          <AlertTriangle size={20} className="shrink-0 text-[var(--color-red-500)]" />
+          <div className="flex flex-col">
+            <span className="text-[1.35rem] font-bold text-[var(--text-primary)]">{counts.overdue || 0}</span>
+            <span className="text-[0.78rem] font-semibold text-[var(--text-secondary)]">Overdue</span>
           </div>
         </div>
       </div>
 
       {/* Toolbar */}
-      <div className="ca-toolbar">
-        <div className="ca-search">
+      <div className="flex flex-wrap gap-3 items-center mb-5">
+        <div className="flex items-center gap-2 py-2 px-3 bg-[var(--bg-primary)] border border-[var(--border-default)] rounded-lg flex-1 min-w-[180px]">
           <Search size={16} />
-          <input type="text" placeholder="Search areas..." value={search} onChange={e => setSearch(e.target.value)} />
+          <input type="text" placeholder="Search areas..." value={search} onChange={e => setSearch(e.target.value)} className="border-none bg-transparent outline-none text-[0.88rem] text-[var(--text-primary)] w-full" />
         </div>
-        <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
+        <select className="py-2 px-3 border border-[var(--border-default)] rounded-lg bg-[var(--bg-primary)] text-[var(--text-primary)] text-[0.85rem] font-semibold" value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
           <option value="">All Status</option>
           <option value="ACTIVE">Active</option>
           <option value="PAUSED">Paused</option>
         </select>
-        <select value={filterAreaType} onChange={e => setFilterAreaType(e.target.value)}>
+        <select className="py-2 px-3 border border-[var(--border-default)] rounded-lg bg-[var(--bg-primary)] text-[var(--text-primary)] text-[0.85rem] font-semibold" value={filterAreaType} onChange={e => setFilterAreaType(e.target.value)}>
           <option value="">All Areas</option>
           {areaTypeOptions.map(t => <option key={t} value={t}>{t.replace(/_/g, ' ')}</option>)}
         </select>
-        <button className="ca-btn ca-btn--primary" onClick={() => setShowModal(true)}>
+        <button className="inline-flex items-center gap-[0.4rem] py-2 px-4 border-none rounded-lg text-[0.85rem] font-semibold cursor-pointer transition-all bg-[var(--accent-primary)] text-white hover:bg-[var(--accent-600)]" onClick={() => setShowModal(true)}>
           <Plus size={16} /> Add Schedule
         </button>
       </div>
 
       {/* List */}
-      <div className="ca-list">
+      <div className="grid gap-4">
         {isLoading ? (
-          <div className="ca-loading">Loading schedules...</div>
+          <div className="text-center p-12 text-[var(--text-secondary)] font-semibold">Loading schedules...</div>
         ) : filtered.length === 0 ? (
-          <div className="ca-empty">No maintenance schedules found</div>
+          <div className="text-center p-12 text-[var(--text-secondary)] font-semibold">No maintenance schedules found</div>
         ) : (
           filtered.map(item => (
-            <div key={item.id} className={`ca-card ${isOverdue(item) ? 'ca-card--overdue' : ''}`}>
-              <div className="ca-card-header">
-                <div className="ca-card-title-row">
-                  <span className="ca-card-area-type">{areaTypeLabels[item.areaType] || item.areaType}</span>
-                  <h3 className="ca-card-title">{item.areaName}</h3>
+            <div key={item.id} className={`rounded-xl p-5 transition-shadow hover:shadow-[0_2px_8px_rgba(0,0,0,0.06)] ${isOverdue(item) ? 'border border-[var(--color-red-300)] bg-[var(--color-red-50)]' : 'bg-[var(--bg-primary)] border border-[var(--border-default)]'}`}>
+              <div className="flex justify-between items-start mb-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-[0.8rem] font-semibold text-[var(--text-secondary)]">{areaTypeLabels[item.areaType] || item.areaType}</span>
+                  <h3 className="text-[1.05rem] font-bold text-[var(--text-primary)] m-0">{item.areaName}</h3>
                 </div>
-                <div className="ca-card-badges">
-                  <span className={`ca-badge ca-badge--${item.status?.toLowerCase()}`}>{item.status}</span>
-                  {isOverdue(item) && <span className="ca-badge ca-badge--overdue">OVERDUE</span>}
+                <div className="flex gap-[0.4rem]">
+                  <span className={`py-[0.2rem] px-[0.55rem] rounded-md text-[0.7rem] font-bold uppercase ${badgeMap[item.status?.toLowerCase()] || ''}`}>{item.status}</span>
+                  {isOverdue(item) && <span className="py-[0.2rem] px-[0.55rem] rounded-md text-[0.7rem] font-bold uppercase bg-[var(--color-red-100)] text-[var(--color-red-700)]">OVERDUE</span>}
                 </div>
               </div>
 
-              <div className="ca-card-body">
-                <div className="ca-card-detail">
+              <div className="flex flex-wrap gap-x-5 gap-y-2 mb-3">
+                <div className="flex items-center gap-[0.35rem] text-[0.82rem] font-[550] text-[var(--text-primary)]">
                   <RefreshCw size={14} />
                   <span>{maintenanceTypeLabels[item.maintenanceType] || item.maintenanceType} · {item.frequency}</span>
                 </div>
                 {item.timeSlot && (
-                  <div className="ca-card-detail">
+                  <div className="flex items-center gap-[0.35rem] text-[0.82rem] font-[550] text-[var(--text-primary)]">
                     <Clock size={14} /><span>{item.timeSlot}</span>
                   </div>
                 )}
                 {item.assignedTo && (
-                  <div className="ca-card-detail">
+                  <div className="flex items-center gap-[0.35rem] text-[0.82rem] font-[550] text-[var(--text-primary)]">
                     <User size={14} /><span>{item.assignedTo}</span>
                   </div>
                 )}
                 {item.vendorName && (
-                  <div className="ca-card-detail">
+                  <div className="flex items-center gap-[0.35rem] text-[0.82rem] font-[550] text-[var(--text-primary)]">
                     <Truck size={14} /><span>{item.vendorName}</span>
                   </div>
                 )}
                 {item.nextDueDate && (
-                  <div className="ca-card-detail">
+                  <div className="flex items-center gap-[0.35rem] text-[0.82rem] font-[550] text-[var(--text-primary)]">
                     <Calendar size={14} /><span>Next: {new Date(item.nextDueDate).toLocaleDateString()}</span>
                   </div>
                 )}
                 {item.costPerService && (
-                  <div className="ca-card-detail">
+                  <div className="flex items-center gap-[0.35rem] text-[0.82rem] font-[550] text-[var(--text-primary)]">
                     <IndianRupee size={14} /><span>₹{Number(item.costPerService).toLocaleString()}</span>
                   </div>
                 )}
                 {item.lastCompletedAt && (
-                  <div className="ca-card-detail ca-card-detail--muted">
+                  <div className="flex items-center gap-[0.35rem] text-[0.82rem] font-[550] text-[var(--text-muted)]">
                     <CheckCircle size={14} /><span>Last done: {new Date(item.lastCompletedAt).toLocaleDateString()}</span>
                   </div>
                 )}
               </div>
 
-              <div className="ca-card-actions">
+              <div className="flex gap-2 flex-wrap">
                 {item.status === 'ACTIVE' && (
                   <>
-                    <button className="ca-btn ca-btn--success ca-btn--sm" onClick={() => completeMutation.mutate(item.id)}>
+                    <button className="inline-flex items-center gap-[0.4rem] py-[0.35rem] px-[0.65rem] border-none rounded-lg text-[0.8rem] font-semibold cursor-pointer transition-all bg-[var(--color-emerald-50)] text-[var(--color-emerald-700)] hover:bg-[var(--color-emerald-100)]" onClick={() => completeMutation.mutate(item.id)}>
                       <CheckCircle size={14} /> Done
                     </button>
-                    <button className="ca-btn ca-btn--warning ca-btn--sm" onClick={() => pauseMutation.mutate(item.id)}>
+                    <button className="inline-flex items-center gap-[0.4rem] py-[0.35rem] px-[0.65rem] border-none rounded-lg text-[0.8rem] font-semibold cursor-pointer transition-all bg-[var(--color-amber-50)] text-[var(--color-amber-700)] hover:bg-[var(--color-amber-100)]" onClick={() => pauseMutation.mutate(item.id)}>
                       <PauseCircle size={14} /> Pause
                     </button>
                   </>
                 )}
                 {item.status === 'PAUSED' && (
-                  <button className="ca-btn ca-btn--info ca-btn--sm" onClick={() => resumeMutation.mutate(item.id)}>
+                  <button className="inline-flex items-center gap-[0.4rem] py-[0.35rem] px-[0.65rem] border-none rounded-lg text-[0.8rem] font-semibold cursor-pointer transition-all bg-[var(--color-blue-50)] text-[var(--color-blue-700)] hover:bg-[var(--color-blue-100)]" onClick={() => resumeMutation.mutate(item.id)}>
                     <PlayCircle size={14} /> Resume
                   </button>
                 )}
-                <button className="ca-btn ca-btn--ghost ca-btn--sm" onClick={() => openEdit(item)}>
+                <button className="inline-flex items-center gap-[0.4rem] py-[0.35rem] px-[0.65rem] border-none rounded-lg text-[0.8rem] font-semibold cursor-pointer transition-all bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:bg-[var(--bg-tertiary)]" onClick={() => openEdit(item)}>
                   <Edit size={14} />
                 </button>
-                <button className="ca-btn ca-btn--danger ca-btn--sm" onClick={() => deleteMutation.mutate(item.id)}>
+                <button className="inline-flex items-center gap-[0.4rem] py-[0.35rem] px-[0.65rem] border-none rounded-lg text-[0.8rem] font-semibold cursor-pointer transition-all bg-[var(--color-red-50)] text-[var(--color-red-600)] hover:bg-[var(--color-red-100)]" onClick={() => deleteMutation.mutate(item.id)}>
                   <Trash2 size={14} />
                 </button>
               </div>
@@ -310,74 +316,74 @@ export default function CommonAreas() {
 
       {/* Modal */}
       {showModal && (
-        <div className="ca-modal-overlay" onClick={closeModal}>
-          <div className="ca-modal" onClick={e => e.stopPropagation()}>
-            <div className="ca-modal-header">
-              <h2>{editItem ? 'Edit Schedule' : 'New Maintenance Schedule'}</h2>
-              <button className="ca-modal-close" onClick={closeModal}><X size={20} /></button>
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[1000] p-4" onClick={closeModal}>
+          <div className="bg-[var(--bg-primary)] rounded-2xl w-full max-w-[600px] max-h-[85vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+            <div className="flex justify-between items-center px-6 py-5 border-b border-[var(--border-default)]">
+              <h2 className="text-[1.15rem] font-bold text-[var(--text-primary)] m-0">{editItem ? 'Edit Schedule' : 'New Maintenance Schedule'}</h2>
+              <button className="bg-transparent border-none cursor-pointer text-[var(--text-secondary)] p-1" onClick={closeModal}><X size={20} /></button>
             </div>
-            <form onSubmit={handleSubmit} className="ca-form">
-              <div className="ca-form-row">
-                <div className="ca-form-group">
-                  <label>Area Name *</label>
-                  <input type="text" value={form.areaName} onChange={e => setForm({ ...form, areaName: e.target.value })} required />
+            <form onSubmit={handleSubmit} className="p-6 flex flex-col gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="flex flex-col gap-[0.35rem]">
+                  <label className="text-[0.82rem] font-semibold text-[var(--text-secondary)]">Area Name *</label>
+                  <input className="py-[0.55rem] px-3 border border-[var(--border-default)] rounded-lg bg-[var(--bg-secondary)] text-[var(--text-primary)] text-[0.88rem] font-[550]" type="text" value={form.areaName} onChange={e => setForm({ ...form, areaName: e.target.value })} required />
                 </div>
-                <div className="ca-form-group">
-                  <label>Area Type *</label>
-                  <select value={form.areaType} onChange={e => setForm({ ...form, areaType: e.target.value })}>
+                <div className="flex flex-col gap-[0.35rem]">
+                  <label className="text-[0.82rem] font-semibold text-[var(--text-secondary)]">Area Type *</label>
+                  <select className="py-[0.55rem] px-3 border border-[var(--border-default)] rounded-lg bg-[var(--bg-secondary)] text-[var(--text-primary)] text-[0.88rem] font-[550]" value={form.areaType} onChange={e => setForm({ ...form, areaType: e.target.value })}>
                     {areaTypeOptions.map(t => <option key={t} value={t}>{t.replace(/_/g, ' ')}</option>)}
                   </select>
                 </div>
               </div>
-              <div className="ca-form-group">
-                <label>Description</label>
-                <textarea value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} rows={2} />
+              <div className="flex flex-col gap-[0.35rem]">
+                <label className="text-[0.82rem] font-semibold text-[var(--text-secondary)]">Description</label>
+                <textarea className="py-[0.55rem] px-3 border border-[var(--border-default)] rounded-lg bg-[var(--bg-secondary)] text-[var(--text-primary)] text-[0.88rem] font-[550] resize-y" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} rows={2} />
               </div>
-              <div className="ca-form-row">
-                <div className="ca-form-group">
-                  <label>Maintenance Type *</label>
-                  <select value={form.maintenanceType} onChange={e => setForm({ ...form, maintenanceType: e.target.value })}>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="flex flex-col gap-[0.35rem]">
+                  <label className="text-[0.82rem] font-semibold text-[var(--text-secondary)]">Maintenance Type *</label>
+                  <select className="py-[0.55rem] px-3 border border-[var(--border-default)] rounded-lg bg-[var(--bg-secondary)] text-[var(--text-primary)] text-[0.88rem] font-[550]" value={form.maintenanceType} onChange={e => setForm({ ...form, maintenanceType: e.target.value })}>
                     {maintenanceTypeOptions.map(t => <option key={t} value={t}>{t.replace(/_/g, ' ')}</option>)}
                   </select>
                 </div>
-                <div className="ca-form-group">
-                  <label>Frequency</label>
-                  <select value={form.frequency} onChange={e => setForm({ ...form, frequency: e.target.value })}>
+                <div className="flex flex-col gap-[0.35rem]">
+                  <label className="text-[0.82rem] font-semibold text-[var(--text-secondary)]">Frequency</label>
+                  <select className="py-[0.55rem] px-3 border border-[var(--border-default)] rounded-lg bg-[var(--bg-secondary)] text-[var(--text-primary)] text-[0.88rem] font-[550]" value={form.frequency} onChange={e => setForm({ ...form, frequency: e.target.value })}>
                     {frequencyOptions.map(f => <option key={f} value={f}>{f}</option>)}
                   </select>
                 </div>
               </div>
-              <div className="ca-form-row">
-                <div className="ca-form-group">
-                  <label>Time Slot</label>
-                  <input type="text" placeholder="e.g. 6:00 AM - 8:00 AM" value={form.timeSlot} onChange={e => setForm({ ...form, timeSlot: e.target.value })} />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="flex flex-col gap-[0.35rem]">
+                  <label className="text-[0.82rem] font-semibold text-[var(--text-secondary)]">Time Slot</label>
+                  <input className="py-[0.55rem] px-3 border border-[var(--border-default)] rounded-lg bg-[var(--bg-secondary)] text-[var(--text-primary)] text-[0.88rem] font-[550]" type="text" placeholder="e.g. 6:00 AM - 8:00 AM" value={form.timeSlot} onChange={e => setForm({ ...form, timeSlot: e.target.value })} />
                 </div>
-                <div className="ca-form-group">
-                  <label>Next Due Date</label>
-                  <input type="date" value={form.nextDueDate} onChange={e => setForm({ ...form, nextDueDate: e.target.value })} />
-                </div>
-              </div>
-              <div className="ca-form-row">
-                <div className="ca-form-group">
-                  <label>Assigned To</label>
-                  <input type="text" placeholder="Person or team" value={form.assignedTo} onChange={e => setForm({ ...form, assignedTo: e.target.value })} />
-                </div>
-                <div className="ca-form-group">
-                  <label>Vendor Name</label>
-                  <input type="text" value={form.vendorName} onChange={e => setForm({ ...form, vendorName: e.target.value })} />
+                <div className="flex flex-col gap-[0.35rem]">
+                  <label className="text-[0.82rem] font-semibold text-[var(--text-secondary)]">Next Due Date</label>
+                  <input className="py-[0.55rem] px-3 border border-[var(--border-default)] rounded-lg bg-[var(--bg-secondary)] text-[var(--text-primary)] text-[0.88rem] font-[550]" type="date" value={form.nextDueDate} onChange={e => setForm({ ...form, nextDueDate: e.target.value })} />
                 </div>
               </div>
-              <div className="ca-form-group">
-                <label>Cost per Service</label>
-                <input type="number" step="0.01" value={form.costPerService} onChange={e => setForm({ ...form, costPerService: e.target.value })} />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="flex flex-col gap-[0.35rem]">
+                  <label className="text-[0.82rem] font-semibold text-[var(--text-secondary)]">Assigned To</label>
+                  <input className="py-[0.55rem] px-3 border border-[var(--border-default)] rounded-lg bg-[var(--bg-secondary)] text-[var(--text-primary)] text-[0.88rem] font-[550]" type="text" placeholder="Person or team" value={form.assignedTo} onChange={e => setForm({ ...form, assignedTo: e.target.value })} />
+                </div>
+                <div className="flex flex-col gap-[0.35rem]">
+                  <label className="text-[0.82rem] font-semibold text-[var(--text-secondary)]">Vendor Name</label>
+                  <input className="py-[0.55rem] px-3 border border-[var(--border-default)] rounded-lg bg-[var(--bg-secondary)] text-[var(--text-primary)] text-[0.88rem] font-[550]" type="text" value={form.vendorName} onChange={e => setForm({ ...form, vendorName: e.target.value })} />
+                </div>
               </div>
-              <div className="ca-form-group">
-                <label>Notes</label>
-                <textarea value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} rows={2} />
+              <div className="flex flex-col gap-[0.35rem]">
+                <label className="text-[0.82rem] font-semibold text-[var(--text-secondary)]">Cost per Service</label>
+                <input className="py-[0.55rem] px-3 border border-[var(--border-default)] rounded-lg bg-[var(--bg-secondary)] text-[var(--text-primary)] text-[0.88rem] font-[550]" type="number" step="0.01" value={form.costPerService} onChange={e => setForm({ ...form, costPerService: e.target.value })} />
               </div>
-              <div className="ca-form-actions">
-                <button type="button" className="ca-btn ca-btn--ghost" onClick={closeModal}>Cancel</button>
-                <button type="submit" className="ca-btn ca-btn--primary">
+              <div className="flex flex-col gap-[0.35rem]">
+                <label className="text-[0.82rem] font-semibold text-[var(--text-secondary)]">Notes</label>
+                <textarea className="py-[0.55rem] px-3 border border-[var(--border-default)] rounded-lg bg-[var(--bg-secondary)] text-[var(--text-primary)] text-[0.88rem] font-[550] resize-y" value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} rows={2} />
+              </div>
+              <div className="flex justify-end gap-3 pt-2">
+                <button type="button" className="inline-flex items-center gap-[0.4rem] py-2 px-4 border-none rounded-lg text-[0.85rem] font-semibold cursor-pointer transition-all bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:bg-[var(--bg-tertiary)]" onClick={closeModal}>Cancel</button>
+                <button type="submit" className="inline-flex items-center gap-[0.4rem] py-2 px-4 border-none rounded-lg text-[0.85rem] font-semibold cursor-pointer transition-all bg-[var(--accent-primary)] text-white hover:bg-[var(--accent-600)]">
                   {editItem ? 'Update' : 'Create'} Schedule
                 </button>
               </div>

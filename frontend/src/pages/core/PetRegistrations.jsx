@@ -36,11 +36,17 @@ const genderOptions = [
 
 const statusBadge = (s) => {
   const map = {
-    PENDING: "pr-badge--pending",
-    APPROVED: "pr-badge--approved",
-    REJECTED: "pr-badge--rejected",
+    PENDING: 'bg-amber-100 text-amber-800',
+    APPROVED: 'bg-green-100 text-green-800',
+    REJECTED: 'bg-red-100 text-red-900',
   };
-  return map[s] || "";
+  return map[s] || '';
+};
+
+const itemBorderMap = {
+  pending: 'border-l-4 border-l-[var(--warning,#f59e0b)]',
+  approved: 'border-l-4 border-l-[var(--success,#22c55e)]',
+  rejected: 'border-l-4 border-l-[var(--error,#ef4444)]',
 };
 
 const petEmoji = (type) => {
@@ -208,24 +214,12 @@ export default function PetRegistrations() {
   };
 
   const summaryCards = [
-    { label: "Pending", value: counts?.pending || 0, cls: "pr-card--pending" },
-    {
-      label: "Approved",
-      value: counts?.approved || 0,
-      cls: "pr-card--approved",
-    },
-    {
-      label: "Rejected",
-      value: counts?.rejected || 0,
-      cls: "pr-card--rejected",
-    },
-    {
-      label: "Vaccinated",
-      value: counts?.vaccinated || 0,
-      cls: "pr-card--vaccinated",
-    },
-    { label: "Dogs", value: counts?.dogs || 0, cls: "pr-card--dogs" },
-    { label: "Cats", value: counts?.cats || 0, cls: "pr-card--cats" },
+    { label: "Pending", value: counts?.pending || 0, cls: "border-l-4 border-l-[var(--warning,#f59e0b)]" },
+    { label: "Approved", value: counts?.approved || 0, cls: "border-l-4 border-l-[var(--success,#22c55e)]" },
+    { label: "Rejected", value: counts?.rejected || 0, cls: "border-l-4 border-l-[var(--error,#ef4444)]" },
+    { label: "Vaccinated", value: counts?.vaccinated || 0, cls: "border-l-4 border-l-cyan-500" },
+    { label: "Dogs", value: counts?.dogs || 0, cls: "border-l-4 border-l-violet-500" },
+    { label: "Cats", value: counts?.cats || 0, cls: "border-l-4 border-l-pink-500" },
   ];
 
   return (
@@ -236,28 +230,28 @@ export default function PetRegistrations() {
       loading={canLoadSocietyData && isLoading}
     >
       {/* Summary */}
-      <div className="pr-summary">
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(110px,1fr))] gap-4 mb-6 max-[600px]:grid-cols-2">
         {summaryCards.map((c) => (
-          <div key={c.label} className={`pr-summary-card ${c.cls}`}>
-            <span className="pr-summary-value">{c.value}</span>
-            <span className="pr-summary-label">{c.label}</span>
+          <div key={c.label} className={`flex flex-col items-center px-3 py-4 rounded-xl bg-[var(--card)] border border-[var(--border-default)] ${c.cls}`}>
+            <span className="text-2xl font-extrabold text-[var(--text-primary)]">{c.value}</span>
+            <span className="text-[0.8rem] text-[var(--text-secondary)] mt-0.5">{c.label}</span>
           </div>
         ))}
       </div>
 
       {/* Toolbar */}
-      <div className="pr-toolbar">
-        <div className="pr-search-wrap">
+      <div className="flex flex-wrap gap-3 items-center mb-5">
+        <div className="flex items-center gap-1.5 bg-[var(--card)] border border-[var(--border-default)] rounded-lg px-3 py-1.5 flex-1 min-w-[180px]">
           <Search size={16} />
           <input
-            className="pr-search"
+            className="border-none bg-transparent outline-none w-full text-[0.92rem] text-[var(--text-primary)] focus:outline-none"
             placeholder="Search pets…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
         <select
-          className="pr-filter"
+          className="px-3 py-[0.45rem] border border-[var(--border-default)] rounded-lg bg-[var(--card)] text-[var(--text-primary)] text-[0.88rem]"
           value={filterStatus}
           onChange={(e) => setFilterStatus(e.target.value)}
         >
@@ -267,7 +261,7 @@ export default function PetRegistrations() {
           <option value="REJECTED">Rejected</option>
         </select>
         <select
-          className="pr-filter"
+          className="px-3 py-[0.45rem] border border-[var(--border-default)] rounded-lg bg-[var(--card)] text-[var(--text-primary)] text-[0.88rem]"
           value={filterType}
           onChange={(e) => setFilterType(e.target.value)}
         >
@@ -278,35 +272,35 @@ export default function PetRegistrations() {
             </option>
           ))}
         </select>
-        <button className="pr-btn pr-btn--primary" onClick={openCreate}>
+        <button className="inline-flex items-center gap-1.5 px-3.5 py-[0.42rem] border-none rounded-lg text-[0.85rem] font-semibold cursor-pointer transition-opacity hover:opacity-85 bg-[var(--primary,#6366f1)] text-white" onClick={openCreate}>
           <Plus size={16} /> Register Pet
         </button>
       </div>
 
       {/* List */}
-      <div className="pr-list">
+      <div className="flex flex-col gap-3.5">
         {filtered.length === 0 && (
-          <p className="pr-empty">No pet registrations found.</p>
+          <p className="text-center text-[var(--text-secondary)] p-10">No pet registrations found.</p>
         )}
         {filtered.map((p) => (
           <div
             key={p.id}
-            className={`pr-item pr-item--${p.status?.toLowerCase()}`}
+            className={`bg-[var(--card)] border border-[var(--border-default)] rounded-xl px-5 py-4 ${itemBorderMap[p.status?.toLowerCase()] || ''}`}
           >
-            <div className="pr-item-header">
-              <div className="pr-item-title">
-                <span className="pr-item-emoji">{petEmoji(p.petType)}</span>
+            <div className="flex justify-between items-center mb-[0.45rem]">
+              <div className="flex items-center gap-2 text-base">
+                <span className="text-lg">{petEmoji(p.petType)}</span>
                 <strong>{p.petName}</strong>
-                <span className="pr-item-type">
+                <span className="text-[0.78rem] text-[var(--text-secondary)] bg-[var(--bg-card)] px-2 py-0.5 rounded-full">
                   {petTypeOptions.find((o) => o.value === p.petType)?.label ||
                     p.petType}
                 </span>
               </div>
-              <span className={`pr-badge ${statusBadge(p.status)}`}>
+              <span className={`text-xs font-bold px-2.5 py-0.5 rounded-full uppercase ${statusBadge(p.status)}`}>
                 {p.status}
               </span>
             </div>
-            <div className="pr-item-meta">
+            <div className="flex flex-wrap gap-3 text-[0.84rem] text-[var(--text-secondary)] mb-1.5">
               <span>Owner: {p.ownerName}</span>
               {p.flatNumber && <span>Flat: {p.flatNumber}</span>}
               {p.wing && <span>Wing: {p.wing}</span>}
@@ -317,33 +311,33 @@ export default function PetRegistrations() {
               {p.weightKg && <span>{p.weightKg} kg</span>}
             </div>
             {p.vaccinated && (
-              <div className="pr-item-vacc">
+              <div className="text-[0.85rem] mb-1 text-[var(--success,#22c55e)]">
                 ✅ Vaccinated{" "}
                 {p.vaccinationExpiry ? `(expires ${p.vaccinationExpiry})` : ""}
               </div>
             )}
             {!p.vaccinated && (
-              <div className="pr-item-vacc pr-item-vacc--no">
+              <div className="text-[0.85rem] mb-1 text-[var(--warning,#f59e0b)]">
                 ⚠️ Not vaccinated
               </div>
             )}
             {p.specialNotes && (
-              <div className="pr-item-notes">{p.specialNotes}</div>
+              <div className="text-[0.82rem] text-[var(--text-secondary)] italic mb-0.5">{p.specialNotes}</div>
             )}
             {p.rejectedReason && (
-              <div className="pr-item-notes">Reason: {p.rejectedReason}</div>
+              <div className="text-[0.82rem] text-[var(--text-secondary)] italic mb-0.5">Reason: {p.rejectedReason}</div>
             )}
-            <div className="pr-item-actions">
+            <div className="flex flex-wrap gap-[0.45rem] mt-2.5">
               {p.status === "PENDING" && (
                 <>
                   <button
-                    className="pr-btn pr-btn--approve"
+                    className="inline-flex items-center gap-1.5 px-3.5 py-[0.42rem] border-none rounded-lg text-[0.85rem] font-semibold cursor-pointer transition-opacity hover:opacity-85 bg-[var(--success,#22c55e)] text-white"
                     onClick={() => approveMut.mutate(p.id)}
                   >
                     <Check size={14} /> Approve
                   </button>
                   <button
-                    className="pr-btn pr-btn--reject"
+                    className="inline-flex items-center gap-1.5 px-3.5 py-[0.42rem] border-none rounded-lg text-[0.85rem] font-semibold cursor-pointer transition-opacity hover:opacity-85 bg-[var(--error,#ef4444)] text-white"
                     onClick={() => {
                       setRejectId(p.id);
                       setRejectReason("");
@@ -354,13 +348,13 @@ export default function PetRegistrations() {
                 </>
               )}
               <button
-                className="pr-btn pr-btn--edit"
+                className="inline-flex items-center gap-1.5 px-3.5 py-[0.42rem] rounded-lg text-[0.85rem] font-semibold cursor-pointer transition-opacity hover:opacity-85 bg-[var(--card)] text-[var(--text-primary)] border border-[var(--border-default)]"
                 onClick={() => openEdit(p)}
               >
                 <Edit2 size={14} /> Edit
               </button>
               <button
-                className="pr-btn pr-btn--delete"
+                className="inline-flex items-center gap-1.5 px-3.5 py-[0.42rem] rounded-lg text-[0.85rem] font-semibold cursor-pointer transition-opacity hover:opacity-85 bg-transparent text-[var(--error,#ef4444)] border border-[var(--error,#ef4444)]"
                 onClick={() => deleteMut.mutate(p.id)}
               >
                 <Trash2 size={14} />
@@ -372,35 +366,36 @@ export default function PetRegistrations() {
 
       {/* Reject Modal */}
       {rejectId && (
-        <div className="pr-overlay" onClick={() => setRejectId(null)}>
-          <div className="pr-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="pr-modal-header">
-              <h3>Reject Registration</h3>
+        <div className="fixed inset-0 bg-black/45 flex items-center justify-center z-[1200]" onClick={() => setRejectId(null)}>
+          <div className="relative isolate bg-[var(--bg-secondary,#ffffff)] border border-[var(--border-default)] rounded-xl w-[95%] max-w-[600px] max-h-[90vh] overflow-y-auto shadow-[0_8px_32px_rgba(0,0,0,0.18)]" onClick={(e) => e.stopPropagation()}>
+            <div className="flex justify-between items-center px-5 py-4 border-b border-[var(--border-default)]">
+              <h3 className="m-0 text-lg">Reject Registration</h3>
               <button
-                className="pr-modal-close"
+                className="bg-transparent border-none cursor-pointer text-[var(--text-secondary)]"
                 onClick={() => setRejectId(null)}
               >
                 <X size={18} />
               </button>
             </div>
-            <div className="pr-form">
-              <div className="pr-field pr-field--full">
-                <label>Reason</label>
+            <div className="p-5">
+              <div className="flex flex-col gap-1 col-span-full">
+                <label className="text-[0.82rem] font-semibold text-[var(--text-secondary)]">Reason</label>
                 <textarea
                   rows={3}
                   value={rejectReason}
                   onChange={(e) => setRejectReason(e.target.value)}
+                  className="px-[0.7rem] py-[0.45rem] border border-[var(--border-default)] rounded-lg bg-[var(--bg-card)] text-[var(--text-primary)] text-[0.9rem]"
                 />
               </div>
-              <div className="pr-form-actions">
+              <div className="flex justify-end gap-2.5 mt-5 pt-4 border-t border-[var(--border-default)]">
                 <button
-                  className="pr-btn pr-btn--secondary"
+                  className="inline-flex items-center gap-1.5 px-3.5 py-[0.42rem] rounded-lg text-[0.85rem] font-semibold cursor-pointer transition-opacity hover:opacity-85 bg-[var(--card)] text-[var(--text-primary)] border border-[var(--border-default)]"
                   onClick={() => setRejectId(null)}
                 >
                   Cancel
                 </button>
                 <button
-                  className="pr-btn pr-btn--reject"
+                  className="inline-flex items-center gap-1.5 px-3.5 py-[0.42rem] border-none rounded-lg text-[0.85rem] font-semibold cursor-pointer transition-opacity hover:opacity-85 bg-[var(--error,#ef4444)] text-white"
                   onClick={handleReject}
                 >
                   Reject
@@ -413,200 +408,96 @@ export default function PetRegistrations() {
 
       {/* Create/Edit Modal */}
       {showModal && (
-        <div className="pr-overlay" onClick={() => setShowModal(false)}>
-          <div className="pr-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="pr-modal-header">
-              <h3>{editing ? "Edit Pet" : "Register Pet"}</h3>
+        <div className="fixed inset-0 bg-black/45 flex items-center justify-center z-[1200]" onClick={() => setShowModal(false)}>
+          <div className="relative isolate bg-[var(--bg-secondary,#ffffff)] border border-[var(--border-default)] rounded-xl w-[95%] max-w-[600px] max-h-[90vh] overflow-y-auto shadow-[0_8px_32px_rgba(0,0,0,0.18)]" onClick={(e) => e.stopPropagation()}>
+            <div className="flex justify-between items-center px-5 py-4 border-b border-[var(--border-default)]">
+              <h3 className="m-0 text-lg">{editing ? "Edit Pet" : "Register Pet"}</h3>
               <button
-                className="pr-modal-close"
+                className="bg-transparent border-none cursor-pointer text-[var(--text-secondary)]"
                 onClick={() => setShowModal(false)}
               >
                 <X size={18} />
               </button>
             </div>
-            <form className="pr-form" onSubmit={handleSubmit}>
-              <div className="pr-form-grid">
-                <div className="pr-field">
-                  <label>Pet Name *</label>
-                  <input
-                    required
-                    value={form.petName}
-                    onChange={(e) =>
-                      setForm({ ...form, petName: e.target.value })
-                    }
-                  />
+            <form className="p-5" onSubmit={handleSubmit}>
+              <div className="grid grid-cols-2 gap-3.5 items-start max-[600px]:grid-cols-1">
+                <div className="flex flex-col gap-1">
+                  <label className="text-[0.82rem] font-semibold text-[var(--text-secondary)]">Pet Name *</label>
+                  <input required value={form.petName} onChange={(e) => setForm({ ...form, petName: e.target.value })} className="px-[0.7rem] py-[0.45rem] border border-[var(--border-default)] rounded-lg bg-[var(--bg-card)] text-[var(--text-primary)] text-[0.9rem]" />
                 </div>
-                <div className="pr-field">
-                  <label>Pet Type *</label>
-                  <select
-                    value={form.petType}
-                    onChange={(e) =>
-                      setForm({ ...form, petType: e.target.value })
-                    }
-                  >
-                    {petTypeOptions.map((o) => (
-                      <option key={o.value} value={o.value}>
-                        {o.label}
-                      </option>
-                    ))}
+                <div className="flex flex-col gap-1">
+                  <label className="text-[0.82rem] font-semibold text-[var(--text-secondary)]">Pet Type *</label>
+                  <select value={form.petType} onChange={(e) => setForm({ ...form, petType: e.target.value })} className="px-[0.7rem] py-[0.45rem] border border-[var(--border-default)] rounded-lg bg-[var(--bg-card)] text-[var(--text-primary)] text-[0.9rem]">
+                    {petTypeOptions.map((o) => (<option key={o.value} value={o.value}>{o.label}</option>))}
                   </select>
                 </div>
-                <div className="pr-field">
-                  <label>Breed</label>
-                  <input
-                    value={form.breed}
-                    onChange={(e) =>
-                      setForm({ ...form, breed: e.target.value })
-                    }
-                  />
+                <div className="flex flex-col gap-1">
+                  <label className="text-[0.82rem] font-semibold text-[var(--text-secondary)]">Breed</label>
+                  <input value={form.breed} onChange={(e) => setForm({ ...form, breed: e.target.value })} className="px-[0.7rem] py-[0.45rem] border border-[var(--border-default)] rounded-lg bg-[var(--bg-card)] text-[var(--text-primary)] text-[0.9rem]" />
                 </div>
-                <div className="pr-field">
-                  <label>Color</label>
-                  <input
-                    value={form.color}
-                    onChange={(e) =>
-                      setForm({ ...form, color: e.target.value })
-                    }
-                  />
+                <div className="flex flex-col gap-1">
+                  <label className="text-[0.82rem] font-semibold text-[var(--text-secondary)]">Color</label>
+                  <input value={form.color} onChange={(e) => setForm({ ...form, color: e.target.value })} className="px-[0.7rem] py-[0.45rem] border border-[var(--border-default)] rounded-lg bg-[var(--bg-card)] text-[var(--text-primary)] text-[0.9rem]" />
                 </div>
-                <div className="pr-field">
-                  <label>Age (years)</label>
-                  <input
-                    type="number"
-                    min={0}
-                    value={form.ageYears}
-                    onChange={(e) =>
-                      setForm({ ...form, ageYears: e.target.value })
-                    }
-                  />
+                <div className="flex flex-col gap-1">
+                  <label className="text-[0.82rem] font-semibold text-[var(--text-secondary)]">Age (years)</label>
+                  <input type="number" min={0} value={form.ageYears} onChange={(e) => setForm({ ...form, ageYears: e.target.value })} className="px-[0.7rem] py-[0.45rem] border border-[var(--border-default)] rounded-lg bg-[var(--bg-card)] text-[var(--text-primary)] text-[0.9rem]" />
                 </div>
-                <div className="pr-field">
-                  <label>Gender</label>
-                  <select
-                    value={form.gender}
-                    onChange={(e) =>
-                      setForm({ ...form, gender: e.target.value })
-                    }
-                  >
+                <div className="flex flex-col gap-1">
+                  <label className="text-[0.82rem] font-semibold text-[var(--text-secondary)]">Gender</label>
+                  <select value={form.gender} onChange={(e) => setForm({ ...form, gender: e.target.value })} className="px-[0.7rem] py-[0.45rem] border border-[var(--border-default)] rounded-lg bg-[var(--bg-card)] text-[var(--text-primary)] text-[0.9rem]">
                     <option value="">Select</option>
-                    {genderOptions.map((o) => (
-                      <option key={o.value} value={o.value}>
-                        {o.label}
-                      </option>
-                    ))}
+                    {genderOptions.map((o) => (<option key={o.value} value={o.value}>{o.label}</option>))}
                   </select>
                 </div>
-                <div className="pr-field">
-                  <label>Weight (kg)</label>
-                  <input
-                    type="number"
-                    step="0.1"
-                    min={0}
-                    value={form.weightKg}
-                    onChange={(e) =>
-                      setForm({ ...form, weightKg: e.target.value })
-                    }
-                  />
+                <div className="flex flex-col gap-1">
+                  <label className="text-[0.82rem] font-semibold text-[var(--text-secondary)]">Weight (kg)</label>
+                  <input type="number" step="0.1" min={0} value={form.weightKg} onChange={(e) => setForm({ ...form, weightKg: e.target.value })} className="px-[0.7rem] py-[0.45rem] border border-[var(--border-default)] rounded-lg bg-[var(--bg-card)] text-[var(--text-primary)] text-[0.9rem]" />
                 </div>
-                <div className="pr-field">
-                  <label>Flat Number</label>
-                  <input
-                    value={form.flatNumber}
-                    onChange={(e) =>
-                      setForm({ ...form, flatNumber: e.target.value })
-                    }
-                  />
+                <div className="flex flex-col gap-1">
+                  <label className="text-[0.82rem] font-semibold text-[var(--text-secondary)]">Flat Number</label>
+                  <input value={form.flatNumber} onChange={(e) => setForm({ ...form, flatNumber: e.target.value })} className="px-[0.7rem] py-[0.45rem] border border-[var(--border-default)] rounded-lg bg-[var(--bg-card)] text-[var(--text-primary)] text-[0.9rem]" />
                 </div>
-                <div className="pr-field">
-                  <label>Wing</label>
-                  <input
-                    value={form.wing}
-                    onChange={(e) => setForm({ ...form, wing: e.target.value })}
-                  />
+                <div className="flex flex-col gap-1">
+                  <label className="text-[0.82rem] font-semibold text-[var(--text-secondary)]">Wing</label>
+                  <input value={form.wing} onChange={(e) => setForm({ ...form, wing: e.target.value })} className="px-[0.7rem] py-[0.45rem] border border-[var(--border-default)] rounded-lg bg-[var(--bg-card)] text-[var(--text-primary)] text-[0.9rem]" />
                 </div>
-                <div className="pr-field">
-                  <label>Registration #</label>
-                  <input
-                    value={form.registrationNumber}
-                    onChange={(e) =>
-                      setForm({ ...form, registrationNumber: e.target.value })
-                    }
-                  />
+                <div className="flex flex-col gap-1">
+                  <label className="text-[0.82rem] font-semibold text-[var(--text-secondary)]">Registration #</label>
+                  <input value={form.registrationNumber} onChange={(e) => setForm({ ...form, registrationNumber: e.target.value })} className="px-[0.7rem] py-[0.45rem] border border-[var(--border-default)] rounded-lg bg-[var(--bg-card)] text-[var(--text-primary)] text-[0.9rem]" />
                 </div>
-                <div className="pr-field">
-                  <label>Microchip ID</label>
-                  <input
-                    value={form.microchipId}
-                    onChange={(e) =>
-                      setForm({ ...form, microchipId: e.target.value })
-                    }
-                  />
+                <div className="flex flex-col gap-1">
+                  <label className="text-[0.82rem] font-semibold text-[var(--text-secondary)]">Microchip ID</label>
+                  <input value={form.microchipId} onChange={(e) => setForm({ ...form, microchipId: e.target.value })} className="px-[0.7rem] py-[0.45rem] border border-[var(--border-default)] rounded-lg bg-[var(--bg-card)] text-[var(--text-primary)] text-[0.9rem]" />
                 </div>
-                <div className="pr-field">
-                  <label
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "0.5rem",
-                    }}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={form.vaccinated}
-                      onChange={(e) =>
-                        setForm({ ...form, vaccinated: e.target.checked })
-                      }
-                    />
+                <div className="flex flex-col gap-1">
+                  <label style={{ display: "flex", alignItems: "center", gap: "0.5rem" }} className="text-[0.82rem] font-semibold text-[var(--text-secondary)]">
+                    <input type="checkbox" checked={form.vaccinated} onChange={(e) => setForm({ ...form, vaccinated: e.target.checked })} />
                     Vaccinated
                   </label>
                 </div>
                 {form.vaccinated && (
                   <>
-                    <div className="pr-field">
-                      <label>Vaccination Date</label>
-                      <input
-                        type="date"
-                        value={form.vaccinationDate}
-                        onChange={(e) =>
-                          setForm({ ...form, vaccinationDate: e.target.value })
-                        }
-                      />
+                    <div className="flex flex-col gap-1">
+                      <label className="text-[0.82rem] font-semibold text-[var(--text-secondary)]">Vaccination Date</label>
+                      <input type="date" value={form.vaccinationDate} onChange={(e) => setForm({ ...form, vaccinationDate: e.target.value })} className="px-[0.7rem] py-[0.45rem] border border-[var(--border-default)] rounded-lg bg-[var(--bg-card)] text-[var(--text-primary)] text-[0.9rem]" />
                     </div>
-                    <div className="pr-field">
-                      <label>Vaccination Expiry</label>
-                      <input
-                        type="date"
-                        value={form.vaccinationExpiry}
-                        onChange={(e) =>
-                          setForm({
-                            ...form,
-                            vaccinationExpiry: e.target.value,
-                          })
-                        }
-                      />
+                    <div className="flex flex-col gap-1">
+                      <label className="text-[0.82rem] font-semibold text-[var(--text-secondary)]">Vaccination Expiry</label>
+                      <input type="date" value={form.vaccinationExpiry} onChange={(e) => setForm({ ...form, vaccinationExpiry: e.target.value })} className="px-[0.7rem] py-[0.45rem] border border-[var(--border-default)] rounded-lg bg-[var(--bg-card)] text-[var(--text-primary)] text-[0.9rem]" />
                     </div>
                   </>
                 )}
-                <div className="pr-field pr-field--full">
-                  <label>Special Notes</label>
-                  <textarea
-                    rows={3}
-                    value={form.specialNotes}
-                    onChange={(e) =>
-                      setForm({ ...form, specialNotes: e.target.value })
-                    }
-                  />
+                <div className="flex flex-col gap-1 col-span-full">
+                  <label className="text-[0.82rem] font-semibold text-[var(--text-secondary)]">Special Notes</label>
+                  <textarea rows={3} value={form.specialNotes} onChange={(e) => setForm({ ...form, specialNotes: e.target.value })} className="px-[0.7rem] py-[0.45rem] border border-[var(--border-default)] rounded-lg bg-[var(--bg-card)] text-[var(--text-primary)] text-[0.9rem]" />
                 </div>
               </div>
-              <div className="pr-form-actions">
-                <button
-                  type="button"
-                  className="pr-btn pr-btn--secondary"
-                  onClick={() => setShowModal(false)}
-                >
+              <div className="flex justify-end gap-2.5 mt-5 pt-4 border-t border-[var(--border-default)]">
+                <button type="button" className="inline-flex items-center gap-1.5 px-3.5 py-[0.42rem] rounded-lg text-[0.85rem] font-semibold cursor-pointer transition-opacity hover:opacity-85 bg-[var(--card)] text-[var(--text-primary)] border border-[var(--border-default)]" onClick={() => setShowModal(false)}>
                   Cancel
                 </button>
-                <button type="submit" className="pr-btn pr-btn--primary">
+                <button type="submit" className="inline-flex items-center gap-1.5 px-3.5 py-[0.42rem] border-none rounded-lg text-[0.85rem] font-semibold cursor-pointer transition-opacity hover:opacity-85 bg-[var(--primary,#6366f1)] text-white">
                   {editing ? "Update" : "Register"}
                 </button>
               </div>

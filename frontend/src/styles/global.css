@@ -1,0 +1,549 @@
+/* ============================================
+   SOCIETY MANAGEMENT SYSTEM
+   Single global stylesheet: Tailwind + design tokens + minimal globals
+   ============================================ */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================
+   CSS VARIABLES - DESIGN TOKENS
+   ============================================ */
+
+:root {
+  --accent-primary: #2f81f7;
+  --accent-secondary: #58a6ff;
+  --accent-light: #79c0ff;
+  --accent-gradient-from: #2f81f7;
+  --accent-gradient-via: #388bfd;
+  --accent-gradient-to: #58a6ff;
+  --accent-50: rgba(47, 129, 247, 0.08);
+  --accent-100: rgba(47, 129, 247, 0.15);
+  --accent-500: #2f81f7;
+  --accent-600: #1f6feb;
+  --accent-700: #1158c7;
+  --accent-hover: #1f6feb;
+
+  --color-primary-50: var(--accent-50);
+  --color-primary-100: var(--accent-100);
+  --color-primary-200: rgba(47, 129, 247, 0.25);
+  --color-primary-500: var(--accent-500);
+  --color-primary-600: var(--accent-600);
+  --color-primary-700: var(--accent-700);
+  --color-primary-800: #0d4194;
+  --color-accent-indigo: #4f46e5;
+  --color-accent-purple: #8b5cf6;
+  --color-accent-amber: #d97706;
+  --color-accent-cyan: #0891b2;
+  --color-accent-rose: #e11d48;
+
+  --color-success: #3fb950;
+  --color-warning: #d29922;
+  --color-error: #f85149;
+  --color-info: #58a6ff;
+
+  --bg-primary: #000000;
+  --bg-secondary: #0a0a0a;
+  --bg-tertiary: #141414;
+  --bg-card: #0a0a0a;
+  --bg-card-hover: #161616;
+  --bg-elevated: #111111;
+  --bg-overlay: #1a1a1a;
+
+  --text-primary: #ffffff;
+  --text-secondary: #f2f6fb;
+  --text-tertiary: #c8d2de;
+  --text-muted: #a9b5c3;
+  --text-inverse: #000000;
+
+  --border-light: #1a1a1a;
+  --border-default: #222222;
+  --border-strong: #333333;
+
+  --glow-subtle: 0 0 12px rgba(47, 129, 247, 0.08);
+  --glow-card: 0 0 20px rgba(47, 129, 247, 0.06);
+  --glow-accent: 0 0 16px rgba(47, 129, 247, 0.15);
+
+  --shadow-xs: 0 1px 0 rgba(0,0,0,0.5);
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.5);
+  --shadow-md: 0 3px 6px rgba(0,0,0,0.4);
+  --shadow-lg: 0 8px 24px rgba(0,0,0,0.5);
+  --shadow-xl: 0 12px 28px rgba(0,0,0,0.5);
+  --shadow-2xl: 0 16px 48px rgba(0,0,0,0.6);
+
+  --spacing-xs: 0.25rem;
+  --spacing-sm: 0.45rem;
+  --spacing-md: 0.9rem;
+  --spacing-lg: 1.25rem;
+  --spacing-xl: 1.75rem;
+  --spacing-2xl: 2.5rem;
+  --spacing-3xl: 3.25rem;
+
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+  --radius-2xl: 16px;
+  --radius-full: 9999px;
+
+  --font-sans: 'Inter', 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', SFMono-Regular, Consolas, monospace;
+
+  --text-xs: 0.8125rem;
+  --text-sm: 0.875rem;
+  --text-base: 0.9375rem;
+  --text-md: 1rem;
+  --text-lg: 1.0625rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+  --text-3xl: 2rem;
+  --text-4xl: 2.5rem;
+
+  --leading-tight: 1.25;
+  --leading-snug: 1.375;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.625;
+
+  --transition-fast: 80ms ease;
+  --transition-normal: 150ms ease;
+  --transition-slow: 250ms ease;
+
+  --z-dropdown: 100;
+  --z-sticky: 200;
+  --z-modal-backdrop: 300;
+  --z-modal: 400;
+  --z-tooltip: 500;
+  --z-toast: 600;
+}
+
+.light {
+  --bg-primary: #ffffff;
+  --bg-secondary: #f3f6fa;
+  --bg-tertiary: #e6ebf2;
+  --bg-card: #ffffff;
+  --bg-card-hover: #f8fafc;
+  --bg-elevated: #ffffff;
+  --bg-overlay: #d9e0e8;
+
+  --text-primary: #0f172a;
+  --text-secondary: #111827;
+  --text-tertiary: #334155;
+  --text-muted: #475569;
+  --text-inverse: #ffffff;
+
+  --border-light: #c5d0dd;
+  --border-default: #b8c4d3;
+  --border-strong: #96a5b8;
+
+  --shadow-xs: 0 1px 0 rgba(31,35,40,0.04);
+  --shadow-sm: 0 1px 3px rgba(31,35,40,0.08);
+  --shadow-md: 0 3px 6px rgba(31,35,40,0.1);
+  --shadow-lg: 0 8px 24px rgba(31,35,40,0.12);
+  --shadow-xl: 0 12px 28px rgba(31,35,40,0.12);
+
+  --glow-subtle: none;
+  --glow-card: none;
+  --glow-accent: none;
+
+  --accent-primary: #0969da;
+  --accent-secondary: #218bff;
+  --accent-light: #54aeff;
+  --accent-hover: #0858ba;
+
+  --color-primary-50: rgba(9, 105, 218, 0.1);
+  --color-primary-100: rgba(9, 105, 218, 0.16);
+  --color-primary-200: rgba(9, 105, 218, 0.28);
+  --color-primary-500: #0969da;
+  --color-primary-600: #0858ba;
+  --color-primary-700: #074a9e;
+  --color-primary-800: #063f86;
+  --color-accent-indigo: #4338ca;
+  --color-accent-purple: #7c3aed;
+  --color-accent-amber: #b45309;
+  --color-accent-cyan: #0e7490;
+  --color-accent-rose: #be123c;
+}
+
+.dark {
+  --bg-primary: #000000;
+  --bg-secondary: #0a0a0a;
+  --bg-tertiary: #141414;
+  --bg-card: #0a0a0a;
+  --bg-card-hover: #161616;
+  --bg-elevated: #111111;
+  --bg-overlay: #1a1a1a;
+
+  --text-primary: #ffffff;
+  --text-secondary: #f2f6fb;
+  --text-tertiary: #c8d2de;
+  --text-muted: #a9b5c3;
+
+  --border-light: #1a1a1a;
+  --border-default: #222222;
+  --border-strong: #333333;
+
+  --glow-subtle: 0 0 12px rgba(47, 129, 247, 0.08);
+  --glow-card: 0 0 20px rgba(47, 129, 247, 0.06);
+  --glow-accent: 0 0 16px rgba(47, 129, 247, 0.15);
+}
+
+/* ============================================
+   Base resets and globals
+   ============================================ */
+
+@layer base {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  html {
+    min-height: 100%;
+    overflow-x: hidden;
+    overflow-y: scroll;
+    scroll-behavior: auto;
+    scrollbar-gutter: stable;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-default) transparent;
+  }
+
+  body {
+    min-height: 100%;
+    overflow-x: clip;
+    font-family: var(--font-sans);
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    font-size: var(--text-base);
+    font-weight: 500;
+    line-height: var(--leading-normal);
+    margin: 0;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    transition: background-color var(--transition-normal), color var(--transition-normal);
+  }
+
+  p, li, label, input, select, textarea {
+    font-size: inherit;
+  }
+
+  #root {
+    min-height: 100%;
+    width: 100%;
+  }
+
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  button, [role="button"], a, input[type="submit"], input[type="button"],
+  input[type="reset"], input[type="checkbox"], input[type="radio"],
+  select, label[for], summary {
+    cursor: pointer;
+  }
+}
+
+/* ============================================
+   Scrollbar
+   ============================================ */
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-primary);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-default);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--border-strong);
+}
+
+/* ============================================
+   Focus and form elements
+   ============================================ */
+
+button:focus,
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+}
+
+/* Consistent transitions for interactive elements */
+button, a, input, select, textarea {
+  transition-property: color, background-color, border-color, box-shadow, transform;
+  transition-duration: 150ms;
+  transition-timing-function: ease;
+}
+
+select option {
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
+::placeholder {
+  color: var(--text-muted);
+  font-weight: 500;
+  opacity: 1;
+}
+
+/* ============================================
+   Line clamp utilities
+   ============================================ */
+
+@layer utilities {
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+}
+
+/* ============================================
+   Dense tables and filters (Tailwind-friendly)
+   ============================================ */
+
+table th,
+table td {
+  padding: 0.56rem 0.72rem;
+  font-size: 0.9rem;
+  font-weight: 550;
+  color: var(--text-primary);
+}
+
+table th {
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.045em;
+  color: var(--text-secondary);
+}
+
+@media (max-width: 768px) {
+  table th,
+  table td {
+    padding: 0.48rem 0.62rem;
+  }
+}
+
+/* Toast keyframes (used by ToastContext) */
+@keyframes toast-in {
+  from { opacity: 0; transform: translateX(14px) scale(0.985); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@keyframes toast-out {
+  from { opacity: 1; transform: translateX(0); }
+  to { opacity: 0; transform: translateX(16px) scale(0.985); }
+}
+@keyframes toast-shake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-6px); }
+  40%, 80% { transform: translateX(6px); }
+}
+@keyframes toast-shrink {
+  from { width: 100%; }
+  to { width: 0%; }
+}
+
+/* Keep dense controls used by list-heavy pages */
+[class*="filters"] input,
+[class*="filters"] select,
+[class*="search"] input,
+[class*="toolbar"] input,
+[class*="toolbar"] select {
+  min-height: 2.3rem;
+  padding: 0.46rem 0.72rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+[class*="filters"],
+[class*="toolbar"],
+[class*="actions-row"] {
+  gap: 0.6rem;
+}
+
+@media (max-width: 768px) {
+  [class*="filters"] input,
+  [class*="filters"] select,
+  [class*="search"] input,
+  [class*="toolbar"] input,
+  [class*="toolbar"] select {
+    min-height: 2.15rem;
+    font-size: 0.85rem;
+  }
+}
+
+/* ============================================
+   Custom animation utilities used in JSX
+   ============================================ */
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fadeInUpSmooth {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scaleInSoft {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes successPulse {
+  0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4); }
+  70% { box-shadow: 0 0 0 10px rgba(34, 197, 94, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+}
+
+@keyframes ticker {
+  0% { transform: translate3d(0, 0, 0); }
+  100% { transform: translate3d(-50%, 0, 0); }
+}
+
+@keyframes sun-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.35s ease-out both;
+}
+
+.animate-fade-in-up {
+  animation: fadeInUpSmooth 0.5s ease-out both;
+}
+
+.animate-scale-in {
+  animation: scaleInSoft 0.35s ease-out both;
+}
+
+.animate-slide-up {
+  animation: slideInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.animate-slide-in-right {
+  animation: slideInRight 0.4s ease-out both;
+}
+
+.animate-slide-in-left {
+  animation: slideInLeft 0.4s ease-out both;
+}
+
+.animate-success-pulse {
+  animation: successPulse 1s ease-in-out;
+}
+
+.animate-ticker {
+  animation: ticker 30s linear infinite;
+}
+
+.animate-ticker:hover {
+  animation-play-state: paused;
+}
+
+.animate-sun {
+  animation: sun-spin 10s linear infinite;
+}
+
+/* Compatibility aliases used in dashboard markup */
+.animate-bounce-custom {
+  animation: bounce 1s infinite;
+}
+
+.animate-pulse-custom {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-fadeIn,
+  .animate-fade-in-up,
+  .animate-scale-in,
+  .animate-slide-up,
+  .animate-slide-in-right,
+  .animate-slide-in-left,
+  .animate-success-pulse,
+  .animate-ticker,
+  .animate-sun,
+  .animate-bounce-custom,
+  .animate-pulse-custom {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}

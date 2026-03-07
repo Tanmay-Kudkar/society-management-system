@@ -12,6 +12,29 @@ import useMinLoadingTime from '../../hooks/useMinLoadingTime'
 
 const statusLabels = { AVAILABLE: 'Available', IN_USE: 'In Use', UNDER_MAINTENANCE: 'Maintenance', RETIRED: 'Retired', DISPOSED: 'Disposed' }
 const conditionLabels = { EXCELLENT: 'Excellent', GOOD: 'Good', FAIR: 'Fair', POOR: 'Poor', DAMAGED: 'Damaged' }
+
+const iconBgMap = {
+  available: 'bg-[rgba(34,197,94,0.15)] text-[var(--color-green)]',
+  'in-use': 'bg-[rgba(59,130,246,0.15)] text-[var(--color-blue)]',
+  'under-maintenance': 'bg-[rgba(245,158,11,0.15)] text-[var(--color-amber)]',
+  retired: 'bg-[rgba(107,114,128,0.15)] text-[var(--text-secondary)]',
+  disposed: 'bg-[rgba(239,68,68,0.15)] text-[var(--color-red)]',
+}
+
+const statusBadgeMap = {
+  available: 'bg-[rgba(34,197,94,0.15)] text-[var(--color-green)]',
+  'in-use': 'bg-[rgba(59,130,246,0.15)] text-[var(--color-blue)]',
+  'under-maintenance': 'bg-[rgba(245,158,11,0.15)] text-[var(--color-amber)]',
+  retired: 'bg-[rgba(107,114,128,0.15)] text-[var(--text-secondary)]',
+}
+
+const conditionBadgeMap = {
+  excellent: 'bg-[rgba(34,197,94,0.1)] text-[var(--color-green)]',
+  good: 'bg-[rgba(34,197,94,0.1)] text-[var(--color-green)]',
+  fair: 'bg-[rgba(245,158,11,0.1)] text-[var(--color-amber)]',
+  poor: 'bg-[rgba(239,68,68,0.1)] text-[var(--color-red)]',
+  damaged: 'bg-[rgba(239,68,68,0.1)] text-[var(--color-red)]',
+}
 const categoryOptions = [
   { value: 'FURNITURE', label: 'Furniture' }, { value: 'EQUIPMENT', label: 'Equipment' },
   { value: 'ELECTRONICS', label: 'Electronics' }, { value: 'TOOLS', label: 'Tools' },
@@ -101,96 +124,97 @@ export default function Assets() {
 
   return (
     <div>
-      <div className="asset-header">
+      <div className="flex justify-between items-start mb-6 flex-wrap gap-4">
         <div>
-          <h1 className="asset-title">Assets & Inventory</h1>
-          <p className="asset-subtitle">Track society assets, equipment, and inventory</p>
+          <h1 className="text-2xl font-bold text-[var(--text-primary)]">Assets & Inventory</h1>
+          <p className="text-sm text-[var(--text-secondary)] mt-1">Track society assets, equipment, and inventory</p>
         </div>
         {isStaff && (
-          <button onClick={() => setShowModal(true)} className="asset-action-button">
+          <button onClick={() => setShowModal(true)} className="inline-flex items-center gap-2 py-[10px] px-5 bg-[var(--color-blue)] text-white border-none rounded-[10px] text-sm font-semibold cursor-pointer transition-colors hover:bg-[var(--color-blue-hover,#2563eb)]">
             <Plus size={20} /> Add Asset
           </button>
         )}
       </div>
 
-      <div className="asset-summary">
-        <div className="asset-summary-card">
-          <p className="asset-summary-label">Available</p>
-          <p className="asset-summary-value asset-summary-value--available">{available}</p>
+      <div className="grid grid-cols-4 gap-4 mb-6">
+        <div className="bg-[var(--bg-secondary)] rounded-xl p-4 text-center border border-[var(--border-primary)]">
+          <p className="text-xs text-[var(--text-tertiary)] uppercase tracking-[0.5px] mb-1">Available</p>
+          <p className="text-[28px] font-bold text-[var(--color-green)]">{available}</p>
         </div>
-        <div className="asset-summary-card">
-          <p className="asset-summary-label">In Use</p>
-          <p className="asset-summary-value asset-summary-value--inuse">{inUse}</p>
+        <div className="bg-[var(--bg-secondary)] rounded-xl p-4 text-center border border-[var(--border-primary)]">
+          <p className="text-xs text-[var(--text-tertiary)] uppercase tracking-[0.5px] mb-1">In Use</p>
+          <p className="text-[28px] font-bold text-[var(--color-blue)]">{inUse}</p>
         </div>
-        <div className="asset-summary-card">
-          <p className="asset-summary-label">Maintenance</p>
-          <p className="asset-summary-value asset-summary-value--maintenance">{maintenance}</p>
+        <div className="bg-[var(--bg-secondary)] rounded-xl p-4 text-center border border-[var(--border-primary)]">
+          <p className="text-xs text-[var(--text-tertiary)] uppercase tracking-[0.5px] mb-1">Maintenance</p>
+          <p className="text-[28px] font-bold text-[var(--color-amber)]">{maintenance}</p>
         </div>
-        <div className="asset-summary-card">
-          <p className="asset-summary-label">Low Stock</p>
-          <p className="asset-summary-value asset-summary-value--low">{lowStock}</p>
+        <div className="bg-[var(--bg-secondary)] rounded-xl p-4 text-center border border-[var(--border-primary)]">
+          <p className="text-xs text-[var(--text-tertiary)] uppercase tracking-[0.5px] mb-1">Low Stock</p>
+          <p className="text-[28px] font-bold text-[var(--color-red)]">{lowStock}</p>
         </div>
       </div>
 
-      <div className="asset-filters">
-        <div className="asset-filters-row">
-          <div className="asset-search">
-            <Search className="asset-search-icon" />
-            <input type="text" placeholder="Search assets..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="asset-input" />
+      <div className="mb-5">
+        <div className="flex gap-3 flex-wrap items-center">
+          <div className="relative flex-1 min-w-[200px]">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)] w-4 h-4" />
+            <input type="text" placeholder="Search assets..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full py-[10px] pr-3 pl-9 border border-[var(--border-primary)] rounded-lg text-sm bg-[var(--bg-secondary)] text-[var(--text-primary)]" />
           </div>
-          <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="asset-select">
+          <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="py-[10px] px-3 border border-[var(--border-primary)] rounded-lg text-sm bg-[var(--bg-secondary)] text-[var(--text-primary)] min-w-[140px]">
             <option value="">All Status</option>
             <option value="AVAILABLE">Available</option>
             <option value="IN_USE">In Use</option>
             <option value="UNDER_MAINTENANCE">Maintenance</option>
             <option value="RETIRED">Retired</option>
           </select>
-          <select value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)} className="asset-select">
+          <select value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)} className="py-[10px] px-3 border border-[var(--border-primary)] rounded-lg text-sm bg-[var(--bg-secondary)] text-[var(--text-primary)] min-w-[140px]">
             <option value="">All Categories</option>
             {categoryOptions.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
           </select>
         </div>
       </div>
 
-      <div className="asset-list">
+      <div className="flex flex-col gap-3">
         {filtered.length === 0 && (
-          <div className="asset-item" style={{ textAlign: 'center', color: 'var(--text-tertiary)' }}>No assets found</div>
+          <div className="bg-[var(--bg-secondary)] rounded-xl p-4 border border-[var(--border-primary)] text-center text-[var(--text-tertiary)]">No assets found</div>
         )}
         {filtered.map(asset => {
           const isLow = asset.minQuantity > 0 && asset.quantity <= asset.minQuantity
+          const statusKey = asset.status?.toLowerCase().replace('_', '-')
           return (
-            <div key={asset.id} className={clsx('asset-item', isLow && 'asset-item--low')}>
-              <div className="asset-item-row">
-                <div className="asset-item-main">
-                  <div className={clsx('asset-item-icon', `asset-item-icon--${asset.status?.toLowerCase().replace('_', '-')}`)}>
-                    <Package className="asset-item-icon-symbol" />
+            <div key={asset.id} className={clsx('bg-[var(--bg-secondary)] rounded-xl p-4 border border-[var(--border-primary)] transition-shadow hover:shadow-[0_2px_8px_rgba(0,0,0,0.06)]', isLow && 'border-l-[3px] border-l-[var(--color-red)]')}>
+              <div className="flex justify-between items-start gap-4">
+                <div className="flex gap-3 flex-1 min-w-0">
+                  <div className={clsx('w-10 h-10 rounded-[10px] flex items-center justify-center shrink-0', iconBgMap[statusKey])}>
+                    <Package className="w-5 h-5" />
                   </div>
                   <div>
-                    <div className="asset-item-meta">
-                      <span className={clsx('asset-status-badge', `asset-status--${asset.status?.toLowerCase().replace('_', '-')}`)}>{statusLabels[asset.status] || asset.status}</span>
-                      <span className="asset-category-badge">{asset.category}</span>
-                      <span className={clsx('asset-condition-badge', `asset-condition--${asset.condition?.toLowerCase()}`)}>{conditionLabels[asset.condition] || asset.condition}</span>
-                      {isLow && <span className="asset-low-badge"><AlertTriangle size={12} /> Low Stock</span>}
+                    <div className="flex items-center gap-2 flex-wrap mb-1">
+                      <span className={clsx('text-[11px] font-semibold py-[2px] px-2 rounded-[6px] uppercase tracking-[0.3px]', statusBadgeMap[statusKey])}>{statusLabels[asset.status] || asset.status}</span>
+                      <span className="text-[11px] font-semibold py-[2px] px-2 rounded-[6px] uppercase tracking-[0.3px] bg-[var(--bg-tertiary)] text-[var(--text-secondary)]">{asset.category}</span>
+                      <span className={clsx('text-[11px] font-semibold py-[2px] px-2 rounded-[6px] uppercase tracking-[0.3px]', conditionBadgeMap[asset.condition?.toLowerCase()])}>{conditionLabels[asset.condition] || asset.condition}</span>
+                      {isLow && <span className="inline-flex items-center gap-[3px] text-[11px] font-semibold py-[2px] px-2 rounded-[6px] bg-[rgba(239,68,68,0.15)] text-[var(--color-red)]"><AlertTriangle size={12} /> Low Stock</span>}
                     </div>
-                    <h3 className="asset-item-title">{asset.assetName} {asset.assetCode && <span className="asset-code">({asset.assetCode})</span>}</h3>
-                    {asset.description && <p className="asset-item-description">{asset.description}</p>}
-                    <div className="asset-item-footer">
-                      {asset.location && <span className="asset-item-footer-text"><MapPin size={12} /> {asset.location}</span>}
-                      <span className="asset-item-footer-text">Qty: {asset.quantity}</span>
-                      {asset.purchaseCost && <span className="asset-item-footer-text"><IndianRupee size={12} /> ₹{asset.purchaseCost}</span>}
-                      {asset.vendorName && <span className="asset-item-footer-text">Vendor: {asset.vendorName}</span>}
-                      {asset.assignedToName && <span className="asset-item-footer-text"><UserPlus size={12} /> {asset.assignedToName}</span>}
-                      {asset.warrantyExpiry && <span className="asset-item-footer-text"><Calendar size={12} /> Warranty: {asset.warrantyExpiry}</span>}
+                    <h3 className="text-[15px] font-semibold text-[var(--text-primary)] mb-[2px]">{asset.assetName} {asset.assetCode && <span className="font-normal text-[var(--text-tertiary)] text-[13px]">({asset.assetCode})</span>}</h3>
+                    {asset.description && <p className="text-[13px] text-[var(--text-secondary)] mb-1">{asset.description}</p>}
+                    <div className="flex flex-wrap gap-3 mt-[6px]">
+                      {asset.location && <span className="text-xs text-[var(--text-tertiary)] inline-flex items-center gap-[3px]"><MapPin size={12} /> {asset.location}</span>}
+                      <span className="text-xs text-[var(--text-tertiary)] inline-flex items-center gap-[3px]">Qty: {asset.quantity}</span>
+                      {asset.purchaseCost && <span className="text-xs text-[var(--text-tertiary)] inline-flex items-center gap-[3px]"><IndianRupee size={12} /> ₹{asset.purchaseCost}</span>}
+                      {asset.vendorName && <span className="text-xs text-[var(--text-tertiary)] inline-flex items-center gap-[3px]">Vendor: {asset.vendorName}</span>}
+                      {asset.assignedToName && <span className="text-xs text-[var(--text-tertiary)] inline-flex items-center gap-[3px]"><UserPlus size={12} /> {asset.assignedToName}</span>}
+                      {asset.warrantyExpiry && <span className="text-xs text-[var(--text-tertiary)] inline-flex items-center gap-[3px]"><Calendar size={12} /> Warranty: {asset.warrantyExpiry}</span>}
                     </div>
                   </div>
                 </div>
                 {isStaff && (
-                  <div className="asset-item-actions">
-                    {asset.status === 'AVAILABLE' && <button onClick={() => statusMutation.mutate({ id: asset.id, status: 'IN_USE' })} className="asset-btn asset-btn--use">In Use</button>}
-                    {asset.status === 'IN_USE' && <button onClick={() => statusMutation.mutate({ id: asset.id, status: 'AVAILABLE' })} className="asset-btn asset-btn--available">Available</button>}
-                    {asset.status !== 'UNDER_MAINTENANCE' && <button onClick={() => statusMutation.mutate({ id: asset.id, status: 'UNDER_MAINTENANCE' })} className="asset-btn asset-btn--maintenance"><Wrench size={14} /></button>}
-                    {asset.status === 'UNDER_MAINTENANCE' && <button onClick={() => statusMutation.mutate({ id: asset.id, status: 'AVAILABLE' })} className="asset-btn asset-btn--available"><CheckCircle2 size={14} /></button>}
-                    {isAdmin && <button onClick={() => { if (confirm('Delete this asset?')) deleteMutation.mutate(asset.id) }} className="asset-btn asset-btn--delete">Delete</button>}
+                  <div className="flex gap-[6px] flex-wrap shrink-0">
+                    {asset.status === 'AVAILABLE' && <button onClick={() => statusMutation.mutate({ id: asset.id, status: 'IN_USE' })} className="py-[6px] px-[14px] border border-[rgba(59,130,246,0.3)] rounded-lg text-xs font-medium cursor-pointer inline-flex items-center gap-1 transition-all bg-[rgba(59,130,246,0.1)] text-[var(--color-blue)]">In Use</button>}
+                    {asset.status === 'IN_USE' && <button onClick={() => statusMutation.mutate({ id: asset.id, status: 'AVAILABLE' })} className="py-[6px] px-[14px] border border-[rgba(34,197,94,0.3)] rounded-lg text-xs font-medium cursor-pointer inline-flex items-center gap-1 transition-all bg-[rgba(34,197,94,0.1)] text-[var(--color-green)]">Available</button>}
+                    {asset.status !== 'UNDER_MAINTENANCE' && <button onClick={() => statusMutation.mutate({ id: asset.id, status: 'UNDER_MAINTENANCE' })} className="py-[6px] px-[14px] border border-[rgba(245,158,11,0.3)] rounded-lg text-xs font-medium cursor-pointer inline-flex items-center gap-1 transition-all bg-[rgba(245,158,11,0.1)] text-[var(--color-amber)]"><Wrench size={14} /></button>}
+                    {asset.status === 'UNDER_MAINTENANCE' && <button onClick={() => statusMutation.mutate({ id: asset.id, status: 'AVAILABLE' })} className="py-[6px] px-[14px] border border-[rgba(34,197,94,0.3)] rounded-lg text-xs font-medium cursor-pointer inline-flex items-center gap-1 transition-all bg-[rgba(34,197,94,0.1)] text-[var(--color-green)]"><CheckCircle2 size={14} /></button>}
+                    {isAdmin && <button onClick={() => { if (confirm('Delete this asset?')) deleteMutation.mutate(asset.id) }} className="py-[6px] px-[14px] border border-[rgba(239,68,68,0.3)] rounded-lg text-xs font-medium cursor-pointer inline-flex items-center gap-1 transition-all bg-[rgba(239,68,68,0.1)] text-[var(--color-red)]">Delete</button>}
                   </div>
                 )}
               </div>
@@ -200,18 +224,18 @@ export default function Assets() {
       </div>
 
       {showModal && (
-        <div className="asset-modal">
-          <div className="asset-modal-card">
-            <div className="asset-modal-header">
-              <h3 className="asset-modal-title">Add Asset</h3>
-              <button onClick={() => setShowModal(false)} className="asset-modal-close"><X size={20} /></button>
+        <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/50 backdrop-blur-[4px]">
+          <div className="bg-[var(--bg-primary)] rounded-2xl p-6 w-[90%] max-w-[560px] max-h-[90vh] overflow-y-auto shadow-[0_20px_60px_rgba(0,0,0,0.3)]">
+            <div className="flex justify-between items-center mb-5">
+              <h3 className="text-lg font-bold text-[var(--text-primary)]">Add Asset</h3>
+              <button onClick={() => setShowModal(false)} className="bg-none border-none cursor-pointer text-[var(--text-tertiary)] p-1"><X size={20} /></button>
             </div>
-            <form onSubmit={handleSubmit} className="asset-form">
-              <div className="asset-form-row">
+            <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+              <div className="grid grid-cols-2 gap-3">
                 <FormInput label="Asset Name" name="assetName" required placeholder="e.g. Fire Extinguisher" />
                 <FormInput label="Asset Code" name="assetCode" placeholder="e.g. FE-001" />
               </div>
-              <div className="asset-form-row">
+              <div className="grid grid-cols-2 gap-3">
                 <SmartSelect label="Category" name="category" required options={categoryOptions} placeholder="Select Category" />
                 <SmartSelect label="Condition" name="condition" options={[
                   { value: 'EXCELLENT', label: 'Excellent' }, { value: 'GOOD', label: 'Good' },
@@ -220,23 +244,23 @@ export default function Assets() {
               </div>
               <FormInput label="Location" name="location" placeholder="e.g. Club House, Store Room" />
               <FormTextarea label="Description" name="description" rows={2} />
-              <div className="asset-form-row">
+              <div className="grid grid-cols-2 gap-3">
                 <FormInput label="Quantity" name="quantity" type="number" min="1" defaultValue="1" />
                 <FormInput label="Min Quantity (alert)" name="minQuantity" type="number" min="0" defaultValue="0" />
               </div>
-              <div className="asset-form-row">
+              <div className="grid grid-cols-2 gap-3">
                 <FormInput label="Purchase Cost (₹)" name="purchaseCost" type="number" step="0.01" />
                 <FormInput label="Current Value (₹)" name="currentValue" type="number" step="0.01" />
               </div>
-              <div className="asset-form-row">
+              <div className="grid grid-cols-2 gap-3">
                 <FormInput label="Purchase Date" name="purchaseDate" type="date" />
                 <FormInput label="Warranty Expiry" name="warrantyExpiry" type="date" />
               </div>
               <FormInput label="Vendor Name" name="vendorName" placeholder="Supplier name" />
               <FormTextarea label="Notes" name="notes" rows={2} />
-              <div className="asset-form-actions">
-                <button type="button" onClick={() => setShowModal(false)} className="asset-btn asset-btn--ghost">Cancel</button>
-                <AsyncButton type="submit" className="asset-btn asset-btn--primary" isLoading={createMutation.isPending} loadingText="Adding...">Add Asset</AsyncButton>
+              <div className="flex gap-3 justify-end mt-2">
+                <button type="button" onClick={() => setShowModal(false)} className="py-[6px] px-[14px] border border-[var(--border-primary)] rounded-lg text-xs font-medium cursor-pointer inline-flex items-center gap-1 transition-all bg-transparent text-[var(--text-primary)]">Cancel</button>
+                <AsyncButton type="submit" className="py-2 px-4 rounded-lg text-xs font-medium cursor-pointer border-none inline-flex items-center gap-1 transition-all bg-[var(--color-blue)] text-white hover:opacity-90" isLoading={createMutation.isPending} loadingText="Adding...">Add Asset</AsyncButton>
               </div>
             </form>
           </div>

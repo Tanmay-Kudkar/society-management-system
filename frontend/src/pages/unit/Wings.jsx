@@ -18,7 +18,6 @@ import {
 import { FormInput, SmartSelect, NumberInput, FormErrorSummary, BulkImportModal, AsyncButton } from '../../components'
 import { HeroSkeleton, FiltersSkeleton, CardGridSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
 import useMinLoadingTime from '../../hooks/useMinLoadingTime'
-import '../../styles/pages/wings.css'
 
 export default function Wings() {
   const { user, canManageWings } = useAuth()
@@ -239,7 +238,7 @@ export default function Wings() {
   const showSkeleton = useMinLoadingTime(isLoading || isError)
 
   if (showSkeleton) return (
-    <div className="wings-page">
+    <div className="min-h-[calc(100vh-68px)] bg-[var(--bg-secondary)] px-6 pb-12 pt-7 text-[var(--text-primary)]">
       <WakeUpBanner />
       <HeroSkeleton statCount={2} />
       <FiltersSkeleton filterCount={1} />
@@ -248,23 +247,23 @@ export default function Wings() {
   )
 
   return (
-    <div className="wings-page">
+    <div className="min-h-[calc(100vh-68px)] bg-[var(--bg-secondary)] px-6 pb-12 pt-7 text-[var(--text-primary)]">
       {/* Header */}
-      <div className="wings-header">
+      <div className="mb-6 flex flex-wrap items-start justify-between gap-4 max-md:flex-col max-md:items-start">
         <div>
-          <h1 className="wings-title">Wings</h1>
-          <p className="wings-subtitle">Manage society wings and towers</p>
+          <h1 className="m-0 text-[28px] font-bold text-[var(--text-primary)]">Wings</h1>
+          <p className="mt-1.5 text-sm text-[var(--text-secondary)]">Manage society wings and towers</p>
           {currentSociety && effectiveSocietyIdNum && (
-            <p className="wings-capacity">
+            <p className="mt-1.5 text-xs text-[var(--text-tertiary)]">
               Capacity: {currentWingCount}/{maxWings || '∞'} wings
             </p>
           )}
         </div>
         {canEditWings && (
-          <div className="wings-actions">
+          <div className="flex flex-wrap gap-2.5 max-md:w-full">
             <button
               onClick={handleBulkImportOpen}
-              className="wings-action-btn wings-action-btn--outline"
+              className="inline-flex items-center gap-2.5 rounded-xl border border-slate-900/15 bg-slate-900 px-4 py-2.5 text-sm font-semibold text-slate-50 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_20px_rgba(15,23,42,0.16)] dark:border-slate-400/30 dark:bg-slate-950"
               disabled={!effectiveSocietyIdNum || wingsCapacityReached}
             >
               <Upload size={20} />
@@ -272,7 +271,7 @@ export default function Wings() {
             </button>
             <button
               onClick={() => { setEditingWing(null); setFormErrors({}); setShowModal(true) }}
-              className="wings-action-btn wings-action-btn--primary"
+              className="inline-flex items-center gap-2.5 rounded-xl border border-[var(--border-default)] bg-[var(--bg-card)] px-4 py-2.5 text-sm font-semibold text-[var(--text-primary)] shadow-[0_8px_20px_rgba(15,23,42,0.14)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-[var(--bg-tertiary)] dark:border-slate-400/25 dark:bg-slate-50 dark:text-slate-900 dark:hover:bg-white"
               disabled={wingsCapacityReached}
             >
               <Plus size={20} />
@@ -283,16 +282,16 @@ export default function Wings() {
       </div>
 
       {pageError && (
-        <div className="wings-alert wings-alert--error" role="alert">
-          <div className="wings-alert__icon">!</div>
-          <div className="wings-alert__content">
-            <p className="wings-alert__title">Action blocked</p>
-            <p className="wings-alert__text">{pageError}</p>
+        <div className="mb-[18px] flex items-start gap-3 rounded-[14px] border border-red-500/35 bg-gradient-to-r from-red-500/15 to-red-400/10 px-4 py-3.5" role="alert">
+          <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-red-500 font-bold text-white">!</div>
+          <div className="flex-1">
+            <p className="text-[13px] font-bold text-red-200">Action blocked</p>
+            <p className="mt-1 text-[13px] text-red-300">{pageError}</p>
           </div>
           <button
             type="button"
             onClick={() => setPageError('')}
-            className="wings-alert__close"
+            className="rounded-lg border-none bg-transparent p-1 text-red-300 transition-colors hover:bg-red-400/15"
             aria-label="Dismiss error"
           >
             <X size={16} />
@@ -301,23 +300,23 @@ export default function Wings() {
       )}
 
       {/* Filters */}
-      <div className="wings-filters">
-        <div className="wings-filters__row">
-          <div className="wings-search">
-            <Search className="wings-search__icon" size={20} />
+      <div className="mb-6 rounded-2xl border border-[var(--border-light)] bg-[var(--bg-card)] p-4 shadow-sm">
+        <div className="flex flex-wrap gap-4">
+          <div className="relative min-w-[220px] flex-1">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)]" size={20} />
             <input
               type="text"
               placeholder="Search wings..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="wings-search__input"
+              className="w-full rounded-xl border border-[var(--border-default)] bg-[var(--bg-card)] px-3.5 py-2.5 pl-10 text-sm text-[var(--text-primary)] outline-none transition-all focus:border-blue-500 focus:shadow-[0_0_0_2px_rgba(59,130,246,0.2)]"
             />
           </div>
           {isPlatformLevel && (
             <select
               value={filterSociety}
               onChange={(e) => setFilterSociety(e.target.value)}
-              className="wings-filter-select"
+              className="rounded-xl border border-[var(--border-default)] bg-[var(--bg-card)] px-3.5 py-2.5 text-sm text-[var(--text-primary)]"
             >
               <option value="">All Societies</option>
               {societies.map(s => (
@@ -329,65 +328,65 @@ export default function Wings() {
       </div>
 
       {/* Grid View */}
-      <div className="wings-grid">
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(260px,1fr))] gap-5">
         {filteredWings.length === 0 ? (
-          <div className="wings-empty">
-            <Layers className="wings-empty__icon" size={48} />
+          <div className="col-[1/-1] px-8 py-8 text-center text-[var(--text-tertiary)]">
+            <Layers className="mb-3 text-gray-300" size={48} />
             <p>No wings found</p>
-            <p className="wings-capacity">{canEditWings ? 'Add your first wing to get started' : 'You have read-only access'}</p>
+            <p className="mt-1.5 text-xs text-[var(--text-tertiary)]">{canEditWings ? 'Add your first wing to get started' : 'You have read-only access'}</p>
           </div>
         ) : (
           filteredWings.map((wing) => (
             <div 
               key={wing.id} 
-              className="wings-card"
+              className="group overflow-hidden rounded-[18px] border border-[var(--border-default)] bg-[var(--bg-card)] shadow-sm transition-all duration-200 hover:-translate-y-1 hover:border-[color-mix(in_srgb,var(--accent-primary)_45%,var(--border-default))] hover:shadow-lg"
             >
               {/* Wing Header with 3D Effect */}
-              <div className="wings-card__hero">
-                <div className="wings-card__pattern"></div>
-                <div className="wings-card__top">
-                  <div className="wings-card__icon">
+              <div className="relative overflow-hidden bg-gradient-to-br from-[color-mix(in_srgb,var(--accent-primary)_70%,#4f46e5)] to-[color-mix(in_srgb,var(--accent-secondary)_60%,#312e81)] p-[18px] text-white">
+                <div className="absolute inset-0 opacity-30" style={{ backgroundImage: 'url("data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmZmZmYiIGZpbGwtb3BhY2l0eT0iMC4wNSI+PHBhdGggZD0iTTM2IDM0djItSDI0di0yaDEyek0zNiAyNHYySDI0di0yaDEyeiIvPjwvZz48L2c+PC9zdmc+")' }} />
+                <div className="relative flex items-start gap-3.5">
+                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-white/30 bg-white/15 shadow-[0_12px_24px_rgba(15,23,42,0.18)] transition-transform duration-200 group-hover:scale-105">
                     <Layers size={28} />
                   </div>
                   <div>
-                    <h3 className="wings-card__name">{wing.name}</h3>
+                    <h3 className="m-0 overflow-hidden text-ellipsis whitespace-nowrap text-lg font-bold">{wing.name}</h3>
                     {isPlatformLevel && (
-                      <p className="wings-card__society">{wing.societyName}</p>
+                      <p className="mt-1 overflow-hidden text-ellipsis whitespace-nowrap text-[13px] text-white/80">{wing.societyName}</p>
                     )}
                   </div>
                 </div>
               </div>
               
               {/* Wing Body with Stats */}
-              <div className="wings-card__body">
+              <div className="p-[18px]">
                 {wing.description && (
-                  <p className="wings-card__desc">{wing.description}</p>
+                  <p className="mb-4 line-clamp-2 text-[13px] text-[var(--text-secondary)]">{wing.description}</p>
                 )}
                 
-                <div className="wings-card__stats">
-                  <div className="wings-stat wings-stat--floors">
-                    <div className="wings-stat__label">
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="rounded-xl border border-[color-mix(in_srgb,var(--accent-primary)_28%,var(--border-default))] bg-[var(--bg-tertiary)] px-3 py-2.5">
+                    <div className="mb-1.5 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.05em] text-[color-mix(in_srgb,var(--accent-primary)_78%,var(--text-secondary))]">
                       <Building2 size={16} />
                       <span>Floors</span>
                     </div>
-                    <p className="wings-stat__value">{wing.totalFloors || 0}</p>
+                    <p className="m-0 text-[20px] font-bold text-[var(--text-primary)]">{wing.totalFloors || 0}</p>
                   </div>
-                  <div className="wings-stat wings-stat--id">
-                    <div className="wings-stat__label wings-stat__label--purple">
+                  <div className="rounded-xl border border-[color-mix(in_srgb,#7c3aed_30%,var(--border-default))] bg-[var(--bg-tertiary)] px-3 py-2.5">
+                    <div className="mb-1.5 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.05em] text-[color-mix(in_srgb,#7c3aed_72%,var(--text-secondary))]">
                       <Hash size={16} />
                       <span>Wing ID</span>
                     </div>
-                    <p className="wings-stat__value">{wing.id}</p>
+                    <p className="m-0 text-[20px] font-bold text-[var(--text-primary)]">{wing.id}</p>
                   </div>
                 </div>
               </div>
 
               {/* Actions with Better Hover */}
               {canEditWings && (
-                <div className="wings-card__footer">
+                <div className="flex justify-end gap-2.5 border-t border-[var(--border-default)] bg-[var(--bg-tertiary)] px-[18px] py-3.5">
                   <button
                     onClick={() => { setEditingWing(wing); setFormErrors({}); setShowModal(true) }}
-                    className="wings-card__btn wings-card__btn--edit"
+                    className="inline-flex items-center gap-1.5 rounded-[10px] border border-transparent bg-[color-mix(in_srgb,var(--accent-primary)_18%,var(--bg-card))] px-3 py-1.5 text-xs font-semibold text-[var(--accent-primary)] transition-colors hover:bg-[color-mix(in_srgb,var(--accent-primary)_26%,var(--bg-card))]"
                     title="Edit Wing"
                   >
                     <Edit size={16} />
@@ -426,7 +425,7 @@ export default function Wings() {
                         }
                       }
                     }}
-                    className="wings-card__btn wings-card__btn--delete"
+                    className="inline-flex items-center gap-1.5 rounded-[10px] border border-transparent bg-[color-mix(in_srgb,#dc2626_14%,var(--bg-card))] px-3 py-1.5 text-xs font-semibold text-red-600 transition-colors hover:bg-[color-mix(in_srgb,#dc2626_20%,var(--bg-card))]"
                     title="Delete Wing"
                   >
                     <Trash2 size={16} />
@@ -441,15 +440,15 @@ export default function Wings() {
 
       {/* Modal */}
       {showModal && canEditWings && (
-        <div className="wings-modal">
-          <div className="wings-modal__panel">
-            <div className="wings-modal__header">
-              <h3 className="wings-modal__title">{editingWing ? 'Edit Wing' : 'Add Wing'}</h3>
-              <button onClick={() => setShowModal(false)} className="wings-modal__close">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="max-h-[90vh] w-full max-w-[520px] overflow-y-auto rounded-2xl border border-[var(--border-light)] bg-[var(--bg-card)] shadow-xl">
+            <div className="sticky top-0 flex items-center justify-between border-b border-[var(--border-light)] bg-[var(--bg-card)] px-[18px] py-4">
+              <h3 className="m-0 text-lg font-bold">{editingWing ? 'Edit Wing' : 'Add Wing'}</h3>
+              <button onClick={() => setShowModal(false)} className="rounded-lg border-none bg-transparent p-1.5 text-[var(--text-tertiary)] transition-colors hover:bg-[var(--bg-tertiary)]">
                 <X size={20} />
               </button>
             </div>
-            <form onSubmit={handleSubmit} className="wings-modal__form">
+            <form onSubmit={handleSubmit} className="flex flex-col gap-4 p-[18px]">
               <FormErrorSummary message={formErrors.capacity} />
               
               {/* Society field - only show dropdown for MASTER_ADMIN */}
@@ -490,17 +489,17 @@ export default function Wings() {
                 onChange={() => setFormErrors(prev => ({ ...prev, totalFloors: null }))}
               />
 
-              <div className="wings-modal__actions">
+              <div className="flex gap-3 pt-2">
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="wings-modal__btn wings-modal__btn--ghost"
+                  className="flex-1 rounded-xl border border-[var(--border-default)] bg-transparent px-3.5 py-2.5 font-semibold text-[var(--text-secondary)] transition-colors hover:bg-[var(--bg-tertiary)]"
                 >
                   Cancel
                 </button>
                 <AsyncButton
                   type="submit"
-                  className="wings-modal__btn wings-modal__btn--primary"
+                  className="flex-1 rounded-xl border border-[var(--border-default)] bg-[var(--bg-card)] px-3.5 py-2.5 font-semibold text-[var(--text-primary)] transition-all hover:bg-[var(--bg-tertiary)] hover:shadow-[0_8px_20px_rgba(15,23,42,0.14)] dark:border-slate-400/25 dark:bg-slate-50 dark:text-slate-900 dark:hover:bg-white"
                   isLoading={createMutation.isPending || updateMutation.isPending}
                   loadingText="Saving..."
                 >

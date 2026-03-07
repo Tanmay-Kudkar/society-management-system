@@ -3,7 +3,6 @@ import { Link, useSearchParams, useNavigate } from 'react-router-dom'
 import { useTheme } from '../../context'
 import { authApi } from '../../../../api'
 import { Building2, Lock, ArrowLeft, CheckCircle, AlertCircle, Eye, EyeOff, ShieldCheck } from 'lucide-react'
-import '../../styles/animations.css'
 
 export default function ResetPassword() {
   const [searchParams] = useSearchParams()
@@ -65,130 +64,106 @@ export default function ResetPassword() {
   }
 
   return (
-    <div className={`reset-page ${isDark ? 'is-dark' : 'is-light'}`}>
-      <div className="reset-panel">
-        {/* Logo */}
-        <div className="reset-logo">
-          <Link to="/welcome" className="reset-logo-link">
-            <div className="reset-logo-badge" style={{ background: `linear-gradient(to bottom right, var(--accent-primary), var(--accent-secondary))` }}>
-              <Building2 className="reset-logo-icon" />
+    <div className="flex min-h-screen items-center justify-center bg-[var(--bg-primary)] px-4 py-12">
+      <div className="w-full max-w-md">
+        <div className="mb-8 text-center">
+          <Link to="/welcome" className="inline-flex items-center gap-3 no-underline">
+            <div className="rounded-xl p-3" style={{ background: 'linear-gradient(to bottom right, var(--accent-primary), var(--accent-secondary))' }}>
+              <Building2 className="h-7 w-7 text-white" />
             </div>
-            <span className="reset-brand">SocietyHub</span>
+            <span className="text-2xl font-extrabold text-[var(--text-primary)]">SocietyHub</span>
           </Link>
         </div>
 
-        {/* Card */}
-        <div className="reset-card">
+        <div className="rounded-3xl border border-[var(--border-default)] bg-[var(--bg-card)] p-8 shadow-xl">
           {!success ? (
             <>
-              <div className="reset-card-header">
-                <div className="reset-card-icon"
+              <div className="mb-6 text-center">
+                <div
+                  className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl"
                   style={{ background: isDark ? 'color-mix(in srgb, var(--accent-primary) 15%, #1e293b)' : 'color-mix(in srgb, var(--accent-primary) 10%, white)' }}
                 >
-                  <ShieldCheck className="reset-card-icon-svg" style={{ color: 'var(--accent-primary)' }} />
+                  <ShieldCheck className="h-7 w-7" style={{ color: 'var(--accent-primary)' }} />
                 </div>
-                <h2 className="reset-card-title">Reset Password</h2>
-                <p className="reset-card-subtitle">
-                  Create a strong password for your account.
-                </p>
+                <h2 className="mb-2 text-3xl font-extrabold text-[var(--text-primary)]">Reset Password</h2>
+                <p className="text-sm text-[var(--text-secondary)]">Create a strong password for your account.</p>
               </div>
 
               {error && (
-                <div className="reset-alert">
-                  <AlertCircle className="reset-alert-icon" />
-                  <p className="reset-alert-text">{error}</p>
+                <div className="mb-4 flex items-center gap-2 rounded-2xl border border-red-300/40 bg-red-500/10 px-3 py-2 text-sm text-red-500">
+                  <AlertCircle className="h-4 w-4" />
+                  <p>{error}</p>
                 </div>
               )}
 
-              <form onSubmit={handleSubmit} className="reset-form">
-                {/* New Password */}
-                <div className="reset-field">
-                  <label className="reset-label">
-                    New Password
-                  </label>
-                  <div className="reset-input-wrap">
-                    <Lock className="reset-input-icon" />
+              <form onSubmit={handleSubmit} className="grid gap-4">
+                <div className="grid gap-2">
+                  <label className="text-sm font-semibold text-[var(--text-primary)]">New Password</label>
+                  <div className="relative">
+                    <Lock className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[var(--text-tertiary)]" />
                     <input
                       type={showPassword ? 'text' : 'password'}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="reset-input"
+                      className="w-full rounded-2xl border-2 border-[var(--border-default)] bg-[var(--bg-primary)] py-3 pl-12 pr-11 text-[var(--text-primary)] outline-none transition placeholder:text-[var(--text-tertiary)] focus:border-[var(--accent-primary)] focus:shadow-[0_0_0_3px_color-mix(in_srgb,var(--accent-primary)_20%,transparent)]"
                       placeholder="Enter new password"
                       required
                       disabled={!token}
                     />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="reset-input-action"
-                    >
-                      {showPassword ? <EyeOff className="reset-input-action-icon" /> : <Eye className="reset-input-action-icon" />}
+                    <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-1 text-[var(--text-tertiary)] transition hover:text-[var(--text-primary)]">
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
                   </div>
-                  {/* Strength indicator */}
                   {password && (
-                    <div className="reset-strength">
-                      <div className={`reset-strength-track ${isDark ? 'is-dark' : 'is-light'}`}>
-                        <div
-                          className="reset-strength-bar"
-                          style={{ width: `${(strength / 5) * 100}%`, background: strengthColor }}
-                        />
+                    <div className="mt-1">
+                      <div className={`h-1.5 overflow-hidden rounded-full ${isDark ? 'bg-slate-600' : 'bg-slate-200'}`}>
+                        <div className="h-full rounded-full transition-all" style={{ width: `${(strength / 5) * 100}%`, background: strengthColor }} />
                       </div>
-                      <p className="reset-strength-label" style={{ color: strengthColor }}>{strengthLabel}</p>
+                      <p className="mt-1 text-xs font-semibold" style={{ color: strengthColor }}>{strengthLabel}</p>
                     </div>
                   )}
                 </div>
 
-                {/* Confirm Password */}
-                <div className="reset-field">
-                  <label className="reset-label">
-                    Confirm Password
-                  </label>
-                  <div className="reset-input-wrap">
-                    <Lock className="reset-input-icon" />
+                <div className="grid gap-2">
+                  <label className="text-sm font-semibold text-[var(--text-primary)]">Confirm Password</label>
+                  <div className="relative">
+                    <Lock className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[var(--text-tertiary)]" />
                     <input
                       type={showConfirm ? 'text' : 'password'}
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
-                      className="reset-input"
+                      className="w-full rounded-2xl border-2 border-[var(--border-default)] bg-[var(--bg-primary)] py-3 pl-12 pr-11 text-[var(--text-primary)] outline-none transition placeholder:text-[var(--text-tertiary)] focus:border-[var(--accent-primary)] focus:shadow-[0_0_0_3px_color-mix(in_srgb,var(--accent-primary)_20%,transparent)]"
                       placeholder="Confirm new password"
                       required
                       disabled={!token}
                     />
-                    <button
-                      type="button"
-                      onClick={() => setShowConfirm(!showConfirm)}
-                      className="reset-input-action"
-                    >
-                      {showConfirm ? <EyeOff className="reset-input-action-icon" /> : <Eye className="reset-input-action-icon" />}
+                    <button type="button" onClick={() => setShowConfirm(!showConfirm)} className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-1 text-[var(--text-tertiary)] transition hover:text-[var(--text-primary)]">
+                      {showConfirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
                   </div>
-                  {confirmPassword && password !== confirmPassword && (
-                    <p className="reset-match reset-match--error">Passwords do not match</p>
-                  )}
+                  {confirmPassword && password !== confirmPassword && <p className="text-xs text-red-500">Passwords do not match</p>}
                   {confirmPassword && password === confirmPassword && (
-                    <p className="reset-match reset-match--success">
-                      <CheckCircle className="reset-match-icon" /> Passwords match
-                    </p>
+                    <p className="inline-flex items-center gap-1 text-xs text-emerald-500"><CheckCircle className="h-3 w-3" /> Passwords match</p>
                   )}
                 </div>
 
                 <button
                   type="submit"
                   disabled={loading || !token}
-                  className="reset-submit"
+                  className="relative mt-1 w-full overflow-hidden rounded-2xl px-6 py-3 font-bold text-white transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
                   style={{
-                    background: `linear-gradient(to right, var(--accent-primary), var(--accent-secondary))`,
-                    boxShadow: `0 8px 24px -4px color-mix(in srgb, var(--accent-primary) 40%, transparent)`
+                    background: 'linear-gradient(to right, var(--accent-primary), var(--accent-secondary))',
+                    boxShadow: '0 8px 24px -4px color-mix(in srgb, var(--accent-primary) 40%, transparent)',
                   }}
                 >
-                  <span className={`reset-submit-content ${loading ? 'is-hidden' : ''}`}>
-                    <ShieldCheck className="reset-submit-icon" />
-                    Reset Password
-                  </span>
-                  {loading && (
-                    <span className="reset-submit-loading">
-                      <div className="reset-submit-spinner" />
+                  {!loading ? (
+                    <span className="inline-flex items-center justify-center gap-2">
+                      <ShieldCheck className="h-4 w-4" />
+                      Reset Password
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center justify-center gap-2">
+                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />
                       Resetting...
                     </span>
                   )}
@@ -196,34 +171,25 @@ export default function ResetPassword() {
               </form>
             </>
           ) : (
-            /* Success State */
-            <div className="reset-success">
-              <div className="reset-success-icon"
+            <div className="py-2 text-center">
+              <div
+                className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full"
                 style={{ background: isDark ? 'rgba(34,197,94,0.15)' : 'rgba(34,197,94,0.1)' }}
               >
-                <CheckCircle className="reset-success-icon-svg" />
+                <CheckCircle className="h-8 w-8 text-emerald-500" />
               </div>
-              <h3 className="reset-success-title">Password Reset Successful</h3>
-              <p className="reset-success-text">
-                Your password has been updated. Redirecting to sign in...
-              </p>
-              <Link
-                to="/login"
-                className="reset-success-link"
-              >
+              <h3 className="mb-2 text-2xl font-extrabold text-[var(--text-primary)]">Password Reset Successful</h3>
+              <p className="mb-5 text-sm text-[var(--text-secondary)]">Your password has been updated. Redirecting to sign in...</p>
+              <Link to="/login" className="rounded-xl border border-[var(--border-default)] bg-[var(--bg-primary)] px-4 py-2 text-sm font-semibold text-[var(--text-primary)] no-underline transition hover:bg-[var(--bg-tertiary)]">
                 Sign in now
               </Link>
             </div>
           )}
 
-          {/* Back to Login */}
           {!success && (
-            <div className="reset-back">
-              <Link
-                to="/login"
-                className="reset-back-link"
-              >
-                <ArrowLeft className="reset-back-icon" />
+            <div className="mt-6 text-center">
+              <Link to="/login" className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--text-secondary)] no-underline transition hover:text-[var(--accent-primary)]">
+                <ArrowLeft className="h-4 w-4" />
                 Back to Sign In
               </Link>
             </div>

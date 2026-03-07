@@ -11,9 +11,9 @@ import { HeroSkeleton, FinancePageSkeleton, WakeUpBanner } from '../../component
 import useMinLoadingTime from '../../hooks/useMinLoadingTime'
 
 const statusColors = {
-  PENDING: 'vendor-bills-status--pending',
-  PARTIAL: 'vendor-bills-status--partial',
-  PAID: 'vendor-bills-status--paid',
+  PENDING: 'bg-amber-100 text-amber-700',
+  PARTIAL: 'bg-blue-100 text-blue-700',
+  PAID: 'bg-green-100 text-green-800',
 }
 
 const statusIcons = {
@@ -117,15 +117,15 @@ export default function VendorBills() {
   return (
     <div>
       {/* Header */}
-      <div className="vendor-bills-header">
+      <div className="flex flex-col gap-4 mb-6 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="vendor-bills-title">Vendor Bills</h1>
-          <p className="vendor-bills-subtitle">Track vendor invoices and payments</p>
+          <h1 className="text-2xl font-bold text-[var(--text-primary)]">Vendor Bills</h1>
+          <p className="mt-1 text-[var(--text-tertiary)]">Track vendor invoices and payments</p>
         </div>
         {canManageVendorBills() && (
           <button
             onClick={() => { setEditingBill(null); setShowModal(true) }}
-            className="vendor-bills-action-button"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-[10px] font-semibold border border-[var(--border-default)] bg-[var(--bg-card)] text-[var(--text-primary)] transition-colors hover:bg-[var(--bg-tertiary)] dark:border-slate-400/22 dark:bg-slate-50 dark:text-slate-900 dark:hover:bg-white"
           >
             <Plus size={20} />
             Add Bill
@@ -134,22 +134,22 @@ export default function VendorBills() {
       </div>
 
       {/* Filters */}
-      <div className="vendor-bills-filters">
-        <div className="vendor-bills-filters-row">
-          <div className="vendor-bills-search">
-            <Search className="vendor-bills-search-icon" />
+      <div className="bg-[var(--bg-card)] border border-[var(--border-light)] rounded-xl p-4 mb-6 shadow-sm">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--text-tertiary)]" />
             <input
               type="text"
               placeholder="Search bills..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="vendor-bills-input"
+              className="w-full pl-10 pr-3 py-2 rounded-[10px] border border-[#cbd5f5] bg-[var(--bg-card)] text-[var(--text-primary)] outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
             />
           </div>
           <select
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
-            className="vendor-bills-select"
+            className="w-full px-3 py-2 rounded-[10px] border border-[#cbd5f5] bg-[var(--bg-card)] text-[var(--text-primary)] outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
           >
             <option value="">All Status</option>
             <option value="PENDING">Pending</option>
@@ -160,60 +160,60 @@ export default function VendorBills() {
       </div>
 
       {/* Table */}
-      <div className="vendor-bills-table-card">
+      <div className="bg-[var(--bg-card)] border border-[var(--border-light)] rounded-2xl overflow-hidden shadow-sm">
         {(
-          <div className="vendor-bills-table-scroll">
-            <table className="vendor-bills-table">
-              <thead className="vendor-bills-thead">
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse">
+              <thead className="bg-[var(--bg-tertiary)] border-b border-[var(--border-light)]">
                 <tr>
-                  <th className="vendor-bills-th">Vendor</th>
-                  <th className="vendor-bills-th">Bill #</th>
-                  <th className="vendor-bills-th">Amount</th>
-                  <th className="vendor-bills-th">Paid</th>
-                  <th className="vendor-bills-th">Pending</th>
-                  <th className="vendor-bills-th">Due Date</th>
-                  <th className="vendor-bills-th">Status</th>
-                  <th className="vendor-bills-th vendor-bills-th--right">Actions</th>
+                  <th className="text-left px-6 py-3 text-xs uppercase tracking-[0.08em] text-[var(--text-tertiary)]">Vendor</th>
+                  <th className="text-left px-6 py-3 text-xs uppercase tracking-[0.08em] text-[var(--text-tertiary)]">Bill #</th>
+                  <th className="text-left px-6 py-3 text-xs uppercase tracking-[0.08em] text-[var(--text-tertiary)]">Amount</th>
+                  <th className="text-left px-6 py-3 text-xs uppercase tracking-[0.08em] text-[var(--text-tertiary)]">Paid</th>
+                  <th className="text-left px-6 py-3 text-xs uppercase tracking-[0.08em] text-[var(--text-tertiary)]">Pending</th>
+                  <th className="text-left px-6 py-3 text-xs uppercase tracking-[0.08em] text-[var(--text-tertiary)]">Due Date</th>
+                  <th className="text-left px-6 py-3 text-xs uppercase tracking-[0.08em] text-[var(--text-tertiary)]">Status</th>
+                  <th className="text-right px-6 py-3 text-xs uppercase tracking-[0.08em] text-[var(--text-tertiary)]">Actions</th>
                 </tr>
               </thead>
-              <tbody className="vendor-bills-tbody">
+              <tbody>
                 {filteredBills.map((bill) => {
                   const StatusIcon = statusIcons[bill.status] || Clock
                   return (
-                    <tr key={bill.id} className="vendor-bills-row">
-                      <td className="vendor-bills-cell">
-                        <div className="vendor-bills-vendor">
-                          <div className="vendor-bills-icon">
-                            <Receipt className="vendor-bills-icon-symbol" />
+                    <tr key={bill.id} className="hover:bg-[var(--bg-tertiary)] transition-colors">
+                      <td className="px-6 py-4 whitespace-nowrap text-[var(--text-primary)]">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-[10px] bg-orange-50 inline-flex items-center justify-center">
+                            <Receipt className="w-4 h-4 text-orange-600" />
                           </div>
-                          <span className="vendor-bills-vendor-name">{bill.vendorName}</span>
+                          <span className="font-semibold">{bill.vendorName}</span>
                         </div>
                       </td>
-                      <td className="vendor-bills-cell vendor-bills-cell-muted">{bill.billNumber}</td>
-                      <td className="vendor-bills-cell vendor-bills-cell-strong">₹{bill.amount?.toLocaleString()}</td>
-                      <td className="vendor-bills-cell vendor-bills-cell-muted">₹{bill.paidAmount?.toLocaleString() || 0}</td>
-                      <td className="vendor-bills-cell">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-[var(--text-tertiary)]">{bill.billNumber}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-[var(--text-primary)] font-semibold">₹{bill.amount?.toLocaleString()}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-[var(--text-tertiary)]">₹{bill.paidAmount?.toLocaleString() || 0}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-[var(--text-primary)]">
                         <span className={clsx(
-                          'vendor-bills-pending-amount',
-                          bill.pendingAmount > 0 ? 'vendor-bills-pending-amount--due' : 'vendor-bills-pending-amount--clear'
+                          'font-semibold',
+                          bill.pendingAmount > 0 ? 'text-red-600' : 'text-green-600'
                         )}>
                           ₹{bill.pendingAmount?.toLocaleString() || 0}
                         </span>
                       </td>
-                      <td className="vendor-bills-cell vendor-bills-cell-muted">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-[var(--text-tertiary)]">
                         {bill.dueDate ? new Date(bill.dueDate).toLocaleDateString() : '-'}
                       </td>
-                      <td className="vendor-bills-cell">
-                        <span className={clsx('vendor-bills-status', statusColors[bill.status])}>
+                      <td className="px-6 py-4 whitespace-nowrap text-[var(--text-primary)]">
+                        <span className={clsx('inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold', statusColors[bill.status])}>
                           <StatusIcon size={12} />
                           {bill.status}
                         </span>
                       </td>
-                      <td className="vendor-bills-cell vendor-bills-cell--right">
+                      <td className="px-6 py-4 whitespace-nowrap text-right">
                         {bill.status !== 'PAID' && (
                           <button
                             onClick={() => { setEditingBill(bill); setShowPaymentModal(true) }}
-                            className="vendor-bills-pay-button"
+                            className="px-2 py-1 text-xs rounded-lg border border-transparent bg-green-100 text-green-700 mr-2 hover:bg-green-200 transition-colors"
                           >
                             Pay
                           </button>
@@ -237,7 +237,7 @@ export default function VendorBills() {
                               deleteMutation.mutate(bill.id)
                             }
                           }}
-                          className="vendor-bills-icon-button vendor-bills-icon-button--delete"
+                          className="inline-flex items-center justify-center p-1.5 rounded-lg bg-transparent border-none text-[var(--text-tertiary)] hover:text-red-600 transition-colors"
                         >
                           <Trash2 size={18} />
                         </button>
@@ -253,21 +253,21 @@ export default function VendorBills() {
 
       {/* Add Bill Modal */}
       {showModal && (
-        <div className="vendor-bills-modal">
-          <div className="vendor-bills-modal-card">
-            <div className="vendor-bills-modal-header">
-              <h3 className="vendor-bills-modal-title">Add Vendor Bill</h3>
-              <button onClick={() => setShowModal(false)} className="vendor-bills-modal-close">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50">
+          <div className="w-full max-w-[420px] bg-[var(--bg-card)] rounded-2xl shadow-[0_24px_60px_rgba(15,23,42,0.2)]">
+            <div className="flex items-center justify-between p-4 border-b border-[var(--border-light)]">
+              <h3 className="text-lg font-semibold text-[var(--text-primary)]">Add Vendor Bill</h3>
+              <button onClick={() => setShowModal(false)} className="border-none bg-transparent text-[var(--text-tertiary)] p-1 rounded-lg hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-primary)]">
                 <X size={20} />
               </button>
             </div>
-            <form onSubmit={handleSubmit} className="vendor-bills-form">
+            <form onSubmit={handleSubmit} className="p-4 grid gap-4">
               <div>
-                <label className="vendor-bills-label">Vendor</label>
+                <label className="block mb-1 text-sm font-semibold text-slate-700">Vendor</label>
                 <select
                   name="vendorId"
                   required
-                  className="vendor-bills-select-input"
+                  className="w-full px-3 py-2 rounded-[10px] border border-[#cbd5f5] bg-[var(--bg-card)] text-[var(--text-primary)] outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
                 >
                   <option value="">Select Vendor</option>
                   {vendors.map(v => (
@@ -275,65 +275,65 @@ export default function VendorBills() {
                   ))}
                 </select>
               </div>
-              <div className="vendor-bills-form-grid">
+              <div className="grid grid-cols-2 gap-4 max-sm:grid-cols-1">
                 <div>
-                  <label className="vendor-bills-label">Bill Number</label>
+                  <label className="block mb-1 text-sm font-semibold text-slate-700">Bill Number</label>
                   <input
                     type="text"
                     name="billNumber"
                     required
-                    className="vendor-bills-text-input"
+                    className="w-full px-3 py-2 rounded-[10px] border border-[#cbd5f5] bg-[var(--bg-card)] text-[var(--text-primary)] outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
                   />
                 </div>
                 <div>
-                  <label className="vendor-bills-label">Amount</label>
+                  <label className="block mb-1 text-sm font-semibold text-slate-700">Amount</label>
                   <input
                     type="number"
                     name="amount"
                     step="0.01"
                     required
-                    className="vendor-bills-text-input"
+                    className="w-full px-3 py-2 rounded-[10px] border border-[#cbd5f5] bg-[var(--bg-card)] text-[var(--text-primary)] outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
                   />
                 </div>
               </div>
-              <div className="vendor-bills-form-grid">
+              <div className="grid grid-cols-2 gap-4 max-sm:grid-cols-1">
                 <div>
-                  <label className="vendor-bills-label">Bill Date</label>
+                  <label className="block mb-1 text-sm font-semibold text-slate-700">Bill Date</label>
                   <input
                     type="date"
                     name="billDate"
                     required
-                    className="vendor-bills-text-input"
+                    className="w-full px-3 py-2 rounded-[10px] border border-[#cbd5f5] bg-[var(--bg-card)] text-[var(--text-primary)] outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
                   />
                 </div>
                 <div>
-                  <label className="vendor-bills-label">Due Date</label>
+                  <label className="block mb-1 text-sm font-semibold text-slate-700">Due Date</label>
                   <input
                     type="date"
                     name="dueDate"
-                    className="vendor-bills-text-input"
+                    className="w-full px-3 py-2 rounded-[10px] border border-[#cbd5f5] bg-[var(--bg-card)] text-[var(--text-primary)] outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
                   />
                 </div>
               </div>
               <div>
-                <label className="vendor-bills-label">Description</label>
+                <label className="block mb-1 text-sm font-semibold text-slate-700">Description</label>
                 <textarea
                   name="description"
                   rows={2}
-                  className="vendor-bills-textarea"
+                  className="w-full px-3 py-2 rounded-[10px] border border-[#cbd5f5] bg-[var(--bg-card)] text-[var(--text-primary)] outline-none min-h-[80px] resize-y focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
                 />
               </div>
-              <div className="vendor-bills-form-actions">
+              <div className="flex gap-3 pt-4">
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="vendor-bills-btn vendor-bills-btn--ghost"
+                  className="flex-1 px-4 py-2 rounded-[10px] font-semibold border border-[var(--border-light)] bg-[var(--bg-card)] text-slate-700 hover:bg-[var(--bg-tertiary)] transition-colors"
                 >
                   Cancel
                 </button>
                 <AsyncButton
                   type="submit"
-                  className="vendor-bills-btn vendor-bills-btn--primary"
+                  className="flex-1 px-4 py-2 rounded-[10px] font-semibold border-none bg-blue-600 text-white hover:bg-blue-700 transition-colors"
                   isLoading={createMutation.isPending}
                   loadingText="Creating..."
                 >
@@ -347,38 +347,38 @@ export default function VendorBills() {
 
       {/* Payment Modal */}
       {showPaymentModal && editingBill && (
-        <div className="vendor-bills-modal">
-          <div className="vendor-bills-modal-card">
-            <div className="vendor-bills-modal-header">
-              <h3 className="vendor-bills-modal-title">Record Payment</h3>
-              <button onClick={() => setShowPaymentModal(false)} className="vendor-bills-modal-close">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50">
+          <div className="w-full max-w-[420px] bg-[var(--bg-card)] rounded-2xl shadow-[0_24px_60px_rgba(15,23,42,0.2)]">
+            <div className="flex items-center justify-between p-4 border-b border-[var(--border-light)]">
+              <h3 className="text-lg font-semibold text-[var(--text-primary)]">Record Payment</h3>
+              <button onClick={() => setShowPaymentModal(false)} className="border-none bg-transparent text-[var(--text-tertiary)] p-1 rounded-lg hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-primary)]">
                 <X size={20} />
               </button>
             </div>
-            <form onSubmit={handlePayment} className="vendor-bills-form">
-              <div className="vendor-bills-summary">
-                <p className="vendor-bills-summary-row">Bill: <span className="vendor-bills-summary-strong">{editingBill.billNumber}</span></p>
-                <p className="vendor-bills-summary-row">Total: <span className="vendor-bills-summary-strong">₹{editingBill.amount?.toLocaleString()}</span></p>
-                <p className="vendor-bills-summary-row">Paid: <span className="vendor-bills-summary-strong">₹{editingBill.paidAmount?.toLocaleString() || 0}</span></p>
-                <p className="vendor-bills-summary-row">Balance: <span className="vendor-bills-summary-balance">₹{(editingBill.amount - (editingBill.paidAmount || 0)).toLocaleString()}</span></p>
+            <form onSubmit={handlePayment} className="p-4 grid gap-4">
+              <div className="p-3 rounded-xl bg-[var(--bg-tertiary)]">
+                <p className="text-sm text-[var(--text-secondary)]">Bill: <span className="font-semibold text-[var(--text-primary)]">{editingBill.billNumber}</span></p>
+                <p className="text-sm text-[var(--text-secondary)]">Total: <span className="font-semibold text-[var(--text-primary)]">₹{editingBill.amount?.toLocaleString()}</span></p>
+                <p className="text-sm text-[var(--text-secondary)]">Paid: <span className="font-semibold text-[var(--text-primary)]">₹{editingBill.paidAmount?.toLocaleString() || 0}</span></p>
+                <p className="text-sm text-[var(--text-secondary)]">Balance: <span className="font-semibold text-red-600">₹{(editingBill.amount - (editingBill.paidAmount || 0)).toLocaleString()}</span></p>
               </div>
               <div>
-                <label className="vendor-bills-label">Payment Amount</label>
+                <label className="block mb-1 text-sm font-semibold text-slate-700">Payment Amount</label>
                 <input
                   type="number"
                   name="amount"
                   step="0.01"
                   max={editingBill.amount - (editingBill.paidAmount || 0)}
                   required
-                  className="vendor-bills-text-input"
+                  className="w-full px-3 py-2 rounded-[10px] border border-[#cbd5f5] bg-[var(--bg-card)] text-[var(--text-primary)] outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
                 />
               </div>
               <div>
-                <label className="vendor-bills-label">Payment Mode</label>
+                <label className="block mb-1 text-sm font-semibold text-slate-700">Payment Mode</label>
                 <select
                   name="paymentMode"
                   required
-                  className="vendor-bills-select-input"
+                  className="w-full px-3 py-2 rounded-[10px] border border-[#cbd5f5] bg-[var(--bg-card)] text-[var(--text-primary)] outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
                 >
                   <option value="CASH">Cash</option>
                   <option value="CHEQUE">Cheque</option>
@@ -386,24 +386,24 @@ export default function VendorBills() {
                 </select>
               </div>
               <div>
-                <label className="vendor-bills-label">Reference Number</label>
+                <label className="block mb-1 text-sm font-semibold text-slate-700">Reference Number</label>
                 <input
                   type="text"
                   name="referenceNumber"
-                  className="vendor-bills-text-input"
+                  className="w-full px-3 py-2 rounded-[10px] border border-[#cbd5f5] bg-[var(--bg-card)] text-[var(--text-primary)] outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
                 />
               </div>
-              <div className="vendor-bills-form-actions">
+              <div className="flex gap-3 pt-4">
                 <button
                   type="button"
                   onClick={() => setShowPaymentModal(false)}
-                  className="vendor-bills-btn vendor-bills-btn--ghost"
+                  className="flex-1 px-4 py-2 rounded-[10px] font-semibold border border-[var(--border-light)] bg-[var(--bg-card)] text-slate-700 hover:bg-[var(--bg-tertiary)] transition-colors"
                 >
                   Cancel
                 </button>
                 <AsyncButton
                   type="submit"
-                  className="vendor-bills-btn vendor-bills-btn--success"
+                  className="flex-1 px-4 py-2 rounded-[10px] font-semibold border-none bg-green-600 text-white hover:bg-green-700 transition-colors"
                   isLoading={paymentMutation.isPending}
                   loadingText="Recording..."
                 >

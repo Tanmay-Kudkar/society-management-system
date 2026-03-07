@@ -137,7 +137,7 @@ export default function Tenants() {
   const showSkeleton = useMinLoadingTime(isLoading || isError)
 
   if (showSkeleton) return (
-    <div className="tenants-page">
+    <div>
       <WakeUpBanner />
       <HeroSkeleton statCount={0} />
       <FiltersSkeleton />
@@ -146,25 +146,25 @@ export default function Tenants() {
   )
 
   return (
-    <div className="tenants-page">
+    <div>
       {/* Header */}
-      <div className="tenants-header">
+      <div className="flex flex-col gap-4 mb-6 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="tenants-title">Tenants</h1>
-          <p className="tenants-subtitle">Manage tenant details and agreements</p>
+          <h1 className="text-2xl font-bold text-[var(--text-primary)]">Tenants</h1>
+          <p className="mt-1 text-[var(--text-secondary)]">Manage tenant details and agreements</p>
         </div>
         {canEditTenants && (
-          <div className="tenants-header-actions">
+          <div className="flex flex-wrap gap-3">
             <button
               onClick={() => setShowBulkImport(true)}
-              className="tenants-bulk-button"
+              className="inline-flex items-center gap-2 py-[0.55rem] px-4 rounded-xl font-semibold border border-[rgba(15,23,42,0.12)] text-[#f8fafc] bg-[#0f172a] transition-transform hover:-translate-y-px hover:shadow-[0_8px_20px_rgba(15,23,42,0.16)] dark:border-[rgba(148,163,184,0.26)] dark:bg-[#020617]"
             >
               <Upload size={20} />
               Bulk Import
             </button>
             <button
               onClick={() => { setEditingTenant(null); setShowModal(true) }}
-              className="tenants-add-button"
+              className="inline-flex items-center gap-2 py-[0.55rem] px-4 rounded-xl font-semibold border border-[var(--border-default)] bg-[var(--bg-card)] text-[var(--text-primary)] transition-transform hover:-translate-y-px hover:shadow-[0_8px_20px_rgba(15,23,42,0.14)] hover:opacity-90 dark:border-[rgba(148,163,184,0.22)] dark:bg-[#f8fafc] dark:text-[#0f172a] dark:hover:bg-white"
             >
               <Plus size={20} />
               Add Tenant
@@ -174,22 +174,22 @@ export default function Tenants() {
       </div>
 
       {/* Filters */}
-      <div className="tenants-filters">
-        <div className="tenants-filters-row">
-          <div className="tenants-search">
-            <Search className="tenants-search-icon" />
+      <div className="p-4 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-light)] shadow-[0_10px_22px_rgba(15,23,42,0.08)] mb-6">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 w-5 h-5 -translate-y-1/2 text-[var(--text-tertiary)]" />
             <input
               type="text"
               placeholder="Search tenants..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="tenants-search-input"
+              className="w-full py-[0.55rem] pr-3 pl-10 rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] text-[var(--text-primary)] transition-all focus:outline-none focus:border-[#2563eb] focus:shadow-[0_0_0_3px_rgba(37,99,235,0.2)]"
             />
           </div>
           <select
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
-            className="tenants-filter-select"
+            className="w-full sm:w-auto py-[0.55rem] px-3 rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] text-[var(--text-primary)] transition-all focus:outline-none focus:border-[#2563eb] focus:shadow-[0_0_0_3px_rgba(37,99,235,0.2)]"
           >
             <option value="">All Status</option>
             <option value="active">Active</option>
@@ -199,78 +199,78 @@ export default function Tenants() {
       </div>
 
       {/* Table */}
-      <div className="tenants-table-card">
+      <div className="rounded-2xl bg-[var(--bg-card)] border border-[var(--border-light)] shadow-[0_12px_24px_rgba(15,23,42,0.08)] overflow-hidden">
         {(
-          <div className="tenants-table-scroll">
-            <table className="tenants-table">
-              <thead className="tenants-thead">
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse min-w-[860px]">
+              <thead className="bg-[var(--bg-tertiary)] border-b border-[var(--border-light)]">
                 <tr>
-                  <th className="tenants-th">Tenant</th>
-                  <th className="tenants-th">Flat</th>
-                  <th className="tenants-th">Contact</th>
-                  <th className="tenants-th">Agreement Period</th>
-                  <th className="tenants-th">Rent</th>
-                  <th className="tenants-th">Status</th>
-                  <th className="tenants-th tenants-th--right">Actions</th>
+                  <th className="py-3 px-6 text-left text-xs font-semibold uppercase tracking-[0.08em] text-[var(--text-tertiary)]">Tenant</th>
+                  <th className="py-3 px-6 text-left text-xs font-semibold uppercase tracking-[0.08em] text-[var(--text-tertiary)]">Flat</th>
+                  <th className="py-3 px-6 text-left text-xs font-semibold uppercase tracking-[0.08em] text-[var(--text-tertiary)]">Contact</th>
+                  <th className="py-3 px-6 text-left text-xs font-semibold uppercase tracking-[0.08em] text-[var(--text-tertiary)]">Agreement Period</th>
+                  <th className="py-3 px-6 text-left text-xs font-semibold uppercase tracking-[0.08em] text-[var(--text-tertiary)]">Rent</th>
+                  <th className="py-3 px-6 text-left text-xs font-semibold uppercase tracking-[0.08em] text-[var(--text-tertiary)]">Status</th>
+                  <th className="py-3 px-6 text-right text-xs font-semibold uppercase tracking-[0.08em] text-[var(--text-tertiary)]">Actions</th>
                 </tr>
               </thead>
-              <tbody className="tenants-tbody">
+              <tbody>
                 {filteredTenants.map((tenant) => (
-                  <tr key={tenant.id} className="tenants-row">
-                    <td className="tenants-cell">
-                      <div className="tenants-tenant">
-                        <div className="tenants-avatar">
-                          <span className="tenants-avatar-text">
+                  <tr key={tenant.id} className="transition-colors hover:bg-[var(--bg-tertiary)]">
+                    <td className="py-[0.85rem] px-6 text-[0.9rem] text-[var(--text-primary)]">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[rgba(147,51,234,0.15)]">
+                          <span className="text-[#7c3aed] font-semibold">
                             {tenant.name?.charAt(0)?.toUpperCase() || 'T'}
                           </span>
                         </div>
-                        <span className="tenants-tenant-name">{tenant.name}</span>
+                        <span className="font-semibold">{tenant.name}</span>
                       </div>
                     </td>
-                    <td className="tenants-cell tenants-cell--muted">
+                    <td className="py-[0.85rem] px-6 text-[0.9rem] text-[var(--text-tertiary)]">
                       {getFlatDisplay(tenant.flatId)}
                     </td>
-                    <td className="tenants-cell">
-                      <div className="tenants-contact">
-                        <div className="tenants-contact-row">
+                    <td className="py-[0.85rem] px-6 text-[0.9rem] text-[var(--text-primary)]">
+                      <div className="flex flex-col gap-1 text-[0.85rem]">
+                        <div className="inline-flex items-center gap-[0.35rem] text-[var(--text-secondary)]">
                           <Phone size={14} />
                           {tenant.phone || 'N/A'}
                         </div>
-                        <div className="tenants-contact-row tenants-contact-row--muted">
+                        <div className="inline-flex items-center gap-[0.35rem] text-[var(--text-tertiary)]">
                           <Mail size={14} />
                           {tenant.email || 'N/A'}
                         </div>
                       </div>
                     </td>
-                    <td className="tenants-cell">
-                      <div className="tenants-agreement">
-                        <div className="tenants-agreement-start">{formatDate(tenant.agreementStartDate)}</div>
+                    <td className="py-[0.85rem] px-6 text-[0.9rem] text-[var(--text-primary)]">
+                      <div className="flex flex-col gap-[0.2rem] text-[0.85rem]">
+                        <div className="text-[var(--text-secondary)]">{formatDate(tenant.agreementStartDate)}</div>
                         <div className={isExpiringSoon(tenant.agreementEndDate)
-                          ? 'tenants-agreement-end tenants-agreement-end--warning'
-                          : 'tenants-agreement-end'
+                          ? 'text-[#ea580c] font-semibold'
+                          : 'text-[var(--text-tertiary)]'
                         }>
                           to {formatDate(tenant.agreementEndDate)}
                           {isExpiringSoon(tenant.agreementEndDate) && ' ⚠️'}
                         </div>
                       </div>
                     </td>
-                    <td className="tenants-cell tenants-cell--muted">
+                    <td className="py-[0.85rem] px-6 text-[0.9rem] text-[var(--text-tertiary)]">
                       ₹{tenant.rentAmount?.toLocaleString() || 0}/mo
                     </td>
-                    <td className="tenants-cell">
+                    <td className="py-[0.85rem] px-6 text-[0.9rem] text-[var(--text-primary)]">
                       <span className={tenant.isActive
-                        ? 'tenants-status tenants-status--active'
-                        : 'tenants-status tenants-status--inactive'
+                        ? 'inline-flex py-1 px-[0.65rem] rounded-full text-xs font-semibold bg-[#dcfce7] text-[#166534]'
+                        : 'inline-flex py-1 px-[0.65rem] rounded-full text-xs font-semibold bg-[rgba(255,255,255,0.1)] text-[var(--text-secondary)]'
                       }>
                         {tenant.isActive ? 'Active' : 'Inactive'}
                       </span>
                     </td>
-                    <td className="tenants-cell tenants-cell--right">
+                    <td className="py-[0.85rem] px-6 text-[0.9rem] text-[var(--text-primary)] text-right">
                       {canEditTenants ? (
-                        <div className="tenants-actions">
+                        <div className="inline-flex items-center gap-2">
                           <button
                             onClick={() => { setEditingTenant(tenant); setShowModal(true) }}
-                            className="tenants-action-button tenants-action-button--edit"
+                            className="p-[0.45rem] rounded-[0.65rem] text-[var(--text-tertiary)] transition-colors hover:text-[#2563eb] hover:bg-[rgba(37,99,235,0.12)]"
                           >
                             <Edit size={18} />
                           </button>
@@ -294,7 +294,7 @@ export default function Tenants() {
                                   deactivateMutation.mutate(tenant.id)
                                 }
                               }}
-                              className="tenants-action-button tenants-action-button--deactivate"
+                              className="p-[0.45rem] rounded-[0.65rem] text-[var(--text-tertiary)] transition-colors hover:text-[#ea580c] hover:bg-[rgba(249,115,22,0.12)]"
                               title="Deactivate"
                             >
                               <User size={18} />
@@ -319,20 +319,20 @@ export default function Tenants() {
                                 deleteMutation.mutate(tenant.id)
                               }
                             }}
-                            className="tenants-action-button tenants-action-button--delete"
+                            className="p-[0.45rem] rounded-[0.65rem] text-[var(--text-tertiary)] transition-colors hover:text-[#dc2626] hover:bg-[rgba(239,68,68,0.12)]"
                           >
                             <Trash2 size={18} />
                           </button>
                         </div>
                       ) : (
-                        <span className="tenants-cell--muted">Read only</span>
+                        <span className="text-[var(--text-tertiary)]">Read only</span>
                       )}
                     </td>
                   </tr>
                 ))}
                 {filteredTenants.length === 0 && (
                   <tr>
-                    <td colSpan="7" className="tenants-empty">
+                    <td colSpan="7" className="p-8 text-center text-[var(--text-tertiary)]">
                       No tenants found
                     </td>
                   </tr>
@@ -345,22 +345,22 @@ export default function Tenants() {
 
       {/* Modal */}
       {showModal && canEditTenants && (
-        <div className="tenants-modal">
-          <div className="tenants-modal-overlay" onClick={() => setShowModal(false)} />
-          <div className="tenants-modal-card">
-            <div className="tenants-modal-header">
-              <h2 className="tenants-modal-title">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="fixed inset-0 bg-black/40" onClick={() => setShowModal(false)} />
+          <div className="relative z-[1] w-full max-w-[32rem] max-h-[calc(100vh-3rem)] overflow-y-auto rounded-xl bg-[var(--bg-card)] border border-[var(--border-light)] shadow-[0_8px_24px_rgba(0,0,0,0.12)] p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-[1.1rem] font-semibold text-[var(--text-primary)]">
                   {editingTenant ? 'Edit Tenant' : 'Add Tenant'}
               </h2>
               <button
                 onClick={() => { setShowModal(false); setEditingTenant(null) }}
-                className="tenants-modal-close"
+                className="p-[0.45rem] rounded-[0.65rem] text-[var(--text-tertiary)] hover:bg-[rgba(148,163,184,0.2)]"
               >
                 <X size={20} />
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="tenants-modal-body">
+            <form onSubmit={handleSubmit} className="flex flex-col gap-4">
                 <SmartSelect
                   label="Flat"
                   name="flatId"
@@ -382,7 +382,7 @@ export default function Tenants() {
                   placeholder="Full name"
                 />
 
-                <div className="tenants-modal-grid">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <FormInput
                     label="Email"
                     name="email"
@@ -398,7 +398,7 @@ export default function Tenants() {
                   />
                 </div>
 
-                <div className="tenants-modal-grid">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <FormInput
                     label="Agreement Start"
                     name="agreementStartDate"
@@ -415,7 +415,7 @@ export default function Tenants() {
                   />
                 </div>
 
-                <div className="tenants-modal-grid">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <NumberInput
                     label="Monthly Rent (₹)"
                     name="rentAmount"
@@ -434,7 +434,7 @@ export default function Tenants() {
                   />
                 </div>
 
-                <div className="tenants-modal-grid">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <SmartSelect
                     label="ID Proof Type"
                     name="idProofType"
@@ -458,17 +458,17 @@ export default function Tenants() {
                   />
                 </div>
 
-                <div className="tenants-modal-actions">
+                <div className="flex justify-end gap-3 pt-2">
                   <button
                     type="button"
                     onClick={() => { setShowModal(false); setEditingTenant(null) }}
-                    className="tenants-cancel-button"
+                    className="py-[0.55rem] px-4 rounded-xl font-semibold bg-[rgba(255,255,255,0.1)] text-[#334155]"
                   >
                     Cancel
                   </button>
                   <AsyncButton
                     type="submit"
-                    className="tenants-submit-button"
+                    className="py-[0.55rem] px-4 rounded-xl font-semibold border border-[var(--border-default)] bg-[var(--bg-card)] text-[var(--text-primary)] hover:opacity-90 hover:shadow-[0_8px_20px_rgba(15,23,42,0.14)] disabled:opacity-60 disabled:cursor-not-allowed dark:border-[rgba(148,163,184,0.22)] dark:bg-[#f8fafc] dark:text-[#0f172a] dark:hover:bg-white"
                     isLoading={createMutation.isPending || updateMutation.isPending}
                     loadingText="Saving..."
                   >

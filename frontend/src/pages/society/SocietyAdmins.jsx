@@ -19,7 +19,6 @@ import {
   Eye, EyeOff, Mail, Phone, MapPin, Shield, ChevronRight,
   Home, Store, Layers, User, Upload
 } from 'lucide-react'
-import '../../styles/pages/society-admins.css'
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const PINCODE_REGEX = /^\d{6}$/
@@ -821,7 +820,7 @@ export default function SocietyAdmins() {
 
   if (showSkeleton) {
     return (
-      <div className="sa-page">
+      <div className="p-6 max-md:p-4 min-h-[calc(100vh-68px)] bg-[var(--bg-secondary)] text-[var(--text-primary)]">
         <WakeUpBanner show />
         <HeroSkeleton statCount={3} />
         <FiltersSkeleton filterCount={2} />
@@ -831,38 +830,38 @@ export default function SocietyAdmins() {
   }
 
   return (
-    <div className="sa-page">
+    <div className="p-6 max-md:p-4 min-h-[calc(100vh-68px)] bg-[var(--bg-secondary)] text-[var(--text-primary)]">
       {/* Header */}
-      <header className="sa-hero">
-        <div className="sa-hero__grid">
+      <header className="relative py-6 px-7 rounded-2xl text-white bg-gradient-to-br from-[#0f172a] via-[#1e293b] to-[#334155] border border-[rgba(148,163,184,0.28)] shadow-[0_10px_26px_rgba(15,23,42,0.32)] overflow-hidden before:content-[''] before:absolute before:-top-[20%] before:-right-[8%] before:w-[240px] before:h-[240px] before:rounded-full before:bg-[rgba(148,163,184,0.12)] before:pointer-events-none">
+        <div className="flex justify-between items-center gap-5 relative z-[2] flex-wrap max-md:flex-col max-md:items-start">
           <div>
-            <h1 className="sa-hero__title">
+            <h1 className="text-[34px] max-md:text-[28px] font-bold flex items-center gap-3 m-0 text-white">
               <UserCheck size={28} />
               Society Admins
             </h1>
-            <p className="sa-hero__subtitle">Manage society administrators and assignments</p>
+            <p className="mt-2 text-[rgba(226,232,240,0.9)] text-base max-md:text-sm">Manage society administrators and assignments</p>
           </div>
-          <div className="sa-hero__stats">
-            <div className="sa-hero__stat">
-              <span className="sa-hero__stat-value">{societyAdmins.length}</span>
-              <span className="sa-hero__stat-label">Assigned Admins</span>
+          <div className="flex gap-4">
+            <div className="flex flex-col items-center py-3 px-5 max-md:py-[10px] max-md:px-[14px] rounded-[10px] bg-[rgba(148,163,184,0.16)] border border-[rgba(148,163,184,0.22)] backdrop-blur-[4px] min-w-[90px] max-md:min-w-[78px]">
+              <span className="text-[30px] max-md:text-2xl font-bold leading-[1.2] text-white">{societyAdmins.length}</span>
+              <span className="text-xs text-[rgba(203,213,225,0.92)] uppercase tracking-[0.05em] text-center">Assigned Admins</span>
             </div>
-            <div className="sa-hero__stat">
-              <span className="sa-hero__stat-value">{societies.length}</span>
-              <span className="sa-hero__stat-label">Total Societies</span>
+            <div className="flex flex-col items-center py-3 px-5 max-md:py-[10px] max-md:px-[14px] rounded-[10px] bg-[rgba(148,163,184,0.16)] border border-[rgba(148,163,184,0.22)] backdrop-blur-[4px] min-w-[90px] max-md:min-w-[78px]">
+              <span className="text-[30px] max-md:text-2xl font-bold leading-[1.2] text-white">{societies.length}</span>
+              <span className="text-xs text-[rgba(203,213,225,0.92)] uppercase tracking-[0.05em] text-center">Total Societies</span>
             </div>
-            <div className="sa-hero__stat">
-              <span className="sa-hero__stat-value">{societiesNeedingAssignment.length}</span>
-              <span className="sa-hero__stat-label">Needs Assignment</span>
+            <div className="flex flex-col items-center py-3 px-5 max-md:py-[10px] max-md:px-[14px] rounded-[10px] bg-[rgba(148,163,184,0.16)] border border-[rgba(148,163,184,0.22)] backdrop-blur-[4px] min-w-[90px] max-md:min-w-[78px]">
+              <span className="text-[30px] max-md:text-2xl font-bold leading-[1.2] text-white">{societiesNeedingAssignment.length}</span>
+              <span className="text-xs text-[rgba(203,213,225,0.92)] uppercase tracking-[0.05em] text-center">Needs Assignment</span>
             </div>
           </div>
           {canManageSocietyAdmins && (
-            <div className="sa-hero__actions">
-              <button onClick={() => setShowBulkImportModal(true)} className="sa-hero__button">
+            <div className="inline-flex items-center gap-[10px] flex-wrap">
+              <button onClick={() => setShowBulkImportModal(true)} className="inline-flex items-center gap-2 py-[10px] px-5 rounded-[10px] border border-[rgba(148,163,184,0.38)] bg-[rgba(148,163,184,0.16)] text-white cursor-pointer font-semibold text-sm transition-colors hover:bg-[rgba(148,163,184,0.24)] hover:border-[rgba(148,163,184,0.56)]">
                 <Upload size={18} />
                 Bulk Import
               </button>
-              <button onClick={openCreate} className="sa-hero__button">
+              <button onClick={openCreate} className="inline-flex items-center gap-2 py-[10px] px-5 rounded-[10px] border border-[rgba(148,163,184,0.38)] bg-[rgba(148,163,184,0.16)] text-white cursor-pointer font-semibold text-sm transition-colors hover:bg-[rgba(148,163,184,0.24)] hover:border-[rgba(148,163,184,0.56)]">
                 <Plus size={18} />
                 Create Society + Admin
               </button>
@@ -872,18 +871,18 @@ export default function SocietyAdmins() {
       </header>
 
       {/* Search */}
-      <div className="sa-search">
-        <div className="sa-search__field">
+      <div className="mt-[18px] mb-4 rounded-xl py-[10px] px-[14px] bg-[var(--bg-card)] border border-[var(--border-light)]">
+        <div className="flex items-center gap-[10px] text-[var(--text-tertiary)]">
           <Search size={18} />
           <input
             type="text"
             placeholder="Search by name, email, or society..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="sa-search__input"
+            className="flex-1 border-none text-sm outline-none text-[var(--text-primary)] bg-transparent"
           />
           {searchTerm && (
-            <button className="sa-search__clear" onClick={() => setSearchTerm('')}>
+            <button className="bg-transparent border-none cursor-pointer text-[var(--text-tertiary)] p-[2px] flex" onClick={() => setSearchTerm('')}>
               <X size={16} />
             </button>
           )}
@@ -892,24 +891,24 @@ export default function SocietyAdmins() {
       </div>
 
       {societiesNeedingAssignment.length > 0 && (
-        <section className="sa-unassigned">
-          <div className="sa-unassigned__header">
-            <h3>Societies Requiring Assignment</h3>
-            <span>{societiesNeedingAssignment.length}</span>
+        <section className="mb-4 border border-[var(--border-light)] rounded-xl bg-[var(--bg-card)] p-[14px]">
+          <div className="flex items-center justify-between mb-[10px]">
+            <h3 className="m-0 text-[15px] font-semibold text-[var(--text-primary)]">Societies Requiring Assignment</h3>
+            <span className="inline-flex items-center justify-center min-w-6 h-6 rounded-xl border border-[var(--border-light)] bg-[var(--bg-tertiary)] text-[var(--text-secondary)] text-xs font-bold">{societiesNeedingAssignment.length}</span>
           </div>
-          <div className="sa-unassigned__grid">
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-[10px]">
             {societiesNeedingAssignment.map((society) => {
               return (
-                <div key={society.id} className="sa-unassigned__card">
-                  <div className="sa-unassigned__top">
+                <div key={society.id} className="border border-[var(--border-light)] rounded-[10px] bg-[var(--bg-secondary)] p-[10px]">
+                  <div className="flex items-start justify-between gap-[10px]">
                     <div>
-                      <p className="sa-unassigned__name">{society.name}</p>
-                      <p className="sa-unassigned__meta">{society.city || 'N/A'}{society.state ? `, ${society.state}` : ''}</p>
+                      <p className="m-0 text-sm font-semibold text-[var(--text-primary)]">{society.name}</p>
+                      <p className="mt-1 text-xs text-[var(--text-tertiary)]">{society.city || 'N/A'}{society.state ? `, ${society.state}` : ''}</p>
                     </div>
-                    <div className="sa-unassigned__actions">
+                    <div className="inline-flex items-center gap-[6px] shrink-0">
                       <button
                         type="button"
-                        className="sa-unassigned__assign-btn"
+                        className="inline-flex items-center gap-[6px] border border-[rgba(8,145,178,0.35)] bg-[rgba(8,145,178,0.12)] text-[#0891b2] rounded-lg py-[5px] px-[9px] text-[11px] font-bold cursor-pointer transition-colors hover:bg-[rgba(8,145,178,0.2)] hover:border-[rgba(8,145,178,0.5)]"
                         onClick={() => openAssign(society)}
                       >
                         <Plus size={14} />
@@ -917,7 +916,7 @@ export default function SocietyAdmins() {
                       </button>
                       <button
                         type="button"
-                        className="sa-icon-btn sa-icon-btn--delete"
+                        className="bg-[var(--bg-tertiary)] border border-[var(--border-light)] p-[6px] rounded-lg cursor-pointer text-[var(--text-secondary)] transition-colors flex items-center justify-center hover:bg-[rgba(239,68,68,0.12)] hover:border-[rgba(239,68,68,0.35)] hover:text-[#ef4444] disabled:opacity-55 disabled:cursor-not-allowed"
                         title={deletingSocietyId === society.id ? 'Deleting...' : 'Delete society'}
                         onClick={() => handleDeleteSociety(society)}
                         disabled={deletingSocietyId === society.id || deleteSocietyMutation.isPending}
@@ -926,8 +925,8 @@ export default function SocietyAdmins() {
                       </button>
                     </div>
                   </div>
-                  <div className="sa-unassigned__badges">
-                    {!assignedSocietyIds.has(society.id) && <span className="sa-unassigned__badge sa-unassigned__badge--warn">No Society Admin</span>}
+                  <div className="mt-2 flex gap-[6px] flex-wrap">
+                    {!assignedSocietyIds.has(society.id) && <span className="inline-flex items-center border border-[rgba(245,158,11,0.35)] bg-[rgba(245,158,11,0.14)] text-[#f59e0b] rounded-full py-[2px] px-2 text-[11px] font-semibold">No Society Admin</span>}
                   </div>
                 </div>
               )
@@ -938,17 +937,17 @@ export default function SocietyAdmins() {
 
       {/* Content */}
       {filteredAdmins.length === 0 ? (
-        <div className="sa-empty">
-          <UserCheck size={48} className="sa-empty__icon" />
-          <h3>No society admins found</h3>
-          <p>Create a society and its admin to get started</p>
+        <div className="py-16 px-6 text-center text-[var(--text-secondary)]">
+          <UserCheck size={48} className="text-[var(--text-muted)] mb-3" />
+          <h3 className="m-0 mb-[6px] text-lg">No society admins found</h3>
+          <p className="m-0 text-sm text-[var(--text-tertiary)]">Create a society and its admin to get started</p>
           {canManageSocietyAdmins && (
-            <div className="sa-empty__actions">
-              <button onClick={() => setShowBulkImportModal(true)} className="sa-empty__button sa-empty__button--ghost">
+            <div className="mt-[18px] inline-flex items-center gap-[10px] flex-wrap">
+              <button onClick={() => setShowBulkImportModal(true)} className="inline-flex items-center gap-2 bg-[var(--bg-tertiary)] text-[var(--text-primary)] border border-[var(--border-light)] py-[10px] px-5 rounded-[10px] cursor-pointer font-semibold">
                 <Upload size={18} />
                 Bulk Import
               </button>
-              <button onClick={openCreate} className="sa-empty__button">
+              <button onClick={openCreate} className="inline-flex items-center gap-2 bg-[#0891b2] text-white border-none py-[10px] px-5 rounded-[10px] cursor-pointer font-semibold">
                 <Plus size={18} />
                 Create Society + Admin
               </button>
@@ -956,34 +955,34 @@ export default function SocietyAdmins() {
           )}
         </div>
       ) : (
-        <div className="sa-grid">
+        <div className="grid grid-cols-[repeat(auto-fill,minmax(360px,1fr))] max-md:grid-cols-1 gap-4">
           {filteredAdmins.map((admin) => {
             const society = societyMap[admin.societyId]
             return (
-              <div key={admin.id} className="sa-card">
+              <div key={admin.id} className="rounded-[14px] p-[18px] bg-[var(--bg-card)] border border-[var(--border-light)] flex flex-col gap-[14px] shadow-sm transition-all hover:border-[rgba(8,145,178,0.38)] hover:shadow-md hover:-translate-y-px">
                 {/* Admin info */}
-                <div className="sa-card__header">
-                  <div className="sa-card__avatar">
+                <div className="flex items-start gap-3">
+                  <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0 text-lg font-bold text-white bg-gradient-to-br from-[#0891b2] to-[#06b6d4]">
                     {admin.name?.charAt(0)?.toUpperCase() || 'A'}
                   </div>
-                  <div className="sa-card__info">
-                    <h3 className="sa-card__name">{admin.name}</h3>
-                    <div className="sa-card__meta-row">
-                      <Mail size={13} />
+                  <div className="flex-1 min-w-0">
+                    <h3 className="m-0 text-base font-semibold text-[var(--text-primary)] leading-[1.3]">{admin.name}</h3>
+                    <div className="flex items-center gap-[6px] text-[12.5px] text-[var(--text-secondary)] mt-1">
+                      <Mail size={13} className="shrink-0 text-[var(--text-muted)]" />
                       <span>{admin.email}</span>
                     </div>
                     {admin.phone && (
-                      <div className="sa-card__meta-row">
-                        <Phone size={13} />
+                      <div className="flex items-center gap-[6px] text-[12.5px] text-[var(--text-secondary)] mt-1">
+                        <Phone size={13} className="shrink-0 text-[var(--text-muted)]" />
                         <span>{admin.phone}</span>
                       </div>
                     )}
                   </div>
-                  <div className="sa-card__actions">
-                    <button onClick={() => openEdit(admin)} className="sa-icon-btn sa-icon-btn--edit" title="Edit">
+                  <div className="flex gap-1 shrink-0">
+                    <button onClick={() => openEdit(admin)} className="bg-[var(--bg-tertiary)] border border-[var(--border-light)] p-[6px] rounded-lg cursor-pointer text-[var(--text-secondary)] transition-colors flex items-center justify-center hover:bg-[rgba(251,191,36,0.12)] hover:border-[rgba(245,158,11,0.35)] hover:text-[#f59e0b]" title="Edit">
                       <Edit size={16} />
                     </button>
-                    <button onClick={() => handleDelete(admin)} className="sa-icon-btn sa-icon-btn--delete" title="Delete">
+                    <button onClick={() => handleDelete(admin)} className="bg-[var(--bg-tertiary)] border border-[var(--border-light)] p-[6px] rounded-lg cursor-pointer text-[var(--text-secondary)] transition-colors flex items-center justify-center hover:bg-[rgba(239,68,68,0.12)] hover:border-[rgba(239,68,68,0.35)] hover:text-[#ef4444]" title="Delete">
                       <Trash2 size={16} />
                     </button>
                   </div>
@@ -992,28 +991,28 @@ export default function SocietyAdmins() {
                 {/* Linked society */}
                 {society ? (
                   <div
-                    className="sa-card__society"
+                    className="p-3 rounded-[10px] bg-[var(--bg-tertiary)] border border-[var(--border-light)] cursor-pointer transition-colors flex flex-col gap-[6px] hover:bg-[rgba(8,145,178,0.08)] hover:border-[rgba(8,145,178,0.35)]"
                     onClick={() => navigate(`/societies/${society.id}`)}
                   >
-                    <div className="sa-card__society-header">
+                    <div className="flex items-center gap-2 text-sm font-semibold text-[var(--text-primary)]">
                       <Building2 size={16} />
-                      <span className="sa-card__society-name">{society.name}</span>
-                      <ChevronRight size={14} className="sa-card__society-arrow" />
+                      <span className="flex-1 min-w-0 overflow-hidden text-ellipsis whitespace-nowrap">{society.name}</span>
+                      <ChevronRight size={14} className="shrink-0 text-[var(--text-muted)]" />
                     </div>
-                    <div className="sa-card__society-details">
+                    <div className="text-xs text-[var(--text-tertiary)] flex items-center gap-1">
                       {society.city && (
                         <span><MapPin size={11} /> {society.city}, {society.state || ''}</span>
                       )}
                     </div>
-                    <div className="sa-card__society-stats">
-                      <span><Home size={12} /> {society.actualFlats ?? society.totalFlats ?? 0} Flats</span>
-                      <span><Store size={12} /> {society.actualShops ?? society.totalShops ?? 0} Shops</span>
-                      <span><Building2 size={12} /> {society.actualOffices ?? society.totalOffices ?? 0} Offices</span>
-                      <span><Layers size={12} /> {society.actualWings ?? society.totalWings ?? 0} Wings</span>
+                    <div className="flex flex-wrap gap-3 text-[11.5px] text-[var(--text-secondary)]">
+                      <span className="inline-flex items-center gap-1"><Home size={12} /> {society.actualFlats ?? society.totalFlats ?? 0} Flats</span>
+                      <span className="inline-flex items-center gap-1"><Store size={12} /> {society.actualShops ?? society.totalShops ?? 0} Shops</span>
+                      <span className="inline-flex items-center gap-1"><Building2 size={12} /> {society.actualOffices ?? society.totalOffices ?? 0} Offices</span>
+                      <span className="inline-flex items-center gap-1"><Layers size={12} /> {society.actualWings ?? society.totalWings ?? 0} Wings</span>
                     </div>
                   </div>
                 ) : (
-                  <div className="sa-card__no-society">
+                  <div className="p-3 rounded-[10px] bg-[var(--bg-tertiary)] border border-[var(--border-light)] flex items-center gap-2 text-[13px] text-[var(--text-secondary)]">
                     <Shield size={14} />
                     <span>No society linked</span>
                   </div>
@@ -1026,33 +1025,33 @@ export default function SocietyAdmins() {
 
       {/* Modal */}
       {showModal && (
-        <div className="sa-modal" onClick={(e) => e.target === e.currentTarget && setShowModal(false)}>
-          <div className="sa-modal__panel">
-            <div className="sa-modal__header">
+        <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/60 backdrop-blur-[4px] p-4" onClick={(e) => e.target === e.currentTarget && setShowModal(false)}>
+          <div className="w-full max-w-[620px] max-h-[90vh] overflow-y-auto bg-[var(--bg-card)] rounded-2xl border border-[var(--border-light)] shadow-[0_20px_60px_rgba(0,0,0,0.3)]">
+            <div className="flex justify-between items-start px-6 pt-5 gap-3">
               <div>
-                <h3>{editingAdmin ? 'Edit Society Admin' : assignmentSociety ? 'Assign Society Admin' : 'Create Society + Admin'}</h3>
-                <p>{editingAdmin ? 'Update society and admin details' : assignmentSociety ? 'Assign an individual society admin' : 'Create a new society with its administrator'}</p>
+                <h3 className="m-0 text-lg font-bold text-[var(--text-primary)]">{editingAdmin ? 'Edit Society Admin' : assignmentSociety ? 'Assign Society Admin' : 'Create Society + Admin'}</h3>
+                <p className="mt-1 text-[13px] text-[var(--text-tertiary)]">{editingAdmin ? 'Update society and admin details' : assignmentSociety ? 'Assign an individual society admin' : 'Create a new society with its administrator'}</p>
               </div>
-              <button onClick={() => { setShowModal(false); setShowPassword(false) }} className="sa-modal__close">
+              <button onClick={() => { setShowModal(false); setShowPassword(false) }} className="bg-transparent border-none cursor-pointer text-[var(--text-tertiary)] p-1 rounded-lg flex hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-primary)]">
                 <X size={20} />
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="sa-form">
+            <form onSubmit={handleSubmit} className="py-5 px-6 pb-6 flex flex-col gap-5">
               {formError && (
-                <div className="sa-form__error">
-                  <X size={16} className="sa-form__error-close" onClick={() => setFormError('')} />
+                <div className="py-[10px] px-[14px] rounded-[10px] bg-[rgba(239,68,68,0.1)] border border-[rgba(239,68,68,0.25)] text-[#ef4444] text-[13px] flex items-center gap-2">
+                  <X size={16} className="cursor-pointer shrink-0" onClick={() => setFormError('')} />
                   {formError}
                 </div>
               )}
 
               {/* Admin Credentials — always shown */}
-              <div className="sa-form__section">
-                <h4><User size={16} /> Admin Credentials</h4>
-                <div className="sa-form__grid">
+              <div className="flex flex-col gap-3">
+                <h4 className="m-0 text-sm font-semibold text-[var(--text-secondary)] flex items-center gap-2 pb-2 border-b border-[var(--border-light)]"><User size={16} /> Admin Credentials</h4>
+                <div className="grid grid-cols-2 max-md:grid-cols-1 gap-3">
                   <FormInput label="Admin Name" name="adminName" defaultValue={editingAdmin?.name || ''} required />
                   <FormInput label="Admin Email" name="adminEmail" type="email" defaultValue={editingAdmin?.email || ''} required />
-                  <div className="sa-form__password-field">
+                  <div className="relative">
                     <FormInput
                       label={editingAdmin ? 'New Password (optional)' : 'Password'}
                       name="adminPassword"
@@ -1062,7 +1061,7 @@ export default function SocietyAdmins() {
                     />
                     <button
                       type="button"
-                      className="sa-form__toggle-pw"
+                      className="absolute top-8 right-[10px] bg-transparent border-none cursor-pointer text-[var(--text-muted)] p-1 flex"
                       onClick={() => setShowPassword(!showPassword)}
                       title={showPassword ? 'Hide' : 'Show'}
                     >
@@ -1073,9 +1072,9 @@ export default function SocietyAdmins() {
                 </div>
               </div>
 
-              <div className="sa-form__section">
-                <h4><Building2 size={16} /> Society Information</h4>
-                <div className="sa-form__grid">
+              <div className="flex flex-col gap-3">
+                <h4 className="m-0 text-sm font-semibold text-[var(--text-secondary)] flex items-center gap-2 pb-2 border-b border-[var(--border-light)]"><Building2 size={16} /> Society Information</h4>
+                <div className="grid grid-cols-2 max-md:grid-cols-1 gap-3">
                   <FormInput label="Society Name" name="societyName" defaultValue={activeSociety?.name || ''} required />
                   <FormInput label="Address" name="address" defaultValue={activeSociety?.address || ''} required />
                   <StateCitySelector
@@ -1091,9 +1090,9 @@ export default function SocietyAdmins() {
                 </div>
               </div>
 
-              <div className="sa-form__section">
-                <h4><Home size={16} /> Property Capacity</h4>
-                <div className="sa-form__grid sa-form__grid--4">
+              <div className="flex flex-col gap-3">
+                <h4 className="m-0 text-sm font-semibold text-[var(--text-secondary)] flex items-center gap-2 pb-2 border-b border-[var(--border-light)]"><Home size={16} /> Property Capacity</h4>
+                <div className="grid grid-cols-4 max-md:grid-cols-2 gap-3">
                   <NumberInput label="Flats" name="totalFlats" min={0} defaultValue={activeSociety?.totalFlats ?? 0} required />
                   <NumberInput label="Shops" name="totalShops" min={0} defaultValue={activeSociety?.totalShops ?? 0} required />
                   <NumberInput label="Offices" name="totalOffices" min={0} defaultValue={activeSociety?.totalOffices ?? 0} required />
@@ -1101,13 +1100,13 @@ export default function SocietyAdmins() {
                 </div>
               </div>
 
-              <div className="sa-form__footer">
-                <button type="button" onClick={() => { setShowModal(false); setShowPassword(false) }} className="sa-btn">
+              <div className="flex justify-end gap-[10px] pt-3 border-t border-[var(--border-light)]">
+                <button type="button" onClick={() => { setShowModal(false); setShowPassword(false) }} className="py-[10px] px-5 rounded-[10px] text-sm font-semibold cursor-pointer transition-colors border border-[var(--border-light)] bg-[var(--bg-tertiary)] text-[var(--text-primary)] hover:bg-[var(--bg-secondary)]">
                   Cancel
                 </button>
                 <AsyncButton
                   type="submit"
-                  className="sa-btn sa-btn--primary"
+                  className="py-[10px] px-5 rounded-[10px] text-sm font-semibold cursor-pointer transition-colors bg-[#0891b2] text-white border border-[#0891b2] hover:bg-[#0e7490]"
                   isLoading={createMutation.isPending || updateMutation.isPending || assignMutation.isPending}
                   loadingText="Saving..."
                 >

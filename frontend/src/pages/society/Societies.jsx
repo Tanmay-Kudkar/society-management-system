@@ -187,7 +187,7 @@ export default function Societies() {
   const showSkeleton = useMinLoadingTime(isLoading || isError)
 
   if (showSkeleton) return (
-    <div className="societies-page">
+    <div className="block">
       <WakeUpBanner />
       <HeroSkeleton statCount={3} />
       <FiltersSkeleton filterCount={2} />
@@ -196,22 +196,22 @@ export default function Societies() {
   )
 
   return (
-    <div className="societies-page">
+    <div className="block">
       {/* Header with gradient background */}
-      <div className="societies-hero">
-        <div className="societies-hero-overlay"></div>
-        <div className="societies-hero-content">
+      <div className="relative mb-8 overflow-hidden rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 p-6 text-white">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.25),transparent_60%)] opacity-40" />
+        <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="societies-hero-title">
-              <Building2 className="societies-hero-icon" />
+            <h1 className="inline-flex items-center gap-3 text-[1.9rem] font-bold">
+              <Building2 className="h-8 w-8" />
               Societies
             </h1>
-            <p className="societies-hero-subtitle">Manage housing societies and their properties</p>
+            <p className="mt-2 text-blue-100/90">Manage housing societies and their properties</p>
           </div>
           {canManageSocieties() && (
             <button
               onClick={() => { setEditingSociety(null); setFormError(''); setShowAdminPassword(false); setShowModal(true) }}
-              className="societies-hero-button"
+              className="inline-flex items-center gap-2 rounded-xl border border-white/35 bg-white/20 px-5 py-2.5 font-semibold text-white backdrop-blur-sm transition hover:-translate-y-px hover:shadow-lg"
             >
               <Plus size={20} />
               Add Society
@@ -220,72 +220,69 @@ export default function Societies() {
         </div>
       </div>
 
-      {/* Search with glass effect */}
-      <div className="societies-search-card">
-        <div className="societies-search">
-          <Search className="societies-search-icon" />
+      {/* Search */}
+      <div className="mb-6 rounded-xl border border-slate-400/40 bg-[var(--bg-card)] p-4 shadow-lg">
+        <div className="relative">
+          <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[var(--text-tertiary)]" />
           <input
             type="text"
             placeholder="Search societies by name or address..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="societies-search-input"
+            className="w-full rounded-xl border border-[var(--border-light)] bg-transparent py-3 pl-12 pr-4 text-[var(--text-primary)] outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-500/20"
           />
         </div>
       </div>
 
       {/* Cards Grid */}
       {filteredSocieties.length === 0 ? (
-        <div className="societies-empty">
-          <div className="societies-empty-icon">
-            <Building2 className="societies-empty-icon-svg" />
+        <div className="py-16 px-4 text-center">
+          <div className="mx-auto mb-4 flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-b from-blue-500/20 to-indigo-500/10">
+            <Building2 className="h-12 w-12 text-blue-500" />
           </div>
-          <h3 className="societies-empty-title">No societies found</h3>
-          <p className="societies-empty-text">Get started by creating your first society</p>
+          <h3 className="text-xl font-semibold text-[var(--text-primary)]">No societies found</h3>
+          <p className="my-2 text-[var(--text-tertiary)]">Get started by creating your first society</p>
           <button
             onClick={() => { setEditingSociety(null); setFormError(''); setShowAdminPassword(false); setShowModal(true) }}
-            className="societies-primary-button"
+            className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 font-semibold text-white"
           >
             <Plus size={20} />
             Add Society
           </button>
         </div>
       ) : (
-        <div className="societies-grid">
-          {filteredSocieties.map((society, index) => {
-            return (
-            <div 
-              key={society.id} 
-              className="societies-card"
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
+          {filteredSocieties.map((society, index) => (
+            <div
+              key={society.id}
+              className="group rounded-[1.25rem] border border-slate-400/30 bg-[var(--bg-card)] p-6 shadow-lg transition hover:-translate-y-1 hover:border-blue-500/50 hover:shadow-xl"
               style={{ animationDelay: `${index * 50}ms` }}
             >
-              {/* Card Header */}
-              <div className="societies-card-header">
-                <div 
-                  className="societies-card-icon"
+              <div className="mb-4 flex items-start justify-between">
+                <div
+                  className="relative cursor-pointer rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 p-3 shadow-lg transition hover:opacity-90"
                   onClick={() => navigate(`/societies/${society.id}`)}
                 >
-                  <Building2 className="societies-card-icon-svg" />
-                  <div className="societies-card-icon-glow"></div>
+                  <Building2 className="h-6 w-6 text-white" />
                 </div>
-                <div className="societies-card-actions">
+                <div className="flex gap-1.5 opacity-0 transition group-hover:opacity-100">
                   <button
                     onClick={() => navigate(`/societies/${society.id}`)}
-                    className="societies-icon-button"
+                    className="rounded-xl p-2 text-[var(--text-tertiary)] transition hover:bg-blue-500/10 hover:text-blue-600"
                     title="View details"
                   >
                     <Eye size={18} />
                   </button>
                   <button
                     onClick={() => { setEditingSociety(society); setFormError(''); setShowAdminPassword(false); setShowModal(true) }}
-                    className="societies-icon-button societies-icon-button--warn"
+                    className="rounded-xl p-2 text-[var(--text-tertiary)] transition hover:bg-amber-500/10 hover:text-amber-600"
                     title="Edit society"
                   >
                     <Edit size={18} />
                   </button>
                   <button
                     onClick={() => confirmAndDeleteSociety(society)}
-                    className="societies-icon-button societies-icon-button--danger"
+                    className="rounded-xl p-2 text-[var(--text-tertiary)] transition hover:bg-red-500/10 hover:text-red-600"
                     title="Delete society"
                   >
                     <Trash2 size={18} />
@@ -293,110 +290,97 @@ export default function Societies() {
                 </div>
               </div>
 
-              {/* Society Name & Address */}
-              <h3 
-                className="societies-card-title"
+              <h3
+                className="cursor-pointer text-[1.1rem] font-bold text-[var(--text-primary)] hover:text-blue-600"
                 onClick={() => navigate(`/societies/${society.id}`)}
               >
                 {society.name}
               </h3>
-              <p className="societies-card-address line-clamp-2">{society.address}</p>
+              <p className="line-clamp-2 mb-4 text-sm text-[var(--text-tertiary)]">{society.address}</p>
 
-              {/* Unit Stats Grid */}
-              <div className="societies-stats">
-                <div className="societies-stat societies-stat--blue">
-                  <Home className="societies-stat-icon" />
-                  <p className="societies-stat-value societies-stat-value--blue">
-                    {society.totalFlats || society.actualFlats || 0}
-                  </p>
-                  <p className="societies-stat-label">Flats</p>
+              <div className="mb-4 grid grid-cols-4 gap-2">
+                <div className="rounded-xl bg-blue-500/10 p-2 text-center">
+                  <Home className="mx-auto mb-1 h-4 w-4" />
+                  <p className="text-base font-bold text-blue-600">{society.totalFlats || society.actualFlats || 0}</p>
+                  <p className="text-[0.65rem] text-[var(--text-tertiary)]">Flats</p>
                 </div>
-                <div className="societies-stat societies-stat--green">
-                  <Store className="societies-stat-icon" />
-                  <p className="societies-stat-value societies-stat-value--green">
-                    {society.totalShops || society.actualShops || 0}
-                  </p>
-                  <p className="societies-stat-label">Shops</p>
+                <div className="rounded-xl bg-emerald-500/10 p-2 text-center">
+                  <Store className="mx-auto mb-1 h-4 w-4" />
+                  <p className="text-base font-bold text-emerald-600">{society.totalShops || society.actualShops || 0}</p>
+                  <p className="text-[0.65rem] text-[var(--text-tertiary)]">Shops</p>
                 </div>
-                <div className="societies-stat societies-stat--purple">
-                  <Briefcase className="societies-stat-icon" />
-                  <p className="societies-stat-value societies-stat-value--purple">
-                    {society.totalOffices || society.actualOffices || 0}
-                  </p>
-                  <p className="societies-stat-label">Offices</p>
+                <div className="rounded-xl bg-violet-500/10 p-2 text-center">
+                  <Briefcase className="mx-auto mb-1 h-4 w-4" />
+                  <p className="text-base font-bold text-violet-600">{society.totalOffices || society.actualOffices || 0}</p>
+                  <p className="text-[0.65rem] text-[var(--text-tertiary)]">Offices</p>
                 </div>
-                <div className="societies-stat societies-stat--amber">
-                  <Layers className="societies-stat-icon" />
-                  <p className="societies-stat-value societies-stat-value--amber">
-                    {society.totalWings || society.actualWings || 0}
-                  </p>
-                  <p className="societies-stat-label">Wings</p>
+                <div className="rounded-xl bg-amber-500/10 p-2 text-center">
+                  <Layers className="mx-auto mb-1 h-4 w-4" />
+                  <p className="text-base font-bold text-amber-600">{society.totalWings || society.actualWings || 0}</p>
+                  <p className="text-[0.65rem] text-[var(--text-tertiary)]">Wings</p>
                 </div>
               </div>
 
-              {/* Contact Info */}
-              <div className="societies-contact">
-                <p className="societies-contact-row">
-                  <span className="societies-contact-icon">📍</span> 
+              <div className="flex flex-col gap-1.5 border-t border-slate-400/20 pt-3 text-sm text-[var(--text-tertiary)]">
+                <p className="inline-flex items-center gap-1.5">
+                  <span className="font-semibold">📍</span>
                   {society.city}{society.state ? `, ${society.state}` : ''}
                 </p>
                 {society.telephone && (
-                  <p className="societies-contact-row">
-                    <span className="societies-contact-icon">📞</span> {society.telephone}
+                  <p className="inline-flex items-center gap-1.5">
+                    <span className="font-semibold">📞</span> {society.telephone}
                   </p>
                 )}
               </div>
 
-              {/* View Details Button */}
               <button
                 onClick={() => navigate(`/societies/${society.id}`)}
-                className="societies-view-button"
+                className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 py-3 font-semibold text-white shadow-lg transition hover:-translate-y-px hover:shadow-xl [&>svg]:transition [&>svg]:hover:translate-x-1"
               >
                 View Details
-                <ChevronRight size={16} className="societies-view-button-icon" />
+                <ChevronRight size={16} />
               </button>
             </div>
-            )
-          })}
+          ))}
         </div>
       )}
 
       {/* Modal */}
       {showModal && (
-        <div className="societies-modal">
-          <div className="societies-modal-card">
-            <div className="societies-modal-header">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="w-full max-h-[calc(100vh-3rem)] max-w-[42rem] overflow-y-auto rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] shadow-xl">
+            <div className="sticky top-0 z-10 flex items-center justify-between border-b border-[var(--border-light)] bg-[var(--bg-card)] px-6 py-5">
               <div>
-                <h3 className="societies-modal-title">
+                <h3 className="text-xl font-bold text-[var(--text-primary)]">
                   {editingSociety ? 'Edit Society' : 'Add New Society'}
                 </h3>
-                <p className="societies-modal-subtitle">
+                <p className="mt-1 text-sm text-[var(--text-tertiary)]">
                   {editingSociety ? 'Update society details and capacity' : 'Create a new society with its properties'}
                 </p>
               </div>
-              <button 
-                onClick={() => setShowModal(false)} 
-                className="societies-modal-close"
+              <button
+                type="button"
+                onClick={() => setShowModal(false)}
+                className="rounded-xl p-2 text-[var(--text-tertiary)] transition hover:bg-slate-400/20"
               >
                 <X size={20} />
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="societies-modal-body">
+            <form onSubmit={handleSubmit} className="flex flex-col gap-6 p-6">
               {formError && (
-                <div className="societies-modal-alert">
-                  <X size={16} className="societies-modal-alert-close" onClick={() => setFormError('')} />
+                <div className="flex items-center gap-2 rounded-xl border border-red-500/35 bg-red-500/15 px-3 py-2.5 text-sm text-red-800">
+                  <X size={16} className="cursor-pointer shrink-0" onClick={() => setFormError('')} />
                   {formError}
                 </div>
               )}
-              {/* Basic Information Section */}
-              <div className="societies-modal-section">
-                <h4 className="societies-modal-section-title">
-                  <Building2 size={16} className="societies-modal-section-icon" />
+              <div className="flex flex-col gap-4">
+                <h4 className="inline-flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-[var(--text-secondary)]">
+                  <Building2 size={16} className="text-blue-500" />
                   Basic Information
                 </h4>
-                <div className="societies-modal-grid">
-                  <div className="societies-modal-full">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                  <div className="col-span-full">
                     <FormInput
                       label="Society Name"
                       name="name"
@@ -405,7 +389,7 @@ export default function Societies() {
                       placeholder="Enter society name"
                     />
                   </div>
-                  <div className="societies-modal-full">
+                  <div className="col-span-full">
                     <FormTextarea
                       label="Address"
                       name="address"
@@ -415,7 +399,7 @@ export default function Societies() {
                       placeholder="Full address"
                     />
                   </div>
-                  <div className="societies-modal-full">
+                  <div className="col-span-full">
                     <StateCitySelector
                       stateDefaultValue={editingSociety?.state}
                       cityDefaultValue={editingSociety?.city}
@@ -453,15 +437,15 @@ export default function Societies() {
               </div>
 
               {!editingSociety && (isPlatformOwner || isOrganizationOwner) && (
-                <div className="societies-modal-section societies-modal-section--divider">
-                  <h4 className="societies-modal-section-title">
-                    <Building2 size={16} className="societies-modal-section-icon societies-modal-section-icon--purple" />
+                <div className="flex flex-col gap-4 border-t border-[var(--border-light)] pt-4">
+                  <h4 className="inline-flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-[var(--text-secondary)]">
+                    <Building2 size={16} className="text-violet-500" />
                     Society Admin Credentials
                   </h4>
-                  <p className="societies-modal-section-text">
+                  <p className="text-xs text-[var(--text-tertiary)]">
                     These credentials will create the initial Society Admin linked to this society.
                   </p>
-                  <div className="societies-modal-grid">
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <FormInput
                       label="Admin Name"
                       name="adminName"
@@ -475,7 +459,7 @@ export default function Societies() {
                       required
                       placeholder="admin@society.com"
                     />
-                    <div className="societies-password-field">
+                    <div className="relative">
                       <FormInput
                         label="Admin Password"
                         name="adminPassword"
@@ -485,7 +469,7 @@ export default function Societies() {
                       />
                       <button
                         type="button"
-                        className="societies-password-toggle"
+                        className="absolute right-2.5 top-9 inline-flex items-center justify-center rounded-lg border-none bg-transparent p-1 text-[var(--text-tertiary)] transition hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-primary)]"
                         onClick={() => setShowAdminPassword(!showAdminPassword)}
                         title={showAdminPassword ? 'Hide password' : 'Show password'}
                       >
@@ -502,12 +486,12 @@ export default function Societies() {
               )}
 
               {/* Property Capacity Section */}
-              <div className="societies-modal-section societies-modal-section--divider">
-                <h4 className="societies-modal-section-title">
-                  <Layers size={16} className="societies-modal-section-icon societies-modal-section-icon--purple" />
+              <div className="flex flex-col gap-4 border-t border-[var(--border-light)] pt-4">
+                <h4 className="inline-flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-[var(--text-secondary)]">
+                  <Layers size={16} className="text-violet-500" />
                   Property Capacity
                 </h4>
-                <div className="societies-modal-grid societies-modal-grid--compact">
+                <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
                   <NumberInput
                     label="Total Flats"
                     name="totalFlats"
@@ -544,22 +528,22 @@ export default function Societies() {
               </div>
 
               {/* Action Buttons */}
-              <div className="societies-modal-actions">
+              <div className="flex gap-3 border-t border-[var(--border-light)] pt-4">
                 <button
                   type="button"
                   onClick={() => { setShowModal(false); setShowAdminPassword(false) }}
-                  className="societies-modal-cancel"
+                  className="flex-1 rounded-xl border border-[var(--border-light)] bg-[var(--bg-tertiary)] py-3 px-4 font-semibold text-[var(--text-secondary)]"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={createMutation.isPending || updateMutation.isPending}
-                  className="societies-modal-submit"
+                  className="flex-1 rounded-xl border border-[var(--border-default)] bg-[var(--bg-card)] py-3 px-4 font-semibold text-[var(--text-primary)] shadow-lg transition hover:bg-[var(--bg-tertiary)] disabled:cursor-not-allowed disabled:opacity-60 disabled:shadow-none dark:border-slate-400/25 dark:bg-slate-50 dark:text-slate-900 dark:hover:bg-white"
                 >
                   {createMutation.isPending || updateMutation.isPending ? (
-                    <span className="societies-modal-submit-loading">
-                      <div className="societies-modal-submit-spinner"></div>
+                    <span className="inline-flex items-center gap-2">
+                      <span className="h-4 w-4 rounded-full border-2 border-white/40 border-t-white animate-spin" />
                       {editingSociety ? 'Updating...' : 'Creating...'}
                     </span>
                   ) : (

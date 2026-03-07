@@ -24,6 +24,20 @@ const statusEmoji = { PENDING: '⏳', APPROVED: '✅', REJECTED: '❌', CANCELLE
 const statusLabel = { PENDING: 'Pending', APPROVED: 'Approved', REJECTED: 'Rejected', CANCELLED: 'Cancelled' }
 const paymentLabel = { UNPAID: 'Unpaid', PAID: 'Paid', PARTIAL: 'Partial', REFUNDED: 'Refunded' }
 
+const itemBorderMap = {
+  pending: 'border-l-4 border-l-[var(--warning,#f59e0b)]',
+  approved: 'border-l-4 border-l-[var(--success,#22c55e)]',
+  rejected: 'border-l-4 border-l-[var(--error,#ef4444)]',
+  cancelled: 'border-l-4 border-l-[var(--text-secondary,#94a3b8)]',
+}
+
+const badgeMap = {
+  pending: 'bg-[#fef3c7] text-[#92400e]',
+  approved: 'bg-[#dcfce7] text-[#166534]',
+  rejected: 'bg-[#fee2e2] text-[#991b1b]',
+  cancelled: 'bg-[var(--bg-card)] text-[var(--text-secondary)]',
+}
+
 const emptyForm = {
   facilityName: '', facilityType: 'CLUBHOUSE', bookingDate: '', startTime: '', endTime: '',
   purpose: '', attendees: 1, amount: '', paymentStatus: 'UNPAID', adminNotes: '', cancelledReason: '',
@@ -120,60 +134,60 @@ export default function FacilityBooking() {
   }
 
   const summaryCards = [
-    { label: 'Pending', value: counts.pending ?? 0, cls: 'fb-card--pending' },
-    { label: 'Approved', value: counts.approved ?? 0, cls: 'fb-card--approved' },
-    { label: 'Rejected', value: counts.rejected ?? 0, cls: 'fb-card--rejected' },
-    { label: 'Cancelled', value: counts.cancelled ?? 0, cls: 'fb-card--cancelled' },
+    { label: 'Pending', value: counts.pending ?? 0, cls: 'border-l-4 border-l-[var(--warning,#f59e0b)]' },
+    { label: 'Approved', value: counts.approved ?? 0, cls: 'border-l-4 border-l-[var(--success,#22c55e)]' },
+    { label: 'Rejected', value: counts.rejected ?? 0, cls: 'border-l-4 border-l-[var(--error,#ef4444)]' },
+    { label: 'Cancelled', value: counts.cancelled ?? 0, cls: 'border-l-4 border-l-[var(--text-secondary,#94a3b8)]' },
   ]
 
   return (
     <PageShell title="Facility Booking" icon={CalendarRange} loading={canLoadSocietyData && isLoading}>
       {/* Summary */}
-      <div className="fb-summary">
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(150px,1fr))] gap-4 mb-6">
         {summaryCards.map(c => (
-          <div key={c.label} className={`fb-summary-card ${c.cls}`}>
-            <span className="fb-summary-value">{c.value}</span>
-            <span className="fb-summary-label">{c.label}</span>
+          <div key={c.label} className={`flex flex-col items-center py-[1.1rem] px-3 rounded-xl bg-[var(--card)] border border-[var(--border-default)] ${c.cls}`}>
+            <span className="text-[1.55rem] font-extrabold text-[var(--text-primary)]">{c.value}</span>
+            <span className="text-[0.8rem] text-[var(--text-secondary)] mt-[0.15rem]">{c.label}</span>
           </div>
         ))}
       </div>
 
       {/* Toolbar */}
-      <div className="fb-toolbar">
-        <div className="fb-search-wrap">
+      <div className="flex flex-wrap gap-3 items-center mb-5">
+        <div className="flex items-center gap-[0.4rem] bg-[var(--card)] border border-[var(--border-default)] rounded-lg px-3 py-[0.4rem] flex-1 min-w-[180px]">
           <Search size={16} />
-          <input placeholder="Search bookings..." value={search} onChange={e => setSearch(e.target.value)} className="fb-search" />
+          <input placeholder="Search bookings..." value={search} onChange={e => setSearch(e.target.value)} className="border-none bg-transparent outline-none w-full text-[0.92rem] text-[var(--text-primary)]" />
         </div>
-        <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="fb-filter">
+        <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="py-[0.45rem] px-3 border border-[var(--border-default)] rounded-lg bg-[var(--card)] text-[var(--text-primary)] text-[0.88rem]">
           <option value="">All Statuses</option>
           <option value="PENDING">Pending</option>
           <option value="APPROVED">Approved</option>
           <option value="REJECTED">Rejected</option>
           <option value="CANCELLED">Cancelled</option>
         </select>
-        <select value={typeFilter} onChange={e => setTypeFilter(e.target.value)} className="fb-filter">
+        <select value={typeFilter} onChange={e => setTypeFilter(e.target.value)} className="py-[0.45rem] px-3 border border-[var(--border-default)] rounded-lg bg-[var(--card)] text-[var(--text-primary)] text-[0.88rem]">
           <option value="">All Types</option>
           {facilityTypeOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
         </select>
-        <button className="fb-btn fb-btn--primary" onClick={() => setShowModal(true)}>
+        <button className="inline-flex items-center gap-[0.35rem] py-[0.42rem] px-[0.9rem] border-none rounded-lg text-[0.85rem] font-semibold cursor-pointer transition-opacity hover:opacity-85 bg-[var(--primary,#6366f1)] text-white" onClick={() => setShowModal(true)}>
           <Plus size={16} /> New Booking
         </button>
       </div>
 
       {/* Booking List */}
-      <div className="fb-list">
-        {filtered.length === 0 && <div className="fb-empty">No bookings found.</div>}
+      <div className="flex flex-col gap-[0.85rem]">
+        {filtered.length === 0 && <div className="text-center text-[var(--text-secondary)] p-10 text-[0.95rem]">No bookings found.</div>}
         {filtered.map(b => (
-          <div key={b.id} className={`fb-item fb-item--${b.status?.toLowerCase()}`}>
-            <div className="fb-item-header">
-              <div className="fb-item-title">
-                <span className="fb-item-emoji">{statusEmoji[b.status]}</span>
+          <div key={b.id} className={`bg-[var(--card)] border border-[var(--border-default)] rounded-xl px-[1.2rem] py-4 ${itemBorderMap[b.status?.toLowerCase()] || ''}`}>
+            <div className="flex justify-between items-center mb-[0.45rem]">
+              <div className="flex items-center gap-2 text-base">
+                <span className="text-[1.15rem]">{statusEmoji[b.status]}</span>
                 <strong>{b.facilityName}</strong>
-                <span className="fb-item-type">{facilityTypeOptions.find(o => o.value === b.facilityType)?.label || b.facilityType}</span>
+                <span className="text-[0.78rem] text-[var(--text-secondary)] bg-[var(--bg-card)] py-[0.15rem] px-[0.55rem] rounded-full">{facilityTypeOptions.find(o => o.value === b.facilityType)?.label || b.facilityType}</span>
               </div>
-              <span className={`fb-badge fb-badge--${b.status?.toLowerCase()}`}>{statusLabel[b.status]}</span>
+              <span className={`text-xs font-bold py-[0.2rem] px-[0.65rem] rounded-full uppercase tracking-[0.04em] ${badgeMap[b.status?.toLowerCase()] || ''}`}>{statusLabel[b.status]}</span>
             </div>
-            <div className="fb-item-meta">
+            <div className="flex flex-wrap gap-3 text-[0.84rem] text-[var(--text-secondary)] mb-[0.35rem]">
               <span>📅 {b.bookingDate}</span>
               <span>🕐 {b.startTime} – {b.endTime}</span>
               <span>👤 {b.bookedByName}</span>
@@ -181,21 +195,21 @@ export default function FacilityBooking() {
               {b.amount > 0 && <span>💰 ₹{Number(b.amount).toLocaleString()}</span>}
               {b.paymentStatus && b.paymentStatus !== 'UNPAID' && <span>Payment: {paymentLabel[b.paymentStatus]}</span>}
             </div>
-            {b.purpose && <div className="fb-item-purpose">{b.purpose}</div>}
-            {b.adminNotes && <div className="fb-item-notes">Admin: {b.adminNotes}</div>}
-            {b.cancelledReason && <div className="fb-item-notes">Reason: {b.cancelledReason}</div>}
-            <div className="fb-item-actions">
+            {b.purpose && <div className="text-[0.88rem] text-[var(--text-primary)] mb-[0.3rem]">{b.purpose}</div>}
+            {b.adminNotes && <div className="text-[0.82rem] text-[var(--text-secondary)] italic mb-[0.2rem]">Admin: {b.adminNotes}</div>}
+            {b.cancelledReason && <div className="text-[0.82rem] text-[var(--text-secondary)] italic mb-[0.2rem]">Reason: {b.cancelledReason}</div>}
+            <div className="flex flex-wrap gap-[0.45rem] mt-[0.6rem]">
               {b.status === 'PENDING' && (
                 <>
-                  <button className="fb-btn fb-btn--approve" onClick={() => approveMutation.mutate(b.id)}>Approve</button>
-                  <button className="fb-btn fb-btn--reject" onClick={() => rejectMutation.mutate(b.id)}>Reject</button>
+                  <button className="inline-flex items-center gap-[0.35rem] py-[0.42rem] px-[0.9rem] border-none rounded-lg text-[0.85rem] font-semibold cursor-pointer transition-opacity hover:opacity-85 bg-[var(--success,#22c55e)] text-white" onClick={() => approveMutation.mutate(b.id)}>Approve</button>
+                  <button className="inline-flex items-center gap-[0.35rem] py-[0.42rem] px-[0.9rem] border-none rounded-lg text-[0.85rem] font-semibold cursor-pointer transition-opacity hover:opacity-85 bg-[var(--error,#ef4444)] text-white" onClick={() => rejectMutation.mutate(b.id)}>Reject</button>
                 </>
               )}
               {(b.status === 'PENDING' || b.status === 'APPROVED') && (
-                <button className="fb-btn fb-btn--cancel" onClick={() => cancelMutation.mutate(b.id)}>Cancel</button>
+                <button className="inline-flex items-center gap-[0.35rem] py-[0.42rem] px-[0.9rem] border-none rounded-lg text-[0.85rem] font-semibold cursor-pointer transition-opacity hover:opacity-85 bg-[var(--warning,#f59e0b)] text-white" onClick={() => cancelMutation.mutate(b.id)}>Cancel</button>
               )}
-              <button className="fb-btn fb-btn--edit" onClick={() => openEdit(b)}>Edit</button>
-              <button className="fb-btn fb-btn--delete" onClick={() => deleteMutation.mutate(b.id)}>Delete</button>
+              <button className="inline-flex items-center gap-[0.35rem] py-[0.42rem] px-[0.9rem] rounded-lg text-[0.85rem] font-semibold cursor-pointer transition-opacity hover:opacity-85 bg-[var(--card)] text-[var(--text-primary)] border border-[var(--border-default)]" onClick={() => openEdit(b)}>Edit</button>
+              <button className="inline-flex items-center gap-[0.35rem] py-[0.42rem] px-[0.9rem] rounded-lg text-[0.85rem] font-semibold cursor-pointer transition-opacity hover:opacity-85 bg-transparent text-[var(--error,#ef4444)] border border-[var(--error,#ef4444)]" onClick={() => deleteMutation.mutate(b.id)}>Delete</button>
             </div>
           </div>
         ))}
@@ -203,65 +217,65 @@ export default function FacilityBooking() {
 
       {/* Modal */}
       {showModal && (
-        <div className="fb-overlay" onClick={closeModal}>
-          <div className="fb-modal" onClick={e => e.stopPropagation()}>
-            <div className="fb-modal-header">
-              <h3>{editingId ? 'Edit Booking' : 'New Booking'}</h3>
-              <button className="fb-modal-close" onClick={closeModal}><X size={20} /></button>
+        <div className="fixed inset-0 bg-black/45 flex items-center justify-center z-[1200]" onClick={closeModal}>
+          <div className="relative isolate bg-[var(--bg-secondary,#ffffff)] border border-[var(--border-default)] rounded-xl w-[95%] max-w-[620px] max-h-[90vh] overflow-y-auto shadow-[0_8px_32px_rgba(0,0,0,0.18)]" onClick={e => e.stopPropagation()}>
+            <div className="flex justify-between items-center px-5 py-4 border-b border-[var(--border-default)]">
+              <h3 className="m-0 text-[1.1rem]">{editingId ? 'Edit Booking' : 'New Booking'}</h3>
+              <button className="bg-transparent border-none cursor-pointer text-[var(--text-secondary)]" onClick={closeModal}><X size={20} /></button>
             </div>
-            <form onSubmit={handleSubmit} className="fb-form">
-              <div className="fb-form-grid">
-                <div className="fb-field">
-                  <label>Facility Name *</label>
-                  <input required value={form.facilityName} onChange={e => setForm({ ...form, facilityName: e.target.value })} />
+            <form onSubmit={handleSubmit} className="p-5">
+              <div className="grid grid-cols-2 items-start gap-[0.9rem]">
+                <div className="flex flex-col gap-[0.3rem]">
+                  <label className="text-[0.82rem] font-semibold text-[var(--text-secondary)]">Facility Name *</label>
+                  <input className="py-[0.45rem] px-[0.7rem] border border-[var(--border-default)] rounded-lg bg-[var(--bg-card)] text-[var(--text-primary)] text-[0.9rem]" required value={form.facilityName} onChange={e => setForm({ ...form, facilityName: e.target.value })} />
                 </div>
-                <div className="fb-field">
-                  <label>Facility Type *</label>
-                  <select value={form.facilityType} onChange={e => setForm({ ...form, facilityType: e.target.value })}>
+                <div className="flex flex-col gap-[0.3rem]">
+                  <label className="text-[0.82rem] font-semibold text-[var(--text-secondary)]">Facility Type *</label>
+                  <select className="py-[0.45rem] px-[0.7rem] border border-[var(--border-default)] rounded-lg bg-[var(--bg-card)] text-[var(--text-primary)] text-[0.9rem]" value={form.facilityType} onChange={e => setForm({ ...form, facilityType: e.target.value })}>
                     {facilityTypeOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
                   </select>
                 </div>
-                <div className="fb-field">
-                  <label>Booking Date *</label>
-                  <input type="date" required value={form.bookingDate} onChange={e => setForm({ ...form, bookingDate: e.target.value })} />
+                <div className="flex flex-col gap-[0.3rem]">
+                  <label className="text-[0.82rem] font-semibold text-[var(--text-secondary)]">Booking Date *</label>
+                  <input className="py-[0.45rem] px-[0.7rem] border border-[var(--border-default)] rounded-lg bg-[var(--bg-card)] text-[var(--text-primary)] text-[0.9rem]" type="date" required value={form.bookingDate} onChange={e => setForm({ ...form, bookingDate: e.target.value })} />
                 </div>
-                <div className="fb-field">
-                  <label>Start Time *</label>
-                  <input type="time" required value={form.startTime} onChange={e => setForm({ ...form, startTime: e.target.value })} />
+                <div className="flex flex-col gap-[0.3rem]">
+                  <label className="text-[0.82rem] font-semibold text-[var(--text-secondary)]">Start Time *</label>
+                  <input className="py-[0.45rem] px-[0.7rem] border border-[var(--border-default)] rounded-lg bg-[var(--bg-card)] text-[var(--text-primary)] text-[0.9rem]" type="time" required value={form.startTime} onChange={e => setForm({ ...form, startTime: e.target.value })} />
                 </div>
-                <div className="fb-field">
-                  <label>End Time *</label>
-                  <input type="time" required value={form.endTime} onChange={e => setForm({ ...form, endTime: e.target.value })} />
+                <div className="flex flex-col gap-[0.3rem]">
+                  <label className="text-[0.82rem] font-semibold text-[var(--text-secondary)]">End Time *</label>
+                  <input className="py-[0.45rem] px-[0.7rem] border border-[var(--border-default)] rounded-lg bg-[var(--bg-card)] text-[var(--text-primary)] text-[0.9rem]" type="time" required value={form.endTime} onChange={e => setForm({ ...form, endTime: e.target.value })} />
                 </div>
-                <div className="fb-field">
-                  <label>Attendees</label>
-                  <input type="number" min="1" value={form.attendees} onChange={e => setForm({ ...form, attendees: e.target.value })} />
+                <div className="flex flex-col gap-[0.3rem]">
+                  <label className="text-[0.82rem] font-semibold text-[var(--text-secondary)]">Attendees</label>
+                  <input className="py-[0.45rem] px-[0.7rem] border border-[var(--border-default)] rounded-lg bg-[var(--bg-card)] text-[var(--text-primary)] text-[0.9rem]" type="number" min="1" value={form.attendees} onChange={e => setForm({ ...form, attendees: e.target.value })} />
                 </div>
-                <div className="fb-field">
-                  <label>Amount (₹)</label>
-                  <input type="number" min="0" step="0.01" value={form.amount} onChange={e => setForm({ ...form, amount: e.target.value })} />
+                <div className="flex flex-col gap-[0.3rem]">
+                  <label className="text-[0.82rem] font-semibold text-[var(--text-secondary)]">Amount (₹)</label>
+                  <input className="py-[0.45rem] px-[0.7rem] border border-[var(--border-default)] rounded-lg bg-[var(--bg-card)] text-[var(--text-primary)] text-[0.9rem]" type="number" min="0" step="0.01" value={form.amount} onChange={e => setForm({ ...form, amount: e.target.value })} />
                 </div>
-                <div className="fb-field">
-                  <label>Payment Status</label>
-                  <select value={form.paymentStatus} onChange={e => setForm({ ...form, paymentStatus: e.target.value })}>
+                <div className="flex flex-col gap-[0.3rem]">
+                  <label className="text-[0.82rem] font-semibold text-[var(--text-secondary)]">Payment Status</label>
+                  <select className="py-[0.45rem] px-[0.7rem] border border-[var(--border-default)] rounded-lg bg-[var(--bg-card)] text-[var(--text-primary)] text-[0.9rem]" value={form.paymentStatus} onChange={e => setForm({ ...form, paymentStatus: e.target.value })}>
                     <option value="UNPAID">Unpaid</option>
                     <option value="PAID">Paid</option>
                     <option value="PARTIAL">Partial</option>
                     <option value="REFUNDED">Refunded</option>
                   </select>
                 </div>
-                <div className="fb-field fb-field--full">
-                  <label>Purpose</label>
-                  <textarea rows={2} value={form.purpose} onChange={e => setForm({ ...form, purpose: e.target.value })} />
+                <div className="flex flex-col gap-[0.3rem] col-span-full">
+                  <label className="text-[0.82rem] font-semibold text-[var(--text-secondary)]">Purpose</label>
+                  <textarea className="py-[0.45rem] px-[0.7rem] border border-[var(--border-default)] rounded-lg bg-[var(--bg-card)] text-[var(--text-primary)] text-[0.9rem]" rows={2} value={form.purpose} onChange={e => setForm({ ...form, purpose: e.target.value })} />
                 </div>
-                <div className="fb-field fb-field--full">
-                  <label>Admin Notes</label>
-                  <textarea rows={2} value={form.adminNotes} onChange={e => setForm({ ...form, adminNotes: e.target.value })} />
+                <div className="flex flex-col gap-[0.3rem] col-span-full">
+                  <label className="text-[0.82rem] font-semibold text-[var(--text-secondary)]">Admin Notes</label>
+                  <textarea className="py-[0.45rem] px-[0.7rem] border border-[var(--border-default)] rounded-lg bg-[var(--bg-card)] text-[var(--text-primary)] text-[0.9rem]" rows={2} value={form.adminNotes} onChange={e => setForm({ ...form, adminNotes: e.target.value })} />
                 </div>
               </div>
-              <div className="fb-form-actions">
-                <button type="button" className="fb-btn fb-btn--secondary" onClick={closeModal}>Cancel</button>
-                <button type="submit" className="fb-btn fb-btn--primary" disabled={saveMutation.isPending}>
+              <div className="flex justify-end gap-[0.65rem] mt-5">
+                <button type="button" className="inline-flex items-center gap-[0.35rem] py-[0.42rem] px-[0.9rem] rounded-lg text-[0.85rem] font-semibold cursor-pointer transition-opacity hover:opacity-85 bg-[var(--card)] text-[var(--text-primary)] border border-[var(--border-default)]" onClick={closeModal}>Cancel</button>
+                <button type="submit" className="inline-flex items-center gap-[0.35rem] py-[0.42rem] px-[0.9rem] border-none rounded-lg text-[0.85rem] font-semibold cursor-pointer transition-opacity hover:opacity-85 bg-[var(--primary,#6366f1)] text-white" disabled={saveMutation.isPending}>
                   {saveMutation.isPending ? 'Saving...' : editingId ? 'Update' : 'Create'}
                 </button>
               </div>
