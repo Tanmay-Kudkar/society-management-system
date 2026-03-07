@@ -17,6 +17,49 @@ const alertIcons = {
   FALSE_ALARM: X,
 }
 
+const alertStatusBadgeClasses = {
+  ACTIVE: 'bg-rose-500/10 text-rose-600 dark:text-rose-300',
+  ACKNOWLEDGED: 'bg-amber-500/10 text-amber-600 dark:text-amber-300',
+  RESOLVED: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-300',
+  FALSE_ALARM: 'bg-slate-500/10 text-[var(--text-tertiary)]',
+}
+
+const alertIconWrapClasses = {
+  ACTIVE: 'bg-rose-500/10',
+  ACKNOWLEDGED: 'bg-amber-500/10',
+  RESOLVED: 'bg-emerald-500/10',
+  FALSE_ALARM: 'bg-slate-500/10',
+}
+
+const alertIconClasses = {
+  ACTIVE: 'text-rose-600 dark:text-rose-300',
+  ACKNOWLEDGED: 'text-amber-600 dark:text-amber-300',
+  RESOLVED: 'text-emerald-600 dark:text-emerald-300',
+  FALSE_ALARM: 'text-[var(--text-tertiary)]',
+}
+
+const gateStatusBadgeClasses = {
+  IN: 'bg-blue-500/10 text-blue-600 dark:text-blue-300',
+  OUT: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-300',
+}
+
+const gateIconWrapClasses = {
+  IN: 'bg-blue-500/10',
+  OUT: 'bg-emerald-500/10',
+}
+
+const gateIconClasses = {
+  IN: 'text-blue-600 dark:text-blue-300',
+  OUT: 'text-emerald-600 dark:text-emerald-300',
+}
+
+const priorityBadgeClasses = {
+  CRITICAL: 'bg-rose-500/15 text-rose-600 dark:text-rose-300',
+  HIGH: 'bg-amber-500/15 text-amber-600 dark:text-amber-300',
+  MEDIUM: 'bg-blue-500/15 text-blue-600 dark:text-blue-300',
+  LOW: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-300',
+}
+
 export default function Safety() {
   const { user } = useAuth()
   const queryClient = useQueryClient()
@@ -174,81 +217,87 @@ export default function Safety() {
 
   return (
     <div>
-      <div className="safety-header">
+      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="safety-title">Safety & Security</h1>
-          <p className="safety-subtitle">SOS alerts and gate entry/exit tracking</p>
+          <h1 className="text-2xl font-bold text-[var(--text-primary)]">Safety & Security</h1>
+          <p className="mt-1 text-[var(--text-tertiary)]">SOS alerts and gate entry/exit tracking</p>
         </div>
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+        <div className="flex flex-wrap gap-2">
           {activeTab === 'sos' && (
             <>
-              <button onClick={() => handleQuickSOS('FIRE')} className="safety-action-button safety-action-button--quick" title="Quick Fire SOS">🔥</button>
-              <button onClick={() => handleQuickSOS('MEDICAL')} className="safety-action-button safety-action-button--quick" title="Quick Medical SOS">🏥</button>
-              <button onClick={() => handleQuickSOS('SECURITY')} className="safety-action-button safety-action-button--quick" title="Quick Security SOS">🚨</button>
-              <button onClick={() => setShowSOSModal(true)} className="safety-action-button safety-action-button--sos">
+              <button onClick={() => handleQuickSOS('FIRE')} className="inline-flex min-w-10 items-center justify-center rounded-lg border border-rose-500/30 bg-rose-500/10 px-2.5 py-2 text-lg text-rose-600 transition hover:bg-rose-500/20 dark:text-rose-300" title="Quick Fire SOS">🔥</button>
+              <button onClick={() => handleQuickSOS('MEDICAL')} className="inline-flex min-w-10 items-center justify-center rounded-lg border border-rose-500/30 bg-rose-500/10 px-2.5 py-2 text-lg text-rose-600 transition hover:bg-rose-500/20 dark:text-rose-300" title="Quick Medical SOS">🏥</button>
+              <button onClick={() => handleQuickSOS('SECURITY')} className="inline-flex min-w-10 items-center justify-center rounded-lg border border-rose-500/30 bg-rose-500/10 px-2.5 py-2 text-lg text-rose-600 transition hover:bg-rose-500/20 dark:text-rose-300" title="Quick Security SOS">🚨</button>
+              <button onClick={() => setShowSOSModal(true)} className="inline-flex items-center gap-2 rounded-lg border border-rose-500/30 bg-rose-500/10 px-4 py-2 text-rose-600 transition hover:bg-rose-500/20 dark:text-rose-300">
                 <Siren size={20} /> Raise SOS Alert
               </button>
             </>
           )}
           {activeTab === 'gatelog' && isStaff && (
-            <button onClick={() => setShowGateLogModal(true)} className="safety-action-button">
+            <button onClick={() => setShowGateLogModal(true)} className="inline-flex items-center gap-2 rounded-lg border border-[var(--border-default)] bg-[var(--bg-card)] px-4 py-2 text-[var(--text-primary)] transition hover:bg-[color-mix(in_srgb,var(--bg-tertiary)_70%,var(--bg-card))] hover:shadow-[0_8px_20px_rgba(15,23,42,0.14)] dark:border-slate-400/25 dark:bg-slate-50 dark:text-slate-900">
               <Plus size={20} /> Log Entry
             </button>
           )}
         </div>
       </div>
 
-      <div className="safety-tabs">
-        <button className={clsx('safety-tab', activeTab === 'sos' && 'safety-tab--active')} onClick={() => { setActiveTab('sos'); setFilterStatus(''); setFilterPriority(''); setSearchTerm('') }}>
+      <div className="mb-5 flex w-fit gap-1 rounded-lg bg-[var(--bg-tertiary)] p-1">
+        <button
+          className={clsx('rounded-md px-4 py-2 text-sm font-medium text-[var(--text-tertiary)] transition', activeTab === 'sos' && 'bg-[var(--bg-card)] text-[var(--text-primary)] shadow-sm')}
+          onClick={() => { setActiveTab('sos'); setFilterStatus(''); setFilterPriority(''); setSearchTerm('') }}
+        >
           SOS Alerts
-          {alerts.filter(a => a.status === 'ACTIVE').length > 0 && <span className="safety-tab-badge">{alerts.filter(a => a.status === 'ACTIVE').length}</span>}
+          {alerts.filter(a => a.status === 'ACTIVE').length > 0 && <span className="ml-1.5 inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-rose-600 px-1 text-[11px] font-bold text-white">{alerts.filter(a => a.status === 'ACTIVE').length}</span>}
         </button>
-        <button className={clsx('safety-tab', activeTab === 'gatelog' && 'safety-tab--active')} onClick={() => { setActiveTab('gatelog'); setFilterStatus(''); setFilterPriority(''); setFilterEntryType(''); setSearchTerm('') }}>
+        <button
+          className={clsx('rounded-md px-4 py-2 text-sm font-medium text-[var(--text-tertiary)] transition', activeTab === 'gatelog' && 'bg-[var(--bg-card)] text-[var(--text-primary)] shadow-sm')}
+          onClick={() => { setActiveTab('gatelog'); setFilterStatus(''); setFilterPriority(''); setFilterEntryType(''); setSearchTerm('') }}
+        >
           Gate Log
-          {gateLogs.filter(g => g.status === 'IN').length > 0 && <span className="safety-tab-badge safety-tab-badge--gate">{gateLogs.filter(g => g.status === 'IN').length}</span>}
+          {gateLogs.filter(g => g.status === 'IN').length > 0 && <span className="ml-1.5 inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-blue-600 px-1 text-[11px] font-bold text-white">{gateLogs.filter(g => g.status === 'IN').length}</span>}
         </button>
       </div>
 
       {/* SOS ALERTS TAB */}
       {activeTab === 'sos' && (
         <>
-          <div className="safety-summary">
-            <div className="safety-summary-card">
-              <p className="safety-summary-label">Active</p>
-              <p className="safety-summary-value safety-summary-value--active">{alerts.filter(a => a.status === 'ACTIVE').length}</p>
+          <div className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-5">
+            <div className="rounded-xl border border-[var(--border-default)] bg-[var(--bg-card)] p-4">
+              <p className="text-[13px] text-[var(--text-tertiary)]">Active</p>
+              <p className="mt-1 text-2xl font-bold text-rose-600 dark:text-rose-300">{alerts.filter(a => a.status === 'ACTIVE').length}</p>
             </div>
-            <div className="safety-summary-card">
-              <p className="safety-summary-label">Acknowledged</p>
-              <p className="safety-summary-value safety-summary-value--acknowledged">{alerts.filter(a => a.status === 'ACKNOWLEDGED').length}</p>
+            <div className="rounded-xl border border-[var(--border-default)] bg-[var(--bg-card)] p-4">
+              <p className="text-[13px] text-[var(--text-tertiary)]">Acknowledged</p>
+              <p className="mt-1 text-2xl font-bold text-amber-500 dark:text-amber-300">{alerts.filter(a => a.status === 'ACKNOWLEDGED').length}</p>
             </div>
-            <div className="safety-summary-card">
-              <p className="safety-summary-label">Resolved</p>
-              <p className="safety-summary-value safety-summary-value--resolved">{alerts.filter(a => a.status === 'RESOLVED').length}</p>
+            <div className="rounded-xl border border-[var(--border-default)] bg-[var(--bg-card)] p-4">
+              <p className="text-[13px] text-[var(--text-tertiary)]">Resolved</p>
+              <p className="mt-1 text-2xl font-bold text-emerald-600 dark:text-emerald-300">{alerts.filter(a => a.status === 'RESOLVED').length}</p>
             </div>
-            <div className="safety-summary-card">
-              <p className="safety-summary-label">Critical</p>
-              <p className="safety-summary-value safety-summary-value--critical">{alerts.filter(a => a.priority === 'CRITICAL' && a.status !== 'RESOLVED' && a.status !== 'FALSE_ALARM').length}</p>
+            <div className="rounded-xl border border-[var(--border-default)] bg-[var(--bg-card)] p-4">
+              <p className="text-[13px] text-[var(--text-tertiary)]">Critical</p>
+              <p className="mt-1 text-2xl font-extrabold text-rose-600 dark:text-rose-300">{alerts.filter(a => a.priority === 'CRITICAL' && a.status !== 'RESOLVED' && a.status !== 'FALSE_ALARM').length}</p>
             </div>
-            <div className="safety-summary-card">
-              <p className="safety-summary-label">Escalated</p>
-              <p className="safety-summary-value safety-summary-value--escalated">{alerts.filter(a => a.escalationLevel > 0).length}</p>
+            <div className="rounded-xl border border-[var(--border-default)] bg-[var(--bg-card)] p-4">
+              <p className="text-[13px] text-[var(--text-tertiary)]">Escalated</p>
+              <p className="mt-1 text-2xl font-bold text-violet-600 dark:text-violet-300">{alerts.filter(a => a.escalationLevel > 0).length}</p>
             </div>
           </div>
 
-          <div className="safety-filters">
-            <div className="safety-filters-row">
-              <div className="safety-search">
-                <Search className="safety-search-icon" />
-                <input type="text" placeholder="Search alerts..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="safety-input" />
+          <div className="mb-5">
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="relative min-w-[200px] flex-1">
+                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--text-tertiary)]" />
+                <input type="text" placeholder="Search alerts..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full rounded-lg border border-[var(--border-default)] bg-[var(--bg-card)] py-2 pl-9 pr-3 text-sm text-[var(--text-primary)] outline-none transition focus:border-blue-500 focus:shadow-[0_0_0_3px_rgba(59,130,246,0.2)]" />
               </div>
-              <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="safety-select">
+              <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="rounded-lg border border-[var(--border-default)] bg-[var(--bg-card)] px-3 py-2 text-sm text-[var(--text-primary)] outline-none transition focus:border-blue-500 focus:shadow-[0_0_0_3px_rgba(59,130,246,0.2)]">
                 <option value="">All Status</option>
                 <option value="ACTIVE">Active</option>
                 <option value="ACKNOWLEDGED">Acknowledged</option>
                 <option value="RESOLVED">Resolved</option>
                 <option value="FALSE_ALARM">False Alarm</option>
               </select>
-              <select value={filterPriority} onChange={(e) => setFilterPriority(e.target.value)} className="safety-select">
+              <select value={filterPriority} onChange={(e) => setFilterPriority(e.target.value)} className="rounded-lg border border-[var(--border-default)] bg-[var(--bg-card)] px-3 py-2 text-sm text-[var(--text-primary)] outline-none transition focus:border-blue-500 focus:shadow-[0_0_0_3px_rgba(59,130,246,0.2)]">
                 <option value="">All Priority</option>
                 <option value="CRITICAL">Critical</option>
                 <option value="HIGH">High</option>
@@ -258,62 +307,62 @@ export default function Safety() {
             </div>
           </div>
 
-          <div className="safety-list">
+          <div className="flex flex-col gap-2">
             {filteredAlerts.length === 0 && (
-              <div className="safety-item" style={{ textAlign: 'center', color: 'var(--text-tertiary)' }}>No SOS alerts found</div>
+              <div className="rounded-xl border border-[var(--border-default)] bg-[var(--bg-card)] p-4 text-center text-[var(--text-tertiary)]">No SOS alerts found</div>
             )}
             {filteredAlerts.map((alert) => {
               const AlertIcon = alertIcons[alert.status] || AlertTriangle
               return (
-                <div key={alert.id} className={clsx('safety-item', alert.priority === 'CRITICAL' && 'safety-item--critical', alert.escalationLevel > 0 && 'safety-item--escalated')}>
-                  <div className="safety-item-row">
-                    <div className="safety-item-main">
-                      <div className={clsx('safety-item-icon', `safety-item-icon--${alert.status?.toLowerCase()}`)}>
-                        <AlertIcon className={clsx('safety-item-icon-symbol', `safety-item-icon-symbol--${alert.status?.toLowerCase()}`)} />
+                <div key={alert.id} className={clsx('rounded-xl border border-[var(--border-default)] bg-[var(--bg-card)] p-4 transition hover:shadow-[0_4px_12px_rgba(15,23,42,0.08)]', alert.priority === 'CRITICAL' && 'border-l-4 border-l-rose-600', alert.escalationLevel > 0 && 'border-l-4 border-l-violet-600', alert.priority === 'CRITICAL' && alert.escalationLevel > 0 && 'border-l-4 border-l-rose-600')}>
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex flex-1 items-start gap-3">
+                      <div className={clsx('flex h-10 w-10 shrink-0 items-center justify-center rounded-lg', alertIconWrapClasses[alert.status] || 'bg-slate-500/10', alert.priority === 'CRITICAL' && alert.status === 'ACTIVE' && 'animate-pulse')}>
+                        <AlertIcon className={clsx('h-5 w-5', alertIconClasses[alert.status] || 'text-[var(--text-tertiary)]')} />
                       </div>
                       <div>
-                        <div className="safety-item-meta">
-                          <span className={clsx('safety-status-badge', `safety-status--${alert.status?.toLowerCase()}`)}>{alert.status?.replace('_', ' ')}</span>
-                          <span className={clsx('safety-priority-badge', `safety-priority--${alert.priority?.toLowerCase()}`)}>{alert.priority}</span>
-                          <span className="safety-type-badge">{alert.alertType}</span>
+                        <div className="mb-1 flex flex-wrap items-center gap-2">
+                          <span className={clsx('inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold uppercase', alertStatusBadgeClasses[alert.status] || 'bg-slate-500/10 text-[var(--text-tertiary)]')}>{alert.status?.replace('_', ' ')}</span>
+                          <span className={clsx('inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold uppercase', priorityBadgeClasses[alert.priority] || 'bg-slate-500/10 text-[var(--text-tertiary)]')}>{alert.priority}</span>
+                          <span className="inline-flex items-center rounded-full bg-violet-500/10 px-2 py-0.5 text-[11px] font-medium text-violet-600 dark:text-violet-300">{alert.alertType}</span>
                           {alert.escalationLevel > 0 && (
-                            <span className="safety-escalation-badge"><TrendingUp size={12} /> L{alert.escalationLevel}</span>
+                            <span className="inline-flex items-center gap-1 rounded-full bg-violet-500/10 px-2 py-0.5 text-[11px] font-semibold text-violet-600 dark:text-violet-300"><TrendingUp size={12} /> L{alert.escalationLevel}</span>
                           )}
                         </div>
-                        <h3 className="safety-item-title">{alert.alertType} Alert</h3>
-                        {alert.description && <p className="safety-item-description">{alert.description}</p>}
+                        <h3 className="font-semibold text-[var(--text-primary)]">{alert.alertType} Alert</h3>
+                        {alert.description && <p className="mt-1 text-sm text-[var(--text-tertiary)]">{alert.description}</p>}
                         {alert.location && (
-                          <p className="safety-item-location"><MapPin size={13} /> {alert.location}</p>
+                          <p className="mt-1 inline-flex items-center gap-1 text-sm text-[var(--text-secondary)]"><MapPin size={13} /> {alert.location}</p>
                         )}
                         {alert.resolutionNotes && (
-                          <div className="safety-resolution">
-                            <p className="safety-resolution-text"><span className="safety-resolution-label">Resolution:</span> {alert.resolutionNotes}</p>
+                          <div className="mt-2 rounded-lg border border-emerald-500/15 bg-emerald-500/5 px-3 py-2">
+                            <p className="text-sm text-[var(--text-secondary)]"><span className="font-semibold text-emerald-600 dark:text-emerald-300">Resolution:</span> {alert.resolutionNotes}</p>
                           </div>
                         )}
                         {/* Timeline */}
-                        <div className="safety-timeline">
-                          <span className="safety-timeline-step safety-timeline-step--done">Created {alert.createdAt && new Date(alert.createdAt).toLocaleString()}</span>
-                          {alert.acknowledgedAt && <span className="safety-timeline-step safety-timeline-step--done">Acknowledged {new Date(alert.acknowledgedAt).toLocaleString()}{alert.acknowledgedByName ? ` by ${alert.acknowledgedByName}` : ''}</span>}
-                          {alert.resolvedAt && <span className="safety-timeline-step safety-timeline-step--done">{alert.status === 'FALSE_ALARM' ? 'Marked False Alarm' : 'Resolved'} {new Date(alert.resolvedAt).toLocaleString()}</span>}
+                        <div className="mt-2 flex flex-wrap gap-2">
+                          <span className="inline-flex items-center rounded-md bg-[var(--bg-tertiary)] px-2 py-0.5 text-[11px] text-[var(--text-secondary)] before:mr-1.5 before:h-1.5 before:w-1.5 before:rounded-full before:bg-emerald-500 before:content-['']">Created {alert.createdAt && new Date(alert.createdAt).toLocaleString()}</span>
+                          {alert.acknowledgedAt && <span className="inline-flex items-center rounded-md bg-[var(--bg-tertiary)] px-2 py-0.5 text-[11px] text-[var(--text-secondary)] before:mr-1.5 before:h-1.5 before:w-1.5 before:rounded-full before:bg-emerald-500 before:content-['']">Acknowledged {new Date(alert.acknowledgedAt).toLocaleString()}{alert.acknowledgedByName ? ` by ${alert.acknowledgedByName}` : ''}</span>}
+                          {alert.resolvedAt && <span className="inline-flex items-center rounded-md bg-[var(--bg-tertiary)] px-2 py-0.5 text-[11px] text-[var(--text-secondary)] before:mr-1.5 before:h-1.5 before:w-1.5 before:rounded-full before:bg-emerald-500 before:content-['']">{alert.status === 'FALSE_ALARM' ? 'Marked False Alarm' : 'Resolved'} {new Date(alert.resolvedAt).toLocaleString()}</span>}
                         </div>
-                        <div className="safety-item-footer">
-                          <span className="safety-item-footer-text">By: {alert.raisedByName}</span>
-                          {alert.flatNumber && <span className="safety-item-footer-text">Flat: {alert.flatNumber}</span>}
-                          {alert.resolvedByName && <span className="safety-item-footer-text">Resolved by: {alert.resolvedByName}</span>}
+                        <div className="mt-2 flex flex-wrap gap-4">
+                          <span className="text-xs text-[var(--text-tertiary)]">By: {alert.raisedByName}</span>
+                          {alert.flatNumber && <span className="text-xs text-[var(--text-tertiary)]">Flat: {alert.flatNumber}</span>}
+                          {alert.resolvedByName && <span className="text-xs text-[var(--text-tertiary)]">Resolved by: {alert.resolvedByName}</span>}
                           {alert.responseTimeSeconds != null && (
-                            <span className="safety-item-footer-text safety-item-footer-text--response"><Clock size={12} /> Response: {formatResponseTime(alert.responseTimeSeconds)}</span>
+                            <span className="inline-flex items-center gap-1 text-xs font-medium text-blue-600 dark:text-blue-300"><Clock size={12} /> Response: {formatResponseTime(alert.responseTimeSeconds)}</span>
                           )}
                         </div>
                       </div>
                     </div>
                     {isStaff && alert.status !== 'RESOLVED' && alert.status !== 'FALSE_ALARM' && (
-                      <div className="safety-item-actions">
+                      <div className="flex shrink-0 flex-wrap gap-1.5">
                         {alert.status === 'ACTIVE' && (
-                          <button onClick={() => acknowledgeMutation.mutate(alert.id)} className="safety-btn safety-btn--acknowledge">Acknowledge</button>
+                          <button onClick={() => acknowledgeMutation.mutate(alert.id)} className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-1.5 text-sm text-amber-600 transition hover:bg-amber-500/20 dark:text-amber-300">Acknowledge</button>
                         )}
-                        <button onClick={() => escalateMutation.mutate(alert.id)} className="safety-btn safety-btn--escalate"><ArrowUpCircle size={14} /> Escalate</button>
-                        <button onClick={() => resolveMutation.mutate(alert.id)} className="safety-btn safety-btn--resolve">Resolve</button>
-                        {isAdmin && <button onClick={() => falseAlarmMutation.mutate(alert.id)} className="safety-btn safety-btn--false-alarm">False Alarm</button>}
+                        <button onClick={() => escalateMutation.mutate(alert.id)} className="inline-flex items-center gap-1 rounded-lg border border-violet-500/30 bg-violet-500/10 px-3 py-1.5 text-sm text-violet-600 transition hover:bg-violet-500/20 dark:text-violet-300"><ArrowUpCircle size={14} /> Escalate</button>
+                        <button onClick={() => resolveMutation.mutate(alert.id)} className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5 text-sm text-emerald-600 transition hover:bg-emerald-500/20 dark:text-emerald-300">Resolve</button>
+                        {isAdmin && <button onClick={() => falseAlarmMutation.mutate(alert.id)} className="rounded-lg border border-slate-500/30 bg-slate-500/10 px-3 py-1.5 text-sm text-[var(--text-tertiary)] transition hover:bg-slate-500/20">False Alarm</button>}
                       </div>
                     )}
                   </div>
@@ -327,37 +376,37 @@ export default function Safety() {
       {/* GATE LOG TAB */}
       {activeTab === 'gatelog' && (
         <>
-          <div className="safety-summary">
-            <div className="safety-summary-card">
-              <p className="safety-summary-label">Currently In</p>
-              <p className="safety-summary-value safety-summary-value--in">{gateLogs.filter(g => g.status === 'IN').length}</p>
+          <div className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-4">
+            <div className="rounded-xl border border-[var(--border-default)] bg-[var(--bg-card)] p-4">
+              <p className="text-[13px] text-[var(--text-tertiary)]">Currently In</p>
+              <p className="mt-1 text-2xl font-bold text-amber-500 dark:text-amber-300">{gateLogs.filter(g => g.status === 'IN').length}</p>
             </div>
-            <div className="safety-summary-card">
-              <p className="safety-summary-label">Exited</p>
-              <p className="safety-summary-value safety-summary-value--out">{gateLogs.filter(g => g.status === 'OUT').length}</p>
+            <div className="rounded-xl border border-[var(--border-default)] bg-[var(--bg-card)] p-4">
+              <p className="text-[13px] text-[var(--text-tertiary)]">Exited</p>
+              <p className="mt-1 text-2xl font-bold text-emerald-600 dark:text-emerald-300">{gateLogs.filter(g => g.status === 'OUT').length}</p>
             </div>
-            <div className="safety-summary-card">
-              <p className="safety-summary-label">Total Today</p>
-              <p className="safety-summary-value safety-summary-value--total">{gateLogs.length}</p>
+            <div className="rounded-xl border border-[var(--border-default)] bg-[var(--bg-card)] p-4">
+              <p className="text-[13px] text-[var(--text-tertiary)]">Total Today</p>
+              <p className="mt-1 text-2xl font-bold text-[var(--text-primary)]">{gateLogs.length}</p>
             </div>
-            <div className="safety-summary-card">
-              <p className="safety-summary-label">Vehicles</p>
-              <p className="safety-summary-value" style={{ color: 'var(--color-violet)' }}>{gateLogs.filter(g => g.vehicleNumber).length}</p>
+            <div className="rounded-xl border border-[var(--border-default)] bg-[var(--bg-card)] p-4">
+              <p className="text-[13px] text-[var(--text-tertiary)]">Vehicles</p>
+              <p className="mt-1 text-2xl font-bold text-violet-600 dark:text-violet-300">{gateLogs.filter(g => g.vehicleNumber).length}</p>
             </div>
           </div>
 
-          <div className="safety-filters">
-            <div className="safety-filters-row">
-              <div className="safety-search">
-                <Search className="safety-search-icon" />
-                <input type="text" placeholder="Search gate logs..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="safety-input" />
+          <div className="mb-5">
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="relative min-w-[200px] flex-1">
+                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--text-tertiary)]" />
+                <input type="text" placeholder="Search gate logs..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full rounded-lg border border-[var(--border-default)] bg-[var(--bg-card)] py-2 pl-9 pr-3 text-sm text-[var(--text-primary)] outline-none transition focus:border-blue-500 focus:shadow-[0_0_0_3px_rgba(59,130,246,0.2)]" />
               </div>
-              <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="safety-select">
+              <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="rounded-lg border border-[var(--border-default)] bg-[var(--bg-card)] px-3 py-2 text-sm text-[var(--text-primary)] outline-none transition focus:border-blue-500 focus:shadow-[0_0_0_3px_rgba(59,130,246,0.2)]">
                 <option value="">All Status</option>
                 <option value="IN">Currently In</option>
                 <option value="OUT">Exited</option>
               </select>
-              <select value={filterEntryType} onChange={(e) => setFilterEntryType(e.target.value)} className="safety-select">
+              <select value={filterEntryType} onChange={(e) => setFilterEntryType(e.target.value)} className="rounded-lg border border-[var(--border-default)] bg-[var(--bg-card)] px-3 py-2 text-sm text-[var(--text-primary)] outline-none transition focus:border-blue-500 focus:shadow-[0_0_0_3px_rgba(59,130,246,0.2)]">
                 <option value="">All Types</option>
                 <option value="RESIDENT">Resident</option>
                 <option value="VISITOR">Visitor</option>
@@ -369,49 +418,49 @@ export default function Safety() {
             </div>
           </div>
 
-          <div className="safety-list">
+          <div className="flex flex-col gap-2">
             {filteredGateLogs.length === 0 && (
-              <div className="safety-item" style={{ textAlign: 'center', color: 'var(--text-tertiary)' }}>No gate log entries found</div>
+              <div className="rounded-xl border border-[var(--border-default)] bg-[var(--bg-card)] p-4 text-center text-[var(--text-tertiary)]">No gate log entries found</div>
             )}
             {filteredGateLogs.map((log) => (
-              <div key={log.id} className="safety-item">
-                <div className="safety-item-row">
-                  <div className="safety-item-main">
-                    <div className={clsx('safety-item-icon', log.status === 'IN' ? 'safety-item-icon--in' : 'safety-item-icon--out')}>
-                      {log.status === 'IN' ? <LogIn className={clsx('safety-item-icon-symbol', 'safety-item-icon-symbol--in')} /> : <LogOut className={clsx('safety-item-icon-symbol', 'safety-item-icon-symbol--out')} />}
+              <div key={log.id} className="rounded-xl border border-[var(--border-default)] bg-[var(--bg-card)] p-4 transition hover:shadow-[0_4px_12px_rgba(15,23,42,0.08)]">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex flex-1 items-start gap-3">
+                    <div className={clsx('flex h-10 w-10 shrink-0 items-center justify-center rounded-lg', gateIconWrapClasses[log.status] || 'bg-slate-500/10')}>
+                      {log.status === 'IN' ? <LogIn className={clsx('h-5 w-5', gateIconClasses.IN)} /> : <LogOut className={clsx('h-5 w-5', gateIconClasses.OUT)} />}
                     </div>
                     <div>
-                      <div className="safety-item-meta">
-                        <span className={clsx('safety-status-badge', log.status === 'IN' ? 'safety-status--in' : 'safety-status--out')}>{log.status}</span>
-                        <span className="safety-type-badge">{log.entryType}</span>
+                      <div className="mb-1 flex flex-wrap items-center gap-2">
+                        <span className={clsx('inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold uppercase', gateStatusBadgeClasses[log.status] || 'bg-slate-500/10 text-[var(--text-tertiary)]')}>{log.status}</span>
+                        <span className="inline-flex items-center rounded-full bg-violet-500/10 px-2 py-0.5 text-[11px] font-medium text-violet-600 dark:text-violet-300">{log.entryType}</span>
                       </div>
-                      <h3 className="safety-item-title">{log.personName}</h3>
+                      <h3 className="font-semibold text-[var(--text-primary)]">{log.personName}</h3>
                       {log.companyName && (
-                        <p className="safety-item-company"><Building2 size={13} /> {log.companyName}</p>
+                        <p className="my-0.5 inline-flex items-center gap-1 text-sm font-medium text-[var(--text-secondary)]"><Building2 size={13} /> {log.companyName}</p>
                       )}
-                      {log.purpose && <p className="safety-item-description">{log.purpose}</p>}
+                      {log.purpose && <p className="mt-1 text-sm text-[var(--text-tertiary)]">{log.purpose}</p>}
                       {log.itemsCarried && (
-                        <p className="safety-item-items"><Package size={13} /> Items: {log.itemsCarried}</p>
+                        <p className="my-0.5 inline-flex items-center gap-1 text-xs text-[var(--text-tertiary)]"><Package size={13} /> Items: {log.itemsCarried}</p>
                       )}
-                      <div className="safety-item-footer">
-                        {log.personPhone && <span className="safety-item-footer-text">Phone: {log.personPhone}</span>}
-                        {log.vehicleNumber && <span className="safety-item-footer-text">Vehicle: {log.vehicleNumber}</span>}
-                        {log.flatNumber && <span className="safety-item-footer-text">Flat: {log.flatNumber}</span>}
-                        {log.entryGate && <span className="safety-item-footer-text">Gate: {log.entryGate}</span>}
+                      <div className="mt-2 flex flex-wrap gap-4">
+                        {log.personPhone && <span className="text-xs text-[var(--text-tertiary)]">Phone: {log.personPhone}</span>}
+                        {log.vehicleNumber && <span className="text-xs text-[var(--text-tertiary)]">Vehicle: {log.vehicleNumber}</span>}
+                        {log.flatNumber && <span className="text-xs text-[var(--text-tertiary)]">Flat: {log.flatNumber}</span>}
+                        {log.entryGate && <span className="text-xs text-[var(--text-tertiary)]">Gate: {log.entryGate}</span>}
                         {log.idType && log.idNumber && (
-                          <span className="safety-item-footer-text"><CreditCard size={12} /> {log.idType}: {log.idNumber}</span>
+                          <span className="inline-flex items-center gap-1 text-xs text-[var(--text-tertiary)]"><CreditCard size={12} /> {log.idType}: {log.idNumber}</span>
                         )}
                         {log.approvedByName && (
-                          <span className="safety-item-footer-text"><UserCheck size={12} /> Approved: {log.approvedByName}</span>
+                          <span className="inline-flex items-center gap-1 text-xs text-[var(--text-tertiary)]"><UserCheck size={12} /> Approved: {log.approvedByName}</span>
                         )}
-                        <span className="safety-item-footer-text">In: {log.entryTime && new Date(log.entryTime).toLocaleTimeString()}</span>
-                        {log.exitTime && <span className="safety-item-footer-text">Out: {new Date(log.exitTime).toLocaleTimeString()}</span>}
+                        <span className="text-xs text-[var(--text-tertiary)]">In: {log.entryTime && new Date(log.entryTime).toLocaleTimeString()}</span>
+                        {log.exitTime && <span className="text-xs text-[var(--text-tertiary)]">Out: {new Date(log.exitTime).toLocaleTimeString()}</span>}
                       </div>
                     </div>
                   </div>
                   {isStaff && log.status === 'IN' && (
-                    <div className="safety-item-actions">
-                      <button onClick={() => markExitMutation.mutate(log.id)} className="safety-btn safety-btn--exit">Mark Exit</button>
+                    <div className="flex shrink-0 flex-wrap gap-1.5">
+                      <button onClick={() => markExitMutation.mutate(log.id)} className="rounded-lg border border-blue-500/30 bg-blue-500/10 px-3 py-1.5 text-sm text-blue-600 transition hover:bg-blue-500/20 dark:text-blue-300">Mark Exit</button>
                     </div>
                   )}
                 </div>
@@ -423,13 +472,13 @@ export default function Safety() {
 
       {/* SOS Alert Modal */}
       {showSOSModal && (
-        <div className="safety-modal">
-          <div className="safety-modal-card">
-            <div className="safety-modal-header">
-              <h3 className="safety-modal-title">Raise SOS Alert</h3>
-              <button onClick={() => setShowSOSModal(false)} className="safety-modal-close"><X size={20} /></button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="max-h-[90vh] w-full max-w-[480px] overflow-y-auto rounded-2xl bg-[var(--bg-card)] p-6">
+            <div className="mb-5 flex items-center justify-between">
+              <h3 className="text-lg font-bold text-[var(--text-primary)]">Raise SOS Alert</h3>
+              <button onClick={() => setShowSOSModal(false)} className="rounded-md p-1 text-[var(--text-tertiary)]"><X size={20} /></button>
             </div>
-            <form onSubmit={handleSOSSubmit} className="safety-form">
+            <form onSubmit={handleSOSSubmit} className="flex flex-col gap-4">
               <SmartSelect label="Alert Type" name="alertType" required options={[
                 { value: 'FIRE', label: 'Fire' }, { value: 'MEDICAL', label: 'Medical Emergency' },
                 { value: 'SECURITY', label: 'Security Threat' }, { value: 'THEFT', label: 'Theft' },
@@ -442,9 +491,9 @@ export default function Safety() {
               ]} placeholder="Select Priority" />
               <FormInput label="Location" name="location" placeholder="e.g. Block A, 3rd Floor, Near Lift" />
               <FormTextarea label="Description" name="description" rows={4} required />
-              <div className="safety-form-actions">
-                <button type="button" onClick={() => setShowSOSModal(false)} className="safety-btn safety-btn--ghost">Cancel</button>
-                <AsyncButton type="submit" className="safety-btn safety-btn--primary" isLoading={createAlertMutation.isPending} loadingText="Raising...">Raise Alert</AsyncButton>
+              <div className="mt-2 flex justify-end gap-3">
+                <button type="button" onClick={() => setShowSOSModal(false)} className="rounded-lg border border-[var(--border-default)] bg-transparent px-4 py-2 text-[var(--text-secondary)]">Cancel</button>
+                <AsyncButton type="submit" className="rounded-lg bg-blue-600 px-4 py-2 text-white" isLoading={createAlertMutation.isPending} loadingText="Raising...">Raise Alert</AsyncButton>
               </div>
             </form>
           </div>
@@ -453,13 +502,13 @@ export default function Safety() {
 
       {/* Gate Log Modal */}
       {showGateLogModal && (
-        <div className="safety-modal">
-          <div className="safety-modal-card">
-            <div className="safety-modal-header">
-              <h3 className="safety-modal-title">Log Gate Entry</h3>
-              <button onClick={() => setShowGateLogModal(false)} className="safety-modal-close"><X size={20} /></button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="max-h-[90vh] w-full max-w-[480px] overflow-y-auto rounded-2xl bg-[var(--bg-card)] p-6">
+            <div className="mb-5 flex items-center justify-between">
+              <h3 className="text-lg font-bold text-[var(--text-primary)]">Log Gate Entry</h3>
+              <button onClick={() => setShowGateLogModal(false)} className="rounded-md p-1 text-[var(--text-tertiary)]"><X size={20} /></button>
             </div>
-            <form onSubmit={handleGateLogSubmit} className="safety-form">
+            <form onSubmit={handleGateLogSubmit} className="flex flex-col gap-4">
               <FormInput label="Person Name" name="personName" required />
               <FormInput label="Phone Number" name="personPhone" />
               <SmartSelect label="Entry Type" name="entryType" required options={[
@@ -470,7 +519,7 @@ export default function Safety() {
               <FormInput label="Vehicle Number" name="vehicleNumber" />
               <FormInput label="Gate" name="entryGate" />
               <FormInput label="Company Name" name="companyName" placeholder="e.g. Amazon, Swiggy" />
-              <div className="safety-form-row">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <SmartSelect label="ID Type" name="idType" options={[
                   { value: 'AADHAAR', label: 'Aadhaar' }, { value: 'PAN', label: 'PAN Card' },
                   { value: 'DRIVING_LICENSE', label: 'Driving License' }, { value: 'PASSPORT', label: 'Passport' },
@@ -482,9 +531,9 @@ export default function Safety() {
               <FormInput label="Image URL" name="imageUrl" placeholder="Photo URL (optional)" />
               <FormInput label="Purpose" name="purpose" />
               <FormTextarea label="Notes" name="notes" rows={2} />
-              <div className="safety-form-actions">
-                <button type="button" onClick={() => setShowGateLogModal(false)} className="safety-btn safety-btn--ghost">Cancel</button>
-                <AsyncButton type="submit" className="safety-btn safety-btn--primary" isLoading={createGateLogMutation.isPending} loadingText="Logging...">Log Entry</AsyncButton>
+              <div className="mt-2 flex justify-end gap-3">
+                <button type="button" onClick={() => setShowGateLogModal(false)} className="rounded-lg border border-[var(--border-default)] bg-transparent px-4 py-2 text-[var(--text-secondary)]">Cancel</button>
+                <AsyncButton type="submit" className="rounded-lg bg-blue-600 px-4 py-2 text-white" isLoading={createGateLogMutation.isPending} loadingText="Logging...">Log Entry</AsyncButton>
               </div>
             </form>
           </div>

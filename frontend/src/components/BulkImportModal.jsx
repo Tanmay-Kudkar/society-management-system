@@ -194,22 +194,31 @@ export default function BulkImportModal({
     return (bytes / (1024 * 1024)).toFixed(1) + ' MB'
   }
 
+  const btnBaseClass = 'inline-flex min-w-[150px] items-center justify-center gap-2 rounded-xl px-4 py-2.5 font-semibold transition disabled:cursor-not-allowed disabled:opacity-60 disabled:shadow-none disabled:transform-none'
+  const btnSecondaryClass = `${btnBaseClass} border border-slate-400/30 bg-slate-950 text-slate-50 hover:bg-slate-950/95`
+  const btnPrimaryClass = `${btnBaseClass} border border-slate-400/35 bg-slate-50 text-slate-900 hover:-translate-y-px hover:bg-white`
+  const btnConfirmClass = `${btnBaseClass} border border-slate-400/35 bg-slate-50 text-slate-900 shadow-[0_12px_20px_rgba(15,23,42,0.18)] hover:-translate-y-px hover:bg-white`
+  const btnAccentClass = `${btnBaseClass} border border-slate-400/35 bg-slate-50 text-slate-900 shadow-[0_12px_20px_rgba(15,23,42,0.18)] hover:bg-white`
+
   return (
-    <div className="bulk-import">
-      <div className="bulk-import__dialog">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+      <div className="max-h-[90vh] w-full max-w-[720px] overflow-hidden rounded-2xl border border-slate-400/25 bg-[#05080d] text-slate-200 shadow-[0_24px_60px_rgba(15,23,42,0.2)]">
         {/* Header */}
-        <div className="bulk-import__header">
-          <h3 className="bulk-import__title">{title}</h3>
-          <button onClick={onClose} className="bulk-import__close">
-            <X size={20} className="bulk-import__close-icon" />
+        <div className="flex items-center justify-between border-b border-slate-400/20 p-4">
+          <h3 className="text-lg font-bold text-slate-50">{title}</h3>
+          <button
+            onClick={onClose}
+            className="rounded-[10px] bg-slate-400/15 p-1.5 text-slate-400 transition hover:bg-slate-400/30 hover:text-slate-200"
+          >
+            <X size={20} />
           </button>
         </div>
 
         {/* Body */}
-        <div className="bulk-import__body">
+        <div className="max-h-[calc(90vh-120px)] overflow-y-auto p-4">
           {/* Error Banner */}
           {error && (
-            <div className="bulk-import__error">
+            <div className="mb-4 flex items-center gap-2 break-words rounded-xl border border-red-400/45 bg-red-800/25 p-3 font-bold leading-6 text-red-100">
               <AlertCircle size={18} />
               {error}
             </div>
@@ -220,36 +229,36 @@ export default function BulkImportModal({
             <>
               <div
                 className={clsx(
-                  'bulk-import__dropzone',
-                  isDragOver && 'bulk-import__dropzone--active'
+                  'rounded-2xl border border-dashed border-slate-400/70 bg-black/40 p-8 text-center transition',
+                  isDragOver && 'border-slate-300 bg-black/55'
                 )}
                 onDrop={handleDrop}
                 onDragOver={(e) => { e.preventDefault(); setIsDragOver(true) }}
                 onDragLeave={() => setIsDragOver(false)}
               >
                 {file ? (
-                  <div className="bulk-import__file-row">
-                    <div className="bulk-import__file-icon">
-                      <Upload className="bulk-import__file-icon-svg" />
+                  <div className="flex items-center justify-center gap-3">
+                    <div className="rounded-[10px] bg-emerald-500/15 p-2">
+                      <Upload className="h-6 w-6 text-emerald-400" />
                     </div>
-                    <div className="bulk-import__file-meta">
-                      <span className="bulk-import__file-name">{file.name}</span>
-                      <span className="bulk-import__file-size">({formatFileSize(file.size)})</span>
+                    <div className="text-left">
+                      <span className="block font-semibold text-slate-200">{file.name}</span>
+                      <span className="ml-1.5 text-xs text-slate-400">({formatFileSize(file.size)})</span>
                     </div>
                     <button
                       onClick={() => setFile(null)}
-                      className="bulk-import__file-remove"
+                      className="rounded-[10px] bg-transparent p-1.5 text-slate-500 transition hover:bg-slate-400/20"
                     >
-                      <X size={18} className="bulk-import__file-remove-icon" />
+                      <X size={18} />
                     </button>
                   </div>
                 ) : (
                   <>
-                    <Upload className="bulk-import__drop-icon" />
-                    <p className="bulk-import__drop-title">
+                    <Upload className="mx-auto mb-4 h-12 w-12 text-slate-400" />
+                    <p className="mb-2 text-base font-medium text-slate-200">
                       Drag and drop your Excel file here, or click to browse
                     </p>
-                    <p className="bulk-import__drop-subtitle">
+                    <p className="mb-4 text-xs text-slate-400">
                       Supported format: .xlsx, .xls
                     </p>
                   </>
@@ -259,13 +268,13 @@ export default function BulkImportModal({
                   type="file"
                   accept=".xlsx,.xls"
                   onChange={handleFileChange}
-                  className="bulk-import__file-input"
+                  className="hidden"
                   id="bulk-import-excel-upload"
                 />
                 {!file && (
                   <label
                     htmlFor="bulk-import-excel-upload"
-                    className="bulk-import__file-button"
+                    className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-slate-400/35 bg-slate-50 px-4 py-2 font-semibold text-slate-900 transition hover:-translate-y-px hover:bg-white"
                   >
                     <Upload size={18} />
                     Select File
@@ -274,27 +283,27 @@ export default function BulkImportModal({
               </div>
 
               {/* Format Requirements */}
-              <div className="bulk-import__requirements">
-                <div className="bulk-import__requirements-header">
-                  <h4 className="bulk-import__requirements-title">
-                    <span className="bulk-import__requirements-dot" />
+              <div className="mt-4 rounded-2xl border border-slate-400/25 bg-black/35 p-4">
+                <div className="mb-3 flex items-center justify-between gap-3">
+                  <h4 className="inline-flex items-center gap-2 font-bold text-slate-100">
+                    <span className="h-2 w-2 rounded-full bg-slate-400 animate-pulse" />
                     Excel Format Requirements
                   </h4>
                   <button
                     onClick={downloadTemplate}
-                    className="bulk-import__template-btn"
+                    className="inline-flex items-center gap-2 rounded-[14px] border border-[var(--accent-100)] bg-[linear-gradient(90deg,var(--accent-gradient-from),var(--accent-gradient-via),var(--accent-gradient-to))] px-[18px] py-2.5 font-bold text-white shadow-[var(--glow-accent)] transition hover:-translate-y-px hover:brightness-105"
                   >
                     <Download size={16} />
                     Download Template
                   </button>
                 </div>
-                <ul className="bulk-import__requirements-list">
+                <ul className="grid list-none gap-2 p-0 text-[13px] text-slate-200">
                   {columns.map((col, idx) => (
-                    <li key={idx} className="bulk-import__requirements-item">
-                      <span className="bulk-import__requirements-badge">
+                    <li key={idx} className="flex items-start gap-2">
+                      <span className="mt-0.5 inline-flex h-5 w-5 items-center justify-center rounded-lg bg-slate-400/25 text-[11px] font-bold text-slate-50">
                         {col.letter}
                       </span>
-                      <span className="bulk-import__requirements-text">
+                      <span>
                         <strong>{col.label}</strong>{col.required ? '' : ' (optional)'} - {col.description}
                       </span>
                     </li>
@@ -308,31 +317,31 @@ export default function BulkImportModal({
           {step === 'preview' && validationResults && (
             <>
               {/* Summary Cards */}
-              <div className="bulk-import__summary">
+              <div className="mb-4 flex flex-col gap-4 sm:flex-row">
                 <div
                   className={clsx(
-                    "bulk-import__summary-card",
+                    'flex-1 rounded-2xl p-4 text-center transition',
                     validationResults.successCount > 0
-                      ? "bulk-import__summary-card--success"
-                      : "bulk-import__summary-card--muted"
+                      ? 'bg-[linear-gradient(135deg,#10b981,#16a34a)] shadow-[0_18px_30px_rgba(16,185,129,0.25)]'
+                      : 'border border-slate-200 bg-slate-100 dark:border-slate-600 dark:bg-slate-700/60'
                   )}
                 >
                   <div
                     className={clsx(
-                      "bulk-import__summary-value",
+                      'text-[28px] font-extrabold',
                       validationResults.successCount > 0
-                        ? "bulk-import__summary-value--light"
-                        : "bulk-import__summary-value--muted"
+                        ? 'text-white'
+                        : 'text-slate-400'
                     )}
                   >
                     {validationResults.successCount}
                   </div>
                   <div
                     className={clsx(
-                      "bulk-import__summary-label",
+                      'text-xs font-semibold',
                       validationResults.successCount > 0
-                        ? "bulk-import__summary-label--light"
-                        : "bulk-import__summary-label--muted"
+                        ? 'text-white/85'
+                        : 'text-slate-500'
                     )}
                   >
                     Valid
@@ -340,28 +349,28 @@ export default function BulkImportModal({
                 </div>
                 <div
                   className={clsx(
-                    "bulk-import__summary-card",
+                    'flex-1 rounded-2xl p-4 text-center transition',
                     validationResults.failureCount > 0
-                      ? "bulk-import__summary-card--error"
-                      : "bulk-import__summary-card--muted"
+                      ? 'bg-[linear-gradient(135deg,#f43f5e,#dc2626)] shadow-[0_18px_30px_rgba(244,63,94,0.25)]'
+                      : 'border border-slate-200 bg-slate-100 dark:border-slate-600 dark:bg-slate-700/60'
                   )}
                 >
                   <div
                     className={clsx(
-                      "bulk-import__summary-value",
+                      'text-[28px] font-extrabold',
                       validationResults.failureCount > 0
-                        ? "bulk-import__summary-value--light"
-                        : "bulk-import__summary-value--muted"
+                        ? 'text-white'
+                        : 'text-slate-400'
                     )}
                   >
                     {validationResults.failureCount}
                   </div>
                   <div
                     className={clsx(
-                      "bulk-import__summary-label",
+                      'text-xs font-semibold',
                       validationResults.failureCount > 0
-                        ? "bulk-import__summary-label--light"
-                        : "bulk-import__summary-label--muted"
+                        ? 'text-white/85'
+                        : 'text-slate-500'
                     )}
                   >
                     {validationResults.failureCount > 0 ? 'Needs Fixing' : 'Invalid'}
@@ -370,46 +379,46 @@ export default function BulkImportModal({
               </div>
 
               {/* Results Table */}
-              <div className="bulk-import__table-wrap">
-                <table className="bulk-import__table">
-                  <thead className="bulk-import__thead">
+              <div className="overflow-hidden rounded-2xl border border-slate-400/25 shadow-[0_8px_20px_rgba(15,23,42,0.06)]">
+                <table className="w-full border-collapse text-[13px]">
+                  <thead className="bg-slate-400/10">
                     <tr>
-                      <th className="bulk-import__th">Row</th>
+                      <th className="p-3 text-left font-bold text-slate-50">Row</th>
                       {tableColumns.map((col, idx) => (
-                        <th key={idx} className="bulk-import__th">{col.label}</th>
+                        <th key={idx} className="p-3 text-left font-bold text-slate-50">{col.label}</th>
                       ))}
-                      <th className="bulk-import__th">Status</th>
+                      <th className="p-3 text-left font-bold text-slate-50">Status</th>
                     </tr>
                   </thead>
-                  <tbody className="bulk-import__tbody">
+                  <tbody className="border-t border-slate-400/20">
                     {validationResults.results?.map((result, idx) => (
                       <tr
                         key={idx}
                         className={clsx(
-                          "bulk-import__row",
+                          'transition',
                           result.success
-                            ? "bulk-import__row--success"
-                            : "bulk-import__row--error"
+                            ? 'hover:bg-emerald-500/10'
+                            : 'border-l-4 border-red-500 bg-red-400/10'
                         )}
                       >
-                        <td className="bulk-import__cell bulk-import__cell--mono">{result.rowNumber}</td>
+                        <td className="p-3 font-mono text-xs text-slate-200">{result.rowNumber}</td>
                         {tableColumns.map((col, colIdx) => (
-                          <td key={colIdx} className="bulk-import__cell">
+                          <td key={colIdx} className="p-3 text-slate-200">
                             {col.render ? col.render(result) : (result[col.key] || '-')}
                           </td>
                         ))}
-                        <td className="bulk-import__cell">
+                        <td className="p-3 text-slate-200">
                           {result.success ? (
-                            <span className="bulk-import__status bulk-import__status--valid">
-                              <span className="bulk-import__status-dot" />
+                            <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-400">
+                              <span className="h-2 w-2 rounded-full bg-emerald-500" />
                               Valid
                             </span>
                           ) : (
-                            <div className="bulk-import__status bulk-import__status--error">
+                            <div className="inline-flex items-center gap-1.5 text-xs font-bold text-red-100">
                               {result.errors && result.errors.length > 0 ? (
-                                <ul className="bulk-import__error-list">
+                                <ul className="flex list-disc flex-col gap-1 pl-3.5">
                                   {result.errors.map((err, errIdx) => (
-                                    <li key={errIdx} className="bulk-import__error-list-item">
+                                    <li key={errIdx} className="text-xs font-semibold leading-5 text-red-100">
                                       {err}
                                     </li>
                                   ))}
@@ -430,57 +439,57 @@ export default function BulkImportModal({
 
           {/* Step 3: Results */}
           {step === 'results' && importResults && (
-            <div className="bulk-import__results">
+            <div className="py-8 text-center">
               <div
                 className={clsx(
-                  "bulk-import__results-icon",
+                  'mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full',
                   importResults.successCount > 0
-                    ? "bulk-import__results-icon--success"
-                    : "bulk-import__results-icon--error"
+                    ? 'bg-emerald-500/15'
+                    : 'bg-red-400/15'
                 )}
               >
                 {importResults.successCount > 0 ? (
-                  <CheckCircle2 className="bulk-import__results-icon-svg" />
+                  <CheckCircle2 className="h-8 w-8 text-emerald-600" />
                 ) : (
-                  <AlertCircle className="bulk-import__results-icon-svg bulk-import__results-icon-svg--error" />
+                  <AlertCircle className="h-8 w-8 text-red-600" />
                 )}
               </div>
-              <h4 className="bulk-import__results-title">{importResults.message}</h4>
-              <div className="bulk-import__results-cards">
-                <div className="bulk-import__results-card bulk-import__results-card--success">
-                  <div className="bulk-import__results-value bulk-import__results-value--success">
+              <h4 className="mb-3 text-lg font-bold text-slate-50">{importResults.message}</h4>
+              <div className="flex flex-col justify-center gap-4 sm:flex-row">
+                <div className="min-w-[110px] rounded-xl bg-emerald-500/15 p-3">
+                  <div className="text-xl font-extrabold text-emerald-400">
                     {importResults.successCount}
                   </div>
-                  <div className="bulk-import__results-label bulk-import__results-label--success">Created</div>
+                  <div className="text-xs font-semibold text-emerald-300">Created</div>
                 </div>
-                <div className="bulk-import__results-card bulk-import__results-card--error">
-                  <div className="bulk-import__results-value bulk-import__results-value--error">
+                <div className="min-w-[110px] rounded-xl bg-red-400/15 p-3">
+                  <div className="text-xl font-extrabold text-red-300">
                     {importResults.failureCount}
                   </div>
-                  <div className="bulk-import__results-label bulk-import__results-label--error">Failed</div>
+                  <div className="text-xs font-semibold text-red-200">Failed</div>
                 </div>
               </div>
             </div>
           )}
 
           {/* Footer Buttons */}
-          <div className="bulk-import__footer">
+          <div className="mt-4 flex w-full flex-col items-stretch gap-3 sm:flex-row sm:flex-wrap sm:items-center">
             {step === 'upload' && (
               <>
                 <button
                   onClick={onClose}
-                  className="bulk-import__btn bulk-import__btn--secondary"
+                  className={btnSecondaryClass}
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleValidate}
                   disabled={!file || isValidating}
-                  className="bulk-import__btn bulk-import__btn--primary"
+                  className={btnPrimaryClass}
                 >
                   {isValidating ? (
                     <>
-                      <div className="bulk-import__spinner" />
+                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-slate-900/50 border-t-transparent" />
                       Validating...
                     </>
                   ) : (
@@ -497,18 +506,18 @@ export default function BulkImportModal({
               <>
                 {validationResults?.failureCount > 0 ? (
                   validationResults.failureCount === validationResults.totalRows ? (
-                    <div className="bulk-import__panel-stack">
-                      <div className="bulk-import__panel bulk-import__panel--error">
-                        <div className="bulk-import__panel-row">
-                          <div className="bulk-import__panel-icon">
-                            <AlertCircle className="bulk-import__panel-icon-svg" />
+                    <div className="grid w-full gap-3">
+                      <div className="rounded-[18px] bg-[linear-gradient(135deg,#f43f5e,#dc2626)] p-5 text-white shadow-[0_18px_30px_rgba(244,63,94,0.35)]">
+                        <div className="flex items-start gap-4">
+                          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/20">
+                            <AlertCircle className="h-6 w-6 text-white" />
                           </div>
-                          <div className="bulk-import__panel-content">
-                            <h4 className="bulk-import__panel-title">Invalid File Format</h4>
-                            <p className="bulk-import__panel-text">
+                          <div className="flex-1">
+                            <h4 className="mb-2 text-lg font-bold">Invalid File Format</h4>
+                            <p className="text-[13px] leading-6 text-white/90">
                               The uploaded Excel file does not match the required format. Please ensure you are using the correct template with the required columns.
                             </p>
-                            <p className="bulk-import__panel-hint">
+                            <p className="mt-2 text-[11px] text-white/75">
                               Download the template for reference and try again.
                             </p>
                           </div>
@@ -516,24 +525,24 @@ export default function BulkImportModal({
                       </div>
                       <button
                         onClick={() => { setFile(null); setValidationResults(null); setStep('upload') }}
-                        className="bulk-import__btn bulk-import__btn--accent bulk-import__btn--block"
+                        className={`${btnAccentClass} w-full min-w-0`}
                       >
                         <Upload size={18} />
                         Upload Correct File
                       </button>
                     </div>
                   ) : (
-                    <div className="bulk-import__panel-stack">
-                      <div className="bulk-import__panel bulk-import__panel--warning">
-                        <div className="bulk-import__panel-row">
-                          <div className="bulk-import__panel-icon bulk-import__panel-icon--bounce">
-                            <AlertCircle className="bulk-import__panel-icon-svg" />
+                    <div className="grid w-full gap-3">
+                      <div className="rounded-[18px] bg-[linear-gradient(135deg,#f59e0b,#f97316)] p-5 text-white shadow-[0_18px_30px_rgba(245,158,11,0.3)]">
+                        <div className="flex items-start gap-4">
+                          <div className="flex h-12 w-12 animate-bounce items-center justify-center rounded-full bg-white/20">
+                            <AlertCircle className="h-6 w-6 text-white" />
                           </div>
-                          <div className="bulk-import__panel-content">
-                            <h4 className="bulk-import__panel-title">
+                          <div className="flex-1">
+                            <h4 className="mb-2 text-lg font-bold">
                               Please Fix {validationResults.failureCount} Error{validationResults.failureCount > 1 ? 's' : ''} Before Import
                             </h4>
-                            <p className="bulk-import__panel-text">
+                            <p className="text-[13px] leading-6 text-white/90">
                               All rows must be valid to proceed. Please review the highlighted errors above, correct them in your Excel file, and re-upload.
                             </p>
                           </div>
@@ -541,7 +550,7 @@ export default function BulkImportModal({
                       </div>
                       <button
                         onClick={() => { setFile(null); setValidationResults(null); setStep('upload') }}
-                        className="bulk-import__btn bulk-import__btn--accent bulk-import__btn--block"
+                        className={`${btnAccentClass} w-full min-w-0`}
                       >
                         <Upload size={18} />
                         Fix & Re-upload Excel
@@ -549,21 +558,21 @@ export default function BulkImportModal({
                     </div>
                   )
                 ) : (
-                  <div className="bulk-import__footer-row">
+                  <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
                     <button
                       onClick={() => setStep('upload')}
-                      className="bulk-import__btn bulk-import__btn--secondary"
+                      className={btnSecondaryClass}
                     >
                       Back
                     </button>
                     <button
                       onClick={handleImport}
                       disabled={isImporting}
-                      className="bulk-import__btn bulk-import__btn--confirm"
+                      className={btnConfirmClass}
                     >
                       {isImporting ? (
                         <>
-                          <div className="bulk-import__spinner" />
+                          <div className="h-4 w-4 animate-spin rounded-full border-2 border-slate-900/50 border-t-transparent" />
                           Importing...
                         </>
                       ) : (
@@ -579,11 +588,11 @@ export default function BulkImportModal({
             )}
 
             {step === 'results' && (
-              <div className="bulk-import__footer-row">
+              <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
                 {importResults?.failureCount > 0 && (
                   <button
                     onClick={downloadErrorReport}
-                    className="bulk-import__btn bulk-import__btn--secondary"
+                    className={btnSecondaryClass}
                   >
                     <Download size={18} />
                     Download Error Report
@@ -591,7 +600,7 @@ export default function BulkImportModal({
                 )}
                 <button
                   onClick={onClose}
-                  className="bulk-import__btn bulk-import__btn--accent"
+                  className={btnAccentClass}
                 >
                   Done
                 </button>

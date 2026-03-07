@@ -15,33 +15,33 @@ import { HeroSkeleton, FiltersSkeleton, TableSkeleton, WakeUpBanner } from '../.
 import useMinLoadingTime from '../../hooks/useMinLoadingTime'
 
 const roleColors = {
-  MASTER_ADMIN: 'role-tag role-tag--platform-owner',
-  SOCIETY_ADMIN: 'role-tag role-tag--society-admin',
-  CHAIRMAN: 'role-tag role-tag--chairman',
-  SECRETARY: 'role-tag role-tag--secretary',
-  TREASURER: 'role-tag role-tag--treasurer',
-  COMMITTEE: 'role-tag role-tag--committee',
-  MANAGER: 'role-tag role-tag--manager',
-  EMPLOYEE: 'role-tag role-tag--employee',
-  MEMBER: 'role-tag role-tag--member',
-  TENANT: 'role-tag role-tag--tenant',
-  VENDOR: 'role-tag role-tag--vendor',
-  VISITOR: 'role-tag role-tag--visitor',
+  MASTER_ADMIN: 'border border-violet-400/30 bg-violet-500/15 text-violet-200',
+  SOCIETY_ADMIN: 'border border-blue-400/30 bg-blue-500/15 text-blue-200',
+  CHAIRMAN: 'border border-emerald-400/30 bg-emerald-500/15 text-emerald-200',
+  SECRETARY: 'border border-cyan-400/30 bg-cyan-500/15 text-cyan-200',
+  TREASURER: 'border border-amber-400/30 bg-amber-500/15 text-amber-200',
+  COMMITTEE: 'border border-purple-400/30 bg-purple-500/15 text-purple-200',
+  MANAGER: 'border border-orange-400/30 bg-orange-500/15 text-orange-200',
+  EMPLOYEE: 'border border-orange-300/30 bg-orange-400/15 text-orange-100',
+  MEMBER: 'border border-slate-400/30 bg-slate-500/15 text-slate-200',
+  TENANT: 'border border-pink-400/30 bg-pink-500/15 text-pink-200',
+  VENDOR: 'border border-sky-400/30 bg-sky-500/15 text-sky-200',
+  VISITOR: 'border border-red-400/30 bg-red-500/15 text-red-200',
 }
 
 const roleAccentColors = {
-  MASTER_ADMIN: 'var(--role-platform-owner)',
-  SOCIETY_ADMIN: 'var(--role-society-admin)',
-  CHAIRMAN: 'var(--role-chairman)',
-  SECRETARY: 'var(--role-secretary)',
-  TREASURER: 'var(--role-treasurer)',
-  COMMITTEE: 'var(--role-committee)',
-  MANAGER: 'var(--role-manager)',
-  EMPLOYEE: 'var(--role-employee)',
-  MEMBER: 'var(--role-member)',
-  TENANT: 'var(--role-tenant)',
-  VENDOR: 'var(--role-vendor)',
-  VISITOR: 'var(--role-visitor)',
+  MASTER_ADMIN: '#8b5cf6',
+  SOCIETY_ADMIN: '#3b82f6',
+  CHAIRMAN: '#10b981',
+  SECRETARY: '#06b6d4',
+  TREASURER: '#f59e0b',
+  COMMITTEE: '#a855f7',
+  MANAGER: '#f97316',
+  EMPLOYEE: '#fb923c',
+  MEMBER: '#94a3b8',
+  TENANT: '#ec4899',
+  VENDOR: '#0ea5e9',
+  VISITOR: '#ef4444',
 }
 
 export default function Users() {
@@ -352,7 +352,6 @@ export default function Users() {
   // UNLESS viewing a specific society from URL - then show all users in that society
   // For others, show all users they can see
   let displayUsers = users
-  const scopedSocietyIds = new Set(societies.map(s => s.id))
   
   // Apply society filter from URL if present
   if (urlSocietyId) {
@@ -497,7 +496,7 @@ export default function Users() {
   }
 
   if (showSkeleton) return (
-    <div className="users-page">
+    <div className="min-h-[calc(100vh-68px)] bg-[var(--bg-secondary)] px-6 pb-12 pt-7 text-[var(--text-primary)]">
       <WakeUpBanner />
       <HeroSkeleton statCount={0} />
       <FiltersSkeleton filterCount={3} />
@@ -506,18 +505,18 @@ export default function Users() {
   )
 
   return (
-    <div className="users-page">
+    <div className="min-h-[calc(100vh-68px)] bg-[var(--bg-secondary)] px-6 pb-12 pt-7 text-[var(--text-primary)]">
       {/* Header */}
-      <div className="users-header">
+      <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="users-title">
+          <h1 className="m-0 text-[28px] font-bold text-[var(--text-primary)]">
             {getPageTitle()}
           </h1>
-          <p className="users-subtitle">
+          <p className="mt-1.5 text-sm text-[var(--text-secondary)]">
             {getPageDescription()}
           </p>
         </div>
-        <div className="users-actions">
+        <div className="flex flex-wrap gap-2.5">
           {/* Bulk Actions - only show for SECRETARY and COMMITTEE (they manage multiple users like MEMBER, EMPLOYEE, etc.) */}
           {/* SOCIETY_ADMIN only creates unique positions (CHAIRMAN, SECRETARY, TREASURER) - no bulk import needed */}
           {['SECRETARY', 'COMMITTEE'].includes(user?.role) ? (
@@ -529,14 +528,14 @@ export default function Users() {
                   setBulkImportError('')
                   setShowBulkImportModal(true)
                 }}
-                className="users-action-btn users-action-btn--success"
+                className="inline-flex items-center gap-2.5 rounded-xl border border-transparent bg-green-600 px-3.5 py-2.5 text-[13px] font-semibold text-white transition hover:bg-green-700"
               >
                 <Upload size={18} />
                 Import Excel
               </button>
               <button
                 onClick={() => setShowBulkCreateModal(true)}
-                className="users-action-btn users-action-btn--purple"
+                className="inline-flex items-center gap-2.5 rounded-xl border border-transparent bg-violet-600 px-3.5 py-2.5 text-[13px] font-semibold text-white transition hover:bg-violet-700"
               >
                 <UserPlus size={18} />
                 Auto-Create Users
@@ -546,7 +545,7 @@ export default function Users() {
           {creatableRoles.length > 0 && (
             <button
               onClick={() => handleOpenModal(null)}
-              className="users-action-btn users-action-btn--primary"
+              className="inline-flex items-center gap-2.5 rounded-xl border border-transparent bg-blue-600 px-3.5 py-2.5 text-[13px] font-semibold text-white transition hover:bg-blue-700"
             >
               <Plus size={20} />
               {urlRole === 'SOCIETY_ADMIN' ? 'Add Society Admin' : isPlatformLevel && !urlSocietyId ? 'Create User' : 'Add User'}
@@ -556,30 +555,30 @@ export default function Users() {
       </div>
 
       {/* Role Permissions Info */}
-      <div className="users-permissions">
-        <div className="users-permissions__row">
-          <Shield className="users-permissions__icon" size={20} />
+      <div className="mb-6 rounded-2xl border border-[color-mix(in_srgb,var(--accent-primary)_20%,var(--border-light))] bg-[color-mix(in_srgb,var(--accent-primary)_8%,var(--bg-tertiary))] p-4">
+        <div className="flex items-start gap-3">
+          <Shield className="text-[var(--accent-primary)]" size={20} />
           <div>
-            <h3 className="users-permissions__title">Your Permissions ({user?.role?.replace('_', ' ')})</h3>
-            <p className="users-permissions__text">
+            <h3 className="m-0 text-sm font-semibold text-[var(--text-primary)]">Your Permissions ({user?.role?.replace('_', ' ')})</h3>
+            <p className="mt-1.5 text-[13px] text-[var(--text-secondary)]">
               Access scope is based on your current role and society assignment.
             </p>
-            <div className="users-permissions__meta">
+            <div className="mt-2.5 flex flex-wrap gap-2.5 text-xs">
               {creatableRoles.length > 0 && (
                 <div>
-                  <span className="users-permissions__label">Can create:</span>{' '}
-                  <span className="users-permissions__value">
+                  <span className="font-semibold text-[var(--accent-primary)]">Can create:</span>{' '}
+                  <span className="text-[var(--text-primary)]">
                     {creatableRoles.map(r => r.replace('_', ' ')).join(', ')}
                   </span>
                 </div>
               )}
               {updatableRoles.length > 0 && creatableRoles.length > 0 && (
-                <span className="users-permissions__divider">|</span>
+                <span className="text-[var(--text-tertiary)]">|</span>
               )}
               {updatableRoles.length > 0 && (
                 <div>
-                  <span className="users-permissions__label">Can edit/delete:</span>{' '}
-                  <span className="users-permissions__value">
+                  <span className="font-semibold text-[var(--accent-primary)]">Can edit/delete:</span>{' '}
+                  <span className="text-[var(--text-primary)]">
                     {updatableRoles.map(r => r.replace('_', ' ')).join(', ')}
                   </span>
                 </div>
@@ -590,16 +589,16 @@ export default function Users() {
       </div>
 
       {/* Filters */}
-      <div className="users-filters">
-        <div className="users-filters__row">
-          <div className="users-search">
-            <Search className="users-search__icon" size={20} />
+      <div className="mb-6 rounded-2xl border border-[var(--border-light)] bg-[var(--bg-card)] p-4 shadow-sm">
+        <div className="flex flex-wrap gap-4">
+          <div className="relative min-w-[220px] flex-1">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#9ca3af]" size={20} />
             <input
               type="text"
               placeholder="Search users..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="users-search__input"
+              className="w-full rounded-xl border border-[var(--border-default)] bg-[var(--bg-card)] px-3.5 py-2.5 pl-10 text-sm text-[var(--text-primary)] outline-none transition-all focus:border-blue-500 focus:shadow-[0_0_0_2px_rgba(59,130,246,0.2)]"
             />
           </div>
           {/* Show role filter when there are manageable roles */}
@@ -607,7 +606,7 @@ export default function Users() {
             <select
               value={filterRole}
               onChange={(e) => setFilterRole(e.target.value)}
-              className="users-filter-select"
+              className="rounded-xl border border-[var(--border-default)] bg-[var(--bg-card)] px-3.5 py-2.5 text-sm text-[var(--text-primary)]"
             >
               <option value="">All Roles</option>
               {/* Include current user's role + roles they can manage */}
@@ -623,65 +622,65 @@ export default function Users() {
 
       {/* MASTER_ADMIN sees user cards with navigation (unless viewing specific society) */}
       {isPlatformLevel && !urlSocietyId ? (
-        <div className="users-section">
-          <h2 className="users-section__title">
+        <div className="flex flex-col gap-4">
+          <h2 className="m-0 flex items-center gap-2.5 text-base font-bold text-[var(--text-primary)]">
             <UsersIcon size={20} />
             Society Administrators
-            <span className="users-section__count">({filteredUsers.length})</span>
+            <span className="text-[13px] font-medium text-[var(--text-tertiary)]">({filteredUsers.length})</span>
           </h2>
           
           {filteredUsers.length === 0 ? (
-            <div className="users-empty">
-              <UsersIcon className="users-empty__icon" size={48} />
-              <p className="users-empty__text">No users found</p>
-              <p className="users-empty__subtext">Create a new Society Admin to get started</p>
+            <div className="rounded-2xl border border-[var(--border-light)] bg-[var(--bg-card)] p-8 text-center">
+              <UsersIcon className="mb-3 text-[#4b5563]" size={48} />
+              <p className="m-0 text-[var(--text-secondary)]">No users found</p>
+              <p className="mt-1.5 text-xs text-[var(--text-tertiary)]">Create a new Society Admin to get started</p>
             </div>
           ) : (
-            <div className="user-grid">
+            <div className="grid grid-cols-[repeat(auto-fit,minmax(260px,1fr))] gap-3.5">
               {filteredUsers.map((u) => {
                 const canEdit = updatableRoles.includes(u.role)
                 const canDelete = u.role !== 'MASTER_ADMIN' && updatableRoles.includes(u.role)
                 const societyName = getSocietyName(u.societyId)
                 
                 return (
-                  <div key={u.id} className="user-card">
+                  <div key={u.id} className="rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] p-3.5 shadow-[0_4px_12px_rgba(15,23,42,0.08)] transition-all hover:border-[var(--border-default)] hover:shadow-[0_6px_14px_rgba(15,23,42,0.1)]">
                     {/* Card Header */}
-                    <div className="user-card__header">
-                      <div className="user-card__identity">
-                        <div className="user-card__avatar">
+                    <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--accent-primary)] text-[13px] font-bold text-white">
                           <span>
                             {u.name?.charAt(0)?.toUpperCase()}
                           </span>
                         </div>
                         <div>
-                          <h3 className="user-card__name">{u.name}</h3>
-                          <p className="user-card__email">{u.email}</p>
+                          <h3 className="m-0 break-words text-[15px] font-bold leading-tight text-[var(--text-primary)]">{u.name}</h3>
+                          <p className="mt-0.5 max-w-[180px] overflow-hidden text-ellipsis whitespace-nowrap text-xs text-[var(--text-tertiary)]">{u.email}</p>
                         </div>
                       </div>
-                      <span className={clsx(roleColors[u.role])}>
+                      <span className={clsx('inline-flex items-center whitespace-nowrap rounded-full px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.04em]', roleColors[u.role] || 'border border-slate-400/30 bg-slate-500/15 text-slate-200')}>
                         {u.role?.replace('_', ' ')}
                       </span>
                     </div>
                     
                     {/* Society Info */}
-                    <div className="user-card__society">
+                    <div className="mb-2 flex items-center gap-2 rounded-lg bg-[var(--bg-tertiary)] px-2.5 py-2">
                       <Building2 size={16} />
-                      <span className="user-card__society-text">{societyName}</span>
+                      <span className="flex-1 text-xs text-[var(--text-secondary)]">{societyName}</span>
                     </div>
                     
                     {/* Phone */}
                     {u.phone && (
-                      <p className="user-card__phone">
+                      <p className="mb-2.5 mt-0 text-xs text-[var(--text-tertiary)]">
                         📞 {u.phone}
                       </p>
                     )}
                     
                     {/* Actions */}
-                    <div className="user-card__actions">
+                    <div className="flex items-center gap-2 border-t border-[var(--border-light)] pt-2.5">
                       {u.societyId ? (
                         <button
                           onClick={() => navigate(`/societies/${u.societyId}`)}
-                          className="user-card__action user-card__action--view"
+                          className="inline-flex min-h-[34px] flex-1 items-center justify-center gap-1.5 rounded-lg border border-transparent bg-blue-500/15 px-2.5 py-1.5 text-xs font-semibold text-blue-300 transition hover:bg-blue-500/25"
                         >
                           <Building2 size={16} />
                           View Society
@@ -690,7 +689,7 @@ export default function Users() {
                         <button
                           type="button"
                           disabled
-                          className="user-card__action user-card__action--view user-card__action--disabled"
+                          className="inline-flex min-h-[34px] flex-1 cursor-not-allowed items-center justify-center gap-1.5 rounded-lg border border-transparent bg-blue-500/15 px-2.5 py-1.5 text-xs font-semibold text-blue-300 opacity-60"
                           title="No society assigned"
                         >
                           <Building2 size={16} />
@@ -700,7 +699,7 @@ export default function Users() {
                       {canEdit && (
                         <button
                           onClick={() => handleOpenModal(u)}
-                          className="user-card__action user-card__action--icon"
+                          className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--bg-tertiary)] p-0 text-[var(--text-tertiary)] transition hover:bg-[var(--bg-secondary)] hover:text-blue-500"
                           title="Edit user"
                         >
                           <Edit size={18} />
@@ -709,7 +708,7 @@ export default function Users() {
                       {canDelete && (
                         <button
                           onClick={() => confirmAndDeleteUser(u, { societyName })}
-                          className="user-card__action user-card__action--icon user-card__action--danger"
+                          className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--bg-tertiary)] p-0 text-[var(--text-tertiary)] transition hover:bg-red-500/10 hover:text-red-500"
                           title="Delete user"
                         >
                           <Trash2 size={18} />
@@ -724,21 +723,21 @@ export default function Users() {
         </div>
       ) : (
       /* Card-row view for non-MASTER_ADMIN users */
-      <div className="utbl">
+      <div className="flex flex-col gap-0">
         {(
           <>
           {/* Column labels */}
-          <div className="utbl__head">
-            <span className="utbl__col utbl__col--name">Name</span>
-            <span className="utbl__col utbl__col--email">Email</span>
-            <span className="utbl__col utbl__col--role">Role</span>
-            <span className="utbl__col utbl__col--prop">Property</span>
-            <span className="utbl__col utbl__col--phone">Phone</span>
-            <span className="utbl__col utbl__col--acts">Actions</span>
+          <div className="mb-1.5 hidden h-10 grid-cols-[minmax(180px,1.4fr)_minmax(160px,1.3fr)_120px_140px_130px_90px] items-center px-[18px] pl-[30px] text-[10.5px] font-bold uppercase tracking-[0.08em] text-[var(--text-tertiary)] lg:grid">
+            <span>Name</span>
+            <span>Email</span>
+            <span>Role</span>
+            <span>Property</span>
+            <span>Phone</span>
+            <span className="text-right">Actions</span>
           </div>
 
           {/* Rows */}
-          <div className="utbl__body">
+          <div className="flex flex-col gap-1.5">
             {filteredUsers.map((u) => {
               const canEdit = u.id === user?.id || updatableRoles.includes(u.role)
               const canDelete = u.role !== 'MASTER_ADMIN' && updatableRoles.includes(u.role)
@@ -747,66 +746,66 @@ export default function Users() {
               const accentColor = roleAccentColors[u.role] || 'var(--role-member)'
 
               return (
-              <div key={u.id} className="utbl__row" style={{ '--row-accent': accentColor }}>
-                <div className="utbl__accent" />
-                <div className="utbl__col utbl__col--name">
-                  <div className="utbl__avatar" style={{ '--avatar-accent': accentColor }}>
+              <div key={u.id} className="relative grid min-h-[58px] grid-cols-1 gap-2 overflow-hidden rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] px-3 py-3 pl-5 transition-all hover:-translate-y-0.5 hover:border-[var(--border-default)] hover:bg-[color-mix(in_srgb,var(--bg-card),var(--text-primary)_2%)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.05)] lg:grid-cols-[minmax(180px,1.4fr)_minmax(160px,1.3fr)_120px_140px_130px_90px] lg:items-center lg:gap-x-3 lg:px-[18px] lg:py-[14px] lg:pl-[30px]" style={{ '--row-accent': accentColor }}>
+                <div className="absolute bottom-2 left-0 top-2 w-1 rounded-r-[3px] bg-[var(--row-accent)] opacity-80" />
+                <div className="flex min-w-0 items-center">
+                  <div className="mr-3 flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] border border-[var(--border-light)] bg-[var(--bg-tertiary)] text-sm font-bold text-[var(--text-primary)]">
                     {u.name?.charAt(0)?.toUpperCase()}
                   </div>
-                  <div className="utbl__name-block">
-                    <span className="utbl__name">{u.name}</span>
-                    {isSelf && <span className="utbl__you">You</span>}
+                  <div className="flex min-w-0 items-center gap-2">
+                    <span className="overflow-hidden text-ellipsis whitespace-nowrap text-[13.5px] font-semibold text-[var(--text-primary)]">{u.name}</span>
+                    {isSelf && <span className="inline-flex shrink-0 items-center rounded-full border border-[var(--border-light)] bg-[var(--bg-tertiary)] px-2 py-0.5 text-[10px] font-bold tracking-[0.03em] text-[var(--text-primary)]">You</span>}
                   </div>
                 </div>
 
-                <div className="utbl__col utbl__col--email">
-                  <span className="utbl__email">{u.email}</span>
+                <div className="flex min-w-0 items-center">
+                  <span className="overflow-hidden text-ellipsis whitespace-nowrap font-mono text-[12.5px] tracking-[-0.01em] text-[var(--text-secondary)]">{u.email}</span>
                 </div>
 
-                <div className="utbl__col utbl__col--role">
-                  <span className={clsx(roleColors[u.role])}>
-                    <span className="role-tag__dot" />
+                <div className="flex min-w-0 items-center">
+                  <span className={clsx('inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.04em]', roleColors[u.role] || 'border border-slate-400/30 bg-slate-500/15 text-slate-200')}>
+                    <span className="h-[7px] w-[7px] rounded-full" style={{ backgroundColor: accentColor }} />
                     {u.role?.replace('_', ' ')}
                   </span>
                 </div>
 
-                <div className="utbl__col utbl__col--prop">
+                <div className="flex min-w-0 items-center lg:justify-end">
                   {userFlat ? (
-                    <span className="utbl__prop-chip">
+                    <span className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border-light)] bg-[var(--bg-tertiary)] px-2.5 py-1 text-xs font-semibold text-[var(--text-secondary)]">
                       <Home size={13} />
                       <span>{userFlat.flatNumber}</span>
-                      {userFlat.wingName && <span className="utbl__prop-wing">{userFlat.wingName}</span>}
+                      {userFlat.wingName && <span className="text-[10.5px] font-medium text-[var(--text-tertiary)]">{userFlat.wingName}</span>}
                     </span>
                   ) : (
-                    <span className="utbl__prop-empty">—</span>
+                    <span className="text-sm text-[var(--text-muted)]">—</span>
                   )}
                 </div>
 
-                <div className="utbl__col utbl__col--phone">
-                  <span className="utbl__phone">{u.phone || '—'}</span>
+                <div className="flex min-w-0 items-center">
+                  <span className="text-[12.5px] text-[var(--text-secondary)]">{u.phone || '—'}</span>
                 </div>
 
-                <div className="utbl__col utbl__col--acts">
-                  <div className="utbl__act-group">
+                <div className="flex min-w-0 items-center lg:justify-end">
+                  <div className="inline-flex items-center gap-0.5 rounded-[10px] border border-transparent p-[3px] transition-all hover:border-[var(--border-light)] hover:bg-[var(--bg-tertiary)]">
                     {canEdit ? (
-                      <button onClick={() => handleOpenModal(u)} className="utbl__act-btn" title={isSelf ? 'Edit your profile' : 'Edit user'}>
+                      <button onClick={() => handleOpenModal(u)} className="inline-flex h-[30px] w-[30px] items-center justify-center rounded-[7px] border-none bg-transparent text-[var(--text-tertiary)] transition hover:bg-black/5 hover:text-[var(--text-primary)]" title={isSelf ? 'Edit your profile' : 'Edit user'}>
                         <Edit size={15} />
                       </button>
                     ) : (
-                      <button disabled className="utbl__act-btn" title="No permission to edit">
+                      <button disabled className="inline-flex h-[30px] w-[30px] cursor-not-allowed items-center justify-center rounded-[7px] border-none bg-transparent text-[var(--text-muted)] opacity-40" title="No permission to edit">
                         <Edit size={15} />
                       </button>
                     )}
                     {canDelete ? (
                       <button
                         onClick={() => confirmAndDeleteUser(u, { userFlat, property: userFlat?.flatNumber || 'Unassigned' })}
-                        className="utbl__act-btn utbl__act-btn--danger"
+                        className="inline-flex h-[30px] w-[30px] items-center justify-center rounded-[7px] border-none bg-transparent text-[var(--text-tertiary)] transition hover:bg-red-500/10 hover:text-red-500"
                         title="Delete user"
                       >
                         <Trash2 size={15} />
                       </button>
                     ) : (
-                      <button disabled className="utbl__act-btn" title={isSelf ? 'Cannot delete yourself' : 'No permission'}>
+                      <button disabled className="inline-flex h-[30px] w-[30px] cursor-not-allowed items-center justify-center rounded-[7px] border-none bg-transparent text-[var(--text-muted)] opacity-40" title={isSelf ? 'Cannot delete yourself' : 'No permission'}>
                         <Trash2 size={15} />
                       </button>
                     )}
@@ -823,15 +822,15 @@ export default function Users() {
 
       {/* Modal */}
       {showModal && (
-        <div className="users-modal">
-          <div className="users-modal__panel">
-            <div className="users-modal__header">
-              <h3 className="users-modal__title">{editingUser ? 'Edit User' : 'Add User'}</h3>
-              <button onClick={() => { setShowModal(false); setError(''); setShowPassword(false); }} className="users-modal__close">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-[2px]">
+          <div className="max-h-[90vh] w-full max-w-[560px] overflow-hidden rounded-2xl border border-[var(--border-default)] bg-[var(--bg-card)] shadow-[0_24px_60px_rgba(0,0,0,0.3)]">
+            <div className="flex items-center justify-between border-b border-[var(--border-light)] px-5 py-4">
+              <h3 className="text-lg font-semibold text-[var(--text-primary)]">{editingUser ? 'Edit User' : 'Add User'}</h3>
+              <button onClick={() => { setShowModal(false); setError(''); setShowPassword(false); }} className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-transparent text-[var(--text-tertiary)] transition hover:border-[var(--border-light)] hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-primary)]">
                 <X size={20} />
               </button>
             </div>
-            <form onSubmit={handleSubmit} className="users-modal__form">
+            <form onSubmit={handleSubmit} className="max-h-[calc(90vh-70px)] space-y-4 overflow-y-auto px-5 py-4">
               <FormErrorSummary message={error} />
               <FormInput
                 label="Name"
@@ -848,7 +847,7 @@ export default function Users() {
                 required
                 placeholder="user@example.com"
               />
-              <div className="users-modal__password-field">
+              <div className="relative">
                 <FormInput
                   label={editingUser ? 'New Password (optional)' : 'Password'}
                   name="password"
@@ -858,7 +857,7 @@ export default function Users() {
                 />
                 <button
                   type="button"
-                  className="users-modal__toggle-pw"
+                  className="absolute right-3 top-[35px] inline-flex h-8 w-8 items-center justify-center rounded-md border border-transparent text-[var(--text-tertiary)] transition hover:border-[var(--border-light)] hover:bg-[var(--bg-tertiary)]"
                   onClick={() => setShowPassword(!showPassword)}
                   title={showPassword ? 'Hide password' : 'Show password'}
                 >
@@ -937,18 +936,18 @@ export default function Users() {
                 defaultValue={editingUser?.phone}
                 required
               />
-              <div className="users-modal__actions">
+              <div className="mt-2 flex justify-end gap-2 border-t border-[var(--border-light)] pt-4">
                 <button
                   type="button"
                   onClick={() => { setShowModal(false); setError(''); setShowPassword(false); }}
-                  className="users-modal__btn users-modal__btn--ghost"
+                  className="inline-flex h-10 items-center justify-center rounded-lg border border-[var(--border-default)] bg-[var(--bg-card)] px-4 text-sm font-medium text-[var(--text-secondary)] transition hover:border-[var(--border-strong)] hover:text-[var(--text-primary)]"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={creatableRoles.length === 0 && !editingUser}
-                  className="users-modal__btn users-modal__btn--primary"
+                  className="inline-flex h-10 items-center justify-center rounded-lg border border-emerald-500 bg-emerald-500 px-4 text-sm font-semibold text-white transition hover:bg-emerald-600 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {editingUser ? 'Update' : 'Create'}
                 </button>
@@ -960,10 +959,10 @@ export default function Users() {
 
       {/* Bulk Import Modal */}
       {showBulkImportModal && (
-        <div className="bulk-modal">
-          <div className="bulk-modal__panel">
-            <div className="bulk-modal__header">
-              <h3 className="bulk-modal__title">Bulk Import Users</h3>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-[2px]">
+          <div className="max-h-[90vh] w-full max-w-[900px] overflow-hidden rounded-2xl border border-[var(--border-default)] bg-[var(--bg-card)] shadow-[0_24px_60px_rgba(0,0,0,0.3)]">
+            <div className="flex items-center justify-between border-b border-[var(--border-light)] px-5 py-4">
+              <h3 className="text-lg font-semibold text-[var(--text-primary)]">Bulk Import Users</h3>
               <button 
                 onClick={() => {
                   setShowBulkImportModal(false)
@@ -971,16 +970,16 @@ export default function Users() {
                   setBulkImportPreview(null)
                   setBulkImportError('')
                 }}
-                className="bulk-modal__close"
+                className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-transparent text-[var(--text-tertiary)] transition hover:border-[var(--border-light)] hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-primary)]"
               >
                 <X size={20} />
               </button>
             </div>
             
-            <div className="bulk-modal__body">
+            <div className="max-h-[calc(90vh-150px)] space-y-4 overflow-y-auto px-5 py-4">
               {/* Error Message */}
               {bulkImportError && (
-                <div className="bulk-error">
+                <div className="flex items-center gap-2 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm font-medium text-red-300">
                   <AlertCircle size={18} />
                   {bulkImportError}
                 </div>
@@ -991,8 +990,8 @@ export default function Users() {
                 <>
                   <div
                     className={clsx(
-                      'bulk-upload',
-                      isDragOver && 'bulk-upload--active'
+                      'rounded-xl border-2 border-dashed border-[var(--border-default)] bg-[var(--bg-tertiary)] p-6 text-center transition',
+                      isDragOver && 'border-emerald-500 bg-emerald-500/10'
                     )}
                     onDragOver={(e) => { e.preventDefault(); setIsDragOver(true) }}
                     onDragLeave={() => setIsDragOver(false)}
@@ -1009,28 +1008,28 @@ export default function Users() {
                     }}
                   >
                     {bulkImportFile ? (
-                      <div className="bulk-upload__file">
-                        <div className="bulk-upload__file-icon">
+                      <div className="flex items-center gap-3 rounded-lg border border-[var(--border-light)] bg-[var(--bg-card)] p-3 text-left">
+                        <div className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-500/15 text-emerald-300">
                           <FileSpreadsheet size={24} />
                         </div>
-                        <div className="bulk-upload__meta">
-                          <p className="bulk-upload__file-name">{bulkImportFile.name}</p>
-                          <p className="bulk-upload__file-size">{(bulkImportFile.size / 1024).toFixed(1)} KB</p>
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-semibold text-[var(--text-primary)]">{bulkImportFile.name}</p>
+                          <p className="text-xs text-[var(--text-tertiary)]">{(bulkImportFile.size / 1024).toFixed(1)} KB</p>
                         </div>
                         <button
                           onClick={() => setBulkImportFile(null)}
-                          className="bulk-upload__remove"
+                          className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-transparent text-[var(--text-tertiary)] transition hover:border-[var(--border-light)] hover:bg-[var(--bg-tertiary)]"
                         >
                           <X size={18} />
                         </button>
                       </div>
                     ) : (
                       <>
-                        <Upload size={48} className="users-empty__icon" />
-                        <p className="bulk-upload__prompt">
+                        <Upload size={48} className="mx-auto mb-3 text-[var(--text-tertiary)]" />
+                        <p className="text-sm font-semibold text-[var(--text-primary)]">
                           Drag and drop your Excel file here, or click to browse
                         </p>
-                        <p className="bulk-upload__hint">Supported format: .xlsx, .xls</p>
+                        <p className="mt-1 text-xs text-[var(--text-tertiary)]">Supported format: .xlsx, .xls</p>
                       </>
                     )}
                     <input
@@ -1051,7 +1050,7 @@ export default function Users() {
                         <button
                           type="button"
                           onClick={() => fileInputRef.current?.click()}
-                          className="bulk-upload__button"
+                          className="mt-4 inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-emerald-500 bg-emerald-500 px-4 text-sm font-semibold text-white transition hover:bg-emerald-600"
                         >
                           <Upload size={18} />
                           Select File
@@ -1061,10 +1060,10 @@ export default function Users() {
                   </div>
 
                   {/* Format Requirements with attractive styling */}
-                  <div className="bulk-requirements">
-                    <div className="bulk-requirements__header">
-                      <h4 className="bulk-requirements__title">
-                        <span className="bulk-requirements__dot"></span>
+                  <div className="space-y-3 rounded-xl border border-[var(--border-light)] bg-[var(--bg-tertiary)] p-4">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <h4 className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--text-primary)]">
+                        <span className="h-2 w-2 rounded-full bg-emerald-400"></span>
                         Excel Format Requirements
                       </h4>
                       <button
@@ -1083,38 +1082,38 @@ export default function Users() {
                             })
                             .catch(() => setBulkImportError('Failed to download template'))
                         }}
-                        className="bulk-requirements__download"
+                        className="inline-flex h-9 items-center justify-center gap-2 rounded-lg border border-[var(--border-default)] bg-[var(--bg-card)] px-3 text-sm font-medium text-[var(--text-secondary)] transition hover:border-[var(--border-strong)] hover:text-[var(--text-primary)]"
                       >
                         <Download size={16} />
                         Download Template
                       </button>
                     </div>
-                    <ul className="bulk-requirements__list">
-                      <li className="bulk-requirements__item">
-                        <span className="bulk-requirements__badge">A</span>
+                    <ul className="space-y-2 text-sm text-[var(--text-secondary)]">
+                      <li className="flex items-start gap-2">
+                        <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-md bg-slate-500/20 text-[11px] font-bold text-slate-200">A</span>
                         <span><strong>Name</strong> (required) - Full name of the user</span>
                       </li>
-                      <li className="bulk-requirements__item">
-                        <span className="bulk-requirements__badge">B</span>
+                      <li className="flex items-start gap-2">
+                        <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-md bg-slate-500/20 text-[11px] font-bold text-slate-200">B</span>
                         <span><strong>Email</strong> (required) - Used as username</span>
                       </li>
-                      <li className="bulk-requirements__item">
-                        <span className="bulk-requirements__badge">C</span>
+                      <li className="flex items-start gap-2">
+                        <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-md bg-slate-500/20 text-[11px] font-bold text-slate-200">C</span>
                         <span><strong>Flat Number</strong> - Required for unit owners. Supports comma-separated for multiple units (e.g., "A-101, S-001")</span>
                       </li>
-                      <li className="bulk-requirements__item">
-                        <span className="bulk-requirements__badge">D</span>
+                      <li className="flex items-start gap-2">
+                        <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-md bg-slate-500/20 text-[11px] font-bold text-slate-200">D</span>
                         <span><strong>Phone</strong> (optional) - Contact number</span>
                       </li>
-                      <li className="bulk-requirements__item">
-                        <span className="bulk-requirements__badge">E</span>
+                      <li className="flex items-start gap-2">
+                        <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-md bg-slate-500/20 text-[11px] font-bold text-slate-200">E</span>
                         <span><strong>Role</strong> (optional) - Default: MEMBER</span>
                       </li>
                     </ul>
                     {/* Role-Unit Type Rules */}
                     <div>
-                      <p className="bulk-requirements__rule-title">Role & Unit Type Rules:</p>
-                      <ul className="bulk-requirements__rules">
+                      <p className="mb-1 text-xs font-semibold uppercase tracking-[0.06em] text-[var(--text-tertiary)]">Role & Unit Type Rules:</p>
+                      <ul className="space-y-1 text-sm text-[var(--text-secondary)]">
                         <li>• <strong>MEMBER, CHAIRMAN, SECRETARY, TREASURER, COMMITTEE, TENANT</strong> → Can own FLAT, SHOP, or OFFICE</li>
                         <li>• <strong>Multiple units:</strong> Use comma-separated values (e.g., "A-101, S-001") for owners with multiple properties</li>
                         <li>• <strong>EMPLOYEE, VISITOR</strong> → Cannot be assigned to any unit (leave Flat Number empty)</li>
@@ -1128,61 +1127,61 @@ export default function Users() {
               {bulkImportPreview && (
                 <>
                   {/* Summary Cards */}
-                  <div className="bulk-summary">
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                     <div className={clsx(
-                      'bulk-summary__card',
-                      bulkImportPreview.successCount > 0 && 'bulk-summary__card--valid'
+                      'rounded-xl border p-4',
+                      bulkImportPreview.successCount > 0 ? 'border-emerald-500/40 bg-emerald-500/10' : 'border-[var(--border-light)] bg-[var(--bg-tertiary)]'
                     )}>
-                      <div className="bulk-summary__count">
+                      <div className="text-2xl font-bold text-[var(--text-primary)]">
                         {bulkImportPreview.successCount}
                       </div>
-                      <div className="bulk-summary__label">
+                      <div className="text-xs uppercase tracking-[0.06em] text-[var(--text-tertiary)]">
                         Valid
                       </div>
                     </div>
                     <div className={clsx(
-                      'bulk-summary__card',
-                      bulkImportPreview.failureCount > 0 && 'bulk-summary__card--invalid'
+                      'rounded-xl border p-4',
+                      bulkImportPreview.failureCount > 0 ? 'border-red-500/40 bg-red-500/10' : 'border-[var(--border-light)] bg-[var(--bg-tertiary)]'
                     )}>
-                      <div className="bulk-summary__count">
+                      <div className="text-2xl font-bold text-[var(--text-primary)]">
                         {bulkImportPreview.failureCount}
                       </div>
-                      <div className="bulk-summary__label">
+                      <div className="text-xs uppercase tracking-[0.06em] text-[var(--text-tertiary)]">
                         {bulkImportPreview.failureCount > 0 ? 'Needs Fixing' : 'Invalid'}
                       </div>
                     </div>
                   </div>
 
                   {/* Results Table */}
-                  <div className="bulk-table">
-                    <table>
+                  <div className="overflow-x-auto rounded-xl border border-[var(--border-light)]">
+                    <table className="min-w-full border-collapse bg-[var(--bg-card)]">
                       <thead>
-                        <tr>
-                          <th>Row</th>
-                          <th>Name</th>
-                          <th>Email</th>
-                          <th>Flat</th>
-                          <th>Status</th>
+                        <tr className="bg-[var(--bg-tertiary)] text-left text-[11px] uppercase tracking-[0.06em] text-[var(--text-tertiary)]">
+                          <th className="px-3 py-2">Row</th>
+                          <th className="px-3 py-2">Name</th>
+                          <th className="px-3 py-2">Email</th>
+                          <th className="px-3 py-2">Flat</th>
+                          <th className="px-3 py-2">Status</th>
                         </tr>
                       </thead>
                       <tbody>
                         {bulkImportPreview.results?.map((row, idx) => (
                           <tr 
                             key={idx}
-                            className={clsx(!row.success && 'bulk-table__row--invalid')}
+                            className={clsx('border-t border-[var(--border-light)] text-sm', !row.success && 'bg-red-500/5')}
                           >
-                            <td>{row.rowNumber}</td>
-                            <td>{row.name || '-'}</td>
-                            <td>{row.email || '-'}</td>
-                            <td>{row.flatNumber || '-'}</td>
-                            <td>
+                            <td className="px-3 py-2">{row.rowNumber}</td>
+                            <td className="px-3 py-2">{row.name || '-'}</td>
+                            <td className="px-3 py-2">{row.email || '-'}</td>
+                            <td className="px-3 py-2">{row.flatNumber || '-'}</td>
+                            <td className="px-3 py-2">
                               {row.success ? (
-                                <span className="bulk-table__status bulk-table__status--valid">
-                                  <span className="bulk-requirements__dot"></span>
+                                <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-xs font-semibold text-emerald-300">
+                                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400"></span>
                                   Valid
                                 </span>
                               ) : (
-                                <span className="bulk-table__status bulk-table__status--error">{row.errorMessage}</span>
+                                <span className="inline-flex rounded-full border border-red-500/30 bg-red-500/10 px-2 py-0.5 text-xs font-semibold text-red-300">{row.errorMessage}</span>
                               )}
                             </td>
                           </tr>
@@ -1195,9 +1194,9 @@ export default function Users() {
             </div>
 
             {/* Footer */}
-            <div className="bulk-footer">
+            <div className="border-t border-[var(--border-light)] px-5 py-4">
               {!bulkImportPreview ? (
-                <>
+                <div className="flex justify-end gap-2">
                   <button
                     onClick={() => {
                       setShowBulkImportModal(false)
@@ -1205,7 +1204,7 @@ export default function Users() {
                       setBulkImportPreview(null)
                       setBulkImportError('')
                     }}
-                    className="bulk-footer__button bulk-footer__button--ghost"
+                    className="inline-flex h-10 items-center justify-center rounded-lg border border-[var(--border-default)] bg-[var(--bg-card)] px-4 text-sm font-medium text-[var(--text-secondary)] transition hover:border-[var(--border-strong)] hover:text-[var(--text-primary)]"
                   >
                     Cancel
                   </button>
@@ -1223,11 +1222,11 @@ export default function Users() {
                       validateBulkImportMutation.mutate({ file: bulkImportFile, societyId })
                     }}
                     disabled={!bulkImportFile || validateBulkImportMutation.isPending}
-                    className="bulk-footer__button bulk-footer__button--primary"
+                    className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-emerald-500 bg-emerald-500 px-4 text-sm font-semibold text-white transition hover:bg-emerald-600 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     {validateBulkImportMutation.isPending ? (
                       <>
-                        <div className="users-loading__spinner"></div>
+                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white"></div>
                         Validating...
                       </>
                     ) : (
@@ -1236,25 +1235,25 @@ export default function Users() {
                       </>
                     )}
                   </button>
-                </>
+                </div>
               ) : bulkImportPreview.failureCount > 0 ? (
                 // Show error state with appropriate message
                 bulkImportPreview.failureCount === bulkImportPreview.totalRows ? (
                   // All rows invalid - wrong file format
-                  <div className="bulk-error-stack">
-                    <div className="bulk-error-card bulk-error-card--fatal">
-                      <div className="bulk-error-card__row">
-                        <div className="bulk-error-card__icon">
+                  <div className="space-y-3">
+                    <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-4">
+                      <div className="flex items-start gap-3">
+                        <div className="mt-0.5 text-red-300">
                           <AlertCircle size={24} />
                         </div>
-                        <div className="bulk-error-card__content">
-                          <h4 className="bulk-error-card__title">
+                        <div>
+                          <h4 className="text-sm font-semibold text-red-200">
                             Invalid File Format
                           </h4>
-                          <p className="bulk-error-card__text">
+                          <p className="mt-1 text-sm text-red-100/90">
                             The uploaded Excel file does not match the required format. Please ensure you are using the correct template with columns: <strong>Name, Email, Flat Number, Phone, Role</strong>.
                           </p>
-                          <p className="bulk-error-card__text">
+                          <p className="mt-1 text-sm text-red-100/90">
                             Download the template for reference and try again.
                           </p>
                         </div>
@@ -1266,14 +1265,14 @@ export default function Users() {
                         setBulkImportPreview(null)
                         setBulkImportError('')
                       }}
-                      className="bulk-error-action"
+                      className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-[var(--border-default)] bg-[var(--bg-card)] px-4 text-sm font-medium text-[var(--text-secondary)] transition hover:border-[var(--border-strong)] hover:text-[var(--text-primary)]"
                     >
                       <Upload size={18} />
                       Upload Correct File
                     </button>
                     <button
                       onClick={downloadUsersBulkErrorReport}
-                      className="bulk-error-action"
+                      className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-amber-500/50 bg-amber-500/15 px-4 text-sm font-semibold text-amber-200 transition hover:bg-amber-500/25"
                     >
                       <Download size={18} />
                       Download Error Report
@@ -1281,17 +1280,17 @@ export default function Users() {
                   </div>
                 ) : (
                   // Some rows have errors
-                  <div className="bulk-error-stack">
-                    <div className="bulk-error-card bulk-error-card--warn">
-                      <div className="bulk-error-card__row">
-                        <div className="bulk-error-card__icon">
+                  <div className="space-y-3">
+                    <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-4">
+                      <div className="flex items-start gap-3">
+                        <div className="mt-0.5 text-amber-300">
                           <AlertCircle size={24} />
                         </div>
-                        <div className="bulk-error-card__content">
-                          <h4 className="bulk-error-card__title">
+                        <div>
+                          <h4 className="text-sm font-semibold text-amber-200">
                             Please Fix {bulkImportPreview.failureCount} Error{bulkImportPreview.failureCount > 1 ? 's' : ''} Before Import
                           </h4>
-                          <p className="bulk-error-card__text">
+                          <p className="mt-1 text-sm text-amber-100/90">
                             All rows must be valid to proceed. Please review the highlighted errors above, correct them in your Excel file, and re-upload.
                           </p>
                         </div>
@@ -1303,14 +1302,14 @@ export default function Users() {
                         setBulkImportPreview(null)
                         setBulkImportError('')
                       }}
-                      className="bulk-error-action"
+                      className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-[var(--border-default)] bg-[var(--bg-card)] px-4 text-sm font-medium text-[var(--text-secondary)] transition hover:border-[var(--border-strong)] hover:text-[var(--text-primary)]"
                     >
                       <Upload size={18} />
                       Fix & Re-upload Excel
                     </button>
                     <button
                       onClick={downloadUsersBulkErrorReport}
-                      className="bulk-error-action"
+                      className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-amber-500/50 bg-amber-500/15 px-4 text-sm font-semibold text-amber-200 transition hover:bg-amber-500/25"
                     >
                       <Download size={18} />
                       Download Error Report
@@ -1319,14 +1318,14 @@ export default function Users() {
                 )
               ) : (
                 // All valid - show import button
-                <div className="bulk-footer__row">
+                <div className="flex justify-end gap-2">
                   <button
                     onClick={() => {
                       setBulkImportFile(null)
                       setBulkImportPreview(null)
                       setBulkImportError('')
                     }}
-                    className="bulk-footer__button bulk-footer__button--ghost"
+                    className="inline-flex h-10 items-center justify-center rounded-lg border border-[var(--border-default)] bg-[var(--bg-card)] px-4 text-sm font-medium text-[var(--text-secondary)] transition hover:border-[var(--border-strong)] hover:text-[var(--text-primary)]"
                   >
                     Back
                   </button>
@@ -1336,11 +1335,11 @@ export default function Users() {
                       processBulkImportMutation.mutate({ file: bulkImportFile, societyId })
                     }}
                     disabled={processBulkImportMutation.isPending}
-                    className="bulk-footer__button bulk-footer__button--success"
+                    className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-emerald-500 bg-emerald-500 px-4 text-sm font-semibold text-white transition hover:bg-emerald-600 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     {processBulkImportMutation.isPending ? (
                       <>
-                        <div className="users-loading__spinner"></div>
+                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white"></div>
                         Importing...
                       </>
                     ) : (
@@ -1359,34 +1358,34 @@ export default function Users() {
 
       {/* Bulk Create from Units Modal */}
       {showBulkCreateModal && (
-        <div className="bulk-modal">
-          <div className="bulk-modal__panel">
-            <div className="bulk-modal__header">
-              <h3 className="bulk-modal__title">Create Users in Bulk</h3>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-[2px]">
+          <div className="w-full max-w-[720px] overflow-hidden rounded-2xl border border-[var(--border-default)] bg-[var(--bg-card)] shadow-[0_24px_60px_rgba(0,0,0,0.3)]">
+            <div className="flex items-center justify-between border-b border-[var(--border-light)] px-5 py-4">
+              <h3 className="text-lg font-semibold text-[var(--text-primary)]">Create Users in Bulk</h3>
               <button 
                 onClick={() => setShowBulkCreateModal(false)}
-                className="bulk-modal__close"
+                className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-transparent text-[var(--text-tertiary)] transition hover:border-[var(--border-light)] hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-primary)]"
               >
                 <X size={20} />
               </button>
             </div>
             
-            <div className="bulk-create">
-              <div className="bulk-create__hero">
-                <div className="bulk-create__icon">
+            <div className="space-y-4 px-5 py-4">
+              <div className="rounded-xl border border-[var(--border-light)] bg-[var(--bg-tertiary)] p-4 text-center">
+                <div className="mx-auto mb-3 inline-flex h-14 w-14 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-300">
                   <UserPlus size={32} />
                 </div>
-                <h4 className="bulk-create__title">
+                <h4 className="text-base font-semibold text-[var(--text-primary)]">
                   Create Users for All Units
                 </h4>
-                <p className="bulk-create__text">
+                <p className="mt-1 text-sm text-[var(--text-secondary)]">
                   This will automatically create user accounts for all units that have an owner email configured but don't have an associated user yet.
                 </p>
               </div>
 
-              <div className="bulk-create__info">
-                <h5>How it works:</h5>
-                <ul>
+              <div className="rounded-xl border border-[var(--border-light)] bg-[var(--bg-tertiary)] p-4">
+                <h5 className="mb-2 text-sm font-semibold text-[var(--text-primary)]">How it works:</h5>
+                <ul className="space-y-1 text-sm text-[var(--text-secondary)]">
                   <li>• Email from unit owner details will be used as username</li>
                   <li>• Flat/Unit number will be used as the default password</li>
                   <li>• Units without owner email will be skipped</li>
@@ -1395,7 +1394,7 @@ export default function Users() {
                 </ul>
               </div>
 
-              <div className="bulk-create__note">
+              <div className="flex items-center gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-sm text-amber-100">
                 <Info size={18} />
                 <p>
                   Users should change their password after first login
@@ -1403,11 +1402,11 @@ export default function Users() {
               </div>
             </div>
 
-            <div className="bulk-footer">
+            <div className="flex justify-end gap-2 border-t border-[var(--border-light)] px-5 py-4">
               <button
                 type="button"
                 onClick={() => setShowBulkCreateModal(false)}
-                className="bulk-footer__button bulk-footer__button--ghost"
+                className="inline-flex h-10 items-center justify-center rounded-lg border border-[var(--border-default)] bg-[var(--bg-card)] px-4 text-sm font-medium text-[var(--text-secondary)] transition hover:border-[var(--border-strong)] hover:text-[var(--text-primary)]"
               >
                 Cancel
               </button>
@@ -1421,11 +1420,11 @@ export default function Users() {
                   bulkCreateFromUnitsMutation.mutate(societyId)
                 }}
                 disabled={bulkCreateFromUnitsMutation.isPending}
-                className="bulk-footer__button bulk-footer__button--success"
+                className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-emerald-500 bg-emerald-500 px-4 text-sm font-semibold text-white transition hover:bg-emerald-600 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {bulkCreateFromUnitsMutation.isPending ? (
                   <>
-                    <div className="users-loading__spinner"></div>
+                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white"></div>
                     Creating...
                   </>
                 ) : (

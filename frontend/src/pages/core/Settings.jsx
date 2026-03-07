@@ -51,15 +51,29 @@ const PasswordStrength = ({ password }) => {
 
   if (!password) return null
 
+  const fillClass = {
+    weak: 'bg-red-500',
+    fair: 'bg-amber-500',
+    good: 'bg-blue-500',
+    strong: 'bg-emerald-500',
+  }[tone]
+
+  const labelClass = {
+    weak: 'text-red-500',
+    fair: 'text-amber-500',
+    good: 'text-blue-500',
+    strong: 'text-emerald-500',
+  }[tone]
+
   return (
-    <div className="settings-pw-strength">
-      <div className="settings-pw-strength__bar">
+    <div className="mt-1 flex items-center gap-2">
+      <div className="h-1 flex-1 overflow-hidden rounded bg-[var(--border-light)]">
         <div
-          className={`settings-pw-strength__fill settings-pw-strength__fill--${tone}`}
+          className={clsx('h-full rounded transition-all duration-300', fillClass)}
           style={{ width: `${pct}%` }}
         />
       </div>
-      <span className={`settings-pw-strength__label settings-pw-strength__label--${tone}`}>
+      <span className={clsx('min-w-12 text-[11px] font-semibold', labelClass)}>
         {label}
       </span>
     </div>
@@ -69,11 +83,11 @@ const PasswordStrength = ({ password }) => {
 const PasswordChecklist = ({ password }) => {
   if (!password) return null
   return (
-    <div className="settings-pw-checklist">
+    <div className="mt-1 grid grid-cols-1 gap-x-4 gap-y-1 sm:grid-cols-2">
       {passwordRules.map(rule => {
         const ok = rule.test(password)
         return (
-          <div key={rule.id} className={clsx('settings-pw-checklist__item', ok && 'is-ok')}>
+          <div key={rule.id} className={clsx('flex items-center gap-1 text-[11px] transition-colors', ok ? 'text-emerald-500' : 'text-[var(--text-tertiary)]')}>
             {ok ? <CheckCircle2 size={13} /> : <XCircle size={13} />}
             <span>{rule.label}</span>
           </div>
@@ -87,9 +101,9 @@ const Alert = ({ type = 'error', children }) => {
   if (!children) return null
   const Icon = type === 'error' ? AlertCircle : CheckCircle2
   return (
-    <div className={`settings-alert settings-alert--${type}`}>
-      <Icon size={16} className="settings-alert__icon" />
-      <span className="settings-alert__text">{children}</span>
+    <div className={clsx('inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium', type === 'error' ? 'border-red-500/30 bg-red-500/10 text-red-300' : 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300')}>
+      <Icon size={16} className="shrink-0" />
+      <span>{children}</span>
     </div>
   )
 }
@@ -98,17 +112,9 @@ const Alert = ({ type = 'error', children }) => {
 export default function Settings() {
   const { user, logout, updateUser } = useAuth()
 
-  if (!user) {
-    return (
-      <>
-        <WakeUpBanner show />
-        <SettingsSkeleton />
-      </>
-    )
-  }
   const {
     theme, compactSidebar,
-    setThemePreview, setCompactSidebarPreview,
+    setThemePreview,
     clearPreviews, updateTheme, updateCompactSidebar
   } = useSettings()
 
@@ -327,22 +333,31 @@ export default function Settings() {
     logout()
   }
 
+  if (!user) {
+    return (
+      <>
+        <WakeUpBanner show />
+        <SettingsSkeleton />
+      </>
+    )
+  }
+
   return (
-    <div className="settings-page">
-      <div className="settings-header">
-        <h1 className="settings-title">Settings</h1>
-        <p className="settings-subtitle">Manage your account preferences</p>
+    <div className="min-h-[calc(100vh-68px)] bg-[var(--bg-secondary)] p-5 md:p-6">
+      <div className="mb-5">
+        <h1 className="text-2xl font-bold text-[var(--text-primary)]">Settings</h1>
+        <p className="mt-1 text-sm text-[var(--text-secondary)]">Manage your account preferences</p>
       </div>
 
-      <div className="settings-card">
+      <div className="overflow-hidden rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] shadow-[0_4px_12px_rgba(15,23,42,0.08)]">
         {/* Tabs */}
-        <div className="settings-tabs">
-          <nav className="settings-tabs-nav">
+        <div className="border-b border-[var(--border-light)]">
+          <nav className="flex overflow-x-auto">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={clsx('settings-tab', activeTab === tab.id ? 'is-active' : 'is-inactive')}
+                className={clsx('inline-flex items-center gap-2 whitespace-nowrap border-0 border-b-2 border-transparent bg-transparent px-5 py-3 text-sm font-semibold transition', activeTab === tab.id ? 'border-b-[var(--accent-primary)] bg-[color-mix(in_srgb,var(--accent-primary)_6%,transparent)] text-[var(--accent-primary)]' : 'text-[var(--text-tertiary)] hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-secondary)]')}
               >
                 <tab.icon size={16} />
                 {tab.label}
@@ -351,22 +366,22 @@ export default function Settings() {
           </nav>
         </div>
 
-        <div className="settings-content">
+        <div className="p-5 md:p-6">
 
           {/* ─── PROFILE TAB ─── */}
           {activeTab === 'profile' && (
-            <div className="settings-section animate-fadeIn">
-              <div className="settings-profile-header">
-                <div className="settings-avatar">
+            <div className="animate-fadeIn flex max-w-full flex-col gap-4">
+              <div className="flex items-center gap-3 rounded-xl border border-[var(--border-light)] bg-[linear-gradient(135deg,color-mix(in_srgb,var(--accent-primary)_8%,var(--bg-tertiary)),var(--bg-tertiary))] p-4">
+                <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(135deg,var(--accent-primary),color-mix(in_srgb,var(--accent-primary)_75%,#7c3aed))] text-2xl font-bold text-white shadow-[0_4px_12px_color-mix(in_srgb,var(--accent-primary)_30%,transparent)]">
                   {profileData.name?.charAt(0)?.toUpperCase() || user?.name?.charAt(0)?.toUpperCase() || 'A'}
                 </div>
-                <div className="settings-profile-info">
-                  <h3 className="settings-profile-name">{profileData.name || user?.name}</h3>
-                  <p className="settings-profile-email">
+                <div className="flex min-w-0 flex-col gap-0.5">
+                  <h3 className="m-0 text-[1.55rem] font-extrabold leading-tight text-[var(--text-primary)] md:text-[1.9rem]">{profileData.name || user?.name}</h3>
+                  <p className="m-0 flex items-center gap-1 text-sm font-semibold text-[var(--text-secondary)] md:text-base">
                     <Mail size={13} />
                     {user?.email}
                   </p>
-                  <span className="settings-role-badge">
+                  <span className="mt-1 inline-flex w-fit items-center gap-1 rounded-full bg-[color-mix(in_srgb,var(--accent-primary)_12%,transparent)] px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.03em] text-[var(--accent-primary)]">
                     <BadgeCheck size={12} />
                     {user?.role?.replace(/_/g, ' ')}
                   </span>
@@ -376,9 +391,9 @@ export default function Settings() {
               {error && <Alert type="error">{error}</Alert>}
               {saved && !error && <Alert type="success">Profile updated successfully!</Alert>}
 
-              <div className="settings-form-grid">
-                <div className="settings-field">
-                  <label className="settings-label">
+              <div className="grid grid-cols-1 gap-3 border-t border-[var(--border-light)] pt-3 md:grid-cols-2">
+                <div className="flex flex-col gap-1.5">
+                  <label className="flex items-center gap-1.5 text-sm font-bold text-[var(--text-primary)] md:text-base">
                     <User size={14} />
                     Full Name
                   </label>
@@ -389,20 +404,20 @@ export default function Settings() {
                       setProfileData({ ...profileData, name: e.target.value })
                       if (profileErrors.name) setProfileErrors({ ...profileErrors, name: null })
                     }}
-                    className={clsx('settings-input', profileErrors.name && 'settings-input--error')}
+                    className={clsx('min-h-10 w-full rounded-lg border border-[var(--border-light)] bg-[var(--bg-card)] px-3 py-2 text-sm font-semibold text-[var(--text-primary)] transition focus:border-[var(--accent-primary)] focus:outline-none focus:ring-2 focus:ring-[color-mix(in_srgb,var(--accent-primary)_15%,transparent)] md:text-[0.98rem]', profileErrors.name && '!border-red-500 !ring-2 !ring-red-500/15')}
                     placeholder="Enter your full name"
                     maxLength={100}
                   />
                   {profileErrors.name && (
-                    <span className="settings-field-error">
+                    <span className="flex items-center gap-1 text-xs font-medium text-red-500">
                       <AlertCircle size={12} />
                       {profileErrors.name}
                     </span>
                   )}
-                  <span className="settings-field-hint">{profileData.name?.length || 0}/100 characters</span>
+                  <span className="flex items-center gap-1 text-xs font-semibold text-[var(--text-secondary)]">{profileData.name?.length || 0}/100 characters</span>
                 </div>
-                <div className="settings-field">
-                  <label className="settings-label">
+                <div className="flex flex-col gap-1.5">
+                  <label className="flex items-center gap-1.5 text-sm font-bold text-[var(--text-primary)] md:text-base">
                     <Mail size={14} />
                     Email
                   </label>
@@ -410,15 +425,15 @@ export default function Settings() {
                     type="email"
                     value={user?.email || ''}
                     disabled
-                    className="settings-input settings-input--disabled"
+                    className="min-h-10 w-full cursor-not-allowed rounded-lg border border-[color-mix(in_srgb,var(--border-light)_85%,var(--text-secondary))] bg-[var(--bg-tertiary)] px-3 py-2 text-sm font-semibold text-[var(--text-secondary)] md:text-[0.98rem]"
                   />
-                  <span className="settings-field-hint">
+                  <span className="flex items-center gap-1 text-xs font-semibold text-[var(--text-secondary)]">
                     <Lock size={11} />
                     Email cannot be changed
                   </span>
                 </div>
-                <div className="settings-field">
-                  <label className="settings-label">
+                <div className="flex flex-col gap-1.5">
+                  <label className="flex items-center gap-1.5 text-sm font-bold text-[var(--text-primary)] md:text-base">
                     <Phone size={14} />
                     Phone Number
                   </label>
@@ -431,14 +446,14 @@ export default function Settings() {
                     }}
                   />
                   {profileErrors.phone && (
-                    <span className="settings-field-error">
+                    <span className="flex items-center gap-1 text-xs font-medium text-red-500">
                       <AlertCircle size={12} />
                       {profileErrors.phone}
                     </span>
                   )}
                 </div>
-                <div className="settings-field">
-                  <label className="settings-label">
+                <div className="flex flex-col gap-1.5">
+                  <label className="flex items-center gap-1.5 text-sm font-bold text-[var(--text-primary)] md:text-base">
                     <BadgeCheck size={14} />
                     Role
                   </label>
@@ -446,16 +461,16 @@ export default function Settings() {
                     type="text"
                     value={user?.role?.replace(/_/g, ' ') || ''}
                     disabled
-                    className="settings-input settings-input--disabled"
+                    className="min-h-10 w-full cursor-not-allowed rounded-lg border border-[color-mix(in_srgb,var(--border-light)_85%,var(--text-secondary))] bg-[var(--bg-tertiary)] px-3 py-2 text-sm font-semibold text-[var(--text-secondary)] md:text-[0.98rem]"
                   />
-                  <span className="settings-field-hint">
+                  <span className="flex items-center gap-1 text-xs font-semibold text-[var(--text-secondary)]">
                     <Lock size={11} />
                     Role is managed by administrators
                   </span>
                 </div>
               </div>
 
-              <button onClick={handleProfileSave} disabled={saving} className="settings-primary-button">
+              <button onClick={handleProfileSave} disabled={saving} className="inline-flex w-fit items-center gap-2 rounded-lg border-0 bg-[var(--accent-primary)] px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90 hover:shadow-[0_4px_12px_color-mix(in_srgb,var(--accent-primary)_30%,transparent)] disabled:cursor-not-allowed disabled:opacity-50">
                 {saved ? <Check size={16} /> : <Save size={16} />}
                 {saving ? 'Saving...' : saved ? 'Saved!' : 'Save Changes'}
               </button>
@@ -464,16 +479,16 @@ export default function Settings() {
 
           {/* ─── NOTIFICATIONS TAB ─── */}
           {activeTab === 'notifications' && (
-            <div className="settings-section animate-fadeIn">
-              <div className="settings-section-header">
-                <h3 className="settings-section-title">Notification Preferences</h3>
-                <p className="settings-section-subtitle">Choose which email notifications you want to receive</p>
+            <div className="animate-fadeIn flex max-w-full flex-col gap-4">
+              <div className="flex flex-col gap-0.5">
+                <h3 className="text-lg font-bold text-[var(--text-primary)]">Notification Preferences</h3>
+                <p className="text-sm font-semibold text-[var(--text-secondary)]">Choose which email notifications you want to receive</p>
               </div>
 
               {error && <Alert type="error">{error}</Alert>}
               {saved && !error && <Alert type="success">Preferences saved successfully!</Alert>}
 
-              <div className="settings-toggle-list">
+              <div className="flex flex-col gap-1">
                 {[
                   { id: 'emailTickets', label: 'New Tickets', desc: 'Notified when tickets are created or updated', icon: '🎫' },
                   { id: 'emailComplaints', label: 'Complaints', desc: 'Notified about new complaints', icon: '⚠️' },
@@ -482,12 +497,12 @@ export default function Settings() {
                   { id: 'emailTenants', label: 'Tenant Agreements', desc: 'Reminded about expiring agreements', icon: '🏠' },
                   { id: 'emailNotices', label: 'Notices', desc: 'Notified when notices are published', icon: '📢' },
                 ].map((item) => (
-                  <div key={item.id} className="settings-toggle-card">
-                    <div className="settings-toggle-card__left">
-                      <span className="settings-toggle-card__icon">{item.icon}</span>
+                  <div key={item.id} className="flex items-center justify-between gap-3 rounded-md border border-[var(--border-light)] bg-[var(--bg-tertiary)] px-3 py-2 transition hover:bg-[color-mix(in_srgb,var(--bg-tertiary)_90%,var(--accent-primary))]">
+                    <div className="flex min-w-0 items-center gap-3">
+                      <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded border border-[var(--border-light)] bg-[var(--bg-card)] text-lg leading-none">{item.icon}</span>
                       <div>
-                        <h4 className="settings-toggle-title">{item.label}</h4>
-                        <p className="settings-toggle-text">{item.desc}</p>
+                        <h4 className="text-sm font-bold text-[var(--text-primary)] md:text-[0.98rem]">{item.label}</h4>
+                        <p className="text-xs font-medium text-[var(--text-tertiary)] md:text-[0.88rem]">{item.desc}</p>
                       </div>
                     </div>
                     <Toggle
@@ -501,7 +516,7 @@ export default function Settings() {
                 ))}
               </div>
 
-              <button onClick={handleNotificationsSave} disabled={notificationsLoading} className="settings-primary-button">
+              <button onClick={handleNotificationsSave} disabled={notificationsLoading} className="inline-flex w-fit items-center gap-2 rounded-lg border-0 bg-[var(--accent-primary)] px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90 hover:shadow-[0_4px_12px_color-mix(in_srgb,var(--accent-primary)_30%,transparent)] disabled:cursor-not-allowed disabled:opacity-50">
                 {saved ? <Check size={16} /> : <Save size={16} />}
                 {notificationsLoading ? 'Saving...' : saved ? 'Saved!' : 'Save Preferences'}
               </button>
@@ -510,37 +525,37 @@ export default function Settings() {
 
           {/* ─── SECURITY TAB ─── */}
           {activeTab === 'security' && (
-            <div className="settings-section animate-fadeIn">
-              <div className="settings-section-header">
-                <h3 className="settings-section-title">Change Password</h3>
-                <p className="settings-section-subtitle">Enter your current password and choose a new one</p>
+            <div className="animate-fadeIn flex max-w-full flex-col gap-4">
+              <div className="flex flex-col gap-0.5">
+                <h3 className="text-lg font-bold text-[var(--text-primary)]">Change Password</h3>
+                <p className="text-sm font-semibold text-[var(--text-secondary)]">Enter your current password and choose a new one</p>
               </div>
 
               {passwordError && <Alert type="error">{passwordError}</Alert>}
               {passwordSaved && <Alert type="success">Password changed successfully!</Alert>}
 
-              <form onSubmit={(e) => { e.preventDefault(); handlePasswordChange() }} className="settings-form">
+              <form onSubmit={(e) => { e.preventDefault(); handlePasswordChange() }} className="flex w-full max-w-[480px] flex-col gap-4">
                 {/* Hidden username for password managers */}
-                <input type="text" name="username" autoComplete="username" value={user?.email || ''} readOnly className="sr-only" aria-hidden="true" />
+                <input type="text" name="username" autoComplete="username" value={user?.email || ''} readOnly className="absolute -m-px h-px w-px overflow-hidden whitespace-nowrap border-0 p-0 [clip:rect(0,0,0,0)]" aria-hidden="true" />
 
-                <div className="settings-field">
-                  <label className="settings-label">
+                <div className="flex flex-col gap-1.5">
+                  <label className="flex items-center gap-1.5 text-sm font-bold text-[var(--text-primary)] md:text-base">
                     <Lock size={14} />
                     Current Password
                   </label>
-                  <div className="settings-input-wrap">
+                  <div className="relative">
                     <input
                       type={showPasswords.current ? 'text' : 'password'}
                       name="currentPassword"
                       autoComplete="current-password"
                       value={passwordData.currentPassword}
                       onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
-                      className="settings-input settings-input--has-icon"
+                      className="min-h-10 w-full rounded-lg border border-[var(--border-light)] bg-[var(--bg-card)] px-3 py-2 pr-10 text-sm font-semibold text-[var(--text-primary)] transition focus:border-[var(--accent-primary)] focus:outline-none focus:ring-2 focus:ring-[color-mix(in_srgb,var(--accent-primary)_15%,transparent)] md:text-[0.98rem]"
                       placeholder="Enter current password"
                     />
                     <button
                       type="button"
-                      className="settings-input-toggle"
+                      className="absolute right-2 top-1/2 inline-flex -translate-y-1/2 items-center justify-center rounded p-1 text-[var(--text-tertiary)] transition hover:text-[var(--text-secondary)]"
                       onClick={() => setShowPasswords(s => ({ ...s, current: !s.current }))}
                       tabIndex={-1}
                     >
@@ -549,24 +564,24 @@ export default function Settings() {
                   </div>
                 </div>
 
-                <div className="settings-field">
-                  <label className="settings-label">
+                <div className="flex flex-col gap-1.5">
+                  <label className="flex items-center gap-1.5 text-sm font-bold text-[var(--text-primary)] md:text-base">
                     <Lock size={14} />
                     New Password
                   </label>
-                  <div className="settings-input-wrap">
+                  <div className="relative">
                     <input
                       type={showPasswords.new ? 'text' : 'password'}
                       name="newPassword"
                       autoComplete="new-password"
                       value={passwordData.newPassword}
                       onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
-                      className="settings-input settings-input--has-icon"
+                      className="min-h-10 w-full rounded-lg border border-[var(--border-light)] bg-[var(--bg-card)] px-3 py-2 pr-10 text-sm font-semibold text-[var(--text-primary)] transition focus:border-[var(--accent-primary)] focus:outline-none focus:ring-2 focus:ring-[color-mix(in_srgb,var(--accent-primary)_15%,transparent)] md:text-[0.98rem]"
                       placeholder="Enter new password"
                     />
                     <button
                       type="button"
-                      className="settings-input-toggle"
+                      className="absolute right-2 top-1/2 inline-flex -translate-y-1/2 items-center justify-center rounded p-1 text-[var(--text-tertiary)] transition hover:text-[var(--text-secondary)]"
                       onClick={() => setShowPasswords(s => ({ ...s, new: !s.new }))}
                       tabIndex={-1}
                     >
@@ -577,12 +592,12 @@ export default function Settings() {
                   <PasswordChecklist password={passwordData.newPassword} />
                 </div>
 
-                <div className="settings-field">
-                  <label className="settings-label">
+                <div className="flex flex-col gap-1.5">
+                  <label className="flex items-center gap-1.5 text-sm font-bold text-[var(--text-primary)] md:text-base">
                     <Lock size={14} />
                     Confirm New Password
                   </label>
-                  <div className="settings-input-wrap">
+                  <div className="relative">
                     <input
                       type={showPasswords.confirm ? 'text' : 'password'}
                       name="confirmPassword"
@@ -590,14 +605,14 @@ export default function Settings() {
                       value={passwordData.confirmPassword}
                       onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
                       className={clsx(
-                        'settings-input settings-input--has-icon',
-                        passwordData.confirmPassword && passwordData.newPassword !== passwordData.confirmPassword && 'settings-input--error'
+                        'min-h-10 w-full rounded-lg border border-[var(--border-light)] bg-[var(--bg-card)] px-3 py-2 pr-10 text-sm font-semibold text-[var(--text-primary)] transition focus:border-[var(--accent-primary)] focus:outline-none focus:ring-2 focus:ring-[color-mix(in_srgb,var(--accent-primary)_15%,transparent)] md:text-[0.98rem]',
+                        passwordData.confirmPassword && passwordData.newPassword !== passwordData.confirmPassword && '!border-red-500 !ring-2 !ring-red-500/15'
                       )}
                       placeholder="Confirm new password"
                     />
                     <button
                       type="button"
-                      className="settings-input-toggle"
+                      className="absolute right-2 top-1/2 inline-flex -translate-y-1/2 items-center justify-center rounded p-1 text-[var(--text-tertiary)] transition hover:text-[var(--text-secondary)]"
                       onClick={() => setShowPasswords(s => ({ ...s, confirm: !s.confirm }))}
                       tabIndex={-1}
                     >
@@ -605,60 +620,60 @@ export default function Settings() {
                     </button>
                   </div>
                   {passwordData.confirmPassword && passwordData.newPassword !== passwordData.confirmPassword && (
-                    <span className="settings-field-error">
+                    <span className="flex items-center gap-1 text-xs font-medium text-red-500">
                       <AlertCircle size={12} />
                       Passwords do not match
                     </span>
                   )}
                   {passwordData.confirmPassword && passwordData.newPassword === passwordData.confirmPassword && passwordData.confirmPassword.length > 0 && (
-                    <span className="settings-field-success">
+                    <span className="flex items-center gap-1 text-xs font-medium text-emerald-500">
                       <CheckCircle2 size={12} />
                       Passwords match
                     </span>
                   )}
                 </div>
 
-                <button type="submit" disabled={saving || !passwordValid} className="settings-primary-button">
+                <button type="submit" disabled={saving || !passwordValid} className="inline-flex w-fit items-center gap-2 rounded-lg border-0 bg-[var(--accent-primary)] px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90 hover:shadow-[0_4px_12px_color-mix(in_srgb,var(--accent-primary)_30%,transparent)] disabled:cursor-not-allowed disabled:opacity-50">
                   {passwordSaved ? <Check size={16} /> : <Shield size={16} />}
                   {saving ? 'Updating...' : passwordSaved ? 'Updated!' : 'Update Password'}
                 </button>
               </form>
 
               {/* Active Sessions */}
-              <div className="settings-divider">
-                <div className="settings-section-header">
-                  <h3 className="settings-section-title">Active Sessions</h3>
-                  <p className="settings-section-subtitle">Manage your active login sessions</p>
+              <div className="flex flex-col gap-3 border-t border-[var(--border-light)] pt-5">
+                <div className="flex flex-col gap-0.5">
+                  <h3 className="text-lg font-bold text-[var(--text-primary)]">Active Sessions</h3>
+                  <p className="text-sm font-semibold text-[var(--text-secondary)]">Manage your active login sessions</p>
                 </div>
                 {(() => {
                   const { os, browser } = getDeviceInfo()
                   const osIcon = OS_ICONS[os.icon] || OS_ICONS.unknown
                   const browserIcon = BROWSER_ICONS[browser.icon] || BROWSER_ICONS.unknown
                   return (
-                    <div className="settings-session-card">
-                      <div className="settings-session-card__left">
-                        <div className="settings-session-card__icon">
+                    <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[var(--border-light)] bg-[color-mix(in_srgb,var(--bg-tertiary)_86%,var(--bg-card))] px-4 py-3">
+                      <div className="flex min-w-0 flex-1 items-center gap-3">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[color-mix(in_srgb,var(--accent-primary)_16%,transparent)] text-[var(--accent-primary)]">
                           <Monitor size={18} />
                         </div>
-                        <div className="settings-session-card__info">
-                          <p className="settings-session-title">Current Session</p>
-                          <div className="settings-session-details">
-                            <span className="settings-session-chip">
-                              <img src={osIcon} alt={os.name} className="settings-session-chip__icon" />
+                        <div className="flex min-w-0 flex-col gap-1">
+                          <p className="text-base font-bold text-[var(--text-primary)]">Current Session</p>
+                          <div className="flex flex-wrap items-center gap-1.5">
+                            <span className="inline-flex items-center gap-1 text-sm font-semibold text-[var(--text-primary)]">
+                              <img src={osIcon} alt={os.name} className="h-4 w-4 shrink-0 object-contain" />
                               {os.name}{os.version ? ` ${os.version}` : ''}
                             </span>
-                            <span className="settings-session-separator">&bull;</span>
-                            <span className="settings-session-chip">
-                              <img src={browserIcon} alt={browser.name} className="settings-session-chip__icon" />
+                            <span className="select-none text-xs text-[var(--text-secondary)]">&bull;</span>
+                            <span className="inline-flex items-center gap-1 text-sm font-semibold text-[var(--text-primary)]">
+                              <img src={browserIcon} alt={browser.name} className="h-4 w-4 shrink-0 object-contain" />
                               {browser.name}
                             </span>
-                            <span className="settings-session-separator">&bull;</span>
-                            <span className="settings-session-chip settings-session-chip--active">Active now</span>
+                            <span className="select-none text-xs text-[var(--text-secondary)]">&bull;</span>
+                            <span className="inline-flex items-center text-sm font-bold text-emerald-600">Active now</span>
                           </div>
                         </div>
                       </div>
-                      <span className="settings-status-badge">
-                        <span className="settings-status-badge__dot" />
+                      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/20 px-2.5 py-1 text-xs font-bold text-emerald-600">
+                        <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-600" />
                         Active
                       </span>
                     </div>
@@ -667,16 +682,16 @@ export default function Settings() {
               </div>
 
               {/* Danger Zone */}
-              <div className="settings-divider">
-                <div className="settings-danger-zone">
-                  <div className="settings-danger-zone__header">
-                    <AlertCircle size={18} className="settings-danger-zone__icon" />
+                <div className="flex flex-col gap-3 border-t border-[var(--border-light)] pt-5">
+                  <div className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-red-400/60 bg-red-500/10 px-4 py-3">
+                    <div className="flex items-center gap-2.5">
+                      <AlertCircle size={18} className="shrink-0 text-red-500" />
                     <div>
-                      <h3 className="settings-danger-title">Danger Zone</h3>
-                      <p className="settings-danger-text">This will log you out from all devices and end all sessions</p>
+                        <h3 className="text-base font-bold text-red-600">Danger Zone</h3>
+                        <p className="text-sm font-semibold text-[var(--text-secondary)]">This will log you out from all devices and end all sessions</p>
                     </div>
                   </div>
-                  <button onClick={handleLogoutAll} className="settings-danger-button">
+                    <button onClick={handleLogoutAll} className="inline-flex items-center gap-2 whitespace-nowrap rounded-lg border border-red-400/70 bg-transparent px-4 py-2 text-sm font-bold text-red-600 transition hover:bg-red-500/10">
                     <LogOut size={16} />
                     Logout from all devices
                   </button>
@@ -687,13 +702,13 @@ export default function Settings() {
 
           {/* ─── APPEARANCE TAB ─── */}
           {activeTab === 'appearance' && (
-            <div className="settings-section animate-fadeIn">
-              <div className="settings-section-header">
-                <h3 className="settings-section-title">Theme</h3>
-                <p className="settings-section-subtitle">Choose how the interface looks</p>
+            <div className="animate-fadeIn flex max-w-full flex-col gap-4">
+              <div className="flex flex-col gap-0.5">
+                <h3 className="text-lg font-bold text-[var(--text-primary)]">Theme</h3>
+                <p className="text-sm font-semibold text-[var(--text-secondary)]">Choose how the interface looks</p>
               </div>
 
-              <div className="settings-theme-grid">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                 {[
                   { id: 'light', label: 'Light', icon: Sun, desc: 'Clean and bright' },
                   { id: 'dark', label: 'Dark', icon: Moon, desc: 'Easy on the eyes' },
@@ -702,15 +717,15 @@ export default function Settings() {
                   <button
                     key={t.id}
                     onClick={() => setThemePreview(t.id)}
-                    className={clsx('settings-theme-card', theme === t.id && 'is-active')}
+                    className={clsx('relative flex flex-col items-center gap-2 rounded-xl border-2 bg-[var(--bg-card)] p-4 text-center transition', theme === t.id ? 'border-[var(--accent-primary)] shadow-[0_0_0_2px_color-mix(in_srgb,var(--accent-primary)_15%,transparent)]' : 'border-[var(--border-light)] hover:border-[color-mix(in_srgb,var(--accent-primary)_40%,var(--border-light))]')}
                   >
-                    <div className={`settings-theme-preview settings-theme-preview--${t.id}`}>
-                      <t.icon size={24} className="settings-theme-preview__icon" />
+                    <div className={clsx('flex h-[4.5rem] w-full items-center justify-center rounded-lg', t.id === 'light' && 'border border-slate-200 bg-white text-slate-600', t.id === 'dark' && 'border border-slate-800 bg-slate-900 text-slate-400', t.id === 'system' && 'border border-slate-300 bg-[linear-gradient(135deg,#ffffff_50%,#111827_50%)] text-slate-500')}>
+                      <t.icon size={24} className="opacity-80" />
                     </div>
-                    <span className="settings-theme-label">{t.label}</span>
-                    <span className="settings-theme-desc">{t.desc}</span>
+                    <span className="text-base font-bold text-[var(--text-primary)]">{t.label}</span>
+                    <span className="text-sm font-semibold text-[var(--text-secondary)]">{t.desc}</span>
                     {theme === t.id && (
-                      <span className="settings-theme-active">
+                      <span className="absolute right-2 top-2 inline-flex h-5 w-5 items-center justify-center rounded-full bg-[var(--accent-primary)] text-white">
                         <Check size={14} />
                       </span>
                     )}
@@ -718,7 +733,7 @@ export default function Settings() {
                 ))}
               </div>
 
-              <button onClick={handleAppearanceSave} className="settings-primary-button">
+              <button onClick={handleAppearanceSave} className="inline-flex w-fit items-center gap-2 rounded-lg border-0 bg-[var(--accent-primary)] px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90 hover:shadow-[0_4px_12px_color-mix(in_srgb,var(--accent-primary)_30%,transparent)] disabled:cursor-not-allowed disabled:opacity-50">
                 {saved ? <Check size={16} /> : <Save size={16} />}
                 {saved ? 'Saved!' : 'Save Preferences'}
               </button>

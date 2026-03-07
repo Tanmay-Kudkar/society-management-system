@@ -261,7 +261,7 @@ export default function SocietySettings() {
 
   if (showSkeleton) {
     return (
-      <div className="society-settings-page">
+      <div className="flex flex-col gap-4">
         <WakeUpBanner />
         <HeroSkeleton statCount={2} />
       </div>
@@ -270,26 +270,26 @@ export default function SocietySettings() {
 
   if (isError) {
     return (
-      <div className="society-settings-page">
-        <div className="society-settings-empty">
-          <h2>Failed to load settings</h2>
-          <p>Please refresh the page and try again.</p>
+      <div className="flex flex-col gap-4">
+        <div className="rounded-xl border border-dashed border-[var(--border-default)] bg-[var(--bg-elevated)] p-5">
+          <h2 className="mb-1 text-base font-semibold text-[var(--text-primary)]">Failed to load settings</h2>
+          <p className="text-sm text-[var(--text-secondary)]">Please refresh the page and try again.</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="society-settings-page">
-      <div className="society-settings-hero">
+    <div className="flex flex-col gap-4">
+      <div className="flex flex-col items-start justify-between gap-4 rounded-[14px] border border-[var(--border-default)] bg-[var(--bg-elevated)] px-5 py-4 sm:flex-row sm:items-center">
         <div>
-          <h1 className="society-settings-title">
+          <h1 className="m-0 flex items-center gap-2 text-lg font-semibold text-[var(--text-primary)]">
             <SlidersHorizontal size={20} />
             Society Rate Settings
           </h1>
-          <p className="society-settings-subtitle">Configure default finance rates and billing schedule</p>
+          <p className="mt-1.5 text-sm text-[var(--text-secondary)]">Configure default finance rates and billing schedule</p>
         </div>
-        <div className="society-settings-meta">
+        <div className="inline-flex items-center gap-1.5 text-[0.85rem] font-semibold text-[var(--text-secondary)]">
           <Building2 size={16} />
           <span>
             {effectiveSocietyId
@@ -300,9 +300,9 @@ export default function SocietySettings() {
       </div>
 
       {isMasterAdmin && (
-        <section className="society-settings-card society-settings-card--selector">
-          <h3>Select Society</h3>
-          <div className="society-settings-selector-row">
+        <section className="rounded-[14px] border border-[var(--border-default)] bg-[var(--bg-elevated)] px-5 pb-3.5 pt-4">
+          <h3 className="mb-3.5 text-base font-semibold text-[var(--text-primary)]">Select Society</h3>
+          <div className="max-w-[460px]">
             <select
               className="form-input"
               value={effectiveSocietyId || ''}
@@ -318,23 +318,23 @@ export default function SocietySettings() {
             </select>
           </div>
           {!effectiveSocietyId && (
-            <p className="society-settings-selector-hint">Select a society to view and update its rate configuration.</p>
+            <p className="mt-2.5 text-[0.85rem] text-[var(--text-secondary)]">Select a society to view and update its rate configuration.</p>
           )}
         </section>
       )}
 
       {!effectiveSocietyId && (
-        <div className="society-settings-empty">
-          <h2>Society selection required</h2>
-          <p>Please select a society to continue.</p>
+        <div className="rounded-xl border border-dashed border-[var(--border-default)] bg-[var(--bg-elevated)] p-5">
+          <h2 className="mb-1 text-base font-semibold text-[var(--text-primary)]">Society selection required</h2>
+          <p className="text-sm text-[var(--text-secondary)]">Please select a society to continue.</p>
         </div>
       )}
 
       {!!effectiveSocietyId && (
-      <form className="society-settings-form" onSubmit={handleSubmit}>
-        <section className="society-settings-card">
-          <h3>Amount Based Charges</h3>
-          <div className="society-settings-grid">
+      <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
+        <section className="rounded-[14px] border border-[var(--border-default)] bg-[var(--bg-elevated)] px-5 py-4">
+          <h3 className="mb-3.5 text-base font-semibold text-[var(--text-primary)]">Amount Based Charges</h3>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {amountFields.map((field) => (
               <FormInput
                 key={field.key}
@@ -352,9 +352,9 @@ export default function SocietySettings() {
           </div>
         </section>
 
-        <section className="society-settings-card">
-          <h3>Percentages</h3>
-          <div className="society-settings-grid society-settings-grid--3">
+        <section className="rounded-[14px] border border-[var(--border-default)] bg-[var(--bg-elevated)] px-5 py-4">
+          <h3 className="mb-3.5 text-base font-semibold text-[var(--text-primary)]">Percentages</h3>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {percentageFields.map((field) => (
               <FormInput
                 key={field.key}
@@ -372,9 +372,9 @@ export default function SocietySettings() {
           </div>
         </section>
 
-        <section className="society-settings-card">
-          <h3>Billing Schedule</h3>
-          <div className="society-settings-grid society-settings-grid--4">
+        <section className="rounded-[14px] border border-[var(--border-default)] bg-[var(--bg-elevated)] px-5 py-4">
+          <h3 className="mb-3.5 text-base font-semibold text-[var(--text-primary)]">Billing Schedule</h3>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {scheduleFields.map((field) => (
               <FormInput
                 key={field.key}
@@ -393,9 +393,9 @@ export default function SocietySettings() {
           </div>
         </section>
 
-        <section className="society-settings-card">
-          <h3>Numbering Prefix</h3>
-          <div className="society-settings-grid society-settings-grid--2">
+        <section className="rounded-[14px] border border-[var(--border-default)] bg-[var(--bg-elevated)] px-5 py-4">
+          <h3 className="mb-3.5 text-base font-semibold text-[var(--text-primary)]">Numbering Prefix</h3>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <FormInput
               label="Bill Prefix"
               name="billNumberPrefix"
@@ -417,13 +417,13 @@ export default function SocietySettings() {
           </div>
         </section>
 
-        <div className="society-settings-actions">
+        <div className="flex justify-end">
           <AsyncButton
             type="submit"
             isLoading={updateMutation.isPending}
             disabled={!effectiveSocietyId}
             loadingText="Saving..."
-            className="society-settings-save"
+            className="inline-flex items-center gap-2 rounded-[10px] border-none bg-[var(--accent-primary)] px-4 py-2.5 font-semibold text-white disabled:cursor-not-allowed disabled:opacity-65"
           >
             <Save size={16} />
             Save Settings

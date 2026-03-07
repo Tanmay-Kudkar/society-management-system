@@ -22,26 +22,29 @@ export default function PageShell({
 
   if (isAdminMode) {
     return (
-      <section className={clsx('admin-page-shell', className)}>
+      <section className={clsx('flex flex-col gap-5', className)}>
         {(title || subtitle || Icon || actions) && (
-          <header className="admin-page-shell__header">
-            <div className="admin-page-shell__heading">
+          <header className="flex flex-wrap items-start justify-between gap-4">
+            <div className="flex items-start gap-3">
               {Icon && (
-                <span className="admin-page-shell__icon-wrap" aria-hidden="true">
-                  <Icon className="admin-page-shell__icon" />
+                <span
+                  className="inline-flex h-8 w-8 items-center justify-center rounded-md bg-[color-mix(in_srgb,var(--accent-primary)_15%,transparent)] text-[var(--accent-primary)]"
+                  aria-hidden="true"
+                >
+                  <Icon className="h-[1.1rem] w-[1.1rem]" />
                 </span>
               )}
               <div>
-                {title && <h1 className="admin-page-shell__title">{title}</h1>}
-                {subtitle && <p className="admin-page-shell__subtitle">{subtitle}</p>}
+                {title && <h1 className="m-0 text-[1.8rem] font-extrabold leading-[1.15] text-[var(--text-primary)]">{title}</h1>}
+                {subtitle && <p className="mt-1.5 text-base text-[var(--text-secondary)]">{subtitle}</p>}
               </div>
             </div>
-            {actions ? <div className="admin-page-shell__actions">{actions}</div> : null}
+            {actions ? <div className="inline-flex items-center gap-2.5">{actions}</div> : null}
           </header>
         )}
 
         {loading ? (
-          <div className="admin-page-shell__loading">Loading...</div>
+          <div className="py-4 text-[0.95rem] text-[var(--text-secondary)]">Loading...</div>
         ) : (
           children
         )}
@@ -84,40 +87,52 @@ export default function PageShell({
   ]
 
   return (
-    <div className="page-shell">
+    <div className="flex min-h-screen flex-col bg-[var(--bg-primary)] text-[var(--text-primary)] transition-colors duration-300">
       {/* Navbar */}
-      <nav className={clsx("page-shell__nav", scrolled && "page-shell__nav--scrolled")}>
-        <div className="page-shell__nav-inner">
-          <Link to="/welcome" className="page-shell__logo">
-            <div className="page-shell__logo-mark">
-              <Building2 className="page-shell__logo-icon" />
+      <nav
+        className={clsx(
+          'sticky top-0 z-[70] border-b border-transparent bg-[color-mix(in_srgb,var(--bg-primary)_88%,transparent)] px-3 py-2.5 backdrop-blur transition-all duration-300',
+          scrolled && 'border-[var(--border-default)] bg-[color-mix(in_srgb,var(--bg-primary)_94%,transparent)] shadow-sm backdrop-blur-md'
+        )}
+      >
+        <div className="mx-auto flex max-w-[1120px] items-center justify-between gap-4 rounded-2xl border border-[var(--border-default)] bg-[color-mix(in_srgb,var(--bg-secondary)_86%,transparent)] px-3.5 py-2.5 shadow-sm sm:px-6 sm:py-4">
+          <Link to="/welcome" className="flex items-center gap-2.5 no-underline">
+            <div className="rounded-md bg-[var(--accent-primary)] p-2 transition-transform duration-200 hover:scale-[1.04]">
+              <Building2 className="h-5 w-5 text-white" />
             </div>
-            <div className="page-shell__logo-text">
-              <span className="page-shell__brand">SocietyHub</span>
-              <span className="page-shell__tagline">Management System</span>
+            <div className="flex flex-col">
+              <span className="text-[1.35rem] font-extrabold leading-none tracking-[-0.02em] text-[var(--text-primary)]">SocietyHub</span>
+              <span className="mt-px text-[0.56rem] font-semibold uppercase tracking-[0.16em] text-[var(--text-tertiary)]">Management System</span>
             </div>
           </Link>
 
-          <div className="page-shell__links">
+          <div className="hidden items-center gap-1 md:flex">
             {navLinks.map((l) => (
               <Link
                 key={l.path}
                 to={l.path}
-                className={clsx("page-shell__link", location.pathname === l.path && "page-shell__link--active")}
+                className={clsx(
+                  'rounded-md px-3 py-1.5 text-[0.85rem] font-semibold text-[var(--text-secondary)] no-underline transition-colors hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-primary)]',
+                  location.pathname === l.path && 'bg-[color-mix(in_srgb,var(--accent-primary)_10%,transparent)] font-bold text-[var(--accent-primary)]'
+                )}
               >
                 {l.label}
               </Link>
             ))}
           </div>
 
-          <div className="page-shell__actions">
-            <div className="page-shell__theme" ref={themeRef}>
-              <button onClick={() => setThemeMenuOpen(!themeMenuOpen)} className="page-shell__theme-button" aria-label="Theme">
-                {!isManual ? <Monitor className="page-shell__theme-icon" /> : isDark ? <Moon className="page-shell__theme-icon" /> : <Sun className="page-shell__theme-icon" />}
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="relative" ref={themeRef}>
+              <button
+                onClick={() => setThemeMenuOpen(!themeMenuOpen)}
+                className="rounded-md border border-[var(--border-default)] bg-[var(--bg-tertiary)] p-2 text-[var(--text-secondary)] transition hover:bg-[var(--bg-overlay)] hover:text-[var(--text-primary)]"
+                aria-label="Theme"
+              >
+                {!isManual ? <Monitor className="h-[18px] w-[18px] sm:h-5 sm:w-5" /> : isDark ? <Moon className="h-[18px] w-[18px] sm:h-5 sm:w-5" /> : <Sun className="h-[18px] w-[18px] sm:h-5 sm:w-5" />}
               </button>
               {themeMenuOpen && (
-                <div className="page-shell__theme-menu">
-                  <div className="page-shell__theme-list">
+                <div className="absolute right-0 z-50 mt-1.5 w-44 overflow-hidden rounded-lg border border-[var(--border-default)] bg-[var(--bg-secondary)] shadow-lg">
+                  <div className="py-1">
                     {[
                       { label: 'System', icon: Monitor, active: !isManual, action: () => { resetToSystemTheme(); setThemeMenuOpen(false) } },
                       { label: 'Light', icon: Sun, active: isManual && theme === 'light', action: () => { setTheme('light'); setThemeMenuOpen(false) } },
@@ -126,11 +141,14 @@ export default function PageShell({
                       <button
                         key={opt.label}
                         onClick={opt.action}
-                        className={clsx("page-shell__theme-option", opt.active && "page-shell__theme-option--active")}
+                        className={clsx(
+                          'flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm text-[var(--text-primary)] transition hover:bg-[var(--bg-tertiary)]',
+                          opt.active && 'bg-[color-mix(in_srgb,var(--accent-primary)_12%,transparent)] font-semibold'
+                        )}
                       >
-                        <opt.icon className="page-shell__theme-option-icon" />
+                        <opt.icon className="h-4 w-4" />
                         <span>{opt.label}</span>
-                        {opt.active && <CheckCircle className="page-shell__theme-check" />}
+                        {opt.active && <CheckCircle className="ml-auto h-4 w-4 text-[var(--accent-primary)]" />}
                       </button>
                     ))}
                   </div>
@@ -138,64 +156,88 @@ export default function PageShell({
               )}
             </div>
 
-            <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="page-shell__menu-button">
-              {mobileMenuOpen ? <X className="page-shell__menu-icon" /> : <Menu className="page-shell__menu-icon" />}
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="rounded-md border border-[var(--border-default)] bg-[var(--bg-tertiary)] p-2 text-[var(--text-secondary)] transition hover:bg-[var(--bg-overlay)] hover:text-[var(--text-primary)] md:hidden"
+            >
+              {mobileMenuOpen ? <X className="h-[18px] w-[18px]" /> : <Menu className="h-[18px] w-[18px]" />}
             </button>
 
-            <Link to="/login" className="page-shell__login">Login</Link>
-            <Link to="/login" className="page-shell__login">Admin Portal</Link>
+            <Link
+              to="/login"
+              className="hidden rounded-lg border border-[var(--border-default)] bg-[var(--bg-secondary)] px-3 py-1.5 text-sm font-semibold text-[var(--text-primary)] no-underline transition hover:-translate-y-px hover:bg-[var(--bg-tertiary)] sm:inline-flex"
+            >
+              Login
+            </Link>
+            <Link
+              to="/login"
+              className="hidden rounded-lg border border-[var(--border-default)] bg-[var(--bg-secondary)] px-3 py-1.5 text-sm font-semibold text-[var(--text-primary)] no-underline transition hover:-translate-y-px hover:bg-[var(--bg-tertiary)] sm:inline-flex"
+            >
+              Admin Portal
+            </Link>
           </div>
         </div>
 
-        <div className={clsx("page-shell__mobile", mobileMenuOpen && "page-shell__mobile--open")}>
-          <div className="page-shell__mobile-inner">
+        <div className={clsx('overflow-hidden transition-all duration-300 md:hidden', mobileMenuOpen ? 'max-h-80' : 'max-h-0')}>
+          <div className="mx-auto mt-2 max-w-[1120px] rounded-2xl border border-[var(--border-default)] bg-[var(--bg-secondary)] p-3">
             {navLinks.map((l) => (
               <Link
                 key={l.path}
                 to={l.path}
                 onClick={() => setMobileMenuOpen(false)}
-                className={clsx("page-shell__mobile-link", location.pathname === l.path && "page-shell__mobile-link--active")}
+                className={clsx(
+                  'mb-1.5 block rounded-md px-3 py-2 text-sm font-semibold text-[var(--text-secondary)] no-underline transition hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-primary)]',
+                  location.pathname === l.path && 'bg-[color-mix(in_srgb,var(--accent-primary)_10%,transparent)] text-[var(--accent-primary)]'
+                )}
               >
                 {l.label}
               </Link>
             ))}
-            <Link to="/login" onClick={() => setMobileMenuOpen(false)} className="page-shell__mobile-login">
+            <Link
+              to="/login"
+              onClick={() => setMobileMenuOpen(false)}
+              className="mt-2 block rounded-md border border-[var(--border-default)] px-3 py-2 text-sm font-semibold text-[var(--text-primary)] no-underline transition hover:bg-[var(--bg-tertiary)]"
+            >
               Login
             </Link>
-            <Link to="/login" onClick={() => setMobileMenuOpen(false)} className="page-shell__mobile-login">
+            <Link
+              to="/login"
+              onClick={() => setMobileMenuOpen(false)}
+              className="mt-2 block rounded-md border border-[var(--border-default)] px-3 py-2 text-sm font-semibold text-[var(--text-primary)] no-underline transition hover:bg-[var(--bg-tertiary)]"
+            >
               Admin Portal
             </Link>
           </div>
         </div>
       </nav>
 
-      <main className="page-shell__main">{children}</main>
+      <main className="mx-auto w-full max-w-[1120px] flex-1 px-4 py-8 sm:px-6">{children}</main>
 
       {/* Footer */}
-      <footer className="page-shell__footer">
-        <div className="page-shell__footer-inner">
-          <div className="page-shell__footer-grid">
-            <div className="page-shell__footer-brand">
-              <Link to="/welcome" className="page-shell__footer-logo">
-                <div className="page-shell__footer-mark">
-                  <Building2 className="page-shell__footer-mark-icon" />
+      <footer className="border-t border-[var(--border-default)] bg-[var(--bg-secondary)]/60">
+        <div className="mx-auto max-w-[1120px] px-4 py-10 sm:px-6">
+          <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="lg:col-span-1">
+              <Link to="/welcome" className="inline-flex items-center gap-2 no-underline">
+                <div className="rounded-md bg-[var(--accent-primary)] p-2 transition-transform duration-200 hover:scale-[1.04]">
+                  <Building2 className="h-4 w-4 text-white" />
                 </div>
-                <span className="page-shell__footer-name">SocietyHub</span>
+                <span className="text-base font-bold text-[var(--text-primary)]">SocietyHub</span>
               </Link>
-              <p className="page-shell__footer-text">
+              <p className="mt-3 max-w-xs text-sm leading-6 text-[var(--text-secondary)]">
                 The complete digital solution for modern housing society management.
               </p>
-              <div className="page-shell__social">
+              <div className="mt-4 flex items-center gap-2">
                 {socialLinks.map((item, i) => (
                   <a
                     key={i}
                     href={item.href}
                     target="_blank"
                     rel="noreferrer"
-                    className="page-shell__social-link"
+                    className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-[var(--border-default)] text-[var(--text-secondary)] transition hover:-translate-y-px hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-primary)]"
                     aria-label={`Open ${item.href} in new tab`}
                   >
-                    <item.icon className="page-shell__social-icon" />
+                    <item.icon className="h-4 w-4" />
                   </a>
                 ))}
               </div>
@@ -218,12 +260,12 @@ export default function PageShell({
                 { label: 'Help Center', to: '/help' },
               ]},
             ].map((section, i) => (
-              <div key={i} className="page-shell__footer-section">
-                <h4 className="page-shell__footer-title">{section.title}</h4>
-                <ul className="page-shell__footer-links">
+              <div key={i}>
+                <h4 className="mb-3 text-sm font-bold uppercase tracking-wide text-[var(--text-tertiary)]">{section.title}</h4>
+                <ul className="space-y-2">
                   {section.links.map((link, j) => (
                     <li key={j}>
-                      <Link to={link.to} className="page-shell__footer-link">{link.label}</Link>
+                      <Link to={link.to} className="text-sm text-[var(--text-secondary)] no-underline transition hover:text-[var(--text-primary)]">{link.label}</Link>
                     </li>
                   ))}
                 </ul>
@@ -231,8 +273,8 @@ export default function PageShell({
             ))}
           </div>
 
-          <div className="page-shell__footer-bottom">
-            <p className="page-shell__footer-copy">© 2026 SocietyHub. All rights reserved.</p>
+          <div className="mt-8 border-t border-[var(--border-default)] pt-4">
+            <p className="text-xs text-[var(--text-tertiary)]">© 2026 SocietyHub. All rights reserved.</p>
           </div>
         </div>
       </footer>

@@ -25,6 +25,37 @@ const dutyStatusColors = {
   LEAVE: 'amber',
 }
 
+const iconBgMap = {
+  green: 'bg-[rgba(34,197,94,0.1)]',
+  blue: 'bg-[rgba(59,130,246,0.1)]',
+  amber: 'bg-[rgba(245,158,11,0.1)]',
+  red: 'bg-[rgba(239,68,68,0.1)]',
+  grey: 'bg-[rgba(107,114,128,0.1)]',
+}
+
+const iconColorMap = {
+  green: 'text-[var(--color-green)]',
+  blue: 'text-[var(--color-blue)]',
+  amber: 'text-[var(--color-amber)]',
+  red: 'text-[var(--color-red)]',
+  grey: 'text-[var(--text-tertiary)]',
+}
+
+const badgeMap = {
+  green: 'bg-[rgba(34,197,94,0.1)] text-[var(--color-green)]',
+  blue: 'bg-[rgba(59,130,246,0.1)] text-[var(--color-blue)]',
+  amber: 'bg-[rgba(245,158,11,0.1)] text-[var(--color-amber)]',
+  red: 'bg-[rgba(239,68,68,0.1)] text-[var(--color-red)]',
+  violet: 'bg-[rgba(139,92,246,0.1)] text-[var(--color-violet)]',
+}
+
+const btnMap = {
+  green: 'bg-[rgba(34,197,94,0.1)] text-[var(--color-green)] border-[rgba(34,197,94,0.3)] hover:bg-[rgba(34,197,94,0.2)]',
+  blue: 'bg-[rgba(59,130,246,0.1)] text-[var(--color-blue)] border-[rgba(59,130,246,0.3)] hover:bg-[rgba(59,130,246,0.2)]',
+  red: 'bg-[rgba(239,68,68,0.1)] text-[var(--color-red)] border-[rgba(239,68,68,0.3)] hover:bg-[rgba(239,68,68,0.2)]',
+  amber: 'bg-[rgba(245,158,11,0.1)] text-[var(--color-amber)] border-[rgba(245,158,11,0.3)] hover:bg-[rgba(245,158,11,0.2)]',
+}
+
 export default function GuardPatrol() {
   const { user } = useAuth()
   const queryClient = useQueryClient()
@@ -162,97 +193,97 @@ export default function GuardPatrol() {
 
   return (
     <div>
-      <div className="patrol-header">
+      <div className="flex flex-col gap-4 mb-6 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="patrol-title">Guard Patrol & Duty Roster</h1>
-          <p className="patrol-subtitle">Checkpoints, patrol tracking, and shift management</p>
+          <h1 className="text-2xl font-bold text-[var(--text-primary)]">Guard Patrol & Duty Roster</h1>
+          <p className="mt-1 text-[var(--text-tertiary)]">Checkpoints, patrol tracking, and shift management</p>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
           {activeTab === 'checkpoints' && isAdmin && (
-            <button onClick={() => setShowModal('checkpoint')} className="patrol-action-btn"><Plus size={20} /> Add Checkpoint</button>
+            <button onClick={() => setShowModal('checkpoint')} className="inline-flex items-center gap-2 py-2 px-4 rounded-[10px] bg-[var(--bg-card)] text-[var(--text-primary)] border border-[var(--border-default)] text-sm cursor-pointer transition-colors hover:opacity-90 hover:shadow-[0_8px_20px_rgba(15,23,42,0.14)]"><Plus size={20} /> Add Checkpoint</button>
           )}
           {activeTab === 'patrol' && isStaff && (
-            <button onClick={() => setShowModal('patrol')} className="patrol-action-btn"><Plus size={20} /> Log Patrol</button>
+            <button onClick={() => setShowModal('patrol')} className="inline-flex items-center gap-2 py-2 px-4 rounded-[10px] bg-[var(--bg-card)] text-[var(--text-primary)] border border-[var(--border-default)] text-sm cursor-pointer transition-colors hover:opacity-90 hover:shadow-[0_8px_20px_rgba(15,23,42,0.14)]"><Plus size={20} /> Log Patrol</button>
           )}
           {activeTab === 'duty' && isAdmin && (
-            <button onClick={() => setShowModal('duty')} className="patrol-action-btn"><Plus size={20} /> Add Duty</button>
+            <button onClick={() => setShowModal('duty')} className="inline-flex items-center gap-2 py-2 px-4 rounded-[10px] bg-[var(--bg-card)] text-[var(--text-primary)] border border-[var(--border-default)] text-sm cursor-pointer transition-colors hover:opacity-90 hover:shadow-[0_8px_20px_rgba(15,23,42,0.14)]"><Plus size={20} /> Add Duty</button>
           )}
         </div>
       </div>
 
-      <div className="patrol-tabs">
-        <button className={clsx('patrol-tab', activeTab === 'duty' && 'patrol-tab--active')} onClick={() => { setActiveTab('duty'); setSearchTerm('') }}>Duty Roster</button>
-        <button className={clsx('patrol-tab', activeTab === 'patrol' && 'patrol-tab--active')} onClick={() => { setActiveTab('patrol'); setSearchTerm('') }}>Patrol Logs</button>
-        <button className={clsx('patrol-tab', activeTab === 'checkpoints' && 'patrol-tab--active')} onClick={() => { setActiveTab('checkpoints'); setSearchTerm('') }}>Checkpoints</button>
+      <div className="flex gap-1 mb-5 p-1 bg-[var(--bg-tertiary)] rounded-[10px] w-fit">
+        <button className={clsx('py-2 px-4 rounded-lg text-sm font-medium cursor-pointer border-none transition-all', activeTab === 'duty' ? 'bg-[var(--bg-card)] text-[var(--text-primary)] shadow-[0_1px_3px_rgba(0,0,0,0.1)]' : 'bg-transparent text-[var(--text-tertiary)]')} onClick={() => { setActiveTab('duty'); setSearchTerm('') }}>Duty Roster</button>
+        <button className={clsx('py-2 px-4 rounded-lg text-sm font-medium cursor-pointer border-none transition-all', activeTab === 'patrol' ? 'bg-[var(--bg-card)] text-[var(--text-primary)] shadow-[0_1px_3px_rgba(0,0,0,0.1)]' : 'bg-transparent text-[var(--text-tertiary)]')} onClick={() => { setActiveTab('patrol'); setSearchTerm('') }}>Patrol Logs</button>
+        <button className={clsx('py-2 px-4 rounded-lg text-sm font-medium cursor-pointer border-none transition-all', activeTab === 'checkpoints' ? 'bg-[var(--bg-card)] text-[var(--text-primary)] shadow-[0_1px_3px_rgba(0,0,0,0.1)]' : 'bg-transparent text-[var(--text-tertiary)]')} onClick={() => { setActiveTab('checkpoints'); setSearchTerm('') }}>Checkpoints</button>
       </div>
 
       {/* DUTY ROSTER TAB */}
       {activeTab === 'duty' && (
         <>
-          <div className="patrol-summary">
-            <div className="patrol-summary-card">
-              <p className="patrol-summary-label">Scheduled</p>
-              <p className="patrol-summary-value" style={{ color: 'var(--color-blue)' }}>{dutyRoster.filter(d => d.status === 'SCHEDULED').length}</p>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+            <div className="p-4 rounded-xl bg-[var(--bg-card)] border border-[var(--border-default)]">
+              <p className="text-[13px] text-[var(--text-tertiary)]">Scheduled</p>
+              <p className="text-2xl font-bold mt-1" style={{ color: 'var(--color-blue)' }}>{dutyRoster.filter(d => d.status === 'SCHEDULED').length}</p>
             </div>
-            <div className="patrol-summary-card">
-              <p className="patrol-summary-label">On Duty</p>
-              <p className="patrol-summary-value" style={{ color: 'var(--color-green)' }}>{dutyRoster.filter(d => d.status === 'ON_DUTY').length}</p>
+            <div className="p-4 rounded-xl bg-[var(--bg-card)] border border-[var(--border-default)]">
+              <p className="text-[13px] text-[var(--text-tertiary)]">On Duty</p>
+              <p className="text-2xl font-bold mt-1" style={{ color: 'var(--color-green)' }}>{dutyRoster.filter(d => d.status === 'ON_DUTY').length}</p>
             </div>
-            <div className="patrol-summary-card">
-              <p className="patrol-summary-label">Completed</p>
-              <p className="patrol-summary-value" style={{ color: 'var(--color-green)' }}>{dutyRoster.filter(d => d.status === 'COMPLETED').length}</p>
+            <div className="p-4 rounded-xl bg-[var(--bg-card)] border border-[var(--border-default)]">
+              <p className="text-[13px] text-[var(--text-tertiary)]">Completed</p>
+              <p className="text-2xl font-bold mt-1" style={{ color: 'var(--color-green)' }}>{dutyRoster.filter(d => d.status === 'COMPLETED').length}</p>
             </div>
-            <div className="patrol-summary-card">
-              <p className="patrol-summary-label">Absent</p>
-              <p className="patrol-summary-value" style={{ color: 'var(--color-red)' }}>{dutyRoster.filter(d => d.status === 'ABSENT').length}</p>
+            <div className="p-4 rounded-xl bg-[var(--bg-card)] border border-[var(--border-default)]">
+              <p className="text-[13px] text-[var(--text-tertiary)]">Absent</p>
+              <p className="text-2xl font-bold mt-1" style={{ color: 'var(--color-red)' }}>{dutyRoster.filter(d => d.status === 'ABSENT').length}</p>
             </div>
           </div>
 
-          <div className="patrol-filters">
-            <div className="patrol-filters-row">
-              <div className="patrol-search">
-                <Search className="patrol-search-icon" />
-                <input type="text" placeholder="Search by guard name..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="patrol-input" />
+          <div className="mb-5">
+            <div className="flex flex-wrap gap-3 items-center">
+              <div className="relative flex-1 min-w-[200px]">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)] w-4 h-4" />
+                <input type="text" placeholder="Search by guard name..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full py-2 pr-3 pl-9 rounded-lg border border-[var(--border-default)] bg-[var(--bg-card)] text-[var(--text-primary)] text-sm" />
               </div>
-              <input type="date" value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)} className="patrol-date-input" />
+              <input type="date" value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)} className="py-2 px-3 rounded-lg border border-[var(--border-default)] bg-[var(--bg-card)] text-[var(--text-primary)] text-sm" />
             </div>
           </div>
 
-          <div className="patrol-list">
-            {filteredDutyRoster.length === 0 && <div className="patrol-empty">No duty roster entries for this date</div>}
+          <div className="flex flex-col gap-2">
+            {filteredDutyRoster.length === 0 && <div className="p-8 text-center text-[var(--text-tertiary)] bg-[var(--bg-card)] rounded-xl border border-[var(--border-default)]">No duty roster entries for this date</div>}
             {filteredDutyRoster.map((d) => (
-              <div key={d.id} className="patrol-item">
-                <div className="patrol-item-row">
-                  <div className="patrol-item-main">
-                    <div className={clsx('patrol-item-icon', `patrol-item-icon--${dutyStatusColors[d.status] || 'blue'}`)}>
-                      <UserCheck className={clsx('patrol-item-icon-sym', `patrol-item-icon-sym--${dutyStatusColors[d.status] || 'blue'}`)} />
+              <div key={d.id} className="p-4 rounded-xl bg-[var(--bg-card)] border border-[var(--border-default)] transition-shadow hover:shadow-[0_4px_12px_rgba(15,23,42,0.08)]">
+                <div className="flex justify-between items-start gap-3">
+                  <div className="flex gap-3 items-start flex-1">
+                    <div className={clsx('w-10 h-10 rounded-[10px] flex items-center justify-center shrink-0', iconBgMap[dutyStatusColors[d.status] || 'blue'])}>
+                      <UserCheck className={clsx('w-5 h-5', iconColorMap[dutyStatusColors[d.status] || 'blue'])} />
                     </div>
                     <div>
-                      <div className="patrol-item-meta">
-                        <span className={clsx('patrol-badge', `patrol-badge--${dutyStatusColors[d.status] || 'blue'}`)}>{d.status?.replace('_', ' ')}</span>
-                        <span className="patrol-badge patrol-badge--violet">{d.shiftName}</span>
+                      <div className="flex items-center gap-2 flex-wrap mb-1">
+                        <span className={clsx('inline-flex items-center py-[2px] px-2 rounded-full text-[11px] font-semibold uppercase', badgeMap[dutyStatusColors[d.status] || 'blue'])}>{d.status?.replace('_', ' ')}</span>
+                        <span className={clsx('inline-flex items-center py-[2px] px-2 rounded-full text-[11px] font-semibold uppercase', badgeMap.violet)}>{d.shiftName}</span>
                       </div>
-                      <h3 className="patrol-item-title">{d.guardName}</h3>
-                      <div className="patrol-item-footer">
-                        <span className="patrol-item-footer-text"><Clock size={12} /> {d.shiftStart} – {d.shiftEnd}</span>
-                        <span className="patrol-item-footer-text"><Calendar size={12} /> {d.dutyDate}</span>
-                        {d.checkInTime && <span className="patrol-item-footer-text"><LogIn size={12} /> In: {new Date(d.checkInTime).toLocaleTimeString()}</span>}
-                        {d.checkOutTime && <span className="patrol-item-footer-text"><LogOut size={12} /> Out: {new Date(d.checkOutTime).toLocaleTimeString()}</span>}
+                      <h3 className="font-semibold text-[var(--text-primary)]">{d.guardName}</h3>
+                      <div className="flex gap-4 flex-wrap mt-2">
+                        <span className="inline-flex items-center gap-[3px] text-xs text-[var(--text-tertiary)]"><Clock size={12} /> {d.shiftStart} – {d.shiftEnd}</span>
+                        <span className="inline-flex items-center gap-[3px] text-xs text-[var(--text-tertiary)]"><Calendar size={12} /> {d.dutyDate}</span>
+                        {d.checkInTime && <span className="inline-flex items-center gap-[3px] text-xs text-[var(--text-tertiary)]"><LogIn size={12} /> In: {new Date(d.checkInTime).toLocaleTimeString()}</span>}
+                        {d.checkOutTime && <span className="inline-flex items-center gap-[3px] text-xs text-[var(--text-tertiary)]"><LogOut size={12} /> Out: {new Date(d.checkOutTime).toLocaleTimeString()}</span>}
                       </div>
-                      {d.notes && <p className="patrol-item-notes">{d.notes}</p>}
+                      {d.notes && <p className="text-[13px] text-[var(--text-tertiary)] mt-1">{d.notes}</p>}
                     </div>
                   </div>
                   {isStaff && (
-                    <div className="patrol-item-actions">
-                      {d.status === 'SCHEDULED' && <button onClick={() => checkInMutation.mutate(d.id)} className="patrol-btn patrol-btn--green">Check In</button>}
-                      {d.status === 'ON_DUTY' && <button onClick={() => checkOutMutation.mutate(d.id)} className="patrol-btn patrol-btn--blue">Check Out</button>}
+                    <div className="flex gap-[6px] shrink-0 flex-wrap">
+                      {d.status === 'SCHEDULED' && <button onClick={() => checkInMutation.mutate(d.id)} className={clsx('py-[6px] px-3 rounded-lg text-[13px] font-medium cursor-pointer border inline-flex items-center gap-1 transition-all', btnMap.green)}>Check In</button>}
+                      {d.status === 'ON_DUTY' && <button onClick={() => checkOutMutation.mutate(d.id)} className={clsx('py-[6px] px-3 rounded-lg text-[13px] font-medium cursor-pointer border inline-flex items-center gap-1 transition-all', btnMap.blue)}>Check Out</button>}
                       {isAdmin && d.status === 'SCHEDULED' && (
                         <>
-                          <button onClick={() => markAbsentMutation.mutate(d.id)} className="patrol-btn patrol-btn--red">Absent</button>
-                          <button onClick={() => markLeaveMutation.mutate(d.id)} className="patrol-btn patrol-btn--amber">Leave</button>
+                          <button onClick={() => markAbsentMutation.mutate(d.id)} className={clsx('py-[6px] px-3 rounded-lg text-[13px] font-medium cursor-pointer border inline-flex items-center gap-1 transition-all', btnMap.red)}>Absent</button>
+                          <button onClick={() => markLeaveMutation.mutate(d.id)} className={clsx('py-[6px] px-3 rounded-lg text-[13px] font-medium cursor-pointer border inline-flex items-center gap-1 transition-all', btnMap.amber)}>Leave</button>
                         </>
                       )}
-                      {isAdmin && <button onClick={() => { if (confirm('Delete this duty entry?')) deleteDutyMutation.mutate(d.id) }} className="patrol-btn patrol-btn--ghost"><X size={14} /></button>}
+                      {isAdmin && <button onClick={() => { if (confirm('Delete this duty entry?')) deleteDutyMutation.mutate(d.id) }} className="py-[6px] px-3 rounded-lg text-[13px] font-medium cursor-pointer border border-[var(--border-default)] inline-flex items-center gap-1 transition-all bg-transparent text-[var(--text-secondary)]"><X size={14} /></button>}
                     </div>
                   )}
                 </div>
@@ -265,54 +296,54 @@ export default function GuardPatrol() {
       {/* PATROL LOGS TAB */}
       {activeTab === 'patrol' && (
         <>
-          <div className="patrol-summary">
-            <div className="patrol-summary-card">
-              <p className="patrol-summary-label">Total Scans</p>
-              <p className="patrol-summary-value" style={{ color: 'var(--color-blue)' }}>{patrolLogs.length}</p>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+            <div className="p-4 rounded-xl bg-[var(--bg-card)] border border-[var(--border-default)]">
+              <p className="text-[13px] text-[var(--text-tertiary)]">Total Scans</p>
+              <p className="text-2xl font-bold mt-1" style={{ color: 'var(--color-blue)' }}>{patrolLogs.length}</p>
             </div>
-            <div className="patrol-summary-card">
-              <p className="patrol-summary-label">On Time</p>
-              <p className="patrol-summary-value" style={{ color: 'var(--color-green)' }}>{patrolLogs.filter(l => l.status === 'ON_TIME').length}</p>
+            <div className="p-4 rounded-xl bg-[var(--bg-card)] border border-[var(--border-default)]">
+              <p className="text-[13px] text-[var(--text-tertiary)]">On Time</p>
+              <p className="text-2xl font-bold mt-1" style={{ color: 'var(--color-green)' }}>{patrolLogs.filter(l => l.status === 'ON_TIME').length}</p>
             </div>
-            <div className="patrol-summary-card">
-              <p className="patrol-summary-label">Late</p>
-              <p className="patrol-summary-value" style={{ color: 'var(--color-amber)' }}>{patrolLogs.filter(l => l.status === 'LATE').length}</p>
+            <div className="p-4 rounded-xl bg-[var(--bg-card)] border border-[var(--border-default)]">
+              <p className="text-[13px] text-[var(--text-tertiary)]">Late</p>
+              <p className="text-2xl font-bold mt-1" style={{ color: 'var(--color-amber)' }}>{patrolLogs.filter(l => l.status === 'LATE').length}</p>
             </div>
-            <div className="patrol-summary-card">
-              <p className="patrol-summary-label">Missed</p>
-              <p className="patrol-summary-value" style={{ color: 'var(--color-red)' }}>{patrolLogs.filter(l => l.status === 'MISSED').length}</p>
+            <div className="p-4 rounded-xl bg-[var(--bg-card)] border border-[var(--border-default)]">
+              <p className="text-[13px] text-[var(--text-tertiary)]">Missed</p>
+              <p className="text-2xl font-bold mt-1" style={{ color: 'var(--color-red)' }}>{patrolLogs.filter(l => l.status === 'MISSED').length}</p>
             </div>
           </div>
 
-          <div className="patrol-filters">
-            <div className="patrol-filters-row">
-              <div className="patrol-search">
-                <Search className="patrol-search-icon" />
-                <input type="text" placeholder="Search patrol logs..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="patrol-input" />
+          <div className="mb-5">
+            <div className="flex flex-wrap gap-3 items-center">
+              <div className="relative flex-1 min-w-[200px]">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)] w-4 h-4" />
+                <input type="text" placeholder="Search patrol logs..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full py-2 pr-3 pl-9 rounded-lg border border-[var(--border-default)] bg-[var(--bg-card)] text-[var(--text-primary)] text-sm" />
               </div>
             </div>
           </div>
 
-          <div className="patrol-list">
-            {filteredPatrolLogs.length === 0 && <div className="patrol-empty">No patrol logs found</div>}
+          <div className="flex flex-col gap-2">
+            {filteredPatrolLogs.length === 0 && <div className="p-8 text-center text-[var(--text-tertiary)] bg-[var(--bg-card)] rounded-xl border border-[var(--border-default)]">No patrol logs found</div>}
             {filteredPatrolLogs.map((l) => (
-              <div key={l.id} className="patrol-item">
-                <div className="patrol-item-row">
-                  <div className="patrol-item-main">
-                    <div className={clsx('patrol-item-icon', l.status === 'ON_TIME' ? 'patrol-item-icon--green' : l.status === 'LATE' ? 'patrol-item-icon--amber' : 'patrol-item-icon--red')}>
-                      {l.status === 'ON_TIME' ? <CheckCircle className="patrol-item-icon-sym patrol-item-icon-sym--green" /> : l.status === 'LATE' ? <Clock className="patrol-item-icon-sym patrol-item-icon-sym--amber" /> : <XCircle className="patrol-item-icon-sym patrol-item-icon-sym--red" />}
+              <div key={l.id} className="p-4 rounded-xl bg-[var(--bg-card)] border border-[var(--border-default)] transition-shadow hover:shadow-[0_4px_12px_rgba(15,23,42,0.08)]">
+                <div className="flex justify-between items-start gap-3">
+                  <div className="flex gap-3 items-start flex-1">
+                    <div className={clsx('w-10 h-10 rounded-[10px] flex items-center justify-center shrink-0', l.status === 'ON_TIME' ? iconBgMap.green : l.status === 'LATE' ? iconBgMap.amber : iconBgMap.red)}>
+                      {l.status === 'ON_TIME' ? <CheckCircle className={clsx('w-5 h-5', iconColorMap.green)} /> : l.status === 'LATE' ? <Clock className={clsx('w-5 h-5', iconColorMap.amber)} /> : <XCircle className={clsx('w-5 h-5', iconColorMap.red)} />}
                     </div>
                     <div>
-                      <div className="patrol-item-meta">
-                        <span className={clsx('patrol-badge', l.status === 'ON_TIME' ? 'patrol-badge--green' : l.status === 'LATE' ? 'patrol-badge--amber' : 'patrol-badge--red')}>{l.status?.replace('_', ' ')}</span>
+                      <div className="flex items-center gap-2 flex-wrap mb-1">
+                        <span className={clsx('inline-flex items-center py-[2px] px-2 rounded-full text-[11px] font-semibold uppercase', l.status === 'ON_TIME' ? badgeMap.green : l.status === 'LATE' ? badgeMap.amber : badgeMap.red)}>{l.status?.replace('_', ' ')}</span>
                       </div>
-                      <h3 className="patrol-item-title">{l.checkpointName}</h3>
-                      <div className="patrol-item-footer">
-                        <span className="patrol-item-footer-text"><Shield size={12} /> {l.guardName}</span>
-                        {l.checkpointLocation && <span className="patrol-item-footer-text"><MapPin size={12} /> {l.checkpointLocation}</span>}
-                        <span className="patrol-item-footer-text"><Clock size={12} /> {l.scannedAt && new Date(l.scannedAt).toLocaleString()}</span>
+                      <h3 className="font-semibold text-[var(--text-primary)]">{l.checkpointName}</h3>
+                      <div className="flex gap-4 flex-wrap mt-2">
+                        <span className="inline-flex items-center gap-[3px] text-xs text-[var(--text-tertiary)]"><Shield size={12} /> {l.guardName}</span>
+                        {l.checkpointLocation && <span className="inline-flex items-center gap-[3px] text-xs text-[var(--text-tertiary)]"><MapPin size={12} /> {l.checkpointLocation}</span>}
+                        <span className="inline-flex items-center gap-[3px] text-xs text-[var(--text-tertiary)]"><Clock size={12} /> {l.scannedAt && new Date(l.scannedAt).toLocaleString()}</span>
                       </div>
-                      {l.notes && <p className="patrol-item-notes">{l.notes}</p>}
+                      {l.notes && <p className="text-[13px] text-[var(--text-tertiary)] mt-1">{l.notes}</p>}
                     </div>
                   </div>
                 </div>
@@ -325,45 +356,45 @@ export default function GuardPatrol() {
       {/* CHECKPOINTS TAB */}
       {activeTab === 'checkpoints' && (
         <>
-          <div className="patrol-summary">
-            <div className="patrol-summary-card">
-              <p className="patrol-summary-label">Total</p>
-              <p className="patrol-summary-value" style={{ color: 'var(--text-primary)' }}>{checkpoints.length}</p>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+            <div className="p-4 rounded-xl bg-[var(--bg-card)] border border-[var(--border-default)]">
+              <p className="text-[13px] text-[var(--text-tertiary)]">Total</p>
+              <p className="text-2xl font-bold mt-1" style={{ color: 'var(--text-primary)' }}>{checkpoints.length}</p>
             </div>
-            <div className="patrol-summary-card">
-              <p className="patrol-summary-label">Active</p>
-              <p className="patrol-summary-value" style={{ color: 'var(--color-green)' }}>{checkpoints.filter(c => c.active).length}</p>
+            <div className="p-4 rounded-xl bg-[var(--bg-card)] border border-[var(--border-default)]">
+              <p className="text-[13px] text-[var(--text-tertiary)]">Active</p>
+              <p className="text-2xl font-bold mt-1" style={{ color: 'var(--color-green)' }}>{checkpoints.filter(c => c.active).length}</p>
             </div>
           </div>
 
-          <div className="patrol-filters">
-            <div className="patrol-filters-row">
-              <div className="patrol-search">
-                <Search className="patrol-search-icon" />
-                <input type="text" placeholder="Search checkpoints..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="patrol-input" />
+          <div className="mb-5">
+            <div className="flex flex-wrap gap-3 items-center">
+              <div className="relative flex-1 min-w-[200px]">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)] w-4 h-4" />
+                <input type="text" placeholder="Search checkpoints..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full py-2 pr-3 pl-9 rounded-lg border border-[var(--border-default)] bg-[var(--bg-card)] text-[var(--text-primary)] text-sm" />
               </div>
             </div>
           </div>
 
-          <div className="patrol-list">
-            {filteredCheckpoints.length === 0 && <div className="patrol-empty">No checkpoints configured</div>}
+          <div className="flex flex-col gap-2">
+            {filteredCheckpoints.length === 0 && <div className="p-8 text-center text-[var(--text-tertiary)] bg-[var(--bg-card)] rounded-xl border border-[var(--border-default)]">No checkpoints configured</div>}
             {filteredCheckpoints.map((c) => (
-              <div key={c.id} className={clsx('patrol-item', !c.active && 'patrol-item--inactive')}>
-                <div className="patrol-item-row">
-                  <div className="patrol-item-main">
-                    <div className={clsx('patrol-item-icon', c.active ? 'patrol-item-icon--green' : 'patrol-item-icon--grey')}>
-                      <MapPin className={clsx('patrol-item-icon-sym', c.active ? 'patrol-item-icon-sym--green' : 'patrol-item-icon-sym--grey')} />
+              <div key={c.id} className={clsx('p-4 rounded-xl bg-[var(--bg-card)] border border-[var(--border-default)] transition-shadow hover:shadow-[0_4px_12px_rgba(15,23,42,0.08)]', !c.active && 'opacity-60')}>
+                <div className="flex justify-between items-start gap-3">
+                  <div className="flex gap-3 items-start flex-1">
+                    <div className={clsx('w-10 h-10 rounded-[10px] flex items-center justify-center shrink-0', c.active ? iconBgMap.green : iconBgMap.grey)}>
+                      <MapPin className={clsx('w-5 h-5', c.active ? iconColorMap.green : iconColorMap.grey)} />
                     </div>
                     <div>
-                      <h3 className="patrol-item-title">{c.checkpointName}</h3>
-                      {c.location && <p className="patrol-item-description"><MapPin size={13} /> {c.location}</p>}
-                      {c.description && <p className="patrol-item-notes">{c.description}</p>}
-                      {c.qrCode && <span className="patrol-item-footer-text">QR: {c.qrCode}</span>}
+                      <h3 className="font-semibold text-[var(--text-primary)]">{c.checkpointName}</h3>
+                      {c.location && <p className="text-[13px] text-[var(--text-secondary)] mt-[2px] flex items-center gap-1"><MapPin size={13} /> {c.location}</p>}
+                      {c.description && <p className="text-[13px] text-[var(--text-tertiary)] mt-1">{c.description}</p>}
+                      {c.qrCode && <span className="inline-flex items-center gap-[3px] text-xs text-[var(--text-tertiary)]">QR: {c.qrCode}</span>}
                     </div>
                   </div>
                   {isAdmin && (
-                    <div className="patrol-item-actions">
-                      <button onClick={() => { if (confirm('Deactivate this checkpoint?')) deleteCheckpointMutation.mutate(c.id) }} className="patrol-btn patrol-btn--ghost"><X size={14} /></button>
+                    <div className="flex gap-[6px] shrink-0 flex-wrap">
+                      <button onClick={() => { if (confirm('Deactivate this checkpoint?')) deleteCheckpointMutation.mutate(c.id) }} className="py-[6px] px-3 rounded-lg text-[13px] font-medium cursor-pointer border border-[var(--border-default)] inline-flex items-center gap-1 transition-all bg-transparent text-[var(--text-secondary)]"><X size={14} /></button>
                     </div>
                   )}
                 </div>
@@ -375,19 +406,19 @@ export default function GuardPatrol() {
 
       {/* MODALS */}
       {showModal === 'checkpoint' && (
-        <div className="patrol-modal">
-          <div className="patrol-modal-card">
-            <div className="patrol-modal-header">
-              <h3 className="patrol-modal-title">Add Checkpoint</h3>
-              <button onClick={() => setShowModal(null)} className="patrol-modal-close"><X size={20} /></button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="bg-[var(--bg-card)] rounded-2xl p-6 w-full max-w-[480px] max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-5">
+              <h3 className="text-lg font-bold text-[var(--text-primary)]">Add Checkpoint</h3>
+              <button onClick={() => setShowModal(null)} className="text-[var(--text-tertiary)] cursor-pointer bg-none border-none p-1"><X size={20} /></button>
             </div>
-            <form onSubmit={handleCheckpointSubmit} className="patrol-form">
+            <form onSubmit={handleCheckpointSubmit} className="flex flex-col gap-4">
               <FormInput label="Checkpoint Name" name="checkpointName" required />
               <FormInput label="Location" name="location" placeholder="e.g. Block A, Ground Floor" />
               <FormTextarea label="Description" name="description" rows={2} />
-              <div className="patrol-form-actions">
-                <button type="button" onClick={() => setShowModal(null)} className="patrol-btn patrol-btn--ghost">Cancel</button>
-                <AsyncButton type="submit" className="patrol-btn patrol-btn--primary" isLoading={createCheckpointMutation.isPending} loadingText="Saving...">Save</AsyncButton>
+              <div className="flex gap-3 justify-end mt-2">
+                <button type="button" onClick={() => setShowModal(null)} className="py-[6px] px-3 rounded-lg text-[13px] font-medium cursor-pointer border border-[var(--border-default)] inline-flex items-center gap-1 transition-all bg-transparent text-[var(--text-secondary)]">Cancel</button>
+                <AsyncButton type="submit" className="py-2 px-4 rounded-lg text-[13px] font-medium cursor-pointer border-none inline-flex items-center gap-1 transition-all bg-[var(--color-blue)] text-white hover:opacity-90" isLoading={createCheckpointMutation.isPending} loadingText="Saving...">Save</AsyncButton>
               </div>
             </form>
           </div>
@@ -395,18 +426,18 @@ export default function GuardPatrol() {
       )}
 
       {showModal === 'patrol' && (
-        <div className="patrol-modal">
-          <div className="patrol-modal-card">
-            <div className="patrol-modal-header">
-              <h3 className="patrol-modal-title">Log Patrol Scan</h3>
-              <button onClick={() => setShowModal(null)} className="patrol-modal-close"><X size={20} /></button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="bg-[var(--bg-card)] rounded-2xl p-6 w-full max-w-[480px] max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-5">
+              <h3 className="text-lg font-bold text-[var(--text-primary)]">Log Patrol Scan</h3>
+              <button onClick={() => setShowModal(null)} className="text-[var(--text-tertiary)] cursor-pointer bg-none border-none p-1"><X size={20} /></button>
             </div>
-            <form onSubmit={handlePatrolSubmit} className="patrol-form">
+            <form onSubmit={handlePatrolSubmit} className="flex flex-col gap-4">
               <SmartSelect label="Checkpoint" name="checkpointId" required options={checkpoints.filter(c => c.active).map(c => ({ value: String(c.id), label: c.checkpointName }))} placeholder="Select Checkpoint" />
               <FormTextarea label="Notes" name="notes" rows={2} />
-              <div className="patrol-form-actions">
-                <button type="button" onClick={() => setShowModal(null)} className="patrol-btn patrol-btn--ghost">Cancel</button>
-                <AsyncButton type="submit" className="patrol-btn patrol-btn--primary" isLoading={logPatrolMutation.isPending} loadingText="Logging...">Log Scan</AsyncButton>
+              <div className="flex gap-3 justify-end mt-2">
+                <button type="button" onClick={() => setShowModal(null)} className="py-[6px] px-3 rounded-lg text-[13px] font-medium cursor-pointer border border-[var(--border-default)] inline-flex items-center gap-1 transition-all bg-transparent text-[var(--text-secondary)]">Cancel</button>
+                <AsyncButton type="submit" className="py-2 px-4 rounded-lg text-[13px] font-medium cursor-pointer border-none inline-flex items-center gap-1 transition-all bg-[var(--color-blue)] text-white hover:opacity-90" isLoading={logPatrolMutation.isPending} loadingText="Logging...">Log Scan</AsyncButton>
               </div>
             </form>
           </div>
@@ -414,22 +445,22 @@ export default function GuardPatrol() {
       )}
 
       {showModal === 'duty' && (
-        <div className="patrol-modal">
-          <div className="patrol-modal-card">
-            <div className="patrol-modal-header">
-              <h3 className="patrol-modal-title">Add Duty Entry</h3>
-              <button onClick={() => setShowModal(null)} className="patrol-modal-close"><X size={20} /></button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="bg-[var(--bg-card)] rounded-2xl p-6 w-full max-w-[480px] max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-5">
+              <h3 className="text-lg font-bold text-[var(--text-primary)]">Add Duty Entry</h3>
+              <button onClick={() => setShowModal(null)} className="text-[var(--text-tertiary)] cursor-pointer bg-none border-none p-1"><X size={20} /></button>
             </div>
-            <form onSubmit={handleDutySubmit} className="patrol-form">
+            <form onSubmit={handleDutySubmit} className="flex flex-col gap-4">
               <FormInput label="Guard User ID" name="guardId" type="number" required />
               <SmartSelect label="Shift" name="shiftName" required options={shiftOptions} placeholder="Select Shift" />
               <FormInput label="Shift Start" name="shiftStart" type="time" required />
               <FormInput label="Shift End" name="shiftEnd" type="time" required />
               <FormInput label="Duty Date" name="dutyDate" type="date" required />
               <FormTextarea label="Notes" name="notes" rows={2} />
-              <div className="patrol-form-actions">
-                <button type="button" onClick={() => setShowModal(null)} className="patrol-btn patrol-btn--ghost">Cancel</button>
-                <AsyncButton type="submit" className="patrol-btn patrol-btn--primary" isLoading={createDutyMutation.isPending} loadingText="Saving...">Save</AsyncButton>
+              <div className="flex gap-3 justify-end mt-2">
+                <button type="button" onClick={() => setShowModal(null)} className="py-[6px] px-3 rounded-lg text-[13px] font-medium cursor-pointer border border-[var(--border-default)] inline-flex items-center gap-1 transition-all bg-transparent text-[var(--text-secondary)]">Cancel</button>
+                <AsyncButton type="submit" className="py-2 px-4 rounded-lg text-[13px] font-medium cursor-pointer border-none inline-flex items-center gap-1 transition-all bg-[var(--color-blue)] text-white hover:opacity-90" isLoading={createDutyMutation.isPending} loadingText="Saving...">Save</AsyncButton>
               </div>
             </form>
           </div>

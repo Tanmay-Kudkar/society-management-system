@@ -10,11 +10,11 @@ import { HeroSkeleton, FinancePageSkeleton, WakeUpBanner } from '../../component
 import useMinLoadingTime from '../../hooks/useMinLoadingTime'
 
 const statusConfig = {
-  CREATED: { label: 'Pending', icon: Clock, className: 'payment-status--pending' },
-  AUTHORIZED: { label: 'Authorized', icon: CheckCircle, className: 'payment-status--authorized' },
-  CAPTURED: { label: 'Success', icon: CheckCircle, className: 'payment-status--success' },
-  FAILED: { label: 'Failed', icon: XCircle, className: 'payment-status--failed' },
-  REFUNDED: { label: 'Refunded', icon: CreditCard, className: 'payment-status--refunded' },
+  CREATED: { label: 'Pending', icon: Clock, className: 'bg-amber-500/15 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300' },
+  AUTHORIZED: { label: 'Authorized', icon: CheckCircle, className: 'bg-blue-500/15 text-blue-700 dark:bg-blue-500/20 dark:text-blue-300' },
+  CAPTURED: { label: 'Success', icon: CheckCircle, className: 'bg-emerald-500/15 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300' },
+  FAILED: { label: 'Failed', icon: XCircle, className: 'bg-rose-500/15 text-rose-700 dark:bg-rose-500/20 dark:text-rose-300' },
+  REFUNDED: { label: 'Refunded', icon: CreditCard, className: 'bg-slate-500/15 text-slate-700 dark:bg-slate-500/20 dark:text-slate-300' },
 }
 
 export default function Payments() {
@@ -86,7 +86,7 @@ export default function Payments() {
 
   if (showSkeleton) {
     return (
-      <div className="payments-page">
+      <div>
         <WakeUpBanner />
         <HeroSkeleton />
         <FinancePageSkeleton summaryCount={4} rows={6} cols={5} />
@@ -95,52 +95,52 @@ export default function Payments() {
   }
 
   return (
-    <div className="payments-page">
+    <div>
       {/* Header */}
-      <div className="payments-header">
+      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="payments-title">Online Payments</h1>
-          <p className="payments-subtitle">Track all Razorpay transactions</p>
+          <h1 className="text-2xl font-bold text-[var(--text-primary)]">Online Payments</h1>
+          <p className="mt-1 text-[var(--text-secondary)]">Track all Razorpay transactions</p>
         </div>
       </div>
 
       {/* Summary Cards */}
-      <div className="payments-summary">
-        <div className="payments-summary-card">
-          <p className="payments-summary-label">Total Payments</p>
-          <p className="payments-summary-value">{stats.total}</p>
+      <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-4">
+        <div className="rounded-2xl border border-[var(--border-light)] bg-[var(--bg-card)] p-5 shadow-sm">
+          <p className="text-sm text-[var(--text-secondary)]">Total Payments</p>
+          <p className="mt-1 text-2xl font-bold text-[var(--text-primary)]">{stats.total}</p>
         </div>
-        <div className="payments-summary-card">
-          <p className="payments-summary-label">Successful</p>
-          <p className="payments-summary-value payments-summary-value--success">{stats.successful}</p>
+        <div className="rounded-2xl border border-[var(--border-light)] bg-[var(--bg-card)] p-5 shadow-sm">
+          <p className="text-sm text-[var(--text-secondary)]">Successful</p>
+          <p className="mt-1 text-2xl font-bold text-emerald-600">{stats.successful}</p>
         </div>
-        <div className="payments-summary-card">
-          <p className="payments-summary-label">Failed</p>
-          <p className="payments-summary-value payments-summary-value--failed">{stats.failed}</p>
+        <div className="rounded-2xl border border-[var(--border-light)] bg-[var(--bg-card)] p-5 shadow-sm">
+          <p className="text-sm text-[var(--text-secondary)]">Failed</p>
+          <p className="mt-1 text-2xl font-bold text-rose-600">{stats.failed}</p>
         </div>
-        <div className="payments-summary-card">
-          <p className="payments-summary-label">Total Collected</p>
-          <p className="payments-summary-value">₹{stats.totalAmount.toLocaleString()}</p>
+        <div className="rounded-2xl border border-[var(--border-light)] bg-[var(--bg-card)] p-5 shadow-sm">
+          <p className="text-sm text-[var(--text-secondary)]">Total Collected</p>
+          <p className="mt-1 text-2xl font-bold text-[var(--text-primary)]">₹{stats.totalAmount.toLocaleString()}</p>
         </div>
       </div>
 
       {/* Filters */}
-      <div className="payments-filters">
-        <div className="payments-filters-row">
-          <div className="payments-search">
-            <Search className="payments-search-icon" />
+      <div className="mb-6">
+        <div className="flex flex-wrap gap-4">
+          <div className="relative min-w-[200px] flex-1">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--text-secondary)]" />
             <input
               type="text"
               placeholder="Search by payment ID, order ID, or user..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="payments-search-input"
+              className="w-full rounded-xl border border-[var(--border-default)] bg-[var(--bg-card)] py-2 pl-9 pr-3 text-sm text-[var(--text-primary)] outline-none transition placeholder:text-[var(--text-secondary)] focus:border-blue-500 focus:shadow-[0_0_0_3px_rgba(59,130,246,0.2)]"
             />
           </div>
           <select
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
-            className="payments-filter-select"
+            className="min-w-[140px] rounded-xl border border-[var(--border-default)] bg-[var(--bg-card)] px-3 py-2 text-sm text-[var(--text-primary)] outline-none transition focus:border-blue-500 focus:shadow-[0_0_0_3px_rgba(59,130,246,0.2)]"
           >
             <option value="">All Status</option>
             <option value="CAPTURED">Success</option>
@@ -152,62 +152,62 @@ export default function Payments() {
       </div>
 
       {/* Table */}
-      <div className="payments-table-card">
+      <div className="overflow-hidden rounded-2xl border border-[var(--border-default)] bg-[var(--bg-card)]">
         {filteredPayments.length === 0 ? (
-          <div className="payments-empty">
-            <CreditCard size={48} className="payments-empty-icon" />
-            <p className="payments-empty-text">No payments found</p>
+          <div className="flex flex-col items-center justify-center p-12 text-[var(--text-secondary)]">
+            <CreditCard size={48} className="mb-3 opacity-50" />
+            <p className="text-sm">No payments found</p>
           </div>
         ) : (
-          <div className="payments-table-scroll">
-            <table className="payments-table">
-              <thead className="payments-thead">
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse">
+              <thead className="bg-[var(--bg-tertiary)]">
                 <tr>
-                  <th className="payments-th">Payment ID</th>
-                  <th className="payments-th">User</th>
-                  <th className="payments-th">Amount</th>
-                  <th className="payments-th">Method</th>
-                  <th className="payments-th">Status</th>
-                  <th className="payments-th">Date</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.05em] text-[var(--text-secondary)]">Payment ID</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.05em] text-[var(--text-secondary)]">User</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.05em] text-[var(--text-secondary)]">Amount</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.05em] text-[var(--text-secondary)]">Method</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.05em] text-[var(--text-secondary)]">Status</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.05em] text-[var(--text-secondary)]">Date</th>
                 </tr>
               </thead>
-              <tbody className="payments-tbody">
+              <tbody>
                 {filteredPayments.map((payment) => {
                   const status = statusConfig[payment.status] || statusConfig.CREATED
                   const StatusIcon = status.icon
                   return (
-                    <tr key={payment.id} className="payments-row">
-                      <td className="payments-cell">
-                        <div className="payments-id">
-                          <span className="payments-id-main">
+                    <tr key={payment.id} className="border-b border-[var(--border-default)] transition hover:bg-[var(--bg-tertiary)]">
+                      <td className="px-4 py-3 text-sm text-[var(--text-primary)]">
+                        <div className="flex flex-col gap-0.5">
+                          <span className="text-[0.85rem] font-medium">
                             {payment.razorpayPaymentId || payment.razorpayOrderId || `#${payment.id}`}
                           </span>
-                          <span className="payments-id-receipt">
+                          <span className="text-xs text-[var(--text-secondary)]">
                             {payment.receiptNumber}
                           </span>
                         </div>
                       </td>
-                      <td className="payments-cell">
-                        <div className="payments-user">
-                          <span className="payments-user-name">{payment.userName || '-'}</span>
+                      <td className="px-4 py-3 text-sm text-[var(--text-primary)]">
+                        <div className="flex flex-col gap-0.5">
+                          <span className="font-medium">{payment.userName || '-'}</span>
                           {payment.societyName && (
-                            <span className="payments-user-society">{payment.societyName}</span>
+                            <span className="text-xs text-[var(--text-secondary)]">{payment.societyName}</span>
                           )}
                         </div>
                       </td>
-                      <td className="payments-cell payments-cell--amount">
+                      <td className="px-4 py-3 text-sm font-semibold text-[var(--text-primary)]">
                         ₹{payment.amount?.toLocaleString()}
                       </td>
-                      <td className="payments-cell payments-cell--method">
+                      <td className="px-4 py-3 text-xs font-medium text-[var(--text-secondary)]">
                         {payment.paymentMethod?.toUpperCase() || '-'}
                       </td>
-                      <td className="payments-cell">
-                        <span className={clsx('payment-status', status.className)}>
+                      <td className="px-4 py-3 text-sm text-[var(--text-primary)]">
+                        <span className={clsx('inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold', status.className)}>
                           <StatusIcon size={14} />
                           {status.label}
                         </span>
                       </td>
-                      <td className="payments-cell payments-cell--date">
+                      <td className="px-4 py-3 text-[0.8rem] text-[var(--text-secondary)]">
                         {formatDate(payment.paidAt || payment.createdAt)}
                       </td>
                     </tr>

@@ -34,6 +34,7 @@ import {
   ReferenceLine,
   ResponsiveContainer,
 } from "recharts";
+import clsx from "clsx";
 
 import axios from "axios";
 import {
@@ -61,6 +62,66 @@ const formatCurrency = (amount) => {
   }).format(amount || 0);
 };
 
+const statIconToneClasses = {
+  purple: "bg-violet-500/10 text-violet-600 dark:text-violet-400",
+  blue: "bg-blue-500/10 text-blue-600 dark:text-blue-400",
+  sky: "bg-sky-500/10 text-sky-600 dark:text-sky-400",
+  green: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+  teal: "bg-teal-500/10 text-teal-600 dark:text-teal-400",
+  cyan: "bg-cyan-500/10 text-cyan-600 dark:text-cyan-400",
+  indigo: "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400",
+  orange: "bg-orange-500/10 text-orange-600 dark:text-orange-400",
+  amber: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
+  yellow: "bg-yellow-500/10 text-yellow-600 dark:text-yellow-400",
+  red: "bg-rose-500/10 text-rose-600 dark:text-rose-400",
+  rose: "bg-rose-500/10 text-rose-600 dark:text-rose-400",
+  neutral: "bg-[var(--bg-tertiary)] text-[var(--text-secondary)]",
+};
+
+const alertToneClasses = {
+  yellow: {
+    accent: "bg-yellow-500",
+    icon: "bg-yellow-500/10 text-yellow-600 dark:text-yellow-400",
+    count: "bg-yellow-500/10 text-yellow-700 dark:text-yellow-300",
+  },
+  teal: {
+    accent: "bg-teal-500",
+    icon: "bg-teal-500/10 text-teal-600 dark:text-teal-400",
+    count: "bg-teal-500/10 text-teal-700 dark:text-teal-300",
+  },
+  red: {
+    accent: "bg-rose-500",
+    icon: "bg-rose-500/10 text-rose-600 dark:text-rose-400",
+    count: "bg-rose-500/10 text-rose-700 dark:text-rose-300",
+  },
+};
+
+const quickToneClasses = {
+  green: {
+    card: "border-l-4 border-l-emerald-500",
+    value: "text-emerald-600 dark:text-emerald-400",
+  },
+  orange: {
+    card: "border-l-4 border-l-orange-500",
+    value: "text-orange-600 dark:text-orange-400",
+  },
+  blue: {
+    card: "border-l-4 border-l-blue-500",
+    value: "text-blue-600 dark:text-blue-400",
+  },
+  teal: {
+    card: "border-l-4 border-l-teal-500",
+    value: "text-teal-600 dark:text-teal-400",
+  },
+  accent: {
+    card: "border-l-4 border-l-[var(--accent-primary)]",
+    value: "text-[var(--accent-primary)]",
+  },
+};
+
+const sectionShellClass = "mb-6 rounded-2xl border border-[var(--border-default)] bg-[var(--bg-secondary)] p-6 shadow-sm";
+const insightPanelClass = "relative overflow-hidden rounded-[14px] border border-[var(--border-default)] bg-[var(--bg-tertiary)] p-5 transition-all duration-300 hover:border-[color-mix(in_srgb,var(--accent-primary)_35%,var(--border-default))] hover:shadow-[0_8px_24px_rgba(15,23,42,0.08)] dark:hover:shadow-[0_8px_22px_rgba(2,6,23,0.32)]";
+
 const StatCard = ({
   title,
   value,
@@ -70,25 +131,26 @@ const StatCard = ({
   delay = 0,
 }) => {
   const CardIcon = icon;
+  const iconToneClass = statIconToneClasses[variant] || statIconToneClasses.neutral;
 
   return (
     <div
-      className={`stat-card stat-card--${variant} animate-slide-up`}
+      className="animate-slide-up rounded-xl border border-[var(--border-default)] bg-[var(--bg-secondary)] p-5 shadow-sm transition-all duration-200 hover:border-[var(--border-strong)] hover:shadow-md dark:border-[#1a1a1a] dark:bg-[var(--bg-secondary)] dark:hover:border-[rgba(47,129,247,0.2)] dark:hover:shadow-[0_0_24px_rgba(47,129,247,0.1),0_2px_8px_rgba(0,0,0,0.3)]"
       style={{ animationDelay: `${delay}ms` }}
     >
-      <div className="stat-card__content">
+      <div className="flex items-start justify-between gap-4">
         <div>
-          <p className="stat-card__label">{title}</p>
-          <p className="stat-card__value">{value}</p>
+          <p className="text-[13px] font-medium text-[var(--text-secondary)]">{title}</p>
+          <p className="mt-1.5 text-[30px] font-bold leading-none text-[var(--text-primary)]">{value}</p>
           {subtext && (
-            <p className="stat-card__subtext">
-              <Activity className="stat-card__subtext-icon" />
+            <p className="mt-2 inline-flex items-center gap-1.5 text-xs text-[var(--text-tertiary)]">
+              <Activity className="h-3.5 w-3.5" />
               {subtext}
             </p>
           )}
         </div>
-        <div className={`stat-card__icon stat-card__icon--${variant}`}>
-          <CardIcon className="stat-card__icon-symbol" />
+        <div className={clsx("flex h-11 w-11 items-center justify-center rounded-[10px]", iconToneClass)}>
+          <CardIcon className="h-5 w-5" />
         </div>
       </div>
     </div>
@@ -97,46 +159,47 @@ const StatCard = ({
 
 const AlertCard = ({ title, items, icon, tone = "yellow", delay = 0 }) => {
   const AlertIcon = icon;
+  const toneClasses = alertToneClasses[tone] || alertToneClasses.yellow;
 
   return (
     <div
-      className="alert-card animate-slide-up"
+      className="animate-slide-up overflow-hidden rounded-xl border border-[var(--border-default)] bg-[var(--bg-secondary)] p-5 shadow-sm transition-all duration-200 hover:border-[var(--border-strong)] hover:shadow-md dark:border-[#1a1a1a] dark:bg-[var(--bg-secondary)] dark:hover:border-[rgba(47,129,247,0.15)] dark:hover:shadow-[0_0_24px_rgba(47,129,247,0.1),0_2px_8px_rgba(0,0,0,0.3)]"
       style={{ animationDelay: `${delay}ms` }}
     >
-      <div className={`alert-card__accent alert-card__accent--${tone}`}></div>
+      <div className={clsx("-mx-5 -mt-5 mb-4 h-[3px]", toneClasses.accent)}></div>
 
-      <div className="alert-card__header">
-        <div className={`alert-card__icon alert-card__icon--${tone}`}>
-          <AlertIcon className="alert-card__icon-symbol" />
+      <div className="mb-4 flex items-center gap-3">
+        <div className={clsx("flex h-9 w-9 items-center justify-center rounded-[10px]", toneClasses.icon)}>
+          <AlertIcon className="h-4.5 w-4.5" />
         </div>
-        <h3 className="alert-card__title">{title}</h3>
+        <h3 className="text-[15px] font-semibold text-[var(--text-primary)]">{title}</h3>
         {items.length > 0 && (
-          <span className={`alert-card__count alert-card__count--${tone}`}>
+          <span className={clsx("ml-auto inline-flex min-w-7 items-center justify-center rounded-md px-2 py-1 text-xs font-semibold", toneClasses.count)}>
             {items.length}
           </span>
         )}
       </div>
 
       {items.length === 0 ? (
-        <div className="alert-card__empty">
-          <div className="alert-card__empty-icon">
-            <Sparkles className="alert-card__empty-sparkle" />
+        <div className="py-6 text-center">
+          <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-[var(--bg-tertiary)]">
+            <Sparkles className="h-4.5 w-4.5 text-[var(--text-tertiary)]" />
           </div>
-          <p className="alert-card__empty-title">All clear!</p>
-          <p className="alert-card__empty-subtitle">No items to display</p>
+          <p className="text-sm font-semibold text-[var(--text-secondary)]">All clear!</p>
+          <p className="text-xs text-[var(--text-tertiary)]">No items to display</p>
         </div>
       ) : (
-        <ul className="alert-card__list">
+        <ul className="space-y-2.5">
           {items.slice(0, 5).map((item, index) => (
             <li
               key={index}
-              className="alert-card__item"
+              className="flex items-center justify-between gap-3 rounded-lg border border-[var(--border-light,var(--border-default))] bg-[var(--bg-tertiary)] px-3 py-2.5 transition-colors hover:border-[var(--accent-primary)]"
               style={{ animationDelay: `${delay + index * 100}ms` }}
             >
-              <span className="alert-card__item-title">{item.title}</span>
-              <span className="alert-card__item-subtitle">
+              <span className="text-sm text-[var(--text-primary)]">{item.title}</span>
+              <span className="inline-flex items-center gap-1 text-xs text-[var(--text-secondary)]">
                 {item.subtitle}
-                <ArrowUpRight className="alert-card__item-arrow" />
+                <ArrowUpRight className="h-3.5 w-3.5" />
               </span>
             </li>
           ))}
@@ -163,13 +226,13 @@ const renderActiveDonutShape = (props) => {
 const ChartTooltipContent = ({ active, payload, label, suffix = "" }) => {
   if (!active || !payload?.length) return null;
   return (
-    <div className="dashboard-recharts-tooltip">
-      <p className="dashboard-recharts-tooltip__label">{label || payload[0]?.payload?.name || payload[0]?.payload?.label}</p>
+    <div className="min-w-[140px] rounded-[10px] border border-white/10 bg-slate-950/95 px-4 py-3 shadow-[0_8px_32px_rgba(0,0,0,0.4),0_0_0_1px_rgba(255,255,255,0.04)] backdrop-blur-md">
+      <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-[0.05em] text-slate-400">{label || payload[0]?.payload?.name || payload[0]?.payload?.label}</p>
       {payload.map((entry, i) => (
-        <div key={i} className="dashboard-recharts-tooltip__row">
-          <span className="dashboard-recharts-tooltip__dot" style={{ background: entry.color || entry.payload?.color || entry.payload?.fill }} />
-          <span className="dashboard-recharts-tooltip__name">{entry.name || entry.dataKey}</span>
-          <span className="dashboard-recharts-tooltip__value" style={{ color: entry.color || entry.payload?.color }}>
+        <div key={i} className="flex items-center gap-2 py-0.5">
+          <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: entry.color || entry.payload?.color || entry.payload?.fill, boxShadow: "0 0 6px currentColor" }} />
+          <span className="text-xs font-medium text-slate-400">{entry.name || entry.dataKey}</span>
+          <span className="ml-auto text-base font-extrabold tracking-[-0.01em]" style={{ color: entry.color || entry.payload?.color }}>
             {typeof entry.value === "number" ? entry.value.toLocaleString() : entry.value}{suffix}
           </span>
         </div>
@@ -188,30 +251,27 @@ const ClockDisplay = memo(function ClockDisplay() {
   }, []);
 
   return (
-    <div className="dashboard-hero__timecard">
-      <div className="dashboard-hero__time-overlay"></div>
-      <div className="dashboard-hero__time-content">
-        <div className="dashboard-hero__clock">
-          <Clock className="dashboard-hero__clock-icon" />
-          <span className="dashboard-hero__clock-day">
-            {currentTime.toLocaleDateString("en-US", { weekday: "long" })}
-          </span>
-        </div>
-        <p className="dashboard-hero__time">
-          {currentTime.toLocaleTimeString("en-US", {
-            hour: "2-digit",
-            minute: "2-digit",
-            second: "2-digit",
-          })}
-        </p>
-        <p className="dashboard-hero__date">
-          {currentTime.toLocaleDateString("en-US", {
-            month: "short",
-            day: "numeric",
-            year: "numeric",
-          })}
-        </p>
+    <div className="flex min-w-[152px] flex-col justify-center px-5 py-4">
+      <div className="flex items-center gap-1.5 text-[var(--text-tertiary)]">
+        <Clock className="h-3.5 w-3.5" />
+        <span className="text-[11px] font-semibold uppercase tracking-[0.08em]">
+          {currentTime.toLocaleDateString("en-US", { weekday: "long" })}
+        </span>
       </div>
+      <p className="mt-0.5 text-[23px] font-bold leading-none tabular-nums text-[var(--text-primary)]">
+        {currentTime.toLocaleTimeString("en-US", {
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+        })}
+      </p>
+      <p className="mt-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--text-tertiary)]">
+        {currentTime.toLocaleDateString("en-US", {
+          month: "short",
+          day: "numeric",
+          year: "numeric",
+        })}
+      </p>
     </div>
   );
 });
@@ -489,8 +549,6 @@ export default function Dashboard() {
 
   const {
     platformTotalIssues,
-    resolvedTicketsCount,
-    resolvedComplaintsCount,
     resolvedIssuesCount,
     issueResolutionRate,
   } = useMemo(() => {
@@ -594,6 +652,16 @@ export default function Dashboard() {
   ];
 
   const platformAnalyticsLoading = false; // placeholderData eliminates loading flash
+  const hasRoleDistributionData = roleBreakdownWithPercent.some((item) => item.value > 0);
+  const hasUsersPerSocietyData = usersPerSociety.some((item) => item.count > 0);
+  const hasOccupancyData = societyOccupancyStats.length > 0;
+  const hasIssueHealthData = issueHealthData.length > 0;
+  const hasBillingHealthData = billingHealthData.some((item) => item.value > 0);
+  const hasPlatformCharts = hasRoleDistributionData
+    || hasUsersPerSocietyData
+    || hasOccupancyData
+    || hasIssueHealthData
+    || (showPlatformFinancialWidgets && hasBillingHealthData);
 
   // Society Admin chart data
   const unitTypeData = useMemo(() => {
@@ -706,7 +774,14 @@ export default function Dashboard() {
     };
   }, [vehicles, tenants, contracts, pendingTickets]);
 
-  const societyAnalyticsLoading = false; // placeholderData eliminates loading flash
+  const hasSocietyBillsData = billsChartData.some((item) => item.value > 0);
+  const hasSocietyTicketData = ticketChartData.some((item) => item.tickets > 0 || item.complaints > 0);
+  const hasTenantStatusData = tenantChartData.some((item) => item.value > 0);
+  const hasSocietyCharts = unitTypeData.length > 0
+    || hasSocietyBillsData
+    || hasSocietyTicketData
+    || vehicleChartData.length > 0
+    || hasTenantStatusData;
 
   const canSeeFinancialCards = canViewFinancials();
   const canSeeTenantCards = canManageTenants();
@@ -916,21 +991,21 @@ export default function Dashboard() {
   const getWeatherIcon = (code) => {
     if (code === 0) {
       return (
-        <Sun className="dashboard-weather-icon dashboard-weather-icon--sun animate-sun" />
+        <Sun className="h-7 w-7 animate-sun text-[var(--text-secondary)]" />
       );
     }
     if (code >= 1 && code <= 3) {
       return (
-        <Cloud className="dashboard-weather-icon dashboard-weather-icon--cloud animate-pulse" />
+        <Cloud className="h-7 w-7 animate-pulse text-[var(--text-secondary)]" />
       );
     }
     if (code >= 51) {
       return (
-        <Cloud className="dashboard-weather-icon dashboard-weather-icon--rain" />
+        <Cloud className="h-7 w-7 text-[var(--text-secondary)]" />
       );
     }
     return (
-      <Sun className="dashboard-weather-icon dashboard-weather-icon--sun animate-sun" />
+      <Sun className="h-7 w-7 animate-sun text-[var(--text-secondary)]" />
     );
   };
 
@@ -944,11 +1019,11 @@ export default function Dashboard() {
 
   const getSecurityBadgeClass = (type) => {
     const normalized = String(type || "").toUpperCase();
-    if (normalized === "ALERT") return "dashboard-security__badge--alert";
-    if (normalized === "SECURITY") return "dashboard-security__badge--security";
+    if (normalized === "ALERT") return "border-rose-500/20 bg-rose-500/10 text-rose-600 dark:text-rose-400";
+    if (normalized === "SECURITY") return "border-blue-500/20 bg-blue-500/10 text-blue-600 dark:text-blue-400";
     if (normalized === "MAINTENANCE")
-      return "dashboard-security__badge--maintenance";
-    return "dashboard-security__badge--info";
+      return "border-emerald-500/20 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400";
+    return "border-[var(--border-default)] bg-[var(--bg-tertiary)] text-[var(--text-secondary)]";
   };
 
   const showSkeleton = useMinLoadingTime(societiesLoading || societiesError);
@@ -962,115 +1037,141 @@ export default function Dashboard() {
     );
   }
 
+  const timeGreeting = (() => {
+    const h = new Date().getHours();
+    if (h < 12) return "Good morning";
+    if (h < 17) return "Good afternoon";
+    return "Good evening";
+  })();
+
   return (
-    <div className="dashboard animate-fadeIn">
-      <div className="dashboard-hero">
-        <div className="dashboard-hero__bg">
-          <div className="dashboard-hero__noise"></div>
+    <div className="pb-10 animate-fadeIn">
+      {/* ── Hero card ─────────────────────────────────────────── */}
+      <div className="relative mb-6 overflow-hidden rounded-2xl border border-[var(--border-default)] bg-[var(--bg-secondary)] shadow-sm dark:border-[#1a1a1a]">
 
-          <div className="dashboard-hero__wave dashboard-hero__wave--one"></div>
-          <div className="dashboard-hero__wave dashboard-hero__wave--two"></div>
-          <div className="dashboard-hero__wave dashboard-hero__wave--three"></div>
+        {/* Top accent bar */}
+        <div className="h-[3px] bg-gradient-to-r from-blue-500 via-violet-500 to-emerald-400 opacity-80" />
 
-          <div className="dashboard-hero__glow dashboard-hero__glow--primary"></div>
-          <div className="dashboard-hero__glow dashboard-hero__glow--secondary"></div>
-        </div>
+        <div className="flex flex-col gap-0 md:flex-row">
 
-        <div className="dashboard-hero__content">
-          <div className="dashboard-hero__top">
-            <div>
-              <div className="dashboard-hero__badges">
-                <span className="dashboard-hero__status">
-                  <span className="dashboard-hero__status-dot"></span>
-                  SYSTEM ONLINE
+          {/* ── Left: greeting ──────────────────────────────── */}
+          <div className="flex-1 px-6 py-5 max-sm:px-4">
+
+            {/* Status pills */}
+            <div className="mb-3 flex flex-wrap items-center gap-2">
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/25 bg-emerald-500/10 px-2.5 py-1 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
+                <span className="relative flex h-2 w-2 shrink-0">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60" />
+                  <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
                 </span>
-                {!isMemberOrTenant && (
-                  <span className="dashboard-hero__badge">v2.5.0</span>
-                )}
-                {isMemberOrTenant && (
-                  <span className="dashboard-hero__badge">{user?.role}</span>
-                )}
-                {!isMemberOrTenant && (
-                  <span className="dashboard-hero__badge dashboard-hero__badge--live">LIVE DATA</span>
-                )}
-              </div>
-              <h1 className="dashboard-hero__title">
-                Hello, {user?.name?.split(" ")[0] || "User"}
-                <span className="dashboard-hero__wave-emoji animate-bounce-custom">
-                  👋
+                LIVE
+              </span>
+
+              {isMemberOrTenant ? (
+                <span className="inline-flex items-center rounded-full border border-[var(--border-default)] bg-[var(--bg-tertiary)] px-2.5 py-1 text-[11px] font-semibold text-[var(--text-secondary)]">
+                  {user?.role}
                 </span>
-              </h1>
-              <p className="dashboard-hero__subtitle">
-                <Zap className="dashboard-hero__subtitle-icon" />
-                {isMemberOrTenant
-                  ? "Here's your dashboard overview."
-                  : "Here's what's happening in your society today."}
-              </p>
+              ) : (
+                <>
+                  <span className="inline-flex items-center rounded-full border border-[var(--border-default)] bg-[var(--bg-tertiary)] px-2.5 py-1 text-[11px] font-semibold text-[var(--text-secondary)]">
+                    v2.5.0
+                  </span>
+                  <span className="inline-flex items-center gap-1 rounded-full border border-blue-500/20 bg-blue-500/8 px-2.5 py-1 text-[11px] font-semibold text-blue-600 dark:text-blue-400">
+                    <Activity className="h-3 w-3" />
+                    REAL-TIME
+                  </span>
+                </>
+              )}
             </div>
 
-            <div className="dashboard-hero__meta">
-              <div className="dashboard-hero__weather">
-                <p className="dashboard-hero__temp">
-                  {weather?.current?.temperature_2m
-                    ? `${Math.round(weather.current.temperature_2m)}°C`
-                    : "..."}
-                </p>
-                <div className="dashboard-hero__desc">
-                  <span>
-                    {weather?.current?.weather_code !== undefined
-                      ? getWeatherDesc(weather.current.weather_code)
-                      : "Loading..."}
-                  </span>
-                </div>
-              </div>
-              <div className="dashboard-hero__icon">
+            {/* Greeting */}
+            <h1 className="text-[26px] font-bold tracking-tight text-[var(--text-primary)] lg:text-[30px]">
+              {timeGreeting},{" "}
+              <span className="text-[var(--accent-primary)]">{user?.name?.split(" ")[0] || "User"}</span>
+              {" "}<span className="inline-block animate-bounce-custom">👋</span>
+            </h1>
+
+            <p className="mt-1.5 text-[13.5px] text-[var(--text-secondary)]">
+              {isMemberOrTenant
+                ? "Here's your personal dashboard overview."
+                : "Here's what's happening across your society today."}
+            </p>
+
+            {/* Quick meta row */}
+            <div className="mt-4 flex flex-wrap items-center gap-3">
+              {!isMemberOrTenant && !isPlatformLevel && user?.societyId && (
+                <span className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border-default)] bg-[var(--bg-tertiary)] px-3 py-1.5 text-xs font-medium text-[var(--text-secondary)]">
+                  <Building2 className="h-3.5 w-3.5 text-[var(--accent-primary)]" />
+                  Society ID: {user.societyId}
+                </span>
+              )}
+              {isPlatformLevel && (
+                <span className="inline-flex items-center gap-1.5 rounded-lg border border-violet-500/20 bg-violet-500/8 px-3 py-1.5 text-xs font-semibold text-violet-600 dark:text-violet-400">
+                  <Layers className="h-3.5 w-3.5" />
+                  {isPlatformOwner ? "Platform Owner" : "Organisation Owner"}
+                </span>
+              )}
+              {isMemberOrTenant && (
+                <span className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border-default)] bg-[var(--bg-tertiary)] px-3 py-1.5 text-xs font-medium text-[var(--text-secondary)]">
+                  <Home className="h-3.5 w-3.5 text-[var(--accent-primary)]" />
+                  {user?.flatNumber ? `Unit ${user.flatNumber}` : "Resident"}
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* ── Right: weather + clock ───────────────────────── */}
+          <div className="flex shrink-0 items-stretch divide-x divide-[var(--border-default)] border-t border-[var(--border-default)] md:border-l md:border-t-0 dark:divide-[#1a1a1a] dark:border-[#1a1a1a]">
+
+            {/* Weather panel */}
+            <div className="flex items-center gap-3 px-5 py-4">
+              <div className="flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-xl border border-[var(--border-default)] bg-[var(--bg-tertiary)] dark:border-[#1e1e1e]">
                 {weather?.current?.weather_code !== undefined ? (
                   getWeatherIcon(weather.current.weather_code)
                 ) : (
-                  <Sun className="dashboard-weather-icon dashboard-weather-icon--sun animate-sun" />
+                  <Sun className="h-7 w-7 animate-sun text-[var(--text-secondary)]" />
                 )}
               </div>
-
-              <ClockDisplay />
+              <div>
+                <p className="text-[24px] font-bold leading-none text-[var(--text-primary)]">
+                  {weather?.current?.temperature_2m != null
+                    ? `${Math.round(weather.current.temperature_2m)}°C`
+                    : "—"}
+                </p>
+                <p className="mt-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--text-secondary)]">
+                  {weather?.current?.weather_code !== undefined
+                    ? getWeatherDesc(weather.current.weather_code)
+                    : "Loading…"}
+                </p>
+              </div>
             </div>
+
+            {/* Clock panel */}
+            <ClockDisplay />
           </div>
         </div>
 
-        <div className="dashboard-ticker">
-          <div className="dashboard-ticker__inner">
-            <div className="dashboard-ticker__label">
-              <Bell className="dashboard-ticker__label-icon" />
-              <span className="dashboard-ticker__label-text">Updates</span>
+        {/* ── Ticker ──────────────────────────────────────────── */}
+        <div className="border-t border-[var(--border-default)] bg-[var(--bg-tertiary)] py-1.5 dark:border-[#1a1a1a]">
+          <div className="flex items-center overflow-hidden">
+            <div className="inline-flex shrink-0 items-center gap-1.5 border-r border-[var(--border-default)] px-4 text-[11px] font-semibold text-[var(--accent-primary)] dark:border-[#1a1a1a]">
+              <Bell className="h-3.5 w-3.5" />
+              <span>NOTICES</span>
             </div>
 
-            <div className="dashboard-ticker__mask">
-              <div className="dashboard-ticker__track animate-ticker">
-                {(notices.length > 0
-                  ? notices.map((n) => n.content || n.title)
-                  : [
-                      "🚀 Welcome to Society Management System",
-                      "📢 No new notices at the moment",
-                      "👮 Security systems active",
-                    ]
-                ).map((msg, i) => (
-                  <span key={i} className="dashboard-ticker__item">
-                    <span className="dashboard-ticker__dot"></span>
-                    {msg}
-                  </span>
-                ))}
-                {(notices.length > 0
-                  ? notices.map((n) => n.content || n.title)
-                  : [
-                      "🚀 Welcome to Society Management System",
-                      "📢 No new notices at the moment",
-                      "👮 Security systems active",
-                    ]
-                ).map((msg, i) => (
-                  <span key={`dup-${i}`} className="dashboard-ticker__item">
-                    <span className="dashboard-ticker__dot"></span>
-                    {msg}
-                  </span>
-                ))}
+            <div className="relative h-5 flex-1 overflow-hidden [mask-image:linear-gradient(90deg,transparent,#000_8%,#000_92%,transparent)]">
+              <div className="absolute inline-flex items-center gap-8 whitespace-nowrap animate-ticker">
+                {(() => {
+                  const items = notices.length > 0
+                    ? notices.map((n) => n.content || n.title)
+                    : ["Welcome to Society Management System", "No new notices at the moment", "Security systems active"];
+                  return [...items, ...items].map((msg, i) => (
+                    <span key={i} className="inline-flex items-center gap-2 text-[13px] font-medium text-[var(--text-secondary)]">
+                      <span className="h-1 w-1 shrink-0 rounded-full bg-[var(--accent-primary)] opacity-60" />
+                      {msg}
+                    </span>
+                  ));
+                })()}
               </div>
             </div>
           </div>
@@ -1078,13 +1179,13 @@ export default function Dashboard() {
       </div>
 
       {isMemberOrTenant && (
-        <div className="dashboard-member">
-          <div className="dashboard-section">
-            <Activity className="dashboard-section__icon" />
-            <h2 className="dashboard-section__title">My Summary</h2>
+        <div className="mb-8 grid gap-6">
+          <div className="mb-4 flex items-center gap-3 border-b border-[var(--border-default)] pb-4 dark:border-[#1e1e1e]">
+            <Activity className="h-5 w-5 text-[var(--accent-primary)]" />
+            <h2 className="text-xl font-bold text-slate-900 dark:text-slate-50">My Summary</h2>
           </div>
 
-          <div className="dashboard-member__stats">
+          <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <StatCard
               title="My Pending Bills"
               value={pendingBillsCount.length}
@@ -1115,29 +1216,29 @@ export default function Dashboard() {
             />
           </div>
 
-          <div className="dashboard-panel">
-            <div className="dashboard-panel__header">
+          <div className="rounded-xl border border-[var(--border-default)] bg-[var(--bg-secondary)] p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900/50">
+            <div className="mb-4 flex items-center gap-3">
               <div
-                className="dashboard-panel__icon"
+                className="flex h-10 w-10 items-center justify-center rounded-lg"
                 style={{
                   background: `color-mix(in srgb, var(--accent-primary) 15%, transparent)`,
                   color: `var(--accent-primary)`,
                 }}
               >
-                <Bell className="dashboard-panel__icon-symbol" />
+                <Bell className="h-5 w-5" />
               </div>
-              <h3 className="dashboard-panel__title">Recent Notices</h3>
+              <h3 className="text-base font-semibold text-[var(--text-primary)]">Recent Notices</h3>
             </div>
             {notices.length === 0 ? (
-              <p className="dashboard-panel__empty">No recent notices</p>
+              <p className="py-8 text-center text-sm text-[var(--text-tertiary)]">No recent notices</p>
             ) : (
-              <ul className="dashboard-notices__list">
+              <ul className="space-y-3">
                 {notices.slice(0, 5).map((notice, idx) => (
-                  <li key={idx} className="dashboard-notices__item">
-                    <p className="dashboard-notices__title">
+                  <li key={idx} className="rounded-lg border border-[var(--border-default)] bg-[var(--bg-tertiary)] p-3 transition-colors hover:border-[var(--accent-primary)] dark:border-slate-800/80">
+                    <p className="mb-1 text-sm font-medium text-[var(--text-primary)]">
                       {notice.title || notice.content}
                     </p>
-                    <p className="dashboard-notices__date">
+                    <p className="text-xs text-[var(--text-tertiary)]">
                       {notice.createdAt &&
                         new Date(notice.createdAt).toLocaleDateString()}
                     </p>
@@ -1148,27 +1249,27 @@ export default function Dashboard() {
           </div>
 
           {pendingBillsCount.length > 0 && (
-            <div className="dashboard-panel">
-              <div className="dashboard-panel__header">
-                <div className="dashboard-panel__icon dashboard-panel__icon--warn">
-                  <CreditCard className="dashboard-panel__icon-symbol" />
+            <div className="rounded-xl border border-[var(--border-default)] bg-[var(--bg-secondary)] p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900/50">
+              <div className="mb-4 flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-orange-500/10 text-orange-500">
+                  <CreditCard className="h-5 w-5" />
                 </div>
-                <h3 className="dashboard-panel__title">Pending Bills</h3>
+                <h3 className="text-base font-semibold text-[var(--text-primary)]">Pending Bills</h3>
               </div>
-              <ul className="dashboard-bills__list">
+              <ul className="space-y-3">
                 {pendingBillsCount.slice(0, 5).map((bill, idx) => (
-                  <li key={idx} className="dashboard-bills__item">
+                  <li key={idx} className="flex items-center justify-between rounded-lg border border-[var(--border-default)] bg-[var(--bg-tertiary)] p-3 dark:border-slate-800/80">
                     <div>
-                      <p className="dashboard-bills__name">
+                      <p className="text-sm font-medium text-[var(--text-primary)]">
                         {bill.billMonth || "Maintenance"}
                       </p>
-                      <p className="dashboard-bills__due">
+                      <p className="mt-0.5 text-xs font-medium text-orange-500">
                         Due:{" "}
                         {bill.dueDate &&
                           new Date(bill.dueDate).toLocaleDateString()}
                       </p>
                     </div>
-                    <span className="dashboard-bills__amount">
+                    <span className="text-sm font-bold text-[var(--text-primary)]">
                       ₹{bill.amount?.toLocaleString()}
                     </span>
                   </li>
@@ -1181,14 +1282,14 @@ export default function Dashboard() {
 
       {!isMemberOrTenant && (
         <>
-          <div className="dashboard-section">
-            <Building2 className="dashboard-section__icon" />
-            <h2 className="dashboard-section__title">
+          <div className="mb-4 flex items-center gap-3 border-b border-[var(--border-default)] pb-4 dark:border-[#1e1e1e]">
+            <Building2 className="h-5 w-5 text-[var(--accent-primary)]" />
+            <h2 className="text-xl font-bold text-slate-900 dark:text-slate-50">
               {isPlatformOwner ? 'Platform Summary' : 'Society Summary'}
             </h2>
           </div>
 
-          <div className="dashboard-admin__stats">
+          <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {adminStatCards.map((card, index) => (
               <StatCard
                 key={card.key}
@@ -1203,79 +1304,81 @@ export default function Dashboard() {
           </div>
 
           {isPlatformLevel && (
-            <div className="dashboard-platform-analytics">
-              <div className="dashboard-section">
-                <BarChart3 className="dashboard-section__icon" />
-                <h2 className="dashboard-section__title">
+            <div className={sectionShellClass}>
+              <div className="mb-4 flex items-center gap-3 border-b border-[var(--border-default)] pb-4 dark:border-[#1e1e1e]">
+                <BarChart3 className="h-5 w-5 text-[var(--accent-primary)]" />
+                <h2 className="text-xl font-bold text-slate-900 dark:text-slate-50">
                   {isPlatformOwner ? "Platform Analytics" : "Society Analytics"}
                 </h2>
               </div>
 
-              <div className="dashboard-charts-grid">
+              <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
                 {platformAnalyticsLoading ? (
                   <DashboardSkeleton />
                 ) : (
                   <>
+                    {!hasPlatformCharts && (
+                      <div className="col-span-full rounded-xl border border-dashed border-[var(--border-default)] bg-[var(--bg-tertiary)] px-4 py-10 text-center text-sm text-[var(--text-secondary)]">
+                        Platform analytics will appear once role and society activity data is available.
+                      </div>
+                    )}
+
                     {/* User Role Distribution - Donut */}
-                    <div className="dashboard-chart-card">
-                      <h3 className="dashboard-chart-card__title">
-                        <span className="dashboard-chart-card__dot dashboard-chart-card__dot--blue" />
+                    {hasRoleDistributionData && (
+                    <div className={insightPanelClass}>
+                      <h3 className="mb-1 flex items-center gap-2 text-sm font-bold tracking-[0.01em] text-[var(--text-primary)]">
+                        <span className="h-2 w-2 shrink-0 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.4)]" />
                         User Role Distribution
                       </h3>
-                      <div className="dashboard-chart-card__body">
-                        {roleBreakdownWithPercent.length > 0 ? (
-                          <ResponsiveContainer width="100%" height={280} debounce={100}>
-                            <PieChart>
-                              <Pie
-                                activeIndex={activePieIndex}
-                                activeShape={renderActiveDonutShape}
-                                data={roleBreakdownWithPercent}
-                                cx="50%"
-                                cy="50%"
-                                innerRadius={65}
-                                outerRadius={90}
-                                dataKey="value"
-                                nameKey="label"
-                                onMouseEnter={(_, index) => setActivePieIndex(index)}
-                                onMouseLeave={() => setActivePieIndex(null)}
-                                isAnimationActive={animatePlatformCharts}
-                                animationBegin={0}
-                                animationDuration={900}
-                                strokeWidth={2}
-                                stroke="rgba(0,0,0,0.15)"
-                              >
-                                {roleBreakdownWithPercent.map((entry, idx) => (
-                                  <Cell key={`cell-${idx}`} fill={entry.color} style={{ cursor: "pointer", transition: "opacity 0.3s ease" }} />
-                                ))}
-                              </Pie>
-                              <RechartsTooltip content={<ChartTooltipContent />} />
-                            </PieChart>
-                          </ResponsiveContainer>
-                        ) : (
-                          <p className="dashboard-chart-card__empty">No user data available</p>
-                        )}
+                      <div className="flex min-h-[260px] items-center justify-center">
+                        <ResponsiveContainer width="100%" height={280} debounce={100}>
+                          <PieChart>
+                            <Pie
+                              activeIndex={activePieIndex}
+                              activeShape={renderActiveDonutShape}
+                              data={roleBreakdownWithPercent}
+                              cx="50%"
+                              cy="50%"
+                              innerRadius={65}
+                              outerRadius={90}
+                              dataKey="value"
+                              nameKey="label"
+                              onMouseEnter={(_, index) => setActivePieIndex(index)}
+                              onMouseLeave={() => setActivePieIndex(null)}
+                              isAnimationActive={animatePlatformCharts}
+                              animationBegin={0}
+                              animationDuration={900}
+                              strokeWidth={2}
+                              stroke="rgba(0,0,0,0.15)"
+                            >
+                              {roleBreakdownWithPercent.map((entry, idx) => (
+                                <Cell key={`cell-${idx}`} fill={entry.color} style={{ cursor: "pointer", transition: "opacity 0.3s ease" }} />
+                              ))}
+                            </Pie>
+                            <RechartsTooltip content={<ChartTooltipContent />} />
+                          </PieChart>
+                        </ResponsiveContainer>
                       </div>
-                      {roleBreakdownWithPercent.length > 0 && (
-                        <div className="dashboard-chart-card__legend">
-                          {roleBreakdownWithPercent.map((item) => (
-                            <div key={item.label} className="dashboard-chart-card__legend-item">
-                              <span className="dashboard-chart-card__legend-dot" style={{ background: item.color }} />
-                              <span className="dashboard-chart-card__legend-text">{item.label}</span>
-                              <span className="dashboard-chart-card__legend-value">{item.value} ({item.percent}%)</span>
-                            </div>
-                          ))}
-                        </div>
-                      )}
+                      <div className="mt-2 flex flex-wrap gap-x-4 gap-y-2 border-t border-[var(--border-light,var(--border-default))] pt-3">
+                        {roleBreakdownWithPercent.map((item) => (
+                          <div key={item.label} className="flex items-center gap-1.5 text-xs">
+                            <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: item.color }} />
+                            <span className="font-medium text-[var(--text-secondary)]">{item.label}</span>
+                            <span className="ml-auto font-bold text-[var(--text-primary)]">{item.value} ({item.percent}%)</span>
+                          </div>
+                        ))}
+                      </div>
                     </div>
+                    )}
 
                     {/* Users per Society - Area Chart */}
-                    <div className="dashboard-chart-card dashboard-chart-card--wide">
-                      <h3 className="dashboard-chart-card__title">
-                        <span className="dashboard-chart-card__dot dashboard-chart-card__dot--violet" />
+                    {hasUsersPerSocietyData && (
+                    <div className={clsx(insightPanelClass, "lg:col-span-2")}>
+                      <h3 className="mb-1 flex items-center gap-2 text-sm font-bold tracking-[0.01em] text-[var(--text-primary)]">
+                        <span className="h-2 w-2 shrink-0 rounded-full bg-violet-500 shadow-[0_0_8px_rgba(139,92,246,0.4)]" />
                         Users per Society (Top 7)
                       </h3>
-                      <div className="dashboard-chart-card__body">
-                        {usersPerSociety.length > 0 ? (
+                      <div className="flex min-h-[260px] items-center justify-center">
                           <ResponsiveContainer width="100%" height={300} debounce={100}>
                             <AreaChart data={usersPerSociety} margin={{ left: 0, right: 20, top: 10, bottom: 10 }}>
                               <defs>
@@ -1304,23 +1407,21 @@ export default function Dashboard() {
                               />
                             </AreaChart>
                           </ResponsiveContainer>
-                        ) : (
-                          <p className="dashboard-chart-card__empty">No society data available</p>
-                        )}
                       </div>
                     </div>
+                    )}
 
                     {/* Society Occupancy Rate - Bar Chart */}
-                    <div className="dashboard-chart-card dashboard-chart-card--wide">
-                      <h3 className="dashboard-chart-card__title">
-                        <span className="dashboard-chart-card__dot dashboard-chart-card__dot--green" />
+                    {hasOccupancyData && (
+                    <div className={clsx(insightPanelClass, "lg:col-span-2")}>
+                      <h3 className="mb-1 flex items-center gap-2 text-sm font-bold tracking-[0.01em] text-[var(--text-primary)]">
+                        <span className="h-2 w-2 shrink-0 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(34,197,94,0.4)]" />
                         Society Occupancy Rate
                       </h3>
-                      <p className="dashboard-chart-card__meta">
+                      <p className="mb-2 text-xs text-[var(--text-secondary)]">
                         Average occupancy across tracked societies: {averageOccupancy}%
                       </p>
-                      <div className="dashboard-chart-card__body">
-                        {societyOccupancyStats.length > 0 ? (
+                      <div className="flex min-h-[260px] items-center justify-center">
                           <ResponsiveContainer width="100%" height={280} debounce={100}>
                             <BarChart data={societyOccupancyStats} margin={{ left: 0, right: 20, top: 10, bottom: 10 }}>
                               <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.1)" />
@@ -1349,37 +1450,43 @@ export default function Dashboard() {
                               </Bar>
                             </BarChart>
                           </ResponsiveContainer>
-                        ) : (
-                          <p className="dashboard-chart-card__empty">No occupancy data available</p>
-                        )}
                       </div>
                     </div>
+                    )}
 
                     {/* Platform KPI Strip */}
-                    <div className="dashboard-chart-card dashboard-chart-card--wide">
-                      <h3 className="dashboard-chart-card__title">
-                        <span className="dashboard-chart-card__dot dashboard-chart-card__dot--blue" />
+                    <div className={clsx(insightPanelClass, "lg:col-span-2")}>
+                      <h3 className="mb-1 flex items-center gap-2 text-sm font-bold tracking-[0.01em] text-[var(--text-primary)]">
+                        <span className="h-2 w-2 shrink-0 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.4)]" />
                         Platform Health Snapshot
                       </h3>
-                      <div className="dashboard-platform-kpis">
+                      <div className="mt-2 grid grid-cols-1 gap-3 md:grid-cols-3">
                         {platformKpiCards.map((kpi) => (
-                          <div key={kpi.key} className={`dashboard-platform-kpi dashboard-platform-kpi--${kpi.tone}`}>
-                            <p className="dashboard-platform-kpi__label">{kpi.label}</p>
-                            <p className="dashboard-platform-kpi__value">{kpi.value}</p>
-                            <p className="dashboard-platform-kpi__helper">{kpi.helper}</p>
+                          <div
+                            key={kpi.key}
+                            className={clsx(
+                              "rounded-xl border border-[var(--border-default)] bg-[var(--bg-secondary)] p-3.5",
+                              kpi.tone === "green" && "text-emerald-500",
+                              kpi.tone === "blue" && "text-blue-500",
+                              kpi.tone === "teal" && "text-teal-500",
+                            )}
+                          >
+                            <p className="text-[11px] font-semibold uppercase tracking-[0.06em] text-[var(--text-secondary)]">{kpi.label}</p>
+                            <p className="mt-1 text-2xl font-bold leading-tight">{kpi.value}</p>
+                            <p className="text-xs text-[var(--text-tertiary)]">{kpi.helper}</p>
                           </div>
                         ))}
                       </div>
                     </div>
 
                     {/* Issue Resolution Mix */}
-                    <div className="dashboard-chart-card">
-                      <h3 className="dashboard-chart-card__title">
-                        <span className="dashboard-chart-card__dot dashboard-chart-card__dot--orange" />
+                    {hasIssueHealthData && (
+                    <div className={insightPanelClass}>
+                      <h3 className="mb-1 flex items-center gap-2 text-sm font-bold tracking-[0.01em] text-[var(--text-primary)]">
+                        <span className="h-2 w-2 shrink-0 rounded-full bg-orange-500 shadow-[0_0_8px_rgba(249,115,22,0.4)]" />
                         Issue Resolution Mix
                       </h3>
-                      <div className="dashboard-chart-card__body">
-                        {issueHealthData.length > 0 ? (
+                      <div className="flex min-h-[260px] items-center justify-center">
                           <ResponsiveContainer width="100%" height={260} debounce={100}>
                             <PieChart>
                               <Pie
@@ -1403,20 +1510,17 @@ export default function Dashboard() {
                               <RechartsTooltip content={<ChartTooltipContent />} />
                             </PieChart>
                           </ResponsiveContainer>
-                        ) : (
-                          <p className="dashboard-chart-card__empty">No issue data available</p>
-                        )}
                       </div>
                     </div>
+                    )}
 
-                    {showPlatformFinancialWidgets && (
-                      <div className="dashboard-chart-card">
-                        <h3 className="dashboard-chart-card__title">
-                          <span className="dashboard-chart-card__dot dashboard-chart-card__dot--teal" />
+                    {showPlatformFinancialWidgets && hasBillingHealthData && (
+                      <div className={insightPanelClass}>
+                        <h3 className="mb-1 flex items-center gap-2 text-sm font-bold tracking-[0.01em] text-[var(--text-primary)]">
+                          <span className="h-2 w-2 shrink-0 rounded-full bg-teal-500 shadow-[0_0_8px_rgba(20,184,166,0.4)]" />
                           Billing Health
                         </h3>
-                        <div className="dashboard-chart-card__body">
-                          {billingHealthData.some((item) => item.value > 0) ? (
+                        <div className="flex min-h-[260px] items-center justify-center">
                             <ResponsiveContainer width="100%" height={260} debounce={100}>
                               <BarChart data={billingHealthData} margin={{ left: 0, right: 20, top: 10, bottom: 10 }}>
                                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.1)" />
@@ -1430,9 +1534,6 @@ export default function Dashboard() {
                                 </Bar>
                               </BarChart>
                             </ResponsiveContainer>
-                          ) : (
-                            <p className="dashboard-chart-card__empty">No billing data available</p>
-                          )}
                         </div>
                       </div>
                     )}
@@ -1443,111 +1544,91 @@ export default function Dashboard() {
           )}
 
           {dashboardReport && isCommitteeLevel() && (
-            <div className="dashboard-financial">
-              <div className="dashboard-section">
-                <BarChart3 className="dashboard-section__icon" />
-                <h2 className="dashboard-section__title">Financial Overview</h2>
+            <div className="mb-5">
+              <div className="mb-4 flex items-center gap-3 border-b border-[var(--border-default)] pb-4 dark:border-[#1e1e1e]">
+                <BarChart3 className="h-5 w-5 text-[var(--accent-primary)]" />
+                <h2 className="text-xl font-bold text-slate-900 dark:text-slate-50">Financial Overview</h2>
               </div>
-              <div className="dashboard-financial__grid">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
                 <div
-                  className="dashboard-financial-card dashboard-financial-card--emerald wave-box animate-slide-up"
+                  className="animate-slide-up rounded-xl border border-[var(--border-default)] bg-gradient-to-br from-emerald-500/15 via-emerald-500/5 to-[var(--bg-secondary)] p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg dark:border-[#1a1a1a]"
                   style={{ animationDelay: "500ms" }}
                 >
-                  <div className="dashboard-financial-card__waves">
-                    <div className="dashboard-financial-card__wave dashboard-financial-card__wave--one"></div>
-                    <div className="dashboard-financial-card__wave dashboard-financial-card__wave--two"></div>
-                    <div className="dashboard-financial-card__wave dashboard-financial-card__wave--three"></div>
-                  </div>
-                  <div className="dashboard-financial-card__content">
-                    <div className="dashboard-financial-card__icon">
-                      <TrendingUp className="dashboard-financial-card__icon-symbol" />
+                  <div>
+                    <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-[10px] bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">
+                      <TrendingUp className="h-5 w-5" />
                     </div>
-                    <p className="dashboard-financial-card__label">
+                    <p className="text-[13px] text-[var(--text-secondary)]">
                       MTD Income
                     </p>
-                    <p className="dashboard-financial-card__value">
+                    <p className="text-[22px] font-bold text-[var(--text-primary)]">
                       {formatCurrency(dashboardReport.totalIncome)}
                     </p>
-                    <p className="dashboard-financial-card__hint">
-                      <Activity className="dashboard-financial-card__hint-icon" />
+                    <p className="mt-2 inline-flex items-center gap-1 rounded-md bg-white/10 px-2 py-1 text-[11px] text-[var(--text-secondary)]">
+                      <Activity className="h-3.5 w-3.5" />
                       This month
                     </p>
                   </div>
                 </div>
 
                 <div
-                  className="dashboard-financial-card dashboard-financial-card--rose wave-box animate-slide-up"
+                  className="animate-slide-up rounded-xl border border-[var(--border-default)] bg-gradient-to-br from-rose-500/15 via-rose-500/5 to-[var(--bg-secondary)] p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg dark:border-[#1a1a1a]"
                   style={{ animationDelay: "600ms" }}
                 >
-                  <div className="dashboard-financial-card__waves">
-                    <div className="dashboard-financial-card__wave dashboard-financial-card__wave--one"></div>
-                    <div className="dashboard-financial-card__wave dashboard-financial-card__wave--two"></div>
-                    <div className="dashboard-financial-card__wave dashboard-financial-card__wave--three"></div>
-                  </div>
-                  <div className="dashboard-financial-card__content">
-                    <div className="dashboard-financial-card__icon">
-                      <TrendingDown className="dashboard-financial-card__icon-symbol" />
+                  <div>
+                    <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-[10px] bg-rose-500/15 text-rose-600 dark:text-rose-400">
+                      <TrendingDown className="h-5 w-5" />
                     </div>
-                    <p className="dashboard-financial-card__label">
+                    <p className="text-[13px] text-[var(--text-secondary)]">
                       MTD Expense
                     </p>
-                    <p className="dashboard-financial-card__value">
+                    <p className="text-[22px] font-bold text-[var(--text-primary)]">
                       {formatCurrency(dashboardReport.totalExpense)}
                     </p>
-                    <p className="dashboard-financial-card__hint">
-                      <Activity className="dashboard-financial-card__hint-icon" />
+                    <p className="mt-2 inline-flex items-center gap-1 rounded-md bg-white/10 px-2 py-1 text-[11px] text-[var(--text-secondary)]">
+                      <Activity className="h-3.5 w-3.5" />
                       This month
                     </p>
                   </div>
                 </div>
 
                 <div
-                  className="dashboard-financial-card dashboard-financial-card--blue wave-box animate-slide-up"
+                  className="animate-slide-up rounded-xl border border-[var(--border-default)] bg-gradient-to-br from-blue-500/15 via-blue-500/5 to-[var(--bg-secondary)] p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg dark:border-[#1a1a1a]"
                   style={{ animationDelay: "700ms" }}
                 >
-                  <div className="dashboard-financial-card__waves">
-                    <div className="dashboard-financial-card__wave dashboard-financial-card__wave--one"></div>
-                    <div className="dashboard-financial-card__wave dashboard-financial-card__wave--two"></div>
-                    <div className="dashboard-financial-card__wave dashboard-financial-card__wave--three"></div>
-                  </div>
-                  <div className="dashboard-financial-card__content">
-                    <div className="dashboard-financial-card__icon">
-                      <BarChart3 className="dashboard-financial-card__icon-symbol" />
+                  <div>
+                    <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-[10px] bg-blue-500/15 text-blue-600 dark:text-blue-400">
+                      <BarChart3 className="h-5 w-5" />
                     </div>
-                    <p className="dashboard-financial-card__label">
+                    <p className="text-[13px] text-[var(--text-secondary)]">
                       YTD Income
                     </p>
-                    <p className="dashboard-financial-card__value">
+                    <p className="text-[22px] font-bold text-[var(--text-primary)]">
                       {formatCurrency(dashboardReport.previousPeriodIncome)}
                     </p>
-                    <p className="dashboard-financial-card__hint">
-                      <Activity className="dashboard-financial-card__hint-icon" />
+                    <p className="mt-2 inline-flex items-center gap-1 rounded-md bg-white/10 px-2 py-1 text-[11px] text-[var(--text-secondary)]">
+                      <Activity className="h-3.5 w-3.5" />
                       Year to date
                     </p>
                   </div>
                 </div>
 
                 <div
-                  className="dashboard-financial-card dashboard-financial-card--violet wave-box animate-slide-up"
+                  className="animate-slide-up rounded-xl border border-[var(--border-default)] bg-gradient-to-br from-violet-500/15 via-violet-500/5 to-[var(--bg-secondary)] p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg dark:border-[#1a1a1a]"
                   style={{ animationDelay: "800ms" }}
                 >
-                  <div className="dashboard-financial-card__waves">
-                    <div className="dashboard-financial-card__wave dashboard-financial-card__wave--one"></div>
-                    <div className="dashboard-financial-card__wave dashboard-financial-card__wave--two"></div>
-                    <div className="dashboard-financial-card__wave dashboard-financial-card__wave--three"></div>
-                  </div>
-                  <div className="dashboard-financial-card__content">
-                    <div className="dashboard-financial-card__icon">
-                      <DollarSign className="dashboard-financial-card__icon-symbol" />
+                  <div>
+                    <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-[10px] bg-violet-500/15 text-violet-600 dark:text-violet-400">
+                      <DollarSign className="h-5 w-5" />
                     </div>
-                    <p className="dashboard-financial-card__label">
+                    <p className="text-[13px] text-[var(--text-secondary)]">
                       Cash Balance
                     </p>
-                    <p className="dashboard-financial-card__value">
+                    <p className="text-[22px] font-bold text-[var(--text-primary)]">
                       {formatCurrency(dashboardReport.cashBalance)}
                     </p>
-                    <p className="dashboard-financial-card__hint">
-                      <Sparkles className="dashboard-financial-card__hint-icon" />
+                    <p className="mt-2 inline-flex items-center gap-1 rounded-md bg-white/10 px-2 py-1 text-[11px] text-[var(--text-secondary)]">
+                      <Sparkles className="h-3.5 w-3.5" />
                       All time
                     </p>
                   </div>
@@ -1559,21 +1640,27 @@ export default function Dashboard() {
           {isSocietyOpsLevel && (
             <>
               {/* Society Operations Analytics */}
-              <div className="dashboard-platform-analytics animate-slide-up" style={{ animationDelay: "850ms" }}>
-                <div className="dashboard-section">
-                  <BarChart3 className="dashboard-section__icon" />
-                  <h2 className="dashboard-section__title">Society Analytics</h2>
+              <div className={clsx(sectionShellClass, "animate-slide-up")} style={{ animationDelay: "850ms" }}>
+                <div className="mb-4 flex items-center gap-3 border-b border-[var(--border-default)] pb-4 dark:border-[#1e1e1e]">
+                  <BarChart3 className="h-5 w-5 text-[var(--accent-primary)]" />
+                  <h2 className="text-xl font-bold text-slate-900 dark:text-slate-50">Society Analytics</h2>
                 </div>
 
-                <div className="dashboard-charts-grid">
+                <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                  {!hasSocietyCharts && (
+                    <div className="col-span-full rounded-xl border border-dashed border-[var(--border-default)] bg-[var(--bg-tertiary)] px-4 py-10 text-center text-sm text-[var(--text-secondary)]">
+                      Society analytics will appear once operational records are available.
+                    </div>
+                  )}
+
                   {/* Unit Type Distribution - Donut */}
                   {unitTypeData.length > 0 && (
-                    <div className="dashboard-chart-card animate-slide-up" style={{ animationDelay: "900ms" }}>
-                      <h3 className="dashboard-chart-card__title">
-                        <span className="dashboard-chart-card__dot dashboard-chart-card__dot--blue" />
+                    <div className={clsx(insightPanelClass, "animate-slide-up")} style={{ animationDelay: "900ms" }}>
+                      <h3 className="mb-1 flex items-center gap-2 text-sm font-bold tracking-[0.01em] text-[var(--text-primary)]">
+                        <span className="h-2 w-2 shrink-0 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.4)]" />
                         Unit Distribution
                       </h3>
-                      <div className="dashboard-chart-card__body">
+                      <div className="flex min-h-[260px] items-center justify-center">
                         <ResponsiveContainer width="100%" height={280} debounce={100}>
                           <PieChart>
                             <Pie
@@ -1601,12 +1688,12 @@ export default function Dashboard() {
                           </PieChart>
                         </ResponsiveContainer>
                       </div>
-                      <div className="dashboard-chart-card__legend">
+                      <div className="mt-2 flex flex-wrap gap-x-4 gap-y-2 border-t border-[var(--border-light,var(--border-default))] pt-3">
                         {unitTypeData.map((item) => (
-                          <div key={item.name} className="dashboard-chart-card__legend-item">
-                            <span className="dashboard-chart-card__legend-dot" style={{ background: item.color }} />
-                            <span className="dashboard-chart-card__legend-text">{item.name}</span>
-                            <span className="dashboard-chart-card__legend-value">{item.occupied}/{item.total} occupied</span>
+                          <div key={item.name} className="flex items-center gap-1.5 text-xs">
+                            <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: item.color }} />
+                            <span className="font-medium text-[var(--text-secondary)]">{item.name}</span>
+                            <span className="ml-auto font-bold text-[var(--text-primary)]">{item.occupied}/{item.total} occupied</span>
                           </div>
                         ))}
                       </div>
@@ -1614,13 +1701,13 @@ export default function Dashboard() {
                   )}
 
                   {/* Bills Status - Bar Chart */}
-                  <div className="dashboard-chart-card animate-slide-up" style={{ animationDelay: "1000ms" }}>
-                    <h3 className="dashboard-chart-card__title">
-                      <span className="dashboard-chart-card__dot dashboard-chart-card__dot--green" />
+                  {hasSocietyBillsData && (
+                  <div className={clsx(insightPanelClass, "animate-slide-up")} style={{ animationDelay: "1000ms" }}>
+                    <h3 className="mb-1 flex items-center gap-2 text-sm font-bold tracking-[0.01em] text-[var(--text-primary)]">
+                      <span className="h-2 w-2 shrink-0 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(34,197,94,0.4)]" />
                       Bills Overview
                     </h3>
-                    <div className="dashboard-chart-card__body">
-                      {billsChartData.some(b => b.value > 0) ? (
+                    <div className="flex min-h-[260px] items-center justify-center">
                         <ResponsiveContainer width="100%" height={280} debounce={100}>
                           <BarChart data={billsChartData} margin={{ left: 0, right: 20, top: 10, bottom: 10 }}>
                             <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.1)" />
@@ -1634,20 +1721,18 @@ export default function Dashboard() {
                             </Bar>
                           </BarChart>
                         </ResponsiveContainer>
-                      ) : (
-                        <p className="dashboard-chart-card__empty">No bills data available</p>
-                      )}
                     </div>
                   </div>
+                  )}
 
                   {/* Tickets & Complaints - Grouped Bar Chart */}
-                  <div className="dashboard-chart-card dashboard-chart-card--wide animate-slide-up" style={{ animationDelay: "1100ms" }}>
-                    <h3 className="dashboard-chart-card__title">
-                      <span className="dashboard-chart-card__dot dashboard-chart-card__dot--violet" />
+                  {hasSocietyTicketData && (
+                  <div className={clsx(insightPanelClass, "lg:col-span-2 animate-slide-up")} style={{ animationDelay: "1100ms" }}>
+                    <h3 className="mb-1 flex items-center gap-2 text-sm font-bold tracking-[0.01em] text-[var(--text-primary)]">
+                      <span className="h-2 w-2 shrink-0 rounded-full bg-violet-500 shadow-[0_0_8px_rgba(139,92,246,0.4)]" />
                       Tickets &amp; Complaints by Status
                     </h3>
-                    <div className="dashboard-chart-card__body">
-                      {ticketChartData.some(t => t.tickets > 0 || t.complaints > 0) ? (
+                    <div className="flex min-h-[260px] items-center justify-center">
                         <ResponsiveContainer width="100%" height={280} debounce={100}>
                           <BarChart data={ticketChartData} margin={{ left: 0, right: 20, top: 10, bottom: 10 }}>
                             <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.1)" />
@@ -1658,20 +1743,18 @@ export default function Dashboard() {
                             <Bar dataKey="complaints" fill="#f97316" radius={[4, 4, 0, 0]} isAnimationActive={animateSocietyCharts} animationDuration={850} animationBegin={0} barSize={24} name="Complaints" />
                           </BarChart>
                         </ResponsiveContainer>
-                      ) : (
-                        <p className="dashboard-chart-card__empty">No tickets or complaints data</p>
-                      )}
                     </div>
                   </div>
+                  )}
 
                   {/* Vehicle Distribution - Donut */}
                   {vehicleChartData.length > 0 && (
-                    <div className="dashboard-chart-card animate-slide-up" style={{ animationDelay: "1200ms" }}>
-                      <h3 className="dashboard-chart-card__title">
-                        <span className="dashboard-chart-card__dot dashboard-chart-card__dot--teal" />
+                    <div className={clsx(insightPanelClass, "animate-slide-up")} style={{ animationDelay: "1200ms" }}>
+                      <h3 className="mb-1 flex items-center gap-2 text-sm font-bold tracking-[0.01em] text-[var(--text-primary)]">
+                        <span className="h-2 w-2 shrink-0 rounded-full bg-teal-500 shadow-[0_0_8px_rgba(20,184,166,0.4)]" />
                         Vehicle Distribution
                       </h3>
-                      <div className="dashboard-chart-card__body">
+                      <div className="flex min-h-[260px] items-center justify-center">
                         <ResponsiveContainer width="100%" height={260} debounce={100}>
                           <PieChart>
                             <Pie
@@ -1703,13 +1786,13 @@ export default function Dashboard() {
                   )}
 
                   {/* Tenant Status - Area or Bar */}
-                  {tenantChartData.length > 0 && tenantChartData.some(t => t.value > 0) && (
-                    <div className="dashboard-chart-card animate-slide-up" style={{ animationDelay: "1300ms" }}>
-                      <h3 className="dashboard-chart-card__title">
-                        <span className="dashboard-chart-card__dot dashboard-chart-card__dot--green" />
+                  {hasTenantStatusData && (
+                    <div className={clsx(insightPanelClass, "animate-slide-up")} style={{ animationDelay: "1300ms" }}>
+                      <h3 className="mb-1 flex items-center gap-2 text-sm font-bold tracking-[0.01em] text-[var(--text-primary)]">
+                        <span className="h-2 w-2 shrink-0 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(34,197,94,0.4)]" />
                         Tenant Status
                       </h3>
-                      <div className="dashboard-chart-card__body">
+                      <div className="flex min-h-[260px] items-center justify-center">
                         <ResponsiveContainer width="100%" height={260} debounce={100}>
                           <BarChart data={tenantChartData} margin={{ left: 0, right: 20, top: 10, bottom: 10 }}>
                             <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.1)" />
@@ -1729,7 +1812,7 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              <div className="dashboard-alerts">
+              <div className="mb-5 grid grid-cols-1 gap-6 lg:grid-cols-3">
                 <AlertCard
                   title="Expiring Contracts"
                   icon={AlertTriangle}
@@ -1764,62 +1847,58 @@ export default function Dashboard() {
                 />
               </div>
 
-              <div className="dashboard-duo">
+              <div className="mb-5 grid grid-cols-1 gap-[14px] lg:grid-cols-2">
                 {showPlatformFinancialWidgets && (
                   <div
-                    className="dashboard-bills-summary animate-slide-up"
+                    className="animate-slide-up rounded-xl border border-[var(--border-default)] bg-[var(--bg-secondary)] p-5 shadow-sm transition-all duration-200 dark:border-[#1a1a1a] dark:bg-[var(--bg-secondary)]"
                     style={{ animationDelay: "1200ms" }}
                   >
-                    <div className="dashboard-bills-summary__accent"></div>
-                    <div className="dashboard-bills-summary__glow"></div>
-                    <div className="dashboard-bills-summary__shine"></div>
-
-                    <div className="dashboard-bills-summary__header">
-                      <div className="dashboard-bills-summary__icon">
-                        <DollarSign className="dashboard-bills-summary__icon-symbol animate-pulse-custom" />
+                    <div className="mb-4 flex items-center gap-3">
+                      <div className="flex h-[38px] w-[38px] items-center justify-center rounded-[10px] bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                        <DollarSign className="h-4.5 w-4.5 animate-pulse-custom" />
                       </div>
                       <div>
-                        <h3 className="dashboard-bills-summary__title">
+                        <h3 className="text-base font-semibold text-[var(--text-primary)]">
                           Bills Summary
                         </h3>
-                        <p className="dashboard-bills-summary__subtitle">
+                        <p className="text-xs text-[var(--text-tertiary)]">
                           Overview of all transactions
                         </p>
                       </div>
                     </div>
 
-                    <div className="dashboard-bills-summary__list">
-                      <div className="dashboard-bills-summary__row">
-                        <span className="dashboard-bills-summary__label">
+                    <div className="space-y-3">
+                      <div className="rounded-lg border border-[var(--border-light,var(--border-default))] bg-[var(--bg-tertiary)] px-3.5 py-3">
+                        <span className="text-sm font-medium text-[var(--text-secondary)]">
                           Total Bills Amount
                         </span>
-                        <span className="dashboard-bills-summary__value">
+                        <span className="ml-2 text-xl font-bold text-[var(--text-primary)]">
                           ₹{totalBillAmount.toLocaleString()}
                         </span>
                       </div>
 
-                      <div className="dashboard-bills-summary__stats">
-                        <div className="dashboard-bills-summary__stat dashboard-bills-summary__stat--paid">
-                          <span className="dashboard-bills-summary__stat-value">
+                      <div className="grid grid-cols-3 gap-2.5">
+                        <div className="rounded-lg border border-emerald-500/15 bg-emerald-500/8 p-2.5 text-emerald-600 dark:text-emerald-400">
+                          <span className="block text-xl font-bold leading-none">
                             {paidBills.length}
                           </span>
-                          <span className="dashboard-bills-summary__stat-label">
+                          <span className="text-[11px] font-medium">
                             Paid Bills
                           </span>
                         </div>
-                        <div className="dashboard-bills-summary__stat dashboard-bills-summary__stat--pending">
-                          <span className="dashboard-bills-summary__stat-value">
+                        <div className="rounded-lg border border-orange-500/15 bg-orange-500/8 p-2.5 text-orange-600 dark:text-orange-400">
+                          <span className="block text-xl font-bold leading-none">
                             {pendingBillsCount.length}
                           </span>
-                          <span className="dashboard-bills-summary__stat-label">
+                          <span className="text-[11px] font-medium">
                             Pending
                           </span>
                         </div>
-                        <div className="dashboard-bills-summary__stat dashboard-bills-summary__stat--overdue">
-                          <span className="dashboard-bills-summary__stat-value">
+                        <div className="rounded-lg border border-rose-500/15 bg-rose-500/8 p-2.5 text-rose-600 dark:text-rose-400">
+                          <span className="block text-xl font-bold leading-none">
                             {overdueBills.length}
                           </span>
-                          <span className="dashboard-bills-summary__stat-label">
+                          <span className="text-[11px] font-medium">
                             Overdue
                           </span>
                         </div>
@@ -1829,56 +1908,52 @@ export default function Dashboard() {
                 )}
 
                 <div
-                  className="dashboard-vehicle-card animate-slide-up"
+                  className="animate-slide-up rounded-xl border border-[var(--border-default)] bg-[var(--bg-secondary)] p-5 shadow-sm transition-all duration-200 dark:border-[#1a1a1a] dark:bg-[var(--bg-secondary)]"
                   style={{ animationDelay: "1300ms" }}
                 >
-                  <div className="dashboard-vehicle-card__accent"></div>
-                  <div className="dashboard-vehicle-card__glow"></div>
-                  <div className="dashboard-vehicle-card__shine"></div>
-
-                  <div className="dashboard-vehicle-card__header">
-                    <div className="dashboard-vehicle-card__icon">
-                      <Car className="dashboard-vehicle-card__icon-symbol animate-bounce-custom" />
+                  <div className="mb-4 flex items-center gap-3">
+                    <div className="flex h-[38px] w-[38px] items-center justify-center rounded-[10px] bg-blue-500/10 text-blue-600 dark:text-blue-400">
+                      <Car className="h-4.5 w-4.5 animate-bounce-custom" />
                     </div>
                     <div>
-                      <h3 className="dashboard-vehicle-card__title">
+                      <h3 className="text-base font-semibold text-[var(--text-primary)]">
                         Vehicle Distribution
                       </h3>
-                      <p className="dashboard-vehicle-card__subtitle">
+                      <p className="text-xs text-[var(--text-tertiary)]">
                         Parking lot analytics
                       </p>
                     </div>
                   </div>
 
-                  <div className="dashboard-vehicle-card__stats">
-                    <div className="dashboard-vehicle-card__stat">
-                      <div className="dashboard-vehicle-card__ring dashboard-vehicle-card__ring--blue">
-                        <div className="dashboard-vehicle-card__ring-inner">
-                          <div className="dashboard-vehicle-card__ring-content">
-                            <span className="dashboard-vehicle-card__ring-value dashboard-vehicle-card__ring-value--blue">
+                  <div className="flex items-start justify-evenly gap-5 pt-2">
+                    <div className="text-center">
+                      <div className="mb-2 flex h-[88px] w-[88px] items-center justify-center rounded-full border-[3px] border-blue-500/25">
+                        <div className="flex h-[72px] w-[72px] items-center justify-center rounded-full bg-[var(--bg-secondary)]">
+                          <div className="flex flex-col items-center leading-none">
+                            <span className="text-xl font-bold text-blue-500">
                               {fourWheelerCount}
                             </span>
-                            <Car className="dashboard-vehicle-card__ring-icon dashboard-vehicle-card__ring-icon--blue" />
+                            <Car className="h-3.5 w-3.5 text-blue-500" />
                           </div>
                         </div>
                       </div>
-                      <p className="dashboard-vehicle-card__label">
+                      <p className="text-[13px] font-medium text-[var(--text-secondary)]">
                         Four Wheelers
                       </p>
                     </div>
 
-                    <div className="dashboard-vehicle-card__stat">
-                      <div className="dashboard-vehicle-card__ring dashboard-vehicle-card__ring--green">
-                        <div className="dashboard-vehicle-card__ring-inner">
-                          <div className="dashboard-vehicle-card__ring-content">
-                            <span className="dashboard-vehicle-card__ring-value dashboard-vehicle-card__ring-value--green">
+                    <div className="text-center">
+                      <div className="mb-2 flex h-[88px] w-[88px] items-center justify-center rounded-full border-[3px] border-emerald-500/25">
+                        <div className="flex h-[72px] w-[72px] items-center justify-center rounded-full bg-[var(--bg-secondary)]">
+                          <div className="flex flex-col items-center leading-none">
+                            <span className="text-xl font-bold text-emerald-500">
                               {twoWheelerCount}
                             </span>
-                            <Activity className="dashboard-vehicle-card__ring-icon dashboard-vehicle-card__ring-icon--green" />
+                            <Activity className="h-3.5 w-3.5 text-emerald-500" />
                           </div>
                         </div>
                       </div>
-                      <p className="dashboard-vehicle-card__label">
+                      <p className="text-[13px] font-medium text-[var(--text-secondary)]">
                         Two Wheelers
                       </p>
                     </div>
@@ -1886,41 +1961,35 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              <div className="dashboard-security">
+              <div className="mb-5">
                 <div
-                  className="dashboard-security__card animate-slide-up"
+                  className="animate-slide-up rounded-xl border border-[var(--border-default)] bg-[var(--bg-secondary)] p-5 shadow-sm transition-all duration-200 dark:border-[#1a1a1a] dark:bg-[var(--bg-secondary)]"
                   style={{ animationDelay: "1400ms" }}
                 >
-                  <div className="dashboard-security__accent"></div>
-
-                  <div className="dashboard-security__lines">
-                    <div className="dashboard-security__line"></div>
-                  </div>
-
-                  <div className="dashboard-security__header">
-                    <div className="dashboard-security__title-wrap">
-                      <div className="dashboard-security__icon">
-                        <Activity className="dashboard-security__icon-symbol animate-pulse" />
+                  <div className="mb-4 flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-[38px] w-[38px] items-center justify-center rounded-[10px] bg-rose-500/10 text-rose-600 dark:text-rose-400">
+                        <Activity className="h-4.5 w-4.5 animate-pulse" />
                       </div>
                       <div>
-                        <h3 className="dashboard-security__title">
+                        <h3 className="text-base font-semibold text-[var(--text-primary)]">
                           Live Security Feed
                         </h3>
-                        <p className="dashboard-security__subtitle">
+                        <p className="text-xs text-[var(--text-tertiary)]">
                           Real-time gate and system activity
                         </p>
                       </div>
                     </div>
-                    <span className="dashboard-security__status">
-                      <span className="dashboard-security__status-dot">
-                        <span className="dashboard-security__status-ping"></span>
-                        <span className="dashboard-security__status-core"></span>
+                    <span className="inline-flex items-center gap-2 rounded-full border border-emerald-500/20 bg-emerald-500/8 px-2.5 py-1 text-[11px] font-semibold text-emerald-500">
+                      <span className="relative inline-flex h-2 w-2 items-center justify-center">
+                        <span className="absolute h-2 w-2 animate-ping rounded-full bg-emerald-500"></span>
+                        <span className="relative h-2 w-2 rounded-full bg-emerald-500"></span>
                       </span>
                       MONITORING ACTIVE
                     </span>
                   </div>
 
-                  <div className="dashboard-security__list">
+                  <div className="space-y-2">
                     {(securityLogs.length > 0
                       ? securityLogs
                       : [
@@ -1932,22 +2001,24 @@ export default function Dashboard() {
                           },
                         ]
                     ).map((log, i) => (
-                      <div key={i} className="dashboard-security__item">
-                        <div className="dashboard-security__time">
+                      <div key={i} className="flex items-center gap-3 rounded-lg border-l-[3px] border-l-[var(--accent-primary)] bg-[var(--bg-tertiary)] px-3 py-2.5 transition-colors hover:bg-[color-mix(in_srgb,var(--bg-tertiary)_80%,var(--accent-primary)_5%)]">
+                        <div className="text-[11px] text-[var(--text-tertiary)]">
                           {new Date(log.createdAt).toLocaleTimeString([], {
                             hour: "2-digit",
                             minute: "2-digit",
                           })}
                         </div>
-                        <div className="dashboard-security__dot">
-                          <span className="dashboard-security__dot-pulse"></span>
-                          <span className="dashboard-security__dot-core"></span>
+                        <div className="relative flex h-2 w-2 items-center justify-center">
+                          <span className="absolute h-2 w-2 rounded-full bg-[var(--accent-primary)]"></span>
                         </div>
-                        <div className="dashboard-security__event">
+                        <div className="flex-1 text-[13px] font-medium text-[var(--text-primary)]">
                           {log.event}
                         </div>
                         <span
-                          className={`dashboard-security__badge ${getSecurityBadgeClass(log.type)}`}
+                          className={clsx(
+                            "rounded-md border px-2 py-0.5 text-[11px] font-semibold",
+                            getSecurityBadgeClass(log.type),
+                          )}
                         >
                           {log.status}
                         </span>
@@ -1958,23 +2029,18 @@ export default function Dashboard() {
               </div>
 
               <div
-                className="dashboard-quick animate-slide-up"
+                className="animate-slide-up rounded-xl border border-[var(--border-default)] bg-[var(--bg-secondary)] p-5 shadow-sm transition-all duration-200 dark:border-[#1a1a1a] dark:bg-[var(--bg-secondary)]"
                 style={{ animationDelay: "1600ms" }}
               >
-                <div className="dashboard-quick__mesh">
-                  <div className="dashboard-quick__mesh-glow"></div>
-                  <div className="dashboard-quick__mesh-grid"></div>
-                </div>
-
-                <div className="dashboard-quick__content">
-                  <h3 className="dashboard-quick__title">
+                <div>
+                  <h3 className="mb-4 flex items-center gap-2 text-base font-semibold text-[var(--text-primary)]">
                     <Sparkles
-                      className="dashboard-quick__title-icon animate-spin"
+                      className="h-[18px] w-[18px] animate-spin text-[var(--accent-primary)]"
                       style={{ animationDuration: "3s" }}
                     />
                     Quick Overview
                   </h3>
-                  <div className="dashboard-quick__grid">
+                  <div className="grid grid-cols-2 gap-2.5 md:grid-cols-5">
                     {[
                       {
                         label: "Paid Bills",
@@ -2004,21 +2070,25 @@ export default function Dashboard() {
                     ].map((stat, idx) => (
                       <div
                         key={idx}
-                        className={`dashboard-quick__card dashboard-quick__card--${stat.tone}`}
+                        className={clsx(
+                          "rounded-[10px] border border-[var(--border-default)] bg-[var(--bg-tertiary)] p-4 transition-colors hover:border-[var(--border-strong)]",
+                          quickToneClasses[stat.tone]?.card,
+                        )}
                         style={{
                           animationDelay: `${1500 + idx * 100}ms`,
                           transformStyle: "preserve-3d",
                         }}
                       >
-                        <div className="dashboard-quick__shine"></div>
-
-                        <div className="dashboard-quick__card-content">
+                        <div>
                           <p
-                            className={`dashboard-quick__value dashboard-quick__value--${stat.tone}`}
+                            className={clsx(
+                              "mb-1 text-[26px] font-bold leading-none",
+                              quickToneClasses[stat.tone]?.value,
+                            )}
                           >
                             {stat.value}
                           </p>
-                          <p className="dashboard-quick__label">{stat.label}</p>
+                          <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--text-secondary)]">{stat.label}</p>
                         </div>
                       </div>
                     ))}

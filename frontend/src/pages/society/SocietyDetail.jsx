@@ -16,9 +16,6 @@ import {
   Bell,
   MessageSquare,
   ChevronRight,
-  Edit,
-  Trash2,
-  Plus,
   AlertCircle,
   User,
   Briefcase,
@@ -31,24 +28,24 @@ import useMinLoadingTime from '../../hooks/useMinLoadingTime'
 
 // Role colors matching the main app
 const roleColors = {
-  MASTER_ADMIN: 'society-role-color society-role-color--platform-owner',
-  SOCIETY_ADMIN: 'society-role-color society-role-color--society-admin',
-  CHAIRMAN: 'society-role-color society-role-color--chairman',
-  SECRETARY: 'society-role-color society-role-color--secretary',
-  TREASURER: 'society-role-color society-role-color--treasurer',
-  COMMITTEE: 'society-role-color society-role-color--committee',
-  EMPLOYEE: 'society-role-color society-role-color--employee',
-  MEMBER: 'society-role-color society-role-color--member',
-  TENANT: 'society-role-color society-role-color--tenant',
-  VISITOR: 'society-role-color society-role-color--visitor',
+  MASTER_ADMIN: 'bg-violet-500/20 text-violet-200 border border-violet-400/35',
+  SOCIETY_ADMIN: 'bg-blue-500/20 text-blue-200 border border-blue-400/35',
+  CHAIRMAN: 'bg-indigo-500/20 text-indigo-200 border border-indigo-400/35',
+  SECRETARY: 'bg-cyan-500/20 text-cyan-200 border border-cyan-400/35',
+  TREASURER: 'bg-emerald-500/20 text-emerald-200 border border-emerald-400/35',
+  COMMITTEE: 'bg-amber-500/20 text-amber-200 border border-amber-400/35',
+  EMPLOYEE: 'bg-orange-500/20 text-orange-200 border border-orange-400/35',
+  MEMBER: 'bg-slate-400/25 text-slate-200 border border-slate-300/35',
+  TENANT: 'bg-pink-500/20 text-pink-200 border border-pink-400/35',
+  VISITOR: 'bg-red-500/20 text-red-200 border border-red-400/35',
 }
 
 const avatarColors = [
-  'society-user-avatar--blue',
-  'society-user-avatar--emerald',
-  'society-user-avatar--purple',
-  'society-user-avatar--orange',
-  'society-user-avatar--cyan',
+  'bg-gradient-to-br from-blue-500 to-indigo-600',
+  'bg-gradient-to-br from-emerald-500 to-teal-500',
+  'bg-gradient-to-br from-violet-500 to-pink-500',
+  'bg-gradient-to-br from-amber-500 to-red-500',
+  'bg-gradient-to-br from-cyan-500 to-blue-500',
 ]
 
 export default function SocietyDetail() {
@@ -193,13 +190,13 @@ export default function SocietyDetail() {
 
   if (societyError || !society) {
     return (
-      <div className="society-state society-state--error">
-        <AlertCircle className="society-error-icon" />
-        <h2 className="society-error-title">Society Not Found</h2>
-        <p className="society-error-text">The society you're looking for doesn't exist or has been removed.</p>
+      <div className="flex min-h-[400px] flex-col items-center justify-center gap-4 text-center">
+        <AlertCircle className="h-16 w-16 text-red-400" />
+        <h2 className="text-xl font-semibold text-[var(--text-primary)]">Society Not Found</h2>
+        <p className="mb-2 text-[var(--text-tertiary)]">The society you're looking for doesn't exist or has been removed.</p>
         <button 
           onClick={() => navigate('/societies')}
-          className="society-error-button"
+          className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 font-semibold text-white transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_12px_20px_rgba(37,99,235,0.25)]"
         >
           <ArrowLeft size={18} />
           Go Back
@@ -211,42 +208,44 @@ export default function SocietyDetail() {
   return (
     <div className="animate-fadeIn">
       {/* Header Section */}
-      <div className="society-header">
-        <div className="society-header-content">
+      <div className="relative mb-6 overflow-hidden rounded-2xl border border-slate-400/30 bg-gradient-to-br from-blue-700 to-indigo-700 p-8 text-white shadow-md">
+        <div className="pointer-events-none absolute -right-[20%] -top-1/2 h-[200%] w-[60%] bg-[radial-gradient(ellipse,rgba(255,255,255,0.1)_0%,transparent_70%)]" />
+        <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-px bg-[linear-gradient(90deg,transparent,rgba(255,255,255,0.3),transparent)]" />
+        <div className="relative z-[1]">
           {/* Back Button */}
           <button 
             onClick={() => navigate(-1)}
-            className="society-back-btn"
+            className="mb-5 inline-flex cursor-pointer items-center gap-2 rounded-md border-none bg-transparent px-2 py-1 text-sm font-medium text-white/80 transition-all duration-150 hover:bg-white/10 hover:text-white"
           >
             <ArrowLeft size={18} />
             Go Back
           </button>
 
           {/* Society Title */}
-          <h1 className="society-title">{society.name}</h1>
+          <h1 className="mb-3 text-[clamp(2.1rem,3.2vw,2.8rem)] font-bold tracking-[-0.02em]">{society.name}</h1>
           
           {/* Address */}
-          <p className="society-address">
-            <MapPin className="society-address-icon" />
+          <p className="mb-5 text-lg text-white/85">
+            <MapPin className="mr-1 inline-block h-4 w-4 align-middle" />
             {society.address}, {society.city}, {society.state} - {society.pincode}
           </p>
 
           {/* Meta Info */}
-          <div className="society-meta">
-            <div className="society-meta-item">
-              <div className="society-meta-icon">
+          <div className="flex flex-wrap gap-5">
+            <div className="flex items-center gap-2 text-base text-white/90">
+              <div className="flex h-9 w-9 items-center justify-center rounded-md bg-white/15">
                 <Phone size={16} />
               </div>
               <span>{society.telephone || 'No telephone'}</span>
             </div>
-            <div className="society-meta-item">
-              <div className="society-meta-icon">
+            <div className="flex items-center gap-2 text-base text-white/90">
+              <div className="flex h-9 w-9 items-center justify-center rounded-md bg-white/15">
                 <Mail size={16} />
               </div>
               <span>{society.email || 'No email'}</span>
             </div>
-            <div className="society-meta-item">
-              <div className="society-meta-icon">
+            <div className="flex items-center gap-2 text-base text-white/90">
+              <div className="flex h-9 w-9 items-center justify-center rounded-md bg-white/15">
                 <FileText size={16} />
               </div>
               <span>Reg: {society.registrationNumber || 'N/A'}</span>
@@ -256,94 +255,94 @@ export default function SocietyDetail() {
       </div>
 
       {/* Stats Row */}
-      <div className="society-stats">
-        <div className="society-stat-card">
-          <div className="society-stat-icon blue">
+      <div className="mb-6 grid grid-cols-[repeat(auto-fit,minmax(160px,1fr))] gap-4">
+        <div className="flex items-center gap-4 rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] p-5 transition-all hover:border-blue-300 hover:shadow-md">
+          <div className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-blue-500/10 text-blue-500">
             <Home size={24} />
           </div>
-          <div className="society-stat-content">
-            <div className="society-stat-value">{stats.totalFlats}</div>
-            <div className="society-stat-label">Flats ({stats.occupiedFlats} occupied)</div>
+          <div className="flex-1">
+            <div className="mb-1 text-2xl font-bold leading-none text-[var(--text-primary)]">{stats.totalFlats}</div>
+            <div className="text-sm text-[var(--text-tertiary)]">Flats ({stats.occupiedFlats} occupied)</div>
           </div>
         </div>
-        <div className="society-stat-card">
-          <div className="society-stat-icon green">
+        <div className="flex items-center gap-4 rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] p-5 transition-all hover:border-blue-300 hover:shadow-md">
+          <div className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-500">
             <Store size={24} />
           </div>
-          <div className="society-stat-content">
-            <div className="society-stat-value">{stats.totalShops}</div>
-            <div className="society-stat-label">Shops ({stats.occupiedShops} occupied)</div>
+          <div className="flex-1">
+            <div className="mb-1 text-2xl font-bold leading-none text-[var(--text-primary)]">{stats.totalShops}</div>
+            <div className="text-sm text-[var(--text-tertiary)]">Shops ({stats.occupiedShops} occupied)</div>
           </div>
         </div>
-        <div className="society-stat-card">
-          <div className="society-stat-icon amber">
+        <div className="flex items-center gap-4 rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] p-5 transition-all hover:border-blue-300 hover:shadow-md">
+          <div className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-amber-500/10 text-amber-500">
             <Briefcase size={24} />
           </div>
-          <div className="society-stat-content">
-            <div className="society-stat-value">{stats.totalOffices}</div>
-            <div className="society-stat-label">Offices ({stats.occupiedOffices} occupied)</div>
+          <div className="flex-1">
+            <div className="mb-1 text-2xl font-bold leading-none text-[var(--text-primary)]">{stats.totalOffices}</div>
+            <div className="text-sm text-[var(--text-tertiary)]">Offices ({stats.occupiedOffices} occupied)</div>
           </div>
         </div>
-        <div className="society-stat-card">
-          <div className="society-stat-icon indigo">
+        <div className="flex items-center gap-4 rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] p-5 transition-all hover:border-blue-300 hover:shadow-md">
+          <div className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-indigo-500/10 text-indigo-500">
             <Layers size={24} />
           </div>
-          <div className="society-stat-content">
-            <div className="society-stat-value">{stats.totalWings}</div>
-            <div className="society-stat-label">Wings</div>
+          <div className="flex-1">
+            <div className="mb-1 text-2xl font-bold leading-none text-[var(--text-primary)]">{stats.totalWings}</div>
+            <div className="text-sm text-[var(--text-tertiary)]">Wings</div>
           </div>
         </div>
-        <div className="society-stat-card">
-          <div className="society-stat-icon purple">
+        <div className="flex items-center gap-4 rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] p-5 transition-all hover:border-blue-300 hover:shadow-md">
+          <div className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-violet-500/10 text-violet-500">
             <Users size={24} />
           </div>
-          <div className="society-stat-content">
-            <div className="society-stat-value">{stats.totalUsers}</div>
-            <div className="society-stat-label">Total Users</div>
+          <div className="flex-1">
+            <div className="mb-1 text-2xl font-bold leading-none text-[var(--text-primary)]">{stats.totalUsers}</div>
+            <div className="text-sm text-[var(--text-tertiary)]">Total Users</div>
           </div>
         </div>
-        <div className="society-stat-card">
-          <div className="society-stat-icon teal">
+        <div className="flex items-center gap-4 rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] p-5 transition-all hover:border-blue-300 hover:shadow-md">
+          <div className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-teal-500/10 text-teal-500">
             <User size={24} />
           </div>
-          <div className="society-stat-content">
-            <div className="society-stat-value">{stats.totalMembers}</div>
-            <div className="society-stat-label">Members</div>
+          <div className="flex-1">
+            <div className="mb-1 text-2xl font-bold leading-none text-[var(--text-primary)]">{stats.totalMembers}</div>
+            <div className="text-sm text-[var(--text-tertiary)]">Members</div>
           </div>
         </div>
       </div>
 
       {/* Quick Actions */}
-      <div className="society-section">
-        <div className="society-section-header">
-          <h2 className="society-section-title">
+      <div className="mb-6">
+        <div className="mb-5 flex items-center justify-between">
+          <h2 className="flex items-center gap-2 text-lg font-semibold text-[var(--text-primary)]">
             <Building2 size={20} />
             Quick Navigation
           </h2>
         </div>
-        <div className="society-actions">
+        <div className="mb-6 grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-4">
           {quickActions.map((action) => (
             <Link
               key={action.title}
               to={action.href}
-              className="society-action-card"
+              className="group flex items-center gap-4 rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] p-5 no-underline transition-all hover:-translate-y-0.5 hover:border-transparent hover:shadow-lg"
             >
-              <div className={clsx('action-icon text-white', action.color)}>
+              <div className={clsx('inline-flex h-11 w-11 items-center justify-center rounded-lg text-white transition-transform duration-150 group-hover:scale-110', action.color)}>
                 <action.icon size={22} />
               </div>
-              <div className="action-content">
-                <div className="action-title">{action.title}</div>
-                <div className="action-count">{action.description}</div>
+              <div className="flex-1">
+                <div className="text-sm font-semibold text-[var(--text-primary)]">{action.title}</div>
+                <div className="text-xs text-[var(--text-tertiary)]">{action.description}</div>
               </div>
-              <ChevronRight size={18} className="action-arrow" />
+              <ChevronRight size={18} className="-translate-x-1 text-[var(--text-muted)] opacity-0 transition-all duration-150 group-hover:translate-x-0 group-hover:opacity-100" />
             </Link>
           ))}
         </div>
       </div>
 
-      <div className="society-section">
-        <div className="society-section-header">
-          <h2 className="society-section-title">
+      <div className="mb-6">
+        <div className="mb-5 flex items-center justify-between">
+          <h2 className="flex items-center gap-2 text-lg font-semibold text-[var(--text-primary)]">
             <Users size={20} />
             Society Members
           </h2>
@@ -351,30 +350,30 @@ export default function SocietyDetail() {
         </div>
 
         {societyUsers.length === 0 ? (
-          <div className="society-empty">
-            <Users className="society-empty-icon" />
-            <p className="society-empty-title">No users yet</p>
-            <p className="society-empty-text">Users assigned to this society will appear here</p>
+          <div className="px-4 py-12 text-center text-[var(--text-tertiary)]">
+            <Users className="mx-auto mb-5 h-16 w-16 opacity-50" />
+            <p className="mb-2 text-lg font-semibold text-[var(--text-secondary)]">No users yet</p>
+            <p className="text-sm text-[var(--text-tertiary)]">Users assigned to this society will appear here</p>
           </div>
         ) : (
-          <div className="society-users-grid">
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-4">
             {societyUsers.map((u, idx) => (
-              <div key={u.id} className="society-user-card">
-                <div className="society-user-header">
-                  <div className={clsx('society-user-avatar', avatarColors[idx % avatarColors.length])}>
+              <div key={u.id} className="rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] p-5 transition-all hover:border-blue-300 hover:shadow-md">
+                <div className="mb-4 flex items-center gap-4">
+                  <div className={clsx('flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-lg font-bold text-white', avatarColors[idx % avatarColors.length])}>
                     {u.name?.charAt(0)?.toUpperCase()}
                   </div>
-                  <div className="society-user-info">
-                    <div className="society-user-name">{u.name}</div>
-                    <div className="society-user-email">{u.email}</div>
+                  <div className="min-w-0 flex-1">
+                    <div className="mb-0.5 font-semibold text-[var(--text-primary)]">{u.name}</div>
+                    <div className="truncate text-sm text-[var(--text-tertiary)]">{u.email}</div>
                   </div>
-                  <span className={clsx('society-user-role', roleColors[u.role])}>
+                  <span className={clsx('inline-flex whitespace-nowrap rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.04em]', roleColors[u.role] || 'bg-slate-500/20 text-slate-200 border border-slate-400/35')}>
                     {u.role?.replace('_', ' ')}
                   </span>
                 </div>
                 {u.phone && (
-                  <div className="society-user-meta">
-                    <div className="society-user-meta-item">
+                  <div className="flex gap-4 border-t border-[var(--border-light)] pt-4">
+                    <div className="flex items-center gap-1.5 text-sm text-[var(--text-tertiary)]">
                       <Phone size={14} />
                       {u.phone}
                     </div>

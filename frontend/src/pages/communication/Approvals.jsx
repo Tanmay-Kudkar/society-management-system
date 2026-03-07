@@ -11,11 +11,11 @@ import { HeroSkeleton, SummaryRowSkeleton, FiltersSkeleton, ListSkeleton, WakeUp
 import useMinLoadingTime from '../../hooks/useMinLoadingTime'
 
 const statusColors = {
-  PENDING: 'approvals-status--pending',
-  IN_REVIEW: 'approvals-status--review',
-  APPROVED: 'approvals-status--approved',
-  REJECTED: 'approvals-status--rejected',
-  CANCELLED: 'approvals-status--cancelled',
+  PENDING: 'bg-amber-100 text-amber-800 dark:bg-amber-500/20 dark:text-amber-300',
+  IN_REVIEW: 'bg-blue-100 text-blue-800 dark:bg-blue-500/20 dark:text-blue-300',
+  APPROVED: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-300',
+  REJECTED: 'bg-rose-100 text-rose-800 dark:bg-rose-500/20 dark:text-rose-300',
+  CANCELLED: 'bg-slate-100 text-slate-600 dark:bg-slate-500/20 dark:text-slate-300',
 }
 
 const statusIcons = {
@@ -186,7 +186,7 @@ export default function Approvals() {
 
   if (showSkeleton) {
     return (
-      <div className="approvals-page">
+      <div>
         <WakeUpBanner isError={isError} />
         <HeroSkeleton />
         <SummaryRowSkeleton count={4} />
@@ -207,21 +207,27 @@ export default function Approvals() {
   const selectedRequest = showActionModal ? requests.find(r => r.id === showActionModal) : null
 
   return (
-    <div className="approvals-page">
+    <div>
       {/* Header */}
-      <div className="approvals-header">
+      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="approvals-title">Approvals</h1>
-          <p className="approvals-subtitle">Manage approval workflows and requests</p>
+          <h1 className="text-2xl font-bold text-[var(--text-primary)]">Approvals</h1>
+          <p className="mt-1 text-[var(--text-tertiary)]">Manage approval workflows and requests</p>
         </div>
-        <div className="approvals-header-actions">
+        <div className="flex gap-2">
           {canManage && activeTab === 'workflows' && (
-            <button className="btn btn-secondary" onClick={() => { setWorkflowSteps([{ stepOrder: 1, approverRole: 'CHAIRMAN', isMandatory: true, autoApproveBelow: '' }]); setShowWorkflowModal(true) }}>
+            <button
+              className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-[var(--border-default)] bg-[var(--bg-tertiary)] px-4 py-2 text-sm font-medium text-[var(--text-primary)] transition hover:bg-[var(--bg-secondary)] hover:border-[var(--border-strong)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent-primary)]"
+              onClick={() => { setWorkflowSteps([{ stepOrder: 1, approverRole: 'CHAIRMAN', isMandatory: true, autoApproveBelow: '' }]); setShowWorkflowModal(true) }}
+            >
               <Plus size={16} /> New Workflow
             </button>
           )}
           {canCreate && activeTab === 'requests' && (
-            <button className="btn btn-primary" onClick={() => setShowRequestModal(true)}>
+            <button
+              className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-[var(--color-primary-600)] px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-[var(--color-primary-700)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent-primary)]"
+              onClick={() => setShowRequestModal(true)}
+            >
               <Plus size={16} /> New Request
             </button>
           )}
@@ -229,12 +235,24 @@ export default function Approvals() {
       </div>
 
       {/* Tab Switcher */}
-      <div className="approvals-tabs">
-        <button className={clsx('approvals-tab', activeTab === 'requests' && 'active')} onClick={() => setActiveTab('requests')}>
+      <div className="mb-6 flex border-b-2 border-[var(--border-light)]">
+        <button
+          className={clsx(
+            'mb-[-2px] border-b-2 border-transparent px-5 py-2.5 text-sm font-semibold text-[var(--text-tertiary)] transition hover:text-[var(--text-primary)]',
+            activeTab === 'requests' && 'border-[var(--accent-primary)] text-[var(--accent-primary)]'
+          )}
+          onClick={() => setActiveTab('requests')}
+        >
           Requests
         </button>
         {canManage && (
-          <button className={clsx('approvals-tab', activeTab === 'workflows' && 'active')} onClick={() => setActiveTab('workflows')}>
+          <button
+            className={clsx(
+              'mb-[-2px] border-b-2 border-transparent px-5 py-2.5 text-sm font-semibold text-[var(--text-tertiary)] transition hover:text-[var(--text-primary)]',
+              activeTab === 'workflows' && 'border-[var(--accent-primary)] text-[var(--accent-primary)]'
+            )}
+            onClick={() => setActiveTab('workflows')}
+          >
             Workflows
           </button>
         )}
@@ -242,47 +260,57 @@ export default function Approvals() {
 
       {/* Summary Cards (requests tab only) */}
       {activeTab === 'requests' && (
-        <div className="approvals-summary">
-          <div className="summary-card summary-card--pending">
-            <Clock size={20} />
+        <div className="mb-6 grid grid-cols-2 gap-4 md:grid-cols-4">
+          <div className="flex items-center gap-3 rounded-2xl border border-[var(--border-light)] border-l-4 border-l-amber-500 bg-[var(--bg-card)] p-4 shadow-[0_1px_2px_rgba(15,23,42,0.06)]">
+            <Clock size={20} className="text-amber-500" />
             <div>
-              <span className="summary-count">{stats.pending}</span>
-              <span className="summary-label">Pending</span>
+              <span className="block text-2xl font-bold text-[var(--text-primary)]">{stats.pending}</span>
+              <span className="text-[13px] text-[var(--text-tertiary)]">Pending</span>
             </div>
           </div>
-          <div className="summary-card summary-card--review">
-            <AlertTriangle size={20} />
+          <div className="flex items-center gap-3 rounded-2xl border border-[var(--border-light)] border-l-4 border-l-blue-500 bg-[var(--bg-card)] p-4 shadow-[0_1px_2px_rgba(15,23,42,0.06)]">
+            <AlertTriangle size={20} className="text-blue-500" />
             <div>
-              <span className="summary-count">{stats.inReview}</span>
-              <span className="summary-label">In Review</span>
+              <span className="block text-2xl font-bold text-[var(--text-primary)]">{stats.inReview}</span>
+              <span className="text-[13px] text-[var(--text-tertiary)]">In Review</span>
             </div>
           </div>
-          <div className="summary-card summary-card--approved">
-            <CheckCircle size={20} />
+          <div className="flex items-center gap-3 rounded-2xl border border-[var(--border-light)] border-l-4 border-l-emerald-500 bg-[var(--bg-card)] p-4 shadow-[0_1px_2px_rgba(15,23,42,0.06)]">
+            <CheckCircle size={20} className="text-emerald-500" />
             <div>
-              <span className="summary-count">{stats.approved}</span>
-              <span className="summary-label">Approved</span>
+              <span className="block text-2xl font-bold text-[var(--text-primary)]">{stats.approved}</span>
+              <span className="text-[13px] text-[var(--text-tertiary)]">Approved</span>
             </div>
           </div>
-          <div className="summary-card summary-card--rejected">
-            <XCircle size={20} />
+          <div className="flex items-center gap-3 rounded-2xl border border-[var(--border-light)] border-l-4 border-l-rose-500 bg-[var(--bg-card)] p-4 shadow-[0_1px_2px_rgba(15,23,42,0.06)]">
+            <XCircle size={20} className="text-rose-500" />
             <div>
-              <span className="summary-count">{stats.rejected}</span>
-              <span className="summary-label">Rejected</span>
+              <span className="block text-2xl font-bold text-[var(--text-primary)]">{stats.rejected}</span>
+              <span className="text-[13px] text-[var(--text-tertiary)]">Rejected</span>
             </div>
           </div>
         </div>
       )}
 
       {/* Filters */}
-      <div className="approvals-filters">
-        <div className="search-box">
-          <Search size={16} />
-          <input type="text" placeholder="Search..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
-          {searchTerm && <button onClick={() => setSearchTerm('')}><X size={14} /></button>}
+      <div className="mb-6 flex flex-wrap gap-3">
+        <div className="flex min-w-[200px] flex-1 items-center gap-2 rounded-xl border border-[var(--border-default)] bg-[var(--bg-card)] px-3 py-2">
+          <Search size={16} className="text-[var(--text-tertiary)]" />
+          <input
+            type="text"
+            placeholder="Search..."
+            value={searchTerm}
+            onChange={e => setSearchTerm(e.target.value)}
+            className="min-w-0 flex-1 border-none bg-transparent text-sm text-[var(--text-primary)] outline-none placeholder:text-[var(--text-tertiary)]"
+          />
+          {searchTerm && <button onClick={() => setSearchTerm('')} className="text-[var(--text-tertiary)]"><X size={14} /></button>}
         </div>
         {activeTab === 'requests' && (
-          <select className="filter-select" value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
+          <select
+            className="cursor-pointer rounded-xl border border-[var(--border-default)] bg-[var(--bg-card)] px-3 py-2 text-sm text-[var(--text-primary)] outline-none"
+            value={filterStatus}
+            onChange={e => setFilterStatus(e.target.value)}
+          >
             <option value="">All Statuses</option>
             <option value="PENDING">Pending</option>
             <option value="IN_REVIEW">In Review</option>
@@ -295,28 +323,28 @@ export default function Approvals() {
 
       {/* === REQUESTS LIST === */}
       {activeTab === 'requests' && (
-        <div className="approvals-list">
+        <div className="flex flex-col gap-4">
           {filteredRequests.length === 0 ? (
-            <div className="approvals-empty">
-              <GitBranch size={48} />
+            <div className="py-12 text-center text-[var(--text-tertiary)]">
+              <GitBranch size={48} className="mx-auto mb-3 opacity-40" />
               <p>No approval requests found</p>
             </div>
           ) : filteredRequests.map(req => {
             const StatusIcon = statusIcons[req.status] || Clock
             return (
-              <div key={req.id} className="approval-card">
-                <div className="approval-card-header">
-                  <div className="approval-card-title">
+              <div key={req.id} className="rounded-2xl border border-[var(--border-light)] bg-[var(--bg-card)] p-5 shadow-[0_1px_3px_rgba(15,23,42,0.06)] transition hover:shadow-[0_4px_12px_rgba(15,23,42,0.1)]">
+                <div className="mb-3 flex items-start justify-between">
+                  <div className="flex flex-wrap items-center gap-2.5">
                     <h3>{req.title}</h3>
-                    <span className={clsx('approval-status-badge', statusColors[req.status])}>
+                    <span className={clsx('inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold', statusColors[req.status])}>
                       <StatusIcon size={12} /> {req.status?.replace('_', ' ')}
                     </span>
                   </div>
-                  <span className="approval-card-type">{req.entityType}</span>
+                  <span className="rounded-full bg-[var(--bg-tertiary)] px-2.5 py-0.5 text-xs font-semibold uppercase tracking-[0.5px] text-[var(--text-secondary)]">{req.entityType}</span>
                 </div>
-                <div className="approval-card-body">
-                  {req.description && <p className="approval-card-desc">{req.description}</p>}
-                  <div className="approval-card-meta">
+                <div className="mb-3">
+                  {req.description && <p className="mb-2.5 text-sm leading-relaxed text-[var(--text-secondary)]">{req.description}</p>}
+                  <div className="flex flex-wrap gap-4 text-[13px] text-[var(--text-tertiary)]">
                     <span>By: {req.requestedByName || 'Unknown'}</span>
                     {req.amount && <span>Amount: ₹{Number(req.amount).toLocaleString('en-IN')}</span>}
                     <span>Step: {req.currentStep}/{req.totalSteps}</span>
@@ -324,34 +352,45 @@ export default function Approvals() {
                     <span>{new Date(req.createdAt).toLocaleDateString()}</span>
                   </div>
                   {/* Progress bar */}
-                  <div className="approval-progress">
-                    <div className="approval-progress-bar" style={{ width: `${(req.currentStep / req.totalSteps) * 100}%` }} />
+                  <div className="mt-2.5 h-1.5 w-full overflow-hidden rounded bg-[var(--bg-tertiary)]">
+                    <div className="h-full rounded bg-[var(--accent-primary)] transition-all" style={{ width: `${(req.currentStep / req.totalSteps) * 100}%` }} />
                   </div>
                 </div>
-                <div className="approval-card-actions">
+                <div className="flex gap-2 border-t border-[var(--border-light)] pt-3">
                   {canManage && ['PENDING', 'IN_REVIEW'].includes(req.status) && (
-                    <button className="btn btn-sm btn-primary" onClick={() => setShowActionModal(req.id)}>
+                    <AsyncButton variant="primary" size="sm" onClick={() => setShowActionModal(req.id)}>
                       Take Action
-                    </button>
+                    </AsyncButton>
                   )}
                   {req.requestedBy === user?.id && req.status === 'PENDING' && (
-                    <button className="btn btn-sm btn-danger" onClick={() => cancelMutation.mutate(req.id)}>
+                    <button
+                      className="inline-flex items-center justify-center gap-1.5 rounded-md bg-[var(--color-error)] px-2.5 py-1 text-xs font-medium text-white shadow-sm transition hover:bg-red-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent-primary)]"
+                      onClick={() => cancelMutation.mutate(req.id)}
+                    >
                       Cancel
                     </button>
                   )}
                 </div>
                 {/* Action history */}
                 {req.actions?.length > 0 && (
-                  <div className="approval-actions-history">
-                    <h4>History</h4>
+                  <div className="mt-4 border-t border-[var(--border-light)] pt-3">
+                    <h4 className="mb-2 text-[13px] font-semibold text-[var(--text-secondary)]">History</h4>
                     {req.actions.map(action => (
-                      <div key={action.id} className="action-item">
-                        <span className={clsx('action-badge', `action-badge--${action.action?.toLowerCase()}`)}>
+                      <div key={action.id} className="flex flex-wrap items-center gap-2.5 py-1.5 text-[13px] text-[var(--text-tertiary)]">
+                        <span
+                          className={clsx(
+                            'rounded-full px-2 py-0.5 text-[11px] font-bold uppercase',
+                            action.action === 'APPROVED' && 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300',
+                            action.action === 'REJECTED' && 'bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-300',
+                            action.action === 'RETURNED' && 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300',
+                            action.action === 'ESCALATED' && 'bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-300'
+                          )}
+                        >
                           {action.action}
                         </span>
                         <span>Step {action.stepOrder} — {action.actedByName}</span>
-                        {action.comments && <span className="action-comment">{action.comments}</span>}
-                        <span className="action-time">{new Date(action.createdAt).toLocaleString()}</span>
+                        {action.comments && <span className="italic text-[var(--text-secondary)]">{action.comments}</span>}
+                        <span className="ml-auto text-xs">{new Date(action.createdAt).toLocaleString()}</span>
                       </div>
                     ))}
                   </div>
@@ -364,46 +403,49 @@ export default function Approvals() {
 
       {/* === WORKFLOWS LIST === */}
       {activeTab === 'workflows' && (
-        <div className="approvals-list">
+        <div className="flex flex-col gap-4">
           {filteredWorkflows.length === 0 ? (
-            <div className="approvals-empty">
-              <GitBranch size={48} />
+            <div className="py-12 text-center text-[var(--text-tertiary)]">
+              <GitBranch size={48} className="mx-auto mb-3 opacity-40" />
               <p>No workflows configured</p>
             </div>
           ) : filteredWorkflows.map(wf => (
-            <div key={wf.id} className="approval-card workflow-card">
-              <div className="approval-card-header">
-                <div className="approval-card-title">
+            <div key={wf.id} className="rounded-2xl border border-[var(--border-light)] bg-[var(--bg-card)] p-5 shadow-[0_1px_3px_rgba(15,23,42,0.06)] transition hover:shadow-[0_4px_12px_rgba(15,23,42,0.1)]">
+              <div className="mb-3 flex items-start justify-between">
+                <div className="flex flex-wrap items-center gap-2.5">
                   <h3>{wf.name}</h3>
-                  <span className={clsx('approval-status-badge', wf.isActive ? 'approvals-status--approved' : 'approvals-status--cancelled')}>
+                  <span className={clsx('inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold', wf.isActive ? statusColors.APPROVED : statusColors.CANCELLED)}>
                     {wf.isActive ? 'Active' : 'Inactive'}
                   </span>
                 </div>
-                <span className="approval-card-type">{wf.entityType}</span>
+                <span className="rounded-full bg-[var(--bg-tertiary)] px-2.5 py-0.5 text-xs font-semibold uppercase tracking-[0.5px] text-[var(--text-secondary)]">{wf.entityType}</span>
               </div>
-              <div className="approval-card-body">
-                {wf.description && <p className="approval-card-desc">{wf.description}</p>}
-                <div className="approval-card-meta">
+              <div className="mb-3">
+                {wf.description && <p className="mb-2.5 text-sm leading-relaxed text-[var(--text-secondary)]">{wf.description}</p>}
+                <div className="flex flex-wrap gap-4 text-[13px] text-[var(--text-tertiary)]">
                   {wf.minAmount != null && <span>Min: ₹{Number(wf.minAmount).toLocaleString('en-IN')}</span>}
                   {wf.maxAmount != null && <span>Max: ₹{Number(wf.maxAmount).toLocaleString('en-IN')}</span>}
                   <span>{wf.steps?.length || 0} step(s)</span>
                 </div>
                 {/* Steps visualization */}
                 {wf.steps?.length > 0 && (
-                  <div className="workflow-steps-viz">
+                  <div className="mt-3 flex flex-wrap items-center gap-2">
                     {wf.steps.map((step, i) => (
-                      <div key={step.id} className="workflow-step-chip">
-                        <span className="step-num">{step.stepOrder}</span>
+                      <div key={step.id} className="inline-flex items-center gap-1.5 rounded-full bg-[var(--bg-tertiary)] px-3 py-1 text-[13px] text-[var(--text-secondary)]">
+                        <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-[var(--accent-primary)] text-[11px] font-bold text-white">{step.stepOrder}</span>
                         <span>{step.approverRole}</span>
-                        {step.isMandatory && <span className="step-mandatory">Required</span>}
-                        {i < wf.steps.length - 1 && <ArrowRight size={14} className="step-arrow" />}
+                        {step.isMandatory && <span className="rounded bg-rose-500/10 px-1.5 py-0.5 text-[10px] font-semibold text-rose-500">Required</span>}
+                        {i < wf.steps.length - 1 && <ArrowRight size={14} className="text-[var(--text-tertiary)]" />}
                       </div>
                     ))}
                   </div>
                 )}
               </div>
-              <div className="approval-card-actions">
-                <button className="btn btn-sm btn-danger" onClick={() => deleteWorkflowMutation.mutate(wf.id)}>
+              <div className="flex gap-2 border-t border-[var(--border-light)] pt-3">
+                <button
+                  className="inline-flex items-center justify-center gap-1.5 rounded-md bg-[var(--color-error)] px-2.5 py-1 text-xs font-medium text-white shadow-sm transition hover:bg-red-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent-primary)]"
+                  onClick={() => deleteWorkflowMutation.mutate(wf.id)}
+                >
                   Delete
                 </button>
               </div>
@@ -427,8 +469,14 @@ export default function Approvals() {
               <NumberInput name="amount" label="Amount (₹)" />
               <FormTextarea name="description" label="Description" />
               <div className="modal-actions">
-                <button type="button" className="btn btn-secondary" onClick={() => setShowRequestModal(false)}>Cancel</button>
-                <AsyncButton type="submit" className="btn btn-primary" loading={createRequestMutation.isPending}>
+                <button
+                  type="button"
+                  className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-[var(--border-default)] bg-[var(--bg-tertiary)] px-4 py-2 text-sm font-medium text-[var(--text-primary)] transition hover:bg-[var(--bg-secondary)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent-primary)]"
+                  onClick={() => setShowRequestModal(false)}
+                >
+                  Cancel
+                </button>
+                <AsyncButton type="submit" variant="primary" loading={createRequestMutation.isPending}>
                   Submit Request
                 </AsyncButton>
               </div>
@@ -440,7 +488,7 @@ export default function Approvals() {
       {/* === CREATE WORKFLOW MODAL === */}
       {showWorkflowModal && (
         <div className="modal-backdrop" onClick={() => setShowWorkflowModal(false)}>
-          <div className="modal-content modal-content--wide" onClick={e => e.stopPropagation()}>
+          <div className="modal-content max-w-[640px]" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
               <h2>New Approval Workflow</h2>
               <button onClick={() => setShowWorkflowModal(false)}><X size={20} /></button>
@@ -449,40 +497,60 @@ export default function Approvals() {
               <FormInput name="name" label="Workflow Name" required />
               <SmartSelect name="entityType" label="Entity Type" options={ENTITY_TYPES} required />
               <FormTextarea name="description" label="Description" />
-              <div className="form-row">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <NumberInput name="minAmount" label="Min Amount (₹)" />
                 <NumberInput name="maxAmount" label="Max Amount (₹)" />
               </div>
 
-              <div className="workflow-steps-editor">
-                <h3>Approval Steps</h3>
+              <div className="my-4">
+                <h3 className="mb-3 text-sm font-semibold text-[var(--text-primary)]">Approval Steps</h3>
                 {workflowSteps.map((step, idx) => (
-                  <div key={idx} className="workflow-step-row">
-                    <span className="step-order">Step {step.stepOrder}</span>
-                    <select value={step.approverRole} onChange={e => updateStep(idx, 'approverRole', e.target.value)}>
+                  <div key={idx} className="mb-2.5 flex flex-wrap items-center gap-2.5">
+                    <span className="min-w-[50px] text-sm font-semibold text-[var(--text-secondary)]">Step {step.stepOrder}</span>
+                    <select
+                      value={step.approverRole}
+                      onChange={e => updateStep(idx, 'approverRole', e.target.value)}
+                      className="rounded-lg border border-[var(--border-default)] bg-[var(--bg-card)] px-2.5 py-1.5 text-sm text-[var(--text-primary)] outline-none"
+                    >
                       {APPROVER_ROLES.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
                     </select>
-                    <label className="step-mandatory-toggle">
+                    <label className="inline-flex cursor-pointer items-center gap-1 text-sm text-[var(--text-secondary)]">
                       <input type="checkbox" checked={step.isMandatory} onChange={e => updateStep(idx, 'isMandatory', e.target.checked)} />
                       Required
                     </label>
-                    <input type="number" placeholder="Auto-approve below ₹" value={step.autoApproveBelow}
-                           onChange={e => updateStep(idx, 'autoApproveBelow', e.target.value)} className="step-auto-input" />
+                    <input
+                      type="number"
+                      placeholder="Auto-approve below ₹"
+                      value={step.autoApproveBelow}
+                      onChange={e => updateStep(idx, 'autoApproveBelow', e.target.value)}
+                      className="w-[140px] rounded-lg border border-[var(--border-default)] bg-[var(--bg-card)] px-2.5 py-1.5 text-sm text-[var(--text-primary)] outline-none"
+                    />
                     {workflowSteps.length > 1 && (
-                      <button type="button" className="btn btn-sm btn-danger" onClick={() => removeStep(idx)}>
+                      <AsyncButton type="button" variant="danger" size="sm" onClick={() => removeStep(idx)}>
                         <X size={14} />
-                      </button>
+                      </AsyncButton>
                     )}
                   </div>
                 ))}
-                <button type="button" className="btn btn-sm btn-secondary" onClick={addStep}>
+                <AsyncButton
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  onClick={addStep}
+                >
                   <Plus size={14} /> Add Step
-                </button>
+                </AsyncButton>
               </div>
 
               <div className="modal-actions">
-                <button type="button" className="btn btn-secondary" onClick={() => setShowWorkflowModal(false)}>Cancel</button>
-                <AsyncButton type="submit" className="btn btn-primary" loading={createWorkflowMutation.isPending}>
+                <button
+                  type="button"
+                  className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-[var(--border-default)] bg-[var(--bg-tertiary)] px-4 py-2 text-sm font-medium text-[var(--text-primary)] transition hover:bg-[var(--bg-secondary)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent-primary)]"
+                  onClick={() => setShowWorkflowModal(false)}
+                >
+                  Cancel
+                </button>
+                <AsyncButton type="submit" variant="primary" loading={createWorkflowMutation.isPending}>
                   Create Workflow
                 </AsyncButton>
               </div>
@@ -499,10 +567,10 @@ export default function Approvals() {
               <h2>Take Action</h2>
               <button onClick={() => setShowActionModal(null)}><X size={20} /></button>
             </div>
-            <div className="action-request-info">
-              <h3>{selectedRequest.title}</h3>
-              <p>Step {selectedRequest.currentStep} of {selectedRequest.totalSteps}</p>
-              {selectedRequest.amount && <p>Amount: ₹{Number(selectedRequest.amount).toLocaleString('en-IN')}</p>}
+            <div className="mb-4 rounded-xl bg-[var(--bg-tertiary)] p-3">
+              <h3 className="mb-1 text-[15px] font-semibold text-[var(--text-primary)]">{selectedRequest.title}</h3>
+              <p className="text-[13px] text-[var(--text-tertiary)]">Step {selectedRequest.currentStep} of {selectedRequest.totalSteps}</p>
+              {selectedRequest.amount && <p className="text-[13px] text-[var(--text-tertiary)]">Amount: ₹{Number(selectedRequest.amount).toLocaleString('en-IN')}</p>}
             </div>
             <form onSubmit={handleAction}>
               <SmartSelect name="action" label="Action" options={[
@@ -513,8 +581,14 @@ export default function Approvals() {
               ]} required />
               <FormTextarea name="comments" label="Comments" />
               <div className="modal-actions">
-                <button type="button" className="btn btn-secondary" onClick={() => setShowActionModal(null)}>Cancel</button>
-                <AsyncButton type="submit" className="btn btn-primary" loading={actionMutation.isPending}>
+                <button
+                  type="button"
+                  className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-[var(--border-default)] bg-[var(--bg-tertiary)] px-4 py-2 text-sm font-medium text-[var(--text-primary)] transition hover:bg-[var(--bg-secondary)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent-primary)]"
+                  onClick={() => setShowActionModal(null)}
+                >
+                  Cancel
+                </button>
+                <AsyncButton type="submit" variant="primary" loading={actionMutation.isPending}>
                   Submit Action
                 </AsyncButton>
               </div>

@@ -124,15 +124,15 @@ export default function Banners() {
   return (
     <div>
       {/* Header */}
-      <div className="banners-header">
+      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="banners-title">Banners</h1>
-          <p className="banners-subtitle">Manage promotional banners for mobile app</p>
+          <h1 className="text-2xl font-bold text-[var(--text-primary)]">Banners</h1>
+          <p className="mt-1 text-[var(--text-tertiary)]">Manage promotional banners for mobile app</p>
         </div>
         {canManageBanners() && (
           <button
             onClick={() => setShowModal(true)}
-            className="banners-action-button"
+            className="inline-flex items-center gap-2 rounded-[10px] border border-[var(--border-default)] bg-[var(--bg-card)] px-4 py-2 text-[var(--text-primary)] transition duration-200 hover:bg-[color-mix(in_srgb,var(--bg-tertiary)_70%,var(--bg-card))] hover:shadow-[0_8px_20px_rgba(15,23,42,0.14)] dark:border-slate-400/20 dark:bg-slate-50 dark:text-slate-900 dark:hover:bg-white"
           >
             <Plus size={20} />
             Add Banner
@@ -141,22 +141,22 @@ export default function Banners() {
       </div>
 
       {/* Filters */}
-      <div className="banners-filters">
-        <div className="banners-filters-row">
-          <div className="banners-search">
-            <Search className="banners-search-icon" />
+      <div className="mb-6 rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] p-4 shadow-sm">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+          <div className="relative flex-1">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-[var(--text-tertiary)]" />
             <input
               type="text"
               placeholder="Search banners..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="banners-input"
+              className="w-full rounded-[10px] border border-[#cbd5f5] bg-[var(--bg-card)] px-3 py-2 pl-10 text-[var(--text-primary)] outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
             />
           </div>
           <select
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
-            className="banners-select"
+            className="w-full rounded-[10px] border border-[#cbd5f5] bg-[var(--bg-card)] px-3 py-2 text-[var(--text-primary)] outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 sm:w-auto sm:min-w-[170px]"
           >
             <option value="">All Status</option>
             <option value="active">Active</option>
@@ -167,50 +167,50 @@ export default function Banners() {
 
       {/* Banners Grid */}
       {(
-        <div className="banners-grid">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
           {filteredBanners.map((banner) => (
-            <div key={banner.id} className="banners-card">
+            <div key={banner.id} className="overflow-hidden rounded-2xl border border-[var(--border-light)] bg-[var(--bg-card)] shadow-sm transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_10px_20px_rgba(15,23,42,0.08)]">
               {/* Banner Image */}
-              <div className="banners-card-media">
+              <div className="relative aspect-video bg-[var(--bg-tertiary)]">
                 {banner.imageUrl ? (
                   <img 
                     src={banner.imageUrl} 
                     alt={banner.title}
-                    className="banners-card-image"
+                    className="h-full w-full object-cover"
                     onError={(e) => { e.target.style.display = 'none' }}
                   />
                 ) : (
-                  <div className="banners-card-empty">
-                    <Image className="banners-card-empty-icon" />
+                  <div className="flex h-full items-center justify-center">
+                    <Image className="h-12 w-12 text-slate-300" />
                   </div>
                 )}
                 <div className={clsx(
-                  'banners-status',
-                  banner.isActive ? 'banners-status--active' : 'banners-status--inactive'
+                  'absolute right-2 top-2 rounded-full px-2 py-1 text-xs font-semibold',
+                  banner.isActive ? 'bg-emerald-100 text-emerald-900' : 'bg-white/70 text-slate-700 backdrop-blur'
                 )}>
                   {banner.isActive ? 'Active' : 'Inactive'}
                 </div>
               </div>
 
               {/* Banner Details */}
-              <div className="banners-card-body">
-                <h3 className="banners-card-title">{banner.title}</h3>
-                {isPlatformLevel && <p className="banners-card-society">{banner.societyName || 'All Societies'}</p>}
+              <div className="p-4">
+                <h3 className="mb-1 font-semibold text-[var(--text-primary)]">{banner.title}</h3>
+                {isPlatformLevel && <p className="mb-3 text-sm text-[var(--text-tertiary)]">{banner.societyName || 'All Societies'}</p>}
                 
-                <div className="banners-card-meta">
+                <div className="mb-4 grid gap-1 text-xs text-[var(--text-tertiary)]">
                   <p>Start: {banner.startDate && new Date(banner.startDate).toLocaleDateString()}</p>
                   <p>End: {banner.endDate && new Date(banner.endDate).toLocaleDateString()}</p>
                   <p>Order: {banner.displayOrder}</p>
                 </div>
 
-                <div className="banners-card-actions">
+                <div className="flex items-center gap-2">
                   <button
                     onClick={() => toggleMutation.mutate(banner)}
                     className={clsx(
-                      'banners-toggle',
+                      'inline-flex flex-1 items-center justify-center gap-1 rounded-[10px] border border-transparent px-3 py-1.5 text-xs transition',
                       banner.isActive 
-                        ? 'banners-toggle--deactivate'
-                        : 'banners-toggle--activate'
+                        ? 'bg-[var(--bg-tertiary)] text-slate-700 hover:bg-white/10'
+                        : 'bg-emerald-100 text-emerald-900 hover:bg-emerald-200'
                     )}
                   >
                     {banner.isActive ? <EyeOff size={14} /> : <Eye size={14} />}
@@ -218,13 +218,13 @@ export default function Banners() {
                   </button>
                   <button
                     onClick={() => { setEditingBanner(banner); setShowModal(true) }}
-                    className="banners-icon-button banners-icon-button--edit"
+                    className="inline-flex items-center justify-center rounded-[10px] border border-transparent bg-transparent p-1.5 text-[var(--text-tertiary)] transition hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-primary)]"
                   >
                     <Edit size={16} />
                   </button>
                   <button
                     onClick={() => confirmAndDeleteBanner(banner)}
-                    className="banners-icon-button banners-icon-button--delete"
+                    className="inline-flex items-center justify-center rounded-[10px] border border-transparent bg-transparent p-1.5 text-red-500 transition hover:bg-red-100"
                   >
                     <Trash2 size={16} />
                   </button>
@@ -237,15 +237,15 @@ export default function Banners() {
 
       {/* Modal */}
       {showModal && (
-        <div className="banners-modal">
-          <div className="banners-modal-card">
-            <div className="banners-modal-header">
-              <h3 className="banners-modal-title">{editingBanner ? 'Edit Banner' : 'Add Banner'}</h3>
-              <button onClick={closeModal} className="banners-modal-close">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="max-h-[calc(100vh-3rem)] w-full max-w-[520px] overflow-y-auto rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] shadow-[0_8px_24px_rgba(0,0,0,0.12)]">
+            <div className="sticky top-0 flex items-center justify-between border-b border-[var(--border-light)] bg-inherit p-4">
+              <h3 className="text-lg font-semibold text-[var(--text-primary)]">{editingBanner ? 'Edit Banner' : 'Add Banner'}</h3>
+              <button onClick={closeModal} className="rounded-lg border-0 bg-transparent p-1 text-[var(--text-tertiary)] transition hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-primary)]">
                 <X size={20} />
               </button>
             </div>
-            <form onSubmit={handleSubmit} className="banners-form">
+            <form onSubmit={handleSubmit} className="grid gap-4 p-4">
               <FormInput
                 label="Title"
                 name="title"
@@ -267,7 +267,7 @@ export default function Banners() {
                 defaultValue={editingBanner?.redirectUrl || ''}
                 placeholder="https://example.com"
               />
-              <div className="banners-form-grid">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <FormInput
                   label="Start Date"
                   name="startDate"
@@ -283,7 +283,7 @@ export default function Banners() {
                   required
                 />
               </div>
-              <div className="banners-form-grid">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <NumberInput
                   label="Display Order"
                   name="displayOrder"
@@ -302,11 +302,11 @@ export default function Banners() {
                   ]}
                 />
               </div>
-              <div className="banners-form-actions">
-                <button type="button" onClick={closeModal} className="banners-btn banners-btn--ghost">Cancel</button>
+              <div className="flex gap-3 pt-4">
+                <button type="button" onClick={closeModal} className="flex-1 rounded-[10px] border border-[var(--border-light)] bg-[var(--bg-card)] px-4 py-2 font-semibold text-slate-700 transition hover:bg-[var(--bg-tertiary)]">Cancel</button>
                 <AsyncButton
                   type="submit"
-                  className="banners-btn banners-btn--primary"
+                  className="flex-1 rounded-[10px] border border-transparent bg-blue-600 px-4 py-2 font-semibold text-white transition hover:bg-blue-700"
                   isLoading={createMutation.isPending || updateMutation.isPending}
                   loadingText={editingBanner ? 'Updating...' : 'Creating...'}
                 >

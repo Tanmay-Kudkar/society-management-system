@@ -10,15 +10,15 @@ import { HeroSkeleton, GroupedListSkeleton, WakeUpBanner } from '../../component
 import useMinLoadingTime from '../../hooks/useMinLoadingTime'
 
 const contactTypeClasses = {
-  POLICE: 'emergency-type--police',
-  FIRE: 'emergency-type--fire',
-  AMBULANCE: 'emergency-type--ambulance',
-  HOSPITAL: 'emergency-type--hospital',
-  DOCTOR: 'emergency-type--doctor',
-  SECURITY: 'emergency-type--security',
-  ELECTRICIAN: 'emergency-type--electrician',
-  PLUMBER: 'emergency-type--plumber',
-  OTHER: 'emergency-type--other',
+  POLICE: 'bg-[#dbeafe] text-[#1d4ed8]',
+  FIRE: 'bg-[#fee2e2] text-[#b91c1c]',
+  AMBULANCE: 'bg-[#dcfce7] text-[#15803d]',
+  HOSPITAL: 'bg-[#ede9fe] text-[#6d28d9]',
+  DOCTOR: 'bg-[#fce7f3] text-[#be185d]',
+  SECURITY: 'bg-[#ffedd5] text-[#c2410c]',
+  ELECTRICIAN: 'bg-[#fef9c3] text-[#a16207]',
+  PLUMBER: 'bg-[#cffafe] text-[#0e7490]',
+  OTHER: 'bg-[var(--bg-tertiary)] text-[var(--text-secondary)]',
 }
 
 export default function EmergencyContacts() {
@@ -150,7 +150,7 @@ export default function EmergencyContacts() {
   const showSkeleton = useMinLoadingTime(isLoading || isError)
 
   if (showSkeleton) return (
-    <div className="emergency-page">
+    <div>
       <WakeUpBanner />
       <HeroSkeleton statCount={0} />
       <GroupedListSkeleton groups={3} itemsPerGroup={3} />
@@ -158,25 +158,25 @@ export default function EmergencyContacts() {
   )
 
   return (
-    <div className="emergency-page">
+    <div>
       {/* Header */}
-      <div className="emergency-header">
+      <div className="flex flex-col gap-4 mb-6 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="emergency-title">Emergency Contacts</h1>
-          <p className="emergency-subtitle">Manage emergency contact directory</p>
+          <h1 className="text-2xl font-bold text-[var(--text-primary)]">Emergency Contacts</h1>
+          <p className="mt-1 text-[var(--text-secondary)]">Manage emergency contact directory</p>
         </div>
         {canManageEmergencyContacts() && (
-          <div className="emergency-actions">
+          <div className="flex gap-2">
             <button
               onClick={() => setShowBulkImport(true)}
-              className="emergency-bulk-button"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl font-semibold border border-[rgba(15,23,42,0.12)] text-[#f8fafc] bg-[#0f172a] transition-all hover:shadow-[0_8px_20px_rgba(15,23,42,0.16)] hover:-translate-y-px dark:border-[rgba(148,163,184,0.26)] dark:bg-[#020617]"
             >
               <Upload size={20} />
               Bulk Import
             </button>
             <button
               onClick={() => setShowModal(true)}
-              className="emergency-add-button"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl font-semibold border border-[var(--border-default)] bg-[var(--bg-card)] text-[var(--text-primary)] transition-all hover:bg-[var(--bg-tertiary)] hover:shadow-[0_8px_20px_rgba(15,23,42,0.14)] hover:-translate-y-px dark:border-[rgba(148,163,184,0.22)] dark:bg-[#f8fafc] dark:text-[#0f172a] dark:hover:bg-white"
             >
               <Plus size={20} />
               Add Contact
@@ -186,22 +186,22 @@ export default function EmergencyContacts() {
       </div>
 
       {/* Filters */}
-      <div className="emergency-filters">
-        <div className="emergency-filters-row">
-          <div className="emergency-search">
-            <Search className="emergency-search-icon" />
+      <div className="p-4 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-light)] shadow-[0_8px_20px_rgba(15,23,42,0.08)] mb-6">
+        <div className="flex flex-col gap-4 sm:flex-row">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--text-tertiary)]" />
             <input
               type="text"
               placeholder="Search by name or phone..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="emergency-search-input"
+              className="w-full py-2 pr-3 pl-10 rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] text-[var(--text-primary)] transition-all focus:outline-none focus:border-[#2563eb] focus:shadow-[0_0_0_3px_rgba(37,99,235,0.2)]"
             />
           </div>
           <select
             value={filterCategory}
             onChange={(e) => setFilterCategory(e.target.value)}
-            className="emergency-filter-select"
+            className="w-full sm:w-auto py-2 px-3 rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] text-[var(--text-primary)] transition-all focus:outline-none focus:border-[#2563eb] focus:shadow-[0_0_0_3px_rgba(37,99,235,0.2)]"
           >
             <option value="">All Categories</option>
             <option value="POLICE">Police</option>
@@ -218,57 +218,57 @@ export default function EmergencyContacts() {
 
       {/* Contacts by Category */}
       {(
-        <div className="emergency-groups">
+        <div className="grid gap-6">
           {Object.entries(groupedContacts).map(([contactType, contactTypeContacts]) => (
-            <div key={contactType} className="emergency-group">
-              <div className="emergency-group-header">
-                <div className="emergency-group-title">
-                  <AlertCircle className="emergency-group-icon" />
-                  <h3 className="emergency-group-name">{contactType}</h3>
-                  <span className="emergency-group-count">({contactTypeContacts.length})</span>
+            <div key={contactType} className="rounded-2xl bg-[var(--bg-card)] border border-[var(--border-light)] overflow-hidden shadow-[0_10px_24px_rgba(15,23,42,0.08)]">
+              <div className="px-5 py-3 border-b border-[var(--border-light)] bg-[var(--bg-tertiary)]">
+                <div className="inline-flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 text-[var(--text-secondary)]" />
+                  <h3 className="font-bold text-[var(--text-primary)]">{contactType}</h3>
+                  <span className="text-sm text-[var(--text-tertiary)]">({contactTypeContacts.length})</span>
                 </div>
               </div>
-              <div className="emergency-list">
+              <div className="grid">
                 {contactTypeContacts.map((contact) => (
-                  <div key={contact.id} className="emergency-item">
-                    <div className="emergency-item-row">
-                      <div className="emergency-item-main">
-                        <div className={clsx('emergency-type-icon', contactTypeClasses[contactType] || 'emergency-type--other')}>
-                          <Phone className={clsx('emergency-type-icon-svg', contactTypeClasses[contactType] || 'emergency-type--other')} />
+                  <div key={contact.id} className="p-4 border-t border-[var(--border-light)] first:border-t-0 transition-colors hover:bg-[var(--bg-tertiary)]">
+                    <div className="flex items-center justify-between gap-4">
+                      <div className="flex items-center gap-4">
+                        <div className={clsx('w-10 h-10 rounded-xl inline-flex items-center justify-center', contactTypeClasses[contactType] || contactTypeClasses.OTHER)}>
+                          <Phone className="w-5 h-5" />
                         </div>
-                        <div className="emergency-item-info">
-                          <div className="emergency-item-title">
-                            <h4 className="emergency-item-name">{contact.name}</h4>
+                        <div className="grid gap-1">
+                          <div className="flex items-center gap-2">
+                            <h4 className="font-bold text-[var(--text-primary)]">{contact.name}</h4>
                             {!contact.isActive && (
-                              <span className="emergency-status-badge">Inactive</span>
+                              <span className="px-2 py-[0.1rem] rounded-full text-[0.7rem] bg-[#fee2e2] text-[#b91c1c]">Inactive</span>
                             )}
                           </div>
-                          <p className="emergency-item-phone">{contact.phone}</p>
+                          <p className="text-base font-mono text-[#2563eb]">{contact.phone}</p>
                           {contact.alternatePhone && (
-                            <p className="emergency-item-alt">Alt: {contact.alternatePhone}</p>
+                            <p className="text-sm text-[var(--text-tertiary)]">Alt: {contact.alternatePhone}</p>
                           )}
                           {contact.address && (
-                            <p className="emergency-item-address">{contact.address}</p>
+                            <p className="text-sm text-[var(--text-tertiary)]">{contact.address}</p>
                           )}
                           {contact.notes && (
-                            <p className="emergency-item-notes">{contact.notes}</p>
+                            <p className="text-sm italic text-[var(--text-tertiary)]">{contact.notes}</p>
                           )}
                           {isPlatformLevel && contact.societyName && (
-                            <p className="emergency-item-society">{contact.societyName}</p>
+                            <p className="text-sm text-[var(--text-tertiary)]">{contact.societyName}</p>
                           )}
                         </div>
                       </div>
-                      <div className="emergency-item-actions">
+                      <div className="flex gap-2 items-center">
                         <a
                           href={`tel:${contact.phone}`}
-                          className="emergency-call-link"
+                          className="p-2 rounded-xl bg-[#dcfce7] text-[#15803d] transition-colors hover:bg-[#bbf7d0]"
                         >
                           <Phone size={18} />
                         </a>
                         {canEdit(contact) && (
                           <button
                             onClick={() => { setEditingContact(contact); setShowModal(true) }}
-                            className="emergency-edit-button"
+                            className="p-2 rounded-xl text-[var(--text-tertiary)] transition-colors hover:bg-[var(--bg-tertiary)]"
                           >
                             <Edit size={18} />
                           </button>
@@ -277,7 +277,7 @@ export default function EmergencyContacts() {
                           <button
                             onClick={() => handleDeleteClick(contact)}
                             disabled={deleteMutation.isPending}
-                            className="emergency-delete-button"
+                            className="p-2 rounded-xl text-[#ef4444] transition-colors hover:bg-[rgba(239,68,68,0.1)] disabled:opacity-50 disabled:cursor-not-allowed"
                             title={contact.createdById === user?.id ? 'Delete your contact' : 'Delete contact'}
                           >
                             <Trash2 size={18} />
@@ -295,22 +295,22 @@ export default function EmergencyContacts() {
 
       {/* Modal */}
       {showModal && (
-        <div className="emergency-modal">
-          <div className="emergency-modal-card">
-            <div className="emergency-modal-header">
-              <h3 className="emergency-modal-title">{editingContact ? 'Edit Contact' : 'Add Emergency Contact'}</h3>
-              <button onClick={closeModal} className="emergency-modal-close">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
+          <div className="w-full max-w-[32rem] max-h-[calc(100vh-3rem)] flex flex-col rounded-xl bg-[var(--bg-card)] shadow-[0_8px_24px_rgba(0,0,0,0.12)]">
+            <div className="flex items-center justify-between p-4 border-b border-[var(--border-light)]">
+              <h3 className="text-lg font-bold text-[var(--text-primary)]">{editingContact ? 'Edit Contact' : 'Add Emergency Contact'}</h3>
+              <button onClick={closeModal} className="p-1 rounded-lg text-[var(--text-tertiary)] hover:bg-[var(--bg-tertiary)]">
                 <X size={20} />
               </button>
             </div>
-            <form onSubmit={handleSubmit} className="emergency-modal-body">
+            <form onSubmit={handleSubmit} className="grid gap-4 p-4 overflow-y-auto flex-1 min-h-0">
               <FormInput
                 label="Name"
                 name="name"
                 defaultValue={editingContact?.name || ''}
                 required
               />
-              <div className="emergency-form-row">
+              <div className="grid gap-4 sm:grid-cols-2">
                 <PhoneInput
                   label="Phone"
                   name="phone"
@@ -349,20 +349,20 @@ export default function EmergencyContacts() {
                 required
               />
               <div>
-                <label className="emergency-label">Notes (Optional)</label>
+                <label className="text-sm font-semibold text-[#334155] mb-1">Notes (Optional)</label>
                 <textarea
                   name="notes"
                   rows={2}
                   defaultValue={editingContact?.notes || ''}
                   placeholder="Additional notes..."
-                  className="emergency-textarea"
+                  className="w-full py-2 px-3 rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] text-[var(--text-primary)] transition-all min-h-16 focus:outline-none focus:border-[#2563eb] focus:shadow-[0_0_0_3px_rgba(37,99,235,0.2)]"
                 />
               </div>
-              <div className="emergency-form-actions">
-                <button type="button" onClick={closeModal} className="emergency-cancel-button">Cancel</button>
+              <div className="flex gap-3 pt-2">
+                <button type="button" onClick={closeModal} className="flex-1 py-2 px-4 rounded-lg font-semibold border border-[var(--border-light)] bg-transparent text-[#334155] hover:bg-[var(--bg-tertiary)]">Cancel</button>
                 <AsyncButton
                   type="submit"
-                  className="emergency-submit-button"
+                  className="flex-1 py-2 px-4 rounded-lg font-semibold border border-[var(--border-default)] bg-[var(--bg-card)] text-[var(--text-primary)] transition-all hover:bg-[var(--bg-tertiary)] hover:shadow-[0_8px_20px_rgba(15,23,42,0.14)] dark:border-[rgba(148,163,184,0.22)] dark:bg-[#f8fafc] dark:text-[#0f172a] dark:hover:bg-white"
                   isLoading={createMutation.isPending || updateMutation.isPending}
                   loadingText={editingContact ? 'Updating...' : 'Creating...'}
                 >
@@ -376,25 +376,25 @@ export default function EmergencyContacts() {
 
       {/* Delete Confirmation Modal */}
       {showDeleteModal && contactToDelete && (
-        <div className="emergency-confirm">
-          <div className="emergency-confirm-card">
-            <div className="emergency-confirm-body">
-              <div className="emergency-confirm-icon">
-                <AlertCircle className="emergency-confirm-icon-svg" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
+          <div className="w-full max-w-[32rem] max-h-[calc(100vh-3rem)] flex flex-col rounded-xl bg-[var(--bg-card)] shadow-[0_8px_24px_rgba(0,0,0,0.12)]">
+            <div className="p-6 text-center">
+              <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-[#fee2e2] inline-flex items-center justify-center">
+                <AlertCircle className="w-6 h-6 text-[#dc2626]" />
               </div>
-              <h3 className="emergency-confirm-title">
+              <h3 className="text-lg font-bold text-[var(--text-primary)] mb-2">
                 Delete Emergency Contact
               </h3>
-              <p className="emergency-confirm-text">
-                Are you sure you want to delete <span className="emergency-confirm-name">{contactToDelete.name}</span>? 
+              <p className="text-[var(--text-tertiary)] mb-6">
+                Are you sure you want to delete <span className="font-bold text-[var(--text-primary)]">{contactToDelete.name}</span>? 
                 This action cannot be undone.
               </p>
-              <div className="emergency-confirm-actions">
+              <div className="flex gap-3">
                 <button
                   type="button"
                   onClick={cancelDelete}
                   disabled={deleteMutation.isPending}
-                  className="emergency-confirm-cancel"
+                  className="flex-1 py-2 px-4 rounded-xl font-semibold border border-[var(--border-light)] bg-transparent text-[#334155] hover:bg-[var(--bg-tertiary)]"
                 >
                   Cancel
                 </button>
@@ -402,11 +402,11 @@ export default function EmergencyContacts() {
                   type="button"
                   onClick={confirmDelete}
                   disabled={deleteMutation.isPending}
-                  className="emergency-confirm-delete"
+                  className="flex-1 py-2 px-4 rounded-xl font-semibold bg-[#dc2626] text-white inline-flex items-center justify-center gap-2 hover:bg-[#b91c1c]"
                 >
                   {deleteMutation.isPending ? (
                     <>
-                      <div className="emergency-confirm-spinner" />
+                      <div className="w-4 h-4 rounded-full border-2 border-[rgba(255,255,255,0.35)] border-t-white animate-spin" />
                       Deleting...
                     </>
                   ) : (

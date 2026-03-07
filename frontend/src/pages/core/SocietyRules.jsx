@@ -33,13 +33,15 @@ const categoryOptions = [
 
 const statusBadge = (s) => {
   const map = {
-    DRAFT: "sr-badge--draft",
-    PUBLISHED: "sr-badge--published",
-    APPROVED: "sr-badge--approved",
-    ARCHIVED: "sr-badge--archived",
+    DRAFT: 'bg-[#fef3c7] text-[#92400e]',
+    PUBLISHED: 'bg-[#dcfce7] text-[#166534]',
+    APPROVED: 'bg-[#e0e7ff] text-[#3730a3]',
+    ARCHIVED: 'bg-[#f3f4f6] text-[#6b7280]',
   };
-  return map[s] || "";
+  return map[s] || '';
 };
+
+const itemBorderMap = { draft: 'border-l-4 border-l-[var(--warning,#f59e0b)]', published: 'border-l-4 border-l-[var(--success,#22c55e)]', approved: 'border-l-4 border-l-[var(--primary,#6366f1)]', archived: 'border-l-4 border-l-[var(--text-secondary)]' };
 
 export default function SocietyRules() {
   const { user } = useAuth();
@@ -178,27 +180,11 @@ export default function SocietyRules() {
   };
 
   const summaryCards = [
-    { label: "Draft", value: counts?.draft || 0, cls: "sr-card--draft" },
-    {
-      label: "Published",
-      value: counts?.published || 0,
-      cls: "sr-card--published",
-    },
-    {
-      label: "Approved",
-      value: counts?.approved || 0,
-      cls: "sr-card--approved",
-    },
-    {
-      label: "Archived",
-      value: counts?.archived || 0,
-      cls: "sr-card--archived",
-    },
-    {
-      label: "Mandatory",
-      value: counts?.mandatory || 0,
-      cls: "sr-card--mandatory",
-    },
+    { label: 'Draft', value: counts?.draft || 0, cls: 'border-l-4 border-l-[var(--warning,#f59e0b)]' },
+    { label: 'Published', value: counts?.published || 0, cls: 'border-l-4 border-l-[var(--success,#22c55e)]' },
+    { label: 'Approved', value: counts?.approved || 0, cls: 'border-l-4 border-l-[var(--primary,#6366f1)]' },
+    { label: 'Archived', value: counts?.archived || 0, cls: 'border-l-4 border-l-[var(--text-secondary)]' },
+    { label: 'Mandatory', value: counts?.mandatory || 0, cls: 'border-l-4 border-l-[var(--error,#ef4444)]' },
   ];
 
   return (
@@ -209,28 +195,28 @@ export default function SocietyRules() {
       loading={canLoadSocietyData && isLoading}
     >
       {/* Summary */}
-      <div className="sr-summary">
+      <div className="grid grid-cols-2 sm:grid-cols-[repeat(auto-fit,minmax(120px,1fr))] gap-4 mb-6">
         {summaryCards.map((c) => (
-          <div key={c.label} className={`sr-summary-card ${c.cls}`}>
-            <span className="sr-summary-value">{c.value}</span>
-            <span className="sr-summary-label">{c.label}</span>
+          <div key={c.label} className={`flex flex-col items-center py-4 px-3 rounded-xl bg-[var(--card)] border border-[var(--border-default)] ${c.cls}`}>
+            <span className="text-2xl font-extrabold text-[var(--text-primary)]">{c.value}</span>
+            <span className="text-[0.8rem] text-[var(--text-secondary)] mt-[0.15rem]">{c.label}</span>
           </div>
         ))}
       </div>
 
       {/* Toolbar */}
-      <div className="sr-toolbar">
-        <div className="sr-search-wrap">
+      <div className="flex flex-wrap gap-3 items-center mb-5">
+        <div className="flex items-center gap-[0.4rem] bg-[var(--card)] border border-[var(--border-default)] rounded-lg py-[0.4rem] px-3 flex-1 min-w-[180px]">
           <Search size={16} />
           <input
-            className="sr-search"
+            className="border-none bg-transparent outline-none w-full text-[0.92rem] text-[var(--text-primary)]"
             placeholder="Search rules…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
         <select
-          className="sr-filter"
+          className="py-[0.45rem] px-3 border border-[var(--border-default)] rounded-lg bg-[var(--card)] text-[var(--text-primary)] text-[0.88rem]"
           value={filterStatus}
           onChange={(e) => setFilterStatus(e.target.value)}
         >
@@ -241,7 +227,7 @@ export default function SocietyRules() {
           <option value="ARCHIVED">Archived</option>
         </select>
         <select
-          className="sr-filter"
+          className="py-[0.45rem] px-3 border border-[var(--border-default)] rounded-lg bg-[var(--card)] text-[var(--text-primary)] text-[0.88rem]"
           value={filterCategory}
           onChange={(e) => setFilterCategory(e.target.value)}
         >
@@ -252,41 +238,41 @@ export default function SocietyRules() {
             </option>
           ))}
         </select>
-        <button className="sr-btn sr-btn--primary" onClick={openCreate}>
+        <button className="inline-flex items-center gap-[0.35rem] py-[0.42rem] px-[0.9rem] border-none rounded-lg text-[0.85rem] font-semibold cursor-pointer transition-opacity hover:opacity-85 bg-[var(--primary,#6366f1)] text-white" onClick={openCreate}>
           <Plus size={16} /> Add Rule
         </button>
       </div>
 
       {/* List */}
-      <div className="sr-list">
-        {filtered.length === 0 && <p className="sr-empty">No rules found.</p>}
+      <div className="flex flex-col gap-[0.85rem]">
+        {filtered.length === 0 && <p className="text-center text-[var(--text-secondary)] py-10">No rules found.</p>}
         {filtered.map((r) => (
           <div
             key={r.id}
-            className={`sr-item sr-item--${r.status?.toLowerCase()}`}
+            className={`bg-[var(--card)] border border-[var(--border-default)] rounded-xl py-4 px-5 ${itemBorderMap[r.status?.toLowerCase()] || ''}`}
           >
-            <div className="sr-item-header">
-              <div className="sr-item-title">
-                <span className="sr-item-emoji">📜</span>
+            <div className="flex justify-between items-center mb-[0.45rem]">
+              <div className="flex items-center gap-2 text-base flex-wrap">
+                <span className="text-[1.15rem]">📜</span>
                 <strong>{r.title}</strong>
-                <span className="sr-item-cat">
+                <span className="text-[0.78rem] text-[var(--text-secondary)] bg-[var(--bg-card)] py-[0.15rem] px-[0.55rem] rounded-full">
                   {categoryOptions.find((o) => o.value === r.category)?.label ||
                     r.category}
                 </span>
                 {r.isMandatory && (
-                  <span className="sr-badge sr-badge--mandatory">
+                  <span className="text-[0.7rem] font-bold py-[0.2rem] px-[0.65rem] rounded-full uppercase bg-[#fee2e2] text-[#991b1b]">
                     Mandatory
                   </span>
                 )}
               </div>
-              <span className={`sr-badge ${statusBadge(r.status)}`}>
+              <span className={`text-xs font-bold py-[0.2rem] px-[0.65rem] rounded-full uppercase ${statusBadge(r.status)}`}>
                 {r.status}
               </span>
             </div>
             {r.description && (
-              <div className="sr-item-desc">{r.description}</div>
+              <div className="text-[0.88rem] text-[var(--text-primary)] mb-[0.3rem]">{r.description}</div>
             )}
-            <div className="sr-item-meta">
+            <div className="flex flex-wrap gap-3 text-[0.84rem] text-[var(--text-secondary)] mb-[0.35rem]">
               <span>By: {r.createdByName}</span>
               <span>v{r.version}</span>
               {r.effectiveDate && <span>Effective: {r.effectiveDate}</span>}
@@ -296,9 +282,9 @@ export default function SocietyRules() {
                 <span style={{ color: "var(--error)" }}>Inactive</span>
               )}
             </div>
-            <div className="sr-item-actions">
+            <div className="flex flex-wrap gap-[0.45rem] mt-[0.6rem]">
               <button
-                className="sr-btn sr-btn--view"
+                className="inline-flex items-center gap-[0.35rem] py-[0.42rem] px-[0.9rem] border-none rounded-lg text-[0.85rem] font-semibold cursor-pointer transition-opacity hover:opacity-85 bg-[#06b6d4] text-white"
                 onClick={() => setViewRule(r)}
               >
                 <Eye size={14} /> View
@@ -306,13 +292,13 @@ export default function SocietyRules() {
               {r.status === "DRAFT" && (
                 <>
                   <button
-                    className="sr-btn sr-btn--publish"
+                    className="inline-flex items-center gap-[0.35rem] py-[0.42rem] px-[0.9rem] border-none rounded-lg text-[0.85rem] font-semibold cursor-pointer transition-opacity hover:opacity-85 bg-[var(--success,#22c55e)] text-white"
                     onClick={() => publishMut.mutate(r.id)}
                   >
                     <Send size={14} /> Publish
                   </button>
                   <button
-                    className="sr-btn sr-btn--approve"
+                    className="inline-flex items-center gap-[0.35rem] py-[0.42rem] px-[0.9rem] border-none rounded-lg text-[0.85rem] font-semibold cursor-pointer transition-opacity hover:opacity-85 bg-[var(--primary,#6366f1)] text-white"
                     onClick={() => approveMut.mutate(r.id)}
                   >
                     <Check size={14} /> Approve
@@ -321,20 +307,20 @@ export default function SocietyRules() {
               )}
               {(r.status === "PUBLISHED" || r.status === "APPROVED") && (
                 <button
-                  className="sr-btn sr-btn--archive"
+                  className="inline-flex items-center gap-[0.35rem] py-[0.42rem] px-[0.9rem] border-none rounded-lg text-[0.85rem] font-semibold cursor-pointer transition-opacity hover:opacity-85 bg-[var(--text-secondary)] text-white"
                   onClick={() => archiveMut.mutate(r.id)}
                 >
                   <Archive size={14} /> Archive
                 </button>
               )}
               <button
-                className="sr-btn sr-btn--edit"
+                className="inline-flex items-center gap-[0.35rem] py-[0.42rem] px-[0.9rem] rounded-lg text-[0.85rem] font-semibold cursor-pointer transition-opacity hover:opacity-85 bg-[var(--card)] text-[var(--text-primary)] border border-[var(--border-default)]"
                 onClick={() => openEdit(r)}
               >
                 <Edit2 size={14} /> Edit
               </button>
               <button
-                className="sr-btn sr-btn--delete"
+                className="inline-flex items-center gap-[0.35rem] py-[0.42rem] px-[0.9rem] rounded-lg text-[0.85rem] font-semibold cursor-pointer transition-opacity hover:opacity-85 bg-transparent text-[var(--error,#ef4444)] border border-[var(--error,#ef4444)]"
                 onClick={() => deleteMut.mutate(r.id)}
               >
                 <Trash2 size={14} />
@@ -346,31 +332,31 @@ export default function SocietyRules() {
 
       {/* View Modal */}
       {viewRule && (
-        <div className="sr-overlay" onClick={() => setViewRule(null)}>
+        <div className="fixed inset-0 bg-black/45 flex items-center justify-center z-[1200]" onClick={() => setViewRule(null)}>
           <div
-            className="sr-modal sr-modal--wide"
+            className="relative isolate bg-[var(--bg-secondary,#ffffff)] border border-[var(--border-default)] rounded-xl w-[95%] max-w-[800px] max-h-[90vh] overflow-y-auto shadow-[0_8px_32px_rgba(0,0,0,0.18)]"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="sr-modal-header">
-              <h3>{viewRule.title}</h3>
+            <div className="flex justify-between items-center px-5 py-4 border-b border-[var(--border-default)]">
+              <h3 className="m-0 text-[1.1rem]">{viewRule.title}</h3>
               <button
-                className="sr-modal-close"
+                className="bg-transparent border-none cursor-pointer text-[var(--text-secondary)]"
                 onClick={() => setViewRule(null)}
               >
                 <X size={18} />
               </button>
             </div>
-            <div className="sr-view-content">
+            <div className="p-5">
               {viewRule.description && (
-                <p className="sr-view-desc">{viewRule.description}</p>
+                <p className="text-[0.92rem] text-[var(--text-secondary)] mb-4 italic">{viewRule.description}</p>
               )}
               <div
-                className="sr-view-body"
+                className="text-[0.92rem] text-[var(--text-primary)] leading-[1.7] mb-4"
                 dangerouslySetInnerHTML={{
                   __html: viewRule.content?.replace(/\n/g, "<br/>"),
                 }}
               />
-              <div className="sr-view-meta">
+              <div className="flex flex-wrap gap-4 text-[0.82rem] text-[var(--text-secondary)] pt-3 border-t border-[var(--border-default)]">
                 <span>
                   Category:{" "}
                   {
@@ -391,22 +377,23 @@ export default function SocietyRules() {
 
       {/* Create/Edit Modal */}
       {showModal && (
-        <div className="sr-overlay" onClick={() => setShowModal(false)}>
-          <div className="sr-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="sr-modal-header">
-              <h3>{editing ? "Edit Rule" : "Add Rule"}</h3>
+        <div className="fixed inset-0 bg-black/45 flex items-center justify-center z-[1200]" onClick={() => setShowModal(false)}>
+          <div className="relative isolate bg-[var(--bg-secondary,#ffffff)] border border-[var(--border-default)] rounded-xl w-[95%] max-w-[600px] max-h-[90vh] overflow-y-auto shadow-[0_8px_32px_rgba(0,0,0,0.18)]" onClick={(e) => e.stopPropagation()}>
+            <div className="flex justify-between items-center px-5 py-4 border-b border-[var(--border-default)]">
+              <h3 className="m-0 text-[1.1rem]">{editing ? "Edit Rule" : "Add Rule"}</h3>
               <button
-                className="sr-modal-close"
+                className="bg-transparent border-none cursor-pointer text-[var(--text-secondary)]"
                 onClick={() => setShowModal(false)}
               >
                 <X size={18} />
               </button>
             </div>
-            <form className="sr-form" onSubmit={handleSubmit}>
-              <div className="sr-form-grid">
-                <div className="sr-field sr-field--full">
-                  <label>Title *</label>
+            <form className="p-5" onSubmit={handleSubmit}>
+              <div className="grid grid-cols-1 sm:grid-cols-2 items-start gap-[0.9rem]">
+                <div className="flex flex-col gap-[0.3rem] col-span-full">
+                  <label className="text-[0.82rem] font-semibold text-[var(--text-secondary)]">Title *</label>
                   <input
+                    className="py-[0.45rem] px-[0.7rem] border border-[var(--border-default)] rounded-lg bg-[var(--bg-card)] text-[var(--text-primary)] text-[0.9rem]"
                     required
                     value={form.title}
                     onChange={(e) =>
@@ -414,9 +401,10 @@ export default function SocietyRules() {
                     }
                   />
                 </div>
-                <div className="sr-field">
-                  <label>Category *</label>
+                <div className="flex flex-col gap-[0.3rem]">
+                  <label className="text-[0.82rem] font-semibold text-[var(--text-secondary)]">Category *</label>
                   <select
+                    className="py-[0.45rem] px-[0.7rem] border border-[var(--border-default)] rounded-lg bg-[var(--bg-card)] text-[var(--text-primary)] text-[0.9rem]"
                     value={form.category}
                     onChange={(e) =>
                       setForm({ ...form, category: e.target.value })
@@ -429,18 +417,20 @@ export default function SocietyRules() {
                     ))}
                   </select>
                 </div>
-                <div className="sr-field">
-                  <label>Version</label>
+                <div className="flex flex-col gap-[0.3rem]">
+                  <label className="text-[0.82rem] font-semibold text-[var(--text-secondary)]">Version</label>
                   <input
+                    className="py-[0.45rem] px-[0.7rem] border border-[var(--border-default)] rounded-lg bg-[var(--bg-card)] text-[var(--text-primary)] text-[0.9rem]"
                     value={form.version}
                     onChange={(e) =>
                       setForm({ ...form, version: e.target.value })
                     }
                   />
                 </div>
-                <div className="sr-field">
-                  <label>Effective Date</label>
+                <div className="flex flex-col gap-[0.3rem]">
+                  <label className="text-[0.82rem] font-semibold text-[var(--text-secondary)]">Effective Date</label>
                   <input
+                    className="py-[0.45rem] px-[0.7rem] border border-[var(--border-default)] rounded-lg bg-[var(--bg-card)] text-[var(--text-primary)] text-[0.9rem]"
                     type="date"
                     value={form.effectiveDate}
                     onChange={(e) =>
@@ -448,9 +438,10 @@ export default function SocietyRules() {
                     }
                   />
                 </div>
-                <div className="sr-field">
-                  <label>Expiry Date</label>
+                <div className="flex flex-col gap-[0.3rem]">
+                  <label className="text-[0.82rem] font-semibold text-[var(--text-secondary)]">Expiry Date</label>
                   <input
+                    className="py-[0.45rem] px-[0.7rem] border border-[var(--border-default)] rounded-lg bg-[var(--bg-card)] text-[var(--text-primary)] text-[0.9rem]"
                     type="date"
                     value={form.expiryDate}
                     onChange={(e) =>
@@ -458,9 +449,10 @@ export default function SocietyRules() {
                     }
                   />
                 </div>
-                <div className="sr-field">
-                  <label>Sort Order</label>
+                <div className="flex flex-col gap-[0.3rem]">
+                  <label className="text-[0.82rem] font-semibold text-[var(--text-secondary)]">Sort Order</label>
                   <input
+                    className="py-[0.45rem] px-[0.7rem] border border-[var(--border-default)] rounded-lg bg-[var(--bg-card)] text-[var(--text-primary)] text-[0.9rem]"
                     type="number"
                     min={0}
                     value={form.sortOrder}
@@ -469,14 +461,8 @@ export default function SocietyRules() {
                     }
                   />
                 </div>
-                <div className="sr-field">
-                  <label
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "0.5rem",
-                    }}
-                  >
+                <div className="flex flex-col gap-[0.3rem]">
+                  <label className="flex items-center gap-2 text-[0.82rem] font-semibold text-[var(--text-secondary)]">
                     <input
                       type="checkbox"
                       checked={form.isMandatory}
@@ -487,9 +473,10 @@ export default function SocietyRules() {
                     Mandatory
                   </label>
                 </div>
-                <div className="sr-field sr-field--full">
-                  <label>Description</label>
+                <div className="flex flex-col gap-[0.3rem] col-span-full">
+                  <label className="text-[0.82rem] font-semibold text-[var(--text-secondary)]">Description</label>
                   <textarea
+                    className="py-[0.45rem] px-[0.7rem] border border-[var(--border-default)] rounded-lg bg-[var(--bg-card)] text-[var(--text-primary)] text-[0.9rem]"
                     rows={2}
                     value={form.description}
                     onChange={(e) =>
@@ -497,9 +484,10 @@ export default function SocietyRules() {
                     }
                   />
                 </div>
-                <div className="sr-field sr-field--full">
-                  <label>Content *</label>
+                <div className="flex flex-col gap-[0.3rem] col-span-full">
+                  <label className="text-[0.82rem] font-semibold text-[var(--text-secondary)]">Content *</label>
                   <textarea
+                    className="py-[0.45rem] px-[0.7rem] border border-[var(--border-default)] rounded-lg bg-[var(--bg-card)] text-[var(--text-primary)] text-[0.9rem]"
                     rows={8}
                     required
                     value={form.content}
@@ -509,15 +497,15 @@ export default function SocietyRules() {
                   />
                 </div>
               </div>
-              <div className="sr-form-actions">
+              <div className="flex justify-end gap-[0.65rem] mt-5 pt-4 border-t border-[var(--border-default)]">
                 <button
                   type="button"
-                  className="sr-btn sr-btn--secondary"
+                  className="inline-flex items-center gap-[0.35rem] py-[0.42rem] px-[0.9rem] rounded-lg text-[0.85rem] font-semibold cursor-pointer transition-opacity hover:opacity-85 bg-[var(--card)] text-[var(--text-primary)] border border-[var(--border-default)]"
                   onClick={() => setShowModal(false)}
                 >
                   Cancel
                 </button>
-                <button type="submit" className="sr-btn sr-btn--primary">
+                <button type="submit" className="inline-flex items-center gap-[0.35rem] py-[0.42rem] px-[0.9rem] border-none rounded-lg text-[0.85rem] font-semibold cursor-pointer transition-opacity hover:opacity-85 bg-[var(--primary,#6366f1)] text-white">
                   {editing ? "Update" : "Create"}
                 </button>
               </div>

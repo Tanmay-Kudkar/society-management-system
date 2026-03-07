@@ -32,10 +32,10 @@ const getBillPaid = (bill) => toNumber(bill?.paidAmount)
 const getBillBalance = (bill) => Math.max(0, getBillTotal(bill) - getBillPaid(bill))
 
 const statusClasses = {
-  PENDING: 'maintenance-status maintenance-status--pending',
-  PARTIAL: 'maintenance-status maintenance-status--partial',
-  PAID: 'maintenance-status maintenance-status--paid',
-  OVERDUE: 'maintenance-status maintenance-status--overdue',
+  PENDING: 'inline-flex items-center py-1 px-3 rounded-full text-xs font-semibold bg-[#fef3c7] text-[#92400e]',
+  PARTIAL: 'inline-flex items-center py-1 px-3 rounded-full text-xs font-semibold bg-[#dbeafe] text-[#1e40af]',
+  PAID: 'inline-flex items-center py-1 px-3 rounded-full text-xs font-semibold bg-[#dcfce7] text-[#166534]',
+  OVERDUE: 'inline-flex items-center py-1 px-3 rounded-full text-xs font-semibold bg-[#fee2e2] text-[#991b1b]',
 }
 
 export default function MaintenanceBills() {
@@ -300,7 +300,7 @@ export default function MaintenanceBills() {
 
   if (showSkeleton) {
     return (
-      <div className="maintenance-page">
+      <div>
         <WakeUpBanner />
         <HeroSkeleton />
         <FinancePageSkeleton summaryCount={3} rows={8} cols={6} />
@@ -309,24 +309,24 @@ export default function MaintenanceBills() {
   }
 
   return (
-    <div className="maintenance-page">
+    <div>
       {/* Header */}
-      <div className="maintenance-header">
+      <div className="flex flex-col gap-4 mb-6 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="maintenance-title">Maintenance Bills</h1>
-          <p className="maintenance-subtitle">Generate and track maintenance bills</p>
+          <h1 className="text-2xl font-bold text-[var(--text-primary)]">Maintenance Bills</h1>
+          <p className="mt-1 text-[var(--text-secondary)]">Generate and track maintenance bills</p>
         </div>
         {canManageMaintenanceBills() && (
-          <div className="maintenance-header-actions">
+          <div className="flex flex-wrap gap-3">
             <button
               onClick={() => setShowBulkModal(true)}
-              className="maintenance-bulk-button"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl font-semibold border border-[rgba(15,23,42,0.12)] text-[#f8fafc] bg-[#0f172a] transition-all hover:-translate-y-px hover:shadow-[0_8px_20px_rgba(15,23,42,0.16)] dark:border-[rgba(148,163,184,0.26)] dark:bg-[#020617]"
             >
               Bulk Generate
             </button>
             <button
               onClick={() => setShowModal(true)}
-              className="maintenance-add-button"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl font-semibold border border-[var(--border-default)] bg-[var(--bg-card)] text-[var(--text-primary)] transition-all hover:-translate-y-px hover:shadow-[0_8px_20px_rgba(15,23,42,0.14)] hover:bg-[var(--bg-tertiary)] dark:border-[rgba(148,163,184,0.22)] dark:bg-[#f8fafc] dark:text-[#0f172a] dark:hover:bg-white"
             >
               <Plus size={20} />
               Add Bill
@@ -336,42 +336,42 @@ export default function MaintenanceBills() {
       </div>
 
       {/* Summary Cards */}
-      <div className="maintenance-summary">
-        <div className="maintenance-summary-card">
-          <p className="maintenance-summary-label">Total Bills</p>
-          <p className="maintenance-summary-value">{bills.length}</p>
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <div className="p-4 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-light)] shadow-[0_10px_22px_rgba(15,23,42,0.08)]">
+          <p className="text-sm text-[var(--text-tertiary)]">Total Bills</p>
+          <p className="mt-1 text-2xl font-bold text-[var(--text-primary)]">{bills.length}</p>
         </div>
-        <div className="maintenance-summary-card">
-          <p className="maintenance-summary-label">Paid</p>
-          <p className="maintenance-summary-value maintenance-summary-value--paid">{bills.filter(b => b.status === 'PAID').length}</p>
+        <div className="p-4 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-light)] shadow-[0_10px_22px_rgba(15,23,42,0.08)]">
+          <p className="text-sm text-[var(--text-tertiary)]">Paid</p>
+          <p className="mt-1 text-2xl font-bold text-[#16a34a]">{bills.filter(b => b.status === 'PAID').length}</p>
         </div>
-        <div className="maintenance-summary-card">
-          <p className="maintenance-summary-label">Pending</p>
-          <p className="maintenance-summary-value maintenance-summary-value--pending">{bills.filter(b => b.status === 'PENDING').length}</p>
+        <div className="p-4 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-light)] shadow-[0_10px_22px_rgba(15,23,42,0.08)]">
+          <p className="text-sm text-[var(--text-tertiary)]">Pending</p>
+          <p className="mt-1 text-2xl font-bold text-[#ca8a04]">{bills.filter(b => b.status === 'PENDING').length}</p>
         </div>
-        <div className="maintenance-summary-card">
-          <p className="maintenance-summary-label">Total Amount</p>
-          <p className="maintenance-summary-value">₹{bills.reduce((sum, b) => sum + getBillTotal(b), 0).toLocaleString()}</p>
+        <div className="p-4 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-light)] shadow-[0_10px_22px_rgba(15,23,42,0.08)]">
+          <p className="text-sm text-[var(--text-tertiary)]">Total Amount</p>
+          <p className="mt-1 text-2xl font-bold text-[var(--text-primary)]">₹{bills.reduce((sum, b) => sum + getBillTotal(b), 0).toLocaleString()}</p>
         </div>
       </div>
 
       {/* Filters */}
-      <div className="maintenance-filters">
-        <div className="maintenance-filters-row">
-          <div className="maintenance-search">
-            <Search className="maintenance-search-icon" />
+      <div className="p-4 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-light)] shadow-[0_10px_22px_rgba(15,23,42,0.08)] mb-6">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--text-tertiary)]" />
             <input
               type="text"
               placeholder="Search by flat or owner..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="maintenance-search-input"
+              className="w-full py-[0.55rem] pr-3 pl-10 rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] text-[var(--text-primary)] transition-all focus:outline-none focus:border-[#2563eb] focus:shadow-[0_0_0_3px_rgba(37,99,235,0.2)]"
             />
           </div>
           <select
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
-            className="maintenance-filter-select"
+            className="w-full sm:w-auto py-[0.55rem] px-3 rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] text-[var(--text-primary)] transition-all focus:outline-none focus:border-[#2563eb] focus:shadow-[0_0_0_3px_rgba(37,99,235,0.2)]"
           >
             <option value="">All Status</option>
             <option value="PENDING">Pending</option>
@@ -382,60 +382,63 @@ export default function MaintenanceBills() {
       </div>
 
       {/* Table */}
-      <div className="maintenance-table-card">
-          <div className="maintenance-table-scroll">
-            <table className="maintenance-table">
-              <thead className="maintenance-thead">
+      <div className="rounded-2xl bg-[var(--bg-card)] border border-[var(--border-light)] shadow-[0_12px_24px_rgba(15,23,42,0.08)] overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse min-w-[720px]">
+              <thead className="bg-[var(--bg-tertiary)] border-b border-[var(--border-light)]">
                 <tr>
-                  <th className="maintenance-th" style={{ width: '40px' }}></th>
-                  <th className="maintenance-th">Flat</th>
-                  <th className="maintenance-th">Month</th>
-                  <th className="maintenance-th">Amount</th>
-                  <th className="maintenance-th">Paid</th>
-                  <th className="maintenance-th">Status</th>
-                  <th className="maintenance-th maintenance-th--right">Actions</th>
+                  <th className="py-3 px-6 text-left text-xs font-semibold uppercase tracking-wider text-[var(--text-tertiary)]" style={{ width: '40px' }}></th>
+                  <th className="py-3 px-6 text-left text-xs font-semibold uppercase tracking-wider text-[var(--text-tertiary)]">Flat</th>
+                  <th className="py-3 px-6 text-left text-xs font-semibold uppercase tracking-wider text-[var(--text-tertiary)]">Month</th>
+                  <th className="py-3 px-6 text-left text-xs font-semibold uppercase tracking-wider text-[var(--text-tertiary)]">Amount</th>
+                  <th className="py-3 px-6 text-left text-xs font-semibold uppercase tracking-wider text-[var(--text-tertiary)]">Paid</th>
+                  <th className="py-3 px-6 text-left text-xs font-semibold uppercase tracking-wider text-[var(--text-tertiary)]">Status</th>
+                  <th className="py-3 px-6 text-right text-xs font-semibold uppercase tracking-wider text-[var(--text-tertiary)]">Actions</th>
                 </tr>
               </thead>
-              <tbody className="maintenance-tbody">
+              <tbody>
                 {filteredBills.map((bill) => (
                   <Fragment key={bill.id}>
-                    <tr className={clsx("maintenance-row", expandedBillId === bill.id && "maintenance-row--expanded")}>
-                      <td className="maintenance-cell">
+                    <tr className="transition-colors hover:bg-[var(--bg-tertiary)]">
+                      <td className="py-[0.85rem] px-6 text-[0.9rem] text-[var(--text-primary)]">
                         {bill.lineItems?.length > 0 && (
                           <button
                             onClick={() => setExpandedBillId(expandedBillId === bill.id ? null : bill.id)}
-                            className={clsx("maintenance-expand-button", expandedBillId === bill.id && "maintenance-expand-button--active")}
+                            className={clsx(
+                              "inline-flex items-center justify-center w-6 h-6 rounded-md text-[var(--text-tertiary)] bg-transparent border-none cursor-pointer transition-all hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-primary)]",
+                              expandedBillId === bill.id && "rotate-90 text-[#2563eb]"
+                            )}
                           >
                             <ChevronRight size={18} />
                           </button>
                         )}
                       </td>
-                      <td className="maintenance-cell">
-                        <div className="maintenance-unit">
-                          <div className="maintenance-unit-icon">
-                            <CreditCard className="maintenance-unit-icon-svg" />
+                      <td className="py-[0.85rem] px-6 text-[0.9rem] text-[var(--text-primary)]">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-xl bg-[rgba(22,163,74,0.12)] flex items-center justify-center">
+                            <CreditCard className="w-4 h-4 text-[#16a34a]" />
                           </div>
-                          <div className="maintenance-unit-meta">
-                            <span className="maintenance-unit-number">{bill.flatNumber}</span>
-                            <p className="maintenance-unit-owner">{bill.ownerName || '-'}</p>
+                          <div>
+                            <span className="font-semibold">{bill.flatNumber}</span>
+                            <p className="text-xs text-[var(--text-tertiary)]">{bill.ownerName || '-'}</p>
                           </div>
                         </div>
                       </td>
-                      <td className="maintenance-cell maintenance-cell--muted">{bill.billMonth}</td>
-                      <td className="maintenance-cell maintenance-cell--strong">₹{getBillTotal(bill).toLocaleString()}</td>
-                      <td className="maintenance-cell maintenance-cell--muted">₹{getBillPaid(bill).toLocaleString()}</td>
-                      <td className="maintenance-cell">
+                      <td className="py-[0.85rem] px-6 text-[0.9rem] text-[var(--text-tertiary)]">{bill.billMonth}</td>
+                      <td className="py-[0.85rem] px-6 text-[0.9rem] text-[var(--text-primary)] font-semibold">₹{getBillTotal(bill).toLocaleString()}</td>
+                      <td className="py-[0.85rem] px-6 text-[0.9rem] text-[var(--text-tertiary)]">₹{getBillPaid(bill).toLocaleString()}</td>
+                      <td className="py-[0.85rem] px-6 text-[0.9rem] text-[var(--text-primary)]">
                         <span className={clsx(statusClasses[bill.status] || statusClasses.PENDING)}>
                           {bill.status}
                         </span>
                       </td>
-                      <td className="maintenance-cell maintenance-cell--right">
+                      <td className="py-[0.85rem] px-6 text-[0.9rem] text-[var(--text-primary)] text-right">
                         {bill.status !== 'PAID' && (
-                          <div className="maintenance-actions">
+                          <div className="flex gap-2 justify-end flex-wrap">
                             <button
                               onClick={() => handleOnlinePayment(bill)}
                               disabled={isPaymentLoading}
-                              className="maintenance-pay-online-button"
+                              className="inline-flex items-center gap-[0.35rem] py-[0.4rem] px-3 text-[0.8rem] font-semibold rounded-lg bg-gradient-to-br from-[#6366f1] to-[#8b5cf6] text-white border-none cursor-pointer transition-all hover:enabled:-translate-y-px hover:enabled:shadow-[0_4px_12px_rgba(99,102,241,0.4)] disabled:opacity-60 disabled:cursor-not-allowed"
                               title="Pay Online via Razorpay"
                             >
                               <Wallet size={16} />
@@ -443,7 +446,7 @@ export default function MaintenanceBills() {
                             </button>
                             <button
                               onClick={() => { setSelectedBill(bill); setShowPaymentModal(true) }}
-                              className="maintenance-pay-button"
+                              className="py-[0.35rem] px-3 rounded-[0.65rem] text-xs font-semibold text-[#166534] bg-[#dcfce7] transition-all hover:bg-[#bbf7d0] hover:-translate-y-px"
                             >
                               Record Payment
                             </button>
@@ -452,40 +455,40 @@ export default function MaintenanceBills() {
                       </td>
                     </tr>
                     {expandedBillId === bill.id && bill.lineItems?.length > 0 && (
-                      <tr className="maintenance-expanded-content">
+                      <tr className="bg-[var(--bg-tertiary)] border-b-2 border-[var(--border-light)]">
                         <td colSpan={7}>
-                          <div className="maintenance-details-wrapper">
-                            <div className="maintenance-details-title">
+                          <div className="py-4 px-6 pl-[4.5rem]">
+                            <div className="text-[0.8rem] font-semibold text-[var(--text-secondary)] mb-3 flex items-center gap-2">
                               <Info size={14} />
                               <span>Bill Breakdown</span>
                             </div>
-                            <table className="maintenance-item-details-table">
+                            <table className="w-full border-collapse">
                               <thead>
                                 <tr>
-                                  <th className="maintenance-item-details-th">Type</th>
-                                  <th className="maintenance-item-details-th">Description</th>
-                                  <th className="maintenance-item-details-th">Rate</th>
-                                  <th className="maintenance-item-details-th">Qty</th>
-                                  <th className="maintenance-item-details-th" style={{ textAlign: 'right' }}>Total</th>
+                                  <th className="py-2 px-4 text-[0.65rem] uppercase text-[var(--text-tertiary)] text-left border-b border-[var(--border-light)]">Type</th>
+                                  <th className="py-2 px-4 text-[0.65rem] uppercase text-[var(--text-tertiary)] text-left border-b border-[var(--border-light)]">Description</th>
+                                  <th className="py-2 px-4 text-[0.65rem] uppercase text-[var(--text-tertiary)] text-left border-b border-[var(--border-light)]">Rate</th>
+                                  <th className="py-2 px-4 text-[0.65rem] uppercase text-[var(--text-tertiary)] text-left border-b border-[var(--border-light)]">Qty</th>
+                                  <th className="py-2 px-4 text-[0.65rem] uppercase text-[var(--text-tertiary)] text-left border-b border-[var(--border-light)]" style={{ textAlign: 'right' }}>Total</th>
                                 </tr>
                               </thead>
                               <tbody>
                                 {bill.lineItems.map((item, idx) => (
-                                  <tr key={idx} className="maintenance-item-details-tr">
-                                    <td className="maintenance-item-details-td">
-                                      <span className="maintenance-item-type-tag">{item.chargeType}</span>
+                                  <tr key={idx}>
+                                    <td className="py-3 px-4 text-[0.85rem] text-[var(--text-secondary)] border-b border-[var(--border-light)]">
+                                      <span className="text-[0.7rem] py-[0.15rem] px-[0.45rem] rounded-md bg-[var(--border-light)] text-[var(--text-tertiary)] font-medium">{item.chargeType}</span>
                                     </td>
-                                    <td className="maintenance-item-details-td">{item.description}</td>
-                                    <td className="maintenance-item-details-td">₹{toNumber(item.rate).toLocaleString()}</td>
-                                    <td className="maintenance-item-details-td">{item.quantity}</td>
-                                    <td className="maintenance-item-details-td" style={{ textAlign: 'right', fontWeight: '600' }}>
+                                    <td className="py-3 px-4 text-[0.85rem] text-[var(--text-secondary)] border-b border-[var(--border-light)]">{item.description}</td>
+                                    <td className="py-3 px-4 text-[0.85rem] text-[var(--text-secondary)] border-b border-[var(--border-light)]">₹{toNumber(item.rate).toLocaleString()}</td>
+                                    <td className="py-3 px-4 text-[0.85rem] text-[var(--text-secondary)] border-b border-[var(--border-light)]">{item.quantity}</td>
+                                    <td className="py-3 px-4 text-[0.85rem] text-[var(--text-secondary)] border-b border-[var(--border-light)]" style={{ textAlign: 'right', fontWeight: '600' }}>
                                       ₹{(toNumber(item.rate) * toNumber(item.quantity, 1)).toLocaleString()}
                                     </td>
                                   </tr>
                                 ))}
-                                <tr className="maintenance-item-details-tr">
-                                  <td colSpan={4} className="maintenance-item-details-td" style={{ textAlign: 'right', fontWeight: '700' }}>Grand Total:</td>
-                                  <td className="maintenance-item-details-td" style={{ textAlign: 'right', fontWeight: '700', color: 'var(--text-primary)' }}>
+                                <tr>
+                                  <td colSpan={4} className="py-3 px-4 text-[0.85rem] text-[var(--text-secondary)]" style={{ textAlign: 'right', fontWeight: '700' }}>Grand Total:</td>
+                                  <td className="py-3 px-4 text-[0.85rem] text-[var(--text-secondary)]" style={{ textAlign: 'right', fontWeight: '700', color: 'var(--text-primary)' }}>
                                     ₹{getBillTotal(bill).toLocaleString()}
                                   </td>
                                 </tr>
@@ -504,21 +507,21 @@ export default function MaintenanceBills() {
 
       {/* Add Bill Modal */}
       {showModal && (
-        <div className="maintenance-modal">
-          <div className="maintenance-modal-card">
-            <div className="maintenance-modal-header">
-              <h3 className="maintenance-modal-title">Add Maintenance Bill</h3>
-              <button onClick={() => {setShowModal(false); setBillMonth('')}} className="maintenance-modal-close">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
+          <div className="w-full max-w-[32rem] max-h-[calc(100vh-3rem)] flex flex-col rounded-xl bg-[var(--bg-card)] border border-[var(--border-light)] shadow-[0_8px_24px_rgba(0,0,0,0.12)]">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--border-light)] shrink-0">
+              <h3 className="text-[1.1rem] font-semibold text-[var(--text-primary)]">Add Maintenance Bill</h3>
+              <button onClick={() => {setShowModal(false); setBillMonth('')}} className="rounded-md p-1 text-[var(--text-tertiary)] transition-colors hover:bg-[rgba(148,163,184,0.2)] hover:text-[var(--text-primary)]">
                 <X size={20} />
               </button>
             </div>
-            <form onSubmit={handleSubmit} className="maintenance-modal-body">
-              <div className="maintenance-field">
-                <label className="maintenance-label">Flat</label>
+            <form onSubmit={handleSubmit} className="p-5 flex flex-col gap-4 overflow-y-auto flex-1 min-h-0">
+              <div className="flex flex-col gap-[0.4rem]">
+                <label className="text-[0.85rem] font-semibold text-[var(--text-secondary)]">Flat</label>
                 <select
                   name="flatId"
                   required
-                  className="maintenance-input"
+                  className="w-full py-[0.55rem] px-3 rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] text-[var(--text-primary)] transition-all focus:outline-none focus:border-[#2563eb] focus:shadow-[0_0_0_3px_rgba(37,99,235,0.2)]"
                 >
                   <option value="">Select Flat</option>
                   {flats.map(f => (
@@ -528,21 +531,21 @@ export default function MaintenanceBills() {
                   ))}
                 </select>
               </div>
-              <div className="maintenance-form-grid">
-                <div className="maintenance-field">
-                  <label className="maintenance-label">Bill Month</label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="flex flex-col gap-[0.4rem]">
+                  <label className="text-[0.85rem] font-semibold text-[var(--text-secondary)]">Bill Month</label>
                   <input
                     type="month"
                     name="billMonth"
                     required
                     value={billMonth}
                     onChange={(e) => setBillMonth(e.target.value)}
-                    className="maintenance-input"
+                    className="w-full py-[0.55rem] px-3 rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] text-[var(--text-primary)] transition-all focus:outline-none focus:border-[#2563eb] focus:shadow-[0_0_0_3px_rgba(37,99,235,0.2)]"
                   />
                 </div>
               </div>
-              <div className="maintenance-itemized-toggle-row">
-                <label className="maintenance-itemized-toggle-label">
+              <div className="flex items-center justify-between gap-3 flex-wrap">
+                <label className="inline-flex items-center gap-[0.45rem] text-[0.85rem] text-[var(--text-secondary)]">
                   <input
                     type="checkbox"
                     checked={useItemizedMode}
@@ -551,17 +554,17 @@ export default function MaintenanceBills() {
                   <span>Use itemized bill</span>
                 </label>
                 {useItemizedMode && (
-                  <p className="maintenance-itemized-total">Subtotal: ₹{lineItemsTotal.toLocaleString()}</p>
+                  <p className="text-[0.85rem] font-semibold text-[var(--text-primary)]">Subtotal: ₹{lineItemsTotal.toLocaleString()}</p>
                 )}
               </div>
               {useItemizedMode ? (
-                <div className="maintenance-line-items">
+                <div className="flex flex-col gap-[0.6rem]">
                   {lineItems.map((item, index) => (
-                    <div key={`item-${index}`} className="maintenance-line-item-row">
+                    <div key={`item-${index}`} className="grid grid-cols-[1.1fr_1.5fr_0.8fr_0.7fr_auto_auto] gap-2 items-center max-lg:grid-cols-2">
                       <select
                         value={item.chargeType}
                         onChange={(e) => updateLineItem(index, 'chargeType', e.target.value)}
-                        className="maintenance-input"
+                        className="w-full py-[0.55rem] px-3 rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] text-[var(--text-primary)] transition-all focus:outline-none focus:border-[#2563eb] focus:shadow-[0_0_0_3px_rgba(37,99,235,0.2)]"
                       >
                         <option value="MAINTENANCE">Maintenance</option>
                         <option value="SINKING_FUND">Sinking Fund</option>
@@ -576,7 +579,7 @@ export default function MaintenanceBills() {
                         placeholder="Description"
                         value={item.description}
                         onChange={(e) => updateLineItem(index, 'description', e.target.value)}
-                        className="maintenance-input"
+                        className="w-full py-[0.55rem] px-3 rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] text-[var(--text-primary)] transition-all focus:outline-none focus:border-[#2563eb] focus:shadow-[0_0_0_3px_rgba(37,99,235,0.2)]"
                       />
                       <input
                         type="number"
@@ -585,7 +588,7 @@ export default function MaintenanceBills() {
                         placeholder="Rate"
                         value={item.rate}
                         onChange={(e) => updateLineItem(index, 'rate', e.target.value)}
-                        className="maintenance-input"
+                        className="w-full py-[0.55rem] px-3 rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] text-[var(--text-primary)] transition-all focus:outline-none focus:border-[#2563eb] focus:shadow-[0_0_0_3px_rgba(37,99,235,0.2)]"
                       />
                       <input
                         type="number"
@@ -594,9 +597,9 @@ export default function MaintenanceBills() {
                         placeholder="Qty"
                         value={item.quantity}
                         onChange={(e) => updateLineItem(index, 'quantity', e.target.value)}
-                        className="maintenance-input"
+                        className="w-full py-[0.55rem] px-3 rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] text-[var(--text-primary)] transition-all focus:outline-none focus:border-[#2563eb] focus:shadow-[0_0_0_3px_rgba(37,99,235,0.2)]"
                       />
-                      <label className="maintenance-line-item-taxable">
+                      <label className="inline-flex items-center gap-[0.35rem] text-[0.8rem] text-[var(--text-secondary)]">
                         <input
                           type="checkbox"
                           checked={item.isTaxable}
@@ -607,7 +610,7 @@ export default function MaintenanceBills() {
                       <button
                         type="button"
                         onClick={() => removeLineItem(index)}
-                        className="maintenance-line-item-remove"
+                        className="border border-[var(--border-default)] bg-[var(--bg-card)] text-[var(--text-primary)] rounded-[0.55rem] py-2 px-3 text-[0.8rem] font-semibold disabled:opacity-[0.55] disabled:cursor-not-allowed"
                         disabled={lineItems.length <= 1}
                       >
                         Remove
@@ -617,37 +620,37 @@ export default function MaintenanceBills() {
                   <button
                     type="button"
                     onClick={addLineItem}
-                    className="maintenance-line-item-add"
+                    className="border border-[var(--border-default)] bg-[var(--bg-card)] text-[var(--text-primary)] rounded-[0.55rem] py-2 px-3 text-[0.8rem] font-semibold"
                   >
                     + Add Line Item
                   </button>
                 </div>
               ) : (
-                <div className="maintenance-field">
-                  <label className="maintenance-label">Amount</label>
+                <div className="flex flex-col gap-[0.4rem]">
+                  <label className="text-[0.85rem] font-semibold text-[var(--text-secondary)]">Amount</label>
                   <input
                     type="number"
                     name="amount"
                     step="0.01"
                     min="0"
                     required={!useItemizedMode}
-                    className="maintenance-input"
+                    className="w-full py-[0.55rem] px-3 rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] text-[var(--text-primary)] transition-all focus:outline-none focus:border-[#2563eb] focus:shadow-[0_0_0_3px_rgba(37,99,235,0.2)]"
                   />
                 </div>
               )}
-              <div className="maintenance-field">
-                <label className="maintenance-label">Due Date</label>
+              <div className="flex flex-col gap-[0.4rem]">
+                <label className="text-[0.85rem] font-semibold text-[var(--text-secondary)]">Due Date</label>
                 <input
                   type="date"
                   name="dueDate"
-                  className="maintenance-input"
+                  className="w-full py-[0.55rem] px-3 rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] text-[var(--text-primary)] transition-all focus:outline-none focus:border-[#2563eb] focus:shadow-[0_0_0_3px_rgba(37,99,235,0.2)]"
                 />
               </div>
-              <div className="maintenance-form-actions">
-                <button type="button" onClick={() => {setShowModal(false); setBillMonth('')}} className="maintenance-cancel-button">Cancel</button>
+              <div className="flex gap-3 pt-2">
+                <button type="button" onClick={() => {setShowModal(false); setBillMonth('')}} className="flex-1 py-[0.65rem] px-4 rounded-xl font-semibold border border-[#cbd5f5] text-[#334155] bg-[var(--bg-tertiary)] transition-all hover:-translate-y-px">Cancel</button>
                 <AsyncButton
                   type="submit"
-                  className="maintenance-submit-button"
+                  className="flex-1 py-[0.65rem] px-4 rounded-xl font-semibold border border-[var(--border-default)] bg-[var(--bg-card)] text-[var(--text-primary)] transition-all hover:-translate-y-px hover:bg-[var(--bg-tertiary)] hover:shadow-[0_8px_20px_rgba(15,23,42,0.14)] dark:border-[rgba(148,163,184,0.22)] dark:bg-[#f8fafc] dark:text-[#0f172a] dark:hover:bg-white"
                   isLoading={createMutation.isPending}
                   loadingText="Creating..."
                 >
@@ -661,55 +664,55 @@ export default function MaintenanceBills() {
 
       {/* Bulk Generate Modal */}
       {showBulkModal && (
-        <div className="maintenance-modal">
-          <div className="maintenance-modal-card">
-            <div className="maintenance-modal-header">
-              <h3 className="maintenance-modal-title">Bulk Generate Bills</h3>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
+          <div className="w-full max-w-[32rem] max-h-[calc(100vh-3rem)] flex flex-col rounded-xl bg-[var(--bg-card)] border border-[var(--border-light)] shadow-[0_8px_24px_rgba(0,0,0,0.12)]">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--border-light)] shrink-0">
+              <h3 className="text-[1.1rem] font-semibold text-[var(--text-primary)]">Bulk Generate Bills</h3>
               <button onClick={() => {
                 setShowBulkModal(false)
                 setBulkPropertyType('ALL')
                 setBulkBillMonth('')
                 setPreviewCount(null)
-              }} className="maintenance-modal-close">
+              }} className="rounded-md p-1 text-[var(--text-tertiary)] transition-colors hover:bg-[rgba(148,163,184,0.2)] hover:text-[var(--text-primary)]">
                 <X size={20} />
               </button>
             </div>
-            <form onSubmit={handleBulkGenerate} className="maintenance-modal-body">
-              <div className="maintenance-form-grid">
-                <div className="maintenance-field">
-                  <label className="maintenance-label">Bill Month</label>
+            <form onSubmit={handleBulkGenerate} className="p-5 flex flex-col gap-4 overflow-y-auto flex-1 min-h-0">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="flex flex-col gap-[0.4rem]">
+                  <label className="text-[0.85rem] font-semibold text-[var(--text-secondary)]">Bill Month</label>
                   <input
                     type="month"
                     name="billMonth"
                     required
                     value={bulkBillMonth}
                     onChange={(e) => setBulkBillMonth(e.target.value)}
-                    className="maintenance-input"
+                    className="w-full py-[0.55rem] px-3 rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] text-[var(--text-primary)] transition-all focus:outline-none focus:border-[#2563eb] focus:shadow-[0_0_0_3px_rgba(37,99,235,0.2)]"
                   />
                 </div>
-                <div className="maintenance-field">
-                  <label className="maintenance-label">Amount per Unit (fallback)</label>
+                <div className="flex flex-col gap-[0.4rem]">
+                  <label className="text-[0.85rem] font-semibold text-[var(--text-secondary)]">Amount per Unit (fallback)</label>
                   <input
                     type="number"
                     name="amount"
                     step="0.01"
                     min="0"
                     defaultValue="0"
-                    className="maintenance-input"
+                    className="w-full py-[0.55rem] px-3 rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] text-[var(--text-primary)] transition-all focus:outline-none focus:border-[#2563eb] focus:shadow-[0_0_0_3px_rgba(37,99,235,0.2)]"
                   />
                 </div>
               </div>
-              <p className="maintenance-bulk-help-text">
+              <p className="text-[0.8rem] text-[var(--text-tertiary)]">
                 Used only when society line-item settings are not configured.
               </p>
               
               {/* Property Type Filter */}
-              <div className="maintenance-field">
-                <label className="maintenance-label">Property Type</label>
+              <div className="flex flex-col gap-[0.4rem]">
+                <label className="text-[0.85rem] font-semibold text-[var(--text-secondary)]">Property Type</label>
                 <select
                   value={bulkPropertyType}
                   onChange={(e) => setBulkPropertyType(e.target.value)}
-                  className="maintenance-input"
+                  className="w-full py-[0.55rem] px-3 rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] text-[var(--text-primary)] transition-all focus:outline-none focus:border-[#2563eb] focus:shadow-[0_0_0_3px_rgba(37,99,235,0.2)]"
                 >
                   <option value="ALL">All Property Types</option>
                   <option value="RESIDENTIAL">Residential Only</option>
@@ -721,38 +724,38 @@ export default function MaintenanceBills() {
               
               {/* Preview Count */}
               <div className={clsx(
-                'maintenance-preview',
+                'flex items-center gap-2 p-3 rounded-xl text-[var(--text-secondary)]',
                 previewCount !== null && previewCount > 0 
-                  ? 'is-ready'
+                  ? 'bg-[rgba(59,130,246,0.1)] text-[#1d4ed8]'
                   : previewCount === 0
-                    ? 'is-empty'
-                    : 'is-idle'
+                    ? 'bg-[#fef9c3] text-[#92400e]'
+                    : 'bg-[var(--bg-tertiary)]'
               )}>
-                <Info className="maintenance-preview-icon" />
+                <Info className="w-4 h-4" />
                 {isLoadingPreview ? (
-                  <span className="maintenance-preview-text">Calculating...</span>
+                  <span className="text-[0.85rem]">Calculating...</span>
                 ) : previewCount !== null ? (
-                  <span className="maintenance-preview-text">
+                  <span className="text-[0.85rem]">
                     <strong>{previewCount}</strong> {previewCount === 1 ? 'unit' : 'units'} will receive bills
                     {bulkPropertyType !== 'ALL' && ` (${bulkPropertyType.toLowerCase()} only)`}
                   </span>
                 ) : bulkBillMonth ? (
-                  <span className="maintenance-preview-text">Select options to see preview count</span>
+                  <span className="text-[0.85rem]">Select options to see preview count</span>
                 ) : (
-                  <span className="maintenance-preview-text">Select a bill month to see how many units will be billed</span>
+                  <span className="text-[0.85rem]">Select a bill month to see how many units will be billed</span>
                 )}
               </div>
               
-              <div className="maintenance-form-actions">
+              <div className="flex gap-3 pt-2">
                 <button type="button" onClick={() => {
                   setShowBulkModal(false)
                   setBulkPropertyType('ALL')
                   setBulkBillMonth('')
                   setPreviewCount(null)
-                }} className="maintenance-cancel-button">Cancel</button>
+                }} className="flex-1 py-[0.65rem] px-4 rounded-xl font-semibold border border-[#cbd5f5] text-[#334155] bg-[var(--bg-tertiary)] transition-all hover:-translate-y-px">Cancel</button>
                 <AsyncButton 
                   type="submit" 
-                  className="maintenance-submit-button"
+                  className="flex-1 py-[0.65rem] px-4 rounded-xl font-semibold border border-[var(--border-default)] bg-[var(--bg-card)] text-[var(--text-primary)] transition-all hover:-translate-y-px hover:bg-[var(--bg-tertiary)] hover:shadow-[0_8px_20px_rgba(15,23,42,0.14)] dark:border-[rgba(148,163,184,0.22)] dark:bg-[#f8fafc] dark:text-[#0f172a] dark:hover:bg-white"
                   isLoading={bulkGenerateMutation.isPending}
                   loadingText="Generating..."
                   disabled={previewCount === 0}
@@ -767,57 +770,57 @@ export default function MaintenanceBills() {
 
       {/* Payment Modal */}
       {showPaymentModal && selectedBill && (
-        <div className="maintenance-modal">
-          <div className="maintenance-modal-card">
-            <div className="maintenance-modal-header">
-              <h3 className="maintenance-modal-title">Record Payment</h3>
-              <button onClick={() => setShowPaymentModal(false)} className="maintenance-modal-close">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
+          <div className="w-full max-w-[32rem] max-h-[calc(100vh-3rem)] flex flex-col rounded-xl bg-[var(--bg-card)] border border-[var(--border-light)] shadow-[0_8px_24px_rgba(0,0,0,0.12)]">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--border-light)] shrink-0">
+              <h3 className="text-[1.1rem] font-semibold text-[var(--text-primary)]">Record Payment</h3>
+              <button onClick={() => setShowPaymentModal(false)} className="rounded-md p-1 text-[var(--text-tertiary)] transition-colors hover:bg-[rgba(148,163,184,0.2)] hover:text-[var(--text-primary)]">
                 <X size={20} />
               </button>
             </div>
-            <form onSubmit={handlePayment} className="maintenance-modal-body">
-              <div className="maintenance-payment-summary">
-                <p className="maintenance-payment-row">Flat: <span className="maintenance-payment-strong">{selectedBill.flatNumber}</span></p>
-                <p className="maintenance-payment-row">Month: <span className="maintenance-payment-strong">{selectedBill.billMonth}</span></p>
-                <p className="maintenance-payment-row">Total: <span className="maintenance-payment-strong">₹{getBillTotal(selectedBill).toLocaleString()}</span></p>
-                <p className="maintenance-payment-row">Balance: <span className="maintenance-payment-balance">₹{getBillBalance(selectedBill).toLocaleString()}</span></p>
+            <form onSubmit={handlePayment} className="p-5 flex flex-col gap-4 overflow-y-auto flex-1 min-h-0">
+              <div className="p-3 rounded-xl bg-[var(--bg-tertiary)] text-[var(--text-secondary)]">
+                <p className="text-[0.85rem]">Flat: <span className="font-semibold text-[var(--text-primary)]">{selectedBill.flatNumber}</span></p>
+                <p className="text-[0.85rem]">Month: <span className="font-semibold text-[var(--text-primary)]">{selectedBill.billMonth}</span></p>
+                <p className="text-[0.85rem]">Total: <span className="font-semibold text-[var(--text-primary)]">₹{getBillTotal(selectedBill).toLocaleString()}</span></p>
+                <p className="text-[0.85rem]">Balance: <span className="font-semibold text-[#dc2626]">₹{getBillBalance(selectedBill).toLocaleString()}</span></p>
               </div>
-              <div className="maintenance-field">
-                <label className="maintenance-label">Amount</label>
+              <div className="flex flex-col gap-[0.4rem]">
+                <label className="text-[0.85rem] font-semibold text-[var(--text-secondary)]">Amount</label>
                 <input
                   type="number"
                   name="amount"
                   step="0.01"
                   max={getBillBalance(selectedBill)}
                   required
-                  className="maintenance-input"
+                  className="w-full py-[0.55rem] px-3 rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] text-[var(--text-primary)] transition-all focus:outline-none focus:border-[#2563eb] focus:shadow-[0_0_0_3px_rgba(37,99,235,0.2)]"
                 />
               </div>
-              <div className="maintenance-field">
-                <label className="maintenance-label">Payment Mode</label>
+              <div className="flex flex-col gap-[0.4rem]">
+                <label className="text-[0.85rem] font-semibold text-[var(--text-secondary)]">Payment Mode</label>
                 <select
                   name="paymentMode"
                   required
-                  className="maintenance-input"
+                  className="w-full py-[0.55rem] px-3 rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] text-[var(--text-primary)] transition-all focus:outline-none focus:border-[#2563eb] focus:shadow-[0_0_0_3px_rgba(37,99,235,0.2)]"
                 >
                   <option value="CASH">Cash</option>
                   <option value="CHEQUE">Cheque</option>
                   <option value="ONLINE">Online</option>
                 </select>
               </div>
-              <div className="maintenance-field">
-                <label className="maintenance-label">Reference Number</label>
+              <div className="flex flex-col gap-[0.4rem]">
+                <label className="text-[0.85rem] font-semibold text-[var(--text-secondary)]">Reference Number</label>
                 <input
                   type="text"
                   name="referenceNumber"
-                  className="maintenance-input"
+                  className="w-full py-[0.55rem] px-3 rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] text-[var(--text-primary)] transition-all focus:outline-none focus:border-[#2563eb] focus:shadow-[0_0_0_3px_rgba(37,99,235,0.2)]"
                 />
               </div>
-              <div className="maintenance-form-actions">
-                <button type="button" onClick={() => setShowPaymentModal(false)} className="maintenance-cancel-button">Cancel</button>
+              <div className="flex gap-3 pt-2">
+                <button type="button" onClick={() => setShowPaymentModal(false)} className="flex-1 py-[0.65rem] px-4 rounded-xl font-semibold border border-[#cbd5f5] text-[#334155] bg-[var(--bg-tertiary)] transition-all hover:-translate-y-px">Cancel</button>
                 <AsyncButton
                   type="submit"
-                  className="maintenance-submit-button maintenance-submit-button--success"
+                  className="flex-1 py-[0.65rem] px-4 rounded-xl font-semibold border border-[var(--border-default)] bg-[var(--bg-card)] text-[var(--text-primary)] transition-all hover:-translate-y-px hover:bg-[var(--bg-tertiary)] hover:shadow-[0_8px_20px_rgba(15,23,42,0.14)] dark:border-[rgba(148,163,184,0.22)] dark:bg-[#f8fafc] dark:text-[#0f172a] dark:hover:bg-white"
                   isLoading={paymentMutation.isPending}
                   loadingText="Recording..."
                 >

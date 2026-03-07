@@ -19,9 +19,14 @@ const FieldHint = ({ message, type = "error" }) => {
   };
   const Icon = icons[type] || AlertCircle;
 
+  const hintStyles = {
+    error: "bg-amber-500/10 border-amber-500/30 text-amber-700",
+    success: "bg-emerald-500/10 border-emerald-500/30 text-emerald-700",
+    info: "bg-blue-500/10 border-blue-500/30 text-blue-700",
+  };
   return (
-    <div className={clsx("field-hint", `field-hint--${type}`)}>
-      <Icon size={14} className="field-hint__icon" />
+    <div className={clsx("inline-flex items-start gap-1.5 rounded-md border py-1.5 px-2.5 text-xs", hintStyles[type])}>
+      <Icon size={14} className="mt-0.5 shrink-0" />
       <span>{message}</span>
     </div>
   );
@@ -47,16 +52,22 @@ export const FormInput = ({
 }) => {
   const [focused, setFocused] = useState(false);
 
+  const inputBase =
+    "w-full rounded-lg border border-[var(--border-default)] bg-[var(--bg-card)] py-2.5 px-3 text-sm text-[var(--text-primary)] outline-none transition placeholder:text-[var(--text-tertiary)]";
+  const inputFocus = "border-blue-500 shadow-[0_0_0_2px_rgba(59,130,246,0.12)]";
+  const inputWarn = "border-amber-500 shadow-[0_0_0_2px_rgba(245,158,11,0.12)]";
+  const inputDisabled = "opacity-60 cursor-not-allowed";
+
   return (
-    <div className={clsx("form-field-group", className)}>
+    <div className={clsx("flex flex-col gap-1.5 min-w-0", className)}>
       {label && (
-        <label htmlFor={name} className="form-label">
-          {Icon && <Icon size={14} className="form-label__icon" />}
+        <label htmlFor={name} className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-[var(--text-secondary)]">
+          {Icon && <Icon size={14} className="text-[var(--text-tertiary)]" />}
           {label}
-          {required && <span className="form-required">*</span>}
+          {required && <span className="text-red-500 ml-0.5">*</span>}
         </label>
       )}
-      <div className="form-input-wrap">
+      <div className="relative min-w-0">
         <input
           type={type}
           id={name}
@@ -70,10 +81,10 @@ export const FormInput = ({
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
           className={clsx(
-            "form-input",
-            error && !focused && "form-input--warn",
-            focused && !error && "form-input--focus",
-            disabled && "form-input--disabled",
+            inputBase,
+            error && !focused && inputWarn,
+            focused && !error && inputFocus,
+            disabled && inputDisabled,
           )}
           {...props}
         />
@@ -143,17 +154,22 @@ export const PhoneInput = ({
   const isValid =
     localValue.length === 10 && /^[6-9]/.test(localValue) && !localError;
 
+  const inputBase = "w-full rounded-lg border py-2.5 px-3 bg-[var(--bg-card)] text-[var(--text-primary)] text-sm outline-none transition border-[var(--border-default)] pr-14";
+  const inputFocus = "border-blue-500 ring-2 ring-blue-500/20";
+  const inputWarn = "border-amber-500 ring-2 ring-amber-500/20";
+  const inputValid = "border-emerald-500 ring-2 ring-emerald-500/20";
+  const inputDisabled = "opacity-60 cursor-not-allowed";
   return (
-    <div className={clsx("form-field-group", className)}>
+    <div className={clsx("flex flex-col gap-1.5 min-w-0", className)}>
       {label && (
-        <label htmlFor={name} className="form-label">
+        <label htmlFor={name} className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-[var(--text-secondary)]">
           {label}
-          {required && <span className="form-required">*</span>}
+          {required && <span className="text-red-500 ml-0.5">*</span>}
         </label>
       )}
-      <div className="phone-row">
-        <div className="phone-prefix">+91</div>
-        <div className="phone-input-wrap">
+      <div className="flex items-center gap-2 min-w-0 w-full">
+        <div className="inline-flex items-center py-2.5 px-3 rounded-lg border border-[var(--border-default)] bg-[var(--bg-tertiary)] text-[var(--text-tertiary)] text-[13px] font-semibold shrink-0">+91</div>
+        <div className="relative flex-1 min-w-0">
           <input
             type="tel"
             id={name}
@@ -167,24 +183,19 @@ export const PhoneInput = ({
             onFocus={() => setFocused(true)}
             onBlur={() => setFocused(false)}
             className={clsx(
-              "form-input phone-input",
-              displayError && !focused && "form-input--warn",
-              isValid && "form-input--valid",
-              focused && !displayError && !isValid && "form-input--focus",
-              disabled && "form-input--disabled",
+              inputBase,
+              displayError && !focused && inputWarn,
+              isValid && inputValid,
+              focused && !displayError && !isValid && inputFocus,
+              disabled && inputDisabled,
             )}
             {...props}
           />
-          {/* Digit counter — only visible when focused or has input */}
           {(focused || localValue.length > 0) && (
             <span
               className={clsx(
-                "phone-counter",
-                isValid
-                  ? "phone-counter--valid"
-                  : localValue.length > 0
-                    ? "phone-counter--active"
-                    : null,
+                "absolute right-3 top-1/2 -translate-y-1/2 text-[11px] pointer-events-none",
+                isValid ? "text-emerald-500" : localValue.length > 0 ? "text-blue-400" : "text-[var(--text-tertiary)]",
               )}
             >
               {localValue.length}/10
@@ -220,50 +231,42 @@ export const SmartSelect = ({
   const [focused, setFocused] = useState(false);
 
   // If only 1 option → show as a locked badge
+  const inputBase = "w-full rounded-lg border border-[var(--border-default)] bg-[var(--bg-card)] py-2.5 px-3 text-sm text-[var(--text-primary)] outline-none transition pr-9 cursor-pointer";
+  const inputFocus = "border-blue-500 ring-2 ring-blue-500/20";
+  const inputWarn = "border-amber-500 ring-2 ring-amber-500/20";
+  const inputDisabled = "opacity-60 cursor-not-allowed";
+
   if (options.length === 1) {
     const only = options[0];
     return (
-      <div className={clsx("form-field-group", className)}>
+      <div className={clsx("flex flex-col gap-1.5 min-w-0", className)}>
         {label && (
-                <label className="form-label">
-                  {Icon && (
-                    <Icon size={14} className="form-label__icon" />
-                  )}
+          <label className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-[var(--text-secondary)]">
+            {Icon && <Icon size={14} className="text-[var(--text-tertiary)]" />}
             {label}
-                  {required && <span className="form-required">*</span>}
+            {required && <span className="text-red-500 ml-0.5">*</span>}
           </label>
         )}
-              <div className="smart-select-single">
-          <Lock
-            size={14}
-                  className="smart-select-single__icon"
-          />
-              <span className="smart-select-single__value">
-            {only.label}
-          </span>
-                <span className="smart-select-single__badge">
-            Auto-selected
-          </span>
+        <div className="inline-flex items-center gap-2 py-2.5 px-3 rounded-lg border border-[var(--border-default)] bg-[var(--bg-tertiary)]">
+          <Lock size={14} className="text-blue-600 shrink-0" />
+          <span className="font-semibold text-[var(--text-primary)]">{only.label}</span>
+          <span className="ml-auto text-[10px] font-bold uppercase tracking-wider text-blue-600">Auto-selected</span>
         </div>
-        {/* Hidden input so form submission picks it up */}
         <input type="hidden" name={name} value={only.value} />
       </div>
     );
   }
 
-  // No options
   if (options.length === 0) {
     return (
-      <div className={clsx("form-field-group", className)}>
-              {label && (
-                <label className="form-label">
-                  {Icon && (
-                    <Icon size={14} className="form-label__icon" />
-                  )}
-                  {label}
-                </label>
-              )}
-        <div className="smart-select-empty">
+      <div className={clsx("flex flex-col gap-1.5 min-w-0", className)}>
+        {label && (
+          <label className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-[var(--text-secondary)]">
+            {Icon && <Icon size={14} className="text-[var(--text-tertiary)]" />}
+            {label}
+          </label>
+        )}
+        <div className="inline-flex items-center gap-2 py-2.5 px-3 rounded-lg border border-dashed border-[var(--border-default)] bg-[var(--bg-tertiary)] text-[var(--text-tertiary)] text-xs">
           <Info size={14} />
           <span>{emptyMessage}</span>
         </div>
@@ -271,19 +274,16 @@ export const SmartSelect = ({
     );
   }
 
-  // Multiple options → attractive dropdown
   return (
-    <div className={clsx("form-field-group", className)}>
-            {label && (
-              <label htmlFor={name} className="form-label">
-                {Icon && (
-                  <Icon size={14} className="form-label__icon" />
-                )}
-                {label}
-                {required && <span className="form-required">*</span>}
-              </label>
-            )}
-      <div className="form-select">
+    <div className={clsx("flex flex-col gap-1.5 min-w-0", className)}>
+      {label && (
+        <label htmlFor={name} className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-[var(--text-secondary)]">
+          {Icon && <Icon size={14} className="text-[var(--text-tertiary)]" />}
+          {label}
+          {required && <span className="text-red-500 ml-0.5">*</span>}
+        </label>
+      )}
+      <div className="relative min-w-0">
         <select
           id={name}
           name={name}
@@ -294,10 +294,10 @@ export const SmartSelect = ({
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
           className={clsx(
-                  "form-input form-select__control",
-                  error && !focused && "form-input--warn",
-                  focused && !error && "form-input--focus",
-                  disabled && "form-input--disabled",
+            inputBase,
+            error && !focused && inputWarn,
+            focused && !error && inputFocus,
+            disabled && inputDisabled,
           )}
           {...props}
         >
@@ -308,10 +308,7 @@ export const SmartSelect = ({
             </option>
           ))}
         </select>
-        <ChevronDown
-          size={16}
-                className="form-select__chevron"
-        />
+        <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)] pointer-events-none" />
       </div>
       <FieldHint message={error} type="error" />
     </div>
@@ -368,12 +365,16 @@ export const FormTextarea = ({
 }) => {
   const [focused, setFocused] = useState(false);
 
+  const inputBase = "w-full rounded-lg border border-[var(--border-default)] bg-[var(--bg-card)] py-2.5 px-3 text-sm text-[var(--text-primary)] outline-none transition placeholder:text-[var(--text-tertiary)] resize-y min-h-[96px]";
+  const inputFocus = "border-blue-500 ring-2 ring-blue-500/20";
+  const inputWarn = "border-amber-500 ring-2 ring-amber-500/20";
+  const inputDisabled = "opacity-60 cursor-not-allowed";
   return (
-    <div className={clsx("form-field-group", className)}>
+    <div className={clsx("flex flex-col gap-1.5 min-w-0", className)}>
       {label && (
-        <label htmlFor={name} className="form-label">
+        <label htmlFor={name} className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-[var(--text-secondary)]">
           {label}
-             {required && <span className="form-required">*</span>}
+          {required && <span className="text-red-500 ml-0.5">*</span>}
         </label>
       )}
       <textarea
@@ -388,10 +389,10 @@ export const FormTextarea = ({
         onFocus={() => setFocused(true)}
         onBlur={() => setFocused(false)}
         className={clsx(
-             "form-input form-textarea",
-             error && !focused && "form-input--warn",
-             focused && !error && "form-input--focus",
-             disabled && "form-input--disabled",
+          inputBase,
+          error && !focused && inputWarn,
+          focused && !error && inputFocus,
+          disabled && inputDisabled,
         )}
         {...props}
       />
@@ -420,15 +421,17 @@ export const NumberInput = ({
 }) => {
   const [focused, setFocused] = useState(false);
 
+  const inputBase = "w-full rounded-lg border border-[var(--border-default)] bg-[var(--bg-card)] py-2.5 px-3 text-sm text-[var(--text-primary)] outline-none transition placeholder:text-[var(--text-tertiary)]";
+  const inputFocus = "border-blue-500 ring-2 ring-blue-500/20";
+  const inputWarn = "border-amber-500 ring-2 ring-amber-500/20";
+  const inputDisabled = "opacity-60 cursor-not-allowed";
   return (
-    <div className={clsx("form-field-group", className)}>
+    <div className={clsx("flex flex-col gap-1.5 min-w-0", className)}>
       {label && (
-        <label htmlFor={name} className="form-label">
-              {Icon && (
-                <Icon size={14} className="form-label__icon" />
-              )}
+        <label htmlFor={name} className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-[var(--text-secondary)]">
+          {Icon && <Icon size={14} className="text-[var(--text-tertiary)]" />}
           {label}
-             {required && <span className="form-required">*</span>}
+          {required && <span className="text-red-500 ml-0.5">*</span>}
         </label>
       )}
       <input
@@ -446,10 +449,10 @@ export const NumberInput = ({
         onFocus={() => setFocused(true)}
         onBlur={() => setFocused(false)}
         className={clsx(
-          "form-input",
-             error && !focused && "form-input--warn",
-             focused && !error && "form-input--focus",
-             disabled && "form-input--disabled",
+          inputBase,
+          error && !focused && inputWarn,
+          focused && !error && inputFocus,
+          disabled && inputDisabled,
         )}
         {...props}
       />
@@ -1122,26 +1125,26 @@ export const StateCitySelector = ({
       ? INDIAN_STATES_CITIES[selectedState] || []
       : [];
 
+  const selectBase = "w-full rounded-lg border border-[var(--border-default)] bg-[var(--bg-card)] py-2.5 px-3 pr-9 text-sm text-[var(--text-primary)] outline-none transition cursor-pointer";
+  const selectWarn = "border-amber-500 ring-2 ring-amber-500/20";
+  const selectDisabled = "opacity-60 cursor-not-allowed";
   return (
-    <div className={clsx("form-grid form-grid--2", className)}>
+    <div className={clsx("grid gap-4 grid-cols-[repeat(auto-fit,minmax(220px,1fr))]", className)}>
       {/* State Selection */}
-      <div className="form-field-group">
-        <label className="form-label">
-          <span className="form-label__row">
-            <span className="form-label__emoji">🗺️</span>
+      <div className="flex flex-col gap-1.5 min-w-0">
+        <label className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-[var(--text-secondary)]">
+          <span className="inline-flex items-center gap-1.5">
+            <span className="text-base leading-none">🗺️</span>
             <span>State</span>
           </span>
-          {stateRequired && <span className="form-required">*</span>}
+          {stateRequired && <span className="text-red-500 ml-0.5">*</span>}
         </label>
-        <div className="form-select">
+        <div className="relative min-w-0">
           <select
             value={selectedState}
             onChange={handleStateChange}
             required={stateRequired && !isStateOther}
-            className={clsx(
-              "form-input form-select__control",
-              stateError && "form-input--warn",
-            )}
+            className={clsx(selectBase, stateError && selectWarn)}
           >
             <option value="">Select State</option>
             {STATE_OPTIONS.map((state) => (
@@ -1151,17 +1154,14 @@ export const StateCitySelector = ({
             ))}
             <option value="OTHER">Other (Custom)</option>
           </select>
-          <ChevronDown
-            size={16}
-            className="form-select__chevron"
-          />
+          <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)] pointer-events-none" />
         </div>
         <FieldHint message={stateError} type="error" />
       </div>
 
       {/* Custom State Input */}
       {isStateOther && (
-        <div className="form-grid__span">
+        <div className="col-span-full">
           <FormInput
             label="Custom State Name"
             name="state"
@@ -1179,15 +1179,15 @@ export const StateCitySelector = ({
       )}
 
       {/* City Selection */}
-      <div className="form-field-group">
-        <label className="form-label">
-          <span className="form-label__row">
-            <span className="form-label__emoji">🏙️</span>
+      <div className="flex flex-col gap-1.5 min-w-0">
+        <label className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-[var(--text-secondary)]">
+          <span className="inline-flex items-center gap-1.5">
+            <span className="text-base leading-none">🏙️</span>
             <span>City</span>
           </span>
-          {cityRequired && <span className="form-required">*</span>}
+          {cityRequired && <span className="text-red-500 ml-0.5">*</span>}
         </label>
-        <div className="form-select">
+        <div className="relative min-w-0">
           <select
             value={selectedCity}
             onChange={handleCityChange}
@@ -1201,10 +1201,9 @@ export const StateCitySelector = ({
               selectedState !== "OTHER"
             }
             className={clsx(
-              "form-input form-select__control",
-              cityError && "form-input--warn",
-              (!selectedState || (selectedState === "OTHER" && !customState)) &&
-                "form-input--disabled",
+              selectBase,
+              cityError && selectWarn,
+              (!selectedState || (selectedState === "OTHER" && !customState)) && selectDisabled,
             )}
           >
             <option value="">
@@ -1223,17 +1222,14 @@ export const StateCitySelector = ({
               <option value="OTHER">Other (Custom)</option>
             )}
           </select>
-          <ChevronDown
-            size={16}
-            className="form-select__chevron"
-          />
+          <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)] pointer-events-none" />
         </div>
         <FieldHint message={cityError} type="error" />
       </div>
 
       {/* Custom City Input */}
       {isCityOther && (
-        <div className="form-grid__span">
+        <div className="col-span-full">
           <FormInput
             label="Custom City Name"
             name="city"
@@ -1264,17 +1260,17 @@ export const FormErrorSummary = ({ errors, message }) => {
   if (errorList.length === 0) return null;
 
   return (
-    <div className="form-error-summary">
-      <div className="form-error-summary__row">
-        <div className="form-error-summary__icon">
+    <div className="rounded-lg border border-amber-500/25 bg-amber-500/10 py-2.5 px-3 text-amber-800 text-xs">
+      <div className="flex items-start gap-2.5">
+        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-amber-500/15">
           <AlertCircle size={14} />
         </div>
         <div>
-          <p className="form-error-summary__title">Please fix the following:</p>
-          <ul className="form-error-summary__list">
+          <p className="m-0 text-[13px] font-semibold">Please fix the following:</p>
+          <ul className="mt-1.5 grid list-inside list-none gap-1 pl-0">
             {errorList.map((err, i) => (
-              <li key={i} className="form-error-summary__item">
-                <span className="form-error-summary__bullet">›</span>
+              <li key={i} className="flex items-start gap-1.5">
+                <span className="mt-0.5 text-amber-500">›</span>
                 {err}
               </li>
             ))}

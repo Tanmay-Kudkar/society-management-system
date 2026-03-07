@@ -24,21 +24,22 @@ const unitTypeIcons = {
 }
 
 const unitTypeClasses = {
-  FLAT: 'units-type units-type--flat',
-  SHOP: 'units-type units-type--shop',
-  OFFICE: 'units-type units-type--office'
+  FLAT: 'text-[var(--text-secondary)]',
+  SHOP: 'text-[#16a34a]',
+  OFFICE: 'text-[#7c3aed]'
 }
 
+const ROLE_TAG_CLS = 'inline-flex items-center py-[5px] px-[11px] rounded-full text-[11px] font-[650] tracking-[0.03em] text-[var(--text-secondary)] dark:border-[rgba(148,163,184,0.18)] dark:bg-[rgba(148,163,184,0.10)] dark:text-[rgba(226,232,240,0.92)]'
 const roleColors = {
-  MASTER_ADMIN: 'units-role-tag',
-  SOCIETY_ADMIN: 'units-role-tag',
-  CHAIRMAN: 'units-role-tag',
-  SECRETARY: 'units-role-tag',
-  TREASURER: 'units-role-tag',
-  COMMITTEE: 'units-role-tag',
-  MEMBER: 'units-role-tag',
-  TENANT: 'units-role-tag',
-  default: 'units-role-tag',
+  MASTER_ADMIN: ROLE_TAG_CLS,
+  SOCIETY_ADMIN: ROLE_TAG_CLS,
+  CHAIRMAN: ROLE_TAG_CLS,
+  SECRETARY: ROLE_TAG_CLS,
+  TREASURER: ROLE_TAG_CLS,
+  COMMITTEE: ROLE_TAG_CLS,
+  MEMBER: ROLE_TAG_CLS,
+  TENANT: ROLE_TAG_CLS,
+  default: ROLE_TAG_CLS,
 }
 
 const UNIT_ASSIGNABLE_ROLES = ['MEMBER', 'TENANT', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE']
@@ -760,7 +761,7 @@ export default function UnitManagement() {
   const showSkeleton = useMinLoadingTime(flatsLoading || flatsError)
 
   if (showSkeleton) return (
-    <div className="units-page">
+    <div>
       <WakeUpBanner />
       <HeroSkeleton statCount={0} />
       <TabsSkeleton tabCount={2} />
@@ -770,38 +771,38 @@ export default function UnitManagement() {
   )
 
   return (
-    <div className="units-page">
+    <div>
       {/* Header */}
-      <div className="units-header">
+      <div className="flex flex-col items-start gap-4 mb-6 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="units-title">
-            <Home className="units-title-icon" />
+          <h1 className="inline-flex items-center gap-2 text-2xl font-bold text-[var(--text-primary)]">
+            <Home className="text-[var(--text-secondary)]" />
             Unit Management
           </h1>
-          <p className="units-subtitle">
+          <p className="mt-1 text-[var(--text-secondary)]">
             Manage units and their assigned users in one place
           </p>
         </div>
-        <div className="units-header-actions">
+        <div className="flex flex-wrap gap-3">
           {canEditUnits && (
             <>
               <button
                 onClick={() => setShowBulkCreateModal(true)}
-                className="units-bulk-button units-bulk-button--success"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl font-semibold border border-[#16a34a] bg-[#16a34a] text-[#f8fafc] shadow-[0_1px_3px_rgba(15,23,42,0.14)] transition-all hover:bg-[#15803d] hover:border-[#15803d] dark:border-[rgba(22,163,74,0.55)]"
               >
                 <UsersRound size={18} />
                 Bulk Create Users
               </button>
               <button
                 onClick={() => setShowBulkImportModal(true)}
-                className="units-bulk-button"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl font-semibold border border-[rgba(15,23,42,0.12)] bg-[#0f172a] text-[#f8fafc] shadow-[0_1px_3px_rgba(15,23,42,0.14)] transition-all hover:bg-[#1e293b] hover:shadow-[0_4px_12px_rgba(15,23,42,0.2)] dark:border-[rgba(148,163,184,0.26)] dark:bg-[#020617] dark:hover:bg-[#0f172a]"
               >
                 <Upload size={18} />
                 Import Units
               </button>
               <button
                 onClick={() => openUnitModal()}
-                className="units-add-button"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl font-semibold border border-[var(--border-default)] bg-[var(--bg-card)] text-[var(--text-primary)] shadow-[0_1px_3px_rgba(15,23,42,0.06)] transition-all hover:shadow-[0_4px_12px_rgba(15,23,42,0.08)] dark:border-[rgba(148,163,184,0.22)] dark:bg-[#f8fafc] dark:text-[#0f172a] dark:hover:bg-white"
               >
                 <Plus size={20} />
                 Add Unit
@@ -819,14 +820,14 @@ export default function UnitManagement() {
                       setBulkImportError('')
                       setShowUserBulkImportModal(true)
                     }}
-                    className="units-bulk-button units-bulk-button--success"
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl font-semibold border border-[#16a34a] bg-[#16a34a] text-[#f8fafc] shadow-[0_1px_3px_rgba(15,23,42,0.14)] transition-all hover:bg-[#15803d] hover:border-[#15803d] dark:border-[rgba(22,163,74,0.55)]"
                   >
                     <Upload size={18} />
                     Import Excel
                   </button>
                   <button
                     onClick={() => setShowBulkCreateModal(true)}
-                    className="units-bulk-button units-bulk-button--auto"
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl font-semibold border border-[#7c3aed] bg-[#7c3aed] text-[#f8fafc] shadow-[0_1px_3px_rgba(15,23,42,0.14)] transition-all hover:bg-[#6d28d9] hover:border-[#6d28d9] dark:border-[rgba(124,58,237,0.55)]"
                   >
                     <UserPlus size={18} />
                     Auto-Create
@@ -836,7 +837,7 @@ export default function UnitManagement() {
               {!isPlatformLevel && creatableRoles.length > 0 && (
                 <button
                   onClick={() => handleOpenStandaloneUserModal(null)}
-                  className="units-add-button units-add-button--users"
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl font-semibold border border-[var(--border-default)] bg-[var(--bg-card)] text-[var(--text-primary)] shadow-[0_1px_3px_rgba(15,23,42,0.06)] transition-all hover:shadow-[0_4px_12px_rgba(15,23,42,0.08)] dark:border-[rgba(148,163,184,0.22)] dark:bg-[#f8fafc] dark:text-[#0f172a] dark:hover:bg-white"
                 >
                   <Plus size={20} />
                   Add User
@@ -848,34 +849,46 @@ export default function UnitManagement() {
       </div>
 
       {/* Tabs */}
-      <div className="units-main-tabs" role="tablist" aria-label="Unit management sections">
+      <div className="flex gap-2 mb-7 p-[0.45rem] rounded-[14px] border border-[var(--border-default)] shadow-[var(--shadow-sm)] max-sm:p-[0.3rem] max-sm:gap-[0.3rem]" role="tablist" aria-label="Unit management sections" style={{ background: 'linear-gradient(180deg, color-mix(in srgb, var(--bg-tertiary) 92%, transparent) 0%, color-mix(in srgb, var(--bg-secondary) 94%, transparent) 100%)' }}>
         <button
           onClick={() => switchTab('units')}
           type="button"
           className={clsx(
-            'units-main-tab',
-            activeTab === 'units' && 'is-active'
+            'appearance-none border-none flex-1 min-h-[46px] flex items-center justify-center gap-2 py-[10px] px-4 rounded-[11px] font-semibold cursor-pointer transition-all max-sm:min-h-[40px] max-sm:py-2 max-sm:px-2 max-sm:text-[0.85rem]',
+            activeTab === 'units'
+              ? 'text-[var(--text-primary)] shadow-[var(--shadow-sm)]'
+              : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
           )}
+          style={activeTab === 'units' ? { background: 'color-mix(in srgb, var(--color-primary-100) 55%, var(--bg-card))', border: '1px solid color-mix(in srgb, var(--color-primary-200) 72%, transparent)' } : undefined}
           role="tab"
           aria-selected={activeTab === 'units'}
         >
           <Home size={18} />
           Units
-          <span className="units-main-tab-badge">{flats.length}</span>
+          <span
+            className={clsx('ml-[2px] px-[0.55rem] py-[0.15rem] rounded-full text-xs font-semibold border max-sm:hidden', activeTab === 'units' ? 'text-[#3b82f6]' : 'border-[var(--border-light)]')}
+            style={{ background: activeTab === 'units' ? 'color-mix(in srgb, var(--color-primary-100) 40%, var(--bg-card))' : 'color-mix(in srgb, var(--bg-tertiary) 65%, var(--bg-card))', borderColor: activeTab === 'units' ? 'color-mix(in srgb, var(--color-primary-200) 70%, transparent)' : undefined }}
+          >{flats.length}</span>
         </button>
         <button
           onClick={() => switchTab('users')}
           type="button"
           className={clsx(
-            'units-main-tab',
-            activeTab === 'users' && 'is-active'
+            'appearance-none border-none flex-1 min-h-[46px] flex items-center justify-center gap-2 py-[10px] px-4 rounded-[11px] font-semibold cursor-pointer transition-all max-sm:min-h-[40px] max-sm:py-2 max-sm:px-2 max-sm:text-[0.85rem]',
+            activeTab === 'users'
+              ? 'text-[var(--text-primary)] shadow-[var(--shadow-sm)]'
+              : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
           )}
+          style={activeTab === 'users' ? { background: 'color-mix(in srgb, var(--color-primary-100) 55%, var(--bg-card))', border: '1px solid color-mix(in srgb, var(--color-primary-200) 72%, transparent)' } : undefined}
           role="tab"
           aria-selected={activeTab === 'users'}
         >
           <Users size={18} />
           Users
-          <span className="units-main-tab-badge">{scopedUsers.length}</span>
+          <span
+            className={clsx('ml-[2px] px-[0.55rem] py-[0.15rem] rounded-full text-xs font-semibold border max-sm:hidden', activeTab === 'users' ? 'text-[#3b82f6]' : 'border-[var(--border-light)]')}
+            style={{ background: activeTab === 'users' ? 'color-mix(in srgb, var(--color-primary-100) 40%, var(--bg-card))' : 'color-mix(in srgb, var(--bg-tertiary) 65%, var(--bg-card))', borderColor: activeTab === 'users' ? 'color-mix(in srgb, var(--color-primary-200) 70%, transparent)' : undefined }}
+          >{scopedUsers.length}</span>
         </button>
       </div>
 
@@ -883,7 +896,7 @@ export default function UnitManagement() {
       {activeTab === 'units' && (
       <>
       {/* Stats Cards */}
-      <div className="units-stats">
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-[0.85rem] mb-6">
         <StatCard label="Total Units" value={stats.totalUnits} icon={Layers} color="blue" />
         <StatCard label="Flats" value={`${stats.flats}/${stats.maxFlats}`} icon={Home} color="indigo" />
         <StatCard label="Shops" value={`${stats.shops}/${stats.maxShops}`} icon={Store} color="green" />
@@ -895,28 +908,29 @@ export default function UnitManagement() {
 
       {/* API Error Alert */}
       {apiError && (
-        <div className="units-alert">
-          <div className="units-alert-content">
+        <div className="flex items-center justify-between gap-2 p-4 rounded-2xl mb-6 border border-[rgba(239,68,68,0.35)] bg-[rgba(239,68,68,0.1)] text-[#dc2626]">
+          <div className="inline-flex items-center gap-2">
             <AlertCircle size={20} />
             <span>{apiError}</span>
           </div>
-          <button onClick={() => setApiError('')} className="units-alert-close">
+          <button onClick={() => setApiError('')} className="p-1 rounded-lg transition-colors hover:bg-[rgba(239,68,68,0.16)]">
             <X size={18} />
           </button>
         </div>
       )}
 
       {/* Filters */}
-      <div className="units-filters">
-        <div className="units-filters-row">
-          <div className="units-search">
-            <Search className="units-search-icon" />
+      <div className="p-[0.9rem] rounded-[14px] bg-[var(--bg-card)] border border-[var(--border-default)] shadow-[var(--shadow-sm)] mb-6 dark:border-[rgba(148,163,184,0.22)] dark:shadow-[0_10px_22px_rgba(2,6,23,0.45)]">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 w-5 h-5 -translate-y-1/2 text-[var(--text-tertiary)]" />
             <input
               type="text"
               placeholder="Search by unit number or user name..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="units-search-input"
+              className="w-full min-h-[42px] py-[0.55rem] pl-10 pr-3 rounded-xl border border-[var(--border-default)] text-[var(--text-primary)] transition-all focus:outline-none"
+              style={{ background: 'color-mix(in srgb, var(--bg-card) 86%, var(--bg-secondary))' }}
             />
           </div>
           <select
@@ -930,7 +944,8 @@ export default function UnitManagement() {
               }
               setSearchParams(params, { replace: true })
             }}
-            className="units-filter-select"
+            className="w-full min-h-[42px] py-[0.55rem] px-3 rounded-xl border border-[var(--border-default)] text-[var(--text-primary)] transition-all focus:outline-none sm:w-[11rem] sm:flex-none"
+            style={{ background: 'color-mix(in srgb, var(--bg-card) 86%, var(--bg-secondary))' }}
           >
             <option value="">All Types</option>
             <option value="FLAT">Flats</option>
@@ -938,22 +953,28 @@ export default function UnitManagement() {
             <option value="OFFICE">Offices</option>
           </select>
           {/* View toggle */}
-          <div className="units-view-toggle">
+          <div className="inline-flex flex-none self-stretch rounded-xl border border-[var(--border-default)] overflow-hidden bg-[var(--bg-card)]">
             <button
               onClick={() => setViewMode('units')}
               className={clsx(
-                'units-view-button',
-                viewMode === 'units' && 'is-active'
+                'appearance-none border-none cursor-pointer min-w-[4.75rem] min-h-[42px] py-2 px-[0.9rem] text-[0.85rem] font-[650] transition-all',
+                viewMode === 'units'
+                  ? 'text-[var(--text-primary)]'
+                  : 'text-[var(--text-tertiary)] bg-[var(--bg-card)]'
               )}
+              style={viewMode === 'units' ? { background: 'color-mix(in srgb, var(--color-primary-100) 62%, var(--bg-card))' } : undefined}
             >
               Cards
             </button>
             <button
               onClick={() => setViewMode('table')}
               className={clsx(
-                'units-view-button',
-                viewMode === 'table' && 'is-active'
+                'appearance-none border-none cursor-pointer min-w-[4.75rem] min-h-[42px] py-2 px-[0.9rem] text-[0.85rem] font-[650] transition-all',
+                viewMode === 'table'
+                  ? 'text-[var(--text-primary)]'
+                  : 'text-[var(--text-tertiary)] bg-[var(--bg-card)]'
               )}
+              style={viewMode === 'table' ? { background: 'color-mix(in srgb, var(--color-primary-100) 62%, var(--bg-card))' } : undefined}
             >
               Table
             </button>
@@ -964,7 +985,7 @@ export default function UnitManagement() {
       {/* Content */}
       {viewMode === 'units' ? (
         /* Card View */
-        <div className="units-grid">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredUnits.map((unit) => {
             const UnitIcon = getUnitIcon(unit.unitType)
             const unitColor = getUnitColor(unit.unitType)
@@ -972,19 +993,19 @@ export default function UnitManagement() {
             const hasAssignedUser = !!assignedUser
             
             return (
-              <div key={unit.id} className="units-card">
+              <div key={unit.id} className="p-[1.15rem] rounded-[14px] bg-[var(--bg-card)] border border-[var(--border-default)] shadow-[var(--shadow-sm)] transition-all duration-200 hover:-translate-y-px hover:shadow-[var(--shadow-md)] dark:border-[rgba(148,163,184,0.22)] dark:shadow-[0_10px_22px_rgba(2,6,23,0.45)]">
                 {/* Unit Header */}
-                <div className="units-card-header">
-                  <div className="units-card-title-row">
-                    <div className={clsx('units-card-icon', unitColor)}>
-                      <UnitIcon className="units-card-icon-svg" />
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className={clsx('w-12 h-12 rounded-[0.9rem] flex items-center justify-center border', unitColor)} style={{ background: 'color-mix(in srgb, var(--color-primary-100) 40%, var(--bg-tertiary))', borderColor: 'color-mix(in srgb, var(--color-primary-200) 58%, transparent)' }}>
+                      <UnitIcon className="w-6 h-6" />
                     </div>
                     <div>
-                      <h3 className="units-card-title">{unit.flatNumber}</h3>
-                      <div className="units-card-meta">
+                      <h3 className="text-[1.1rem] font-bold text-[var(--text-primary)]">{unit.flatNumber}</h3>
+                      <div className="inline-flex items-center gap-2 text-[0.8rem] text-[var(--text-tertiary)]">
                         {unit.wingName && (
-                          <span className="units-card-meta-item">
-                            <Layers className="units-card-meta-icon" />
+                          <span className="inline-flex items-center gap-1">
+                            <Layers className="w-3 h-3" />
                             {unit.wingName}
                           </span>
                         )}
@@ -993,55 +1014,58 @@ export default function UnitManagement() {
                     </div>
                   </div>
                   <span className={clsx(
-                    'units-status',
-                    hasAssignedUser ? 'is-occupied' : 'is-vacant'
-                  )}>
+                    'py-1 px-[0.7rem] rounded-full text-xs font-semibold',
+                    hasAssignedUser
+                      ? 'text-[color-mix(in_srgb,var(--color-success)_80%,var(--text-primary))]'
+                      : 'text-[var(--text-secondary)]'
+                  )} style={{ background: hasAssignedUser ? 'color-mix(in srgb, var(--color-success) 22%, transparent)' : 'color-mix(in srgb, var(--bg-tertiary) 80%, transparent)' }}>
                     {hasAssignedUser ? 'Occupied' : 'Vacant'}
                   </span>
                 </div>
 
                 {/* Unit Details */}
-                <div className="units-card-details">
-                  <div className="units-card-detail-row">
-                    <span className="units-card-detail-label">Type:</span>
-                    <span className="units-card-detail-value">{unit.flatType || unit.unitType || 'FLAT'}</span>
+                <div className="flex flex-col gap-2 text-[0.85rem] mb-4">
+                  <div className="flex justify-between">
+                    <span className="text-[var(--text-tertiary)]">Type:</span>
+                    <span className="font-semibold text-[var(--text-primary)]">{unit.flatType || unit.unitType || 'FLAT'}</span>
                   </div>
                   {unit.area > 0 && (
-                    <div className="units-card-detail-row">
-                      <span className="units-card-detail-label">Area:</span>
-                      <span className="units-card-detail-value">{unit.area} sq.ft</span>
+                    <div className="flex justify-between">
+                      <span className="text-[var(--text-tertiary)]">Area:</span>
+                      <span className="font-semibold text-[var(--text-primary)]">{unit.area} sq.ft</span>
                     </div>
                   )}
                 </div>
 
                 {/* Assigned User - single user per unit */}
-                <div className="units-assigned">
-                  <p className="units-assigned-title">Assigned User</p>
+                <div className="border-t border-[var(--border-default)] pt-4 mb-4">
+                  <p className="text-[0.7rem] uppercase tracking-[0.08em] text-[var(--text-tertiary)] mb-2">Assigned User</p>
                   {assignedUser ? (
-                    <div className="units-assigned-user">
-                      <div className="units-assigned-avatar">
-                        <span className="units-assigned-avatar-text">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: 'linear-gradient(135deg, rgba(100,116,139,0.70) 0%, rgba(30,41,59,0.90) 100%)' }}>
+                        <span className="text-white font-bold text-[0.85rem]">
                           {assignedUser.name?.charAt(0)?.toUpperCase()}
                         </span>
                       </div>
-                      <div className="units-assigned-meta">
-                        <p className="units-assigned-name">{assignedUser.name}</p>
-                        <p className="units-assigned-contact">{assignedUser.phone || assignedUser.email}</p>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-[var(--text-primary)] truncate">{assignedUser.name}</p>
+                        <p className="text-xs text-[var(--text-tertiary)] truncate">{assignedUser.phone || assignedUser.email}</p>
                       </div>
                       <span className={clsx(
-                        'units-assigned-role',
+                        'inline-flex items-center justify-center leading-none text-[0.7rem] font-semibold py-1 px-[0.55rem] rounded-full',
                         assignedUser.role === 'MEMBER'
-                          ? 'is-owner'
+                          ? 'text-[var(--text-secondary)]'
                           : assignedUser.role === 'TENANT'
-                          ? 'is-tenant'
+                          ? 'bg-[rgba(249,115,22,0.15)] text-[#c2410c]'
                           : null
-                      )}>
+                      )} style={assignedUser.role === 'MEMBER' ? { background: 'color-mix(in srgb, var(--text-tertiary) 18%, transparent)' } : undefined}>
                         {assignedUser.role === 'MEMBER' ? 'Owner' : formatRoleLabel(assignedUser.role)}
                       </span>
                       {canEditUnits && (
                         <button
                           onClick={() => openEditUserModal(assignedUser, unit)}
-                          className="units-edit-user"
+                          className="appearance-none w-7 h-7 inline-flex items-center justify-center p-0 rounded-lg border text-[var(--text-secondary)] transition-all hover:text-[var(--text-primary)] dark:border-[rgba(148,163,184,0.26)] dark:bg-[rgba(148,163,184,0.14)] dark:text-[rgba(241,245,249,0.94)] dark:hover:bg-[rgba(148,163,184,0.22)] dark:hover:text-white"
+                          style={{ borderColor: 'color-mix(in srgb, var(--border-light) 75%, transparent)', background: 'color-mix(in srgb, var(--bg-tertiary) 60%, transparent)' }}
                           title="Edit User"
                         >
                           <Edit size={14} />
@@ -1049,16 +1073,17 @@ export default function UnitManagement() {
                       )}
                     </div>
                   ) : (
-                    <p className="units-assigned-empty">No user assigned</p>
+                    <p className="text-[var(--text-tertiary)] text-[0.85rem] italic">No user assigned</p>
                   )}
                 </div>
 
                 {/* Actions */}
                 {canEditUnits && (
-                  <div className="units-card-actions">
+                  <div className="flex gap-2 pt-3 border-t border-[var(--border-default)]">
                     <button
                       onClick={() => openUnitModal(unit)}
-                      className="units-card-button"
+                      className="appearance-none flex-1 inline-flex items-center justify-center gap-[0.35rem] py-2 px-3 rounded-xl border text-[0.85rem] font-semibold text-[var(--text-primary)] transition-all dark:border-[rgba(148,163,184,0.26)] dark:bg-[rgba(15,23,42,0.75)] dark:text-[rgba(241,245,249,0.96)] dark:hover:bg-[rgba(30,41,59,0.92)]"
+                      style={{ borderColor: 'color-mix(in srgb, var(--border-light) 78%, transparent)', background: 'color-mix(in srgb, var(--bg-tertiary) 68%, transparent)' }}
                     >
                       <Edit size={14} />
                       Edit
@@ -1066,7 +1091,8 @@ export default function UnitManagement() {
                     {!hasAssignedUser && (
                       <button
                         onClick={() => openUserModal(unit)}
-                        className="units-card-button units-card-button--primary"
+                        className="appearance-none flex-1 inline-flex items-center justify-center gap-[0.35rem] py-2 px-3 rounded-xl border text-[0.85rem] font-semibold text-[var(--text-primary)] transition-all dark:border-[rgba(148,163,184,0.26)] dark:bg-[rgba(15,23,42,0.75)] dark:text-[rgba(241,245,249,0.96)] dark:hover:bg-[rgba(30,41,59,0.92)]"
+                        style={{ borderColor: 'color-mix(in srgb, var(--border-light) 78%, transparent)', background: 'color-mix(in srgb, var(--bg-tertiary) 85%, transparent)' }}
                       >
                         <UserPlus size={14} />
                         Add User
@@ -1110,7 +1136,7 @@ export default function UnitManagement() {
                           }
                         }
                       }}
-                      className="units-card-delete"
+                      className="appearance-none w-9 h-9 inline-flex items-center justify-center p-0 rounded-xl border border-[rgba(239,68,68,0.35)] text-[#dc2626] bg-[rgba(239,68,68,0.1)] transition-all hover:bg-[rgba(239,68,68,0.16)] hover:border-[rgba(239,68,68,0.5)] dark:text-[rgba(252,165,165,0.98)] dark:bg-[rgba(127,29,29,0.34)] dark:border-[rgba(239,68,68,0.42)] dark:hover:bg-[rgba(127,29,29,0.5)]"
                     >
                       <Trash2 size={16} />
                     </button>
@@ -1122,82 +1148,84 @@ export default function UnitManagement() {
         </div>
       ) : (
         /* Table View */
-        <div className="units-table-card">
-          <div className="units-table-scroll">
-            <table className="units-table">
-              <thead className="units-thead">
+        <div className="rounded-[14px] bg-[var(--bg-card)] border border-[var(--border-default)] shadow-[var(--shadow-sm)] overflow-hidden dark:border-[rgba(148,163,184,0.22)] dark:shadow-[0_10px_22px_rgba(2,6,23,0.45)]">
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse min-w-[900px]">
+              <thead className="border-b border-[var(--border-default)] dark:border-b-[rgba(148,163,184,0.16)]" style={{ background: 'linear-gradient(90deg, color-mix(in srgb, var(--bg-tertiary) 88%, transparent) 0%, color-mix(in srgb, var(--bg-secondary) 92%, transparent) 100%)' }}>
                 <tr>
-                  <th className="units-th">Unit</th>
-                  <th className="units-th">Wing</th>
-                  <th className="units-th">Type</th>
-                  <th className="units-th">Assigned User</th>
-                  <th className="units-th">Contact</th>
-                  <th className="units-th">Status</th>
+                  <th className="py-3 px-6 text-left text-xs font-semibold uppercase tracking-[0.08em] text-[var(--text-tertiary)]">Unit</th>
+                  <th className="py-3 px-6 text-left text-xs font-semibold uppercase tracking-[0.08em] text-[var(--text-tertiary)]">Wing</th>
+                  <th className="py-3 px-6 text-left text-xs font-semibold uppercase tracking-[0.08em] text-[var(--text-tertiary)]">Type</th>
+                  <th className="py-3 px-6 text-left text-xs font-semibold uppercase tracking-[0.08em] text-[var(--text-tertiary)]">Assigned User</th>
+                  <th className="py-3 px-6 text-left text-xs font-semibold uppercase tracking-[0.08em] text-[var(--text-tertiary)]">Contact</th>
+                  <th className="py-3 px-6 text-left text-xs font-semibold uppercase tracking-[0.08em] text-[var(--text-tertiary)]">Status</th>
                   {canEditUnits && (
-                    <th className="units-th units-th--right">Actions</th>
+                    <th className="py-3 px-6 text-right text-xs font-semibold uppercase tracking-[0.08em] text-[var(--text-tertiary)]">Actions</th>
                   )}
                 </tr>
               </thead>
-              <tbody className="units-tbody">
+              <tbody>
                 {filteredUnits.map((unit) => {
                   const UnitIcon = getUnitIcon(unit.unitType)
                   const assignedUser = unitUserMap[unit.id]?.member
                   const hasAssignedUser = !!assignedUser
                   return (
-                    <tr key={unit.id} className="units-row">
-                      <td className="units-cell">
-                        <div className="units-table-unit">
-                          <div className={clsx('units-table-icon', getUnitColor(unit.unitType))}>
-                            <UnitIcon className="units-table-icon-svg" />
+                    <tr key={unit.id} className="transition-colors hover:bg-[rgba(30,41,59,0.04)] dark:hover:bg-[rgba(30,41,59,0.45)]">
+                      <td className="py-[0.85rem] px-6 text-[0.9rem] text-[var(--text-primary)]">
+                        <div className="flex items-center gap-3">
+                          <div className={clsx('w-8 h-8 rounded-[0.6rem] flex items-center justify-center border', getUnitColor(unit.unitType))} style={{ background: 'color-mix(in srgb, var(--color-primary-100) 40%, var(--bg-tertiary))', borderColor: 'color-mix(in srgb, var(--color-primary-200) 58%, transparent)' }}>
+                            <UnitIcon className="w-4 h-4" />
                           </div>
                           <div>
-                            <span className="units-table-title">{unit.flatNumber}</span>
-                            <p className="units-table-subtitle">Floor {unit.floor}</p>
+                            <span className="font-semibold">{unit.flatNumber}</span>
+                            <p className="text-xs text-[var(--text-tertiary)]">Floor {unit.floor}</p>
                           </div>
                         </div>
                       </td>
-                      <td className="units-cell">
+                      <td className="py-[0.85rem] px-6 text-[0.9rem] text-[var(--text-primary)]">
                         {unit.wingName ? (
-                          <span className="units-wing-badge">
-                            <Layers className="units-wing-icon" />
+                          <span className="inline-flex items-center gap-[0.4rem] py-1 px-[0.6rem] rounded-full text-xs bg-[rgba(99,102,241,0.15)] text-[#4338ca]">
+                            <Layers className="w-3 h-3" />
                             {unit.wingName}
                           </span>
                         ) : (
-                          <span className="units-cell--muted">-</span>
+                          <span className="text-[var(--text-tertiary)]">-</span>
                         )}
                       </td>
-                      <td className="units-cell units-cell--muted">
+                      <td className="py-[0.85rem] px-6 text-[0.9rem] text-[var(--text-tertiary)]">
                         {unit.flatType || unit.unitType || 'FLAT'}
                       </td>
-                      <td className="units-cell">
-                        <span className="units-cell--strong">{assignedUser?.name || '-'}</span>
+                      <td className="py-[0.85rem] px-6 text-[0.9rem] text-[var(--text-primary)]">
+                        <span className="font-semibold">{assignedUser?.name || '-'}</span>
                       </td>
-                      <td className="units-cell">
-                        <div className="units-table-contact">
-                          <p className="units-table-contact-main">{assignedUser?.phone || '-'}</p>
-                          <p className="units-table-contact-sub">{assignedUser?.email || ''}</p>
+                      <td className="py-[0.85rem] px-6 text-[0.9rem] text-[var(--text-primary)]">
+                        <div className="flex flex-col gap-[0.2rem] text-[0.8rem]">
+                          <p className="text-[var(--text-tertiary)]">{assignedUser?.phone || '-'}</p>
+                          <p className="text-[var(--text-tertiary)] text-[0.7rem]">{assignedUser?.email || ''}</p>
                         </div>
                       </td>
-                      <td className="units-cell">
+                      <td className="py-[0.85rem] px-6 text-[0.9rem] text-[var(--text-primary)]">
                         <span className={clsx(
-                          'units-status',
-                          hasAssignedUser ? 'is-occupied' : 'is-vacant'
-                        )}>
+                          'py-1 px-[0.7rem] rounded-full text-xs font-semibold',
+                          hasAssignedUser
+                            ? 'text-[color-mix(in_srgb,var(--color-success)_80%,var(--text-primary))]'
+                            : 'text-[var(--text-secondary)]'
+                        )} style={{ background: hasAssignedUser ? 'color-mix(in srgb, var(--color-success) 22%, transparent)' : 'color-mix(in srgb, var(--bg-tertiary) 80%, transparent)' }}>
                           {hasAssignedUser ? 'Occupied' : 'Vacant'}
                         </span>
                       </td>
                       {canEditUnits && (
-                        <td className="units-cell units-cell--right">
+                        <td className="py-[0.85rem] px-6 text-right text-[0.9rem] text-[var(--text-primary)]">
                           <button
                             onClick={() => openUnitModal(unit)}
-                            className="units-table-action units-table-action--edit"
+                            className="p-[0.35rem] rounded-[0.6rem] text-[var(--text-tertiary)] transition-all border hover:text-[var(--text-primary)]" style={{ borderColor: 'color-mix(in srgb, var(--border-default) 78%, transparent)', background: 'color-mix(in srgb, var(--bg-tertiary) 55%, transparent)' }}
                           >
                             <Edit size={18} />
                           </button>
                           {!hasAssignedUser && (
                             <button
                               onClick={() => openUserModal(unit)}
-                              className="units-table-action units-table-action--add"
+                              className="p-[0.35rem] rounded-[0.6rem] text-[var(--text-tertiary)] transition-all border hover:text-[#16a34a] hover:bg-[rgba(22,163,74,0.12)]" style={{ borderColor: 'color-mix(in srgb, var(--border-default) 78%, transparent)', background: 'color-mix(in srgb, var(--bg-tertiary) 55%, transparent)' }}
                             >
                               <UserPlus size={18} />
                             </button>
@@ -1205,7 +1233,7 @@ export default function UnitManagement() {
                           {hasAssignedUser && (
                             <button
                               onClick={() => openEditUserModal(assignedUser, unit)}
-                              className="units-table-action units-table-action--user"
+                              className="p-[0.35rem] rounded-[0.6rem] text-[var(--text-tertiary)] transition-all border hover:text-[#7c3aed] hover:bg-[rgba(124,58,237,0.12)]" style={{ borderColor: 'color-mix(in srgb, var(--border-default) 78%, transparent)', background: 'color-mix(in srgb, var(--bg-tertiary) 55%, transparent)' }}
                               title="Edit User"
                             >
                               <UserCog size={18} />
@@ -1249,7 +1277,7 @@ export default function UnitManagement() {
                                 }
                               }
                             }}
-                            className="units-table-action units-table-action--delete"
+                            className="p-[0.35rem] rounded-[0.6rem] text-[var(--text-tertiary)] transition-all border hover:text-[#dc2626] hover:bg-[rgba(239,68,68,0.12)]" style={{ borderColor: 'color-mix(in srgb, var(--border-default) 78%, transparent)', background: 'color-mix(in srgb, var(--bg-tertiary) 55%, transparent)' }}
                           >
                             <Trash2 size={18} />
                           </button>
@@ -1270,28 +1298,28 @@ export default function UnitManagement() {
       {activeTab === 'users' && (
       <>
         {/* Role Permissions Info */}
-        <div className="units-permissions-card">
-          <div className="units-permissions-layout">
-            <Shield className="units-permissions-icon units-permissions-icon--md" />
-            <div className="units-permissions-content">
-              <h3 className="units-permissions-title units-permissions-title--medium">Your Permissions ({user?.role?.replace('_', ' ')})</h3>
-              <p className="units-permissions-text units-permissions-text--sm units-permissions-text--mt">
+        <div className="mb-6 p-4 rounded-[14px] border shadow-[var(--shadow-sm)] dark:border-[rgba(59,130,246,0.38)]" style={{ borderColor: 'color-mix(in srgb, var(--color-primary-200) 55%, var(--border-default))', background: 'linear-gradient(135deg, color-mix(in srgb, var(--color-primary-100) 35%, var(--bg-card)) 0%, color-mix(in srgb, var(--bg-tertiary) 88%, transparent) 100%)' }}>
+          <div className="flex items-start gap-3">
+            <Shield className="w-5 h-5 mt-0.5 text-[var(--text-secondary)]" />
+            <div className="flex-1">
+              <h3 className="font-medium text-[var(--text-primary)]">Your Permissions ({user?.role?.replace('_', ' ')})</h3>
+              <p className="text-sm text-[var(--text-secondary)] mt-1">
                 Access scope is based on your current role and selected society.
               </p>
-              <div className="units-permissions-meta">
+              <div className="mt-2 flex flex-wrap gap-2">
                 {creatableRoles.length > 0 && (
-                  <div className="units-permissions-text units-permissions-text--xs">
-                    <span className="units-permissions-label">Can create:</span>{' '}
-                    <span className="units-permissions-value">{creatableRoles.map(r => r.replace('_', ' ')).join(', ')}</span>
+                  <div className="text-xs text-[var(--text-secondary)]">
+                    <span className="font-semibold text-[var(--text-primary)]">Can create:</span>{' '}
+                    <span>{creatableRoles.map(r => r.replace('_', ' ')).join(', ')}</span>
                   </div>
                 )}
                 {updatableRoles.length > 0 && creatableRoles.length > 0 && (
-                  <span className="units-permissions-sep">|</span>
+                  <span className="text-[var(--text-tertiary)]">|</span>
                 )}
                 {updatableRoles.length > 0 && (
-                  <div className="units-permissions-text units-permissions-text--xs">
-                    <span className="units-permissions-label">Can edit/delete:</span>{' '}
-                    <span className="units-permissions-value">{updatableRoles.map(r => r.replace('_', ' ')).join(', ')}</span>
+                  <div className="text-xs text-[var(--text-secondary)]">
+                    <span className="font-semibold text-[var(--text-primary)]">Can edit/delete:</span>{' '}
+                    <span>{updatableRoles.map(r => r.replace('_', ' ')).join(', ')}</span>
                   </div>
                 )}
               </div>
@@ -1301,28 +1329,29 @@ export default function UnitManagement() {
 
         {/* User Error Alert */}
         {userError && !showStandaloneUserModal && (
-          <div className="units-inline-alert">
-            <div className="units-inline-alert__content">
+          <div className="flex items-center justify-between gap-2 mb-6 p-4 rounded-xl border border-[rgba(239,68,68,0.28)] bg-[rgba(239,68,68,0.10)] text-[#b91c1c] dark:border-[rgba(239,68,68,0.32)] dark:bg-[rgba(185,28,28,0.22)] dark:text-[rgba(252,165,165,0.98)]">
+            <div className="inline-flex items-center gap-2">
               <AlertCircle size={20} />
               <span>{userError}</span>
             </div>
-            <button onClick={() => setUserError('')} className="units-inline-alert__close">
+            <button onClick={() => setUserError('')} className="p-1 rounded-[0.45rem] transition-colors hover:bg-[rgba(239,68,68,0.16)] dark:hover:bg-[rgba(239,68,68,0.22)]">
               <X size={18} />
             </button>
           </div>
         )}
 
         {/* User Filters */}
-        <div className="units-filters units-users-filters">
-          <div className="units-filters-row units-users-filters-row">
-            <div className="units-search">
-              <Search className="units-search-icon" />
+        <div className="p-[0.9rem] rounded-[14px] bg-[var(--bg-card)] border border-[var(--border-default)] shadow-[var(--shadow-sm)] mb-6 dark:border-[rgba(148,163,184,0.22)] dark:shadow-[0_10px_22px_rgba(2,6,23,0.45)]">
+          <div className="flex flex-col gap-[0.85rem] sm:flex-row sm:items-center">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 w-5 h-5 -translate-y-1/2 text-[var(--text-tertiary)]" />
               <input
                 type="text"
                 placeholder="Search by name or email..."
                 value={userSearchTerm}
                 onChange={(e) => setUserSearchTerm(e.target.value)}
-                className="units-search-input"
+                className="w-full min-h-[42px] py-[0.55rem] pl-10 pr-3 rounded-xl border border-[var(--border-default)] text-[var(--text-primary)] transition-all focus:outline-none"
+                style={{ background: 'color-mix(in srgb, var(--bg-card) 86%, var(--bg-secondary))' }}
               />
             </div>
 
@@ -1330,7 +1359,8 @@ export default function UnitManagement() {
               <select
                 value={filterSociety}
                 onChange={(e) => setFilterSociety(e.target.value)}
-                className="units-filter-select"
+                className="w-full min-h-[42px] py-[0.55rem] px-3 rounded-xl border border-[var(--border-default)] text-[var(--text-primary)] transition-all focus:outline-none sm:w-[10.5rem] sm:flex-none"
+                style={{ background: 'color-mix(in srgb, var(--bg-card) 86%, var(--bg-secondary))' }}
               >
                 <option value="">All Societies</option>
                 {societyOptions.map(society => (
@@ -1343,7 +1373,8 @@ export default function UnitManagement() {
               <select
                 value={filterRole}
                 onChange={(e) => setFilterRole(e.target.value)}
-                className="units-filter-select"
+                className="w-full min-h-[42px] py-[0.55rem] px-3 rounded-xl border border-[var(--border-default)] text-[var(--text-primary)] transition-all focus:outline-none sm:w-[10.5rem] sm:flex-none"
+                style={{ background: 'color-mix(in srgb, var(--bg-card) 86%, var(--bg-secondary))' }}
               >
                 <option value="">All Roles</option>
                 {roleFilterOptions.map(role => (
@@ -1355,26 +1386,26 @@ export default function UnitManagement() {
         </div>
 
         {/* Users Table */}
-        <div className="units-users-table">
+        <div className="rounded-[14px] bg-[var(--bg-card)] border border-[var(--border-default)] shadow-[var(--shadow-sm)] overflow-hidden dark:bg-[rgba(2,6,23,0.55)] dark:border-[rgba(148,163,184,0.18)] dark:shadow-[0_10px_22px_rgba(2,6,23,0.45)]">
           {!filteredTabUsers.length ? (
-            <div className="units-users-empty">
-              <Users className="units-users-empty__icon" />
-              <p className="units-users-empty__text">No users found</p>
+            <div className="p-8 text-center">
+              <Users className="w-12 h-12 mx-auto mb-3 text-[#cbd5e1] dark:text-[#475569]" />
+              <p className="text-[#64748b] dark:text-[#94a3b8]">No users found</p>
             </div>
           ) : (
-            <div className="units-users-table__scroll">
-              <table className="units-users-table__table">
-                <thead className="units-users-table__thead">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="border-b border-[var(--border-default)] dark:border-b-[rgba(148,163,184,0.16)]" style={{ background: 'linear-gradient(90deg, color-mix(in srgb, var(--bg-tertiary) 88%, transparent) 0%, color-mix(in srgb, var(--bg-secondary) 92%, transparent) 100%)' }}>
                   <tr>
-                    <th className="units-users-table__th">Name</th>
-                    <th className="units-users-table__th">Email</th>
-                    <th className="units-users-table__th">Role</th>
-                    <th className="units-users-table__th">Property</th>
-                    <th className="units-users-table__th">Phone</th>
-                    <th className="units-users-table__th units-users-table__th--right units-users-table__th--actions">Actions</th>
+                    <th className="py-[14px] px-6 text-left text-[11.5px] font-[650] text-[var(--text-secondary)] tracking-[0.05em] uppercase">Name</th>
+                    <th className="py-[14px] px-6 text-left text-[11.5px] font-[650] text-[var(--text-secondary)] tracking-[0.05em] uppercase">Email</th>
+                    <th className="py-[14px] px-6 text-left text-[11.5px] font-[650] text-[var(--text-secondary)] tracking-[0.05em] uppercase">Role</th>
+                    <th className="py-[14px] px-6 text-left text-[11.5px] font-[650] text-[var(--text-secondary)] tracking-[0.05em] uppercase">Property</th>
+                    <th className="py-[14px] px-6 text-left text-[11.5px] font-[650] text-[var(--text-secondary)] tracking-[0.05em] uppercase">Phone</th>
+                    <th className="py-[14px] px-6 text-right text-[11.5px] font-[650] text-[var(--text-secondary)] tracking-[0.05em] uppercase w-[118px]">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="units-users-table__tbody">
+                <tbody>
                   {filteredTabUsers.map((u) => {
                     const canEdit = u.id === user?.id || updatableRoles.includes(u.role)
                     const canDelete = u.role !== 'MASTER_ADMIN' && u.id !== user?.id && updatableRoles.includes(u.role)
@@ -1382,63 +1413,65 @@ export default function UnitManagement() {
                     const userFlat = flats.find(f => f.id === u.flatId)
 
                     return (
-                      <tr key={u.id} className="units-users-table__row">
-                        <td className="units-users-table__td">
-                          <div className="units-users-table__name">
-                            <div className="units-users-table__avatar">
-                              <span className="units-users-table__avatar-text">
+                      <tr key={u.id} className="border-t transition-colors dark:border-t-[rgba(148,163,184,0.14)] dark:hover:bg-[rgba(148,163,184,0.06)]" style={{ borderTopColor: 'color-mix(in srgb, var(--border-light) 50%, transparent)' }}>
+                        <td className="py-[14px] px-6 whitespace-nowrap text-[13px] text-[var(--text-primary)]">
+                          <div className="flex items-center gap-3">
+                            <div className="w-[34px] h-[34px] rounded-full grid place-items-center dark:bg-none" style={{ background: 'linear-gradient(135deg, rgba(100,116,139,0.70) 0%, rgba(30,41,59,0.90) 100%)' }}>
+                              <span className="text-[13px] font-[650] text-white/95">
                                 {u.name?.charAt(0)?.toUpperCase()}
                               </span>
                             </div>
-                            <div className="units-users-table__name-text">
-                              <span className="units-users-table__name-main">{u.name}</span>
-                              {isSelf && <span className="units-users-table__you">You</span>}
+                            <div className="flex items-baseline gap-2">
+                              <span className="font-[650]">{u.name}</span>
+                              {isSelf && <span className="text-[11px] py-[2px] px-2 rounded-full border text-[var(--text-secondary)] dark:border-[rgba(148,163,184,0.22)] dark:text-[rgba(203,213,225,0.95)]" style={{ borderColor: 'color-mix(in srgb, var(--border-light) 70%, transparent)' }}>You</span>}
                             </div>
                           </div>
                         </td>
-                        <td className="units-users-table__td units-users-table__mono">{u.email}</td>
-                        <td className="units-users-table__td">
-                          <span className={clsx(roleColors[u.role] || roleColors.default)}>
+                        <td className="py-[14px] px-6 whitespace-nowrap text-[13px] text-[var(--text-secondary)]">{u.email}</td>
+                        <td className="py-[14px] px-6 whitespace-nowrap text-[13px] text-[var(--text-primary)]">
+                          <span className={clsx(roleColors[u.role] || roleColors.default)} style={{ border: '1px solid color-mix(in srgb, var(--border-light) 70%, transparent)', background: 'color-mix(in srgb, var(--bg-tertiary) 55%, transparent)' }}>
                             {u.role?.replace(/_/g, ' ')}
                           </span>
                         </td>
-                        <td className="units-users-table__td">
+                        <td className="py-[14px] px-6 whitespace-nowrap text-[13px] text-[var(--text-primary)]">
                           {userFlat ? (
-                            <span className="units-users-table__prop">
-                              <Home className="units-users-table__prop-ico" />
+                            <span className="inline-flex items-center gap-[6px]">
+                              <Home className="w-[14px] h-[14px] text-[var(--text-tertiary)]" />
                               {userFlat.flatNumber}
-                              {userFlat.wingName && <span className="units-users-table__prop-wing">({userFlat.wingName})</span>}
+                              {userFlat.wingName && <span className="text-[var(--text-tertiary)] text-xs">({userFlat.wingName})</span>}
                             </span>
                           ) : (
-                            <span className="units-users-table__empty">-</span>
+                            <span className="text-[var(--text-tertiary)]">-</span>
                           )}
                         </td>
-                        <td className="units-users-table__td">{u.phone || '-'}</td>
-                        <td className="units-users-table__td units-users-table__td--right">
-                          <div className="units-users-table__actions">
+                        <td className="py-[14px] px-6 whitespace-nowrap text-[13px] text-[var(--text-primary)]">{u.phone || '-'}</td>
+                        <td className="py-[14px] px-6 whitespace-nowrap text-[13px] text-right text-[var(--text-primary)]">
+                          <div className="inline-flex items-center justify-end gap-1 min-w-[78px]">
                             {canEdit ? (
                               <button
                                 onClick={() => handleOpenStandaloneUserModal(u)}
-                                className="units-users-table__icon-btn"
+                                className="appearance-none w-[30px] h-[30px] inline-flex items-center justify-center p-[6px] rounded-lg border bg-transparent transition-all text-[var(--text-secondary)] hover:text-[var(--text-primary)] dark:border-[rgba(148,163,184,0.28)] dark:bg-[rgba(15,23,42,0.35)] dark:hover:bg-[rgba(148,163,184,0.10)] dark:hover:text-[rgba(248,250,252,0.95)]"
+                                style={{ borderColor: 'color-mix(in srgb, var(--border-light) 78%, transparent)' }}
                                 title={isSelf ? 'Edit your profile' : 'Edit user'}
                               >
                                 <Edit size={16} />
                               </button>
                             ) : (
-                              <button disabled className="units-users-table__icon-btn" title="No permission to edit">
+                              <button disabled className="appearance-none w-[30px] h-[30px] inline-flex items-center justify-center p-[6px] rounded-lg border bg-transparent text-[var(--text-secondary)] opacity-50 cursor-not-allowed dark:border-[rgba(148,163,184,0.28)] dark:bg-[rgba(51,65,85,0.45)]" style={{ borderColor: 'color-mix(in srgb, var(--border-light) 78%, transparent)' }} title="No permission to edit">
                                 <Edit size={16} />
                               </button>
                             )}
                             {canDelete ? (
                               <button
                                 onClick={() => confirmAndDeleteUser(u, { userFlat })}
-                                className="units-users-table__icon-btn units-users-table__icon-btn--danger"
+                                className="appearance-none w-[30px] h-[30px] inline-flex items-center justify-center p-[6px] rounded-lg border bg-transparent transition-all text-[var(--text-secondary)] hover:bg-[rgba(239,68,68,0.12)] hover:text-[#b91c1c] dark:border-[rgba(148,163,184,0.28)] dark:bg-[rgba(15,23,42,0.35)] dark:hover:bg-[rgba(239,68,68,0.14)] dark:hover:text-[rgba(252,165,165,0.95)]"
+                                style={{ borderColor: 'color-mix(in srgb, var(--border-light) 78%, transparent)' }}
                                 title="Delete user"
                               >
                                 <Trash2 size={16} />
                               </button>
                             ) : (
-                              <button disabled className="units-users-table__icon-btn" title={isSelf ? "Cannot delete yourself" : "No permission"}>
+                              <button disabled className="appearance-none w-[30px] h-[30px] inline-flex items-center justify-center p-[6px] rounded-lg border bg-transparent text-[var(--text-secondary)] opacity-50 cursor-not-allowed dark:border-[rgba(148,163,184,0.28)] dark:bg-[rgba(51,65,85,0.45)]" style={{ borderColor: 'color-mix(in srgb, var(--border-light) 78%, transparent)' }} title={isSelf ? "Cannot delete yourself" : "No permission"}>
                                 <Trash2 size={16} />
                               </button>
                             )}
@@ -1455,19 +1488,19 @@ export default function UnitManagement() {
 
         {/* Standalone User Modal (Users tab) */}
         {showStandaloneUserModal && (
-          <div className="units-modal">
-            <div className="units-modal-card units-modal-card--compact">
-              <div className="units-modal-header">
-                <h3 className="units-modal-title">{editingStandaloneUser ? 'Edit User' : 'Add User'}</h3>
-                <button onClick={() => { setShowStandaloneUserModal(false); setUserError(''); setShowStandalonePassword(false); }} className="units-modal-close">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[rgba(15,23,42,0.6)]">
+            <div className="w-full max-w-[28rem] max-h-[90vh] overflow-y-auto rounded-2xl bg-[var(--bg-card)] border border-[var(--border-light)] shadow-[0_24px_48px_rgba(15,23,42,0.24)]">
+              <div className="sticky top-0 flex items-center justify-between p-4 px-5 border-b border-[var(--border-light)] bg-[var(--bg-card)] z-[1]">
+                <h3 className="text-[1.1rem] font-semibold text-[var(--text-primary)]">{editingStandaloneUser ? 'Edit User' : 'Add User'}</h3>
+                <button onClick={() => { setShowStandaloneUserModal(false); setUserError(''); setShowStandalonePassword(false); }} className="p-[0.35rem] rounded-[0.6rem] text-[var(--text-tertiary)] hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-primary)]">
                   <X size={20} />
                 </button>
               </div>
-              <form onSubmit={handleStandaloneUserSubmit} className="units-modal-body">
+              <form onSubmit={handleStandaloneUserSubmit} className="p-5 flex flex-col gap-4">
                 <FormErrorSummary message={userError} />
                 <FormInput label="Name" name="name" defaultValue={editingStandaloneUser?.name} required placeholder="Full name" />
                 <FormInput label="Email" name="email" type="email" defaultValue={editingStandaloneUser?.email} required placeholder="user@example.com" />
-                <div className="units-modal-password-field">
+                <div className="relative">
                   <FormInput
                     label={editingStandaloneUser ? 'New Password (optional)' : 'Password'}
                     name="password"
@@ -1477,7 +1510,7 @@ export default function UnitManagement() {
                   />
                   <button
                     type="button"
-                    className="units-modal-toggle-pw"
+                    className="absolute right-[10px] top-[36px] inline-flex items-center justify-center border-none bg-transparent text-[var(--text-tertiary)] p-1 rounded-lg cursor-pointer hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)]"
                     onClick={() => setShowStandalonePassword(!showStandalonePassword)}
                     title={showStandalonePassword ? 'Hide password' : 'Show password'}
                   >
@@ -1524,14 +1557,14 @@ export default function UnitManagement() {
                 )}
                 <PhoneInput label="Phone" name="phone" defaultValue={editingStandaloneUser?.phone} required />
                 
-                <div className="units-modal-actions">
+                <div className="flex gap-3 pt-3 border-t border-[var(--border-light)]">
                   <button type="button" onClick={() => { setShowStandaloneUserModal(false); setUserError(''); setShowStandalonePassword(false); }}
-                    className="units-modal-cancel">
+                    className="flex-1 py-[0.65rem] px-4 rounded-xl font-semibold bg-[var(--bg-tertiary)] border border-[var(--border-default)] text-[var(--text-secondary)]">
                     Cancel
                   </button>
                   <AsyncButton
                     type="submit"
-                    className="units-modal-submit units-modal-submit--disabled-aware"
+                    className="flex-1 py-[0.65rem] px-4 rounded-xl font-semibold border border-[var(--border-default)] bg-[var(--bg-card)] text-[var(--text-primary)] transition-all disabled:opacity-50 disabled:cursor-not-allowed dark:border-[rgba(148,163,184,0.22)] dark:bg-[#f8fafc] dark:text-[#0f172a] dark:hover:bg-white"
                     isLoading={standaloneCreateUserMutation.isPending || standaloneUpdateUserMutation.isPending}
                     loadingText="Saving..."
                   >
@@ -1545,18 +1578,18 @@ export default function UnitManagement() {
 
         {/* User Bulk Import Modal */}
         {showUserBulkImportModal && (
-          <div className="units-modal">
-            <div className="units-modal-card units-user-import-modal">
-              <div className="units-modal-header">
-                <h3 className="units-modal-title">Bulk Import Users</h3>
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[rgba(15,23,42,0.6)]">
+            <div className="w-full max-w-[42rem] max-h-[90vh] overflow-hidden rounded-2xl bg-[var(--bg-card)] border border-[var(--border-light)] shadow-[0_24px_48px_rgba(15,23,42,0.24)]">
+              <div className="sticky top-0 flex items-center justify-between p-4 px-5 border-b border-[var(--border-light)] bg-[var(--bg-card)] z-[1]">
+                <h3 className="text-[1.1rem] font-semibold text-[var(--text-primary)]">Bulk Import Users</h3>
                 <button onClick={() => { setShowUserBulkImportModal(false); setBulkImportFile(null); setBulkImportPreview(null); setBulkImportError(''); }}
-                  className="units-modal-close">
+                  className="p-[0.35rem] rounded-[0.6rem] text-[var(--text-tertiary)] hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-primary)]">
                   <X size={20} />
                 </button>
               </div>
-              <div className="units-user-import-body">
+              <div className="p-4 overflow-y-auto max-h-[calc(90vh-180px)]">
                 {bulkImportError && (
-                  <div className="units-inline-alert units-inline-alert--compact">
+                  <div className="flex items-center justify-between gap-2 mb-4 p-3 rounded-xl border border-[rgba(239,68,68,0.28)] bg-[rgba(239,68,68,0.10)] text-[#b91c1c]">
                     <AlertCircle size={18} />{bulkImportError}
                   </div>
                 )}
@@ -1564,25 +1597,28 @@ export default function UnitManagement() {
                   <>
                     <div
                       className={clsx(
-                        'units-user-import-dropzone',
-                        isDragOver && 'is-dragover'
+                        'border-2 border-dashed rounded-xl p-8 text-center transition-all dark:bg-[rgba(15,23,42,0.3)]',
+                        isDragOver
+                          ? 'border-[rgba(100,116,139,0.8)]'
+                          : 'border-[rgba(148,163,184,0.5)] hover:border-[rgba(100,116,139,0.7)] dark:border-[rgba(148,163,184,0.38)]'
                       )}
+                      style={isDragOver ? { background: 'color-mix(in srgb, var(--bg-tertiary) 70%, transparent)' } : undefined}
                       onDragOver={(e) => { e.preventDefault(); setIsDragOver(true) }}
                       onDragLeave={() => setIsDragOver(false)}
                       onDrop={(e) => { e.preventDefault(); setIsDragOver(false); const file = e.dataTransfer.files[0]; if (file) { setBulkImportFile(file); setBulkImportError('') } }}
                     >
-                      <FileSpreadsheet className="units-user-import-dropzone__icon" />
-                      <p className="units-user-import-dropzone__title">
+                      <FileSpreadsheet className="w-12 h-12 mx-auto mb-3 text-[#94a3b8]" />
+                      <p className="mb-2 text-[var(--text-secondary)]">
                         {bulkImportFile ? bulkImportFile.name : 'Drag & drop Excel file here'}
                       </p>
                       <button type="button" onClick={() => fileInputRef.current?.click()}
-                        className="units-user-import-dropzone__btn">
+                        className="py-2 px-4 rounded-lg border border-[var(--border-default)] bg-[var(--bg-card)] text-[var(--text-primary)] text-sm transition-all dark:border-[rgba(148,163,184,0.22)] dark:bg-[#f8fafc] dark:text-[#0f172a] dark:hover:bg-white">
                         {bulkImportFile ? 'Change File' : 'Select File'}
                       </button>
-                      <input ref={fileInputRef} type="file" accept=".xlsx,.xls" className="units-user-import-file-input"
+                      <input ref={fileInputRef} type="file" accept=".xlsx,.xls" className="hidden"
                         onChange={(e) => { if (e.target.files[0]) { setBulkImportFile(e.target.files[0]); setBulkImportError('') } }} />
                     </div>
-                    <div className="units-user-import-template-row">
+                    <div className="mt-4 flex items-center justify-between">
                       <button
                         type="button"
                         onClick={async () => {
@@ -1601,51 +1637,51 @@ export default function UnitManagement() {
                             console.error('Failed to download template:', error)
                           }
                         }}
-                        className="units-user-import-template-link">
+                        className="inline-flex items-center gap-2 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)]">
                         <Download size={16} />Download Template
                       </button>
                     </div>
                   </>
                 ) : (
-                  <div className="units-user-import-preview">
-                    <div className="units-user-import-summary">
-                      <div className="units-user-import-summary-card is-valid">
-                        <p className="units-user-import-summary-value">{bulkImportPreview.validCount || 0}</p>
-                        <p className="units-user-import-summary-label">Valid</p>
+                  <div>
+                    <div className="grid grid-cols-3 gap-3 mb-4">
+                      <div className="rounded-lg p-3 text-center bg-[rgba(22,163,74,0.10)]">
+                        <p className="text-2xl font-bold leading-tight text-[var(--text-primary)]">{bulkImportPreview.validCount || 0}</p>
+                        <p className="text-xs text-[var(--text-secondary)]">Valid</p>
                       </div>
-                      <div className="units-user-import-summary-card is-invalid">
-                        <p className="units-user-import-summary-value">{bulkImportPreview.invalidCount || 0}</p>
-                        <p className="units-user-import-summary-label">Invalid</p>
+                      <div className="rounded-lg p-3 text-center bg-[rgba(239,68,68,0.10)]">
+                        <p className="text-2xl font-bold leading-tight text-[var(--text-primary)]">{bulkImportPreview.invalidCount || 0}</p>
+                        <p className="text-xs text-[var(--text-secondary)]">Invalid</p>
                       </div>
-                      <div className="units-user-import-summary-card is-total">
-                        <p className="units-user-import-summary-value">{bulkImportPreview.totalRows || 0}</p>
-                        <p className="units-user-import-summary-label">Total</p>
+                      <div className="rounded-lg p-3 text-center" style={{ background: 'color-mix(in srgb, var(--bg-tertiary) 70%, transparent)' }}>
+                        <p className="text-2xl font-bold leading-tight text-[var(--text-primary)]">{bulkImportPreview.totalRows || 0}</p>
+                        <p className="text-xs text-[var(--text-secondary)]">Total</p>
                       </div>
                     </div>
                     {bulkImportPreview.rows?.length > 0 && (
-                      <div className="units-user-import-table-wrap">
-                        <table className="units-user-import-table">
-                          <thead className="units-user-import-table__head">
+                      <div className="mb-4 border border-[var(--border-light)] rounded-lg overflow-hidden max-h-64 overflow-y-auto dark:border-[rgba(148,163,184,0.24)]">
+                        <table className="w-full text-sm border-collapse">
+                          <thead className="sticky top-0" style={{ background: 'color-mix(in srgb, var(--bg-tertiary) 75%, transparent)' }}>
                             <tr>
-                              <th className="units-user-import-table__th">Row</th>
-                              <th className="units-user-import-table__th">Name</th>
-                              <th className="units-user-import-table__th">Email</th>
-                              <th className="units-user-import-table__th">Role</th>
-                              <th className="units-user-import-table__th">Status</th>
+                              <th className="py-2 px-3 text-left text-[var(--text-primary)]">Row</th>
+                              <th className="py-2 px-3 text-left text-[var(--text-primary)]">Name</th>
+                              <th className="py-2 px-3 text-left text-[var(--text-primary)]">Email</th>
+                              <th className="py-2 px-3 text-left text-[var(--text-primary)]">Role</th>
+                              <th className="py-2 px-3 text-left text-[var(--text-primary)]">Status</th>
                             </tr>
                           </thead>
-                          <tbody className="units-user-import-table__body">
+                          <tbody className="border-t" style={{ borderTopColor: 'color-mix(in srgb, var(--border-light) 65%, transparent)' }}>
                             {bulkImportPreview.rows.map((row, idx) => (
-                              <tr key={idx} className={clsx('units-user-import-table__row', row.valid === false && 'is-invalid')}>
-                                <td className="units-user-import-table__td">{row.rowNumber || idx + 1}</td>
-                                <td className="units-user-import-table__td">{row.name}</td>
-                                <td className="units-user-import-table__td">{row.email}</td>
-                                <td className="units-user-import-table__td">{row.role}</td>
-                                <td className="units-user-import-table__td">
+                              <tr key={idx} className={clsx('border-b', row.valid === false && 'bg-[rgba(239,68,68,0.08)] dark:bg-[rgba(127,29,29,0.22)]')} style={{ borderBottomColor: 'color-mix(in srgb, var(--border-light) 55%, transparent)' }}>
+                                <td className="py-2 px-3 text-[var(--text-secondary)]">{row.rowNumber || idx + 1}</td>
+                                <td className="py-2 px-3 text-[var(--text-secondary)]">{row.name}</td>
+                                <td className="py-2 px-3 text-[var(--text-secondary)]">{row.email}</td>
+                                <td className="py-2 px-3 text-[var(--text-secondary)]">{row.role}</td>
+                                <td className="py-2 px-3 text-[var(--text-secondary)]">
                                   {row.valid === false ? (
-                                    <span className="units-user-import-status units-user-import-status--error">{row.error || 'Invalid'}</span>
+                                    <span className="text-xs text-[#dc2626]">{row.error || 'Invalid'}</span>
                                   ) : (
-                                    <CheckCircle size={16} className="units-user-import-status units-user-import-status--ok" />
+                                    <CheckCircle size={16} className="text-xs text-[#16a34a]" />
                                   )}
                                 </td>
                               </tr>
@@ -1657,25 +1693,25 @@ export default function UnitManagement() {
                   </div>
                 )}
               </div>
-              <div className="units-user-import-actions">
+              <div className="flex gap-3 p-4 border-t border-[var(--border-light)] dark:border-t-[rgba(148,163,184,0.22)]">
                 {!bulkImportPreview ? (
                   <button
                     onClick={() => { if (bulkImportFile) validateBulkImportMutation.mutate({ file: bulkImportFile, societyId: effectiveSocietyId }) }}
                     disabled={!bulkImportFile || validateBulkImportMutation.isPending}
-                    className="units-user-import-action-btn units-user-import-action-btn--primary"
+                    className="flex-1 py-2 px-4 rounded-lg border border-[var(--border-default)] font-semibold bg-[var(--bg-card)] text-[var(--text-primary)] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {validateBulkImportMutation.isPending ? 'Validating...' : 'Validate'}
                   </button>
                 ) : (
                   <>
                     <button onClick={() => { setBulkImportPreview(null); setBulkImportFile(null) }}
-                      className="units-user-import-action-btn units-user-import-action-btn--secondary">
+                      className="flex-1 py-2 px-4 rounded-lg border border-[var(--border-default)] font-semibold bg-[var(--bg-card)] text-[var(--text-secondary)] transition-all">
                       Back
                     </button>
                     <button
                       onClick={() => processBulkImportMutation.mutate({ file: bulkImportFile, societyId: effectiveSocietyId })}
                       disabled={(bulkImportPreview.invalidCount > 0) || processBulkImportMutation.isPending}
-                      className="units-user-import-action-btn units-user-import-action-btn--success"
+                      className="flex-1 py-2 px-4 rounded-lg border border-[#16a34a] font-semibold bg-[#16a34a] text-white transition-all hover:bg-[#15803d] hover:border-[#15803d] disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {processBulkImportMutation.isPending ? 'Importing...' : 'Import All'}
                     </button>
@@ -1800,24 +1836,24 @@ export default function UnitManagement() {
 // eslint-disable-next-line no-unused-vars
 function StatCard({ label, value, icon: Icon, color }) {
   const colorClasses = {
-    blue: 'units-stat-icon units-stat-icon--blue',
-    indigo: 'units-stat-icon units-stat-icon--indigo',
-    green: 'units-stat-icon units-stat-icon--green',
-    purple: 'units-stat-icon units-stat-icon--purple',
-    teal: 'units-stat-icon units-stat-icon--teal',
-    orange: 'units-stat-icon units-stat-icon--orange',
-    pink: 'units-stat-icon units-stat-icon--pink',
+    blue: 'bg-[rgba(59,130,246,0.15)] text-[#3b82f6]',
+    indigo: 'bg-[rgba(99,102,241,0.15)] text-[#6366f1]',
+    green: 'bg-[rgba(22,163,74,0.15)] text-[#16a34a]',
+    purple: 'bg-[rgba(147,51,234,0.15)] text-[#9333ea]',
+    teal: 'bg-[rgba(20,184,166,0.15)] text-[#14b8a6]',
+    orange: 'bg-[rgba(249,115,22,0.15)] text-[#f97316]',
+    pink: 'bg-[rgba(236,72,153,0.15)] text-[#ec4899]',
   }
   
   return (
-    <div className="units-stat-card">
-      <div className="units-stat-content">
-        <div className={colorClasses[color]}>
-          <Icon className="units-stat-icon-svg" />
+    <div className="p-4 rounded-[14px] bg-[var(--bg-card)] border border-[var(--border-light)] shadow-[var(--shadow-sm)] transition-all duration-200 hover:-translate-y-px hover:shadow-[var(--shadow-md)] dark:border-[rgba(148,163,184,0.22)] dark:shadow-[0_10px_22px_rgba(2,6,23,0.45)]">
+      <div className="flex items-center gap-3">
+        <div className={clsx('w-8 h-8 rounded-xl flex items-center justify-center', colorClasses[color])}>
+          <Icon className="w-4 h-4" />
         </div>
         <div>
-          <p className="units-stat-value">{value}</p>
-          <p className="units-stat-label">{label}</p>
+          <p className="text-xl font-bold text-[var(--text-primary)]">{value}</p>
+          <p className="text-xs font-medium text-[var(--text-tertiary)]">{label}</p>
         </div>
       </div>
     </div>
@@ -1847,19 +1883,19 @@ function UnitFormModal({ unit, societies, wings, isPlatformLevel, userSocietyId,
   const maxFloor = selectedWing?.totalFloors || 100
 
   return (
-    <div className="units-modal">
-      <div className="units-modal-card">
-        <div className="units-modal-header">
-          <h3 className="units-modal-title">{unit ? 'Edit Unit' : 'Add Unit'}</h3>
-          <button onClick={onClose} className="units-modal-close">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[rgba(15,23,42,0.6)]">
+      <div className="w-full max-w-[36rem] max-h-[90vh] overflow-y-auto rounded-2xl bg-[var(--bg-card)] border border-[var(--border-light)] shadow-[0_24px_48px_rgba(15,23,42,0.24)]">
+        <div className="sticky top-0 flex items-center justify-between p-4 px-5 border-b border-[var(--border-light)] bg-[var(--bg-card)] z-[1]">
+          <h3 className="text-[1.1rem] font-semibold text-[var(--text-primary)]">{unit ? 'Edit Unit' : 'Add Unit'}</h3>
+          <button onClick={onClose} className="p-[0.35rem] rounded-[0.6rem] text-[var(--text-tertiary)] hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-primary)]">
             <X size={20} />
           </button>
         </div>
 
-        {apiError && <div className="units-modal-alert"><FormErrorSummary message={apiError} /></div>}
-        {errors.capacity && <div className="units-modal-alert"><FormErrorSummary message={errors.capacity} /></div>}
+        {apiError && <div className="px-5 pt-3"><FormErrorSummary message={apiError} /></div>}
+        {errors.capacity && <div className="px-5 pt-3"><FormErrorSummary message={errors.capacity} /></div>}
 
-        <form onSubmit={onSubmit} className="units-modal-body">
+        <form onSubmit={onSubmit} className="p-5 flex flex-col gap-4">
           {/* Society (MASTER_ADMIN only) */}
           {isPlatformLevel ? (
             <SmartSelect
@@ -1877,7 +1913,7 @@ function UnitFormModal({ unit, societies, wings, isPlatformLevel, userSocietyId,
           )}
 
           {/* Unit Type and Wing */}
-          <div className="units-modal-grid">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <SmartSelect
               label="Unit Type"
               name="unitType"
@@ -1903,7 +1939,7 @@ function UnitFormModal({ unit, societies, wings, isPlatformLevel, userSocietyId,
           </div>
 
           {/* Flat Number and Type */}
-          <div className="units-modal-grid">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <FormInput
               label="Unit Number"
               name="flatNumber"
@@ -1965,7 +2001,7 @@ function UnitFormModal({ unit, societies, wings, isPlatformLevel, userSocietyId,
           </div>
 
           {/* Floor and Area */}
-          <div className="units-modal-grid">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <NumberInput
               label={`Floor${selectedWingId && selectedWing?.totalFloors ? ` (0 to ${selectedWing.totalFloors})` : ''}`}
               name="floor"
@@ -1992,17 +2028,17 @@ function UnitFormModal({ unit, societies, wings, isPlatformLevel, userSocietyId,
           {/* Note: Owner/user will be added via the 'Add User' button after creating the unit */}
 
           {/* Submit Button */}
-          <div className="units-modal-actions">
+          <div className="flex gap-3 pt-3 border-t border-[var(--border-light)]">
             <button
               type="button"
               onClick={onClose}
-              className="units-modal-cancel"
+              className="flex-1 py-[0.65rem] px-4 rounded-xl font-semibold bg-[var(--bg-tertiary)] border border-[var(--border-default)] text-[var(--text-secondary)]"
             >
               Cancel
             </button>
             <AsyncButton
               type="submit"
-              className="units-modal-submit"
+              className="flex-1 py-[0.65rem] px-4 rounded-xl font-semibold border border-[var(--border-default)] bg-[var(--bg-card)] text-[var(--text-primary)] transition-all dark:border-[rgba(148,163,184,0.22)] dark:bg-[#f8fafc] dark:text-[#0f172a] dark:hover:bg-white"
               isLoading={isLoading}
               loadingText="Saving..."
             >
@@ -2018,24 +2054,24 @@ function UnitFormModal({ unit, societies, wings, isPlatformLevel, userSocietyId,
 // User Form Modal for linking user to unit
 function UserFormModal({ unit, roleOptions, errors, apiError, onSubmit, onClose, isLoading }) {
   return (
-    <div className="units-modal">
-      <div className="units-modal-card units-modal-card--compact">
-        <div className="units-modal-header">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[rgba(15,23,42,0.6)]">
+      <div className="w-full max-w-[28rem] max-h-[90vh] overflow-y-auto rounded-2xl bg-[var(--bg-card)] border border-[var(--border-light)] shadow-[0_24px_48px_rgba(15,23,42,0.24)]">
+        <div className="sticky top-0 flex items-center justify-between p-4 px-5 border-b border-[var(--border-light)] bg-[var(--bg-card)] z-[1]">
           <div>
-            <h3 className="units-modal-title">Add User to Unit</h3>
-            <p className="units-modal-subtitle">Unit: {unit.flatNumber}</p>
+            <h3 className="text-[1.1rem] font-semibold text-[var(--text-primary)]">Add User to Unit</h3>
+            <p className="text-[0.8rem] text-[var(--text-tertiary)]">Unit: {unit.flatNumber}</p>
           </div>
-          <button onClick={onClose} className="units-modal-close">
+          <button onClick={onClose} className="p-[0.35rem] rounded-[0.6rem] text-[var(--text-tertiary)] hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-primary)]">
             <X size={20} />
           </button>
         </div>
 
-        {apiError && <div className="units-modal-alert"><FormErrorSummary message={apiError} /></div>}
+        {apiError && <div className="px-5 pt-3"><FormErrorSummary message={apiError} /></div>}
 
-        <form onSubmit={onSubmit} className="units-modal-body">
-          <div className="units-modal-note">
+        <form onSubmit={onSubmit} className="p-5 flex flex-col gap-4">
+          <div className="p-3 rounded-xl text-[0.85rem] text-[var(--text-secondary)]" style={{ background: 'color-mix(in srgb, var(--bg-tertiary) 85%, transparent)' }}>
             <p><strong>Default Password:</strong> {unit.flatNumber?.padEnd(6, '123456') || '123456'}</p>
-            <p className="units-modal-note-text">User can change password after login</p>
+            <p className="text-xs text-[var(--text-tertiary)] mt-1">User can change password after login</p>
           </div>
 
           <FormInput
@@ -2070,17 +2106,17 @@ function UserFormModal({ unit, roleOptions, errors, apiError, onSubmit, onClose,
             options={(roleOptions || ['MEMBER', 'TENANT']).map((role) => ({ value: role, label: formatRoleLabel(role) }))}
           />
 
-          <div className="units-modal-actions">
+          <div className="flex gap-3 pt-3 border-t border-[var(--border-light)]">
             <button
               type="button"
               onClick={onClose}
-              className="units-modal-cancel"
+              className="flex-1 py-[0.65rem] px-4 rounded-xl font-semibold bg-[var(--bg-tertiary)] border border-[var(--border-default)] text-[var(--text-secondary)]"
             >
               Cancel
             </button>
             <AsyncButton
               type="submit"
-              className="units-modal-submit"
+              className="flex-1 py-[0.65rem] px-4 rounded-xl font-semibold border border-[var(--border-default)] bg-[var(--bg-card)] text-[var(--text-primary)] transition-all dark:border-[rgba(148,163,184,0.22)] dark:bg-[#f8fafc] dark:text-[#0f172a] dark:hover:bg-white"
               isLoading={isLoading}
               loadingText="Creating..."
             >
@@ -2096,23 +2132,23 @@ function UserFormModal({ unit, roleOptions, errors, apiError, onSubmit, onClose,
 // Edit User Form Modal for editing user linked to unit
 function EditUserFormModal({ user, unit, roleOptions, errors, apiError, onSubmit, onClose, isLoading }) {
   return (
-    <div className="units-modal">
-      <div className="units-modal-card units-modal-card--compact">
-        <div className="units-modal-header">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[rgba(15,23,42,0.6)]">
+      <div className="w-full max-w-[28rem] max-h-[90vh] overflow-y-auto rounded-2xl bg-[var(--bg-card)] border border-[var(--border-light)] shadow-[0_24px_48px_rgba(15,23,42,0.24)]">
+        <div className="sticky top-0 flex items-center justify-between p-4 px-5 border-b border-[var(--border-light)] bg-[var(--bg-card)] z-[1]">
           <div>
-            <h3 className="units-modal-title">Edit User</h3>
-            <p className="units-modal-subtitle">Unit: {unit.flatNumber}</p>
+            <h3 className="text-[1.1rem] font-semibold text-[var(--text-primary)]">Edit User</h3>
+            <p className="text-[0.8rem] text-[var(--text-tertiary)]">Unit: {unit.flatNumber}</p>
           </div>
-          <button onClick={onClose} className="units-modal-close">
+          <button onClick={onClose} className="p-[0.35rem] rounded-[0.6rem] text-[var(--text-tertiary)] hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-primary)]">
             <X size={20} />
           </button>
         </div>
 
-        {apiError && <div className="units-modal-alert"><FormErrorSummary message={apiError} /></div>}
+        {apiError && <div className="px-5 pt-3"><FormErrorSummary message={apiError} /></div>}
 
-        <form onSubmit={onSubmit} className="units-modal-body">
-          <div className="units-modal-meta">
-            <p className="units-modal-meta-text">User ID: <span className="units-modal-meta-id">{user.id}</span></p>
+        <form onSubmit={onSubmit} className="p-5 flex flex-col gap-4">
+          <div className="p-3 rounded-xl bg-[var(--bg-tertiary)] text-[0.85rem]">
+            <p className="text-[var(--text-tertiary)]">User ID: <span className="font-mono text-xs">{user.id}</span></p>
           </div>
 
           <FormInput
@@ -2150,17 +2186,17 @@ function EditUserFormModal({ user, unit, roleOptions, errors, apiError, onSubmit
             options={(roleOptions || ['MEMBER', 'TENANT']).map((role) => ({ value: role, label: formatRoleLabel(role) }))}
           />
 
-          <div className="units-modal-actions">
+          <div className="flex gap-3 pt-3 border-t border-[var(--border-light)]">
             <button
               type="button"
               onClick={onClose}
-              className="units-modal-cancel"
+              className="flex-1 py-[0.65rem] px-4 rounded-xl font-semibold bg-[var(--bg-tertiary)] border border-[var(--border-default)] text-[var(--text-secondary)]"
             >
               Cancel
             </button>
             <AsyncButton
               type="submit"
-              className="units-modal-submit"
+              className="flex-1 py-[0.65rem] px-4 rounded-xl font-semibold border border-[var(--border-default)] bg-[var(--bg-card)] text-[var(--text-primary)] transition-all dark:border-[rgba(148,163,184,0.22)] dark:bg-[#f8fafc] dark:text-[#0f172a] dark:hover:bg-white"
               isLoading={isLoading}
               loadingText="Saving..."
             >
@@ -2176,31 +2212,31 @@ function EditUserFormModal({ user, unit, roleOptions, errors, apiError, onSubmit
 // Bulk Create Users Modal
 function BulkCreateUsersModal({ isLoading, results, onConfirm, onClose }) {
   return (
-    <div className="units-modal">
-      <div className="units-modal-card units-modal-card--wide">
-        <div className="units-modal-header">
-          <h3 className="units-modal-title">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[rgba(15,23,42,0.6)]">
+      <div className="w-full max-w-[48rem] max-h-[90vh] overflow-y-auto rounded-2xl bg-[var(--bg-card)] border border-[var(--border-light)] shadow-[0_24px_48px_rgba(15,23,42,0.24)]">
+        <div className="sticky top-0 flex items-center justify-between p-4 px-5 border-b border-[var(--border-light)] bg-[var(--bg-card)] z-[1]">
+          <h3 className="text-[1.1rem] font-semibold text-[var(--text-primary)]">
             {results ? 'Bulk Create Results' : 'Create Users in Bulk'}
           </h3>
-          <button onClick={onClose} className="units-modal-close">
+          <button onClick={onClose} className="p-[0.35rem] rounded-[0.6rem] text-[var(--text-tertiary)] hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-primary)]">
             <X size={20} />
           </button>
         </div>
 
-        <div className="units-modal-scroll">
+        <div className="p-4 max-h-[calc(90vh-120px)] overflow-y-auto">
           {!results ? (
             <>
-              <div className="units-bulk-info">
-                <div className="units-bulk-icon">
-                  <UsersRound className="units-bulk-icon-svg" />
+              <div className="text-center py-6">
+                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[rgba(22,163,74,0.15)] flex items-center justify-center">
+                  <UsersRound className="w-8 h-8 text-[#16a34a]" />
                 </div>
-                <h4 className="units-bulk-title">Create Users for All Units</h4>
-                <p className="units-bulk-text">
+                <h4 className="text-[1.1rem] font-semibold text-[var(--text-primary)] mb-2">Create Users for All Units</h4>
+                <p className="text-[var(--text-secondary)] mb-4">
                   This will automatically create user accounts for all units that have an owner email configured but don't have an associated user yet.
                 </p>
-                <div className="units-bulk-callout">
-                  <h5 className="units-bulk-callout-title">How it works:</h5>
-                  <ul className="units-bulk-callout-list">
+                <div className="rounded-xl p-4 text-left mb-4 border" style={{ background: 'color-mix(in srgb, var(--bg-card) 80%, var(--accent-primary) 20%)', borderColor: 'color-mix(in srgb, var(--accent-primary) 40%, var(--border-light))' }}>
+                  <h5 className="font-semibold text-[var(--text-primary)] mb-2">How it works:</h5>
+                  <ul className="text-[0.85rem] text-[var(--text-secondary)] flex flex-col gap-1">
                     <li>• Email from unit owner details will be used as username</li>
                     <li>• Flat/Unit number will be used as the default password</li>
                     <li>• Units without owner email will be skipped</li>
@@ -2208,29 +2244,29 @@ function BulkCreateUsersModal({ isLoading, results, onConfirm, onClose }) {
                     <li>• All users will be created with MEMBER role</li>
                   </ul>
                 </div>
-                <div className="units-bulk-warning">
-                  <p className="units-bulk-warning-text">
+                <div className="rounded-xl p-3 text-left bg-[rgba(234,179,8,0.15)] border border-[rgba(234,179,8,0.35)]">
+                  <p className="inline-flex items-center gap-2 text-[0.85rem] text-[#d97706]">
                     <AlertCircle size={16} />
                     Users should change their password after first login
                   </p>
                 </div>
               </div>
 
-              <div className="units-bulk-actions">
+              <div className="flex gap-3">
                 <button
                   onClick={onClose}
-                  className="units-modal-cancel"
+                  className="flex-1 py-[0.65rem] px-4 rounded-xl font-semibold bg-[var(--bg-tertiary)] border border-[var(--border-default)] text-[var(--text-secondary)]"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={onConfirm}
                   disabled={isLoading}
-                  className="units-modal-submit units-modal-submit--success"
+                  className="flex-1 py-[0.65rem] px-4 rounded-xl font-semibold border border-[var(--border-default)] bg-[var(--bg-card)] text-[var(--text-primary)] transition-all dark:border-[rgba(148,163,184,0.22)] dark:bg-[#f8fafc] dark:text-[#0f172a] dark:hover:bg-white"
                 >
                   {isLoading ? (
                     <>
-                      <div className="units-bulk-spinner" />
+                      <div className="w-4 h-4 rounded-full border-2 border-white/40 border-t-white animate-spin" />
                       Creating Users...
                     </>
                   ) : (
@@ -2244,72 +2280,72 @@ function BulkCreateUsersModal({ isLoading, results, onConfirm, onClose }) {
             </>
           ) : (
             <>
-              <div className="units-bulk-results">
+              <div className="text-center py-4">
                 <div className={clsx(
-                  'units-bulk-results-icon',
-                  results.usersCreated > 0 ? 'is-success' : 'is-idle'
+                  'w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center',
+                  results.usersCreated > 0 ? 'bg-[rgba(22,163,74,0.15)] text-[#16a34a]' : 'bg-[rgba(148,163,184,0.2)] text-[var(--text-tertiary)]'
                 )}>
                   {results.usersCreated > 0 ? (
-                    <UserCheck className="units-bulk-results-icon-svg" />
+                    <UserCheck className="w-8 h-8" />
                   ) : (
-                    <UserX className="units-bulk-results-icon-svg" />
+                    <UserX className="w-8 h-8" />
                   )}
                 </div>
-                <h4 className="units-bulk-results-title">{results.message}</h4>
+                <h4 className="text-[1.1rem] font-semibold text-[var(--text-primary)]">{results.message}</h4>
               </div>
 
-              <div className="units-bulk-results-grid">
-                <div className="units-bulk-results-card units-bulk-results-card--success">
-                  <div className="units-bulk-results-value">
+              <div className="grid grid-cols-3 gap-4 mb-4">
+                <div className="p-3 rounded-xl text-center bg-[rgba(22,163,74,0.12)] text-[#15803d]">
+                  <div className="text-xl font-bold">
                     {results.usersCreated}
                   </div>
-                  <div className="units-bulk-results-label">Created</div>
+                  <div className="text-xs">Created</div>
                 </div>
-                <div className="units-bulk-results-card units-bulk-results-card--warning">
-                  <div className="units-bulk-results-value">
+                <div className="p-3 rounded-xl text-center bg-[rgba(234,179,8,0.12)] text-[#b45309]">
+                  <div className="text-xl font-bold">
                     {results.usersSkipped}
                   </div>
-                  <div className="units-bulk-results-label">Skipped</div>
+                  <div className="text-xs">Skipped</div>
                 </div>
-                <div className="units-bulk-results-card units-bulk-results-card--error">
-                  <div className="units-bulk-results-value">
+                <div className="p-3 rounded-xl text-center bg-[rgba(239,68,68,0.12)] text-[#b91c1c]">
+                  <div className="text-xl font-bold">
                     {results.errors}
                   </div>
-                  <div className="units-bulk-results-label">Errors</div>
+                  <div className="text-xs">Errors</div>
                 </div>
               </div>
 
               {results.results && results.results.length > 0 && (
-                <div className="units-bulk-table-card">
-                  <table className="units-bulk-table">
-                    <thead className="units-bulk-thead">
+                <div className="rounded-xl border border-[var(--border-light)] overflow-hidden max-h-64 overflow-y-auto">
+                  <table className="w-full text-[0.85rem] border-collapse">
+                    <thead className="bg-[var(--bg-tertiary)] sticky top-0">
                       <tr>
-                        <th className="units-bulk-th">Unit</th>
-                        <th className="units-bulk-th">Status</th>
-                        <th className="units-bulk-th">Details</th>
+                        <th className="py-2 px-3 text-left font-semibold">Unit</th>
+                        <th className="py-2 px-3 text-left font-semibold">Status</th>
+                        <th className="py-2 px-3 text-left font-semibold">Details</th>
                       </tr>
                     </thead>
-                    <tbody className="units-bulk-tbody">
+                    <tbody>
                       {results.results.map((result, idx) => (
                         <tr key={idx} className={
-                          result.status === 'CREATED' ? 'units-bulk-row is-success' :
-                          result.status === 'ERROR' ? 'units-bulk-row is-error' :
-                          'units-bulk-row'
+                          result.status === 'CREATED' ? 'bg-[rgba(22,163,74,0.06)]' :
+                          result.status === 'ERROR' ? 'bg-[rgba(239,68,68,0.06)]' :
+                          ''
                         }>
-                          <td className="units-bulk-cell">{result.flatNumber}</td>
-                          <td className="units-bulk-cell">
+                          <td className="py-2 px-3 text-[var(--text-secondary)]">{result.flatNumber}</td>
+                          <td className="py-2 px-3 text-[var(--text-secondary)]">
                             <span className={clsx(
-                              'units-bulk-status',
+                              'inline-flex items-center py-[0.2rem] px-[0.6rem] rounded-full text-[0.7rem] font-semibold',
                               result.status === 'CREATED'
-                                ? 'is-success'
+                                ? 'bg-[rgba(22,163,74,0.12)] text-[#15803d]'
                                 : result.status === 'SKIPPED'
-                                  ? 'is-warning'
-                                  : 'is-error'
+                                  ? 'bg-[rgba(234,179,8,0.12)] text-[#b45309]'
+                                  : 'bg-[rgba(239,68,68,0.12)] text-[#b91c1c]'
                             )}>
                               {result.status}
                             </span>
                           </td>
-                          <td className="units-bulk-cell units-bulk-cell--muted">
+                          <td className="py-2 px-3 text-xs text-[var(--text-tertiary)]">
                             {result.email || result.errorMessage}
                           </td>
                         </tr>
@@ -2319,10 +2355,10 @@ function BulkCreateUsersModal({ isLoading, results, onConfirm, onClose }) {
                 </div>
               )}
 
-              <div className="units-bulk-actions">
+              <div className="flex gap-3">
                 <button
                   onClick={onClose}
-                  className="units-modal-submit"
+                  className="flex-1 py-[0.65rem] px-4 rounded-xl font-semibold border border-[var(--border-default)] bg-[var(--bg-card)] text-[var(--text-primary)] transition-all dark:border-[rgba(148,163,184,0.22)] dark:bg-[#f8fafc] dark:text-[#0f172a] dark:hover:bg-white"
                 >
                   Done
                 </button>

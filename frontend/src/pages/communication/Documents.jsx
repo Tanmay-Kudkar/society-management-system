@@ -11,12 +11,12 @@ import { HeroSkeleton, DocumentsSkeleton, WakeUpBanner } from '../../components/
 import useMinLoadingTime from '../../hooks/useMinLoadingTime'
 
 const templateTypeClasses = {
-  NOC: 'documents-badge documents-badge--noc',
-  LETTER: 'documents-badge documents-badge--letter',
-  MEETING_AGENDA: 'documents-badge documents-badge--meeting',
-  AGREEMENT: 'documents-badge documents-badge--agreement',
-  RESOLUTION: 'documents-badge documents-badge--resolution',
-  OTHER: 'documents-badge documents-badge--other',
+  NOC: 'inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-xs font-semibold text-blue-700',
+  LETTER: 'inline-flex items-center rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-700',
+  MEETING_AGENDA: 'inline-flex items-center rounded-full bg-violet-100 px-2 py-0.5 text-xs font-semibold text-violet-700',
+  AGREEMENT: 'inline-flex items-center rounded-full bg-orange-100 px-2 py-0.5 text-xs font-semibold text-orange-700',
+  RESOLUTION: 'inline-flex items-center rounded-full bg-cyan-100 px-2 py-0.5 text-xs font-semibold text-cyan-700',
+  OTHER: 'inline-flex items-center rounded-full bg-[var(--bg-tertiary)] px-2 py-0.5 text-xs font-semibold text-[var(--text-secondary)]',
 }
 
 export default function Documents() {
@@ -114,7 +114,7 @@ export default function Documents() {
 
   if (showSkeleton) {
     return (
-      <div className="documents-page">
+      <div>
         <WakeUpBanner />
         <HeroSkeleton />
         <DocumentsSkeleton />
@@ -123,17 +123,17 @@ export default function Documents() {
   }
 
   return (
-    <div className="documents-page">
+    <div>
       {/* Header */}
-      <div className="documents-header">
+      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="documents-title">Document Templates</h1>
-          <p className="documents-subtitle">Manage document templates for NOC, certificates, etc.</p>
+          <h1 className="text-2xl font-bold text-[var(--text-primary)]">Document Templates</h1>
+          <p className="mt-1 text-[var(--text-secondary)]">Manage document templates for NOC, certificates, etc.</p>
         </div>
         {canManageDocuments() && (
           <button
             onClick={() => setShowModal(true)}
-            className="documents-add-button"
+            className="inline-flex items-center gap-2 rounded-xl border border-[var(--border-default)] bg-[var(--bg-card)] px-4 py-2 font-semibold text-[var(--text-primary)] transition hover:-translate-y-0.5 hover:bg-[color-mix(in_srgb,var(--bg-tertiary)_70%,var(--bg-card))] hover:shadow-[0_8px_20px_rgba(15,23,42,0.14)] dark:border-slate-400/25 dark:bg-slate-50 dark:text-slate-900 dark:hover:bg-white"
           >
             <Plus size={20} />
             Add Template
@@ -142,36 +142,36 @@ export default function Documents() {
       </div>
 
       {/* Stats */}
-      <div className="documents-stats">
-        <div className="documents-stat-card">
-          <p className="documents-stat-label">Total</p>
-          <p className="documents-stat-value">{documents.length}</p>
+      <div className="mb-6 grid grid-cols-2 gap-4 md:grid-cols-4">
+        <div className="rounded-2xl border border-[var(--border-light)] bg-[var(--bg-card)] p-4 shadow-[0_8px_20px_rgba(15,23,42,0.08)]">
+          <p className="text-sm text-[var(--text-tertiary)]">Total</p>
+          <p className="text-2xl font-bold text-[var(--text-primary)]">{documents.length}</p>
         </div>
         {['NOC', 'LETTER', 'AGREEMENT'].map(cat => (
-          <div key={cat} className="documents-stat-card">
-            <p className="documents-stat-label">{cat}</p>
-            <p className="documents-stat-value">{documentTypeCounts[cat] || 0}</p>
+          <div key={cat} className="rounded-2xl border border-[var(--border-light)] bg-[var(--bg-card)] p-4 shadow-[0_8px_20px_rgba(15,23,42,0.08)]">
+            <p className="text-sm text-[var(--text-tertiary)]">{cat}</p>
+            <p className="text-2xl font-bold text-[var(--text-primary)]">{documentTypeCounts[cat] || 0}</p>
           </div>
         ))}
       </div>
 
       {/* Filters */}
-      <div className="documents-filters">
-        <div className="documents-filters-row">
-          <div className="documents-search">
-            <Search className="documents-search-icon" />
+      <div className="mb-6 rounded-2xl border border-[var(--border-light)] bg-[var(--bg-card)] p-4 shadow-[0_8px_20px_rgba(15,23,42,0.08)]">
+        <div className="flex flex-col gap-4 sm:flex-row">
+          <div className="relative flex-1">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-[var(--text-tertiary)]" />
             <input
               type="text"
               placeholder="Search templates..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="documents-search-input"
+              className="w-full rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] py-2 pl-10 pr-3 text-[var(--text-primary)] outline-none transition focus:border-blue-600 focus:shadow-[0_0_0_3px_rgba(37,99,235,0.2)]"
             />
           </div>
           <select
             value={filterCategory}
             onChange={(e) => setFilterCategory(e.target.value)}
-            className="documents-filter-select"
+            className="w-full rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] px-3 py-2 text-[var(--text-primary)] outline-none transition focus:border-blue-600 focus:shadow-[0_0_0_3px_rgba(37,99,235,0.2)] sm:w-52"
           >
             <option value="">All Types</option>
             <option value="NOC">NOC</option>
@@ -185,85 +185,87 @@ export default function Documents() {
       </div>
 
       {/* Documents Grid */}
-        <div className="documents-grid">
-          {filteredDocuments.map((doc) => (
-            <div key={doc.id} className="documents-card">
-              <div className="documents-card-header">
-                <div className="documents-card-info">
-                  <div className="documents-card-icon">
-                    <FileText className="documents-card-icon-svg" />
-                  </div>
-                  <div>
-                    <span className={clsx(templateTypeClasses[doc.templateType] || 'documents-badge documents-badge--other')}>
-                      {doc.templateType}
-                    </span>
-                  </div>
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {filteredDocuments.map((doc) => (
+          <div key={doc.id} className="rounded-2xl border border-[var(--border-light)] bg-[var(--bg-card)] p-5 shadow-[0_12px_24px_rgba(15,23,42,0.06)] transition hover:-translate-y-0.5 hover:shadow-[0_16px_32px_rgba(15,23,42,0.12)]">
+            <div className="mb-3 flex items-start justify-between">
+              <div className="flex items-center gap-3">
+                <div className="rounded-xl bg-[var(--bg-tertiary)] p-2">
+                  <FileText className="h-5 w-5 text-[var(--text-secondary)]" />
                 </div>
-                <span className={clsx(
-                  'documents-status-badge',
-                  doc.isActive ? 'is-active' : 'is-inactive'
-                )}>
-                  {doc.isActive ? 'Active' : 'Inactive'}
-                </span>
-              </div>
-              
-              <h3 className="documents-card-title">{doc.title}</h3>
-              <p className="documents-card-excerpt">{doc.content?.substring(0, 100)}...</p>
-              
-              <div className="documents-card-meta">
-                <p>Updated: {doc.updatedAt && new Date(doc.updatedAt).toLocaleDateString()}</p>
-              </div>
-
-              {canManageDocuments() && (
-                <div className="documents-card-actions">
-                  <button
-                    onClick={() => { setEditingDocument(doc); setShowModal(true) }}
-                    className="documents-edit-button"
-                  >
-                    <Edit size={14} />
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => confirmAndDeleteDocument(doc)}
-                    className="documents-delete-button"
-                  >
-                    <Trash2 size={16} />
-                  </button>
+                <div>
+                  <span className={clsx(templateTypeClasses[doc.templateType] || templateTypeClasses.OTHER)}>
+                    {doc.templateType}
+                  </span>
                 </div>
-              )}
+              </div>
+              <span className={clsx(
+                'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold',
+                doc.isActive
+                  ? 'bg-emerald-100 text-emerald-700'
+                  : 'bg-[var(--bg-tertiary)] text-[var(--text-secondary)]'
+              )}>
+                {doc.isActive ? 'Active' : 'Inactive'}
+              </span>
             </div>
-          ))}
-        </div>
+
+            <h3 className="mb-1 font-bold text-[var(--text-primary)]">{doc.title}</h3>
+            <p className="mb-3 line-clamp-2 text-sm text-[var(--text-secondary)]">{doc.content?.substring(0, 100)}...</p>
+
+            <div className="mb-3 text-xs text-[var(--text-tertiary)]">
+              <p>Updated: {doc.updatedAt && new Date(doc.updatedAt).toLocaleDateString()}</p>
+            </div>
+
+            {canManageDocuments() && (
+              <div className="flex gap-2 border-t border-[var(--border-light)] pt-3">
+                <button
+                  onClick={() => { setEditingDocument(doc); setShowModal(true) }}
+                  className="inline-flex flex-1 items-center justify-center gap-1 rounded-xl bg-[var(--bg-tertiary)] px-3 py-2 text-sm text-[var(--text-secondary)] transition hover:bg-[color-mix(in_srgb,var(--bg-tertiary)_70%,var(--bg-card))]"
+                >
+                  <Edit size={14} />
+                  Edit
+                </button>
+                <button
+                  onClick={() => confirmAndDeleteDocument(doc)}
+                  className="rounded-xl p-2 text-red-500 transition hover:bg-red-500/10"
+                >
+                  <Trash2 size={16} />
+                </button>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
 
       {/* Modal */}
       {showModal && (
-        <div className="documents-modal">
-          <div className="documents-modal-card">
-            <div className="documents-modal-header">
-              <h3 className="documents-modal-title">{editingDocument ? 'Edit Template' : 'Add Document Template'}</h3>
-              <button onClick={closeModal} className="documents-modal-close">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="max-h-[calc(100vh-3rem)] w-full max-w-3xl overflow-y-auto rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] shadow-[0_8px_24px_rgba(0,0,0,0.12)]">
+            <div className="sticky top-0 z-[2] flex items-center justify-between border-b border-[var(--border-light)] bg-[var(--bg-card)] p-4">
+              <h3 className="text-lg font-bold text-[var(--text-primary)]">{editingDocument ? 'Edit Template' : 'Add Document Template'}</h3>
+              <button onClick={closeModal} className="rounded-lg p-1 text-[var(--text-tertiary)] transition hover:bg-[var(--bg-tertiary)]">
                 <X size={20} />
               </button>
             </div>
-            <form onSubmit={handleSubmit} className="documents-modal-body">
-              <div className="documents-form-grid">
-                <div className="documents-field">
-                  <label className="documents-label">Title</label>
+            <form onSubmit={handleSubmit} className="grid gap-4 p-4">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="grid gap-2">
+                  <label className="text-sm font-semibold text-[var(--text-primary)]">Title</label>
                   <input
                     type="text"
                     name="title"
                     defaultValue={editingDocument?.title || ''}
                     required
-                    className="documents-input"
+                    className="w-full rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] px-3 py-2 text-[var(--text-primary)] outline-none transition focus:border-blue-600 focus:shadow-[0_0_0_3px_rgba(37,99,235,0.2)]"
                   />
                 </div>
-                <div className="documents-field">
-                  <label className="documents-label">Template Type</label>
+                <div className="grid gap-2">
+                  <label className="text-sm font-semibold text-[var(--text-primary)]">Template Type</label>
                   <select
                     name="templateType"
                     defaultValue={editingDocument?.templateType || 'OTHER'}
                     required
-                    className="documents-input"
+                    className="w-full rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] px-3 py-2 text-[var(--text-primary)] outline-none transition focus:border-blue-600 focus:shadow-[0_0_0_3px_rgba(37,99,235,0.2)]"
                   >
                     <option value="NOC">NOC</option>
                     <option value="LETTER">Letter</option>
@@ -274,23 +276,23 @@ export default function Documents() {
                   </select>
                 </div>
               </div>
-              <div className="documents-field">
-                <label className="documents-label">Template Content</label>
-                <p className="documents-help">Use placeholders like {"{{owner_name}}"}, {"{{flat_number}}"}, {"{{society_name}}"}, {"{{date}}"} etc.</p>
+              <div className="grid gap-2">
+                <label className="text-sm font-semibold text-[var(--text-primary)]">Template Content</label>
+                <p className="text-xs text-[var(--text-tertiary)]">Use placeholders like {'{{owner_name}}'}, {'{{flat_number}}'}, {'{{society_name}}'}, {'{{date}}'} etc.</p>
                 <textarea
                   name="content"
                   rows={10}
                   defaultValue={editingDocument?.content || ''}
                   required
                   placeholder="Enter template content with placeholders..."
-                  className="documents-textarea"
+                  className="w-full rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] px-3 py-2 text-[var(--text-primary)] outline-none transition placeholder:text-[var(--text-tertiary)] focus:border-blue-600 focus:shadow-[0_0_0_3px_rgba(37,99,235,0.2)]"
                 />
               </div>
-              <div className="documents-form-actions">
-                <button type="button" onClick={closeModal} className="documents-cancel-button">Cancel</button>
+              <div className="flex gap-3 pt-2">
+                <button type="button" onClick={closeModal} className="flex-1 rounded-xl border border-[var(--border-light)] bg-transparent px-4 py-2 font-semibold text-slate-700 transition hover:bg-[var(--bg-tertiary)]">Cancel</button>
                 <AsyncButton
                   type="submit"
-                  className="documents-submit-button"
+                  className="flex-1 rounded-xl border border-[var(--border-default)] bg-[var(--bg-card)] px-4 py-2 font-semibold text-[var(--text-primary)] transition hover:bg-[color-mix(in_srgb,var(--bg-tertiary)_70%,var(--bg-card))] hover:shadow-[0_8px_20px_rgba(15,23,42,0.14)] dark:border-slate-400/25 dark:bg-slate-50 dark:text-slate-900 dark:hover:bg-white"
                   isLoading={createMutation.isPending || updateMutation.isPending}
                   loadingText={editingDocument ? 'Updating...' : 'Creating...'}
                 >

@@ -18,6 +18,30 @@ const statusIcons = {
   CANCELLED: X,
 }
 
+const statusBadgeClasses = {
+  EXPECTED: 'bg-blue-500/10 text-blue-600',
+  CHECKED_IN: 'bg-amber-500/10 text-amber-600',
+  CHECKED_OUT: 'bg-emerald-500/10 text-emerald-600',
+  REJECTED: 'bg-red-500/10 text-red-600',
+  CANCELLED: 'bg-slate-500/10 text-[var(--text-tertiary)]',
+}
+
+const iconWrapClasses = {
+  EXPECTED: 'bg-blue-500/10',
+  CHECKED_IN: 'bg-amber-500/10',
+  CHECKED_OUT: 'bg-emerald-500/10',
+  REJECTED: 'bg-red-500/10',
+  CANCELLED: 'bg-slate-500/10',
+}
+
+const iconColorClasses = {
+  EXPECTED: 'text-blue-600',
+  CHECKED_IN: 'text-amber-600',
+  CHECKED_OUT: 'text-emerald-600',
+  REJECTED: 'text-red-600',
+  CANCELLED: 'text-slate-500',
+}
+
 export default function Visitors() {
   const { user } = useAuth()
   const queryClient = useQueryClient()
@@ -134,46 +158,55 @@ export default function Visitors() {
 
   return (
     <div>
-      <div className="visitors-header">
+      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="visitors-title">Visitor Management</h1>
-          <p className="visitors-subtitle">Track and manage visitors</p>
+          <h1 className="text-2xl font-bold text-[var(--text-primary)]">Visitor Management</h1>
+          <p className="mt-1 text-[var(--text-tertiary)]">Track and manage visitors</p>
         </div>
-        <button onClick={() => setShowModal(true)} className="visitors-action-button">
+        <button
+          onClick={() => setShowModal(true)}
+          className="inline-flex items-center gap-2 rounded-xl border border-[var(--border-default)] bg-[var(--bg-card)] px-4 py-2 font-semibold text-[var(--text-primary)] transition hover:bg-[color-mix(in_srgb,var(--bg-tertiary)_70%,var(--bg-card))] hover:shadow-[0_8px_20px_rgba(15,23,42,0.14)] dark:border-slate-400/25 dark:bg-slate-50 dark:text-slate-900 dark:hover:bg-white"
+        >
           <Plus size={20} /> Pre-approve Visitor
         </button>
       </div>
 
-      <div className="visitors-summary">
-        <div className="visitors-summary-card">
-          <p className="visitors-summary-label">Expected</p>
-          <p className="visitors-summary-value visitors-summary-value--expected">{visitors.filter(v => v.status === 'EXPECTED').length}</p>
+      <div className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-5">
+        <div className="rounded-xl border border-[var(--border-default)] bg-[var(--bg-card)] p-4">
+          <p className="text-xs text-[var(--text-tertiary)]">Expected</p>
+          <p className="mt-1 text-2xl font-bold text-blue-600">{visitors.filter(v => v.status === 'EXPECTED').length}</p>
         </div>
-        <div className="visitors-summary-card">
-          <p className="visitors-summary-label">Checked In</p>
-          <p className="visitors-summary-value visitors-summary-value--in">{visitors.filter(v => v.status === 'CHECKED_IN').length}</p>
+        <div className="rounded-xl border border-[var(--border-default)] bg-[var(--bg-card)] p-4">
+          <p className="text-xs text-[var(--text-tertiary)]">Checked In</p>
+          <p className="mt-1 text-2xl font-bold text-amber-600">{visitors.filter(v => v.status === 'CHECKED_IN').length}</p>
         </div>
-        <div className="visitors-summary-card">
-          <p className="visitors-summary-label">Checked Out</p>
-          <p className="visitors-summary-value visitors-summary-value--out">{visitors.filter(v => v.status === 'CHECKED_OUT').length}</p>
+        <div className="rounded-xl border border-[var(--border-default)] bg-[var(--bg-card)] p-4">
+          <p className="text-xs text-[var(--text-tertiary)]">Checked Out</p>
+          <p className="mt-1 text-2xl font-bold text-emerald-600">{visitors.filter(v => v.status === 'CHECKED_OUT').length}</p>
         </div>
-        <div className="visitors-summary-card">
-          <p className="visitors-summary-label">Total</p>
-          <p className="visitors-summary-value visitors-summary-value--total">{visitors.length}</p>
+        <div className="rounded-xl border border-[var(--border-default)] bg-[var(--bg-card)] p-4">
+          <p className="text-xs text-[var(--text-tertiary)]">Total</p>
+          <p className="mt-1 text-2xl font-bold text-[var(--text-primary)]">{visitors.length}</p>
         </div>
-        <div className="visitors-summary-card">
-          <p className="visitors-summary-label">Overstayed</p>
-          <p className="visitors-summary-value visitors-summary-value--overstayed">{visitors.filter(v => v.status === 'CHECKED_IN' && v.checkInTime && (Date.now() - new Date(v.checkInTime).getTime()) >= (Number(overstayThreshold) * 60 * 60 * 1000)).length}</p>
+        <div className="rounded-xl border border-[var(--border-default)] bg-[var(--bg-card)] p-4">
+          <p className="text-xs text-[var(--text-tertiary)]">Overstayed</p>
+          <p className="mt-1 text-2xl font-bold text-red-600">{visitors.filter(v => v.status === 'CHECKED_IN' && v.checkInTime && (Date.now() - new Date(v.checkInTime).getTime()) >= (Number(overstayThreshold) * 60 * 60 * 1000)).length}</p>
         </div>
       </div>
 
-      <div className="visitors-filters">
-        <div className="visitors-filters-row">
-          <div className="visitors-search">
-            <Search className="visitors-search-icon" />
-            <input type="text" placeholder="Search visitors..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="visitors-input" />
+      <div className="mb-5">
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="relative min-w-[200px] flex-1">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--text-tertiary)]" />
+            <input
+              type="text"
+              placeholder="Search visitors..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full rounded-lg border border-[var(--border-default)] bg-[var(--bg-card)] py-2 pl-9 pr-3 text-sm text-[var(--text-primary)] outline-none"
+            />
           </div>
-          <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="visitors-select">
+          <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="rounded-lg border border-[var(--border-default)] bg-[var(--bg-card)] px-3 py-2 text-sm text-[var(--text-primary)] outline-none">
             <option value="">All Status</option>
             <option value="EXPECTED">Expected</option>
             <option value="CHECKED_IN">Checked In</option>
@@ -181,7 +214,7 @@ export default function Visitors() {
             <option value="REJECTED">Rejected</option>
             <option value="CANCELLED">Cancelled</option>
           </select>
-          <select value={filterType} onChange={(e) => setFilterType(e.target.value)} className="visitors-select">
+          <select value={filterType} onChange={(e) => setFilterType(e.target.value)} className="rounded-lg border border-[var(--border-default)] bg-[var(--bg-card)] px-3 py-2 text-sm text-[var(--text-primary)] outline-none">
             <option value="">All Types</option>
             <option value="GUEST">Guest</option>
             <option value="DELIVERY">Delivery</option>
@@ -190,17 +223,17 @@ export default function Visitors() {
             <option value="OTHER">Other</option>
           </select>
 
-          <div className="visitors-view-switch" role="group" aria-label="Visitor quick views">
+          <div className="inline-flex items-center overflow-hidden rounded-lg border border-[var(--border-default)] bg-[var(--bg-card)]" role="group" aria-label="Visitor quick views">
             <button
               type="button"
-              className={clsx('visitors-view-btn', viewMode === 'all' && 'visitors-view-btn--active')}
+              className={clsx('inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-[var(--text-secondary)]', viewMode === 'all' ? 'bg-[var(--color-blue)] text-white' : 'hover:bg-[var(--bg-tertiary)]')}
               onClick={() => setViewMode('all')}
             >
               All
             </button>
             <button
               type="button"
-              className={clsx('visitors-view-btn', viewMode === 'today' && 'visitors-view-btn--active')}
+              className={clsx('inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-[var(--text-secondary)]', viewMode === 'today' ? 'bg-[var(--color-blue)] text-white' : 'hover:bg-[var(--bg-tertiary)]')}
               onClick={() => setViewMode('today')}
             >
               Today
@@ -208,7 +241,7 @@ export default function Visitors() {
             {isStaff && (
               <button
                 type="button"
-                className={clsx('visitors-view-btn', viewMode === 'overstayed' && 'visitors-view-btn--active')}
+                className={clsx('inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-[var(--text-secondary)]', viewMode === 'overstayed' ? 'bg-[var(--color-blue)] text-white' : 'hover:bg-[var(--bg-tertiary)]')}
                 onClick={() => setViewMode('overstayed')}
               >
                 <AlertTriangle size={14} /> Overstayed
@@ -220,7 +253,7 @@ export default function Visitors() {
             <select
               value={overstayThreshold}
               onChange={(e) => setOverstayThreshold(e.target.value)}
-              className="visitors-select"
+              className="rounded-lg border border-[var(--border-default)] bg-[var(--bg-card)] px-3 py-2 text-sm text-[var(--text-primary)] outline-none"
             >
               <option value="2">2h threshold</option>
               <option value="4">4h threshold</option>
@@ -231,71 +264,55 @@ export default function Visitors() {
         </div>
       </div>
 
-      <div className="visitors-list">
+      <div className="flex flex-col gap-2">
         {filteredVisitors.length === 0 && (
-          <div className="visitors-item" style={{ textAlign: 'center', color: 'var(--text-tertiary)' }}>
+          <div className="rounded-xl border border-[var(--border-default)] bg-[var(--bg-card)] p-4 text-center text-[var(--text-tertiary)]">
             No visitors found
           </div>
         )}
         {filteredVisitors.map((visitor) => {
           const StatusIcon = statusIcons[visitor.status] || Clock
           return (
-            <div key={visitor.id} className="visitors-item">
-              <div className="visitors-item-row">
-                <div className="visitors-item-main">
-                  <div className={clsx('visitors-item-icon',
-                    visitor.status === 'EXPECTED' && 'visitors-item-icon--expected',
-                    visitor.status === 'CHECKED_IN' && 'visitors-item-icon--in',
-                    visitor.status === 'CHECKED_OUT' && 'visitors-item-icon--out',
-                    visitor.status === 'REJECTED' && 'visitors-item-icon--rejected',
-                  )}>
-                    <StatusIcon className={clsx('visitors-item-icon-symbol',
-                      visitor.status === 'EXPECTED' && 'visitors-item-icon-symbol--expected',
-                      visitor.status === 'CHECKED_IN' && 'visitors-item-icon-symbol--in',
-                      visitor.status === 'CHECKED_OUT' && 'visitors-item-icon-symbol--out',
-                      visitor.status === 'REJECTED' && 'visitors-item-icon-symbol--rejected',
-                    )} />
+            <div key={visitor.id} className="rounded-xl border border-[var(--border-default)] bg-[var(--bg-card)] p-4 transition hover:shadow-[0_4px_12px_rgba(15,23,42,0.08)]">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex flex-1 items-start gap-3">
+                  <div className={clsx('flex h-10 w-10 shrink-0 items-center justify-center rounded-lg', iconWrapClasses[visitor.status] || iconWrapClasses.CANCELLED)}>
+                    <StatusIcon className={clsx('h-5 w-5', iconColorClasses[visitor.status] || iconColorClasses.CANCELLED)} />
                   </div>
                   <div>
-                    <div className="visitors-item-meta">
-                      <span className={clsx('visitors-status-badge',
-                        visitor.status === 'EXPECTED' && 'visitors-status--expected',
-                        visitor.status === 'CHECKED_IN' && 'visitors-status--checked_in',
-                        visitor.status === 'CHECKED_OUT' && 'visitors-status--checked_out',
-                        visitor.status === 'REJECTED' && 'visitors-status--rejected',
-                        visitor.status === 'CANCELLED' && 'visitors-status--cancelled',
-                      )}>{visitor.status?.replace('_', ' ')}</span>
-                      <span className="visitors-type-badge">{visitor.visitorType}</span>
-                      {visitor.isPreApproved && <span className="visitors-status-badge visitors-status--expected">PRE-APPROVED</span>}
-                      {visitor.otpVerifiedAt && <span className="visitors-status-badge visitors-status--checked_out">OTP VERIFIED</span>}
+                    <div className="mb-1 flex flex-wrap items-center gap-2">
+                      <span className={clsx('inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold uppercase', statusBadgeClasses[visitor.status] || statusBadgeClasses.CANCELLED)}>{visitor.status?.replace('_', ' ')}</span>
+                      <span className="inline-flex items-center rounded-full bg-violet-500/10 px-2 py-0.5 text-[11px] font-medium text-violet-600">{visitor.visitorType}</span>
+                      {visitor.isPreApproved && <span className="inline-flex items-center rounded-full bg-blue-500/10 px-2 py-0.5 text-[11px] font-semibold uppercase text-blue-600">PRE-APPROVED</span>}
+                      {visitor.otpVerifiedAt && <span className="inline-flex items-center rounded-full bg-emerald-500/10 px-2 py-0.5 text-[11px] font-semibold uppercase text-emerald-600">OTP VERIFIED</span>}
                     </div>
-                    <h3 className="visitors-item-title">{visitor.visitorName}</h3>
-                    {visitor.purpose && <p className="visitors-item-description">{visitor.purpose}</p>}
-                    <div className="visitors-item-footer">
-                      {visitor.visitorPhone && <span className="visitors-item-footer-text">Phone: {visitor.visitorPhone}</span>}
-                      {visitor.flatNumber && <span className="visitors-item-footer-text">Flat: {visitor.flatNumber}</span>}
-                      {visitor.vehicleNumber && <span className="visitors-item-footer-text">Vehicle: {visitor.vehicleNumber}</span>}
-                      {visitor.expectedArrival && <span className="visitors-item-footer-text">Expected: {new Date(visitor.expectedArrival).toLocaleString()}</span>}
-                      {visitor.approvalCode && <span className="visitors-item-footer-text">Code: {visitor.approvalCode}</span>}
+                    <h3 className="font-semibold text-[var(--text-primary)]">{visitor.visitorName}</h3>
+                    {visitor.purpose && <p className="mt-0.5 text-sm text-[var(--text-tertiary)]">{visitor.purpose}</p>}
+                    <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1.5">
+                      {visitor.visitorPhone && <span className="text-xs text-[var(--text-tertiary)]">Phone: {visitor.visitorPhone}</span>}
+                      {visitor.flatNumber && <span className="text-xs text-[var(--text-tertiary)]">Flat: {visitor.flatNumber}</span>}
+                      {visitor.vehicleNumber && <span className="text-xs text-[var(--text-tertiary)]">Vehicle: {visitor.vehicleNumber}</span>}
+                      {visitor.expectedArrival && <span className="text-xs text-[var(--text-tertiary)]">Expected: {new Date(visitor.expectedArrival).toLocaleString()}</span>}
+                      {visitor.approvalCode && <span className="text-xs text-[var(--text-tertiary)]">Code: {visitor.approvalCode}</span>}
                       {requiresOtp(visitor.visitorType) && visitor.status === 'EXPECTED' && visitor.otpCode && (
-                        <span className="visitors-item-footer-text visitors-item-footer-text--otp">OTP: {visitor.otpCode} {visitor.otpExpiresAt ? `(valid till ${new Date(visitor.otpExpiresAt).toLocaleTimeString()})` : ''}</span>
+                        <span className="text-xs font-semibold text-blue-600">OTP: {visitor.otpCode} {visitor.otpExpiresAt ? `(valid till ${new Date(visitor.otpExpiresAt).toLocaleTimeString()})` : ''}</span>
                       )}
-                      <span className="visitors-item-footer-text">{visitor.createdAt && new Date(visitor.createdAt).toLocaleString()}</span>
+                      <span className="text-xs text-[var(--text-tertiary)]">{visitor.createdAt && new Date(visitor.createdAt).toLocaleString()}</span>
                     </div>
                   </div>
                 </div>
-                <div className="visitors-item-actions">
+                <div className="flex shrink-0 gap-1.5">
                   {visitor.status === 'EXPECTED' && requiresOtp(visitor.visitorType) && canGenerateOtp && (
                     <button
                       onClick={() => generateOtpMutation.mutate(visitor.id)}
-                      className="visitors-btn visitors-btn--otp"
+                      className="rounded-lg border border-blue-500/35 bg-blue-500/10 px-3 py-1.5 text-xs font-medium text-blue-600 transition hover:bg-blue-500/20"
                     >
                       {visitor.otpCode ? 'Regenerate OTP' : 'Generate OTP'}
                     </button>
                   )}
 
                   {isStaff && visitor.status === 'EXPECTED' && requiresOtp(visitor.visitorType) && !visitor.otpVerifiedAt && (
-                    <button onClick={() => handleVerifyOtp(visitor)} className="visitors-btn visitors-btn--verify">
+                    <button onClick={() => handleVerifyOtp(visitor)} className="rounded-lg border border-amber-500/35 bg-amber-500/10 px-3 py-1.5 text-xs font-medium text-amber-600 transition hover:bg-amber-500/20">
                       Verify OTP
                     </button>
                   )}
@@ -303,14 +320,14 @@ export default function Visitors() {
                   {isStaff && visitor.status === 'EXPECTED' && (
                     <>
                       {(!requiresOtp(visitor.visitorType) || visitor.otpVerifiedAt) && (
-                        <button onClick={() => checkInMutation.mutate(visitor.id)} className="visitors-btn visitors-btn--checkin">Check In</button>
+                        <button onClick={() => checkInMutation.mutate(visitor.id)} className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5 text-xs font-medium text-emerald-600 transition hover:bg-emerald-500/20">Check In</button>
                       )}
-                      <button onClick={() => rejectMutation.mutate(visitor.id)} className="visitors-btn visitors-btn--reject">Reject</button>
+                      <button onClick={() => rejectMutation.mutate(visitor.id)} className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-1.5 text-xs font-medium text-red-600 transition hover:bg-red-500/20">Reject</button>
                     </>
                   )}
 
                   {isStaff && visitor.status === 'CHECKED_IN' && (
-                    <button onClick={() => checkOutMutation.mutate(visitor.id)} className="visitors-btn visitors-btn--checkout">Check Out</button>
+                    <button onClick={() => checkOutMutation.mutate(visitor.id)} className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-1.5 text-xs font-medium text-amber-600 transition hover:bg-amber-500/20">Check Out</button>
                   )}
                 </div>
               </div>
@@ -320,13 +337,13 @@ export default function Visitors() {
       </div>
 
       {showModal && (
-        <div className="visitors-modal">
-          <div className="visitors-modal-card">
-            <div className="visitors-modal-header">
-              <h3 className="visitors-modal-title">Pre-approve Visitor</h3>
-              <button onClick={() => setShowModal(false)} className="visitors-modal-close"><X size={20} /></button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="max-h-[90vh] w-full max-w-[480px] overflow-y-auto rounded-2xl bg-[var(--bg-card)] p-6">
+            <div className="mb-5 flex items-center justify-between">
+              <h3 className="text-lg font-bold text-[var(--text-primary)]">Pre-approve Visitor</h3>
+              <button onClick={() => setShowModal(false)} className="rounded-md p-1 text-[var(--text-tertiary)] transition hover:bg-[var(--bg-tertiary)]"><X size={20} /></button>
             </div>
-            <form onSubmit={handleSubmit} className="visitors-form">
+            <form onSubmit={handleSubmit} className="flex flex-col gap-4">
               <FormInput label="Visitor Name" name="visitorName" required />
               <FormInput label="Phone Number" name="visitorPhone" />
               <SmartSelect label="Visitor Type" name="visitorType" required options={[
@@ -339,12 +356,12 @@ export default function Visitors() {
               <FormInput label="Purpose" name="purpose" />
               <FormInput label="Vehicle Number" name="vehicleNumber" />
               <FormTextarea label="Notes" name="notes" rows={3} />
-              <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, color: 'var(--text-secondary)' }}>
+              <label className="inline-flex items-center gap-2 text-sm text-[var(--text-secondary)]">
                 <input type="checkbox" name="isPreApproved" defaultChecked /> Pre-approve this visitor
               </label>
-              <div className="visitors-form-actions">
-                <button type="button" onClick={() => setShowModal(false)} className="visitors-btn visitors-btn--ghost">Cancel</button>
-                <AsyncButton type="submit" className="visitors-btn visitors-btn--primary" isLoading={createMutation.isPending} loadingText="Adding...">Add Visitor</AsyncButton>
+              <div className="mt-1 flex justify-end gap-3">
+                <button type="button" onClick={() => setShowModal(false)} className="rounded-lg border border-[var(--border-default)] bg-transparent px-4 py-2 text-sm font-medium text-[var(--text-secondary)] transition hover:bg-[var(--bg-tertiary)]">Cancel</button>
+                <AsyncButton type="submit" className="rounded-lg bg-[var(--color-blue)] px-4 py-2 text-sm font-medium text-white transition hover:opacity-90" isLoading={createMutation.isPending} loadingText="Adding...">Add Visitor</AsyncButton>
               </div>
             </form>
           </div>

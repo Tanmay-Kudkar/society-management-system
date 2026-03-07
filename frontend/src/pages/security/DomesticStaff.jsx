@@ -112,54 +112,90 @@ export default function DomesticStaff() {
 
   return (
     <div>
-      <div className="staff-header">
+      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="staff-title">Domestic Staff</h1>
-          <p className="staff-subtitle">Manage domestic helpers and attendance</p>
+          <h1 className="text-2xl font-bold text-[var(--text-primary)]">Domestic Staff</h1>
+          <p className="mt-1 text-[var(--text-tertiary)]">Manage domestic helpers and attendance</p>
         </div>
-        <div style={{ display: 'flex', gap: 8 }}>
+        <div className="flex gap-2">
           {isStaff && activeTab === 'staff' && (
-            <button onClick={() => setShowModal(true)} className="staff-action-button"><Plus size={20} /> Add Staff</button>
+            <button
+              onClick={() => setShowModal(true)}
+              className="inline-flex items-center gap-2 rounded-lg border border-[var(--border-default)] bg-[var(--bg-card)] px-4 py-2 text-[var(--text-primary)] transition hover:bg-[color-mix(in_srgb,var(--bg-tertiary)_70%,var(--bg-card))] hover:shadow-[0_8px_20px_rgba(15,23,42,0.14)] dark:border-slate-400/25 dark:bg-slate-50 dark:text-slate-900"
+            >
+              <Plus size={20} /> Add Staff
+            </button>
           )}
           {isStaff && activeTab === 'attendance' && (
-            <button onClick={() => setShowAttendanceModal(true)} className="staff-action-button"><Clock size={20} /> Record Attendance</button>
+            <button
+              onClick={() => setShowAttendanceModal(true)}
+              className="inline-flex items-center gap-2 rounded-lg border border-[var(--border-default)] bg-[var(--bg-card)] px-4 py-2 text-[var(--text-primary)] transition hover:bg-[color-mix(in_srgb,var(--bg-tertiary)_70%,var(--bg-card))] hover:shadow-[0_8px_20px_rgba(15,23,42,0.14)] dark:border-slate-400/25 dark:bg-slate-50 dark:text-slate-900"
+            >
+              <Clock size={20} /> Record Attendance
+            </button>
           )}
         </div>
       </div>
 
-      <div className="staff-tabs">
-        <button className={clsx('staff-tab', activeTab === 'staff' && 'staff-tab--active')} onClick={() => setActiveTab('staff')}>Staff Directory</button>
-        <button className={clsx('staff-tab', activeTab === 'attendance' && 'staff-tab--active')} onClick={() => setActiveTab('attendance')}>Attendance</button>
+      <div className="mb-5 flex w-fit gap-1 rounded-lg bg-[var(--bg-tertiary)] p-1">
+        <button
+          className={clsx(
+            'rounded-md px-4 py-2 text-sm font-medium text-[var(--text-tertiary)] transition',
+            activeTab === 'staff' && 'bg-[var(--bg-card)] text-[var(--text-primary)] shadow-sm'
+          )}
+          onClick={() => setActiveTab('staff')}
+        >
+          Staff Directory
+        </button>
+        <button
+          className={clsx(
+            'rounded-md px-4 py-2 text-sm font-medium text-[var(--text-tertiary)] transition',
+            activeTab === 'attendance' && 'bg-[var(--bg-card)] text-[var(--text-primary)] shadow-sm'
+          )}
+          onClick={() => setActiveTab('attendance')}
+        >
+          Attendance
+        </button>
       </div>
 
       {activeTab === 'staff' && (
         <>
-          <div className="staff-summary">
-            <div className="staff-summary-card">
-              <p className="staff-summary-label">Active</p>
-              <p className="staff-summary-value staff-summary-value--active">{staffList.filter(s => s.isActive).length}</p>
+          <div className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-4">
+            <div className="rounded-xl border border-[var(--border-default)] bg-[var(--bg-card)] p-4">
+              <p className="text-[13px] text-[var(--text-tertiary)]">Active</p>
+              <p className="mt-1 text-2xl font-bold text-emerald-600 dark:text-emerald-300">{staffList.filter(s => s.isActive).length}</p>
             </div>
-            <div className="staff-summary-card">
-              <p className="staff-summary-label">Inactive</p>
-              <p className="staff-summary-value staff-summary-value--inactive">{staffList.filter(s => !s.isActive).length}</p>
+            <div className="rounded-xl border border-[var(--border-default)] bg-[var(--bg-card)] p-4">
+              <p className="text-[13px] text-[var(--text-tertiary)]">Inactive</p>
+              <p className="mt-1 text-2xl font-bold text-rose-600 dark:text-rose-300">{staffList.filter(s => !s.isActive).length}</p>
             </div>
-            <div className="staff-summary-card">
-              <p className="staff-summary-label">Verified</p>
-              <p className="staff-summary-value staff-summary-value--verified">{staffList.filter(s => s.isVerified).length}</p>
+            <div className="rounded-xl border border-[var(--border-default)] bg-[var(--bg-card)] p-4">
+              <p className="text-[13px] text-[var(--text-tertiary)]">Verified</p>
+              <p className="mt-1 text-2xl font-bold text-blue-600 dark:text-blue-300">{staffList.filter(s => s.isVerified).length}</p>
             </div>
-            <div className="staff-summary-card">
-              <p className="staff-summary-label">Total</p>
-              <p className="staff-summary-value staff-summary-value--total">{staffList.length}</p>
+            <div className="rounded-xl border border-[var(--border-default)] bg-[var(--bg-card)] p-4">
+              <p className="text-[13px] text-[var(--text-tertiary)]">Total</p>
+              <p className="mt-1 text-2xl font-bold text-[var(--text-primary)]">{staffList.length}</p>
             </div>
           </div>
 
-          <div className="staff-filters">
-            <div className="staff-filters-row">
-              <div className="staff-search">
-                <Search className="staff-search-icon" />
-                <input type="text" placeholder="Search staff..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="staff-input" />
+          <div className="mb-5">
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="relative min-w-[200px] flex-1">
+                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--text-tertiary)]" />
+                <input
+                  type="text"
+                  placeholder="Search staff..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full rounded-lg border border-[var(--border-default)] bg-[var(--bg-card)] py-2 pl-9 pr-3 text-sm text-[var(--text-primary)] outline-none transition focus:border-blue-500 focus:shadow-[0_0_0_3px_rgba(59,130,246,0.2)]"
+                />
               </div>
-              <select value={filterType} onChange={(e) => setFilterType(e.target.value)} className="staff-select">
+              <select
+                value={filterType}
+                onChange={(e) => setFilterType(e.target.value)}
+                className="rounded-lg border border-[var(--border-default)] bg-[var(--bg-card)] px-3 py-2 text-sm text-[var(--text-primary)] outline-none transition focus:border-blue-500 focus:shadow-[0_0_0_3px_rgba(59,130,246,0.2)]"
+              >
                 <option value="">All Types</option>
                 <option value="MAID">Maid</option>
                 <option value="COOK">Cook</option>
@@ -173,44 +209,44 @@ export default function DomesticStaff() {
             </div>
           </div>
 
-          <div className="staff-list">
+          <div className="flex flex-col gap-2">
             {filteredStaff.length === 0 && (
-              <div className="staff-item" style={{ textAlign: 'center', color: 'var(--text-tertiary)' }}>No staff members found</div>
+              <div className="rounded-xl border border-[var(--border-default)] bg-[var(--bg-card)] p-4 text-center text-[var(--text-tertiary)]">No staff members found</div>
             )}
             {filteredStaff.map((staff) => (
-              <div key={staff.id} className="staff-item">
-                <div className="staff-item-row">
-                  <div className="staff-item-main">
-                    <div className={clsx('staff-item-icon', staff.isActive ? 'staff-item-icon--active' : 'staff-item-icon--inactive')}>
-                      <Users className="staff-item-icon-symbol" />
+              <div key={staff.id} className="rounded-xl border border-[var(--border-default)] bg-[var(--bg-card)] p-4 transition hover:shadow-[0_4px_12px_rgba(15,23,42,0.08)]">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex flex-1 items-start gap-3">
+                    <div className={clsx('flex h-10 w-10 shrink-0 items-center justify-center rounded-lg', staff.isActive ? 'bg-emerald-500/10' : 'bg-rose-500/10')}>
+                      <Users className="h-5 w-5 text-violet-600" />
                     </div>
                     <div>
-                      <div className="staff-item-meta">
-                        <span className={clsx('staff-status-badge', staff.isActive ? 'staff-status--active' : 'staff-status--inactive')}>
+                      <div className="mb-1 flex flex-wrap items-center gap-2">
+                        <span className={clsx('inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold uppercase', staff.isActive ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-300' : 'bg-rose-500/10 text-rose-600 dark:text-rose-300')}>
                           {staff.isActive ? 'Active' : 'Inactive'}
                         </span>
-                        <span className="staff-type-badge">{staff.staffType}</span>
-                        {staff.isVerified && <span className="staff-status-badge staff-status--verified">Verified</span>}
+                        <span className="inline-flex items-center rounded-full bg-violet-500/10 px-2 py-0.5 text-[11px] font-medium text-violet-600 dark:text-violet-300">{staff.staffType}</span>
+                        {staff.isVerified && <span className="inline-flex items-center rounded-full bg-blue-500/10 px-2 py-0.5 text-[11px] font-semibold uppercase text-blue-600 dark:text-blue-300">Verified</span>}
                       </div>
-                      <h3 className="staff-item-title">{staff.name}</h3>
-                      <div className="staff-item-footer">
-                        {staff.phone && <span className="staff-item-footer-text">Phone: {staff.phone}</span>}
-                        {staff.idProofType && <span className="staff-item-footer-text">{staff.idProofType}: {staff.idProofNumber}</span>}
-                        {staff.address && <span className="staff-item-footer-text">Address: {staff.address}</span>}
-                        {isPlatformLevel && <span className="staff-item-footer-text">{staff.societyName}</span>}
+                      <h3 className="font-semibold text-[var(--text-primary)]">{staff.name}</h3>
+                      <div className="mt-2 flex flex-wrap gap-4">
+                        {staff.phone && <span className="text-xs text-[var(--text-tertiary)]">Phone: {staff.phone}</span>}
+                        {staff.idProofType && <span className="text-xs text-[var(--text-tertiary)]">{staff.idProofType}: {staff.idProofNumber}</span>}
+                        {staff.address && <span className="text-xs text-[var(--text-tertiary)]">Address: {staff.address}</span>}
+                        {isPlatformLevel && <span className="text-xs text-[var(--text-tertiary)]">{staff.societyName}</span>}
                       </div>
                     </div>
                   </div>
                   {isStaff && (
-                    <div className="staff-item-actions">
+                    <div className="flex shrink-0 flex-wrap gap-1.5">
                       {isAdmin && !staff.isVerified && (
-                        <button onClick={() => verifyMutation.mutate(staff.id)} className="staff-btn staff-btn--verify">Verify</button>
+                        <button onClick={() => verifyMutation.mutate(staff.id)} className="rounded-lg border border-blue-500/30 bg-blue-500/10 px-3 py-1.5 text-sm text-blue-600 transition hover:bg-blue-500/20 dark:text-blue-300">Verify</button>
                       )}
-                      <button onClick={() => toggleMutation.mutate(staff.id)} className="staff-btn staff-btn--toggle">
+                      <button onClick={() => toggleMutation.mutate(staff.id)} className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-1.5 text-sm text-amber-600 transition hover:bg-amber-500/20 dark:text-amber-300">
                         {staff.isActive ? 'Deactivate' : 'Activate'}
                       </button>
                       {isAdmin && (
-                        <button onClick={() => { if (confirm('Delete this staff member?')) deleteMutation.mutate(staff.id) }} className="staff-btn staff-btn--delete">Delete</button>
+                        <button onClick={() => { if (confirm('Delete this staff member?')) deleteMutation.mutate(staff.id) }} className="rounded-lg border border-rose-500/30 bg-rose-500/10 px-3 py-1.5 text-sm text-rose-600 transition hover:bg-rose-500/20 dark:text-rose-300">Delete</button>
                       )}
                     </div>
                   )}
@@ -223,51 +259,51 @@ export default function DomesticStaff() {
 
       {activeTab === 'attendance' && (
         <>
-          <div className="staff-summary">
-            <div className="staff-summary-card">
-              <p className="staff-summary-label">Present Today</p>
-              <p className="staff-summary-value staff-summary-value--active">{attendance.filter(a => a.status === 'PRESENT').length}</p>
+          <div className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-4">
+            <div className="rounded-xl border border-[var(--border-default)] bg-[var(--bg-card)] p-4">
+              <p className="text-[13px] text-[var(--text-tertiary)]">Present Today</p>
+              <p className="mt-1 text-2xl font-bold text-emerald-600 dark:text-emerald-300">{attendance.filter(a => a.status === 'PRESENT').length}</p>
             </div>
-            <div className="staff-summary-card">
-              <p className="staff-summary-label">Absent</p>
-              <p className="staff-summary-value staff-summary-value--inactive">{attendance.filter(a => a.status === 'ABSENT').length}</p>
+            <div className="rounded-xl border border-[var(--border-default)] bg-[var(--bg-card)] p-4">
+              <p className="text-[13px] text-[var(--text-tertiary)]">Absent</p>
+              <p className="mt-1 text-2xl font-bold text-rose-600 dark:text-rose-300">{attendance.filter(a => a.status === 'ABSENT').length}</p>
             </div>
-            <div className="staff-summary-card">
-              <p className="staff-summary-label">Late</p>
-              <p className="staff-summary-value" style={{ color: 'var(--color-amber)' }}>{attendance.filter(a => a.status === 'LATE').length}</p>
+            <div className="rounded-xl border border-[var(--border-default)] bg-[var(--bg-card)] p-4">
+              <p className="text-[13px] text-[var(--text-tertiary)]">Late</p>
+              <p className="mt-1 text-2xl font-bold text-amber-500 dark:text-amber-300">{attendance.filter(a => a.status === 'LATE').length}</p>
             </div>
-            <div className="staff-summary-card">
-              <p className="staff-summary-label">Total Records</p>
-              <p className="staff-summary-value staff-summary-value--total">{attendance.length}</p>
+            <div className="rounded-xl border border-[var(--border-default)] bg-[var(--bg-card)] p-4">
+              <p className="text-[13px] text-[var(--text-tertiary)]">Total Records</p>
+              <p className="mt-1 text-2xl font-bold text-[var(--text-primary)]">{attendance.length}</p>
             </div>
           </div>
 
           {attendance.length === 0 ? (
-            <div className="staff-item" style={{ textAlign: 'center', color: 'var(--text-tertiary)' }}>No attendance records for today</div>
+            <div className="rounded-xl border border-[var(--border-default)] bg-[var(--bg-card)] p-4 text-center text-[var(--text-tertiary)]">No attendance records for today</div>
           ) : (
-            <table className="staff-attendance-table">
-              <thead>
+            <table className="w-full overflow-hidden rounded-xl border border-[var(--border-default)] bg-[var(--bg-card)]">
+              <thead className="bg-[var(--bg-tertiary)]">
                 <tr>
-                  <th>Staff Name</th>
-                  <th>Type</th>
-                  <th>Check In</th>
-                  <th>Check Out</th>
-                  <th>Status</th>
-                  {isStaff && <th>Action</th>}
+                  <th className="border-b border-[var(--border-default)] px-4 py-3 text-left text-xs font-semibold uppercase text-[var(--text-tertiary)]">Staff Name</th>
+                  <th className="border-b border-[var(--border-default)] px-4 py-3 text-left text-xs font-semibold uppercase text-[var(--text-tertiary)]">Type</th>
+                  <th className="border-b border-[var(--border-default)] px-4 py-3 text-left text-xs font-semibold uppercase text-[var(--text-tertiary)]">Check In</th>
+                  <th className="border-b border-[var(--border-default)] px-4 py-3 text-left text-xs font-semibold uppercase text-[var(--text-tertiary)]">Check Out</th>
+                  <th className="border-b border-[var(--border-default)] px-4 py-3 text-left text-xs font-semibold uppercase text-[var(--text-tertiary)]">Status</th>
+                  {isStaff && <th className="border-b border-[var(--border-default)] px-4 py-3 text-left text-xs font-semibold uppercase text-[var(--text-tertiary)]">Action</th>}
                 </tr>
               </thead>
               <tbody>
                 {attendance.map((record) => (
                   <tr key={record.id}>
-                    <td>{record.staffName}</td>
-                    <td><span className="staff-type-badge">{record.staffType}</span></td>
-                    <td>{record.checkInTime ? new Date(record.checkInTime).toLocaleTimeString() : '-'}</td>
-                    <td>{record.checkOutTime ? new Date(record.checkOutTime).toLocaleTimeString() : '-'}</td>
-                    <td><span className={clsx('staff-status-badge', record.status === 'PRESENT' ? 'staff-status--active' : record.status === 'ABSENT' ? 'staff-status--inactive' : 'staff-status--verified')}>{record.status}</span></td>
+                    <td className="border-b border-[var(--border-default)] px-4 py-3 text-sm text-[var(--text-primary)]">{record.staffName}</td>
+                    <td className="border-b border-[var(--border-default)] px-4 py-3 text-sm text-[var(--text-primary)]"><span className="inline-flex items-center rounded-full bg-violet-500/10 px-2 py-0.5 text-[11px] font-medium text-violet-600 dark:text-violet-300">{record.staffType}</span></td>
+                    <td className="border-b border-[var(--border-default)] px-4 py-3 text-sm text-[var(--text-primary)]">{record.checkInTime ? new Date(record.checkInTime).toLocaleTimeString() : '-'}</td>
+                    <td className="border-b border-[var(--border-default)] px-4 py-3 text-sm text-[var(--text-primary)]">{record.checkOutTime ? new Date(record.checkOutTime).toLocaleTimeString() : '-'}</td>
+                    <td className="border-b border-[var(--border-default)] px-4 py-3 text-sm text-[var(--text-primary)]"><span className={clsx('inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold uppercase', record.status === 'PRESENT' ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-300' : record.status === 'ABSENT' ? 'bg-rose-500/10 text-rose-600 dark:text-rose-300' : 'bg-blue-500/10 text-blue-600 dark:text-blue-300')}>{record.status}</span></td>
                     {isStaff && (
-                      <td>
+                      <td className="border-b border-[var(--border-default)] px-4 py-3 text-sm text-[var(--text-primary)]">
                         {!record.checkOutTime && record.status === 'PRESENT' && (
-                          <button onClick={() => checkOutMutation.mutate(record.id)} className="staff-btn staff-btn--toggle">Check Out</button>
+                          <button onClick={() => checkOutMutation.mutate(record.id)} className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-1.5 text-sm text-amber-600 transition hover:bg-amber-500/20 dark:text-amber-300">Check Out</button>
                         )}
                       </td>
                     )}
@@ -281,13 +317,13 @@ export default function DomesticStaff() {
 
       {/* Add Staff Modal */}
       {showModal && (
-        <div className="staff-modal">
-          <div className="staff-modal-card">
-            <div className="staff-modal-header">
-              <h3 className="staff-modal-title">Add Staff Member</h3>
-              <button onClick={() => setShowModal(false)} className="staff-modal-close"><X size={20} /></button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="max-h-[90vh] w-full max-w-[480px] overflow-y-auto rounded-2xl bg-[var(--bg-card)] p-6">
+            <div className="mb-5 flex items-center justify-between">
+              <h3 className="text-lg font-bold text-[var(--text-primary)]">Add Staff Member</h3>
+              <button onClick={() => setShowModal(false)} className="rounded-md p-1 text-[var(--text-tertiary)]"><X size={20} /></button>
             </div>
-            <form onSubmit={handleSubmit} className="staff-form">
+            <form onSubmit={handleSubmit} className="flex flex-col gap-4">
               <FormInput label="Full Name" name="name" required />
               <FormInput label="Phone Number" name="phone" />
               <SmartSelect label="Staff Type" name="staffType" required options={[
@@ -302,9 +338,9 @@ export default function DomesticStaff() {
               ]} placeholder="Select ID Proof" />
               <FormInput label="ID Proof Number" name="idProofNumber" />
               <FormInput label="Address" name="address" />
-              <div className="staff-form-actions">
-                <button type="button" onClick={() => setShowModal(false)} className="staff-btn staff-btn--ghost">Cancel</button>
-                <AsyncButton type="submit" className="staff-btn staff-btn--primary" isLoading={createMutation.isPending} loadingText="Adding...">Add Staff</AsyncButton>
+              <div className="mt-2 flex justify-end gap-3">
+                <button type="button" onClick={() => setShowModal(false)} className="rounded-lg border border-[var(--border-default)] bg-transparent px-4 py-2 text-[var(--text-secondary)]">Cancel</button>
+                <AsyncButton type="submit" className="rounded-lg bg-blue-600 px-4 py-2 text-white" isLoading={createMutation.isPending} loadingText="Adding...">Add Staff</AsyncButton>
               </div>
             </form>
           </div>
@@ -313,13 +349,13 @@ export default function DomesticStaff() {
 
       {/* Record Attendance Modal */}
       {showAttendanceModal && (
-        <div className="staff-modal">
-          <div className="staff-modal-card">
-            <div className="staff-modal-header">
-              <h3 className="staff-modal-title">Record Attendance</h3>
-              <button onClick={() => setShowAttendanceModal(false)} className="staff-modal-close"><X size={20} /></button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="max-h-[90vh] w-full max-w-[480px] overflow-y-auto rounded-2xl bg-[var(--bg-card)] p-6">
+            <div className="mb-5 flex items-center justify-between">
+              <h3 className="text-lg font-bold text-[var(--text-primary)]">Record Attendance</h3>
+              <button onClick={() => setShowAttendanceModal(false)} className="rounded-md p-1 text-[var(--text-tertiary)]"><X size={20} /></button>
             </div>
-            <form onSubmit={handleAttendanceSubmit} className="staff-form">
+            <form onSubmit={handleAttendanceSubmit} className="flex flex-col gap-4">
               <SmartSelect label="Staff Member" name="staffId" required options={
                 staffList.filter(s => s.isActive).map(s => ({ value: String(s.id), label: `${s.name} (${s.staffType})` }))
               } placeholder="Select Staff" />
@@ -328,9 +364,9 @@ export default function DomesticStaff() {
                 { value: 'LATE', label: 'Late' }, { value: 'HALF_DAY', label: 'Half Day' },
               ]} placeholder="Select Status" />
               <FormTextarea label="Notes" name="notes" rows={2} />
-              <div className="staff-form-actions">
-                <button type="button" onClick={() => setShowAttendanceModal(false)} className="staff-btn staff-btn--ghost">Cancel</button>
-                <AsyncButton type="submit" className="staff-btn staff-btn--primary" isLoading={attendanceMutation.isPending} loadingText="Recording...">Record</AsyncButton>
+              <div className="mt-2 flex justify-end gap-3">
+                <button type="button" onClick={() => setShowAttendanceModal(false)} className="rounded-lg border border-[var(--border-default)] bg-transparent px-4 py-2 text-[var(--text-secondary)]">Cancel</button>
+                <AsyncButton type="submit" className="rounded-lg bg-blue-600 px-4 py-2 text-white" isLoading={attendanceMutation.isPending} loadingText="Recording...">Record</AsyncButton>
               </div>
             </form>
           </div>

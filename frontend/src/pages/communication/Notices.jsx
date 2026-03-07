@@ -12,10 +12,10 @@ import { HeroSkeleton, FiltersSkeleton, CardGridSkeleton, WakeUpBanner } from '.
 import useMinLoadingTime from '../../hooks/useMinLoadingTime'
 
 const priorityClasses = {
-  LOW: 'notices-priority notices-priority--low',
-  MEDIUM: 'notices-priority notices-priority--medium',
-  HIGH: 'notices-priority notices-priority--high',
-  URGENT: 'notices-priority notices-priority--urgent',
+  LOW: 'inline-flex items-center rounded-full bg-[var(--bg-tertiary)] px-2 py-0.5 text-xs font-semibold text-[var(--text-secondary)]',
+  MEDIUM: 'inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-xs font-semibold text-blue-700',
+  HIGH: 'inline-flex items-center rounded-full bg-orange-100 px-2 py-0.5 text-xs font-semibold text-orange-700',
+  URGENT: 'inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-700',
 }
 
 export default function Notices() {
@@ -117,7 +117,7 @@ export default function Notices() {
   const showSkeleton = useMinLoadingTime(isLoading || isError)
 
   if (showSkeleton) return (
-    <div className="notices-page">
+    <div>
       <WakeUpBanner />
       <HeroSkeleton statCount={0} />
       <FiltersSkeleton filterCount={1} />
@@ -126,17 +126,17 @@ export default function Notices() {
   )
 
   return (
-    <div className="notices-page">
+    <div>
       {/* Header */}
-      <div className="notices-header">
+      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="notices-title">Notices</h1>
-          <p className="notices-subtitle">Manage society announcements and notices</p>
+          <h1 className="text-2xl font-bold text-[var(--text-primary)]">Notices</h1>
+          <p className="mt-1 text-[var(--text-secondary)]">Manage society announcements and notices</p>
         </div>
         {canManageNotices() && (
           <button
             onClick={() => setShowModal(true)}
-            className="notices-add-button"
+            className="inline-flex items-center gap-2 rounded-xl border border-[var(--border-default)] bg-[var(--bg-card)] px-4 py-2 font-semibold text-[var(--text-primary)] transition hover:-translate-y-0.5 hover:bg-[color-mix(in_srgb,var(--bg-tertiary)_70%,var(--bg-card))] hover:shadow-[0_8px_20px_rgba(15,23,42,0.14)] dark:border-slate-400/25 dark:bg-slate-50 dark:text-slate-900 dark:hover:bg-white"
           >
             <Plus size={20} />
             Add Notice
@@ -145,16 +145,16 @@ export default function Notices() {
       </div>
 
       {/* Filters */}
-      <div className="notices-filters">
-        <div className="notices-filters-row">
-          <div className="notices-search">
-            <Search className="notices-search-icon" />
+      <div className="mb-6 rounded-2xl border border-[var(--border-light)] bg-[var(--bg-card)] p-4 shadow-[0_8px_20px_rgba(15,23,42,0.08)]">
+        <div className="flex flex-col gap-4">
+          <div className="relative flex-1">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-[var(--text-tertiary)]" />
             <input
               type="text"
               placeholder="Search notices..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="notices-search-input"
+              className="w-full rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] py-2 pl-10 pr-3 text-[var(--text-primary)] outline-none transition focus:border-blue-600 focus:shadow-[0_0_0_3px_rgba(37,99,235,0.2)]"
             />
           </div>
         </div>
@@ -162,29 +162,29 @@ export default function Notices() {
 
       {/* Notices Grid */}
       {(
-        <div className="notices-grid">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
           {filteredNotices.map((notice) => (
-            <div key={notice.id} className="notices-card">
-              <div className="notices-card-header">
-                <div className="notices-card-info">
-                  <div className="notices-card-icon">
-                    <Megaphone className="notices-card-icon-svg" />
+            <div key={notice.id} className="rounded-2xl border border-[var(--border-light)] bg-[var(--bg-card)] p-5 shadow-[0_12px_24px_rgba(15,23,42,0.06)] transition hover:-translate-y-0.5 hover:shadow-[0_16px_32px_rgba(15,23,42,0.12)]">
+              <div className="mb-3 flex items-start justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="rounded-xl bg-blue-500/15 p-2">
+                    <Megaphone className="h-4 w-4 text-blue-600" />
                   </div>
                   <span className={clsx(priorityClasses[notice.priority] || priorityClasses.LOW)}>
                     {notice.priority}
                   </span>
                 </div>
                 {canManageNotices() && (
-                  <div className="notices-card-actions">
+                  <div className="flex gap-2">
                     <button
                       onClick={() => { setEditingNotice(notice); setShowModal(true) }}
-                      className="notices-edit-button"
+                      className="rounded-lg p-1.5 text-[var(--text-tertiary)] transition hover:bg-[var(--bg-tertiary)]"
                     >
                       <Edit size={16} />
                     </button>
                     <button
                       onClick={() => confirmAndDeleteNotice(notice)}
-                      className="notices-delete-button"
+                      className="rounded-lg p-1.5 text-red-500 transition hover:bg-red-500/10"
                     >
                       <Trash2 size={16} />
                     </button>
@@ -192,16 +192,16 @@ export default function Notices() {
                 )}
               </div>
               
-              <h3 className="notices-card-title">{notice.title}</h3>
-              <p className="notices-card-content">{notice.content}</p>
+              <h3 className="mb-2 font-bold text-[var(--text-primary)]">{notice.title}</h3>
+              <p className="mb-3 line-clamp-3 text-sm text-[var(--text-secondary)]">{notice.content}</p>
               
-              <div className="notices-card-meta">
-                {isPlatformLevel && <span className="notices-card-meta-text">{notice.societyName || 'All Societies'}</span>}
-                <span className="notices-card-meta-text">{notice.createdAt && new Date(notice.createdAt).toLocaleDateString()}</span>
+              <div className="flex items-center justify-between border-t border-[var(--border-light)] pt-3 text-xs text-[var(--text-tertiary)]">
+                {isPlatformLevel && <span>{notice.societyName || 'All Societies'}</span>}
+                <span>{notice.createdAt && new Date(notice.createdAt).toLocaleDateString()}</span>
               </div>
               
               {notice.expiryDate && (
-                <p className="notices-expiry">
+                <p className="mt-2 text-xs text-orange-600">
                   Expires: {new Date(notice.expiryDate).toLocaleDateString()}
                 </p>
               )}
@@ -212,15 +212,15 @@ export default function Notices() {
 
       {/* Modal */}
       {showModal && (
-        <div className="notices-modal">
-          <div className="notices-modal-card">
-            <div className="notices-modal-header">
-              <h3 className="notices-modal-title">{editingNotice ? 'Edit Notice' : 'Add Notice'}</h3>
-              <button onClick={closeModal} className="notices-modal-close">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="max-h-[calc(100vh-3rem)] w-full max-w-2xl overflow-y-auto rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] shadow-[0_8px_24px_rgba(0,0,0,0.12)]">
+            <div className="flex items-center justify-between border-b border-[var(--border-light)] p-4">
+              <h3 className="text-lg font-bold text-[var(--text-primary)]">{editingNotice ? 'Edit Notice' : 'Add Notice'}</h3>
+              <button onClick={closeModal} className="rounded-lg p-1 text-[var(--text-tertiary)] transition hover:bg-[var(--bg-tertiary)]">
                 <X size={20} />
               </button>
             </div>
-            <form onSubmit={handleSubmit} className="notices-modal-body">
+            <form onSubmit={handleSubmit} className="grid gap-4 p-4">
               <FormInput
                 label="Title"
                 name="title"
@@ -234,7 +234,7 @@ export default function Notices() {
                 defaultValue={editingNotice?.content || ''}
                 required
               />
-              <div className="notices-form-row">
+              <div className="grid gap-4 sm:grid-cols-2">
                 <SmartSelect
                   label="Priority"
                   name="priority"
@@ -254,11 +254,11 @@ export default function Notices() {
                   defaultValue={editingNotice?.expiryDate || ''}
                 />
               </div>
-              <div className="notices-form-actions">
-                <button type="button" onClick={closeModal} className="notices-cancel-button">Cancel</button>
+              <div className="flex gap-3 pt-2">
+                <button type="button" onClick={closeModal} className="flex-1 rounded-xl border border-[var(--border-light)] bg-transparent px-4 py-2 font-semibold text-slate-700 transition hover:bg-[var(--bg-tertiary)]">Cancel</button>
                 <AsyncButton
                   type="submit"
-                  className="notices-submit-button"
+                  className="flex-1 rounded-xl border border-[var(--border-default)] bg-[var(--bg-card)] px-4 py-2 font-semibold text-[var(--text-primary)] transition hover:bg-[color-mix(in_srgb,var(--bg-tertiary)_70%,var(--bg-card))] hover:shadow-[0_8px_20px_rgba(15,23,42,0.14)] dark:border-slate-400/25 dark:bg-slate-50 dark:text-slate-900 dark:hover:bg-white"
                   isLoading={createMutation.isPending || updateMutation.isPending}
                   loadingText="Saving..."
                 >

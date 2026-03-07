@@ -25,6 +25,31 @@ const categoryLabels = {
   LANDSCAPING: '🌿 Landscaping', HVAC: '❄️ HVAC', ELEVATOR: '🛗 Elevator', OTHER: '📋 Other',
 }
 
+const iconBgMap = {
+  open: 'bg-[rgba(245,158,11,.15)] text-[var(--color-amber)]',
+  assigned: 'bg-[rgba(59,130,246,.15)] text-[var(--color-blue)]',
+  'in-progress': 'bg-[rgba(139,92,246,.15)] text-[var(--color-violet)]',
+  'on-hold': 'bg-[rgba(107,114,128,.15)] text-[var(--text-secondary)]',
+  completed: 'bg-[rgba(34,197,94,.15)] text-[var(--color-green)]',
+  cancelled: 'bg-[rgba(239,68,68,.15)] text-[var(--color-red)]',
+}
+
+const statusBadgeMap = {
+  open: 'bg-[rgba(245,158,11,.15)] text-[var(--color-amber)]',
+  assigned: 'bg-[rgba(59,130,246,.15)] text-[var(--color-blue)]',
+  'in-progress': 'bg-[rgba(139,92,246,.15)] text-[var(--color-violet)]',
+  'on-hold': 'bg-[rgba(107,114,128,.15)] text-[var(--text-secondary)]',
+  completed: 'bg-[rgba(34,197,94,.15)] text-[var(--color-green)]',
+  cancelled: 'bg-[rgba(239,68,68,.15)] text-[var(--color-red)]',
+}
+
+const priorityBadgeMap = {
+  low: 'bg-[rgba(107,114,128,.12)] text-[var(--text-secondary)]',
+  medium: 'bg-[rgba(59,130,246,.12)] text-[var(--color-blue)]',
+  high: 'bg-[rgba(245,158,11,.12)] text-[var(--color-amber)]',
+  urgent: 'bg-[rgba(239,68,68,.15)] text-[var(--color-red)] font-bold',
+}
+
 export default function WorkOrders() {
   const { user } = useAuth()
   const queryClient = useQueryClient()
@@ -135,42 +160,42 @@ export default function WorkOrders() {
 
   return (
     <div>
-      <div className="wo-header">
+      <div className="flex justify-between items-start mb-6 flex-wrap gap-4">
         <div>
-          <h1 className="wo-title">Work Orders</h1>
-          <p className="wo-subtitle">Track and manage maintenance work orders</p>
+          <h1 className="text-2xl font-bold text-[var(--text-primary)]">Work Orders</h1>
+          <p className="text-sm text-[var(--text-secondary)] mt-1">Track and manage maintenance work orders</p>
         </div>
-        <button onClick={() => setShowModal(true)} className="wo-action-button">
+        <button onClick={() => setShowModal(true)} className="inline-flex items-center gap-2 py-[10px] px-5 bg-[var(--color-blue)] text-white border-none rounded-[10px] text-sm font-semibold cursor-pointer transition-colors hover:bg-[var(--color-blue-hover,#2563eb)]">
           <Plus size={20} /> New Work Order
         </button>
       </div>
 
-      <div className="wo-summary">
-        <div className="wo-summary-card">
-          <p className="wo-summary-label">Open</p>
-          <p className="wo-summary-value wo-summary-value--open">{openCount}</p>
+      <div className="grid grid-cols-4 gap-4 mb-6">
+        <div className="bg-[var(--bg-secondary)] rounded-xl p-4 text-center border border-[var(--border-primary)]">
+          <p className="text-xs text-[var(--text-tertiary)] uppercase tracking-[0.5px] mb-1">Open</p>
+          <p className="text-[28px] font-bold text-[var(--color-amber)]">{openCount}</p>
         </div>
-        <div className="wo-summary-card">
-          <p className="wo-summary-label">Assigned</p>
-          <p className="wo-summary-value wo-summary-value--assigned">{assignedCount}</p>
+        <div className="bg-[var(--bg-secondary)] rounded-xl p-4 text-center border border-[var(--border-primary)]">
+          <p className="text-xs text-[var(--text-tertiary)] uppercase tracking-[0.5px] mb-1">Assigned</p>
+          <p className="text-[28px] font-bold text-[var(--color-blue)]">{assignedCount}</p>
         </div>
-        <div className="wo-summary-card">
-          <p className="wo-summary-label">In Progress</p>
-          <p className="wo-summary-value wo-summary-value--progress">{inProgressCount}</p>
+        <div className="bg-[var(--bg-secondary)] rounded-xl p-4 text-center border border-[var(--border-primary)]">
+          <p className="text-xs text-[var(--text-tertiary)] uppercase tracking-[0.5px] mb-1">In Progress</p>
+          <p className="text-[28px] font-bold text-[var(--color-violet)]">{inProgressCount}</p>
         </div>
-        <div className="wo-summary-card">
-          <p className="wo-summary-label">Completed</p>
-          <p className="wo-summary-value wo-summary-value--completed">{completedCount}</p>
+        <div className="bg-[var(--bg-secondary)] rounded-xl p-4 text-center border border-[var(--border-primary)]">
+          <p className="text-xs text-[var(--text-tertiary)] uppercase tracking-[0.5px] mb-1">Completed</p>
+          <p className="text-[28px] font-bold text-[var(--color-green)]">{completedCount}</p>
         </div>
       </div>
 
-      <div className="wo-filters">
-        <div className="wo-filters-row">
-          <div className="wo-search">
-            <Search className="wo-search-icon" />
-            <input type="text" placeholder="Search work orders..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="wo-input" />
+      <div className="mb-5">
+        <div className="flex gap-3 flex-wrap items-center">
+          <div className="relative flex-1 min-w-[200px]">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)] w-4 h-4" />
+            <input type="text" placeholder="Search work orders..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full py-[10px] pr-3 pl-9 border border-[var(--border-primary)] rounded-lg text-sm bg-[var(--bg-secondary)] text-[var(--text-primary)]" />
           </div>
-          <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="wo-select">
+          <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="py-[10px] px-3 border border-[var(--border-primary)] rounded-lg text-sm bg-[var(--bg-secondary)] text-[var(--text-primary)] min-w-[140px]">
             <option value="">All Status</option>
             <option value="OPEN">Open</option>
             <option value="ASSIGNED">Assigned</option>
@@ -179,7 +204,7 @@ export default function WorkOrders() {
             <option value="COMPLETED">Completed</option>
             <option value="CANCELLED">Cancelled</option>
           </select>
-          <select value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)} className="wo-select">
+          <select value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)} className="py-[10px] px-3 border border-[var(--border-primary)] rounded-lg text-sm bg-[var(--bg-secondary)] text-[var(--text-primary)] min-w-[140px]">
             <option value="">All Categories</option>
             <option value="PLUMBING">Plumbing</option>
             <option value="ELECTRICAL">Electrical</option>
@@ -192,7 +217,7 @@ export default function WorkOrders() {
             <option value="ELEVATOR">Elevator</option>
             <option value="OTHER">Other</option>
           </select>
-          <select value={filterPriority} onChange={(e) => setFilterPriority(e.target.value)} className="wo-select">
+          <select value={filterPriority} onChange={(e) => setFilterPriority(e.target.value)} className="py-[10px] px-3 border border-[var(--border-primary)] rounded-lg text-sm bg-[var(--bg-secondary)] text-[var(--text-primary)] min-w-[140px]">
             <option value="">All Priority</option>
             <option value="URGENT">Urgent</option>
             <option value="HIGH">High</option>
@@ -202,65 +227,67 @@ export default function WorkOrders() {
         </div>
       </div>
 
-      <div className="wo-list">
+      <div className="flex flex-col gap-3">
         {filtered.length === 0 && (
-          <div className="wo-item" style={{ textAlign: 'center', color: 'var(--text-tertiary)' }}>No work orders found</div>
+          <div className="bg-[var(--bg-secondary)] rounded-xl p-4 border border-[var(--border-primary)] text-center text-[var(--text-tertiary)]">No work orders found</div>
         )}
         {filtered.map(wo => {
           const StatusIcon = statusIcons[wo.status] || Wrench
           const isActive = !['COMPLETED', 'CANCELLED'].includes(wo.status)
+          const statusKey = wo.status?.toLowerCase().replace('_', '-')
+          const priorityKey = wo.priority?.toLowerCase()
           return (
-            <div key={wo.id} className={clsx('wo-item', wo.priority === 'URGENT' && 'wo-item--urgent')}>
-              <div className="wo-item-row">
-                <div className="wo-item-main">
-                  <div className={clsx('wo-item-icon', `wo-item-icon--${wo.status?.toLowerCase().replace('_', '-')}`)}>
-                    <StatusIcon className="wo-item-icon-symbol" />
+            <div key={wo.id} className={clsx('bg-[var(--bg-secondary)] rounded-xl p-4 border border-[var(--border-primary)] transition-shadow hover:shadow-[0_2px_8px_rgba(0,0,0,.06)]', wo.priority === 'URGENT' && 'border-l-[3px] border-l-[var(--color-red)]')}>
+              <div className="flex justify-between items-start gap-4">
+                <div className="flex gap-3 flex-1 min-w-0">
+                  <div className={clsx('w-10 h-10 rounded-[10px] flex items-center justify-center shrink-0', iconBgMap[statusKey])}>
+                    <StatusIcon className="w-5 h-5" />
                   </div>
                   <div>
-                    <div className="wo-item-meta">
-                      <span className={clsx('wo-status-badge', `wo-status--${wo.status?.toLowerCase().replace('_', '-')}`)}>{wo.status?.replace(/_/g, ' ')}</span>
-                      <span className={clsx('wo-priority-badge', `wo-priority--${wo.priority?.toLowerCase()}`)}>{wo.priority}</span>
-                      <span className="wo-category-badge">{categoryLabels[wo.category] || wo.category}</span>
+                    <div className="flex items-center gap-2 flex-wrap mb-1">
+                      <span className={clsx('text-[11px] font-semibold py-[2px] px-2 rounded-md uppercase tracking-[0.3px]', statusBadgeMap[statusKey])}>{wo.status?.replace(/_/g, ' ')}</span>
+                      <span className={clsx('text-[11px] font-semibold py-[2px] px-2 rounded-md uppercase tracking-[0.3px]', priorityBadgeMap[priorityKey])}>{wo.priority}</span>
+                      <span className="text-[11px] font-semibold py-[2px] px-2 rounded-md uppercase tracking-[0.3px] bg-[var(--bg-tertiary)] text-[var(--text-secondary)]">{categoryLabels[wo.category] || wo.category}</span>
                     </div>
-                    <h3 className="wo-item-title">{wo.title}</h3>
-                    {wo.description && <p className="wo-item-description">{wo.description}</p>}
-                    {wo.location && <p className="wo-item-location"><MapPin size={13} /> {wo.location}</p>}
+                    <h3 className="text-[15px] font-semibold text-[var(--text-primary)] mb-[2px]">{wo.title}</h3>
+                    {wo.description && <p className="text-[13px] text-[var(--text-secondary)] mb-1">{wo.description}</p>}
+                    {wo.location && <p className="flex items-center gap-1 text-xs text-[var(--text-tertiary)] mb-1"><MapPin size={13} /> {wo.location}</p>}
                     {wo.resolutionNotes && (
-                      <div className="wo-resolution">
-                        <p className="wo-resolution-text"><span className="wo-resolution-label">Resolution:</span> {wo.resolutionNotes}</p>
+                      <div className="bg-[var(--bg-tertiary)] rounded-lg py-2 px-3 my-[6px]">
+                        <p className="text-[13px] text-[var(--text-secondary)]"><span className="font-semibold text-[var(--text-primary)]">Resolution:</span> {wo.resolutionNotes}</p>
                       </div>
                     )}
-                    <div className="wo-item-footer">
-                      <span className="wo-item-footer-text">By: {wo.requestedByName}</span>
-                      {wo.assignedToName && <span className="wo-item-footer-text">Assigned: {wo.assignedToName}</span>}
-                      {wo.flatNumber && <span className="wo-item-footer-text">Flat: {wo.flatNumber}</span>}
-                      {wo.scheduledDate && <span className="wo-item-footer-text"><Calendar size={12} /> {wo.scheduledDate}</span>}
-                      {wo.estimatedCost && <span className="wo-item-footer-text"><IndianRupee size={12} /> Est: ₹{wo.estimatedCost}</span>}
-                      {wo.actualCost && <span className="wo-item-footer-text"><IndianRupee size={12} /> Actual: ₹{wo.actualCost}</span>}
-                      {wo.completedAt && <span className="wo-item-footer-text"><Clock size={12} /> Done: {new Date(wo.completedAt).toLocaleDateString()}</span>}
-                      <span className="wo-item-footer-text">{wo.createdAt && new Date(wo.createdAt).toLocaleDateString()}</span>
+                    <div className="flex flex-wrap gap-3 mt-[6px]">
+                      <span className="text-xs text-[var(--text-tertiary)] inline-flex items-center gap-[3px]">By: {wo.requestedByName}</span>
+                      {wo.assignedToName && <span className="text-xs text-[var(--text-tertiary)] inline-flex items-center gap-[3px]">Assigned: {wo.assignedToName}</span>}
+                      {wo.flatNumber && <span className="text-xs text-[var(--text-tertiary)] inline-flex items-center gap-[3px]">Flat: {wo.flatNumber}</span>}
+                      {wo.scheduledDate && <span className="text-xs text-[var(--text-tertiary)] inline-flex items-center gap-[3px]"><Calendar size={12} /> {wo.scheduledDate}</span>}
+                      {wo.estimatedCost && <span className="text-xs text-[var(--text-tertiary)] inline-flex items-center gap-[3px]"><IndianRupee size={12} /> Est: ₹{wo.estimatedCost}</span>}
+                      {wo.actualCost && <span className="text-xs text-[var(--text-tertiary)] inline-flex items-center gap-[3px]"><IndianRupee size={12} /> Actual: ₹{wo.actualCost}</span>}
+                      {wo.completedAt && <span className="text-xs text-[var(--text-tertiary)] inline-flex items-center gap-[3px]"><Clock size={12} /> Done: {new Date(wo.completedAt).toLocaleDateString()}</span>}
+                      <span className="text-xs text-[var(--text-tertiary)] inline-flex items-center gap-[3px]">{wo.createdAt && new Date(wo.createdAt).toLocaleDateString()}</span>
                     </div>
                   </div>
                 </div>
                 {isStaff && isActive && (
-                  <div className="wo-item-actions">
+                  <div className="flex gap-[6px] flex-wrap shrink-0">
                     {wo.status === 'OPEN' && (
                       <button onClick={() => {
                         const assigneeId = prompt('Enter user ID to assign:')
                         if (assigneeId) assignMutation.mutate({ id: wo.id, assignedToId: parseInt(assigneeId) })
-                      }} className="wo-btn wo-btn--assign"><UserPlus size={14} /> Assign</button>
+                      }} className="py-[6px] px-[14px] rounded-lg text-xs font-medium cursor-pointer inline-flex items-center gap-1 transition-all bg-[rgba(59,130,246,.1)] text-[var(--color-blue)] border border-[rgba(59,130,246,.3)]"><UserPlus size={14} /> Assign</button>
                     )}
                     {(wo.status === 'ASSIGNED' || wo.status === 'ON_HOLD') && (
-                      <button onClick={() => startMutation.mutate(wo.id)} className="wo-btn wo-btn--start">Start</button>
+                      <button onClick={() => startMutation.mutate(wo.id)} className="py-[6px] px-[14px] rounded-lg text-xs font-medium cursor-pointer inline-flex items-center gap-1 transition-all bg-[rgba(139,92,246,.1)] text-[var(--color-violet)] border border-[rgba(139,92,246,.3)]">Start</button>
                     )}
                     {wo.status === 'IN_PROGRESS' && (
-                      <button onClick={() => holdMutation.mutate(wo.id)} className="wo-btn wo-btn--hold">Hold</button>
+                      <button onClick={() => holdMutation.mutate(wo.id)} className="py-[6px] px-[14px] rounded-lg text-xs font-medium cursor-pointer inline-flex items-center gap-1 transition-all bg-[rgba(107,114,128,.1)] text-[var(--text-secondary)] border border-[rgba(107,114,128,.3)]">Hold</button>
                     )}
-                    <button onClick={() => completeMutation.mutate(wo.id)} className="wo-btn wo-btn--complete">Complete</button>
+                    <button onClick={() => completeMutation.mutate(wo.id)} className="py-[6px] px-[14px] rounded-lg text-xs font-medium cursor-pointer inline-flex items-center gap-1 transition-all bg-[rgba(34,197,94,.1)] text-[var(--color-green)] border border-[rgba(34,197,94,.3)]">Complete</button>
                     {isAdmin && (
                       <>
-                        <button onClick={() => cancelMutation.mutate(wo.id)} className="wo-btn wo-btn--cancel">Cancel</button>
-                        <button onClick={() => { if (confirm('Delete this work order?')) deleteMutation.mutate(wo.id) }} className="wo-btn wo-btn--delete">Delete</button>
+                        <button onClick={() => cancelMutation.mutate(wo.id)} className="py-[6px] px-[14px] rounded-lg text-xs font-medium cursor-pointer inline-flex items-center gap-1 transition-all bg-[rgba(245,158,11,.1)] text-[var(--color-amber)] border border-[rgba(245,158,11,.3)]">Cancel</button>
+                        <button onClick={() => { if (confirm('Delete this work order?')) deleteMutation.mutate(wo.id) }} className="py-[6px] px-[14px] rounded-lg text-xs font-medium cursor-pointer inline-flex items-center gap-1 transition-all bg-[rgba(239,68,68,.1)] text-[var(--color-red)] border border-[rgba(239,68,68,.3)]">Delete</button>
                       </>
                     )}
                   </div>
@@ -272,16 +299,16 @@ export default function WorkOrders() {
       </div>
 
       {showModal && (
-        <div className="wo-modal">
-          <div className="wo-modal-card">
-            <div className="wo-modal-header">
-              <h3 className="wo-modal-title">New Work Order</h3>
-              <button onClick={() => setShowModal(false)} className="wo-modal-close"><X size={20} /></button>
+        <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/50 backdrop-blur-[4px]">
+          <div className="bg-[var(--bg-primary)] rounded-2xl p-6 w-[90%] max-w-[560px] max-h-[90vh] overflow-y-auto shadow-[0_20px_60px_rgba(0,0,0,.3)]">
+            <div className="flex justify-between items-center mb-5">
+              <h3 className="text-lg font-bold text-[var(--text-primary)]">New Work Order</h3>
+              <button onClick={() => setShowModal(false)} className="bg-transparent border-none cursor-pointer text-[var(--text-tertiary)] p-1"><X size={20} /></button>
             </div>
-            <form onSubmit={handleSubmit} className="wo-form">
+            <form onSubmit={handleSubmit} className="flex flex-col gap-4">
               <FormInput label="Title" name="title" required placeholder="Brief summary of work needed" />
               <FormTextarea label="Description" name="description" rows={3} required placeholder="Detailed description" />
-              <div className="wo-form-row">
+              <div className="grid grid-cols-2 gap-3">
                 <SmartSelect label="Category" name="category" required options={[
                   { value: 'PLUMBING', label: 'Plumbing' }, { value: 'ELECTRICAL', label: 'Electrical' },
                   { value: 'CARPENTRY', label: 'Carpentry' }, { value: 'PAINTING', label: 'Painting' },
@@ -295,14 +322,14 @@ export default function WorkOrders() {
                 ]} placeholder="Select Priority" />
               </div>
               <FormInput label="Location" name="location" placeholder="e.g. Block A, Ground Floor" />
-              <div className="wo-form-row">
+              <div className="grid grid-cols-2 gap-3">
                 <FormInput label="Estimated Cost (₹)" name="estimatedCost" type="number" step="0.01" />
                 <FormInput label="Scheduled Date" name="scheduledDate" type="date" />
               </div>
               <FormTextarea label="Notes" name="notes" rows={2} />
-              <div className="wo-form-actions">
-                <button type="button" onClick={() => setShowModal(false)} className="wo-btn wo-btn--ghost">Cancel</button>
-                <AsyncButton type="submit" className="wo-btn wo-btn--primary" isLoading={createMutation.isPending} loadingText="Creating...">Create Work Order</AsyncButton>
+              <div className="flex gap-3 justify-end mt-2">
+                <button type="button" onClick={() => setShowModal(false)} className="py-[6px] px-[14px] border border-[var(--border-primary)] rounded-lg text-xs font-medium cursor-pointer bg-transparent text-[var(--text-primary)] inline-flex items-center gap-1 transition-all hover:bg-[var(--bg-tertiary)]">Cancel</button>
+                <AsyncButton type="submit" className="py-[6px] px-[14px] rounded-lg text-xs font-medium cursor-pointer inline-flex items-center gap-1 transition-all bg-[var(--color-blue)] text-white border border-[var(--color-blue)] hover:opacity-90" isLoading={createMutation.isPending} loadingText="Creating...">Create Work Order</AsyncButton>
               </div>
             </form>
           </div>
