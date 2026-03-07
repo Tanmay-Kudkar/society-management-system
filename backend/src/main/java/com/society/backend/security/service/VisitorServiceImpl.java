@@ -1,17 +1,17 @@
 package com.society.backend.security.service;
 
-import com.society.backend.security.dto.VisitorRequest;
-import com.society.backend.security.dto.VisitorResponse;
-import com.society.backend.entity.Flat;
-import com.society.backend.entity.Society;
-import com.society.backend.entity.User;
-import com.society.backend.entity.Visitor;
-import com.society.backend.exception.ApiException;
+import com.society.backend.security.dto.request.VisitorRequest;
+import com.society.backend.security.dto.response.VisitorResponse;
+import com.society.backend.flat.entity.Flat;
+import com.society.backend.society.entity.Society;
+import com.society.backend.user.entity.User;
+import com.society.backend.security.entity.Visitor;
+import com.society.backend.common.exception.ApiException;
 import com.society.backend.flat.repository.FlatRepository;
 import com.society.backend.society.repository.SocietyRepository;
 import com.society.backend.user.repository.UserRepository;
 import com.society.backend.security.repository.VisitorRepository;
-import com.society.backend.service.common.RoleService;
+import com.society.backend.common.service.RoleService;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 

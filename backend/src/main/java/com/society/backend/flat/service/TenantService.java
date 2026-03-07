@@ -1,7 +1,7 @@
 package com.society.backend.flat.service;
 
-import com.society.backend.flat.dto.TenantRequest;
-import com.society.backend.flat.dto.TenantResponse;
+import com.society.backend.flat.dto.request.TenantRequest;
+import com.society.backend.flat.dto.response.TenantResponse;
 
 import java.util.List;
 

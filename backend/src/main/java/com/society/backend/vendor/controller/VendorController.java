@@ -1,9 +1,9 @@
 package com.society.backend.vendor.controller;
 
-import com.society.backend.vendor.dto.BulkVendorImportResponse;
-import com.society.backend.vendor.dto.VendorImportRow;
-import com.society.backend.vendor.dto.VendorRequest;
-import com.society.backend.vendor.dto.VendorResponse;
+import com.society.backend.vendor.dto.response.BulkVendorImportResponse;
+import com.society.backend.vendor.dto.request.VendorImportRow;
+import com.society.backend.vendor.dto.request.VendorRequest;
+import com.society.backend.vendor.dto.response.VendorResponse;
 import com.society.backend.vendor.service.BulkVendorImportService;
 import com.society.backend.vendor.service.VendorService;
 import jakarta.validation.Valid;
@@ -16,6 +16,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
+import com.society.backend.society.entity.Society;
 @RestController
 @RequestMapping("/vendors")
 @RequiredArgsConstructor

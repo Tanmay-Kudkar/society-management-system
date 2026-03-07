@@ -1,9 +1,9 @@
 package com.society.backend.flat.controller;
 
-import com.society.backend.flat.dto.BulkTenantImportResponse;
-import com.society.backend.flat.dto.TenantImportRow;
-import com.society.backend.flat.dto.TenantRequest;
-import com.society.backend.flat.dto.TenantResponse;
+import com.society.backend.flat.dto.response.BulkTenantImportResponse;
+import com.society.backend.flat.dto.request.TenantImportRow;
+import com.society.backend.flat.dto.request.TenantRequest;
+import com.society.backend.flat.dto.response.TenantResponse;
 import com.society.backend.flat.service.BulkTenantImportService;
 import com.society.backend.flat.service.TenantService;
 import jakarta.validation.Valid;
@@ -16,6 +16,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
+import com.society.backend.flat.entity.Flat;
 @RestController
 @RequestMapping("/tenants")
 @RequiredArgsConstructor

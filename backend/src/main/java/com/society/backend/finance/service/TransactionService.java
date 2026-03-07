@@ -1,13 +1,15 @@
 package com.society.backend.finance.service;
 
-import com.society.backend.finance.dto.TransactionRequest;
-import com.society.backend.finance.dto.TransactionResponse;
+import com.society.backend.finance.dto.request.TransactionRequest;
+import com.society.backend.finance.dto.response.TransactionResponse;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
+import com.society.backend.finance.entity.Transaction;
+import com.society.backend.user.entity.Role;
 public interface TransactionService {
     TransactionResponse create(TransactionRequest request, Long userId);
     

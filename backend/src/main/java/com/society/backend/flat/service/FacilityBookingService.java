@@ -1,7 +1,7 @@
 package com.society.backend.flat.service;
 
-import com.society.backend.dto.request.FacilityBookingRequest;
-import com.society.backend.dto.response.FacilityBookingResponse;
+import com.society.backend.flat.dto.request.FacilityBookingRequest;
+import com.society.backend.flat.dto.response.FacilityBookingResponse;
 
 import java.time.LocalDate;
 import java.util.List;

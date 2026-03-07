@@ -1,7 +1,7 @@
 package com.society.backend.finance.service;
 
-import com.society.backend.dto.request.PenaltyRequest;
-import com.society.backend.dto.response.PenaltyResponse;
+import com.society.backend.finance.dto.request.PenaltyRequest;
+import com.society.backend.finance.dto.response.PenaltyResponse;
 import java.util.List;
 import java.util.Map;
 

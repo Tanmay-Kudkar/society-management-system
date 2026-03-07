@@ -1,19 +1,19 @@
 package com.society.backend.finance.service;
 
-import com.society.backend.finance.dto.BillLineItemRequest;
-import com.society.backend.finance.dto.MaintenanceBillRequest;
-import com.society.backend.finance.dto.MaintenanceBillResponse;
-import com.society.backend.finance.dto.BillLineItemResponse;
-import com.society.backend.finance.dto.TransactionRequest;
-import com.society.backend.entity.BillLineItem;
-import com.society.backend.entity.Flat;
-import com.society.backend.entity.MaintenanceBill;
-import com.society.backend.entity.SocietySetting;
-import com.society.backend.exception.ApiException;
+import com.society.backend.finance.dto.request.BillLineItemRequest;
+import com.society.backend.finance.dto.request.MaintenanceBillRequest;
+import com.society.backend.finance.dto.response.MaintenanceBillResponse;
+import com.society.backend.finance.dto.response.BillLineItemResponse;
+import com.society.backend.finance.dto.request.TransactionRequest;
+import com.society.backend.finance.entity.BillLineItem;
+import com.society.backend.flat.entity.Flat;
+import com.society.backend.finance.entity.MaintenanceBill;
+import com.society.backend.society.entity.SocietySetting;
+import com.society.backend.common.exception.ApiException;
 import com.society.backend.flat.repository.FlatRepository;
 import com.society.backend.finance.repository.MaintenanceBillRepository;
 import com.society.backend.society.repository.SocietySettingRepository;
-import com.society.backend.service.common.RoleService;
+import com.society.backend.common.service.RoleService;
 import com.society.backend.finance.service.TransactionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -30,6 +30,10 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import com.society.backend.finance.entity.Payment;
+import com.society.backend.finance.entity.Transaction;
+import com.society.backend.society.entity.Society;
+import com.society.backend.user.entity.Role;
 @Service
 @RequiredArgsConstructor
 public class MaintenanceBillServiceImpl implements MaintenanceBillService {
@@ -515,7 +519,7 @@ public class MaintenanceBillServiceImpl implements MaintenanceBillService {
         return response;
     }
 
-    private BillLineItemResponse mapLineItemToResponse(com.society.backend.entity.BillLineItem lineItem) {
+    private BillLineItemResponse mapLineItemToResponse(com.society.backend.finance.entity.BillLineItem lineItem) {
         BillLineItemResponse response = new BillLineItemResponse();
         response.setId(lineItem.getId());
         response.setChargeType(lineItem.getChargeType());

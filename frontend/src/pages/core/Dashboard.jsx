@@ -1,9 +1,8 @@
-import { useState, useEffect, useRef, useMemo, memo } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "../../context/AuthContext";
 import {
   Users,
-  Layers,
   Building2,
   Home,
   CreditCard,
@@ -25,7 +24,6 @@ import {
   Bell,
   Sun,
   Cloud,
-  Zap,
 } from "lucide-react";
 import {
   PieChart, Pie, Cell, Sector,
@@ -36,7 +34,6 @@ import {
 } from "recharts";
 import clsx from "clsx";
 
-import axios from "axios";
 import {
   societyApi,
   userApi,
@@ -53,6 +50,10 @@ import {
 } from "../../../../api";
 import { DashboardSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders';
 import useMinLoadingTime from '../../hooks/useMinLoadingTime';
+import StatCard from "./dashboard/components/StatCard";
+import AlertCard from "./dashboard/components/AlertCard";
+import HeroSection from "./dashboard/components/HeroSection";
+import useWeather from "./dashboard/hooks/useWeather";
 
 const formatCurrency = (amount) => {
   return new Intl.NumberFormat("en-IN", {
@@ -60,40 +61,6 @@ const formatCurrency = (amount) => {
     currency: "INR",
     maximumFractionDigits: 0,
   }).format(amount || 0);
-};
-
-const statIconToneClasses = {
-  purple: "bg-violet-500/10 text-violet-600 dark:text-violet-400",
-  blue: "bg-blue-500/10 text-blue-600 dark:text-blue-400",
-  sky: "bg-sky-500/10 text-sky-600 dark:text-sky-400",
-  green: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
-  teal: "bg-teal-500/10 text-teal-600 dark:text-teal-400",
-  cyan: "bg-cyan-500/10 text-cyan-600 dark:text-cyan-400",
-  indigo: "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400",
-  orange: "bg-orange-500/10 text-orange-600 dark:text-orange-400",
-  amber: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
-  yellow: "bg-yellow-500/10 text-yellow-600 dark:text-yellow-400",
-  red: "bg-rose-500/10 text-rose-600 dark:text-rose-400",
-  rose: "bg-rose-500/10 text-rose-600 dark:text-rose-400",
-  neutral: "bg-[var(--bg-tertiary)] text-[var(--text-secondary)]",
-};
-
-const alertToneClasses = {
-  yellow: {
-    accent: "bg-yellow-500",
-    icon: "bg-yellow-500/10 text-yellow-600 dark:text-yellow-400",
-    count: "bg-yellow-500/10 text-yellow-700 dark:text-yellow-300",
-  },
-  teal: {
-    accent: "bg-teal-500",
-    icon: "bg-teal-500/10 text-teal-600 dark:text-teal-400",
-    count: "bg-teal-500/10 text-teal-700 dark:text-teal-300",
-  },
-  red: {
-    accent: "bg-rose-500",
-    icon: "bg-rose-500/10 text-rose-600 dark:text-rose-400",
-    count: "bg-rose-500/10 text-rose-700 dark:text-rose-300",
-  },
 };
 
 const quickToneClasses = {
@@ -121,93 +88,6 @@ const quickToneClasses = {
 
 const sectionShellClass = "mb-6 rounded-2xl border border-[var(--border-default)] bg-[var(--bg-secondary)] p-6 shadow-sm";
 const insightPanelClass = "relative overflow-hidden rounded-[14px] border border-[var(--border-default)] bg-[var(--bg-tertiary)] p-5 transition-all duration-300 hover:border-[color-mix(in_srgb,var(--accent-primary)_35%,var(--border-default))] hover:shadow-[0_8px_24px_rgba(15,23,42,0.08)] dark:hover:shadow-[0_8px_22px_rgba(2,6,23,0.32)]";
-
-const StatCard = ({
-  title,
-  value,
-  icon,
-  variant = "neutral",
-  subtext,
-  delay = 0,
-}) => {
-  const CardIcon = icon;
-  const iconToneClass = statIconToneClasses[variant] || statIconToneClasses.neutral;
-
-  return (
-    <div
-      className="animate-slide-up rounded-xl border border-[var(--border-default)] bg-[var(--bg-secondary)] p-5 shadow-sm transition-all duration-200 hover:border-[var(--border-strong)] hover:shadow-md dark:border-[#1a1a1a] dark:bg-[var(--bg-secondary)] dark:hover:border-[rgba(47,129,247,0.2)] dark:hover:shadow-[0_0_24px_rgba(47,129,247,0.1),0_2px_8px_rgba(0,0,0,0.3)]"
-      style={{ animationDelay: `${delay}ms` }}
-    >
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <p className="text-[13px] font-medium text-[var(--text-secondary)]">{title}</p>
-          <p className="mt-1.5 text-[30px] font-bold leading-none text-[var(--text-primary)]">{value}</p>
-          {subtext && (
-            <p className="mt-2 inline-flex items-center gap-1.5 text-xs text-[var(--text-tertiary)]">
-              <Activity className="h-3.5 w-3.5" />
-              {subtext}
-            </p>
-          )}
-        </div>
-        <div className={clsx("flex h-11 w-11 items-center justify-center rounded-[10px]", iconToneClass)}>
-          <CardIcon className="h-5 w-5" />
-        </div>
-      </div>
-    </div>
-  );
-};
-
-const AlertCard = ({ title, items, icon, tone = "yellow", delay = 0 }) => {
-  const AlertIcon = icon;
-  const toneClasses = alertToneClasses[tone] || alertToneClasses.yellow;
-
-  return (
-    <div
-      className="animate-slide-up overflow-hidden rounded-xl border border-[var(--border-default)] bg-[var(--bg-secondary)] p-5 shadow-sm transition-all duration-200 hover:border-[var(--border-strong)] hover:shadow-md dark:border-[#1a1a1a] dark:bg-[var(--bg-secondary)] dark:hover:border-[rgba(47,129,247,0.15)] dark:hover:shadow-[0_0_24px_rgba(47,129,247,0.1),0_2px_8px_rgba(0,0,0,0.3)]"
-      style={{ animationDelay: `${delay}ms` }}
-    >
-      <div className={clsx("-mx-5 -mt-5 mb-4 h-[3px]", toneClasses.accent)}></div>
-
-      <div className="mb-4 flex items-center gap-3">
-        <div className={clsx("flex h-9 w-9 items-center justify-center rounded-[10px]", toneClasses.icon)}>
-          <AlertIcon className="h-4.5 w-4.5" />
-        </div>
-        <h3 className="text-[15px] font-semibold text-[var(--text-primary)]">{title}</h3>
-        {items.length > 0 && (
-          <span className={clsx("ml-auto inline-flex min-w-7 items-center justify-center rounded-md px-2 py-1 text-xs font-semibold", toneClasses.count)}>
-            {items.length}
-          </span>
-        )}
-      </div>
-
-      {items.length === 0 ? (
-        <div className="py-6 text-center">
-          <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-[var(--bg-tertiary)]">
-            <Sparkles className="h-4.5 w-4.5 text-[var(--text-tertiary)]" />
-          </div>
-          <p className="text-sm font-semibold text-[var(--text-secondary)]">All clear!</p>
-          <p className="text-xs text-[var(--text-tertiary)]">No items to display</p>
-        </div>
-      ) : (
-        <ul className="space-y-2.5">
-          {items.slice(0, 5).map((item, index) => (
-            <li
-              key={index}
-              className="flex items-center justify-between gap-3 rounded-lg border border-[var(--border-light,var(--border-default))] bg-[var(--bg-tertiary)] px-3 py-2.5 transition-colors hover:border-[var(--accent-primary)]"
-              style={{ animationDelay: `${delay + index * 100}ms` }}
-            >
-              <span className="text-sm text-[var(--text-primary)]">{item.title}</span>
-              <span className="inline-flex items-center gap-1 text-xs text-[var(--text-secondary)]">
-                {item.subtitle}
-                <ArrowUpRight className="h-3.5 w-3.5" />
-              </span>
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
-  );
-};
 
 const CHART_COLORS = ["#3b82f6", "#14b8a6", "#8b5cf6", "#f97316", "#ec4899", "#06b6d4", "#84cc16"];
 
@@ -240,41 +120,6 @@ const ChartTooltipContent = ({ active, payload, label, suffix = "" }) => {
     </div>
   );
 };
-
-// Isolated clock component - prevents re-rendering entire Dashboard every second
-const ClockDisplay = memo(function ClockDisplay() {
-  const [currentTime, setCurrentTime] = useState(new Date());
-
-  useEffect(() => {
-    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
-    return () => clearInterval(timer);
-  }, []);
-
-  return (
-    <div className="flex min-w-[152px] flex-col justify-center px-5 py-4">
-      <div className="flex items-center gap-1.5 text-[var(--text-tertiary)]">
-        <Clock className="h-3.5 w-3.5" />
-        <span className="text-[11px] font-semibold uppercase tracking-[0.08em]">
-          {currentTime.toLocaleDateString("en-US", { weekday: "long" })}
-        </span>
-      </div>
-      <p className="mt-0.5 text-[23px] font-bold leading-none tabular-nums text-[var(--text-primary)]">
-        {currentTime.toLocaleTimeString("en-US", {
-          hour: "2-digit",
-          minute: "2-digit",
-          second: "2-digit",
-        })}
-      </p>
-      <p className="mt-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--text-tertiary)]">
-        {currentTime.toLocaleDateString("en-US", {
-          month: "short",
-          day: "numeric",
-          year: "numeric",
-        })}
-      </p>
-    </div>
-  );
-});
 
 export default function Dashboard() {
   const {
@@ -975,18 +820,7 @@ export default function Dashboard() {
     refetchInterval: 30000,
   });
 
-  const { data: weather } = useQuery({
-    queryKey: ["weather"],
-    queryFn: async () => {
-      const lat = 19.076;
-      const long = 72.8777;
-      const res = await axios.get(
-        `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${long}&current=temperature_2m,weather_code,is_day&forecast_days=1`,
-      );
-      return res.data;
-    },
-    staleTime: 1000 * 60 * 30,
-  });
+  const { data: weather } = useWeather();
 
   const getWeatherIcon = (code) => {
     if (code === 0) {
@@ -1046,137 +880,17 @@ export default function Dashboard() {
 
   return (
     <div className="pb-10 animate-fadeIn">
-      {/* ── Hero card ─────────────────────────────────────────── */}
-      <div className="relative mb-6 overflow-hidden rounded-2xl border border-[var(--border-default)] bg-[var(--bg-secondary)] shadow-sm dark:border-[#1a1a1a]">
-
-        {/* Top accent bar */}
-        <div className="h-[3px] bg-gradient-to-r from-blue-500 via-violet-500 to-emerald-400 opacity-80" />
-
-        <div className="flex flex-col gap-0 md:flex-row">
-
-          {/* ── Left: greeting ──────────────────────────────── */}
-          <div className="flex-1 px-6 py-5 max-sm:px-4">
-
-            {/* Status pills */}
-            <div className="mb-3 flex flex-wrap items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/25 bg-emerald-500/10 px-2.5 py-1 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
-                <span className="relative flex h-2 w-2 shrink-0">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60" />
-                  <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
-                </span>
-                LIVE
-              </span>
-
-              {isMemberOrTenant ? (
-                <span className="inline-flex items-center rounded-full border border-[var(--border-default)] bg-[var(--bg-tertiary)] px-2.5 py-1 text-[11px] font-semibold text-[var(--text-secondary)]">
-                  {user?.role}
-                </span>
-              ) : (
-                <>
-                  <span className="inline-flex items-center rounded-full border border-[var(--border-default)] bg-[var(--bg-tertiary)] px-2.5 py-1 text-[11px] font-semibold text-[var(--text-secondary)]">
-                    v2.5.0
-                  </span>
-                  <span className="inline-flex items-center gap-1 rounded-full border border-blue-500/20 bg-blue-500/8 px-2.5 py-1 text-[11px] font-semibold text-blue-600 dark:text-blue-400">
-                    <Activity className="h-3 w-3" />
-                    REAL-TIME
-                  </span>
-                </>
-              )}
-            </div>
-
-            {/* Greeting */}
-            <h1 className="text-[26px] font-bold tracking-tight text-[var(--text-primary)] lg:text-[30px]">
-              {timeGreeting},{" "}
-              <span className="text-[var(--accent-primary)]">{user?.name?.split(" ")[0] || "User"}</span>
-              {" "}<span className="inline-block animate-bounce-custom">👋</span>
-            </h1>
-
-            <p className="mt-1.5 text-[13.5px] text-[var(--text-secondary)]">
-              {isMemberOrTenant
-                ? "Here's your personal dashboard overview."
-                : "Here's what's happening across your society today."}
-            </p>
-
-            {/* Quick meta row */}
-            <div className="mt-4 flex flex-wrap items-center gap-3">
-              {!isMemberOrTenant && !isPlatformLevel && user?.societyId && (
-                <span className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border-default)] bg-[var(--bg-tertiary)] px-3 py-1.5 text-xs font-medium text-[var(--text-secondary)]">
-                  <Building2 className="h-3.5 w-3.5 text-[var(--accent-primary)]" />
-                  Society ID: {user.societyId}
-                </span>
-              )}
-              {isPlatformLevel && (
-                <span className="inline-flex items-center gap-1.5 rounded-lg border border-violet-500/20 bg-violet-500/8 px-3 py-1.5 text-xs font-semibold text-violet-600 dark:text-violet-400">
-                  <Layers className="h-3.5 w-3.5" />
-                  {isPlatformOwner ? "Platform Owner" : "Organisation Owner"}
-                </span>
-              )}
-              {isMemberOrTenant && (
-                <span className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border-default)] bg-[var(--bg-tertiary)] px-3 py-1.5 text-xs font-medium text-[var(--text-secondary)]">
-                  <Home className="h-3.5 w-3.5 text-[var(--accent-primary)]" />
-                  {user?.flatNumber ? `Unit ${user.flatNumber}` : "Resident"}
-                </span>
-              )}
-            </div>
-          </div>
-
-          {/* ── Right: weather + clock ───────────────────────── */}
-          <div className="flex shrink-0 items-stretch divide-x divide-[var(--border-default)] border-t border-[var(--border-default)] md:border-l md:border-t-0 dark:divide-[#1a1a1a] dark:border-[#1a1a1a]">
-
-            {/* Weather panel */}
-            <div className="flex items-center gap-3 px-5 py-4">
-              <div className="flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-xl border border-[var(--border-default)] bg-[var(--bg-tertiary)] dark:border-[#1e1e1e]">
-                {weather?.current?.weather_code !== undefined ? (
-                  getWeatherIcon(weather.current.weather_code)
-                ) : (
-                  <Sun className="h-7 w-7 animate-sun text-[var(--text-secondary)]" />
-                )}
-              </div>
-              <div>
-                <p className="text-[24px] font-bold leading-none text-[var(--text-primary)]">
-                  {weather?.current?.temperature_2m != null
-                    ? `${Math.round(weather.current.temperature_2m)}°C`
-                    : "—"}
-                </p>
-                <p className="mt-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--text-secondary)]">
-                  {weather?.current?.weather_code !== undefined
-                    ? getWeatherDesc(weather.current.weather_code)
-                    : "Loading…"}
-                </p>
-              </div>
-            </div>
-
-            {/* Clock panel */}
-            <ClockDisplay />
-          </div>
-        </div>
-
-        {/* ── Ticker ──────────────────────────────────────────── */}
-        <div className="border-t border-[var(--border-default)] bg-[var(--bg-tertiary)] py-1.5 dark:border-[#1a1a1a]">
-          <div className="flex items-center overflow-hidden">
-            <div className="inline-flex shrink-0 items-center gap-1.5 border-r border-[var(--border-default)] px-4 text-[11px] font-semibold text-[var(--accent-primary)] dark:border-[#1a1a1a]">
-              <Bell className="h-3.5 w-3.5" />
-              <span>NOTICES</span>
-            </div>
-
-            <div className="relative h-5 flex-1 overflow-hidden [mask-image:linear-gradient(90deg,transparent,#000_8%,#000_92%,transparent)]">
-              <div className="absolute inline-flex items-center gap-8 whitespace-nowrap animate-ticker">
-                {(() => {
-                  const items = notices.length > 0
-                    ? notices.map((n) => n.content || n.title)
-                    : ["Welcome to Society Management System", "No new notices at the moment", "Security systems active"];
-                  return [...items, ...items].map((msg, i) => (
-                    <span key={i} className="inline-flex items-center gap-2 text-[13px] font-medium text-[var(--text-secondary)]">
-                      <span className="h-1 w-1 shrink-0 rounded-full bg-[var(--accent-primary)] opacity-60" />
-                      {msg}
-                    </span>
-                  ));
-                })()}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      <HeroSection
+        user={user}
+        notices={notices}
+        isMemberOrTenant={isMemberOrTenant}
+        isPlatformLevel={isPlatformLevel}
+        isPlatformOwner={isPlatformOwner}
+        weather={weather}
+        getWeatherDesc={getWeatherDesc}
+        getWeatherIcon={getWeatherIcon}
+        timeGreeting={timeGreeting}
+      />
 
       {isMemberOrTenant && (
         <div className="mb-8 grid gap-6">

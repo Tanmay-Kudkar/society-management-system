@@ -1,15 +1,15 @@
 package com.society.backend.society.service;
 
-import com.society.backend.society.dto.AssetRequest;
-import com.society.backend.society.dto.AssetResponse;
-import com.society.backend.entity.Asset;
-import com.society.backend.entity.Society;
-import com.society.backend.entity.User;
-import com.society.backend.exception.ApiException;
+import com.society.backend.society.dto.request.AssetRequest;
+import com.society.backend.society.dto.response.AssetResponse;
+import com.society.backend.society.entity.Asset;
+import com.society.backend.society.entity.Society;
+import com.society.backend.user.entity.User;
+import com.society.backend.common.exception.ApiException;
 import com.society.backend.society.repository.AssetRepository;
 import com.society.backend.society.repository.SocietyRepository;
 import com.society.backend.user.repository.UserRepository;
-import com.society.backend.service.common.RoleService;
+import com.society.backend.common.service.RoleService;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 

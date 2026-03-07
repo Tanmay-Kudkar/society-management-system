@@ -1,14 +1,14 @@
 package com.society.backend.flat.service;
 
-import com.society.backend.flat.dto.PetRegistrationRequest;
-import com.society.backend.flat.dto.PetRegistrationResponse;
-import com.society.backend.entity.PetRegistration;
-import com.society.backend.entity.Society;
-import com.society.backend.entity.User;
+import com.society.backend.flat.dto.request.PetRegistrationRequest;
+import com.society.backend.flat.dto.response.PetRegistrationResponse;
+import com.society.backend.flat.entity.PetRegistration;
+import com.society.backend.society.entity.Society;
+import com.society.backend.user.entity.User;
 import com.society.backend.flat.repository.PetRegistrationRepository;
 import com.society.backend.society.repository.SocietyRepository;
 import com.society.backend.user.repository.UserRepository;
-import com.society.backend.service.common.RoleService;
+import com.society.backend.common.service.RoleService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -20,6 +20,7 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.society.backend.flat.entity.Wing;
 @Service
 @RequiredArgsConstructor
 @Transactional

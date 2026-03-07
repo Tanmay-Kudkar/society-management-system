@@ -1,6 +1,6 @@
 package com.society.backend.finance.service;
 
-import com.society.backend.finance.dto.FinancialReportResponse;
+import com.society.backend.finance.dto.response.FinancialReportResponse;
 
 import java.time.LocalDate;
 

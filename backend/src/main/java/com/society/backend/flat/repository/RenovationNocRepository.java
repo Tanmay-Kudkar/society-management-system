@@ -1,6 +1,6 @@
 package com.society.backend.flat.repository;
 
-import com.society.backend.entity.RenovationNoc;
+import com.society.backend.flat.entity.RenovationNoc;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

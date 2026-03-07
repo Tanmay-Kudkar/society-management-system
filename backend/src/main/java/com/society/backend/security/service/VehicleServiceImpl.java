@@ -1,13 +1,13 @@
 package com.society.backend.security.service;
 
-import com.society.backend.security.dto.VehicleRequest;
-import com.society.backend.security.dto.VehicleResponse;
-import com.society.backend.entity.Flat;
-import com.society.backend.entity.Vehicle;
-import com.society.backend.exception.ApiException;
+import com.society.backend.security.dto.request.VehicleRequest;
+import com.society.backend.security.dto.response.VehicleResponse;
+import com.society.backend.flat.entity.Flat;
+import com.society.backend.security.entity.Vehicle;
+import com.society.backend.common.exception.ApiException;
 import com.society.backend.flat.repository.FlatRepository;
 import com.society.backend.security.repository.VehicleRepository;
-import com.society.backend.service.common.RoleService;
+import com.society.backend.common.service.RoleService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;

@@ -1,6 +1,7 @@
 package com.society.backend.ticket.service;
 
-import com.society.backend.ticket.dto.*;
+import com.society.backend.ticket.dto.request.*;
+import com.society.backend.ticket.dto.response.*;
 
 import java.util.List;
 

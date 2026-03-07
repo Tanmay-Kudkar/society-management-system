@@ -1,17 +1,17 @@
 package com.society.backend.society.service;
 
-import com.society.backend.society.dto.SocietyRequest;
-import com.society.backend.society.dto.SocietyResponse;
-import com.society.backend.entity.Society;
-import com.society.backend.entity.Role;
-import com.society.backend.entity.User;
-import com.society.backend.exception.ApiException;
+import com.society.backend.society.dto.request.SocietyRequest;
+import com.society.backend.society.dto.response.SocietyResponse;
+import com.society.backend.society.entity.Society;
+import com.society.backend.user.entity.Role;
+import com.society.backend.user.entity.User;
+import com.society.backend.common.exception.ApiException;
 import com.society.backend.flat.repository.WingRepository;
 import com.society.backend.flat.repository.FlatRepository;
 import com.society.backend.society.repository.SocietyRepository;
 import com.society.backend.user.repository.UserRepository;
-import com.society.backend.service.common.ReferenceCleanupService;
-import com.society.backend.service.common.RoleService;
+import com.society.backend.common.service.ReferenceCleanupService;
+import com.society.backend.common.service.RoleService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -21,6 +21,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.society.backend.flat.entity.Flat;
+import com.society.backend.flat.entity.Wing;
 @Service
 @RequiredArgsConstructor
 public class SocietyServiceImpl implements SocietyService {
@@ -115,7 +117,7 @@ public class SocietyServiceImpl implements SocietyService {
 
         if (force) {
             var flatIds = flatRepository.findBySocietyId(id).stream().map(flat -> flat.getId()).toList();
-            var wingIds = wingRepository.findBySocietyId(id).stream().map(com.society.backend.entity.Wing::getId).toList();
+            var wingIds = wingRepository.findBySocietyId(id).stream().map(com.society.backend.flat.entity.Wing::getId).toList();
 
             for (Long flatId : flatIds) {
                 referenceCleanupService.clearReferences("flat_id", flatId, true, Set.of("flats"));

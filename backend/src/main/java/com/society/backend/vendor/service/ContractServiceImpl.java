@@ -1,15 +1,15 @@
 package com.society.backend.vendor.service;
 
-import com.society.backend.vendor.dto.ContractRequest;
-import com.society.backend.vendor.dto.ContractResponse;
-import com.society.backend.entity.Contract;
-import com.society.backend.entity.Society;
-import com.society.backend.entity.Vendor;
-import com.society.backend.exception.ApiException;
+import com.society.backend.vendor.dto.request.ContractRequest;
+import com.society.backend.vendor.dto.response.ContractResponse;
+import com.society.backend.vendor.entity.Contract;
+import com.society.backend.society.entity.Society;
+import com.society.backend.vendor.entity.Vendor;
+import com.society.backend.common.exception.ApiException;
 import com.society.backend.vendor.repository.ContractRepository;
 import com.society.backend.society.repository.SocietyRepository;
 import com.society.backend.vendor.repository.VendorRepository;
-import com.society.backend.service.common.RoleService;
+import com.society.backend.common.service.RoleService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -20,6 +20,8 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.society.backend.user.entity.Role;
+import com.society.backend.user.entity.User;
 @Service
 @RequiredArgsConstructor
 public class ContractServiceImpl implements ContractService {
@@ -102,7 +104,7 @@ public class ContractServiceImpl implements ContractService {
 
         return contractRepository.findAll().stream()
                 .filter(c -> {
-                    if (currentUser.getRole() == com.society.backend.entity.Role.MASTER_ADMIN) {
+                    if (currentUser.getRole() == com.society.backend.user.entity.Role.MASTER_ADMIN) {
                         return true;
                     }
                     return c.getSociety() != null && currentUser.getSociety() != null

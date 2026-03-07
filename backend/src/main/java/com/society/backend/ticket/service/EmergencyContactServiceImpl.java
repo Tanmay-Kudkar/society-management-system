@@ -1,16 +1,16 @@
 package com.society.backend.ticket.service;
 
-import com.society.backend.ticket.dto.EmergencyContactRequest;
-import com.society.backend.ticket.dto.EmergencyContactResponse;
-import com.society.backend.entity.EmergencyContact;
-import com.society.backend.entity.Role;
-import com.society.backend.entity.Society;
-import com.society.backend.entity.User;
-import com.society.backend.exception.AccessDeniedException;
-import com.society.backend.exception.ApiException;
+import com.society.backend.ticket.dto.request.EmergencyContactRequest;
+import com.society.backend.ticket.dto.response.EmergencyContactResponse;
+import com.society.backend.ticket.entity.EmergencyContact;
+import com.society.backend.user.entity.Role;
+import com.society.backend.society.entity.Society;
+import com.society.backend.user.entity.User;
+import com.society.backend.common.exception.AccessDeniedException;
+import com.society.backend.common.exception.ApiException;
 import com.society.backend.ticket.repository.EmergencyContactRepository;
 import com.society.backend.society.repository.SocietyRepository;
-import com.society.backend.service.common.RoleService;
+import com.society.backend.common.service.RoleService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;

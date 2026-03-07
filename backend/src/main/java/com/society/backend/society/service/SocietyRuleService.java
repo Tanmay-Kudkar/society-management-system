@@ -1,7 +1,7 @@
 package com.society.backend.society.service;
 
-import com.society.backend.society.dto.SocietyRuleRequest;
-import com.society.backend.society.dto.SocietyRuleResponse;
+import com.society.backend.society.dto.request.SocietyRuleRequest;
+import com.society.backend.society.dto.response.SocietyRuleResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 

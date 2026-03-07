@@ -1,11 +1,11 @@
 package com.society.backend.security.controller;
 
-import com.society.backend.security.dto.GateLogRequest;
-import com.society.backend.security.dto.GateLogResponse;
-import com.society.backend.security.dto.SOSAlertRequest;
-import com.society.backend.security.dto.SOSAlertResponse;
+import com.society.backend.security.dto.request.GateLogRequest;
+import com.society.backend.security.dto.response.GateLogResponse;
+import com.society.backend.security.dto.request.SOSAlertRequest;
+import com.society.backend.security.dto.response.SOSAlertResponse;
 import com.society.backend.security.service.SafetyService;
-import com.society.backend.service.common.RoleService;
+import com.society.backend.common.service.RoleService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -15,6 +15,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
+import com.society.backend.flat.entity.Flat;
+import com.society.backend.society.entity.Society;
 @RestController
 @RequestMapping("/safety")
 @PreAuthorize("isAuthenticated()")

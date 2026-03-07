@@ -1,15 +1,15 @@
 package com.society.backend.finance.service;
 
-import com.society.backend.dto.request.PenaltyRequest;
-import com.society.backend.dto.response.PenaltyResponse;
-import com.society.backend.entity.Penalty;
-import com.society.backend.entity.Society;
-import com.society.backend.entity.User;
+import com.society.backend.finance.dto.request.PenaltyRequest;
+import com.society.backend.finance.dto.response.PenaltyResponse;
+import com.society.backend.finance.entity.Penalty;
+import com.society.backend.society.entity.Society;
+import com.society.backend.user.entity.User;
 import com.society.backend.finance.repository.PenaltyRepository;
 import com.society.backend.society.repository.SocietyRepository;
 import com.society.backend.user.repository.UserRepository;
 import com.society.backend.finance.service.PenaltyService;
-import com.society.backend.service.common.RoleService;
+import com.society.backend.common.service.RoleService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.society.backend.flat.entity.Wing;
 @Service
 @RequiredArgsConstructor
 public class PenaltyServiceImpl implements PenaltyService {

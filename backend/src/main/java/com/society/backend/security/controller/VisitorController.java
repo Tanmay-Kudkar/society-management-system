@@ -1,9 +1,9 @@
 package com.society.backend.security.controller;
 
-import com.society.backend.security.dto.VisitorRequest;
-import com.society.backend.security.dto.VisitorResponse;
+import com.society.backend.security.dto.request.VisitorRequest;
+import com.society.backend.security.dto.response.VisitorResponse;
 import com.society.backend.security.service.VisitorService;
-import com.society.backend.service.common.RoleService;
+import com.society.backend.common.service.RoleService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -12,6 +12,8 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDate;
 import java.util.List;
 
+import com.society.backend.flat.entity.Flat;
+import com.society.backend.society.entity.Society;
 @RestController
 @RequestMapping("/visitors")
 @PreAuthorize("isAuthenticated()")

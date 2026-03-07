@@ -1,6 +1,6 @@
 package com.society.backend.security.repository;
 
-import com.society.backend.entity.SecurityLog;
+import com.society.backend.security.entity.SecurityLog;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;

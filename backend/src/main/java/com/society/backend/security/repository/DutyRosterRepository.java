@@ -1,6 +1,6 @@
 package com.society.backend.security.repository;
 
-import com.society.backend.entity.DutyRoster;
+import com.society.backend.security.entity.DutyRoster;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

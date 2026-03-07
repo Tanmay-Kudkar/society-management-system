@@ -1,6 +1,6 @@
 package com.society.backend.finance.repository;
 
-import com.society.backend.entity.Transaction;
+import com.society.backend.finance.entity.Transaction;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -10,6 +10,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
+import com.society.backend.society.entity.Society;
 @Repository
 public interface TransactionRepository extends JpaRepository<Transaction, Long> {
     List<Transaction> findBySocietyId(Long societyId);

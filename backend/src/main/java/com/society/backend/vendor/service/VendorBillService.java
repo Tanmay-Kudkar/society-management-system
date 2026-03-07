@@ -1,7 +1,7 @@
 package com.society.backend.vendor.service;
 
-import com.society.backend.vendor.dto.VendorBillRequest;
-import com.society.backend.vendor.dto.VendorBillResponse;
+import com.society.backend.vendor.dto.request.VendorBillRequest;
+import com.society.backend.vendor.dto.response.VendorBillResponse;
 
 import java.math.BigDecimal;
 import java.util.List;

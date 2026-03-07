@@ -50,7 +50,7 @@ import clsx from "clsx";
 const prefetchedRouteSet = new Set();
 
 const routePrefetchMap = {
-  "/": () => import("../pages/core/Dashboard"),
+  "/": () => import("../pages/core/dashboard"),
   "/settings": () => import("../pages/core/Settings"),
   "/reports": () => import("../pages/core/Reports"),
   "/users": () => import("../pages/users/Users"),

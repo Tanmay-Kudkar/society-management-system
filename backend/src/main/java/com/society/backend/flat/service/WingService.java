@@ -1,7 +1,7 @@
 package com.society.backend.flat.service;
 
-import com.society.backend.flat.dto.WingRequest;
-import com.society.backend.flat.dto.WingResponse;
+import com.society.backend.flat.dto.request.WingRequest;
+import com.society.backend.flat.dto.response.WingResponse;
 
 import java.util.List;
 

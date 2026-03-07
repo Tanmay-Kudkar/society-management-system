@@ -1,6 +1,7 @@
 package com.society.backend.ticket.controller;
 
-import com.society.backend.ticket.dto.*;
+import com.society.backend.ticket.dto.request.*;
+import com.society.backend.ticket.dto.response.*;
 import com.society.backend.ticket.service.ApprovalService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -11,6 +12,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+import com.society.backend.society.entity.Society;
+import com.society.backend.user.entity.User;
 @RestController
 @RequestMapping("/approvals")
 @RequiredArgsConstructor

@@ -1,7 +1,7 @@
 package com.society.backend.security.service;
 
-import com.society.backend.security.dto.VisitorRequest;
-import com.society.backend.security.dto.VisitorResponse;
+import com.society.backend.security.dto.request.VisitorRequest;
+import com.society.backend.security.dto.response.VisitorResponse;
 
 import java.time.LocalDate;
 import java.util.List;

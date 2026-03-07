@@ -1,7 +1,7 @@
 package com.society.backend.flat.service;
 
-import com.society.backend.dto.request.RenovationNocRequest;
-import com.society.backend.dto.response.RenovationNocResponse;
+import com.society.backend.flat.dto.request.RenovationNocRequest;
+import com.society.backend.flat.dto.response.RenovationNocResponse;
 
 import java.util.List;
 import java.util.Map;

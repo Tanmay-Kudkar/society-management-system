@@ -1,8 +1,9 @@
 package com.society.backend.security.controller;
 
-import com.society.backend.security.dto.*;
+import com.society.backend.security.dto.request.*;
+import com.society.backend.security.dto.response.*;
 import com.society.backend.security.service.PatrolService;
-import com.society.backend.service.common.RoleService;
+import com.society.backend.common.service.RoleService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -12,6 +13,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import com.society.backend.society.entity.Society;
 @RestController
 @RequestMapping("/patrol")
 @PreAuthorize("isAuthenticated()")

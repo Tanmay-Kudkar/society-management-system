@@ -1,7 +1,7 @@
 package com.society.backend.finance.controller;
 
-import com.society.backend.finance.dto.TransactionRequest;
-import com.society.backend.finance.dto.TransactionResponse;
+import com.society.backend.finance.dto.request.TransactionRequest;
+import com.society.backend.finance.dto.response.TransactionResponse;
 import com.society.backend.finance.service.TransactionService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +17,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.society.backend.finance.entity.Payment;
+import com.society.backend.society.entity.Society;
 @RestController
 @RequestMapping("/transactions")
 @RequiredArgsConstructor

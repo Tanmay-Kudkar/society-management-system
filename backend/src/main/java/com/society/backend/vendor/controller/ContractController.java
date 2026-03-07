@@ -1,7 +1,7 @@
 package com.society.backend.vendor.controller;
 
-import com.society.backend.vendor.dto.ContractRequest;
-import com.society.backend.vendor.dto.ContractResponse;
+import com.society.backend.vendor.dto.request.ContractRequest;
+import com.society.backend.vendor.dto.response.ContractResponse;
 import com.society.backend.vendor.service.ContractService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+import com.society.backend.society.entity.Society;
 @RestController
 @RequestMapping("/contracts")
 @RequiredArgsConstructor

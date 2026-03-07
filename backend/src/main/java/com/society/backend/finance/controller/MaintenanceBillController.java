@@ -1,7 +1,7 @@
 package com.society.backend.finance.controller;
 
-import com.society.backend.finance.dto.MaintenanceBillRequest;
-import com.society.backend.finance.dto.MaintenanceBillResponse;
+import com.society.backend.finance.dto.request.MaintenanceBillRequest;
+import com.society.backend.finance.dto.response.MaintenanceBillResponse;
 import com.society.backend.finance.service.MaintenanceBillService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.*;
 import java.math.BigDecimal;
 import java.util.List;
 
+import com.society.backend.finance.entity.Payment;
+import com.society.backend.flat.entity.Flat;
 @RestController
 @RequestMapping("/maintenance-bills")
 @RequiredArgsConstructor

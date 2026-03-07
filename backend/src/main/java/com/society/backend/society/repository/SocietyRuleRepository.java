@@ -1,6 +1,6 @@
 package com.society.backend.society.repository;
 
-import com.society.backend.entity.SocietyRule;
+import com.society.backend.society.entity.SocietyRule;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;

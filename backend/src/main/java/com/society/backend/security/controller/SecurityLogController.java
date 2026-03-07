@@ -1,6 +1,6 @@
 package com.society.backend.security.controller;
 
-import com.society.backend.entity.SecurityLog;
+import com.society.backend.security.entity.SecurityLog;
 import com.society.backend.security.service.SecurityLogService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

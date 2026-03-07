@@ -1,7 +1,7 @@
 package com.society.backend.flat.service;
 
-import com.society.backend.flat.dto.PetRegistrationRequest;
-import com.society.backend.flat.dto.PetRegistrationResponse;
+import com.society.backend.flat.dto.request.PetRegistrationRequest;
+import com.society.backend.flat.dto.response.PetRegistrationResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 

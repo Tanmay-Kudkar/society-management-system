@@ -1,6 +1,6 @@
 package com.society.backend.flat.repository;
 
-import com.society.backend.entity.FacilityBooking;
+import com.society.backend.flat.entity.FacilityBooking;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -9,6 +9,7 @@ import org.springframework.stereotype.Repository;
 import java.time.LocalDate;
 import java.util.List;
 
+import com.society.backend.society.entity.Society;
 @Repository
 public interface FacilityBookingRepository extends JpaRepository<FacilityBooking, Long> {
 

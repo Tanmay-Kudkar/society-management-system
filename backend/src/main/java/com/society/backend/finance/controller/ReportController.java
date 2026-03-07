@@ -1,6 +1,6 @@
 package com.society.backend.finance.controller;
 
-import com.society.backend.finance.dto.FinancialReportResponse;
+import com.society.backend.finance.dto.response.FinancialReportResponse;
 import com.society.backend.finance.service.ReportService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;

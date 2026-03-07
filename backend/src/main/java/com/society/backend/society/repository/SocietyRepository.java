@@ -1,6 +1,6 @@
 package com.society.backend.society.repository;
 
-import com.society.backend.entity.Society;
+import com.society.backend.society.entity.Society;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

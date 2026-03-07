@@ -1,6 +1,6 @@
 package com.society.backend.flat.repository;
 
-import com.society.backend.entity.MoveRecord;
+import com.society.backend.flat.entity.MoveRecord;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

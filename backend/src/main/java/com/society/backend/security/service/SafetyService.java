@@ -1,9 +1,9 @@
 package com.society.backend.security.service;
 
-import com.society.backend.security.dto.GateLogRequest;
-import com.society.backend.security.dto.GateLogResponse;
-import com.society.backend.security.dto.SOSAlertRequest;
-import com.society.backend.security.dto.SOSAlertResponse;
+import com.society.backend.security.dto.request.GateLogRequest;
+import com.society.backend.security.dto.response.GateLogResponse;
+import com.society.backend.security.dto.request.SOSAlertRequest;
+import com.society.backend.security.dto.response.SOSAlertResponse;
 
 import java.time.LocalDateTime;
 import java.util.List;

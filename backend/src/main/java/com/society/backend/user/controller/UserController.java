@@ -1,11 +1,11 @@
 package com.society.backend.user.controller;
 
-import com.society.backend.user.dto.BulkCreateUsersResponse;
-import com.society.backend.user.dto.BulkUserImportResponse;
-import com.society.backend.user.dto.UserImportRow;
-import com.society.backend.user.dto.UserRequest;
-import com.society.backend.user.dto.UserResponse;
-import com.society.backend.entity.Role;
+import com.society.backend.user.dto.response.BulkCreateUsersResponse;
+import com.society.backend.user.dto.response.BulkUserImportResponse;
+import com.society.backend.user.dto.request.UserImportRow;
+import com.society.backend.user.dto.request.UserRequest;
+import com.society.backend.user.dto.response.UserResponse;
+import com.society.backend.user.entity.Role;
 import com.society.backend.user.service.BulkUserImportService;
 import com.society.backend.user.service.UserService;
 import jakarta.validation.Valid;
@@ -18,6 +18,11 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.society.backend.flat.entity.Flat;
+import com.society.backend.flat.entity.Tenant;
+import com.society.backend.security.entity.Visitor;
+import com.society.backend.society.entity.Society;
+import com.society.backend.user.entity.User;
 @RestController
 @RequestMapping("/users")
 public class UserController {

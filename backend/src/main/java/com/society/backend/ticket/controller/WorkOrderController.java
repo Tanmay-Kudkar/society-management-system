@@ -1,9 +1,9 @@
 package com.society.backend.ticket.controller;
 
-import com.society.backend.ticket.dto.WorkOrderRequest;
-import com.society.backend.ticket.dto.WorkOrderResponse;
+import com.society.backend.ticket.dto.request.WorkOrderRequest;
+import com.society.backend.ticket.dto.response.WorkOrderResponse;
 import com.society.backend.ticket.service.WorkOrderService;
-import com.society.backend.service.common.RoleService;
+import com.society.backend.common.service.RoleService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -13,6 +13,7 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 
+import com.society.backend.society.entity.Society;
 @RestController
 @RequestMapping("/work-orders")
 @PreAuthorize("isAuthenticated()")

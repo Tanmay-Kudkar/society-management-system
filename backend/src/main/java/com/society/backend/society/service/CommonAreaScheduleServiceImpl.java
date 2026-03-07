@@ -1,14 +1,14 @@
 package com.society.backend.society.service;
 
-import com.society.backend.dto.request.CommonAreaScheduleRequest;
-import com.society.backend.dto.response.CommonAreaScheduleResponse;
-import com.society.backend.entity.CommonAreaSchedule;
-import com.society.backend.entity.Society;
-import com.society.backend.entity.User;
+import com.society.backend.society.dto.request.CommonAreaScheduleRequest;
+import com.society.backend.society.dto.response.CommonAreaScheduleResponse;
+import com.society.backend.society.entity.CommonAreaSchedule;
+import com.society.backend.society.entity.Society;
+import com.society.backend.user.entity.User;
 import com.society.backend.society.repository.CommonAreaScheduleRepository;
 import com.society.backend.user.repository.UserRepository;
 import com.society.backend.society.repository.SocietyRepository;
-import com.society.backend.service.common.RoleService;
+import com.society.backend.common.service.RoleService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

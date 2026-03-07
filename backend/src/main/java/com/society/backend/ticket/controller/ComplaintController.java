@@ -1,9 +1,9 @@
 package com.society.backend.ticket.controller;
 
-import com.society.backend.ticket.dto.ComplaintRequest;
-import com.society.backend.ticket.dto.ComplaintResponse;
+import com.society.backend.ticket.dto.request.ComplaintRequest;
+import com.society.backend.ticket.dto.response.ComplaintResponse;
 import com.society.backend.ticket.service.ComplaintService;
-import com.society.backend.service.common.RoleService;
+import com.society.backend.common.service.RoleService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -11,6 +11,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+import com.society.backend.flat.entity.Tenant;
+import com.society.backend.society.entity.Society;
+import com.society.backend.user.entity.User;
 @RestController
 @RequestMapping("/complaints")
 @PreAuthorize("isAuthenticated()")

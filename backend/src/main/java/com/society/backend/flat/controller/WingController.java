@@ -1,9 +1,9 @@
 package com.society.backend.flat.controller;
 
-import com.society.backend.flat.dto.BulkWingImportResponse;
-import com.society.backend.flat.dto.WingImportRow;
-import com.society.backend.flat.dto.WingRequest;
-import com.society.backend.flat.dto.WingResponse;
+import com.society.backend.flat.dto.response.BulkWingImportResponse;
+import com.society.backend.flat.dto.request.WingImportRow;
+import com.society.backend.flat.dto.request.WingRequest;
+import com.society.backend.flat.dto.response.WingResponse;
 import com.society.backend.flat.service.BulkWingImportService;
 import com.society.backend.flat.service.WingService;
 import jakarta.validation.Valid;
@@ -15,6 +15,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
+import com.society.backend.society.entity.Society;
 @RestController
 @RequestMapping("/api/wings")
 @RequiredArgsConstructor

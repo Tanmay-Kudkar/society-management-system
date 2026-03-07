@@ -1,7 +1,7 @@
 package com.society.backend.finance.controller;
 
-import com.society.backend.dto.request.PenaltyRequest;
-import com.society.backend.dto.response.PenaltyResponse;
+import com.society.backend.finance.dto.request.PenaltyRequest;
+import com.society.backend.finance.dto.response.PenaltyResponse;
 import com.society.backend.finance.service.PenaltyService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -11,6 +11,9 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Map;
 
+import com.society.backend.finance.entity.Payment;
+import com.society.backend.society.entity.Society;
+import com.society.backend.user.entity.User;
 @RestController
 @RequestMapping("/penalties")
 @RequiredArgsConstructor

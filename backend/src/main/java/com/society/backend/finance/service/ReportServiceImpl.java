@@ -1,21 +1,21 @@
 package com.society.backend.finance.service;
 
-import com.society.backend.finance.dto.FinancialReportResponse;
-import com.society.backend.finance.dto.FinancialReportResponse.DailyTrend;
-import com.society.backend.finance.dto.FinancialReportResponse.MonthlyTrend;
-import com.society.backend.finance.dto.FinancialReportResponse.UpcomingPayment;
-import com.society.backend.entity.MaintenanceBill;
-import com.society.backend.entity.Society;
-import com.society.backend.entity.Transaction;
-import com.society.backend.entity.VendorBill;
-import com.society.backend.entity.Contract;
-import com.society.backend.exception.ApiException;
+import com.society.backend.finance.dto.response.FinancialReportResponse;
+import com.society.backend.finance.dto.response.FinancialReportResponse.DailyTrend;
+import com.society.backend.finance.dto.response.FinancialReportResponse.MonthlyTrend;
+import com.society.backend.finance.dto.response.FinancialReportResponse.UpcomingPayment;
+import com.society.backend.finance.entity.MaintenanceBill;
+import com.society.backend.society.entity.Society;
+import com.society.backend.finance.entity.Transaction;
+import com.society.backend.vendor.entity.VendorBill;
+import com.society.backend.vendor.entity.Contract;
+import com.society.backend.common.exception.ApiException;
 import com.society.backend.vendor.repository.ContractRepository;
 import com.society.backend.finance.repository.MaintenanceBillRepository;
 import com.society.backend.society.repository.SocietyRepository;
 import com.society.backend.finance.repository.TransactionRepository;
 import com.society.backend.vendor.repository.VendorBillRepository;
-import com.society.backend.service.common.RoleService;
+import com.society.backend.common.service.RoleService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -28,6 +28,8 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import com.society.backend.finance.entity.Payment;
+import com.society.backend.vendor.entity.Vendor;
 @Service
 @RequiredArgsConstructor
 public class ReportServiceImpl implements ReportService {
