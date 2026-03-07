@@ -1,11 +1,13 @@
 package com.society.backend.finance.service;
 
-import com.society.backend.finance.dto.MaintenanceBillRequest;
-import com.society.backend.finance.dto.MaintenanceBillResponse;
+import com.society.backend.finance.dto.request.MaintenanceBillRequest;
+import com.society.backend.finance.dto.response.MaintenanceBillResponse;
 
 import java.math.BigDecimal;
 import java.util.List;
 
+import com.society.backend.finance.entity.Payment;
+import com.society.backend.user.entity.Role;
 public interface MaintenanceBillService {
     MaintenanceBillResponse create(MaintenanceBillRequest request, Long userId);
 

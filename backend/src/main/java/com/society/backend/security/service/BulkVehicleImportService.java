@@ -1,11 +1,11 @@
 package com.society.backend.security.service;
 
-import com.society.backend.security.dto.BulkVehicleImportResponse;
-import com.society.backend.security.dto.BulkVehicleImportResponse.VehicleImportResult;
-import com.society.backend.security.dto.VehicleImportRow;
-import com.society.backend.entity.Flat;
-import com.society.backend.entity.Vehicle;
-import com.society.backend.exception.ApiException;
+import com.society.backend.security.dto.response.BulkVehicleImportResponse;
+import com.society.backend.security.dto.response.BulkVehicleImportResponse.VehicleImportResult;
+import com.society.backend.security.dto.request.VehicleImportRow;
+import com.society.backend.flat.entity.Flat;
+import com.society.backend.security.entity.Vehicle;
+import com.society.backend.common.exception.ApiException;
 import com.society.backend.flat.repository.FlatRepository;
 import com.society.backend.society.repository.SocietyRepository;
 import com.society.backend.security.repository.VehicleRepository;
@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.regex.Pattern;
 
+import com.society.backend.society.entity.Society;
 @Service
 @RequiredArgsConstructor
 @Slf4j

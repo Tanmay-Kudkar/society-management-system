@@ -1,7 +1,7 @@
 package com.society.backend.flat.controller;
 
-import com.society.backend.dto.request.CommonAreaScheduleRequest;
-import com.society.backend.dto.response.CommonAreaScheduleResponse;
+import com.society.backend.society.dto.request.CommonAreaScheduleRequest;
+import com.society.backend.society.dto.response.CommonAreaScheduleResponse;
 import com.society.backend.society.service.CommonAreaScheduleService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Map;
 
+import com.society.backend.society.entity.Society;
 @RestController
 @RequestMapping("/common-areas")
 @RequiredArgsConstructor

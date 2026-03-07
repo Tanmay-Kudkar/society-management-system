@@ -13,20 +13,24 @@ import org.springframework.transaction.annotation.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.society.backend.auth.dto.LoginRequest;
-import com.society.backend.auth.dto.LoginResponse;
-import com.society.backend.auth.dto.RegisterRequest;
-import com.society.backend.user.dto.UserResponse;
-import com.society.backend.entity.PasswordResetToken;
-import com.society.backend.entity.Role;
-import com.society.backend.entity.User;
-import com.society.backend.exception.ApiException;
-import com.society.backend.repository.PasswordResetTokenRepository;
+import com.society.backend.auth.dto.request.LoginRequest;
+import com.society.backend.auth.dto.response.LoginResponse;
+import com.society.backend.auth.dto.request.RegisterRequest;
+import com.society.backend.user.dto.response.UserResponse;
+import com.society.backend.auth.entity.PasswordResetToken;
+import com.society.backend.user.entity.Role;
+import com.society.backend.user.entity.User;
+import com.society.backend.common.exception.ApiException;
+import com.society.backend.auth.repository.PasswordResetTokenRepository;
 import com.society.backend.user.repository.UserRepository;
-import com.society.backend.auth.security.JwtUtils;
-import com.society.backend.security.RolePermissions;
-import com.society.backend.service.common.EmailService;
+import com.society.backend.common.security.JwtUtils;
+import com.society.backend.common.security.RolePermissions;
+import com.society.backend.common.service.EmailService;
 
+import com.society.backend.flat.entity.Flat;
+import com.society.backend.flat.entity.Tenant;
+import com.society.backend.security.entity.Visitor;
+import com.society.backend.society.entity.Society;
 /**
  * Auth service handles login and public self-registration.
  * 

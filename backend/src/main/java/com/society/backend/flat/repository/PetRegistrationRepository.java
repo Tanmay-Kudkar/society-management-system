@@ -1,6 +1,6 @@
 package com.society.backend.flat.repository;
 
-import com.society.backend.entity.PetRegistration;
+import com.society.backend.flat.entity.PetRegistration;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;

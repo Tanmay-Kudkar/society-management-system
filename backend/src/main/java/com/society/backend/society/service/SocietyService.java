@@ -1,7 +1,7 @@
 package com.society.backend.society.service;
 
-import com.society.backend.society.dto.SocietyRequest;
-import com.society.backend.society.dto.SocietyResponse;
+import com.society.backend.society.dto.request.SocietyRequest;
+import com.society.backend.society.dto.response.SocietyResponse;
 
 import java.util.List;
 

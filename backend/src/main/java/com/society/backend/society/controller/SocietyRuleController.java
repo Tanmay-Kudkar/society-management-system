@@ -1,7 +1,7 @@
 package com.society.backend.society.controller;
 
-import com.society.backend.society.dto.SocietyRuleRequest;
-import com.society.backend.society.dto.SocietyRuleResponse;
+import com.society.backend.society.dto.request.SocietyRuleRequest;
+import com.society.backend.society.dto.response.SocietyRuleResponse;
 import com.society.backend.society.service.SocietyRuleService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
+import com.society.backend.society.entity.Society;
+import com.society.backend.user.entity.User;
 @RestController
 @RequestMapping("/society-rules")
 @RequiredArgsConstructor

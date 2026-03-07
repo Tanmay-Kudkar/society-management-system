@@ -1,19 +1,19 @@
 package com.society.backend.vendor.service;
 
-import com.society.backend.vendor.dto.VendorRequest;
-import com.society.backend.vendor.dto.VendorResponse;
-import com.society.backend.entity.Role;
-import com.society.backend.entity.SecurityLog;
-import com.society.backend.entity.Society;
-import com.society.backend.entity.User;
-import com.society.backend.entity.Vendor;
-import com.society.backend.exception.ApiException;
+import com.society.backend.vendor.dto.request.VendorRequest;
+import com.society.backend.vendor.dto.response.VendorResponse;
+import com.society.backend.user.entity.Role;
+import com.society.backend.security.entity.SecurityLog;
+import com.society.backend.society.entity.Society;
+import com.society.backend.user.entity.User;
+import com.society.backend.vendor.entity.Vendor;
+import com.society.backend.common.exception.ApiException;
 import com.society.backend.society.repository.SocietyRepository;
 import com.society.backend.vendor.repository.VendorBillRepository;
 import com.society.backend.vendor.repository.VendorRepository;
 import com.society.backend.security.service.SecurityLogService;
-import com.society.backend.service.common.ReferenceCleanupService;
-import com.society.backend.service.common.RoleService;
+import com.society.backend.common.service.ReferenceCleanupService;
+import com.society.backend.common.service.RoleService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -147,7 +147,7 @@ public class VendorServiceImpl implements VendorService {
 
         return vendorRepository.findAll().stream()
                 .filter(v -> {
-                    if (currentUser.getRole() == com.society.backend.entity.Role.MASTER_ADMIN) {
+                    if (currentUser.getRole() == com.society.backend.user.entity.Role.MASTER_ADMIN) {
                         return true;
                     }
                     return v.getSociety() != null && currentUser.getSociety() != null

@@ -1,13 +1,13 @@
 package com.society.backend.user.service;
 
-import com.society.backend.user.dto.UserRequest;
-import com.society.backend.entity.Flat;
-import com.society.backend.entity.Role;
-import com.society.backend.entity.Society;
-import com.society.backend.entity.User;
-import com.society.backend.exception.ApiException;
-import com.society.backend.repository.PasswordResetTokenRepository;
-import com.society.backend.service.common.ReferenceCleanupService;
+import com.society.backend.user.dto.request.UserRequest;
+import com.society.backend.flat.entity.Flat;
+import com.society.backend.user.entity.Role;
+import com.society.backend.society.entity.Society;
+import com.society.backend.user.entity.User;
+import com.society.backend.common.exception.ApiException;
+import com.society.backend.auth.repository.PasswordResetTokenRepository;
+import com.society.backend.common.service.ReferenceCleanupService;
 import com.society.backend.ticket.repository.ComplaintRepository;
 import com.society.backend.flat.repository.FlatRepository;
 import com.society.backend.society.repository.SocietyRepository;
@@ -28,6 +28,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Optional;
 
+import com.society.backend.flat.entity.Tenant;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.lenient;

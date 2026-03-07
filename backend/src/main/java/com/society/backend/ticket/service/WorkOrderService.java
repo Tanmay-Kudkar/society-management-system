@@ -1,7 +1,7 @@
 package com.society.backend.ticket.service;
 
-import com.society.backend.ticket.dto.WorkOrderRequest;
-import com.society.backend.ticket.dto.WorkOrderResponse;
+import com.society.backend.ticket.dto.request.WorkOrderRequest;
+import com.society.backend.ticket.dto.response.WorkOrderResponse;
 
 import java.math.BigDecimal;
 import java.util.List;

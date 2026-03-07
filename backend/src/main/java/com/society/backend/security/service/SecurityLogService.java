@@ -1,6 +1,6 @@
 package com.society.backend.security.service;
 
-import com.society.backend.entity.SecurityLog;
+import com.society.backend.security.entity.SecurityLog;
 import com.society.backend.security.repository.SecurityLogRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;

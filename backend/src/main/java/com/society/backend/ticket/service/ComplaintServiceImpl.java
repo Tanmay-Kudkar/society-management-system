@@ -1,21 +1,22 @@
 package com.society.backend.ticket.service;
 
-import com.society.backend.ticket.dto.ComplaintRequest;
-import com.society.backend.ticket.dto.ComplaintResponse;
-import com.society.backend.entity.Complaint;
-import com.society.backend.entity.Society;
-import com.society.backend.entity.User;
-import com.society.backend.exception.ApiException;
+import com.society.backend.ticket.dto.request.ComplaintRequest;
+import com.society.backend.ticket.dto.response.ComplaintResponse;
+import com.society.backend.ticket.entity.Complaint;
+import com.society.backend.society.entity.Society;
+import com.society.backend.user.entity.User;
+import com.society.backend.common.exception.ApiException;
 import com.society.backend.ticket.repository.ComplaintRepository;
 import com.society.backend.society.repository.SocietyRepository;
 import com.society.backend.user.repository.UserRepository;
-import com.society.backend.service.common.RoleService;
+import com.society.backend.common.service.RoleService;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.society.backend.user.entity.Role;
 @Service
 public class ComplaintServiceImpl implements ComplaintService {
 
@@ -91,7 +92,7 @@ public class ComplaintServiceImpl implements ComplaintService {
     @Override
     public List<ComplaintResponse> getByUser(Long userId) {
         var currentUser = roleService.getCurrentUser();
-        if (currentUser != null && currentUser.getRole() != com.society.backend.entity.Role.MASTER_ADMIN) {
+        if (currentUser != null && currentUser.getRole() != com.society.backend.user.entity.Role.MASTER_ADMIN) {
             if (!currentUser.getId().equals(userId)) {
                 throw new ApiException(HttpStatus.FORBIDDEN, "Cannot access other users' complaints");
             }

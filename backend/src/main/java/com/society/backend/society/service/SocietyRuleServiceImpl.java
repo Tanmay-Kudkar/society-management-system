@@ -1,14 +1,14 @@
 package com.society.backend.society.service;
 
-import com.society.backend.society.dto.SocietyRuleRequest;
-import com.society.backend.society.dto.SocietyRuleResponse;
-import com.society.backend.entity.Society;
-import com.society.backend.entity.SocietyRule;
-import com.society.backend.entity.User;
+import com.society.backend.society.dto.request.SocietyRuleRequest;
+import com.society.backend.society.dto.response.SocietyRuleResponse;
+import com.society.backend.society.entity.Society;
+import com.society.backend.society.entity.SocietyRule;
+import com.society.backend.user.entity.User;
 import com.society.backend.society.repository.SocietyRuleRepository;
 import com.society.backend.society.repository.SocietyRepository;
 import com.society.backend.user.repository.UserRepository;
-import com.society.backend.service.common.RoleService;
+import com.society.backend.common.service.RoleService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;

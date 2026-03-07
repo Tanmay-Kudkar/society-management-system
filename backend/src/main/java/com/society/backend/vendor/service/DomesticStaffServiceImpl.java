@@ -1,21 +1,21 @@
 package com.society.backend.vendor.service;
 
-import com.society.backend.vendor.dto.DomesticStaffRequest;
-import com.society.backend.vendor.dto.DomesticStaffResponse;
-import com.society.backend.vendor.dto.StaffAttendanceRequest;
-import com.society.backend.vendor.dto.StaffAttendanceResponse;
-import com.society.backend.entity.DomesticStaff;
-import com.society.backend.entity.Flat;
-import com.society.backend.entity.Society;
-import com.society.backend.entity.StaffAttendance;
-import com.society.backend.entity.User;
-import com.society.backend.exception.ApiException;
+import com.society.backend.vendor.dto.request.DomesticStaffRequest;
+import com.society.backend.vendor.dto.response.DomesticStaffResponse;
+import com.society.backend.vendor.dto.request.StaffAttendanceRequest;
+import com.society.backend.vendor.dto.response.StaffAttendanceResponse;
+import com.society.backend.vendor.entity.DomesticStaff;
+import com.society.backend.flat.entity.Flat;
+import com.society.backend.society.entity.Society;
+import com.society.backend.vendor.entity.StaffAttendance;
+import com.society.backend.user.entity.User;
+import com.society.backend.common.exception.ApiException;
 import com.society.backend.flat.repository.FlatRepository;
 import com.society.backend.society.repository.SocietyRepository;
 import com.society.backend.vendor.repository.DomesticStaffRepository;
 import com.society.backend.vendor.repository.StaffAttendanceRepository;
 import com.society.backend.user.repository.UserRepository;
-import com.society.backend.service.common.RoleService;
+import com.society.backend.common.service.RoleService;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 

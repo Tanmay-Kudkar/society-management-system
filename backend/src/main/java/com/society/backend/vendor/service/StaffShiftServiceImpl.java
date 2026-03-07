@@ -1,14 +1,14 @@
 package com.society.backend.vendor.service;
 
-import com.society.backend.dto.request.StaffShiftRequest;
-import com.society.backend.dto.response.StaffShiftResponse;
-import com.society.backend.entity.Society;
-import com.society.backend.entity.StaffShift;
-import com.society.backend.entity.User;
+import com.society.backend.vendor.dto.request.StaffShiftRequest;
+import com.society.backend.vendor.dto.response.StaffShiftResponse;
+import com.society.backend.society.entity.Society;
+import com.society.backend.vendor.entity.StaffShift;
+import com.society.backend.user.entity.User;
 import com.society.backend.vendor.repository.StaffShiftRepository;
 import com.society.backend.society.repository.SocietyRepository;
 import com.society.backend.user.repository.UserRepository;
-import com.society.backend.service.common.RoleService;
+import com.society.backend.common.service.RoleService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

@@ -1,13 +1,13 @@
 package com.society.backend.flat.service;
 
-import com.society.backend.flat.dto.TenantRequest;
-import com.society.backend.flat.dto.TenantResponse;
-import com.society.backend.entity.Flat;
-import com.society.backend.entity.Tenant;
-import com.society.backend.exception.ApiException;
+import com.society.backend.flat.dto.request.TenantRequest;
+import com.society.backend.flat.dto.response.TenantResponse;
+import com.society.backend.flat.entity.Flat;
+import com.society.backend.flat.entity.Tenant;
+import com.society.backend.common.exception.ApiException;
 import com.society.backend.flat.repository.FlatRepository;
 import com.society.backend.flat.repository.TenantRepository;
-import com.society.backend.service.common.RoleService;
+import com.society.backend.common.service.RoleService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;

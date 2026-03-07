@@ -1,7 +1,7 @@
 package com.society.backend.society.service;
 
-import com.society.backend.society.dto.AssetRequest;
-import com.society.backend.society.dto.AssetResponse;
+import com.society.backend.society.dto.request.AssetRequest;
+import com.society.backend.society.dto.response.AssetResponse;
 
 import java.util.List;
 import java.util.Map;

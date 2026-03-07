@@ -1,6 +1,6 @@
 package com.society.backend.ticket.repository;
 
-import com.society.backend.entity.Complaint;
+import com.society.backend.ticket.entity.Complaint;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

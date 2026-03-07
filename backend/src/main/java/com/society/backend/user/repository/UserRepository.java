@@ -1,7 +1,7 @@
 package com.society.backend.user.repository;
 
-import com.society.backend.entity.Role;
-import com.society.backend.entity.User;
+import com.society.backend.user.entity.Role;
+import com.society.backend.user.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -9,6 +9,8 @@ import org.springframework.data.repository.query.Param;
 import java.util.List;
 import java.util.Optional;
 
+import com.society.backend.flat.entity.Flat;
+import com.society.backend.society.entity.Society;
 public interface UserRepository extends JpaRepository<User, Long> {
 
     Optional<User> findByEmail(String email);

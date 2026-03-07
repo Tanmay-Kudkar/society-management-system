@@ -1,12 +1,12 @@
 package com.society.backend.ticket.service;
 
-import com.society.backend.ticket.dto.BulkEmergencyContactImportResponse;
-import com.society.backend.ticket.dto.BulkEmergencyContactImportResponse.EmergencyContactImportResult;
-import com.society.backend.ticket.dto.EmergencyContactImportRow;
-import com.society.backend.entity.EmergencyContact;
-import com.society.backend.entity.Society;
-import com.society.backend.entity.User;
-import com.society.backend.exception.ApiException;
+import com.society.backend.ticket.dto.response.BulkEmergencyContactImportResponse;
+import com.society.backend.ticket.dto.response.BulkEmergencyContactImportResponse.EmergencyContactImportResult;
+import com.society.backend.ticket.dto.request.EmergencyContactImportRow;
+import com.society.backend.ticket.entity.EmergencyContact;
+import com.society.backend.society.entity.Society;
+import com.society.backend.user.entity.User;
+import com.society.backend.common.exception.ApiException;
 import com.society.backend.ticket.repository.EmergencyContactRepository;
 import com.society.backend.society.repository.SocietyRepository;
 import com.society.backend.user.repository.UserRepository;

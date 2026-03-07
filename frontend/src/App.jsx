@@ -26,7 +26,7 @@ const ResetPassword = lazyWithMinDelay(
   () => import("./pages/auth/ResetPassword"),
 );
 
-const Dashboard = lazyWithMinDelay(() => import("./pages/core/Dashboard"));
+const Dashboard = lazyWithMinDelay(() => import("./pages/core/dashboard"));
 const Settings = lazyWithMinDelay(() => import("./pages/core/Settings"));
 const Reports = lazyWithMinDelay(() => import("./pages/core/Reports"));
 
@@ -235,7 +235,7 @@ function App() {
 
     const role = user?.role;
     const importers = [
-      () => import("./pages/core/Dashboard"),
+      () => import("./pages/core/dashboard"),
       () => import("./pages/core/Settings"),
       () => import("./pages/communication/Notices"),
     ];

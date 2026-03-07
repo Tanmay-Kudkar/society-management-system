@@ -1,16 +1,16 @@
 package com.society.backend.flat.service;
 
-import com.society.backend.flat.dto.WingRequest;
-import com.society.backend.flat.dto.WingResponse;
-import com.society.backend.entity.Role;
-import com.society.backend.entity.Society;
-import com.society.backend.entity.Wing;
-import com.society.backend.exception.ApiException;
+import com.society.backend.flat.dto.request.WingRequest;
+import com.society.backend.flat.dto.response.WingResponse;
+import com.society.backend.user.entity.Role;
+import com.society.backend.society.entity.Society;
+import com.society.backend.flat.entity.Wing;
+import com.society.backend.common.exception.ApiException;
 import com.society.backend.flat.repository.WingRepository;
 import com.society.backend.flat.repository.FlatRepository;
 import com.society.backend.society.repository.SocietyRepository;
-import com.society.backend.service.common.ReferenceCleanupService;
-import com.society.backend.service.common.RoleService;
+import com.society.backend.common.service.ReferenceCleanupService;
+import com.society.backend.common.service.RoleService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.society.backend.flat.entity.Flat;
 @Service
 @RequiredArgsConstructor
 public class WingServiceImpl implements WingService {

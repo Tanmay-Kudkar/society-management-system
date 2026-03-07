@@ -1,6 +1,6 @@
 package com.society.backend.vendor.repository;
 
-import com.society.backend.entity.StaffShift;
+import com.society.backend.vendor.entity.StaffShift;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

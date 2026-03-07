@@ -12,22 +12,26 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.society.backend.user.dto.BulkCreateUsersResponse;
-import com.society.backend.user.dto.UserRequest;
-import com.society.backend.user.dto.UserResponse;
-import com.society.backend.entity.Flat;
-import com.society.backend.entity.Role;
-import com.society.backend.entity.User;
-import com.society.backend.exception.ApiException;
-import com.society.backend.repository.PasswordResetTokenRepository;
+import com.society.backend.user.dto.response.BulkCreateUsersResponse;
+import com.society.backend.user.dto.request.UserRequest;
+import com.society.backend.user.dto.response.UserResponse;
+import com.society.backend.flat.entity.Flat;
+import com.society.backend.user.entity.Role;
+import com.society.backend.user.entity.User;
+import com.society.backend.common.exception.ApiException;
+import com.society.backend.auth.repository.PasswordResetTokenRepository;
 import com.society.backend.ticket.repository.ComplaintRepository;
 import com.society.backend.flat.repository.FlatRepository;
 import com.society.backend.ticket.repository.TicketRepository;
 import com.society.backend.user.repository.UserRepository;
 import com.society.backend.society.repository.SocietyRepository;
-import com.society.backend.security.RolePermissions;
-import com.society.backend.service.common.ReferenceCleanupService;
+import com.society.backend.common.security.RolePermissions;
+import com.society.backend.common.service.ReferenceCleanupService;
 
+import com.society.backend.flat.entity.Tenant;
+import com.society.backend.society.entity.Society;
+import com.society.backend.ticket.entity.Complaint;
+import com.society.backend.ticket.entity.Ticket;
 @Service
 public class UserServiceImpl implements UserService {
 

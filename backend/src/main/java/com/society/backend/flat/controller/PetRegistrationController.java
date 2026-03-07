@@ -1,7 +1,7 @@
 package com.society.backend.flat.controller;
 
-import com.society.backend.flat.dto.PetRegistrationRequest;
-import com.society.backend.flat.dto.PetRegistrationResponse;
+import com.society.backend.flat.dto.request.PetRegistrationRequest;
+import com.society.backend.flat.dto.response.PetRegistrationResponse;
 import com.society.backend.flat.service.PetRegistrationService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
+import com.society.backend.society.entity.Society;
+import com.society.backend.user.entity.User;
 @RestController
 @RequestMapping("/pet-registrations")
 @RequiredArgsConstructor

@@ -1,15 +1,15 @@
 package com.society.backend.finance.service;
 
-import com.society.backend.finance.dto.TransactionRequest;
-import com.society.backend.finance.dto.TransactionResponse;
-import com.society.backend.entity.Flat;
-import com.society.backend.entity.Society;
-import com.society.backend.entity.Transaction;
-import com.society.backend.exception.ApiException;
+import com.society.backend.finance.dto.request.TransactionRequest;
+import com.society.backend.finance.dto.response.TransactionResponse;
+import com.society.backend.flat.entity.Flat;
+import com.society.backend.society.entity.Society;
+import com.society.backend.finance.entity.Transaction;
+import com.society.backend.common.exception.ApiException;
 import com.society.backend.flat.repository.FlatRepository;
 import com.society.backend.society.repository.SocietyRepository;
 import com.society.backend.finance.repository.TransactionRepository;
-import com.society.backend.service.common.RoleService;
+import com.society.backend.common.service.RoleService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -22,6 +22,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.society.backend.user.entity.Role;
+import com.society.backend.user.entity.User;
 @Service
 @RequiredArgsConstructor
 public class TransactionServiceImpl implements TransactionService {
@@ -160,7 +162,7 @@ public class TransactionServiceImpl implements TransactionService {
 
         return transactionRepository.findAll().stream()
                 .filter(t -> {
-                    if (currentUser.getRole() == com.society.backend.entity.Role.MASTER_ADMIN) {
+                    if (currentUser.getRole() == com.society.backend.user.entity.Role.MASTER_ADMIN) {
                         return true;
                     }
                     return t.getSociety() != null && currentUser.getSociety() != null

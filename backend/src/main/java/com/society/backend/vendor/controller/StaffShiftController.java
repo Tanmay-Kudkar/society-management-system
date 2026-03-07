@@ -1,7 +1,7 @@
 package com.society.backend.vendor.controller;
 
-import com.society.backend.dto.request.StaffShiftRequest;
-import com.society.backend.dto.response.StaffShiftResponse;
+import com.society.backend.vendor.dto.request.StaffShiftRequest;
+import com.society.backend.vendor.dto.response.StaffShiftResponse;
 import com.society.backend.vendor.service.StaffShiftService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -13,6 +13,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
+import com.society.backend.society.entity.Society;
 @RestController
 @RequestMapping("/staff-shifts")
 @RequiredArgsConstructor

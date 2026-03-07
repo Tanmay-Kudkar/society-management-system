@@ -1,6 +1,6 @@
 package com.society.backend.security.repository;
 
-import com.society.backend.entity.SOSAlert;
+import com.society.backend.security.entity.SOSAlert;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

@@ -1,6 +1,6 @@
 package com.society.backend.society.repository;
 
-import com.society.backend.entity.SocietySetting;
+import com.society.backend.society.entity.SocietySetting;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

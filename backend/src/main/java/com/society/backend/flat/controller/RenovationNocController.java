@@ -1,7 +1,7 @@
 package com.society.backend.flat.controller;
 
-import com.society.backend.dto.request.RenovationNocRequest;
-import com.society.backend.dto.response.RenovationNocResponse;
+import com.society.backend.flat.dto.request.RenovationNocRequest;
+import com.society.backend.flat.dto.response.RenovationNocResponse;
 import com.society.backend.flat.service.RenovationNocService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -11,6 +11,8 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Map;
 
+import com.society.backend.society.entity.Society;
+import com.society.backend.user.entity.User;
 @RestController
 @RequestMapping("/renovation-nocs")
 @RequiredArgsConstructor

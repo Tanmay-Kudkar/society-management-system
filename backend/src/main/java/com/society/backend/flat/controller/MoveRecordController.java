@@ -1,7 +1,7 @@
 package com.society.backend.flat.controller;
 
-import com.society.backend.dto.request.MoveRecordRequest;
-import com.society.backend.dto.response.MoveRecordResponse;
+import com.society.backend.flat.dto.request.MoveRecordRequest;
+import com.society.backend.flat.dto.response.MoveRecordResponse;
 import com.society.backend.flat.service.MoveRecordService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -13,6 +13,8 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
+import com.society.backend.society.entity.Society;
+import com.society.backend.user.entity.User;
 @RestController
 @RequestMapping("/move-records")
 @RequiredArgsConstructor

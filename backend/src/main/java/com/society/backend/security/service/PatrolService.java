@@ -1,6 +1,7 @@
 package com.society.backend.security.service;
 
-import com.society.backend.security.dto.*;
+import com.society.backend.security.dto.request.*;
+import com.society.backend.security.dto.response.*;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;

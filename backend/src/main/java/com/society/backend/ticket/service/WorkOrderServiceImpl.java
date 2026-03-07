@@ -1,17 +1,17 @@
 package com.society.backend.ticket.service;
 
-import com.society.backend.ticket.dto.WorkOrderRequest;
-import com.society.backend.ticket.dto.WorkOrderResponse;
-import com.society.backend.entity.Flat;
-import com.society.backend.entity.Society;
-import com.society.backend.entity.User;
-import com.society.backend.entity.WorkOrder;
-import com.society.backend.exception.ApiException;
+import com.society.backend.ticket.dto.request.WorkOrderRequest;
+import com.society.backend.ticket.dto.response.WorkOrderResponse;
+import com.society.backend.flat.entity.Flat;
+import com.society.backend.society.entity.Society;
+import com.society.backend.user.entity.User;
+import com.society.backend.ticket.entity.WorkOrder;
+import com.society.backend.common.exception.ApiException;
 import com.society.backend.flat.repository.FlatRepository;
 import com.society.backend.society.repository.SocietyRepository;
 import com.society.backend.user.repository.UserRepository;
 import com.society.backend.ticket.repository.WorkOrderRepository;
-import com.society.backend.service.common.RoleService;
+import com.society.backend.common.service.RoleService;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 

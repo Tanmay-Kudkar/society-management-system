@@ -1,6 +1,6 @@
 package com.society.backend.ticket.repository;
 
-import com.society.backend.entity.EmergencyContact;
+import com.society.backend.ticket.entity.EmergencyContact;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

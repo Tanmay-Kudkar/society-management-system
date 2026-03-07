@@ -1,13 +1,16 @@
 package com.society.backend.user.service;
 
-import com.society.backend.user.dto.BulkCreateUsersResponse;
-import com.society.backend.user.dto.UserRequest;
-import com.society.backend.user.dto.UserResponse;
-import com.society.backend.entity.Role;
+import com.society.backend.user.dto.response.BulkCreateUsersResponse;
+import com.society.backend.user.dto.request.UserRequest;
+import com.society.backend.user.dto.response.UserResponse;
+import com.society.backend.user.entity.Role;
 
 import java.util.List;
 import java.util.Set;
 
+import com.society.backend.flat.entity.Flat;
+import com.society.backend.society.entity.Society;
+import com.society.backend.user.entity.User;
 public interface UserService {
 
     UserResponse createUser(UserRequest request);

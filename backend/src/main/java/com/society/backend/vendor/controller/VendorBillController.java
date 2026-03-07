@@ -1,7 +1,7 @@
 package com.society.backend.vendor.controller;
 
-import com.society.backend.vendor.dto.VendorBillRequest;
-import com.society.backend.vendor.dto.VendorBillResponse;
+import com.society.backend.vendor.dto.request.VendorBillRequest;
+import com.society.backend.vendor.dto.response.VendorBillResponse;
 import com.society.backend.vendor.service.VendorBillService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -13,6 +13,9 @@ import org.springframework.web.bind.annotation.*;
 import java.math.BigDecimal;
 import java.util.List;
 
+import com.society.backend.finance.entity.Payment;
+import com.society.backend.society.entity.Society;
+import com.society.backend.vendor.entity.Vendor;
 @RestController
 @RequestMapping("/vendor-bills")
 @RequiredArgsConstructor

@@ -1,8 +1,8 @@
 package com.society.backend.society.controller;
 
-import com.society.backend.society.dto.SocietyRequest;
-import com.society.backend.society.dto.SocietyResponse;
-import com.society.backend.service.common.RoleService;
+import com.society.backend.society.dto.request.SocietyRequest;
+import com.society.backend.society.dto.response.SocietyResponse;
+import com.society.backend.common.service.RoleService;
 import com.society.backend.society.service.SocietyService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;

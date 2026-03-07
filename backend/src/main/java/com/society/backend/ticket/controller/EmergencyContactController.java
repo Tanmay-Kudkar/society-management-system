@@ -1,9 +1,9 @@
 package com.society.backend.ticket.controller;
 
-import com.society.backend.ticket.dto.BulkEmergencyContactImportResponse;
-import com.society.backend.ticket.dto.EmergencyContactImportRow;
-import com.society.backend.ticket.dto.EmergencyContactRequest;
-import com.society.backend.ticket.dto.EmergencyContactResponse;
+import com.society.backend.ticket.dto.response.BulkEmergencyContactImportResponse;
+import com.society.backend.ticket.dto.request.EmergencyContactImportRow;
+import com.society.backend.ticket.dto.request.EmergencyContactRequest;
+import com.society.backend.ticket.dto.response.EmergencyContactResponse;
 import com.society.backend.ticket.service.BulkEmergencyContactImportService;
 import com.society.backend.ticket.service.EmergencyContactService;
 import jakarta.validation.Valid;
@@ -16,6 +16,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
+import com.society.backend.society.entity.Society;
 @RestController
 @RequestMapping("/emergency-contacts")
 @RequiredArgsConstructor

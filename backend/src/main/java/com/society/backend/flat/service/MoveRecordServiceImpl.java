@@ -1,15 +1,15 @@
 package com.society.backend.flat.service;
 
-import com.society.backend.dto.request.MoveRecordRequest;
-import com.society.backend.dto.response.MoveRecordResponse;
-import com.society.backend.entity.MoveRecord;
-import com.society.backend.entity.Society;
-import com.society.backend.entity.User;
+import com.society.backend.flat.dto.request.MoveRecordRequest;
+import com.society.backend.flat.dto.response.MoveRecordResponse;
+import com.society.backend.flat.entity.MoveRecord;
+import com.society.backend.society.entity.Society;
+import com.society.backend.user.entity.User;
 import com.society.backend.flat.repository.MoveRecordRepository;
 import com.society.backend.society.repository.SocietyRepository;
 import com.society.backend.user.repository.UserRepository;
 import com.society.backend.flat.service.MoveRecordService;
-import com.society.backend.service.common.RoleService;
+import com.society.backend.common.service.RoleService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.society.backend.flat.entity.Wing;
 @Service
 @RequiredArgsConstructor
 public class MoveRecordServiceImpl implements MoveRecordService {

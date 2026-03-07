@@ -1,6 +1,6 @@
 package com.society.backend.finance.repository;
 
-import com.society.backend.entity.BillLineItem;
+import com.society.backend.finance.entity.BillLineItem;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;

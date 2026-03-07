@@ -1,7 +1,7 @@
 package com.society.backend.ticket.service;
 
-import com.society.backend.ticket.dto.ComplaintRequest;
-import com.society.backend.ticket.dto.ComplaintResponse;
+import com.society.backend.ticket.dto.request.ComplaintRequest;
+import com.society.backend.ticket.dto.response.ComplaintResponse;
 
 import java.util.List;
 

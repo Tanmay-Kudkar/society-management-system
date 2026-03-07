@@ -1,15 +1,15 @@
 package com.society.backend.flat.service;
 
-import com.society.backend.dto.request.FacilityBookingRequest;
-import com.society.backend.dto.response.FacilityBookingResponse;
-import com.society.backend.entity.FacilityBooking;
-import com.society.backend.entity.Society;
-import com.society.backend.entity.User;
+import com.society.backend.flat.dto.request.FacilityBookingRequest;
+import com.society.backend.flat.dto.response.FacilityBookingResponse;
+import com.society.backend.flat.entity.FacilityBooking;
+import com.society.backend.society.entity.Society;
+import com.society.backend.user.entity.User;
 import com.society.backend.flat.repository.FacilityBookingRepository;
 import com.society.backend.society.repository.SocietyRepository;
 import com.society.backend.user.repository.UserRepository;
 import com.society.backend.flat.service.FacilityBookingService;
-import com.society.backend.service.common.RoleService;
+import com.society.backend.common.service.RoleService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

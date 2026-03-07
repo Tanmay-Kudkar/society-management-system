@@ -1,7 +1,7 @@
 package com.society.backend.vendor.service;
 
-import com.society.backend.vendor.dto.VendorRequest;
-import com.society.backend.vendor.dto.VendorResponse;
+import com.society.backend.vendor.dto.request.VendorRequest;
+import com.society.backend.vendor.dto.response.VendorResponse;
 
 import java.util.List;
 

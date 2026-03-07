@@ -1,15 +1,15 @@
 package com.society.backend.ticket.service;
 
-import com.society.backend.ticket.dto.TicketRequest;
-import com.society.backend.ticket.dto.TicketResponse;
-import com.society.backend.entity.Society;
-import com.society.backend.entity.Ticket;
-import com.society.backend.entity.User;
-import com.society.backend.exception.ApiException;
+import com.society.backend.ticket.dto.request.TicketRequest;
+import com.society.backend.ticket.dto.response.TicketResponse;
+import com.society.backend.society.entity.Society;
+import com.society.backend.ticket.entity.Ticket;
+import com.society.backend.user.entity.User;
+import com.society.backend.common.exception.ApiException;
 import com.society.backend.society.repository.SocietyRepository;
 import com.society.backend.ticket.repository.TicketRepository;
 import com.society.backend.user.repository.UserRepository;
-import com.society.backend.service.common.RoleService;
+import com.society.backend.common.service.RoleService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -19,6 +19,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.society.backend.user.entity.Role;
 @Service
 @RequiredArgsConstructor
 public class TicketServiceImpl implements TicketService {
@@ -108,7 +109,7 @@ public class TicketServiceImpl implements TicketService {
 
         return ticketRepository.findAll().stream()
                 .filter(t -> {
-                    if (currentUser.getRole() == com.society.backend.entity.Role.MASTER_ADMIN) {
+                    if (currentUser.getRole() == com.society.backend.user.entity.Role.MASTER_ADMIN) {
                         return true;
                     }
                     return t.getSociety() != null && currentUser.getSociety() != null

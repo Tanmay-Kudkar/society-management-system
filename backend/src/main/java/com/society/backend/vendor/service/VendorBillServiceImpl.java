@@ -1,16 +1,16 @@
 package com.society.backend.vendor.service;
 
-import com.society.backend.finance.dto.TransactionRequest;
-import com.society.backend.vendor.dto.VendorBillRequest;
-import com.society.backend.vendor.dto.VendorBillResponse;
-import com.society.backend.entity.Society;
-import com.society.backend.entity.Vendor;
-import com.society.backend.entity.VendorBill;
-import com.society.backend.exception.ApiException;
+import com.society.backend.finance.dto.request.TransactionRequest;
+import com.society.backend.vendor.dto.request.VendorBillRequest;
+import com.society.backend.vendor.dto.response.VendorBillResponse;
+import com.society.backend.society.entity.Society;
+import com.society.backend.vendor.entity.Vendor;
+import com.society.backend.vendor.entity.VendorBill;
+import com.society.backend.common.exception.ApiException;
 import com.society.backend.society.repository.SocietyRepository;
 import com.society.backend.vendor.repository.VendorBillRepository;
 import com.society.backend.vendor.repository.VendorRepository;
-import com.society.backend.service.common.RoleService;
+import com.society.backend.common.service.RoleService;
 import com.society.backend.finance.service.TransactionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -23,6 +23,10 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.society.backend.finance.entity.Payment;
+import com.society.backend.finance.entity.Transaction;
+import com.society.backend.user.entity.Role;
+import com.society.backend.user.entity.User;
 @Service
 @RequiredArgsConstructor
 public class VendorBillServiceImpl implements VendorBillService {
@@ -111,7 +115,7 @@ public class VendorBillServiceImpl implements VendorBillService {
 
         return vendorBillRepository.findAll().stream()
                 .filter(b -> {
-                    if (currentUser.getRole() == com.society.backend.entity.Role.MASTER_ADMIN) {
+                    if (currentUser.getRole() == com.society.backend.user.entity.Role.MASTER_ADMIN) {
                         return true;
                     }
                     return b.getSociety() != null && currentUser.getSociety() != null

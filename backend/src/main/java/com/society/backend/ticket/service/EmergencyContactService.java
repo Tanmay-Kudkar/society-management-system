@@ -1,7 +1,7 @@
 package com.society.backend.ticket.service;
 
-import com.society.backend.ticket.dto.EmergencyContactRequest;
-import com.society.backend.ticket.dto.EmergencyContactResponse;
+import com.society.backend.ticket.dto.request.EmergencyContactRequest;
+import com.society.backend.ticket.dto.response.EmergencyContactResponse;
 
 import java.util.List;
 

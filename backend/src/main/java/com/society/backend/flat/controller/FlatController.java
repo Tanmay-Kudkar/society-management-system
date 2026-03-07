@@ -1,12 +1,12 @@
 package com.society.backend.flat.controller;
 
-import com.society.backend.flat.dto.BulkFlatImportResponse;
-import com.society.backend.flat.dto.FlatImportRow;
-import com.society.backend.flat.dto.FlatRequest;
-import com.society.backend.flat.dto.FlatResponse;
+import com.society.backend.flat.dto.response.BulkFlatImportResponse;
+import com.society.backend.flat.dto.request.FlatImportRow;
+import com.society.backend.flat.dto.request.FlatRequest;
+import com.society.backend.flat.dto.response.FlatResponse;
 import com.society.backend.flat.service.BulkFlatImportService;
 import com.society.backend.flat.service.FlatService;
-import com.society.backend.service.common.RoleService;
+import com.society.backend.common.service.RoleService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -15,6 +15,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
+import com.society.backend.society.entity.Society;
 @RestController
 @RequestMapping("/flats")
 @PreAuthorize("isAuthenticated()")

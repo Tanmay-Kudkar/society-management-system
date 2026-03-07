@@ -1,13 +1,13 @@
 package com.society.backend.society.service;
 
-import com.society.backend.society.dto.SocietySettingRequest;
-import com.society.backend.society.dto.SocietySettingResponse;
-import com.society.backend.entity.Society;
-import com.society.backend.entity.SocietySetting;
-import com.society.backend.exception.ApiException;
+import com.society.backend.society.dto.request.SocietySettingRequest;
+import com.society.backend.society.dto.response.SocietySettingResponse;
+import com.society.backend.society.entity.Society;
+import com.society.backend.society.entity.SocietySetting;
+import com.society.backend.common.exception.ApiException;
 import com.society.backend.society.repository.SocietyRepository;
 import com.society.backend.society.repository.SocietySettingRepository;
-import com.society.backend.service.common.RoleService;
+import com.society.backend.common.service.RoleService;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

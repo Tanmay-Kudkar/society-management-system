@@ -1,7 +1,7 @@
 package com.society.backend.society.service;
 
-import com.society.backend.dto.request.CommonAreaScheduleRequest;
-import com.society.backend.dto.response.CommonAreaScheduleResponse;
+import com.society.backend.society.dto.request.CommonAreaScheduleRequest;
+import com.society.backend.society.dto.response.CommonAreaScheduleResponse;
 
 import java.util.List;
 import java.util.Map;

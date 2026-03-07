@@ -1,9 +1,9 @@
 package com.society.backend.vendor.service;
 
-import com.society.backend.vendor.dto.DomesticStaffRequest;
-import com.society.backend.vendor.dto.DomesticStaffResponse;
-import com.society.backend.vendor.dto.StaffAttendanceRequest;
-import com.society.backend.vendor.dto.StaffAttendanceResponse;
+import com.society.backend.vendor.dto.request.DomesticStaffRequest;
+import com.society.backend.vendor.dto.response.DomesticStaffResponse;
+import com.society.backend.vendor.dto.request.StaffAttendanceRequest;
+import com.society.backend.vendor.dto.response.StaffAttendanceResponse;
 
 import java.time.LocalDate;
 import java.util.List;

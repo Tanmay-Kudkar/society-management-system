@@ -1,11 +1,11 @@
 package com.society.backend.vendor.controller;
 
-import com.society.backend.vendor.dto.DomesticStaffRequest;
-import com.society.backend.vendor.dto.DomesticStaffResponse;
-import com.society.backend.vendor.dto.StaffAttendanceRequest;
-import com.society.backend.vendor.dto.StaffAttendanceResponse;
+import com.society.backend.vendor.dto.request.DomesticStaffRequest;
+import com.society.backend.vendor.dto.response.DomesticStaffResponse;
+import com.society.backend.vendor.dto.request.StaffAttendanceRequest;
+import com.society.backend.vendor.dto.response.StaffAttendanceResponse;
 import com.society.backend.vendor.service.DomesticStaffService;
-import com.society.backend.service.common.RoleService;
+import com.society.backend.common.service.RoleService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -14,6 +14,8 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDate;
 import java.util.List;
 
+import com.society.backend.flat.entity.Flat;
+import com.society.backend.society.entity.Society;
 @RestController
 @RequestMapping("/domestic-staff")
 @PreAuthorize("isAuthenticated()")

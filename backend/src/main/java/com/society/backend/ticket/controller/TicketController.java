@@ -1,7 +1,7 @@
 package com.society.backend.ticket.controller;
 
-import com.society.backend.ticket.dto.TicketRequest;
-import com.society.backend.ticket.dto.TicketResponse;
+import com.society.backend.ticket.dto.request.TicketRequest;
+import com.society.backend.ticket.dto.response.TicketResponse;
 import com.society.backend.ticket.service.TicketService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -12,6 +12,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+import com.society.backend.flat.entity.Tenant;
+import com.society.backend.society.entity.Society;
 @RestController
 @RequestMapping("/tickets")
 @RequiredArgsConstructor

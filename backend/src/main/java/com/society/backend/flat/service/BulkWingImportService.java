@@ -1,11 +1,11 @@
 package com.society.backend.flat.service;
 
-import com.society.backend.flat.dto.BulkWingImportResponse;
-import com.society.backend.flat.dto.BulkWingImportResponse.WingImportResult;
-import com.society.backend.flat.dto.WingImportRow;
-import com.society.backend.entity.Society;
-import com.society.backend.entity.Wing;
-import com.society.backend.exception.ApiException;
+import com.society.backend.flat.dto.response.BulkWingImportResponse;
+import com.society.backend.flat.dto.response.BulkWingImportResponse.WingImportResult;
+import com.society.backend.flat.dto.request.WingImportRow;
+import com.society.backend.society.entity.Society;
+import com.society.backend.flat.entity.Wing;
+import com.society.backend.common.exception.ApiException;
 import com.society.backend.flat.repository.WingRepository;
 import com.society.backend.society.repository.SocietyRepository;
 import lombok.RequiredArgsConstructor;

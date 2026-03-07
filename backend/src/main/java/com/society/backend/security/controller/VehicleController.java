@@ -1,9 +1,9 @@
 package com.society.backend.security.controller;
 
-import com.society.backend.security.dto.BulkVehicleImportResponse;
-import com.society.backend.security.dto.VehicleImportRow;
-import com.society.backend.security.dto.VehicleRequest;
-import com.society.backend.security.dto.VehicleResponse;
+import com.society.backend.security.dto.response.BulkVehicleImportResponse;
+import com.society.backend.security.dto.request.VehicleImportRow;
+import com.society.backend.security.dto.request.VehicleRequest;
+import com.society.backend.security.dto.response.VehicleResponse;
 import com.society.backend.security.service.BulkVehicleImportService;
 import com.society.backend.security.service.VehicleService;
 import jakarta.validation.Valid;
@@ -16,6 +16,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
+import com.society.backend.flat.entity.Flat;
 @RestController
 @RequestMapping("/vehicles")
 @RequiredArgsConstructor

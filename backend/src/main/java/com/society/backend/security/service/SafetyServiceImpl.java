@@ -1,23 +1,23 @@
 package com.society.backend.security.service;
 
-import com.society.backend.security.dto.GateLogRequest;
-import com.society.backend.security.dto.GateLogResponse;
-import com.society.backend.security.dto.SOSAlertRequest;
-import com.society.backend.security.dto.SOSAlertResponse;
-import com.society.backend.entity.Flat;
-import com.society.backend.entity.GateLog;
-import com.society.backend.entity.SOSAlert;
-import com.society.backend.entity.Society;
-import com.society.backend.entity.User;
-import com.society.backend.entity.Visitor;
-import com.society.backend.exception.ApiException;
+import com.society.backend.security.dto.request.GateLogRequest;
+import com.society.backend.security.dto.response.GateLogResponse;
+import com.society.backend.security.dto.request.SOSAlertRequest;
+import com.society.backend.security.dto.response.SOSAlertResponse;
+import com.society.backend.flat.entity.Flat;
+import com.society.backend.security.entity.GateLog;
+import com.society.backend.security.entity.SOSAlert;
+import com.society.backend.society.entity.Society;
+import com.society.backend.user.entity.User;
+import com.society.backend.security.entity.Visitor;
+import com.society.backend.common.exception.ApiException;
 import com.society.backend.flat.repository.FlatRepository;
 import com.society.backend.security.repository.GateLogRepository;
 import com.society.backend.security.repository.SOSAlertRepository;
 import com.society.backend.society.repository.SocietyRepository;
 import com.society.backend.user.repository.UserRepository;
 import com.society.backend.security.repository.VisitorRepository;
-import com.society.backend.service.common.RoleService;
+import com.society.backend.common.service.RoleService;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 

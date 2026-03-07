@@ -1,7 +1,7 @@
 package com.society.backend.vendor.service;
 
-import com.society.backend.dto.request.StaffShiftRequest;
-import com.society.backend.dto.response.StaffShiftResponse;
+import com.society.backend.vendor.dto.request.StaffShiftRequest;
+import com.society.backend.vendor.dto.response.StaffShiftResponse;
 
 import java.time.LocalDate;
 import java.util.List;

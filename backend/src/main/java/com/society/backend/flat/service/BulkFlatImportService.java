@@ -1,12 +1,12 @@
 package com.society.backend.flat.service;
 
-import com.society.backend.flat.dto.BulkFlatImportResponse;
-import com.society.backend.flat.dto.BulkFlatImportResponse.FlatImportResult;
-import com.society.backend.flat.dto.FlatImportRow;
-import com.society.backend.entity.Flat;
-import com.society.backend.entity.Society;
-import com.society.backend.entity.Wing;
-import com.society.backend.exception.ApiException;
+import com.society.backend.flat.dto.response.BulkFlatImportResponse;
+import com.society.backend.flat.dto.response.BulkFlatImportResponse.FlatImportResult;
+import com.society.backend.flat.dto.request.FlatImportRow;
+import com.society.backend.flat.entity.Flat;
+import com.society.backend.society.entity.Society;
+import com.society.backend.flat.entity.Wing;
+import com.society.backend.common.exception.ApiException;
 import com.society.backend.flat.repository.FlatRepository;
 import com.society.backend.society.repository.SocietyRepository;
 import com.society.backend.flat.repository.WingRepository;

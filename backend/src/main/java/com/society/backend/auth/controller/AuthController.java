@@ -1,9 +1,10 @@
 package com.society.backend.auth.controller;
 
-import com.society.backend.auth.dto.*;
-import com.society.backend.user.dto.UserResponse;
+import com.society.backend.auth.dto.request.*;
+import com.society.backend.auth.dto.response.*;
+import com.society.backend.user.dto.response.UserResponse;
 import com.society.backend.auth.service.AuthService;
-import com.society.backend.auth.security.JwtUtils;
+import com.society.backend.common.security.JwtUtils;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;

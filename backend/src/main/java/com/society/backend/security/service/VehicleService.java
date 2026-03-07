@@ -1,7 +1,7 @@
 package com.society.backend.security.service;
 
-import com.society.backend.security.dto.VehicleRequest;
-import com.society.backend.security.dto.VehicleResponse;
+import com.society.backend.security.dto.request.VehicleRequest;
+import com.society.backend.security.dto.response.VehicleResponse;
 
 import java.util.List;
 

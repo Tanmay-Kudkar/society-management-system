@@ -1,12 +1,12 @@
 package com.society.backend.security.service;
 
-import com.society.backend.security.dto.*;
-import com.society.backend.entity.*;
-import com.society.backend.exception.ApiException;
+import com.society.backend.security.dto.request.*;
+import com.society.backend.security.dto.response.*;
+import com.society.backend.common.exception.ApiException;
 import com.society.backend.security.repository.*;
 import com.society.backend.society.repository.SocietyRepository;
 import com.society.backend.user.repository.UserRepository;
-import com.society.backend.service.common.RoleService;
+import com.society.backend.common.service.RoleService;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -15,6 +15,11 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.society.backend.security.entity.DutyRoster;
+import com.society.backend.security.entity.PatrolCheckpoint;
+import com.society.backend.security.entity.PatrolLog;
+import com.society.backend.society.entity.Society;
+import com.society.backend.user.entity.User;
 @Service
 public class PatrolServiceImpl implements PatrolService {
 

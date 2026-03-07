@@ -1,14 +1,14 @@
 package com.society.backend.ticket.service;
 
-import com.society.backend.ticket.dto.*;
-import com.society.backend.entity.*;
-import com.society.backend.exception.ApiException;
+import com.society.backend.ticket.dto.request.*;
+import com.society.backend.ticket.dto.response.*;
+import com.society.backend.common.exception.ApiException;
 import com.society.backend.ticket.repository.ApprovalActionRepository;
 import com.society.backend.ticket.repository.ApprovalRequestRepository;
 import com.society.backend.ticket.repository.ApprovalWorkflowRepository;
 import com.society.backend.society.repository.SocietyRepository;
 import com.society.backend.user.repository.UserRepository;
-import com.society.backend.service.common.RoleService;
+import com.society.backend.common.service.RoleService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -18,6 +18,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.society.backend.society.entity.Society;
+import com.society.backend.ticket.entity.ApprovalAction;
+import com.society.backend.ticket.entity.ApprovalRequest;
+import com.society.backend.ticket.entity.ApprovalWorkflow;
+import com.society.backend.ticket.entity.ApprovalWorkflowStep;
+import com.society.backend.user.entity.Role;
+import com.society.backend.user.entity.User;
 @Service
 @RequiredArgsConstructor
 public class ApprovalServiceImpl implements ApprovalService {

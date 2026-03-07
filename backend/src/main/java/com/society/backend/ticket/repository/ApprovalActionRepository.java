@@ -1,6 +1,6 @@
 package com.society.backend.ticket.repository;
 
-import com.society.backend.entity.ApprovalAction;
+import com.society.backend.ticket.entity.ApprovalAction;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

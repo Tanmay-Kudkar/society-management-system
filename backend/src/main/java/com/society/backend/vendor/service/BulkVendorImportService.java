@@ -1,11 +1,11 @@
 package com.society.backend.vendor.service;
 
-import com.society.backend.vendor.dto.BulkVendorImportResponse;
-import com.society.backend.vendor.dto.BulkVendorImportResponse.VendorImportResult;
-import com.society.backend.vendor.dto.VendorImportRow;
-import com.society.backend.entity.Society;
-import com.society.backend.entity.Vendor;
-import com.society.backend.exception.ApiException;
+import com.society.backend.vendor.dto.response.BulkVendorImportResponse;
+import com.society.backend.vendor.dto.response.BulkVendorImportResponse.VendorImportResult;
+import com.society.backend.vendor.dto.request.VendorImportRow;
+import com.society.backend.society.entity.Society;
+import com.society.backend.vendor.entity.Vendor;
+import com.society.backend.common.exception.ApiException;
 import com.society.backend.society.repository.SocietyRepository;
 import com.society.backend.vendor.repository.VendorRepository;
 import lombok.RequiredArgsConstructor;

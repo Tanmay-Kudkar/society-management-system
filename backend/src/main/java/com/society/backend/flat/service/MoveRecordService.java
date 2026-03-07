@@ -1,7 +1,7 @@
 package com.society.backend.flat.service;
 
-import com.society.backend.dto.request.MoveRecordRequest;
-import com.society.backend.dto.response.MoveRecordResponse;
+import com.society.backend.flat.dto.request.MoveRecordRequest;
+import com.society.backend.flat.dto.response.MoveRecordResponse;
 
 import java.time.LocalDate;
 import java.util.List;

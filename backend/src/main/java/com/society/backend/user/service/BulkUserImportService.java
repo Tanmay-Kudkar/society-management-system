@@ -1,18 +1,18 @@
 package com.society.backend.user.service;
 
-import com.society.backend.user.dto.BulkUserImportResponse;
-import com.society.backend.user.dto.BulkUserImportResponse.UserImportResult;
-import com.society.backend.user.dto.UserImportRow;
-import com.society.backend.entity.Flat;
-import com.society.backend.entity.Role;
-import com.society.backend.entity.Society;
-import com.society.backend.entity.User;
-import com.society.backend.exception.ApiException;
+import com.society.backend.user.dto.response.BulkUserImportResponse;
+import com.society.backend.user.dto.response.BulkUserImportResponse.UserImportResult;
+import com.society.backend.user.dto.request.UserImportRow;
+import com.society.backend.flat.entity.Flat;
+import com.society.backend.user.entity.Role;
+import com.society.backend.society.entity.Society;
+import com.society.backend.user.entity.User;
+import com.society.backend.common.exception.ApiException;
 import com.society.backend.flat.repository.FlatRepository;
 import com.society.backend.society.repository.SocietyRepository;
 import com.society.backend.user.repository.UserRepository;
-import com.society.backend.security.RolePermissions;
-import com.society.backend.service.common.RoleService;
+import com.society.backend.common.security.RolePermissions;
+import com.society.backend.common.service.RoleService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.*;
@@ -34,6 +34,9 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Pattern;
 
+import com.society.backend.flat.entity.Tenant;
+import com.society.backend.flat.entity.Wing;
+import com.society.backend.security.entity.Visitor;
 @Service
 @RequiredArgsConstructor
 @Slf4j

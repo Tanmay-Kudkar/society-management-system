@@ -1,14 +1,15 @@
 package com.society.backend.society.controller;
 
-import com.society.backend.society.dto.SocietySettingRequest;
-import com.society.backend.society.dto.SocietySettingResponse;
-import com.society.backend.service.common.RoleService;
+import com.society.backend.society.dto.request.SocietySettingRequest;
+import com.society.backend.society.dto.response.SocietySettingResponse;
+import com.society.backend.common.service.RoleService;
 import com.society.backend.society.service.SocietySettingService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import com.society.backend.society.entity.Society;
 @RestController
 @RequestMapping("/society-settings")
 @PreAuthorize("isAuthenticated()")
