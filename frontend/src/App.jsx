@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { Routes, Route, Navigate, useLocation, useParams } from "react-router-dom";
 import { useEffect, lazy, Suspense, useRef } from "react";
 import {
   useAuth,
@@ -35,12 +35,8 @@ const RolesPermissions = lazyWithMinDelay(
   () => import("./pages/users/RolesPermissions"),
 );
 
-const Societies = lazyWithMinDelay(() => import("./pages/society/Societies"));
 const SocietyAdmins = lazyWithMinDelay(
   () => import("./pages/society/SocietyAdmins"),
-);
-const SocietyDetail = lazyWithMinDelay(
-  () => import("./pages/society/SocietyDetail"),
 );
 
 const UnitManagement = lazyWithMinDelay(
@@ -170,7 +166,6 @@ const PAGE_TITLES = {
   "/help": "Help",
   "/": "Dashboard",
   "/users": "Users",
-  "/societies": "Societies",
   "/society-admins": "Society Admins",
   "/wings": "Wings",
   "/unit-management": "Unit & User Management",
@@ -215,13 +210,17 @@ const DynamicTitle = () => {
   const { pathname } = useLocation();
 
   useEffect(() => {
-    const title =
-      PAGE_TITLES[pathname] ||
-      (pathname.startsWith("/societies/") ? "Society Details" : null);
+    const title = PAGE_TITLES[pathname] || null;
     document.title = title ? `${title} - SocietyHub` : "SocietyHub";
   }, [pathname]);
 
   return null;
+};
+
+const SocietyRouteRedirect = () => {
+  const { id } = useParams();
+  const scopedId = encodeURIComponent(id || "");
+  return <Navigate to={`/?society=${scopedId}`} replace />;
 };
 
 function App() {
@@ -242,7 +241,6 @@ function App() {
 
     if (role === "MASTER_ADMIN" || role === "MASTER_ADMIN") {
       importers.push(
-        () => import("./pages/society/Societies"),
         () => import("./pages/society/SocietyAdmins"),
         () => import("./pages/users/Users"),
         () => import("./pages/core/Reports"),
@@ -333,9 +331,12 @@ function App() {
               >
                 <Route index element={<Dashboard />} />
                 <Route path="users" element={<Users />} />
-                <Route path="societies" element={<Societies />} />
+                <Route
+                  path="societies"
+                  element={<Navigate to="/society-admins" replace />}
+                />
                 <Route path="society-admins" element={<SocietyAdmins />} />
-                <Route path="societies/:id" element={<SocietyDetail />} />
+                <Route path="societies/:id" element={<SocietyRouteRedirect />} />
                 <Route path="wings" element={<Wings />} />
                 <Route
                   path="flats"

@@ -679,7 +679,7 @@ export default function Users() {
                     <div className="flex items-center gap-2 border-t border-[var(--border-light)] pt-2.5">
                       {u.societyId ? (
                         <button
-                          onClick={() => navigate(`/societies/${u.societyId}`)}
+                          onClick={() => navigate(`/?society=${encodeURIComponent(u.societyId)}`)}
                           className="inline-flex min-h-[34px] flex-1 items-center justify-center gap-1.5 rounded-lg border border-transparent bg-blue-500/15 px-2.5 py-1.5 text-xs font-semibold text-blue-300 transition hover:bg-blue-500/25"
                         >
                           <Building2 size={16} />

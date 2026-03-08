@@ -77,7 +77,7 @@ export default function SocietySettings() {
   const { user, hasRole } = useAuth()
   const toast = useToast()
   const queryClient = useQueryClient()
-  const [searchParams, setSearchParams] = useSearchParams()
+  const [searchParams] = useSearchParams()
 
   const [form, setForm] = useState(defaultForm)
   const [errors, setErrors] = useState({})
@@ -86,21 +86,34 @@ export default function SocietySettings() {
   const isMasterAdmin = user?.role === 'MASTER_ADMIN'
 
   const societyIdFromUrl = searchParams.get('society')
+  const parsedSocietyIdFromUrl = Number(societyIdFromUrl)
+  const hasValidSocietyIdInUrl = Number.isInteger(parsedSocietyIdFromUrl) && parsedSocietyIdFromUrl > 0
   const effectiveSocietyId = useMemo(
-    () => (isMasterAdmin ? Number(societyIdFromUrl) || null : user?.societyId || null),
-    [isMasterAdmin, societyIdFromUrl, user?.societyId]
+    () => (isMasterAdmin ? (hasValidSocietyIdInUrl ? parsedSocietyIdFromUrl : null) : user?.societyId || null),
+    [hasValidSocietyIdInUrl, isMasterAdmin, parsedSocietyIdFromUrl, user?.societyId]
   )
 
-  const { data: societies = [], isLoading: isSocietiesLoading } = useQuery({
-    queryKey: ['societies-for-settings'],
-    queryFn: () => societyApi.getAll().then((res) => res.data),
-    enabled: isMasterAdmin && canManageSettings,
+  const {
+    data: scopedSociety,
+    isError: isScopedSocietyMissing,
+    isLoading: isScopedSocietyLoading,
+  } = useQuery({
+    queryKey: ['society-exists', effectiveSocietyId],
+    queryFn: () => societyApi.getById(effectiveSocietyId).then((res) => res.data),
+    enabled: isMasterAdmin && !!effectiveSocietyId,
+    retry: false,
   })
+
+  const invalidUrlSociety = isMasterAdmin && !!societyIdFromUrl && (!hasValidSocietyIdInUrl || isScopedSocietyMissing)
 
   const { data: settings, isLoading, isError } = useQuery({
     queryKey: ['society-settings', effectiveSocietyId],
     queryFn: () => societySettingApi.getBySocietyId(effectiveSocietyId, user.id).then((res) => res.data),
-    enabled: canManageSettings && !!effectiveSocietyId && !!user?.id,
+    enabled: canManageSettings
+      && !!effectiveSocietyId
+      && !!user?.id
+      && (!isMasterAdmin || !!scopedSociety)
+      && !invalidUrlSociety,
   })
 
   useEffect(() => {
@@ -124,7 +137,7 @@ export default function SocietySettings() {
     },
   })
 
-  const showSkeleton = useMinLoadingTime(isLoading)
+  const showSkeleton = useMinLoadingTime(isLoading || isScopedSocietyLoading)
 
   if (!canManageSettings) {
     return <PermissionDenied message="You don't have permission to manage society settings" />
@@ -203,15 +216,6 @@ export default function SocietySettings() {
       })
     }
     setForm((prev) => ({ ...prev, [key]: e.target.value }))
-  }
-
-  const handleSocietyChange = (e) => {
-    const selectedId = e.target.value
-    if (!selectedId) {
-      setSearchParams({})
-      return
-    }
-    setSearchParams({ society: selectedId })
   }
 
   const handleSubmit = (e) => {
@@ -293,44 +297,33 @@ export default function SocietySettings() {
           <Building2 size={16} />
           <span>
             {effectiveSocietyId
-              ? (settings?.societyName || `Society #${effectiveSocietyId}`)
+              ? (settings?.societyName || scopedSociety?.name || `Society #${effectiveSocietyId}`)
               : 'No society selected'}
           </span>
         </div>
       </div>
 
-      {isMasterAdmin && (
-        <section className="rounded-[14px] border border-[var(--border-default)] bg-[var(--bg-elevated)] px-5 pb-3.5 pt-4">
-          <h3 className="mb-3.5 text-base font-semibold text-[var(--text-primary)]">Select Society</h3>
-          <div className="max-w-[460px]">
-            <select
-              className="form-input"
-              value={effectiveSocietyId || ''}
-              onChange={handleSocietyChange}
-              disabled={isSocietiesLoading}
-            >
-              <option value="">Choose a society</option>
-              {societies.map((society) => (
-                <option key={society.id} value={society.id}>
-                  {society.name}
-                </option>
-              ))}
-            </select>
-          </div>
-          {!effectiveSocietyId && (
-            <p className="mt-2.5 text-[0.85rem] text-[var(--text-secondary)]">Select a society to view and update its rate configuration.</p>
-          )}
-        </section>
-      )}
-
-      {!effectiveSocietyId && (
+      {invalidUrlSociety && (
         <div className="rounded-xl border border-dashed border-[var(--border-default)] bg-[var(--bg-elevated)] p-5">
-          <h2 className="mb-1 text-base font-semibold text-[var(--text-primary)]">Society selection required</h2>
-          <p className="text-sm text-[var(--text-secondary)]">Please select a society to continue.</p>
+          <h2 className="mb-1 text-base font-semibold text-[var(--text-primary)]">No society exists for this URL</h2>
+          <p className="text-sm text-[var(--text-secondary)]">
+            Please choose a valid society context from app navigation. Do not use random values in the URL.
+          </p>
         </div>
       )}
 
-      {!!effectiveSocietyId && (
+      {!invalidUrlSociety && !effectiveSocietyId && (
+        <div className="rounded-xl border border-dashed border-[var(--border-default)] bg-[var(--bg-elevated)] p-5">
+          <h2 className="mb-1 text-base font-semibold text-[var(--text-primary)]">Society context required</h2>
+          <p className="text-sm text-[var(--text-secondary)]">
+            {isMasterAdmin
+              ? 'Open this page from a selected society context (URL with ?society=<id>) to manage that society settings.'
+              : 'Please select a society to continue.'}
+          </p>
+        </div>
+      )}
+
+      {!invalidUrlSociety && !!effectiveSocietyId && (
       <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
         <section className="rounded-[14px] border border-[var(--border-default)] bg-[var(--bg-elevated)] px-5 py-4">
           <h3 className="mb-3.5 text-base font-semibold text-[var(--text-primary)]">Amount Based Charges</h3>

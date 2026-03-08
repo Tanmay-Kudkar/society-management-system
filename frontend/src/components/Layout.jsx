@@ -1,6 +1,9 @@
 import { useState, useRef, useEffect, useMemo } from "react";
 import { Outlet, NavLink, useNavigate, useLocation } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "../context/AuthContext";
+import { useToast } from "../context";
+import { societyApi } from "../../../api";
 
 import {
   LayoutDashboard,
@@ -54,7 +57,6 @@ const routePrefetchMap = {
   "/reports": () => import("../pages/core/Reports"),
   "/users": () => import("../pages/users/Users"),
   "/roles-permissions": () => import("../pages/users/RolesPermissions"),
-  "/societies": () => import("../pages/society/Societies"),
   "/society-admins": () => import("../pages/society/SocietyAdmins"),
   "/unit-management": () => import("../pages/unit/UnitManagement"),
   "/wings": () => import("../pages/unit/Wings"),
@@ -100,6 +102,15 @@ const prefetchRoute = (path) => {
   }
   prefetchedRouteSet.add(path);
   importer().catch(() => null);
+};
+
+const withSocietyScope = (path, scopedSocietyId) => {
+  if (!path || !scopedSocietyId) return path;
+  const [pathname, rawSearch = ""] = path.split("?");
+  const params = new URLSearchParams(rawSearch);
+  params.set("society", scopedSocietyId);
+  const query = params.toString();
+  return query ? `${pathname}?${query}` : pathname;
 };
 
 // MASTER_ADMIN specific menu - simplified for platform management
@@ -347,7 +358,7 @@ const standardMenuGroups = [
 ];
 
 // Dropdown component for desktop navbar
-function NavDropdown({ group, hasRole, onPrefetch }) {
+function NavDropdown({ group, hasRole, onPrefetch, resolvePath }) {
   const [isOpen, setIsOpen] = useState(false);
   const timeoutRef = useRef(null);
   const location = useLocation();
@@ -380,7 +391,7 @@ function NavDropdown({ group, hasRole, onPrefetch }) {
   if (group.path) {
     return (
       <NavLink
-        to={group.path}
+        to={resolvePath(group.path)}
         onMouseEnter={() => onPrefetch?.(group.path)}
         onFocus={() => onPrefetch?.(group.path)}
         className={clsx(
@@ -433,7 +444,7 @@ function NavDropdown({ group, hasRole, onPrefetch }) {
         {filteredItems.map((item) => (
           <NavLink
             key={item.path}
-            to={item.path}
+            to={resolvePath(item.path)}
             onClick={() => setIsOpen(false)}
             onMouseEnter={() => onPrefetch?.(item.path)}
             onFocus={() => onPrefetch?.(item.path)}
@@ -463,6 +474,7 @@ function MobileAccordion({
   isOpen,
   onToggle,
   onPrefetch,
+  resolvePath,
 }) {
   const location = useLocation();
   const contentRef = useRef(null);
@@ -498,7 +510,7 @@ function MobileAccordion({
   if (group.path) {
     return (
       <NavLink
-        to={group.path}
+        to={resolvePath(group.path)}
         onMouseEnter={() => onPrefetch?.(group.path)}
         onFocus={() => onPrefetch?.(group.path)}
         onClick={onNavigate}
@@ -548,7 +560,7 @@ function MobileAccordion({
           {filteredItems.map((item) => (
             <NavLink
               key={item.path}
-              to={item.path}
+              to={resolvePath(item.path)}
               onMouseEnter={() => onPrefetch?.(item.path)}
               onFocus={() => onPrefetch?.(item.path)}
               onClick={onNavigate}
@@ -572,13 +584,13 @@ function MobileAccordion({
 }
 
 // Desktop sidebar link
-function SidebarLink({ group, hasRole, onPrefetch }) {
+function SidebarLink({ group, hasRole, onPrefetch, resolvePath }) {
   const location = useLocation();
   if (group.roles && !hasRole(...group.roles)) return null;
   const isActive = location.pathname === group.path;
   return (
     <NavLink
-      to={group.path}
+      to={resolvePath(group.path)}
       onMouseEnter={() => onPrefetch?.(group.path)}
       onFocus={() => onPrefetch?.(group.path)}
       className={clsx(
@@ -595,7 +607,7 @@ function SidebarLink({ group, hasRole, onPrefetch }) {
 }
 
 // Desktop sidebar accordion group
-function SidebarGroup({ group, hasRole, isOpen, onToggle, onPrefetch }) {
+function SidebarGroup({ group, hasRole, isOpen, onToggle, onPrefetch, resolvePath }) {
   const location = useLocation();
   const contentRef = useRef(null);
   const [contentHeight, setContentHeight] = useState(0);
@@ -649,7 +661,7 @@ function SidebarGroup({ group, hasRole, isOpen, onToggle, onPrefetch }) {
           {filteredItems.map((item) => (
             <NavLink
               key={item.path}
-              to={item.path}
+              to={resolvePath(item.path)}
               onMouseEnter={() => onPrefetch?.(item.path)}
               onFocus={() => onPrefetch?.(item.path)}
               className={({ isActive }) =>
@@ -673,15 +685,134 @@ function SidebarGroup({ group, hasRole, isOpen, onToggle, onPrefetch }) {
 
 export default function Layout() {
   const { user, logout, hasRole } = useAuth();
+  const toast = useToast();
   const navigate = useNavigate();
+  const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [openAccordion, setOpenAccordion] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(null);
+  const lastGuardNoticeRef = useRef("");
 
   // Determine which menu to show based on user role
   const isMasterAdmin =
     user?.role === "MASTER_ADMIN" || user?.role === "MASTER_ADMIN";
-  const menuGroups = isMasterAdmin ? platformOwnerMenu : standardMenuGroups;
+
+  const societyParam = useMemo(() => {
+    const searchParams = new URLSearchParams(location.search);
+    return searchParams.get("society");
+  }, [location.search]);
+
+  const hasSocietyParam = societyParam !== null && String(societyParam).trim() !== "";
+  const parsedSocietyParam = Number(societyParam);
+  const hasNumericSocietyParam = Number.isInteger(parsedSocietyParam) && parsedSocietyParam > 0;
+
+  const { isError: isMasterSocietyParamMissing } = useQuery({
+    queryKey: ["layout-society-exists", parsedSocietyParam],
+    queryFn: () => societyApi.getById(parsedSocietyParam).then((res) => res.data),
+    enabled: isMasterAdmin && hasSocietyParam && hasNumericSocietyParam,
+    retry: false,
+    staleTime: 60_000,
+  });
+
+  const notifyGuard = (message) => {
+    const key = `${location.pathname}|${location.search}|${message}`;
+    if (lastGuardNoticeRef.current === key) return;
+    lastGuardNoticeRef.current = key;
+    toast.error(message);
+  };
+
+  useEffect(() => {
+    if (!hasSocietyParam) return;
+
+    const params = new URLSearchParams(location.search);
+    const replaceUrl = () => {
+      const nextSearch = params.toString();
+      navigate(
+        {
+          pathname: location.pathname,
+          search: nextSearch ? `?${nextSearch}` : "",
+        },
+        { replace: true },
+      );
+    };
+
+    if (!isMasterAdmin) {
+      const allowedSociety = user?.societyId ? String(user.societyId) : "";
+      const attemptedSociety = String(societyParam);
+
+      if (!allowedSociety) {
+        params.delete("society");
+        notifyGuard("Society scope in URL was removed because your account has no mapped society.");
+        replaceUrl();
+        return;
+      }
+
+      if (attemptedSociety !== allowedSociety) {
+        params.set("society", allowedSociety);
+        notifyGuard("Unauthorized society URL detected. Scope reset to your permitted society.");
+        replaceUrl();
+      }
+      return;
+    }
+
+    if (!hasNumericSocietyParam) {
+      params.delete("society");
+      notifyGuard("Invalid society value in URL. Use app navigation to choose a valid society.");
+      replaceUrl();
+      return;
+    }
+
+    if (isMasterSocietyParamMissing) {
+      params.delete("society");
+      notifyGuard("Society in URL was not found in database. Please select from valid options.");
+      replaceUrl();
+    }
+  }, [
+    hasNumericSocietyParam,
+    hasSocietyParam,
+    isMasterAdmin,
+    isMasterSocietyParamMissing,
+    location.pathname,
+    location.search,
+    navigate,
+    societyParam,
+    toast,
+    user?.societyId,
+  ]);
+
+  const scopedSocietyId = useMemo(() => {
+    if (!isMasterAdmin) return null;
+    const searchParams = new URLSearchParams(location.search);
+    const societyFromQuery = searchParams.get("society");
+    if (societyFromQuery) return societyFromQuery;
+
+    const detailMatch = location.pathname.match(/^\/societies\/([^/]+)$/);
+    return detailMatch?.[1] || null;
+  }, [isMasterAdmin, location.pathname, location.search]);
+
+  const isMasterSocietyMode = isMasterAdmin && Boolean(scopedSocietyId);
+  const menuGroups = isMasterSocietyMode
+    ? standardMenuGroups
+    : isMasterAdmin
+      ? platformOwnerMenu
+      : standardMenuGroups;
+
+  const hasMenuRole = useMemo(() => {
+    if (!isMasterSocietyMode) {
+      return hasRole;
+    }
+    return (...roles) => {
+      if (!user) return false;
+      return roles.includes("SOCIETY_ADMIN");
+    };
+  }, [hasRole, isMasterSocietyMode, user]);
+
+  const resolvePath = useMemo(() => {
+    if (!isMasterSocietyMode) {
+      return (path) => path;
+    }
+    return (path) => withSocietyScope(path, scopedSocietyId);
+  }, [isMasterSocietyMode, scopedSocietyId]);
 
   const handleLogout = () => {
     logout();
@@ -735,7 +866,7 @@ export default function Layout() {
       {/* Desktop Sidebar */}
       <aside className="relative hidden before:pointer-events-none before:absolute before:left-0 before:right-0 before:top-0 before:h-[200px] before:bg-[linear-gradient(180deg,rgba(47,129,247,0.03)_0%,transparent_100%)] before:content-[''] lg:fixed lg:inset-y-0 lg:left-0 lg:z-[45] lg:flex lg:w-[260px] lg:flex-col lg:overflow-hidden lg:border-r lg:border-[var(--border-default)] lg:bg-[var(--bg-secondary)]">
         <div className="relative border-b border-[var(--border-default)] px-5 pb-4 pt-5">
-          <div className="group flex cursor-pointer items-center gap-3" onClick={() => navigate("/")}>
+          <div className="group flex cursor-pointer items-center gap-3" onClick={() => navigate(resolvePath("/"))}>
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[linear-gradient(135deg,var(--accent-primary)_0%,#1d6ce0_100%)] shadow-[0_4px_16px_rgba(47,129,247,0.3)] transition-all duration-200 group-hover:scale-105 group-hover:shadow-[0_6px_20px_rgba(47,129,247,0.4)]">
               <Building2 size={20} className="text-white" />
             </div>
@@ -750,22 +881,34 @@ export default function Layout() {
 
         <nav className="flex-1 overflow-y-auto px-3 pb-4 pt-4 [scrollbar-width:thin] [&::-webkit-scrollbar-thumb]:rounded [&::-webkit-scrollbar-thumb]:bg-white/10 [&::-webkit-scrollbar]:w-1">
           <div className="mb-1 px-3.5 pb-1.5 pt-2 text-[11px] font-bold uppercase tracking-[0.08em] text-[var(--text-tertiary)]">Navigation</div>
+          {isMasterSocietyMode && (
+            <button
+              type="button"
+              onClick={() => navigate("/")}
+              className="mb-2 flex w-full items-center gap-2 rounded-lg border border-[var(--border-default)] bg-[var(--bg-tertiary)] px-3 py-2 text-xs font-semibold uppercase tracking-[0.05em] text-[var(--text-secondary)] transition hover:border-[var(--border-strong)] hover:text-[var(--text-primary)]"
+            >
+              <ArrowLeftRight size={14} />
+              Exit Society Mode
+            </button>
+          )}
           {menuGroups.map((group) =>
             group.path ? (
               <SidebarLink
                 key={group.id}
                 group={group}
-                hasRole={hasRole}
+                hasRole={hasMenuRole}
                 onPrefetch={handlePrefetch}
+                resolvePath={resolvePath}
               />
             ) : (
               <SidebarGroup
                 key={group.id}
                 group={group}
-                hasRole={hasRole}
+                hasRole={hasMenuRole}
                 isOpen={sidebarOpen === group.id}
                 onToggle={() => handleSidebarToggle(group.id)}
                 onPrefetch={handlePrefetch}
+                resolvePath={resolvePath}
               />
             ),
           )}
@@ -778,7 +921,7 @@ export default function Layout() {
         <div className="h-16 border-b border-[var(--border-default)] bg-[var(--bg-secondary)] backdrop-blur-[8px]">
           <div className="mx-auto flex h-full max-w-[1800px] items-center justify-between gap-4 px-4 lg:justify-end lg:px-6 [&>*]:min-w-0">
             {/* Logo - visible on mobile only */}
-            <div className="group flex cursor-pointer items-center gap-3 text-decoration-none lg:hidden" onClick={() => navigate("/")}>
+            <div className="group flex cursor-pointer items-center gap-3 text-decoration-none lg:hidden" onClick={() => navigate(resolvePath("/"))}>
               <div className="rounded-lg bg-[var(--accent-primary)] p-2 shadow-[0_2px_6px_rgba(47,129,247,0.2)] transition-transform duration-200 group-hover:scale-[1.04]">
                 <Building2 size={22} className="text-white" />
               </div>
@@ -796,8 +939,9 @@ export default function Layout() {
                 <NavDropdown
                   key={group.id}
                   group={group}
-                  hasRole={hasRole}
+                  hasRole={hasMenuRole}
                   onPrefetch={handlePrefetch}
+                  resolvePath={resolvePath}
                 />
               ))}
             </nav>
@@ -910,11 +1054,12 @@ export default function Layout() {
               <MobileAccordion
                 key={group.id}
                 group={group}
-                hasRole={hasRole}
+                  hasRole={hasMenuRole}
                 onNavigate={closeMobileMenu}
                 isOpen={openAccordion === group.id}
                 onToggle={() => handleAccordionToggle(group.id)}
                 onPrefetch={handlePrefetch}
+                  resolvePath={resolvePath}
               />
             ))}
           </nav>

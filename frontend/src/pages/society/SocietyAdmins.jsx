@@ -166,20 +166,30 @@ const validateBulkRows = ({ rows, isPlatformOwner, existingAdminEmails, existing
     })
 
     if (adminEmail) {
-      if (seenEmails.has(adminEmail)) {
-        errors.push('Admin email appears more than once in this file')
+      const adminEmailKey = `admin:${adminEmail}`
+      if (seenEmails.has(adminEmailKey)) {
+        errors.push('Duplicate admin email found in import file')
       } else {
-        seenEmails.add(adminEmail)
+        seenEmails.add(adminEmailKey)
       }
 
       if (existingAdminEmails.has(adminEmail)) {
-        errors.push('This admin email is already registered in the system')
+        errors.push('This admin email is already registered')
+      }
+    }
+
+    if (societyEmail) {
+      const societyEmailKey = `society:${societyEmail}`
+      if (seenEmails.has(societyEmailKey)) {
+        errors.push('Duplicate society email found in import file')
+      } else {
+        seenEmails.add(societyEmailKey)
       }
     }
 
     if (registrationNumber) {
       if (seenRegistrationNumbers.has(registrationNumber)) {
-        errors.push('Registration number appears more than once in this file')
+        errors.push('Duplicate registration number found in import file')
       } else {
         seenRegistrationNumbers.add(registrationNumber)
       }
@@ -843,14 +853,16 @@ export default function SocietyAdmins() {
       {/* Header */}
       <header className="relative overflow-hidden rounded-2xl p-[3px] shadow-sm transition-all duration-300">
         <div
-          className="absolute inset-0 rounded-2xl opacity-100 blur-[1px]"
+          className="absolute inset-0 rounded-2xl"
           style={{
-            backgroundImage: 'linear-gradient(90deg, #ff0000, #ff7a00, #ffe600, #00d26a, #00d5ff, #2563eb, #7c3aed, #ff00b8, #ff0000)',
-            backgroundSize: '200% auto',
-            animation: 'admin-border-flow 6.5s linear infinite',
+            backgroundImage: 'var(--flow-border-gradient)',
+            backgroundSize: 'var(--flow-border-size)',
+            animation: 'admin-border-flow var(--flow-border-speed-admin) linear infinite',
+            filter: 'blur(var(--flow-border-blur))',
+            opacity: 'var(--flow-border-opacity)',
           }}
         />
-        <div className="relative z-[2] grid gap-0 overflow-hidden rounded-[14px] bg-[var(--bg-secondary)] xl:grid-cols-[1.15fr_0.85fr] xl:divide-x xl:divide-[color-mix(in_srgb,var(--border-default)_70%,white_30%)]">
+        <div className="relative z-[2] grid gap-0 overflow-hidden rounded-[13px] bg-[var(--bg-secondary)] xl:grid-cols-[1.15fr_0.85fr] xl:divide-x xl:divide-[color-mix(in_srgb,var(--border-default)_70%,white_30%)]">
           <div className="px-6 py-6 sm:px-8 sm:py-7">
             <p className="mb-2 text-xs font-black uppercase tracking-[0.24em] text-[var(--accent-primary)]">Admin Control</p>
             <h1 className="m-0 flex items-center gap-3 text-[40px] font-extrabold tracking-tight text-[var(--text-primary)] max-md:text-[31px]">
@@ -1029,7 +1041,7 @@ export default function SocietyAdmins() {
                 {society ? (
                   <div
                     className="p-3 rounded-[12px] bg-[color-mix(in_srgb,var(--bg-secondary)_94%,white_6%)] border border-[color-mix(in_srgb,var(--border-default)_90%,white_10%)] cursor-pointer transition-[border-color,background-color,box-shadow] duration-200 ease-out flex flex-col gap-[6px] hover:bg-[color-mix(in_srgb,var(--bg-secondary)_88%,var(--accent-primary)_12%)] hover:border-[rgba(59,130,246,0.3)] hover:shadow-[0_8px_18px_rgba(30,64,175,0.14)]"
-                    onClick={() => navigate(`/societies/${society.id}`)}
+                    onClick={() => navigate(`/?society=${encodeURIComponent(society.id)}`)}
                   >
                     <div className="flex items-center gap-2 text-sm font-semibold text-[var(--text-primary)]">
                       <Building2 size={16} />
