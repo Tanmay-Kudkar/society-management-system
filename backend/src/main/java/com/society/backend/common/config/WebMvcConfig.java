@@ -10,9 +10,11 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 public class WebMvcConfig implements WebMvcConfigurer {
 
     private final DeleteForceCleanupInterceptor deleteForceCleanupInterceptor;
+    private final SocietyScopeInterceptor societyScopeInterceptor;
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
+        registry.addInterceptor(societyScopeInterceptor);
         registry.addInterceptor(deleteForceCleanupInterceptor);
     }
 }

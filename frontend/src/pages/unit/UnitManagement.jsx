@@ -64,9 +64,12 @@ export default function UnitManagement() {
   const societyIdFromUrl = searchParams.get('society')
   const unitTypeFromUrl = searchParams.get('unitType')
   const tabFromUrl = searchParams.get('tab')
-  const isPlatformLevel = user?.role === 'MASTER_ADMIN'
-  const effectiveSocietyId = isPlatformLevel && societyIdFromUrl ? parseInt(societyIdFromUrl) : user?.societyId
-  const currentUserSocietyId = user?.societyId ? String(user.societyId) : ''
+  const parsedSocietyIdFromUrl = Number(societyIdFromUrl)
+  const scopedSocietyId = Number.isInteger(parsedSocietyIdFromUrl) && parsedSocietyIdFromUrl > 0 ? parsedSocietyIdFromUrl : null
+  const isScopedSocietyMode = user?.role === 'MASTER_ADMIN' && !!scopedSocietyId
+  const isPlatformLevel = user?.role === 'MASTER_ADMIN' && !isScopedSocietyMode
+  const effectiveSocietyId = isScopedSocietyMode ? scopedSocietyId : user?.societyId
+  const currentUserSocietyId = effectiveSocietyId ? String(effectiveSocietyId) : (user?.societyId ? String(user.societyId) : '')
 
   // PO/OO are supervisory - they can view but not directly edit units/users within a society
   const canEditUnits = isCommitteeLevel() && !isPlatformLevel
@@ -125,7 +128,7 @@ export default function UnitManagement() {
 
   // Derive effective filter society from state + user context
   const effectiveFilterSociety = filterSociety
-    || (!isPlatformLevel && user?.societyId ? String(user.societyId) : '')
+    || (!isPlatformLevel && effectiveSocietyId ? String(effectiveSocietyId) : '')
 
   // Fetch flats/units
   // PO/OO must have effectiveSocietyId (from URL), otherwise skip
@@ -542,7 +545,7 @@ export default function UnitManagement() {
     
     const societyId = isPlatformLevel 
       ? parseInt(formData.get('societyId')) 
-      : user?.societyId
+      : effectiveSocietyId
 
     const unitType = formData.get('unitType') || 'FLAT'
 
@@ -1731,7 +1734,7 @@ export default function UnitManagement() {
           societies={societies}
           wings={wings}
           isPlatformLevel={isPlatformLevel}
-          userSocietyId={user?.societyId}
+          userSocietyId={effectiveSocietyId}
           errors={unitFormErrors}
           apiError={apiError}
           onSubmit={handleUnitSubmit}

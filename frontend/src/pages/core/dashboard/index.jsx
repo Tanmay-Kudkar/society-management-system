@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useSearchParams } from "react-router-dom";
 import {
   Activity,
   AlertTriangle,
@@ -261,6 +262,7 @@ function FeedPanel({ title, icon, items, emptyText, badgeLabel }) {
 }
 
 export default function Dashboard() {
+  const [searchParams] = useSearchParams();
   const {
     user,
     hasRole,
@@ -270,9 +272,16 @@ export default function Dashboard() {
   } = useAuth();
 
   const isPlatformOwner = hasRole("MASTER_ADMIN");
-  const isOrgOwner = hasRole("SOCIETY_ADMIN");
-  const role = user?.role;
-  const isPlatformLevel = isPlatformOwner || isOrgOwner;
+  const societyIdFromUrl = searchParams.get("society");
+  const parsedSocietyIdFromUrl = Number(societyIdFromUrl);
+  const scopedSocietyId = Number.isInteger(parsedSocietyIdFromUrl) && parsedSocietyIdFromUrl > 0
+    ? parsedSocietyIdFromUrl
+    : null;
+  const isScopedSocietyMode = isPlatformOwner && !!scopedSocietyId;
+
+  const role = isScopedSocietyMode ? "SOCIETY_ADMIN" : user?.role;
+  const isPlatformLevel = isPlatformOwner && !isScopedSocietyMode;
+  const dashboardSocietyId = isScopedSocietyMode ? scopedSocietyId : user?.societyId;
   const isMemberOrTenant = user?.role === "MEMBER" || user?.role === "TENANT";
   const isSocietyOpsLevel = !isPlatformLevel && !isMemberOrTenant;
   const isManagerRole = role === "MANAGER";
@@ -299,9 +308,14 @@ export default function Dashboard() {
   });
 
   const { data: flats = [] } = useQuery({
-    queryKey: ["flats", user?.id],
-    queryFn: () => flatApi.getAll(user?.id).then((res) => res.data).catch(() => []),
-    enabled: isSocietyOpsLevel && !!user?.id,
+    queryKey: ["flats", dashboardSocietyId, user?.id],
+    queryFn: () => {
+      if (dashboardSocietyId) {
+        return flatApi.getBySociety(dashboardSocietyId).then((res) => res.data).catch(() => []);
+      }
+      return flatApi.getAll(user?.id).then((res) => res.data).catch(() => []);
+    },
+    enabled: isSocietyOpsLevel && (!!dashboardSocietyId || !!user?.id),
     placeholderData: [],
   });
 
@@ -320,15 +334,25 @@ export default function Dashboard() {
   });
 
   const { data: contracts = [] } = useQuery({
-    queryKey: ["contracts"],
-    queryFn: () => contractApi.getAll().then((res) => res.data).catch(() => []),
+    queryKey: ["contracts", dashboardSocietyId],
+    queryFn: () => {
+      if (dashboardSocietyId) {
+        return contractApi.getBySociety(dashboardSocietyId).then((res) => res.data).catch(() => []);
+      }
+      return contractApi.getAll().then((res) => res.data).catch(() => []);
+    },
     enabled: isSocietyOpsLevel,
     placeholderData: [],
   });
 
   const { data: allTickets = [] } = useQuery({
-    queryKey: ["tickets"],
-    queryFn: () => ticketApi.getAll().then((res) => res.data).catch(() => []),
+    queryKey: ["tickets", dashboardSocietyId],
+    queryFn: () => {
+      if (dashboardSocietyId) {
+        return ticketApi.getBySociety(dashboardSocietyId).then((res) => res.data).catch(() => []);
+      }
+      return ticketApi.getAll().then((res) => res.data).catch(() => []);
+    },
     placeholderData: [],
   });
 
@@ -340,28 +364,33 @@ export default function Dashboard() {
   });
 
   const { data: complaints = [] } = useQuery({
-    queryKey: ["complaints", user?.id],
-    queryFn: () => complaintApi.getAll(user?.id).then((res) => res.data).catch(() => []),
+    queryKey: ["complaints", dashboardSocietyId, user?.id],
+    queryFn: () => {
+      if (dashboardSocietyId && user?.id) {
+        return complaintApi.getBySociety(dashboardSocietyId, user.id).then((res) => res.data).catch(() => []);
+      }
+      return complaintApi.getAll(user?.id).then((res) => res.data).catch(() => []);
+    },
     enabled: !!user?.id,
     placeholderData: [],
   });
 
   const { data: dashboardReport } = useQuery({
-    queryKey: ["dashboardReport", user?.societyId],
-    queryFn: () => user?.societyId && isCommitteeLevel() ? reportApi.getDashboard(user.societyId).then((res) => res.data) : null,
-    enabled: !!user?.societyId && isCommitteeLevel(),
+    queryKey: ["dashboardReport", dashboardSocietyId],
+    queryFn: () => dashboardSocietyId && isCommitteeLevel() ? reportApi.getDashboard(dashboardSocietyId).then((res) => res.data) : null,
+    enabled: !!dashboardSocietyId && isCommitteeLevel(),
   });
 
   const { data: notices = [] } = useQuery({
-    queryKey: ["notices", user?.societyId],
-    queryFn: () => user?.societyId ? noticeApi.getBySociety(user.societyId).then((res) => res.data).catch(() => []) : [],
-    enabled: !!user?.societyId,
+    queryKey: ["notices", dashboardSocietyId],
+    queryFn: () => dashboardSocietyId ? noticeApi.getBySociety(dashboardSocietyId).then((res) => res.data).catch(() => []) : [],
+    enabled: !!dashboardSocietyId,
   });
 
   const { data: securityLogs = [] } = useQuery({
-    queryKey: ["securityLogs", user?.societyId],
-    queryFn: () => user?.societyId ? securityLogApi.getRecent(user.societyId).then((res) => res.data).catch(() => []) : [],
-    enabled: !!user?.societyId,
+    queryKey: ["securityLogs", dashboardSocietyId],
+    queryFn: () => dashboardSocietyId ? securityLogApi.getRecent(dashboardSocietyId).then((res) => res.data).catch(() => []) : [],
+    enabled: !!dashboardSocietyId,
     refetchInterval: 30000,
   });
 

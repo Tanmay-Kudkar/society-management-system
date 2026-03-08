@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useQuery, useMutation } from '@tanstack/react-query'
+import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '../../context'
 import { reportApi, societyApi, exportApi, downloadBlob } from '../../../../api'
 import {
@@ -39,6 +40,7 @@ const formatPercent = (value) => {
 
 export default function Reports() {
   const { user, canViewReports } = useAuth()
+  const [searchParams] = useSearchParams()
   
   // Permission check
   if (!canViewReports()) {
@@ -51,13 +53,32 @@ export default function Reports() {
 
   const isPlatformLevel = user?.role === 'MASTER_ADMIN'
 
+  const societyIdFromUrl = searchParams.get('society')
+  const parsedSocietyIdFromUrl = Number(societyIdFromUrl)
+  const hasValidSocietyIdInUrl = Number.isInteger(parsedSocietyIdFromUrl) && parsedSocietyIdFromUrl > 0
+  const isScopedMode = isPlatformLevel && !!societyIdFromUrl
+
   const { data: societies = [] } = useQuery({
     queryKey: ['societies'],
     queryFn: () => societyApi.getAll().then(res => res.data),
-    enabled: isPlatformLevel,
+    enabled: isPlatformLevel && !isScopedMode,
   })
 
-  const societyId = isPlatformLevel ? selectedSocietyId : user?.societyId
+  const {
+    isLoading: isScopedSocietyLoading,
+    isError: isScopedSocietyMissing,
+  } = useQuery({
+    queryKey: ['reports-society-exists', parsedSocietyIdFromUrl],
+    queryFn: () => societyApi.getById(parsedSocietyIdFromUrl).then(res => res.data),
+    enabled: isScopedMode && hasValidSocietyIdInUrl,
+    retry: false,
+  })
+
+  const invalidUrlSociety = isScopedMode && (!hasValidSocietyIdInUrl || isScopedSocietyMissing)
+
+  const societyId = isPlatformLevel
+    ? (isScopedMode ? (invalidUrlSociety ? '' : parsedSocietyIdFromUrl) : selectedSocietyId)
+    : user?.societyId
 
   const { data: report, isLoading, isError, refetch } = useQuery({
     queryKey: ['report', reportType, societyId, customStartDate, customEndDate],
@@ -75,13 +96,13 @@ export default function Reports() {
       }
       return null
     },
-    enabled: !!societyId,
+    enabled: !!societyId && !invalidUrlSociety,
   })
 
   const { data: dashboardReport } = useQuery({
     queryKey: ['dashboardReport', societyId],
     queryFn: () => societyId ? reportApi.getDashboard(societyId).then(res => res.data) : null,
-    enabled: !!societyId,
+    enabled: !!societyId && !invalidUrlSociety,
   })
 
   const [isExporting, setIsExporting] = useState(false)
@@ -105,7 +126,7 @@ export default function Reports() {
     }
   }
 
-  const showSkeleton = useMinLoadingTime(isLoading || isError)
+  const showSkeleton = useMinLoadingTime(isLoading || isError || isScopedSocietyLoading)
 
   if (showSkeleton) return (
     <div className="flex flex-col gap-6">
@@ -132,67 +153,77 @@ export default function Reports() {
         </button>
       </div>
 
-      {/* Filters */}
-      <div className="p-4 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-light)] shadow-[0_10px_22px_rgba(15,23,42,0.08)]">
-        <div className="flex flex-wrap items-start gap-4 max-md:flex-col max-md:items-stretch">
-          {isPlatformLevel && (
-            <select
-              value={selectedSocietyId}
-              onChange={(e) => setSelectedSocietyId(e.target.value)}
-              className="min-w-[190px] py-2 px-[0.85rem] rounded-xl border border-[var(--border-default)] bg-[var(--bg-card)] text-[var(--text-primary)] min-h-[2.5rem] focus:outline-none focus:border-[#2563eb] focus:shadow-[0_0_0_3px_rgba(37,99,235,0.2)] max-md:w-full"
-            >
-              <option value="">Select Society</option>
-              {societies.map(s => (
-                <option key={s.id} value={s.id}>{s.name}</option>
+      {!invalidUrlSociety && (
+        <div className="p-4 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-light)] shadow-[0_10px_22px_rgba(15,23,42,0.08)]">
+          <div className="flex flex-wrap items-start gap-4 max-md:flex-col max-md:items-stretch">
+            {isPlatformLevel && !isScopedMode && (
+              <select
+                value={selectedSocietyId}
+                onChange={(e) => setSelectedSocietyId(e.target.value)}
+                className="min-w-[190px] py-2 px-[0.85rem] rounded-xl border border-[var(--border-default)] bg-[var(--bg-card)] text-[var(--text-primary)] min-h-[2.5rem] focus:outline-none focus:border-[#2563eb] focus:shadow-[0_0_0_3px_rgba(37,99,235,0.2)] max-md:w-full"
+              >
+                <option value="">Select Society</option>
+                {societies.map(s => (
+                  <option key={s.id} value={s.id}>{s.name}</option>
+                ))}
+              </select>
+            )}
+
+            <div className="flex items-center flex-wrap gap-[0.4rem] p-[0.35rem] rounded-xl bg-[var(--bg-tertiary)] border border-[var(--border-light)] max-md:w-full">
+              {['MTD', 'YTD', 'COMPARISON', 'CUSTOM'].map(type => (
+                <button
+                  key={type}
+                  type="button"
+                  onClick={() => setReportType(type)}
+                  className={clsx(
+                    'border border-transparent py-[0.45rem] px-[0.9rem] rounded-[0.6rem] text-[0.85rem] font-semibold text-[var(--text-tertiary)] transition-colors hover:text-[var(--text-primary)] max-md:flex-1 max-md:text-center',
+                    reportType === type && 'bg-[var(--bg-card)] !border-[color-mix(in_srgb,var(--accent-primary)_35%,var(--border-default))] text-[var(--accent-primary)] shadow-[0_6px_16px_rgba(15,23,42,0.1)]'
+                  )}
+                >
+                  {type}
+                </button>
               ))}
-            </select>
-          )}
-
-          <div className="flex items-center flex-wrap gap-[0.4rem] p-[0.35rem] rounded-xl bg-[var(--bg-tertiary)] border border-[var(--border-light)] max-md:w-full">
-            {['MTD', 'YTD', 'COMPARISON', 'CUSTOM'].map(type => (
-              <button
-                key={type}
-                type="button"
-                onClick={() => setReportType(type)}
-                className={clsx(
-                  'border border-transparent py-[0.45rem] px-[0.9rem] rounded-[0.6rem] text-[0.85rem] font-semibold text-[var(--text-tertiary)] transition-colors hover:text-[var(--text-primary)] max-md:flex-1 max-md:text-center',
-                  reportType === type && 'bg-[var(--bg-card)] !border-[color-mix(in_srgb,var(--accent-primary)_35%,var(--border-default))] text-[var(--accent-primary)] shadow-[0_6px_16px_rgba(15,23,42,0.1)]'
-                )}
-              >
-                {type}
-              </button>
-            ))}
-          </div>
-
-          {reportType === 'CUSTOM' && (
-            <div className="flex flex-wrap items-center gap-3 max-md:w-full">
-              <input
-                type="date"
-                value={customStartDate}
-                onChange={(e) => setCustomStartDate(e.target.value)}
-                className="py-2 px-[0.85rem] rounded-xl border border-[var(--border-default)] bg-[var(--bg-card)] text-[var(--text-primary)] min-h-[2.5rem] focus:outline-none focus:border-[#2563eb] focus:shadow-[0_0_0_3px_rgba(37,99,235,0.2)] max-md:w-full"
-              />
-              <span className="text-[var(--text-tertiary)] max-md:hidden">to</span>
-              <input
-                type="date"
-                value={customEndDate}
-                onChange={(e) => setCustomEndDate(e.target.value)}
-                className="py-2 px-[0.85rem] rounded-xl border border-[var(--border-default)] bg-[var(--bg-card)] text-[var(--text-primary)] min-h-[2.5rem] focus:outline-none focus:border-[#2563eb] focus:shadow-[0_0_0_3px_rgba(37,99,235,0.2)] max-md:w-full"
-              />
-              <button
-                onClick={() => refetch()}
-                className="border border-transparent py-2 px-4 rounded-xl bg-[#2563eb] text-white font-semibold min-h-[2.5rem] transition-transform hover:-translate-y-px hover:shadow-[0_10px_18px_rgba(37,99,235,0.25)] max-md:w-full"
-              >
-                Generate
-              </button>
             </div>
-          )}
-        </div>
-      </div>
 
-      {!societyId && (
+            {reportType === 'CUSTOM' && (
+              <div className="flex flex-wrap items-center gap-3 max-md:w-full">
+                <input
+                  type="date"
+                  value={customStartDate}
+                  onChange={(e) => setCustomStartDate(e.target.value)}
+                  className="py-2 px-[0.85rem] rounded-xl border border-[var(--border-default)] bg-[var(--bg-card)] text-[var(--text-primary)] min-h-[2.5rem] focus:outline-none focus:border-[#2563eb] focus:shadow-[0_0_0_3px_rgba(37,99,235,0.2)] max-md:w-full"
+                />
+                <span className="text-[var(--text-tertiary)] max-md:hidden">to</span>
+                <input
+                  type="date"
+                  value={customEndDate}
+                  onChange={(e) => setCustomEndDate(e.target.value)}
+                  className="py-2 px-[0.85rem] rounded-xl border border-[var(--border-default)] bg-[var(--bg-card)] text-[var(--text-primary)] min-h-[2.5rem] focus:outline-none focus:border-[#2563eb] focus:shadow-[0_0_0_3px_rgba(37,99,235,0.2)] max-md:w-full"
+                />
+                <button
+                  onClick={() => refetch()}
+                  className="border border-transparent py-2 px-4 rounded-xl bg-[#2563eb] text-white font-semibold min-h-[2.5rem] transition-transform hover:-translate-y-px hover:shadow-[0_10px_18px_rgba(37,99,235,0.25)] max-md:w-full"
+                >
+                  Generate
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {invalidUrlSociety && (
+        <div className="p-4 rounded-xl border border-dashed border-[var(--border-default)] bg-[var(--bg-elevated)] text-[var(--text-secondary)]">
+          <p className="m-0 font-semibold text-[var(--text-primary)]">No society exists for this URL</p>
+          <p className="mt-1 text-sm">Please select a valid society from app navigation. Do not use random values in the URL.</p>
+        </div>
+      )}
+
+      {!invalidUrlSociety && !societyId && (
         <div className="p-4 rounded-xl bg-[#fef3c7] border border-[#fde68a] text-[#92400e]">
-          Please select a society to view reports.
+          {isPlatformLevel
+            ? 'Please open reports from a selected society context to view data.'
+            : 'Please select a society to view reports.'}
         </div>
       )}
 

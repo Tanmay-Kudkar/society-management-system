@@ -1,5 +1,5 @@
 /* ============================================
-   SOCIETY MANAGEMENT SYSTEM
+            SOCIETY MANAGEMENT SYSTEM
    Single global stylesheet: Tailwind + design tokens + minimal globals
    ============================================ */
 
@@ -8,7 +8,7 @@
 @tailwind utilities;
 
 /* ============================================
-   CSS VARIABLES - DESIGN TOKENS
+         CSS VARIABLES - DESIGN TOKENS
    ============================================ */
 
 :root {
@@ -65,6 +65,13 @@
   --glow-card: 0 0 20px rgba(47, 129, 247, 0.06);
   --glow-accent: 0 0 16px rgba(47, 129, 247, 0.15);
 
+  --flow-border-gradient: linear-gradient(90deg, #ff0000, #ff7a00, #ffe600, #00d26a, #00d5ff, #2563eb, #7c3aed, #ff00b8, #ff0000);
+  --flow-border-opacity: 1;
+  --flow-border-blur: 1px;
+  --flow-border-size: 200% auto;
+  --flow-border-speed: 5s;
+  --flow-border-speed-admin: 6.5s;
+
   --shadow-xs: 0 1px 0 rgba(0,0,0,0.5);
   --shadow-sm: 0 1px 3px rgba(0,0,0,0.5);
   --shadow-md: 0 3px 6px rgba(0,0,0,0.4);
@@ -119,22 +126,22 @@
 
 .light {
   --bg-primary: #ffffff;
-  --bg-secondary: #f3f6fa;
-  --bg-tertiary: #e6ebf2;
+  --bg-secondary: #f4f7fb;
+  --bg-tertiary: #e8eef6;
   --bg-card: #ffffff;
-  --bg-card-hover: #f8fafc;
+  --bg-card-hover: #f1f5fa;
   --bg-elevated: #ffffff;
-  --bg-overlay: #d9e0e8;
+  --bg-overlay: #dbe5f1;
 
-  --text-primary: #0f172a;
-  --text-secondary: #111827;
-  --text-tertiary: #334155;
-  --text-muted: #475569;
+  --text-primary: #0b1220;
+  --text-secondary: #0f172a;
+  --text-tertiary: #1e293b;
+  --text-muted: #334155;
   --text-inverse: #ffffff;
 
-  --border-light: #c5d0dd;
-  --border-default: #b8c4d3;
-  --border-strong: #96a5b8;
+  --border-light: #aebed2;
+  --border-default: #98abc4;
+  --border-strong: #788ea9;
 
   --shadow-xs: 0 1px 0 rgba(31,35,40,0.04);
   --shadow-sm: 0 1px 3px rgba(31,35,40,0.08);
@@ -163,6 +170,13 @@
   --color-accent-amber: #b45309;
   --color-accent-cyan: #0e7490;
   --color-accent-rose: #be123c;
+
+  --flow-border-gradient: linear-gradient(90deg, #0b0b0b, #0b0b0b);
+  --flow-border-opacity: 0.92;
+  --flow-border-blur: 0px;
+  --flow-border-size: 100% 100%;
+  --flow-border-speed: 0s;
+  --flow-border-speed-admin: 0s;
 }
 
 .dark {
@@ -189,7 +203,7 @@
 }
 
 /* ============================================
-   Base resets and globals
+            Base resets and globals
    ============================================ */
 
 @layer base {
@@ -254,7 +268,7 @@
 }
 
 /* ============================================
-   Scrollbar
+                    Scrollbar
    ============================================ */
 
 ::-webkit-scrollbar {
@@ -277,7 +291,7 @@
 }
 
 /* ============================================
-   Focus and form elements
+            Focus and form elements
    ============================================ */
 
 button:focus,
@@ -309,7 +323,7 @@ select option {
 }
 
 /* ============================================
-   Line clamp utilities
+              Line clamp utilities
    ============================================ */
 
 @layer utilities {
@@ -402,7 +416,7 @@ table th {
 }
 
 /* ============================================
-   Custom animation utilities used in JSX
+    Custom animation utilities used in JSX
    ============================================ */
 
 @keyframes fadeIn {
