@@ -9,7 +9,7 @@ import { parseApiError } from '../../utils'
 import * as XLSX from 'xlsx'
 import {
   FormInput, PhoneInput, PincodeInput, NumberInput,
-  StateCitySelector, SmartSelect, AsyncButton
+  StateCitySelector, SmartSelect, NeonSweepButton
 } from '../../components'
 import { BulkImportModal } from '../../components'
 import { FiltersSkeleton, CardGridSkeleton, HeroSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
@@ -22,6 +22,8 @@ import {
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const PINCODE_REGEX = /^\d{6}$/
+const pageShellClass = 'rounded-[28px] border border-[color-mix(in_srgb,var(--border-default)_88%,white_12%)] bg-[linear-gradient(180deg,color-mix(in_srgb,var(--bg-secondary)_96%,white_4%),color-mix(in_srgb,var(--bg-secondary)_100%,black_0%))] shadow-[0_20px_60px_rgba(2,6,23,0.08)]'
+const pagePanelClass = 'rounded-[18px] border border-[color-mix(in_srgb,var(--border-default)_90%,white_10%)] bg-[color-mix(in_srgb,var(--bg-tertiary)_88%,white_12%)] shadow-[0_12px_30px_rgba(15,23,42,0.08)]'
 
 const BULK_FIELD_CONFIG = [
   { key: 'adminName', label: 'Admin Name', required: true, description: 'Full name of society admin', sample: 'Rahul Sharma', aliases: ['adminname', 'admin_name'] },
@@ -831,47 +833,82 @@ export default function SocietyAdmins() {
 
   return (
     <div className="p-6 max-md:p-4 min-h-[calc(100vh-68px)] bg-[var(--bg-secondary)] text-[var(--text-primary)]">
+      <style>{`
+        @keyframes admin-border-flow {
+          0% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+          100% { background-position: 0% 50%; }
+        }
+      `}</style>
       {/* Header */}
-      <header className="relative py-6 px-7 rounded-2xl text-white bg-gradient-to-br from-[#0f172a] via-[#1e293b] to-[#334155] border border-[rgba(148,163,184,0.28)] shadow-[0_10px_26px_rgba(15,23,42,0.32)] overflow-hidden before:content-[''] before:absolute before:-top-[20%] before:-right-[8%] before:w-[240px] before:h-[240px] before:rounded-full before:bg-[rgba(148,163,184,0.12)] before:pointer-events-none">
-        <div className="flex justify-between items-center gap-5 relative z-[2] flex-wrap max-md:flex-col max-md:items-start">
-          <div>
-            <h1 className="text-[34px] max-md:text-[28px] font-bold flex items-center gap-3 m-0 text-white">
-              <UserCheck size={28} />
+      <header className="relative overflow-hidden rounded-2xl p-[3px] shadow-sm transition-all duration-300">
+        <div
+          className="absolute inset-0 rounded-2xl opacity-100 blur-[1px]"
+          style={{
+            backgroundImage: 'linear-gradient(90deg, #ff0000, #ff7a00, #ffe600, #00d26a, #00d5ff, #2563eb, #7c3aed, #ff00b8, #ff0000)',
+            backgroundSize: '200% auto',
+            animation: 'admin-border-flow 6.5s linear infinite',
+          }}
+        />
+        <div className="relative z-[2] grid gap-0 overflow-hidden rounded-[14px] bg-[var(--bg-secondary)] xl:grid-cols-[1.15fr_0.85fr] xl:divide-x xl:divide-[color-mix(in_srgb,var(--border-default)_70%,white_30%)]">
+          <div className="px-6 py-6 sm:px-8 sm:py-7">
+            <p className="mb-2 text-xs font-black uppercase tracking-[0.24em] text-[var(--accent-primary)]">Admin Control</p>
+            <h1 className="m-0 flex items-center gap-3 text-[40px] font-extrabold tracking-tight text-[var(--text-primary)] max-md:text-[31px]">
+              <UserCheck size={28} className="text-[var(--accent-primary)]" />
               Society Admins
             </h1>
-            <p className="mt-2 text-[rgba(226,232,240,0.9)] text-base max-md:text-sm">Manage society administrators and assignments</p>
+            <p className="mt-2 max-w-xl text-[15px] leading-relaxed text-[color-mix(in_srgb,var(--text-secondary)_90%,white_10%)] sm:text-[17px]">
+              Manage society administrators, assignment gaps, and onboarding operations from one command surface.
+            </p>
+
+            <div className="mt-4 flex flex-wrap items-center gap-2">
+              <span className="inline-flex items-center rounded-full border border-[color-mix(in_srgb,var(--accent-primary)_40%,transparent)] bg-[color-mix(in_srgb,var(--accent-primary)_10%,transparent)] px-3 py-1 text-[11px] font-semibold text-[var(--accent-primary)]">
+                {societyAdmins.length} active admins
+              </span>
+              <span className="inline-flex items-center rounded-full border border-[var(--border-default)] bg-[var(--bg-tertiary)] px-3 py-1 text-[11px] font-semibold text-[var(--text-secondary)]">
+                {societiesNeedingAssignment.length} pending assignments
+              </span>
+            </div>
+
+            {canManageSocietyAdmins && (
+              <div className="mt-5 inline-flex flex-wrap items-center gap-3">
+                <NeonSweepButton tone="cyan" onClick={() => setShowBulkImportModal(true)}>
+                  <Upload size={20} />
+                  Bulk Import
+                </NeonSweepButton>
+                <NeonSweepButton tone="violet" onClick={openCreate}>
+                  <Plus size={20} />
+                  Create Society Admin
+                </NeonSweepButton>
+              </div>
+            )}
           </div>
-          <div className="flex gap-4">
-            <div className="flex flex-col items-center py-3 px-5 max-md:py-[10px] max-md:px-[14px] rounded-[10px] bg-[rgba(148,163,184,0.16)] border border-[rgba(148,163,184,0.22)] backdrop-blur-[4px] min-w-[90px] max-md:min-w-[78px]">
-              <span className="text-[30px] max-md:text-2xl font-bold leading-[1.2] text-white">{societyAdmins.length}</span>
-              <span className="text-xs text-[rgba(203,213,225,0.92)] uppercase tracking-[0.05em] text-center">Assigned Admins</span>
+
+          <div className="grid grid-cols-1 gap-3 px-6 py-6 sm:grid-cols-3 sm:px-8 sm:py-7 xl:grid-cols-1 xl:gap-2">
+            <div className="rounded-xl border border-[var(--border-default)] bg-[var(--bg-tertiary)] px-4 py-3 transition-[border-color,background-color,box-shadow] duration-200 ease-out hover:border-[var(--accent-primary)]/35 hover:shadow-[0_6px_14px_rgba(15,23,42,0.16)]">
+              <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[var(--text-tertiary)]">Assigned Admins</p>
+              <p className="mt-1 text-3xl font-black leading-none text-[var(--text-primary)]">{societyAdmins.length}</p>
+              <div className="mt-2 h-1.5 rounded-full bg-[color-mix(in_srgb,var(--border-default)_75%,transparent)]">
+                <div className="h-full rounded-full bg-[var(--accent-primary)]" style={{ width: `${Math.min(100, societies.length ? Math.round((societyAdmins.length / societies.length) * 100) : 0)}%` }} />
+              </div>
             </div>
-            <div className="flex flex-col items-center py-3 px-5 max-md:py-[10px] max-md:px-[14px] rounded-[10px] bg-[rgba(148,163,184,0.16)] border border-[rgba(148,163,184,0.22)] backdrop-blur-[4px] min-w-[90px] max-md:min-w-[78px]">
-              <span className="text-[30px] max-md:text-2xl font-bold leading-[1.2] text-white">{societies.length}</span>
-              <span className="text-xs text-[rgba(203,213,225,0.92)] uppercase tracking-[0.05em] text-center">Total Societies</span>
+            <div className="rounded-xl border border-[var(--border-default)] bg-[var(--bg-tertiary)] px-4 py-3 transition-[border-color,background-color,box-shadow] duration-200 ease-out hover:border-[var(--accent-primary)]/35 hover:shadow-[0_6px_14px_rgba(15,23,42,0.16)]">
+              <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[var(--text-tertiary)]">Total Societies</p>
+              <p className="mt-1 text-3xl font-black leading-none text-[var(--text-primary)]">{societies.length}</p>
             </div>
-            <div className="flex flex-col items-center py-3 px-5 max-md:py-[10px] max-md:px-[14px] rounded-[10px] bg-[rgba(148,163,184,0.16)] border border-[rgba(148,163,184,0.22)] backdrop-blur-[4px] min-w-[90px] max-md:min-w-[78px]">
-              <span className="text-[30px] max-md:text-2xl font-bold leading-[1.2] text-white">{societiesNeedingAssignment.length}</span>
-              <span className="text-xs text-[rgba(203,213,225,0.92)] uppercase tracking-[0.05em] text-center">Needs Assignment</span>
+            <div className="rounded-xl border border-[var(--border-default)] bg-[var(--bg-tertiary)] px-4 py-3 transition-[border-color,background-color,box-shadow] duration-200 ease-out hover:border-[var(--accent-primary)]/35 hover:shadow-[0_6px_14px_rgba(15,23,42,0.16)]">
+              <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[var(--text-tertiary)]">Needs Assignment</p>
+              <p className="mt-1 text-3xl font-black leading-none text-[var(--text-primary)]">{societiesNeedingAssignment.length}</p>
+              <p className="mt-1 text-[11px] font-semibold text-amber-600 dark:text-amber-400">
+                {societiesNeedingAssignment.length > 0 ? "Action required" : "All covered"}
+              </p>
             </div>
           </div>
-          {canManageSocietyAdmins && (
-            <div className="inline-flex items-center gap-[10px] flex-wrap">
-              <button onClick={() => setShowBulkImportModal(true)} className="inline-flex items-center gap-2 py-[10px] px-5 rounded-[10px] border border-[rgba(148,163,184,0.38)] bg-[rgba(148,163,184,0.16)] text-white cursor-pointer font-semibold text-sm transition-colors hover:bg-[rgba(148,163,184,0.24)] hover:border-[rgba(148,163,184,0.56)]">
-                <Upload size={18} />
-                Bulk Import
-              </button>
-              <button onClick={openCreate} className="inline-flex items-center gap-2 py-[10px] px-5 rounded-[10px] border border-[rgba(148,163,184,0.38)] bg-[rgba(148,163,184,0.16)] text-white cursor-pointer font-semibold text-sm transition-colors hover:bg-[rgba(148,163,184,0.24)] hover:border-[rgba(148,163,184,0.56)]">
-                <Plus size={18} />
-                Create Society + Admin
-              </button>
-            </div>
-          )}
         </div>
       </header>
 
       {/* Search */}
-      <div className="mt-[18px] mb-4 rounded-xl py-[10px] px-[14px] bg-[var(--bg-card)] border border-[var(--border-light)]">
+      <div className={`${pagePanelClass} mb-4 mt-[18px] px-4 py-3 transition-all focus-within:border-[var(--accent-primary)]/45 focus-within:shadow-[0_10px_24px_color-mix(in_srgb,var(--accent-primary)_18%,transparent)]`}>
         <div className="flex items-center gap-[10px] text-[var(--text-tertiary)]">
           <Search size={18} />
           <input
@@ -891,7 +928,7 @@ export default function SocietyAdmins() {
       </div>
 
       {societiesNeedingAssignment.length > 0 && (
-        <section className="mb-4 border border-[var(--border-light)] rounded-xl bg-[var(--bg-card)] p-[14px]">
+        <section className={`${pagePanelClass} mb-4 p-[14px]`}>
           <div className="flex items-center justify-between mb-[10px]">
             <h3 className="m-0 text-[15px] font-semibold text-[var(--text-primary)]">Societies Requiring Assignment</h3>
             <span className="inline-flex items-center justify-center min-w-6 h-6 rounded-xl border border-[var(--border-light)] bg-[var(--bg-tertiary)] text-[var(--text-secondary)] text-xs font-bold">{societiesNeedingAssignment.length}</span>
@@ -899,7 +936,7 @@ export default function SocietyAdmins() {
           <div className="grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-[10px]">
             {societiesNeedingAssignment.map((society) => {
               return (
-                <div key={society.id} className="border border-[var(--border-light)] rounded-[10px] bg-[var(--bg-secondary)] p-[10px]">
+                <div key={society.id} className="rounded-[12px] border border-[var(--border-light)] bg-[var(--bg-secondary)] p-[12px] transition-all hover:-translate-y-px hover:border-[rgba(59,130,246,0.28)] hover:shadow-[0_10px_26px_rgba(30,64,175,0.14)]">
                   <div className="flex items-start justify-between gap-[10px]">
                     <div>
                       <p className="m-0 text-sm font-semibold text-[var(--text-primary)]">{society.name}</p>
@@ -908,7 +945,7 @@ export default function SocietyAdmins() {
                     <div className="inline-flex items-center gap-[6px] shrink-0">
                       <button
                         type="button"
-                        className="inline-flex items-center gap-[6px] border border-[rgba(8,145,178,0.35)] bg-[rgba(8,145,178,0.12)] text-[#0891b2] rounded-lg py-[5px] px-[9px] text-[11px] font-bold cursor-pointer transition-colors hover:bg-[rgba(8,145,178,0.2)] hover:border-[rgba(8,145,178,0.5)]"
+                        className="inline-flex items-center gap-[6px] border border-[rgba(59,130,246,0.34)] bg-[rgba(59,130,246,0.12)] text-[var(--accent-primary)] rounded-lg py-[5px] px-[9px] text-[11px] font-bold cursor-pointer transition-colors hover:bg-[rgba(59,130,246,0.2)] hover:border-[rgba(59,130,246,0.5)]"
                         onClick={() => openAssign(society)}
                       >
                         <Plus size={14} />
@@ -943,23 +980,23 @@ export default function SocietyAdmins() {
           <p className="m-0 text-sm text-[var(--text-tertiary)]">Create a society and its admin to get started</p>
           {canManageSocietyAdmins && (
             <div className="mt-[18px] inline-flex items-center gap-[10px] flex-wrap">
-              <button onClick={() => setShowBulkImportModal(true)} className="inline-flex items-center gap-2 bg-[var(--bg-tertiary)] text-[var(--text-primary)] border border-[var(--border-light)] py-[10px] px-5 rounded-[10px] cursor-pointer font-semibold">
+              <NeonSweepButton tone="slate" size="md" onClick={() => setShowBulkImportModal(true)}>
                 <Upload size={18} />
                 Bulk Import
-              </button>
-              <button onClick={openCreate} className="inline-flex items-center gap-2 bg-[#0891b2] text-white border-none py-[10px] px-5 rounded-[10px] cursor-pointer font-semibold">
+              </NeonSweepButton>
+              <NeonSweepButton tone="cyan" size="md" onClick={openCreate}>
                 <Plus size={18} />
-                Create Society + Admin
-              </button>
+                Create Society Admin
+              </NeonSweepButton>
             </div>
           )}
         </div>
       ) : (
-        <div className="grid grid-cols-[repeat(auto-fill,minmax(360px,1fr))] max-md:grid-cols-1 gap-4">
+        <div className="grid grid-cols-[repeat(auto-fill,minmax(360px,1fr))] gap-4 max-md:grid-cols-1">
           {filteredAdmins.map((admin) => {
             const society = societyMap[admin.societyId]
             return (
-              <div key={admin.id} className="rounded-[14px] p-[18px] bg-[var(--bg-card)] border border-[var(--border-light)] flex flex-col gap-[14px] shadow-sm transition-all hover:border-[rgba(8,145,178,0.38)] hover:shadow-md hover:-translate-y-px">
+              <div key={admin.id} className={`${pagePanelClass} group flex flex-col gap-[14px] p-[18px] transition-[border-color,box-shadow,background-color] duration-200 ease-out hover:border-[rgba(59,130,246,0.3)] hover:shadow-[0_14px_34px_rgba(30,64,175,0.16)]`}>
                 {/* Admin info */}
                 <div className="flex items-start gap-3">
                   <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0 text-lg font-bold text-white bg-gradient-to-br from-[#0891b2] to-[#06b6d4]">
@@ -979,10 +1016,10 @@ export default function SocietyAdmins() {
                     )}
                   </div>
                   <div className="flex gap-1 shrink-0">
-                    <button onClick={() => openEdit(admin)} className="bg-[var(--bg-tertiary)] border border-[var(--border-light)] p-[6px] rounded-lg cursor-pointer text-[var(--text-secondary)] transition-colors flex items-center justify-center hover:bg-[rgba(251,191,36,0.12)] hover:border-[rgba(245,158,11,0.35)] hover:text-[#f59e0b]" title="Edit">
+                    <button onClick={() => openEdit(admin)} className="bg-[var(--bg-tertiary)] border border-[var(--border-light)] p-[6px] rounded-lg cursor-pointer text-[var(--text-secondary)] transition-[border-color,background-color,color] duration-150 ease-out flex items-center justify-center hover:bg-[rgba(251,191,36,0.12)] hover:border-[rgba(245,158,11,0.35)] hover:text-[#f59e0b]" title="Edit">
                       <Edit size={16} />
                     </button>
-                    <button onClick={() => handleDelete(admin)} className="bg-[var(--bg-tertiary)] border border-[var(--border-light)] p-[6px] rounded-lg cursor-pointer text-[var(--text-secondary)] transition-colors flex items-center justify-center hover:bg-[rgba(239,68,68,0.12)] hover:border-[rgba(239,68,68,0.35)] hover:text-[#ef4444]" title="Delete">
+                    <button onClick={() => handleDelete(admin)} className="bg-[var(--bg-tertiary)] border border-[var(--border-light)] p-[6px] rounded-lg cursor-pointer text-[var(--text-secondary)] transition-[border-color,background-color,color] duration-150 ease-out flex items-center justify-center hover:bg-[rgba(239,68,68,0.12)] hover:border-[rgba(239,68,68,0.35)] hover:text-[#ef4444]" title="Delete">
                       <Trash2 size={16} />
                     </button>
                   </div>
@@ -991,7 +1028,7 @@ export default function SocietyAdmins() {
                 {/* Linked society */}
                 {society ? (
                   <div
-                    className="p-3 rounded-[10px] bg-[var(--bg-tertiary)] border border-[var(--border-light)] cursor-pointer transition-colors flex flex-col gap-[6px] hover:bg-[rgba(8,145,178,0.08)] hover:border-[rgba(8,145,178,0.35)]"
+                    className="p-3 rounded-[12px] bg-[color-mix(in_srgb,var(--bg-secondary)_94%,white_6%)] border border-[color-mix(in_srgb,var(--border-default)_90%,white_10%)] cursor-pointer transition-[border-color,background-color,box-shadow] duration-200 ease-out flex flex-col gap-[6px] hover:bg-[color-mix(in_srgb,var(--bg-secondary)_88%,var(--accent-primary)_12%)] hover:border-[rgba(59,130,246,0.3)] hover:shadow-[0_8px_18px_rgba(30,64,175,0.14)]"
                     onClick={() => navigate(`/societies/${society.id}`)}
                   >
                     <div className="flex items-center gap-2 text-sm font-semibold text-[var(--text-primary)]">
@@ -1012,7 +1049,7 @@ export default function SocietyAdmins() {
                     </div>
                   </div>
                 ) : (
-                  <div className="p-3 rounded-[10px] bg-[var(--bg-tertiary)] border border-[var(--border-light)] flex items-center gap-2 text-[13px] text-[var(--text-secondary)]">
+                  <div className="p-3 rounded-[12px] bg-[color-mix(in_srgb,var(--bg-secondary)_94%,white_6%)] border border-[color-mix(in_srgb,var(--border-default)_90%,white_10%)] flex items-center gap-2 text-[13px] text-[var(--text-secondary)]">
                     <Shield size={14} />
                     <span>No society linked</span>
                   </div>
@@ -1101,17 +1138,24 @@ export default function SocietyAdmins() {
               </div>
 
               <div className="flex justify-end gap-[10px] pt-3 border-t border-[var(--border-light)]">
-                <button type="button" onClick={() => { setShowModal(false); setShowPassword(false) }} className="py-[10px] px-5 rounded-[10px] text-sm font-semibold cursor-pointer transition-colors border border-[var(--border-light)] bg-[var(--bg-tertiary)] text-[var(--text-primary)] hover:bg-[var(--bg-secondary)]">
+                <NeonSweepButton tone="slate" size="md" type="button" onClick={() => { setShowModal(false); setShowPassword(false) }}>
                   Cancel
-                </button>
-                <AsyncButton
+                </NeonSweepButton>
+                <NeonSweepButton
+                  tone="cyan"
+                  size="md"
                   type="submit"
-                  className="py-[10px] px-5 rounded-[10px] text-sm font-semibold cursor-pointer transition-colors bg-[#0891b2] text-white border border-[#0891b2] hover:bg-[#0e7490]"
-                  isLoading={createMutation.isPending || updateMutation.isPending || assignMutation.isPending}
-                  loadingText="Saving..."
+                  disabled={createMutation.isPending || updateMutation.isPending || assignMutation.isPending}
                 >
-                  {editingAdmin ? 'Update Admin' : assignmentSociety ? 'Assign Admin' : 'Create Society + Admin'}
-                </AsyncButton>
+                  {(createMutation.isPending || updateMutation.isPending || assignMutation.isPending) ? (
+                    <>
+                      <span className="h-4 w-4 animate-spin rounded-full border-2 border-[#03141d]/70 border-t-transparent" />
+                      Saving...
+                    </>
+                  ) : (
+                    editingAdmin ? 'Update Admin' : assignmentSociety ? 'Assign Admin' : 'Create Society + Admin'
+                  )}
+                </NeonSweepButton>
               </div>
             </form>
           </div>

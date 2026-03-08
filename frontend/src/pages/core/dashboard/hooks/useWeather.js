@@ -8,29 +8,18 @@ export default function useWeather() {
   const [coords, setCoords] = useState(DEFAULT_LOCATION);
 
   useEffect(() => {
-    if (typeof navigator === "undefined" || !navigator.geolocation) {
-      return;
-    }
+    if (typeof navigator === "undefined" || !navigator.geolocation) return;
 
-    const success = (position) => {
-      setCoords({
-        lat: position.coords.latitude,
-        long: position.coords.longitude,
-      });
-    };
-
-    const error = () => {
-      setCoords(DEFAULT_LOCATION);
-    };
-
-    navigator.geolocation.getCurrentPosition(success, error, {
-      enableHighAccuracy: false,
-      timeout: 5000,
-      maximumAge: 1000 * 60 * 15,
-    });
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setCoords({ lat: position.coords.latitude, long: position.coords.longitude });
+      },
+      () => setCoords(DEFAULT_LOCATION),
+      { enableHighAccuracy: false, timeout: 5000, maximumAge: 1000 * 60 * 15 },
+    );
   }, []);
 
-  return useQuery({
+  const weatherQuery = useQuery({
     queryKey: ["weather", coords.lat, coords.long],
     queryFn: async () => {
       const res = await axios.get(
@@ -40,4 +29,23 @@ export default function useWeather() {
     },
     staleTime: 1000 * 60 * 30,
   });
+
+  const locationQuery = useQuery({
+    queryKey: ["location", coords.lat, coords.long],
+    queryFn: async () => {
+      const res = await axios.get(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${coords.lat}&lon=${coords.long}&zoom=10`,
+        { headers: { "Accept-Language": "en" } },
+      );
+      const addr = res.data?.address || {};
+      return addr.city || addr.town || addr.village || addr.county || null;
+    },
+    staleTime: 1000 * 60 * 60,
+    retry: false,
+  });
+
+  return {
+    ...weatherQuery,
+    locationName: locationQuery.data ?? null,
+  };
 }
