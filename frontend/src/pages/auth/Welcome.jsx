@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { Building2, Shield, Users, CreditCard, Bell, ArrowRight, CheckCircle, ChevronDown, Car, Phone, MessageSquare, Key, Sun, Moon, Menu, X, Twitter, Linkedin, Monitor, Sparkles, Mail, Link2, Youtube } from 'lucide-react'
 import { useTheme } from '../../context'
+import { enquiryApi } from '../../../../api'
 import clsx from 'clsx'
 
 /* Scroll-reveal hook */
@@ -32,6 +33,8 @@ export default function Welcome() {
   const [enrollPhone, setEnrollPhone] = useState('')
   const [enrollReason, setEnrollReason] = useState('')
   const [enrollError, setEnrollError] = useState('')
+  const [enrollSubmitting, setEnrollSubmitting] = useState(false)
+  const [enrollSubmitted, setEnrollSubmitted] = useState(false)
 
   useEffect(() => {
     const handler = (e) => {
@@ -92,24 +95,34 @@ export default function Welcome() {
     setMobileMenuOpen(false)
   }
 
-  const handleEnrollSubmit = (e) => {
+  const handleEnrollSubmit = async (e) => {
     e.preventDefault()
-    const nameOk = enrollName.trim().length >= 2
-    const phoneOk = enrollPhone.trim().length >= 8
+    const errors = []
+    if (enrollName.trim().length < 2) errors.push('a valid name')
+    const digits = enrollPhone.replace(/\D/g, '')
+    if (digits.length !== 10) errors.push('a 10-digit phone number')
+    if (!enrollReason) errors.push('a reason')
 
-    if (!nameOk || !phoneOk) {
-      setEnrollError('Please enter your name and phone number.')
+    if (errors.length) {
+      setEnrollError('Please enter ' + errors.join(', ') + '.')
       return
     }
 
     setEnrollError('')
-    navigate('/contact', {
-      state: {
+    setEnrollSubmitting(true)
+    try {
+      await enquiryApi.submit({
         name: enrollName.trim(),
-        phone: enrollPhone.trim(),
-        reason: enrollReason || null,
-      },
-    })
+        phone: digits,
+        reason: enrollReason,
+      })
+      setEnrollSubmitted(true)
+    } catch (err) {
+      const msg = err?.response?.data?.message || 'Something went wrong. Please try again.'
+      setEnrollError(msg)
+    } finally {
+      setEnrollSubmitting(false)
+    }
   }
 
   return (
@@ -236,59 +249,81 @@ export default function Welcome() {
                 built for modern housing societies.
               </p>
 
-              <form className={clsx(
+              <div className={clsx(
                 'welcome-anim mb-5 transition-all duration-500',
                 isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'
-              )} style={{ transitionDelay: '0.35s' }} onSubmit={handleEnrollSubmit}>
-                <div className="grid grid-cols-2 max-[680px]:grid-cols-1 gap-3 p-[0.875rem] rounded-xl border border-[var(--border-default)] shadow-[var(--shadow-sm)]" style={{ background: 'color-mix(in srgb, var(--bg-secondary) 88%, transparent)' }}>
-                  <label className="flex flex-col gap-[0.35rem] min-w-0">
-                    <span className="text-xs font-bold text-[var(--text-secondary)]">Name</span>
-                    <input
-                      value={enrollName}
-                      onChange={(e) => setEnrollName(e.target.value)}
-                      className="h-[42px] py-[0.55rem] px-[0.8rem] rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--bg-primary)] text-[var(--text-primary)] text-[0.95rem] font-semibold focus:outline-2 focus:outline-[color-mix(in_srgb,var(--accent-primary)_50%,transparent)] focus:outline-offset-2"
-                      placeholder="Your name"
-                      autoComplete="name"
-                    />
-                  </label>
-
-                  <label className="flex flex-col gap-[0.35rem] min-w-0">
-                    <span className="text-xs font-bold text-[var(--text-secondary)]">Phone</span>
-                    <div className="flex items-stretch gap-2">
-                      <span className="inline-flex items-center px-3 rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--bg-tertiary)] text-[var(--text-secondary)] font-extrabold">+91</span>
-                      <input
-                        value={enrollPhone}
-                        onChange={(e) => setEnrollPhone(e.target.value)}
-                        className="flex-1 h-[42px] py-[0.55rem] px-[0.8rem] rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--bg-primary)] text-[var(--text-primary)] text-[0.95rem] font-semibold focus:outline-2 focus:outline-[color-mix(in_srgb,var(--accent-primary)_50%,transparent)] focus:outline-offset-2"
-                        placeholder="Enter phone number"
-                        inputMode="tel"
-                        autoComplete="tel"
-                      />
+              )} style={{ transitionDelay: '0.35s' }}>
+                {enrollSubmitted ? (
+                  <div className="grid gap-3 p-[0.875rem] rounded-xl border border-[var(--border-default)] shadow-[var(--shadow-sm)] text-center" style={{ background: 'color-mix(in srgb, var(--bg-secondary) 88%, transparent)' }}>
+                    <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full" style={{ background: 'color-mix(in srgb, #22c55e 15%, transparent)' }}>
+                      <CheckCircle size={28} className="text-emerald-500" />
                     </div>
-                  </label>
-
-                  <label className="flex flex-col gap-[0.35rem] min-w-0">
-                    <span className="text-xs font-bold text-[var(--text-secondary)]">Select Reason</span>
-                    <select
-                      value={enrollReason}
-                      onChange={(e) => setEnrollReason(e.target.value)}
-                      className="h-[42px] py-[0.55rem] px-[0.8rem] rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--bg-primary)] text-[var(--text-primary)] text-[0.95rem] font-semibold focus:outline-2 focus:outline-[color-mix(in_srgb,var(--accent-primary)_50%,transparent)] focus:outline-offset-2"
+                    <div>
+                      <p className="font-extrabold text-[var(--text-primary)] text-base">Enquiry Received!</p>
+                      <p className="text-sm text-[var(--text-secondary)] mt-1">We'll reach out to <span className="font-bold text-[var(--text-primary)]">+91 {enrollPhone}</span> within 24 hours.</p>
+                    </div>
+                    <button
+                      onClick={() => { setEnrollSubmitted(false); setEnrollName(''); setEnrollPhone(''); setEnrollReason('') }}
+                      className="mx-auto text-xs font-semibold text-[var(--accent-primary)] bg-transparent border-none cursor-pointer underline underline-offset-2 hover:opacity-70"
                     >
-                      <option value="">Select reason</option>
-                      <option value="DEMO">Request a demo</option>
-                      <option value="ONBOARDING">New society onboarding</option>
-                      <option value="PRICING">Pricing enquiry</option>
-                    </select>
-                  </label>
+                      Submit another enquiry
+                    </button>
+                  </div>
+                ) : (
+                  <form onSubmit={handleEnrollSubmit}>
+                    <div className="grid grid-cols-2 max-[680px]:grid-cols-1 gap-3 p-[0.875rem] rounded-xl border border-[var(--border-default)] shadow-[var(--shadow-sm)]" style={{ background: 'color-mix(in srgb, var(--bg-secondary) 88%, transparent)' }}>
+                      <label className="flex flex-col gap-[0.35rem] min-w-0">
+                        <span className="text-xs font-bold text-[var(--text-secondary)]">Name</span>
+                        <input
+                          value={enrollName}
+                          onChange={(e) => setEnrollName(e.target.value)}
+                          className="h-[42px] py-[0.55rem] px-[0.8rem] rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--bg-primary)] text-[var(--text-primary)] text-[0.95rem] font-semibold focus:outline-2 focus:outline-[color-mix(in_srgb,var(--accent-primary)_50%,transparent)] focus:outline-offset-2"
+                          placeholder="Your name"
+                          autoComplete="name"
+                        />
+                      </label>
 
-                  <button type="submit" className="h-[42px] inline-flex items-center justify-center gap-2 px-4 rounded-[var(--radius-md)] border-none cursor-pointer bg-[var(--accent-primary)] text-white font-extrabold text-[0.95rem] transition-all hover:bg-[var(--accent-hover)] hover:-translate-y-[2px] active:translate-y-0 active:shadow-none" style={{ boxShadow: 'none' }}>
-                    Enroll your society
-                    <ArrowRight size={16} />
-                  </button>
-                </div>
+                      <label className="flex flex-col gap-[0.35rem] min-w-0">
+                        <span className="text-xs font-bold text-[var(--text-secondary)]">Phone</span>
+                        <div className="flex items-stretch gap-2">
+                          <span className="inline-flex items-center px-3 rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--bg-tertiary)] text-[var(--text-secondary)] font-extrabold">+91</span>
+                          <input
+                            value={enrollPhone}
+                            onChange={(e) => setEnrollPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                            className="flex-1 h-[42px] py-[0.55rem] px-[0.8rem] rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--bg-primary)] text-[var(--text-primary)] text-[0.95rem] font-semibold focus:outline-2 focus:outline-[color-mix(in_srgb,var(--accent-primary)_50%,transparent)] focus:outline-offset-2"
+                            placeholder="Enter phone number"
+                            type="tel"
+                            inputMode="tel"
+                            maxLength={10}
+                            autoComplete="tel"
+                          />
+                        </div>
+                      </label>
 
-                {enrollError && <p className="mt-2 text-sm font-bold" style={{ color: 'var(--danger-600, var(--text-secondary))' }}>{enrollError}</p>}
-              </form>
+                      <label className="flex flex-col gap-[0.35rem] min-w-0">
+                        <span className="text-xs font-bold text-[var(--text-secondary)]">Select Reason</span>
+                        <select
+                          value={enrollReason}
+                          onChange={(e) => setEnrollReason(e.target.value)}
+                          className="h-[42px] py-[0.55rem] px-[0.8rem] rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--bg-primary)] text-[var(--text-primary)] text-[0.95rem] font-semibold appearance-none focus:outline-2 focus:outline-[color-mix(in_srgb,var(--accent-primary)_50%,transparent)] focus:outline-offset-2"
+                        >
+                          <option value="">Select reason</option>
+                          <option value="DEMO">Request a demo</option>
+                          <option value="ONBOARDING">New society onboarding</option>
+                          <option value="PRICING">Pricing enquiry</option>
+                        </select>
+                      </label>
+
+                      <button type="submit" disabled={enrollSubmitting} className="self-end h-[42px] inline-flex items-center justify-center gap-2 px-4 rounded-[var(--radius-md)] border-none cursor-pointer bg-[var(--accent-primary)] text-white font-extrabold text-[0.95rem] transition-all hover:bg-[var(--accent-hover)] hover:-translate-y-[2px] active:translate-y-0 active:shadow-none disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:translate-y-0" style={{ boxShadow: 'none' }}>
+                        {enrollSubmitting ? 'Submitting…' : 'Enroll your society'}
+                        {!enrollSubmitting && <ArrowRight size={16} />}
+                      </button>
+                    </div>
+
+                    {enrollError && <p className="mt-2 text-sm font-bold" style={{ color: 'var(--danger-600, var(--text-secondary))' }}>{enrollError}</p>}
+                  </form>
+                )}
+              </div>
 
               <div className={clsx(
                 'welcome-anim flex flex-wrap justify-start gap-3 transition-all duration-500',

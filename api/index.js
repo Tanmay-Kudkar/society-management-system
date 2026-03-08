@@ -39,6 +39,11 @@ api.interceptors.response.use(
 
 export default api
 
+// Enquiry API (public – no auth required)
+export const enquiryApi = {
+  submit: (data) => api.post('/enquiries', data),
+}
+
 // Auth API
 export const authApi = {
   login: (credentials) => api.post('/auth/login', credentials),

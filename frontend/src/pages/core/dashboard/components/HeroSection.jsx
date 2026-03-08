@@ -1,6 +1,7 @@
-import { Activity, Building2, Home, Layers, Sun } from "lucide-react";
+import { Activity, Building2, Home, Layers, MapPin, Sun } from "lucide-react";
 import ClockDisplay from "./ClockDisplay";
 import NoticeRail from "./NoticeRail";
+import { formatRole } from "../../../../utils/formatUtils";
 
 export default function HeroSection({
   user,
@@ -9,112 +10,158 @@ export default function HeroSection({
   isPlatformLevel,
   isPlatformOwner,
   weather,
+  locationName,
   getWeatherDesc,
   getWeatherIcon,
   timeGreeting,
 }) {
   return (
-    <section className="relative mb-6 overflow-hidden rounded-2xl border border-[var(--border-default)] bg-[var(--bg-secondary)] shadow-sm dark:border-[#1a1a1a]" aria-labelledby="dashboard-hero-title">
-      <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-violet-500/5 to-emerald-500/5 opacity-50 dark:from-blue-500/10 dark:via-violet-500/10 dark:to-emerald-500/10" />
-      <div className="absolute -left-20 -top-20 h-64 w-64 animate-pulse rounded-full bg-blue-400/20 mix-blend-multiply blur-3xl filter dark:bg-blue-400/10" style={{ animationDuration: "8s" }} />
-      <div className="absolute -bottom-20 -right-20 h-64 w-64 animate-pulse rounded-full bg-violet-400/20 mix-blend-multiply blur-3xl filter dark:bg-violet-400/10" style={{ animationDuration: "10s", animationDelay: "1s" }} />
-      <div className="absolute left-0 right-0 top-0 h-[4px] bg-gradient-to-r from-blue-500 via-violet-500 to-emerald-400 opacity-90" />
+    <>
+      <style>{`
+        @keyframes border-flow {
+          0% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+          100% { background-position: 0% 50%; }
+        }
+      `}</style>
+      <section
+        className="relative mb-6 rounded-2xl p-[2px] shadow-sm transition-all duration-300"
+        aria-labelledby="dashboard-hero-title"
+      >
+        {/* Flowing Gradient Border Background */}
+        <div className="absolute inset-0 rounded-2xl opacity-100 blur-[1px]"
+             style={{ 
+               backgroundImage: "linear-gradient(90deg, #ff0000, #ff8000, #ffff00, #00ff00, #00ffff, #0000ff, #8000ff, #ff00ff, #ff0000)",
+               backgroundSize: "200% auto", 
+               animation: "border-flow 5s linear infinite" 
+             }} />
+             
+        {/* Inner Card Container */}
+        <div className="relative flex h-full w-full flex-col overflow-hidden rounded-[14px] bg-[var(--bg-secondary)]">
 
-      <div className="relative flex flex-col gap-0 md:flex-row">
-        <header className="flex-1 px-6 py-6 sm:px-8 sm:py-8">
-          <div className="mb-4 flex flex-wrap items-center gap-3">
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-[11px] font-bold tracking-wider text-emerald-600 shadow-[0_0_10px_rgba(16,185,129,0.1)] backdrop-blur-sm dark:text-emerald-400">
-              <span className="relative flex h-2 w-2 shrink-0">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60" />
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+          <div className="relative flex flex-col gap-0 md:flex-row">
+            {/* LEFT: Greeting */}
+            <header className="flex-1 px-6 py-6 sm:px-8 sm:py-7">
+          <div className="mb-4 flex flex-wrap items-center gap-2">
+            {/* LIVE badge */}
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/25 bg-emerald-500/8 px-2.5 py-0.5 text-[11px] font-semibold tracking-wide text-emerald-700 dark:text-emerald-400">
+              <span className="relative flex h-1.5 w-1.5 shrink-0">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500" />
               </span>
-              LIVE
+              Live
             </span>
 
             {isMemberOrTenant ? (
-              <span className="inline-flex items-center rounded-full border border-[var(--border-default)] bg-[var(--bg-tertiary)] px-3 py-1 text-[11px] font-bold tracking-wider text-[var(--text-secondary)] shadow-sm backdrop-blur-sm">
-                {user?.role}
+              <span className="inline-flex items-center rounded-full border border-[var(--border-default)] bg-[var(--bg-tertiary)] px-2.5 py-0.5 text-[11px] font-semibold text-[var(--text-muted)]">
+                {formatRole(user?.role)}
               </span>
             ) : (
               <>
-                <span className="inline-flex items-center rounded-full border border-[var(--border-default)] bg-white/50 px-3 py-1 text-[11px] font-bold tracking-wider text-[var(--text-secondary)] shadow-sm backdrop-blur-sm dark:bg-black/20">
-                  v2.5.0
+                <span className="inline-flex items-center rounded-full border border-[var(--border-default)] bg-[var(--bg-tertiary)] px-2.5 py-0.5 text-[11px] font-semibold text-[var(--text-muted)]">
+                  v1.0.0
                 </span>
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-blue-500/30 bg-blue-500/10 px-3 py-1 text-[11px] font-bold tracking-wider text-blue-700 shadow-[0_0_10px_rgba(59,130,246,0.1)] backdrop-blur-sm dark:text-blue-400">
-                  <Activity className="h-3 w-3" aria-hidden="true" />
-                  REAL-TIME
+                <span className="inline-flex items-center gap-1 rounded-full border border-[var(--border-default)] bg-[var(--bg-tertiary)] px-2.5 py-0.5 text-[11px] font-semibold text-[var(--text-muted)]">
+                  <Activity className="h-2.5 w-2.5" aria-hidden="true" />
+                  Real-time
                 </span>
               </>
             )}
           </div>
 
-          <h1 id="dashboard-hero-title" className="mb-2 text-[28px] font-extrabold tracking-tight text-[var(--text-primary)] lg:text-[34px]">
+          {/* Greeting headline */}
+          <h1
+            id="dashboard-hero-title"
+            className="mb-2 text-[24px] font-bold leading-tight tracking-tight text-[var(--text-primary)] sm:text-[28px]"
+          >
             {timeGreeting},{" "}
-            <span className="bg-gradient-to-r from-blue-600 to-violet-600 bg-clip-text text-transparent dark:from-blue-400 dark:to-violet-400">
+            <span className="text-[var(--accent-primary)]">
               {user?.name?.split(" ")[0] || "User"}
             </span>{" "}
-            <span className="inline-block origin-bottom animate-bounce-custom" aria-hidden="true">👋</span>
+            <span aria-hidden="true">👋</span>
           </h1>
 
-          <p className="max-w-xl text-[14.5px] leading-relaxed text-[var(--text-secondary)]">
+          <p className="max-w-lg text-sm leading-relaxed text-[var(--text-muted)]">
             {isMemberOrTenant
               ? "Welcome back. Here's a personalized overview of everything happening in your living space."
               : "Welcome to your command center. Here's what's happening across your society today."}
           </p>
 
-          <div className="mt-5 flex flex-wrap items-center gap-3">
+          {/* Role / Society badge row */}
+          <div className="mt-4 flex flex-wrap items-center gap-2">
             {!isMemberOrTenant && !isPlatformLevel && user?.societyId && (
-              <span className="group flex items-center gap-2 rounded-xl border border-[var(--border-default)] bg-white/60 px-4 py-2 text-xs font-semibold tracking-wide text-[var(--text-secondary)] shadow-sm backdrop-blur-md transition-all hover:border-[var(--accent-primary)] hover:bg-white dark:bg-black/40 dark:hover:bg-black/60">
-                <Building2 className="h-4 w-4 text-[var(--accent-primary)] transition-transform group-hover:scale-110" aria-hidden="true" />
+              <span className="flex items-center gap-1.5 rounded-lg border border-[var(--border-default)] bg-[var(--bg-tertiary)] px-3 py-1.5 text-xs font-medium text-[var(--text-muted)] transition-colors hover:border-[var(--accent-primary)]">
+                <Building2 className="h-3.5 w-3.5 text-[var(--accent-primary)]" aria-hidden="true" />
                 Society ID: <span className="text-[var(--text-primary)]">{user.societyId}</span>
               </span>
             )}
             {isPlatformLevel && (
-              <span className="group flex items-center gap-2 rounded-xl border border-violet-500/20 bg-violet-500/10 px-4 py-2 text-xs font-bold tracking-wide text-violet-700 shadow-sm backdrop-blur-md transition-all hover:bg-violet-500/20 dark:text-violet-300">
-                <Layers className="h-4 w-4 transition-transform group-hover:scale-110" aria-hidden="true" />
-                {isPlatformOwner ? "Platform Owner" : "Organisation Owner"}
+              <span className="flex items-center gap-1.5 rounded-lg border border-violet-500/25 bg-violet-500/8 px-3 py-1.5 text-xs font-semibold text-violet-700 dark:text-violet-400">
+                <Layers className="h-3.5 w-3.5" aria-hidden="true" />
+                {formatRole(user?.role)}
               </span>
             )}
             {isMemberOrTenant && (
-              <span className="group flex items-center gap-2 rounded-xl border border-[var(--border-default)] bg-white/60 px-4 py-2 text-xs font-semibold tracking-wide text-[var(--text-secondary)] shadow-sm backdrop-blur-md transition-all hover:border-[var(--accent-primary)] hover:bg-white dark:bg-black/40 dark:hover:bg-black/60">
-                <Home className="h-4 w-4 text-[var(--accent-primary)] transition-transform group-hover:scale-110" aria-hidden="true" />
+              <span className="flex items-center gap-1.5 rounded-lg border border-[var(--border-default)] bg-[var(--bg-tertiary)] px-3 py-1.5 text-xs font-medium text-[var(--text-muted)] transition-colors hover:border-[var(--accent-primary)]">
+                <Home className="h-3.5 w-3.5 text-[var(--accent-primary)]" aria-hidden="true" />
                 {user?.flatNumber ? <span className="text-[var(--text-primary)]">Unit {user.flatNumber}</span> : "Resident"}
               </span>
             )}
           </div>
         </header>
 
-        <aside className="relative flex shrink-0 items-center justify-center gap-0 border-t border-[var(--border-default)] bg-gradient-to-b from-white/40 to-white/10 backdrop-blur-md md:border-l md:border-t-0 dark:from-black/40 dark:to-black/10" aria-label="Weather and time">
-          <div className="flex h-full w-full max-w-sm divide-x divide-[var(--border-default)] md:max-w-none">
-            <div className="group flex w-1/2 flex-col items-center justify-center gap-2 p-5 transition-colors hover:bg-white/40 md:w-auto md:min-w-[140px] dark:hover:bg-white/5">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--bg-tertiary)] shadow-inner transition-transform duration-300 group-hover:scale-110">
+        {/* RIGHT: Weather + Clock combined widget */}
+        <aside
+          className="flex shrink-0 flex-col xl:flex-row items-center justify-center gap-6 lg:gap-8 border-t border-[var(--border-default)]/60 p-6 lg:p-8 md:border-l md:border-t-0"
+          aria-label="Weather and time"
+        >
+          {/* Weather block */}
+          <div className="flex flex-col items-center xl:items-start gap-3 lg:gap-4">
+            {locationName && (
+              <div className="flex items-center gap-2 text-[var(--text-secondary)]">
+                <MapPin className="h-4 w-4 lg:h-5 lg:w-5 shrink-0 text-[var(--accent-primary)]" aria-hidden="true" />
+                <span className="truncate text-sm lg:text-base font-semibold">{locationName}</span>
+              </div>
+            )}
+            <div className="flex items-center gap-4">
+              <div className="flex h-14 w-14 lg:h-16 lg:w-16 shrink-0 items-center justify-center rounded-xl border border-[var(--border-default)] bg-[var(--bg-tertiary)] shadow-sm shadow-amber-500/10">
                 {weather?.current?.weather_code !== undefined ? (
-                  getWeatherIcon(weather.current.weather_code)
+                  <div className="[&>svg]:h-8 [&>svg]:w-8 lg:[&>svg]:h-10 lg:[&>svg]:w-10">
+                    {getWeatherIcon(weather.current.weather_code)}
+                  </div>
                 ) : (
-                  <Sun className="h-6 w-6 animate-[spin_4s_linear_infinite] text-[var(--accent-primary)]" />
+                  <Sun className="h-8 w-8 lg:h-10 lg:w-10 text-amber-500" aria-hidden="true" />
                 )}
               </div>
-              <div className="text-center">
-                <p className="bg-gradient-to-br from-[var(--text-primary)] to-[var(--text-secondary)] bg-clip-text text-[26px] font-black leading-none tabular-nums tracking-tight text-transparent">
+              <div className="flex flex-col items-start pt-1">
+                <p className="text-[36px] lg:text-[46px] font-black leading-none tabular-nums tracking-tight text-amber-600 dark:text-amber-400">
                   {weather?.current?.temperature_2m != null
                     ? `${Math.round(weather.current.temperature_2m)}°C`
-                    : "-"}
+                    : "—"}
                 </p>
-                <p className="mt-1 text-[10px] font-extrabold uppercase tracking-widest text-[var(--text-tertiary)]">
+                <p className="mt-1 lg:mt-1.5 text-xs lg:text-sm font-bold uppercase tracking-widest text-[var(--text-muted)]">
                   {weather?.current?.weather_code !== undefined
                     ? getWeatherDesc(weather.current.weather_code)
-                    : "Loading"}
+                    : "Fetching..."}
                 </p>
               </div>
             </div>
-            <div className="flex w-1/2 items-center justify-center p-2 transition-colors hover:bg-white/40 md:w-auto md:min-w-[170px] dark:hover:bg-white/5">
-              <ClockDisplay />
-            </div>
+          </div>
+
+          <div className="hidden xl:block h-[80px] w-px bg-[var(--border-default)]/60" />
+          <div className="block xl:hidden h-px w-full bg-[var(--border-default)]/60" />
+
+          {/* Clock block */}
+          <div className="flex flex-col items-center xl:items-start">
+            <ClockDisplay />
           </div>
         </aside>
       </div>
 
       <NoticeRail notices={notices} />
-    </section>
+      
+        </div>
+      </section>
+    </>
   );
 }

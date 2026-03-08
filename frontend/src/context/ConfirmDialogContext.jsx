@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { AlertTriangle, Trash2 } from 'lucide-react'
+import NeonSweepButton from '../components/NeonSweepButton'
 
 const ConfirmDialogContext = createContext(null)
 
@@ -26,12 +27,7 @@ function ConfirmDialog({ open, options, onCancel, onConfirm }) {
         : 'bg-red-100/95'
   const iconToneClass =
     options.tone === 'warning' ? 'text-amber-600' : options.tone === 'neutral' ? 'text-slate-700' : 'text-red-500'
-  const confirmBtnToneClass =
-    options.tone === 'warning'
-      ? 'bg-amber-500 text-slate-900 hover:bg-amber-600 hover:text-white'
-      : options.tone === 'neutral'
-        ? 'border border-slate-400/30 bg-slate-50 text-slate-900 hover:bg-white'
-        : 'bg-rose-500 text-white hover:bg-rose-600 hover:shadow-[0_10px_18px_rgba(244,63,94,0.28)]'
+  const confirmTone = options.tone === 'danger' ? 'danger' : options.tone === 'neutral' ? 'slate' : 'cyan'
 
   return (
     <div className="fixed inset-0 z-[70] flex items-center justify-center p-4" role="presentation">
@@ -99,23 +95,22 @@ function ConfirmDialog({ open, options, onCancel, onConfirm }) {
         )}
 
         <div className="mt-[18px] flex gap-2.5">
-          <button
-            type="button"
-            className="min-h-[42px] flex-1 rounded-xl border border-slate-400/30 bg-transparent px-4 text-[0.92rem] font-bold text-slate-400 transition hover:-translate-y-px hover:bg-slate-400/10 hover:text-slate-200"
+          <NeonSweepButton
+            tone="slate"
+            size="md"
+            className="min-h-[42px] flex-1"
             onClick={onCancel}
           >
             {options.cancelText}
-          </button>
-          <button
-            type="button"
-            className={[
-              'min-h-[42px] flex-1 rounded-xl border border-transparent px-4 text-[0.92rem] font-bold transition hover:-translate-y-px',
-              confirmBtnToneClass,
-            ].join(' ')}
+          </NeonSweepButton>
+          <NeonSweepButton
+            tone={confirmTone}
+            size="md"
+            className="min-h-[42px] flex-1"
             onClick={onConfirm}
           >
             {options.confirmText}
-          </button>
+          </NeonSweepButton>
         </div>
       </div>
     </div>

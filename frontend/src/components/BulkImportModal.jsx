@@ -3,6 +3,7 @@ import { Upload, Download, X, AlertCircle, Eye, CheckCircle2 } from 'lucide-reac
 import clsx from 'clsx'
 import * as XLSX from 'xlsx'
 import { useToast } from '../context'
+import NeonSweepButton from './NeonSweepButton'
 
 /**
  * Reusable Bulk Import Modal component.
@@ -194,12 +195,6 @@ export default function BulkImportModal({
     return (bytes / (1024 * 1024)).toFixed(1) + ' MB'
   }
 
-  const btnBaseClass = 'inline-flex min-w-[150px] items-center justify-center gap-2 rounded-xl px-4 py-2.5 font-semibold transition disabled:cursor-not-allowed disabled:opacity-60 disabled:shadow-none disabled:transform-none'
-  const btnSecondaryClass = `${btnBaseClass} border border-slate-400/30 bg-slate-950 text-slate-50 hover:bg-slate-950/95`
-  const btnPrimaryClass = `${btnBaseClass} border border-slate-400/35 bg-slate-50 text-slate-900 hover:-translate-y-px hover:bg-white`
-  const btnConfirmClass = `${btnBaseClass} border border-slate-400/35 bg-slate-50 text-slate-900 shadow-[0_12px_20px_rgba(15,23,42,0.18)] hover:-translate-y-px hover:bg-white`
-  const btnAccentClass = `${btnBaseClass} border border-slate-400/35 bg-slate-50 text-slate-900 shadow-[0_12px_20px_rgba(15,23,42,0.18)] hover:bg-white`
-
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
       <div className="max-h-[90vh] w-full max-w-[720px] overflow-hidden rounded-2xl border border-slate-400/25 bg-[#05080d] text-slate-200 shadow-[0_24px_60px_rgba(15,23,42,0.2)]">
@@ -272,13 +267,15 @@ export default function BulkImportModal({
                   id="bulk-import-excel-upload"
                 />
                 {!file && (
-                  <label
-                    htmlFor="bulk-import-excel-upload"
-                    className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-slate-400/35 bg-slate-50 px-4 py-2 font-semibold text-slate-900 transition hover:-translate-y-px hover:bg-white"
+                  <NeonSweepButton
+                    tone="slate"
+                    size="md"
+                    className="cursor-pointer"
+                    onClick={() => fileInputRef.current?.click()}
                   >
                     <Upload size={18} />
                     Select File
-                  </label>
+                  </NeonSweepButton>
                 )}
               </div>
 
@@ -289,13 +286,10 @@ export default function BulkImportModal({
                     <span className="h-2 w-2 rounded-full bg-slate-400 animate-pulse" />
                     Excel Format Requirements
                   </h4>
-                  <button
-                    onClick={downloadTemplate}
-                    className="inline-flex items-center gap-2 rounded-[14px] border border-[var(--accent-100)] bg-[linear-gradient(90deg,var(--accent-gradient-from),var(--accent-gradient-via),var(--accent-gradient-to))] px-[18px] py-2.5 font-bold text-white shadow-[var(--glow-accent)] transition hover:-translate-y-px hover:brightness-105"
-                  >
+                  <NeonSweepButton tone="cyan" size="md" onClick={downloadTemplate}>
                     <Download size={16} />
                     Download Template
-                  </button>
+                  </NeonSweepButton>
                 </div>
                 <ul className="grid list-none gap-2 p-0 text-[13px] text-slate-200">
                   {columns.map((col, idx) => (
@@ -476,16 +470,20 @@ export default function BulkImportModal({
           <div className="mt-4 flex w-full flex-col items-stretch gap-3 sm:flex-row sm:flex-wrap sm:items-center">
             {step === 'upload' && (
               <>
-                <button
+                <NeonSweepButton
+                  tone="slate"
+                  size="md"
+                  className="min-w-[150px]"
                   onClick={onClose}
-                  className={btnSecondaryClass}
                 >
                   Cancel
-                </button>
-                <button
+                </NeonSweepButton>
+                <NeonSweepButton
+                  tone="cyan"
+                  size="md"
+                  className="min-w-[150px]"
                   onClick={handleValidate}
                   disabled={!file || isValidating}
-                  className={btnPrimaryClass}
                 >
                   {isValidating ? (
                     <>
@@ -498,7 +496,7 @@ export default function BulkImportModal({
                       Preview & Validate
                     </>
                   )}
-                </button>
+                </NeonSweepButton>
               </>
             )}
 
@@ -523,13 +521,15 @@ export default function BulkImportModal({
                           </div>
                         </div>
                       </div>
-                      <button
+                      <NeonSweepButton
+                        tone="violet"
+                        size="md"
                         onClick={() => { setFile(null); setValidationResults(null); setStep('upload') }}
-                        className={`${btnAccentClass} w-full min-w-0`}
+                        className="w-full min-w-0"
                       >
                         <Upload size={18} />
                         Upload Correct File
-                      </button>
+                      </NeonSweepButton>
                     </div>
                   ) : (
                     <div className="grid w-full gap-3">
@@ -548,27 +548,33 @@ export default function BulkImportModal({
                           </div>
                         </div>
                       </div>
-                      <button
+                      <NeonSweepButton
+                        tone="violet"
+                        size="md"
                         onClick={() => { setFile(null); setValidationResults(null); setStep('upload') }}
-                        className={`${btnAccentClass} w-full min-w-0`}
+                        className="w-full min-w-0"
                       >
                         <Upload size={18} />
                         Fix & Re-upload Excel
-                      </button>
+                      </NeonSweepButton>
                     </div>
                   )
                 ) : (
                   <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
-                    <button
+                    <NeonSweepButton
+                      tone="slate"
+                      size="md"
+                      className="min-w-[150px]"
                       onClick={() => setStep('upload')}
-                      className={btnSecondaryClass}
                     >
                       Back
-                    </button>
-                    <button
+                    </NeonSweepButton>
+                    <NeonSweepButton
+                      tone="cyan"
+                      size="md"
+                      className="min-w-[150px]"
                       onClick={handleImport}
                       disabled={isImporting}
-                      className={btnConfirmClass}
                     >
                       {isImporting ? (
                         <>
@@ -581,7 +587,7 @@ export default function BulkImportModal({
                           Import {validationResults?.successCount} {entityName}
                         </>
                       )}
-                    </button>
+                    </NeonSweepButton>
                   </div>
                 )}
               </>
@@ -590,20 +596,24 @@ export default function BulkImportModal({
             {step === 'results' && (
               <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
                 {importResults?.failureCount > 0 && (
-                  <button
+                  <NeonSweepButton
+                    tone="slate"
+                    size="md"
+                    className="min-w-[150px]"
                     onClick={downloadErrorReport}
-                    className={btnSecondaryClass}
                   >
                     <Download size={18} />
                     Download Error Report
-                  </button>
+                  </NeonSweepButton>
                 )}
-                <button
+                <NeonSweepButton
+                  tone="violet"
+                  size="md"
+                  className="min-w-[150px]"
                   onClick={onClose}
-                  className={btnAccentClass}
                 >
                   Done
-                </button>
+                </NeonSweepButton>
               </div>
             )}
           </div>

@@ -9,7 +9,7 @@ import {
 } from 'lucide-react'
 import clsx from 'clsx'
 import Toggle from '../../components/Toggle'
-import { PhoneInput } from '../../components'
+import { PhoneInput, NeonSweepButton } from '../../components'
 import { SettingsSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
 import { getDeviceInfo } from '../../utils'
 
@@ -470,10 +470,10 @@ export default function Settings() {
                 </div>
               </div>
 
-              <button onClick={handleProfileSave} disabled={saving} className="inline-flex w-fit items-center gap-2 rounded-lg border-0 bg-[var(--accent-primary)] px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90 hover:shadow-[0_4px_12px_color-mix(in_srgb,var(--accent-primary)_30%,transparent)] disabled:cursor-not-allowed disabled:opacity-50">
+              <NeonSweepButton onClick={handleProfileSave} disabled={saving} tone="cyan" size="md" className="self-start">
                 {saved ? <Check size={16} /> : <Save size={16} />}
                 {saving ? 'Saving...' : saved ? 'Saved!' : 'Save Changes'}
-              </button>
+              </NeonSweepButton>
             </div>
           )}
 
@@ -516,10 +516,10 @@ export default function Settings() {
                 ))}
               </div>
 
-              <button onClick={handleNotificationsSave} disabled={notificationsLoading} className="inline-flex w-fit items-center gap-2 rounded-lg border-0 bg-[var(--accent-primary)] px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90 hover:shadow-[0_4px_12px_color-mix(in_srgb,var(--accent-primary)_30%,transparent)] disabled:cursor-not-allowed disabled:opacity-50">
+              <NeonSweepButton onClick={handleNotificationsSave} disabled={notificationsLoading} tone="cyan" size="md" className="self-start">
                 {saved ? <Check size={16} /> : <Save size={16} />}
                 {notificationsLoading ? 'Saving...' : saved ? 'Saved!' : 'Save Preferences'}
-              </button>
+              </NeonSweepButton>
             </div>
           )}
 
@@ -633,10 +633,10 @@ export default function Settings() {
                   )}
                 </div>
 
-                <button type="submit" disabled={saving || !passwordValid} className="inline-flex w-fit items-center gap-2 rounded-lg border-0 bg-[var(--accent-primary)] px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90 hover:shadow-[0_4px_12px_color-mix(in_srgb,var(--accent-primary)_30%,transparent)] disabled:cursor-not-allowed disabled:opacity-50">
+                <NeonSweepButton type="submit" disabled={saving || !passwordValid} tone="cyan" size="md" className="self-start">
                   {passwordSaved ? <Check size={16} /> : <Shield size={16} />}
                   {saving ? 'Updating...' : passwordSaved ? 'Updated!' : 'Update Password'}
-                </button>
+                </NeonSweepButton>
               </form>
 
               {/* Active Sessions */}
@@ -691,10 +691,10 @@ export default function Settings() {
                         <p className="text-sm font-semibold text-[var(--text-secondary)]">This will log you out from all devices and end all sessions</p>
                     </div>
                   </div>
-                    <button onClick={handleLogoutAll} className="inline-flex items-center gap-2 whitespace-nowrap rounded-lg border border-red-400/70 bg-transparent px-4 py-2 text-sm font-bold text-red-600 transition hover:bg-red-500/10">
+                    <NeonSweepButton onClick={handleLogoutAll} tone="danger" size="md" className="whitespace-nowrap">
                     <LogOut size={16} />
                     Logout from all devices
-                  </button>
+                  </NeonSweepButton>
                 </div>
               </div>
             </div>
@@ -733,10 +733,10 @@ export default function Settings() {
                 ))}
               </div>
 
-              <button onClick={handleAppearanceSave} className="inline-flex w-fit items-center gap-2 rounded-lg border-0 bg-[var(--accent-primary)] px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90 hover:shadow-[0_4px_12px_color-mix(in_srgb,var(--accent-primary)_30%,transparent)] disabled:cursor-not-allowed disabled:opacity-50">
+              <NeonSweepButton onClick={handleAppearanceSave} tone="cyan" size="md" className="self-start">
                 {saved ? <Check size={16} /> : <Save size={16} />}
                 {saved ? 'Saved!' : 'Save Preferences'}
-              </button>
+              </NeonSweepButton>
             </div>
           )}
         </div>

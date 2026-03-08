@@ -67,6 +67,59 @@ const badgeClasses = {
   neutral: "border-[var(--border-default)] bg-[var(--bg-tertiary)] text-[var(--text-secondary)]",
 };
 
+const ROLE_UI = {
+  MASTER_ADMIN: {
+    eyebrow: "MASTER CONTROL",
+    title: "Network command center",
+    description: "Cross-society health, adoption, and issue pressure across the platform.",
+  },
+  SOCIETY_ADMIN: {
+    eyebrow: "SOCIETY ADMIN",
+    title: "Society control desk",
+    description: "Operational and financial signals for day-to-day administration.",
+  },
+  CHAIRMAN: {
+    eyebrow: "CHAIRMAN",
+    title: "Governance overview",
+    description: "Committee decisions, escalations, and society-level risk indicators.",
+  },
+  SECRETARY: {
+    eyebrow: "SECRETARY",
+    title: "Coordination board",
+    description: "Track communications, approvals, and operational follow-through.",
+  },
+  TREASURER: {
+    eyebrow: "TREASURER",
+    title: "Finance operations",
+    description: "Billing, recoveries, and outstanding financial obligations.",
+  },
+  COMMITTEE: {
+    eyebrow: "COMMITTEE",
+    title: "Committee operations",
+    description: "Issue monitoring and execution visibility for assigned responsibilities.",
+  },
+  MANAGER: {
+    eyebrow: "MANAGER",
+    title: "Execution cockpit",
+    description: "Operational follow-up, closures, and on-ground delivery signals.",
+  },
+  EMPLOYEE: {
+    eyebrow: "EMPLOYEE",
+    title: "Daily workboard",
+    description: "Tasks, support load, and field operations relevant to your role.",
+  },
+  MEMBER: {
+    eyebrow: "MEMBER VIEW",
+    title: "Your essentials",
+    description: "Only the signals that need your attention right now.",
+  },
+  TENANT: {
+    eyebrow: "TENANT VIEW",
+    title: "Your essentials",
+    description: "Only the signals that need your attention right now.",
+  },
+};
+
 const formatCurrency = (amount) => {
   return new Intl.NumberFormat("en-IN", {
     style: "currency",
@@ -218,9 +271,19 @@ export default function Dashboard() {
 
   const isPlatformOwner = hasRole("MASTER_ADMIN");
   const isOrgOwner = hasRole("SOCIETY_ADMIN");
+  const role = user?.role;
   const isPlatformLevel = isPlatformOwner || isOrgOwner;
   const isMemberOrTenant = user?.role === "MEMBER" || user?.role === "TENANT";
   const isSocietyOpsLevel = !isPlatformLevel && !isMemberOrTenant;
+  const isManagerRole = role === "MANAGER";
+  const isEmployeeRole = role === "EMPLOYEE";
+  const canSeeFinanceSection = canViewFinancials();
+  const canSeeContractAlerts = hasRole("SOCIETY_ADMIN", "CHAIRMAN", "SECRETARY", "TREASURER", "COMMITTEE", "MANAGER");
+  const roleUi = ROLE_UI[role] || {
+    eyebrow: "ROLE VIEW",
+    title: "Operational dashboard",
+    description: "A role-scoped view generated from your current permissions.",
+  };
 
   const { data: societies = [], isLoading: societiesLoading, isError: societiesError } = useQuery({
     queryKey: ["societies"],
@@ -302,7 +365,7 @@ export default function Dashboard() {
     refetchInterval: 30000,
   });
 
-  const { data: weather } = useWeather();
+  const { data: weather, locationName } = useWeather();
 
   const openTickets = allTickets.filter((ticket) => ticket.status === "OPEN" || ticket.status === "IN_PROGRESS");
   const pendingTickets = allTickets.filter((ticket) => ticket.status === "OPEN");
@@ -475,6 +538,7 @@ export default function Dashboard() {
   const activeContractsCount = contracts.filter((contract) => contract.isActive).length;
   const fourWheelerCount = vehicles.filter((vehicle) => vehicle.vehicleType === "FOUR_WHEELER").length;
   const twoWheelerCount = vehicles.filter((vehicle) => vehicle.vehicleType === "TWO_WHEELER").length;
+  const securityAlertCount = securityLogs.filter((log) => String(log.type || "").toUpperCase() === "ALERT").length;
 
   const primaryStats = useMemo(() => {
     if (isMemberOrTenant) {
@@ -543,6 +607,228 @@ export default function Dashboard() {
       ];
     }
 
+    if (role === "TREASURER") {
+      return [
+        {
+          key: "treasurer-pending",
+          title: "Pending Bills",
+          value: pendingBillsCount.length,
+          icon: CreditCard,
+          variant: "orange",
+          subtext: overdueBills.length > 0 ? `${overdueBills.length} overdue` : "No overdue bills",
+        },
+        {
+          key: "treasurer-recovery",
+          title: "Collection Rate",
+          value: `${billCollectionRate}%`,
+          icon: TrendingUp,
+          variant: "green",
+          subtext: `${paidBills.length}/${billTotalCount} paid bills`,
+        },
+        {
+          key: "treasurer-billed",
+          title: "Total Billed",
+          value: formatCurrency(totalBillAmount),
+          icon: DollarSign,
+          variant: "teal",
+          subtext: "Across all maintenance records",
+        },
+        {
+          key: "treasurer-finance-issues",
+          title: "Finance Escalations",
+          value: pendingTickets.length,
+          icon: AlertTriangle,
+          variant: "yellow",
+          subtext: "Tickets requiring payment follow-up",
+        },
+      ];
+    }
+
+    if (role === "SECRETARY") {
+      return [
+        {
+          key: "secretary-notices",
+          title: "Recent Notices",
+          value: notices.length,
+          icon: Bell,
+          variant: "blue",
+          subtext: "Latest communication items",
+        },
+        {
+          key: "secretary-pending-tickets",
+          title: "Pending Tickets",
+          value: pendingTickets.length,
+          icon: Ticket,
+          variant: "sky",
+          subtext: "Requests waiting for coordination",
+        },
+        {
+          key: "secretary-expiring",
+          title: "Expiring Agreements",
+          value: expiringTenants.length + expiringContracts.length,
+          icon: FileText,
+          variant: "orange",
+          subtext: "Renewals due within 30 days",
+        },
+        {
+          key: "secretary-complaints",
+          title: "Pending Complaints",
+          value: pendingComplaints.length,
+          icon: AlertTriangle,
+          variant: "amber",
+          subtext: "Cases still in progress",
+        },
+      ];
+    }
+
+    if (role === "CHAIRMAN") {
+      return [
+        {
+          key: "chairman-open-issues",
+          title: "Open Issues",
+          value: openTickets.length + pendingComplaints.length,
+          icon: AlertTriangle,
+          variant: "yellow",
+          subtext: "High-priority items awaiting closure",
+        },
+        {
+          key: "chairman-security",
+          title: "Security Alerts",
+          value: securityAlertCount,
+          icon: ShieldCheck,
+          variant: "red",
+          subtext: "Alert-level events in recent feed",
+        },
+        {
+          key: "chairman-collection",
+          title: "Collection Rate",
+          value: `${billCollectionRate}%`,
+          icon: DollarSign,
+          variant: "teal",
+          subtext: billTotalCount > 0 ? `${paidBills.length}/${billTotalCount} cleared` : "No bills generated yet",
+        },
+        {
+          key: "chairman-expiring",
+          title: "Expiring Agreements",
+          value: expiringTenants.length + expiringContracts.length,
+          icon: Clock,
+          variant: "orange",
+          subtext: "Contracts and tenancy nearing expiry",
+        },
+      ];
+    }
+
+    if (role === "COMMITTEE") {
+      return [
+        {
+          key: "committee-queue",
+          title: "Issue Queue",
+          value: pendingTickets.length + pendingComplaints.length,
+          icon: Ticket,
+          variant: "amber",
+          subtext: "Items pending committee review",
+        },
+        {
+          key: "committee-notices",
+          title: "Recent Notices",
+          value: notices.length,
+          icon: Bell,
+          variant: "blue",
+          subtext: "Communication stream",
+        },
+        {
+          key: "committee-occupancy",
+          title: "Occupied Units",
+          value: occupiedUnits,
+          icon: Home,
+          variant: "cyan",
+          subtext: `${totalUnits} total units`,
+        },
+        {
+          key: "committee-vehicles",
+          title: "Registered Vehicles",
+          value: fourWheelerCount + twoWheelerCount,
+          icon: Car,
+          variant: "violet",
+          subtext: `${fourWheelerCount} four-wheelers and ${twoWheelerCount} two-wheelers`,
+        },
+      ];
+    }
+
+    if (role === "MANAGER") {
+      return [
+        {
+          key: "manager-pending-tickets",
+          title: "Pending Tickets",
+          value: pendingTickets.length,
+          icon: Ticket,
+          variant: "sky",
+          subtext: "Operational requests awaiting resolution",
+        },
+        {
+          key: "manager-pending-complaints",
+          title: "Pending Complaints",
+          value: pendingComplaints.length,
+          icon: AlertTriangle,
+          variant: "amber",
+          subtext: "Resident concerns in progress",
+        },
+        {
+          key: "manager-expiring-agreements",
+          title: "Expiring Agreements",
+          value: expiringTenants.length + expiringContracts.length,
+          icon: FileText,
+          variant: "orange",
+          subtext: "Need renewal action in next 30 days",
+        },
+        {
+          key: "manager-occupancy",
+          title: "Occupied Units",
+          value: occupiedUnits,
+          icon: Home,
+          variant: "blue",
+          subtext: `${totalUnits} total units`,
+        },
+      ];
+    }
+
+    if (role === "EMPLOYEE") {
+      return [
+        {
+          key: "employee-tickets",
+          title: "Open Tickets",
+          value: openTickets.length,
+          icon: Ticket,
+          variant: "sky",
+          subtext: "Support requests currently active",
+        },
+        {
+          key: "employee-complaints",
+          title: "In-Progress Complaints",
+          value: pendingComplaints.length,
+          icon: AlertTriangle,
+          variant: "amber",
+          subtext: "Complaints requiring field updates",
+        },
+        {
+          key: "employee-notices",
+          title: "Recent Notices",
+          value: notices.length,
+          icon: Bell,
+          variant: "blue",
+          subtext: "Operational announcements",
+        },
+        {
+          key: "employee-vehicles",
+          title: "Vehicle Footprint",
+          value: fourWheelerCount + twoWheelerCount,
+          icon: Car,
+          variant: "violet",
+          subtext: `${fourWheelerCount} four-wheelers and ${twoWheelerCount} two-wheelers`,
+        },
+      ];
+    }
+
     return [
       {
         key: "society-units",
@@ -591,6 +877,7 @@ export default function Dashboard() {
     isMemberOrTenant,
     isPlatformLevel,
     isPlatformOwner,
+    notices.length,
     memberIssueStats.myComplaintsCount,
     memberIssueStats.myOpenTicketsCount,
     memberIssueStats.myPendingComplaintsCount,
@@ -598,6 +885,7 @@ export default function Dashboard() {
     membersCount,
     occupiedUnits,
     openTickets.length,
+    role,
     overdueBills.length,
     paidBills.length,
     pendingBillsCount.length,
@@ -606,8 +894,13 @@ export default function Dashboard() {
     platformUsers.length,
     societies.length,
     societyAdminsCount,
+    securityAlertCount,
     tenantsCount,
     totalUnits,
+    fourWheelerCount,
+    twoWheelerCount,
+    expiringContracts.length,
+    notices.length,
     canManageTenants,
     canViewFinancials,
   ]);
@@ -644,10 +937,107 @@ export default function Dashboard() {
     badgeTone: overdueBills.some((entry) => entry.id === bill.id) ? "danger" : "warning",
   }));
 
+  const roleActionItems = useMemo(() => {
+    if (isPlatformOwner) {
+      return [
+        { title: "Society onboarding", value: societies.length, helper: "Active societies in network", tone: "blue" },
+        { title: "Admin coverage", value: societyAdminsCount, helper: "Society admins currently mapped", tone: "emerald" },
+        { title: "Network issues", value: openTickets.length + pendingComplaints.length, helper: "Open tickets and pending complaints", tone: "amber" },
+      ];
+    }
+
+    if (role === "SOCIETY_ADMIN") {
+      return [
+        { title: "Resident occupancy", value: `${occupiedUnits}/${totalUnits || 0}`, helper: "Occupied units against inventory", tone: "blue" },
+        { title: "Collections", value: `${billCollectionRate}%`, helper: "Current maintenance recovery", tone: "emerald" },
+        { title: "Pending escalations", value: pendingTickets.length + pendingComplaints.length, helper: "Requests awaiting closure", tone: "amber" },
+      ];
+    }
+
+    if (role === "TREASURER") {
+      return [
+        { title: "Outstanding dues", value: formatCurrency(pendingBillsCount.reduce((sum, bill) => sum + (bill.amount || 0), 0)), helper: `${pendingBillsCount.length} pending bills`, tone: "amber" },
+        { title: "Overdue cases", value: overdueBills.length, helper: "Bills past due date", tone: "rose" },
+        { title: "Total billed", value: formatCurrency(totalBillAmount), helper: `${billTotalCount} billing records`, tone: "blue" },
+      ];
+    }
+
+    if (role === "SECRETARY") {
+      return [
+        { title: "Notice stream", value: notices.length, helper: "Recent communication updates", tone: "blue" },
+        { title: "Ticket queue", value: pendingTickets.length, helper: "Requests waiting for dispatch", tone: "amber" },
+        { title: "Renewal watch", value: expiringTenants.length + expiringContracts.length, helper: "Agreements expiring in 30 days", tone: "violet" },
+      ];
+    }
+
+    if (role === "CHAIRMAN") {
+      return [
+        { title: "Critical issues", value: openTickets.length + pendingComplaints.length, helper: "High-priority operational concerns", tone: "amber" },
+        { title: "Security alerts", value: securityAlertCount, helper: "Alert-level security events", tone: "rose" },
+        { title: "Collection health", value: `${billCollectionRate}%`, helper: "Recovery trend for society dues", tone: "emerald" },
+      ];
+    }
+
+    if (role === "COMMITTEE") {
+      return [
+        { title: "Issue queue", value: pendingTickets.length + pendingComplaints.length, helper: "Items awaiting committee review", tone: "amber" },
+        { title: "Resident load", value: activeTenantsCount, helper: "Active tenant occupancy", tone: "blue" },
+        { title: "Parking footprint", value: fourWheelerCount + twoWheelerCount, helper: "Vehicles mapped to units", tone: "violet" },
+      ];
+    }
+
+    if (role === "MANAGER") {
+      return [
+        { title: "Operations queue", value: pendingTickets.length + pendingComplaints.length, helper: "Tickets and complaints pending action", tone: "amber" },
+        { title: "Renewal watch", value: expiringTenants.length + expiringContracts.length, helper: "Agreements nearing expiry", tone: "violet" },
+        { title: "Security feed", value: securityFeedItems.length, helper: "Recent activity items to monitor", tone: "blue" },
+      ];
+    }
+
+    if (role === "EMPLOYEE") {
+      return [
+        { title: "Daily support load", value: openTickets.length, helper: "Open tickets in the system", tone: "blue" },
+        { title: "Complaint follow-up", value: pendingComplaints.length, helper: "Complaints still in progress", tone: "amber" },
+        { title: "Broadcast updates", value: notices.length, helper: "Recent notices affecting operations", tone: "violet" },
+      ];
+    }
+
+    return [
+      { title: "My pending bills", value: pendingBillsCount.length, helper: "Bills requiring your attention", tone: "amber" },
+      { title: "My open tickets", value: memberIssueStats.myOpenTicketsCount, helper: "Support tickets still open", tone: "blue" },
+      { title: "My pending complaints", value: memberIssueStats.myPendingComplaintsCount, helper: "Complaints in processing", tone: "rose" },
+    ];
+  }, [
+    activeTenantsCount,
+    billCollectionRate,
+    billTotalCount,
+    expiringContracts.length,
+    expiringTenants.length,
+    fourWheelerCount,
+    isPlatformOwner,
+    memberIssueStats.myOpenTicketsCount,
+    memberIssueStats.myPendingComplaintsCount,
+    notices.length,
+    occupiedUnits,
+    openTickets.length,
+    overdueBills.length,
+    pendingBillsCount,
+    pendingComplaints.length,
+    pendingTickets.length,
+    role,
+    securityFeedItems.length,
+    societies.length,
+    societyAdminsCount,
+    securityAlertCount,
+    totalBillAmount,
+    totalUnits,
+    twoWheelerCount,
+  ]);
+
   const operationsCards = useMemo(() => {
     const items = [];
 
-    if (dashboardReport && isCommitteeLevel()) {
+    if (dashboardReport && isCommitteeLevel() && canSeeFinanceSection) {
       items.push(
         {
           key: "income",
@@ -674,7 +1064,7 @@ export default function Dashboard() {
           tone: "blue",
         },
       );
-    } else if (billTotalCount > 0) {
+    } else if (billTotalCount > 0 && canSeeFinanceSection) {
       items.push(
         {
           key: "collections",
@@ -712,14 +1102,28 @@ export default function Dashboard() {
         icon: Car,
         tone: "violet",
       });
-      items.push({
-        key: "contracts",
-        title: "Active Contracts",
-        value: activeContractsCount,
-        helper: `${expiringContracts.length} ending in 30 days`,
-        icon: FileText,
-        tone: "amber",
-      });
+
+      if (!isEmployeeRole) {
+        items.push({
+          key: "contracts",
+          title: "Active Contracts",
+          value: activeContractsCount,
+          helper: `${expiringContracts.length} ending in 30 days`,
+          icon: FileText,
+          tone: "amber",
+        });
+      }
+
+      if (isManagerRole) {
+        items.push({
+          key: "manager-open-issues",
+          title: "Open Issues",
+          value: openTickets.length + pendingComplaints.length,
+          helper: "Combined ticket and complaint pressure",
+          icon: AlertTriangle,
+          tone: "blue",
+        });
+      }
     }
 
     return items.slice(0, 4);
@@ -730,8 +1134,13 @@ export default function Dashboard() {
     dashboardReport,
     expiringContracts.length,
     fourWheelerCount,
+    canSeeFinanceSection,
+    isEmployeeRole,
     isCommitteeLevel,
+    isManagerRole,
     isSocietyOpsLevel,
+    openTickets.length,
+    pendingComplaints.length,
     paidBills.length,
     pendingBillsCount,
     totalBillAmount,
@@ -771,6 +1180,189 @@ export default function Dashboard() {
     return "Sunny";
   };
 
+  const overviewConfig = isPlatformLevel
+    ? {
+        eyebrow: "OVERVIEW",
+        title: "Portfolio health",
+        description: "High-value operational signals across the network.",
+        boardA: {
+          title: "User mix",
+          caption: "Distribution across key user groups.",
+          items: roleMix,
+          emptyText: "No user-distribution data available yet.",
+        },
+        boardB: {
+          title: "Society spotlight",
+          caption: "Top societies ranked by occupancy.",
+          items: societySpotlight,
+          emptyText: "No ranked societies available yet.",
+        },
+        boardC: {
+          title: "Collections",
+          caption: "Current recovery status across billing records.",
+          items: billingBreakdown,
+          emptyText: "No billing activity yet.",
+        },
+      }
+    : role === "TREASURER"
+      ? {
+          eyebrow: "TREASURY",
+          title: "Treasury performance",
+          description: "Cashflow pressure, recoveries, and follow-up priorities.",
+          boardA: {
+            title: "Collections",
+            caption: "Paid, pending, and overdue bill mix.",
+            items: billingBreakdown,
+            emptyText: "No billing activity yet.",
+          },
+          boardB: {
+            title: "Issue flow",
+            caption: "Financial issues requiring closure.",
+            items: issueBreakdown,
+            emptyText: "No issue trends available yet.",
+          },
+          boardC: {
+            title: "Unit occupancy",
+            caption: "Occupancy baseline for billing context.",
+            items: unitBreakdown,
+            emptyText: "No occupancy data available yet.",
+          },
+        }
+      : role === "SECRETARY"
+        ? {
+            eyebrow: "COORDINATION",
+            title: "Secretary operations",
+            description: "Communication and issue execution status.",
+            boardA: {
+              title: "Issue flow",
+              caption: "Open, active, and resolved case balance.",
+              items: issueBreakdown,
+              emptyText: "No issue trends available yet.",
+            },
+            boardB: {
+              title: "Unit occupancy",
+              caption: "Current occupancy distribution across unit types.",
+              items: unitBreakdown,
+              emptyText: "No occupancy data available yet.",
+            },
+            boardC: {
+              title: "Collections",
+              caption: "Billing pressure indicators for committee follow-up.",
+              items: billingBreakdown,
+              emptyText: "No billing activity yet.",
+            },
+          }
+        : role === "CHAIRMAN"
+          ? {
+              eyebrow: "GOVERNANCE",
+              title: "Chairman oversight",
+              description: "Governance-level risk, billing, and occupancy indicators.",
+              boardA: {
+                title: "Issue flow",
+                caption: "Status of pending and resolved concerns.",
+                items: issueBreakdown,
+                emptyText: "No issue trends available yet.",
+              },
+              boardB: {
+                title: "Collections",
+                caption: "Recovery health across billed records.",
+                items: billingBreakdown,
+                emptyText: "No billing activity yet.",
+              },
+              boardC: {
+                title: "Unit occupancy",
+                caption: "Occupancy by property category.",
+                items: unitBreakdown,
+                emptyText: "No occupancy data available yet.",
+              },
+            }
+          : role === "MANAGER"
+            ? {
+                eyebrow: "EXECUTION",
+                title: "Manager operations",
+                description: "Day-to-day closures, escalations, and occupancy health.",
+                boardA: {
+                  title: "Issue flow",
+                  caption: "Open, active, and resolved issue balance.",
+                  items: issueBreakdown,
+                  emptyText: "No issue trends available yet.",
+                },
+                boardB: {
+                  title: "Unit occupancy",
+                  caption: "Occupancy movement across unit categories.",
+                  items: unitBreakdown,
+                  emptyText: "No occupancy data available yet.",
+                },
+                boardC: {
+                  title: "Collections",
+                  caption: "Billing status useful for follow-up execution.",
+                  items: billingBreakdown,
+                  emptyText: "No billing activity yet.",
+                },
+              }
+            : role === "EMPLOYEE"
+              ? {
+                  eyebrow: "FIELD OPS",
+                  title: "Employee activity board",
+                  description: "Ground-level request status and occupancy context.",
+                  boardA: {
+                    title: "Issue flow",
+                    caption: "Open and in-progress work items.",
+                    items: issueBreakdown,
+                    emptyText: "No issue trends available yet.",
+                  },
+                  boardB: {
+                    title: "Unit occupancy",
+                    caption: "Current occupancy map for field coordination.",
+                    items: unitBreakdown,
+                    emptyText: "No occupancy data available yet.",
+                  },
+                  boardC: {
+                    title: "Vehicle mix",
+                    caption: "Parking load indicators by type.",
+                    items: [
+                      {
+                        label: "Four-wheelers",
+                        value: fourWheelerCount,
+                        helper: "Registered inside society",
+                        percent: fourWheelerCount + twoWheelerCount > 0 ? Math.round((fourWheelerCount / (fourWheelerCount + twoWheelerCount)) * 100) : 0,
+                        tone: "blue",
+                      },
+                      {
+                        label: "Two-wheelers",
+                        value: twoWheelerCount,
+                        helper: "Registered inside society",
+                        percent: fourWheelerCount + twoWheelerCount > 0 ? Math.round((twoWheelerCount / (fourWheelerCount + twoWheelerCount)) * 100) : 0,
+                        tone: "violet",
+                      },
+                    ].filter((item) => item.value > 0),
+                    emptyText: "No vehicle records available yet.",
+                  },
+                }
+          : {
+              eyebrow: "OPERATIONS",
+              title: "Operations board",
+              description: "Simplified operational health without the chart overload.",
+              boardA: {
+                title: "Unit occupancy",
+                caption: "How each unit category is performing.",
+                items: unitBreakdown,
+                emptyText: "No occupancy data available yet.",
+              },
+              boardB: {
+                title: "Issue flow",
+                caption: "Open, active, and resolved issue balance.",
+                items: issueBreakdown,
+                emptyText: "No issue trends available yet.",
+              },
+              boardC: {
+                title: "Collections",
+                caption: "Current recovery status across billing records.",
+                items: billingBreakdown,
+                emptyText: "No billing activity yet.",
+              },
+            };
+
   return (
     <div className="space-y-8 pb-10 animate-fadeIn">
       <HeroSection
@@ -780,6 +1372,7 @@ export default function Dashboard() {
         isPlatformLevel={isPlatformLevel}
         isPlatformOwner={isPlatformOwner}
         weather={weather}
+        locationName={locationName}
         getWeatherDesc={getWeatherDesc}
         getWeatherIcon={getWeatherIcon}
         timeGreeting={timeGreeting}
@@ -788,11 +1381,9 @@ export default function Dashboard() {
       <section className={sectionShellClass}>
         <SectionHeader
           icon={Activity}
-          eyebrow={isMemberOrTenant ? "RESIDENT VIEW" : isPlatformLevel ? "EXECUTIVE VIEW" : "OPERATIONS VIEW"}
-          title={isMemberOrTenant ? "Your essentials" : isPlatformLevel ? "Command summary" : "Society snapshot"}
-          description={isMemberOrTenant
-            ? "Only the signals that need your attention right now."
-            : "A simplified dashboard with core metrics, live updates, and action items."}
+          eyebrow={roleUi.eyebrow}
+          title={roleUi.title}
+          description={roleUi.description}
         />
         <div className={clsx("grid gap-4", primaryStats.length >= 4 ? "md:grid-cols-2 xl:grid-cols-4" : "md:grid-cols-3")}>
           {primaryStats.map((card, index) => (
@@ -804,6 +1395,26 @@ export default function Dashboard() {
               variant={card.variant}
               subtext={card.subtext}
               delay={index * 40}
+            />
+          ))}
+        </div>
+      </section>
+
+      <section className={sectionShellClass}>
+        <SectionHeader
+          icon={Briefcase}
+          eyebrow="ROLE PRIORITIES"
+          title={`${role || "USER"} action queue`}
+          description="This queue is generated from live records and scoped to your role responsibilities."
+        />
+        <div className="grid gap-4 md:grid-cols-3">
+          {roleActionItems.map((item) => (
+            <MetricPanel
+              key={item.title}
+              title={item.title}
+              value={item.value}
+              helper={item.helper}
+              tone={item.tone}
             />
           ))}
         </div>
@@ -854,28 +1465,28 @@ export default function Dashboard() {
             <section className={sectionShellClass}>
               <SectionHeader
                 icon={Building2}
-                eyebrow={isPlatformLevel ? "OVERVIEW" : "OPERATIONS"}
-                title={isPlatformLevel ? "Portfolio health" : "Operations board"}
-                description={isPlatformLevel ? "High-value operational signals across the network." : "Simplified operational health without the chart overload."}
+                eyebrow={overviewConfig.eyebrow}
+                title={overviewConfig.title}
+                description={overviewConfig.description}
               />
               <div className="grid gap-4 lg:grid-cols-2">
                 <ProgressBoard
-                  title={isPlatformLevel ? "User mix" : "Unit occupancy"}
-                  caption={isPlatformLevel ? "Distribution across key user groups." : "How each unit category is performing."}
-                  items={isPlatformLevel ? roleMix : unitBreakdown}
-                  emptyText="No occupancy data available yet."
+                  title={overviewConfig.boardA.title}
+                  caption={overviewConfig.boardA.caption}
+                  items={overviewConfig.boardA.items}
+                  emptyText={overviewConfig.boardA.emptyText}
                 />
                 <ProgressBoard
-                  title={isPlatformLevel ? "Society spotlight" : "Issue flow"}
-                  caption={isPlatformLevel ? "Top societies ranked by occupancy." : "Open, active, and resolved issue balance."}
-                  items={isPlatformLevel ? societySpotlight : issueBreakdown}
-                  emptyText="No ranked societies available yet."
+                  title={overviewConfig.boardB.title}
+                  caption={overviewConfig.boardB.caption}
+                  items={overviewConfig.boardB.items}
+                  emptyText={overviewConfig.boardB.emptyText}
                 />
                 <ProgressBoard
-                  title="Collections"
-                  caption="Current recovery status across billing records."
-                  items={billingBreakdown}
-                  emptyText="No billing activity yet."
+                  title={overviewConfig.boardC.title}
+                  caption={overviewConfig.boardC.caption}
+                  items={overviewConfig.boardC.items}
+                  emptyText={overviewConfig.boardC.emptyText}
                 />
                 <div className={panelClass}>
                   <h3 className="text-base font-semibold text-[var(--text-primary)]">Critical reminders</h3>
@@ -903,13 +1514,15 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {operationsCards.length > 0 && (
+          {operationsCards.length > 0 && (canSeeFinanceSection || isSocietyOpsLevel) && (
             <section className={sectionShellClass}>
               <SectionHeader
                 icon={DollarSign}
-                eyebrow="FINANCE"
-                title="Financial snapshot"
-                description="A cleaner financial view with four concise signals instead of extra graphs."
+                eyebrow={canSeeFinanceSection ? "FINANCE" : "OPERATIONS INSIGHT"}
+                title={canSeeFinanceSection ? "Financial snapshot" : "Execution snapshot"}
+                description={canSeeFinanceSection
+                  ? "A cleaner financial view with four concise signals instead of extra graphs."
+                  : "Operational indicators relevant to on-ground execution and service quality."}
               />
               <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
                 {operationsCards.map((item) => (
@@ -928,24 +1541,28 @@ export default function Dashboard() {
 
           {isSocietyOpsLevel && (
             <div className="grid gap-5 lg:grid-cols-3">
-              <AlertCard
-                title="Expiring Contracts"
-                icon={AlertTriangle}
-                tone="yellow"
-                items={expiringContracts.map((contract) => ({
-                  title: contract.title,
-                  subtitle: new Date(contract.endDate).toLocaleDateString(),
-                }))}
-              />
-              <AlertCard
-                title="Expiring Tenant Agreements"
-                icon={UserCheck}
-                tone="teal"
-                items={expiringTenants.map((tenant) => ({
-                  title: tenant.name,
-                  subtitle: new Date(tenant.agreementEndDate).toLocaleDateString(),
-                }))}
-              />
+              {canSeeContractAlerts && (
+                <AlertCard
+                  title="Expiring Contracts"
+                  icon={AlertTriangle}
+                  tone="yellow"
+                  items={expiringContracts.map((contract) => ({
+                    title: contract.title,
+                    subtitle: new Date(contract.endDate).toLocaleDateString(),
+                  }))}
+                />
+              )}
+              {canSeeContractAlerts && (
+                <AlertCard
+                  title="Expiring Tenant Agreements"
+                  icon={UserCheck}
+                  tone="teal"
+                  items={expiringTenants.map((tenant) => ({
+                    title: tenant.name,
+                    subtitle: new Date(tenant.agreementEndDate).toLocaleDateString(),
+                  }))}
+                />
+              )}
               <AlertCard
                 title="Pending Tickets"
                 icon={Clock}

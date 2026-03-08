@@ -4,6 +4,8 @@ const fallbackNotices = [
   "Welcome to the Society Management Hub!",
   "Check your pending bills and active notices.",
   "Security systems are 100% operational.",
+  "Maintenance requests can be raised anytime.",
+  "Community events are updated in real-time.",
 ];
 
 export default function NoticeRail({ notices }) {
@@ -14,20 +16,37 @@ export default function NoticeRail({ notices }) {
       }))
     : fallbackNotices.map((label) => ({ id: label, label }));
 
+  // Duplicate for seamless infinite scroll
+  const doubled = [...items, ...items];
+
   return (
-    <section className="relative border-t border-[var(--border-default)] bg-gradient-to-r from-[var(--bg-tertiary)] via-white/50 to-[var(--bg-tertiary)] py-2 dark:from-[#1a1a1a] dark:via-[#222] dark:to-[#1a1a1a]" aria-label="Recent notices">
-      <div className="flex flex-col gap-3 px-4 py-1 sm:flex-row sm:items-center sm:px-5">
-        <div className="flex shrink-0 items-center gap-2 text-[11px] font-extrabold tracking-widest text-[var(--accent-primary)]">
-          <Bell className="h-3.5 w-3.5" aria-hidden="true" />
-          <span>LATEST NOTICES</span>
+    <section
+      className="relative border-t border-[var(--border-default)]/60 bg-[var(--bg-tertiary)]"
+      aria-label="Recent notices"
+    >
+      {/* Left fade */}
+      <div className="pointer-events-none absolute bottom-0 left-0 top-0 z-10 w-20 bg-gradient-to-r from-[var(--bg-tertiary)] to-transparent" />
+      {/* Right fade */}
+      <div className="pointer-events-none absolute bottom-0 right-0 top-0 z-10 w-20 bg-gradient-to-l from-[var(--bg-tertiary)] to-transparent" />
+
+      <div className="flex items-center gap-0 py-2.5">
+        {/* Label pill */}
+        <div className="shrink-0 z-20 flex items-center gap-2 border-r border-[var(--border-default)] bg-[var(--bg-tertiary)] pl-4 pr-4 py-1">
+          <Bell className="h-3.5 w-3.5 text-[var(--accent-primary)]" aria-hidden="true" />
+          <span className="text-[10px] font-black uppercase tracking-[0.18em] text-[var(--accent-primary)] whitespace-nowrap">
+            Latest Notices
+          </span>
         </div>
-        <div className="flex-1 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          <ul className="flex min-w-max items-center gap-2.5">
-            {items.map((item) => (
+
+        {/* Scrolling ticker */}
+        <div className="flex-1 overflow-hidden" aria-live="polite">
+          <ul className="flex w-max animate-ticker items-center gap-0">
+            {doubled.map((item, i) => (
               <li
-                key={item.id}
-                className="shrink-0 rounded-full border border-[var(--border-default)] bg-white/65 px-3 py-1.5 text-[12px] font-medium text-[var(--text-secondary)] shadow-sm backdrop-blur-sm dark:bg-black/30"
+                key={`${item.id}-${i}`}
+                className="flex items-center gap-3 px-5 text-[12.5px] font-medium text-[var(--text-tertiary)] whitespace-nowrap"
               >
+                <span className="h-1 w-1 rounded-full bg-[var(--accent-primary)] opacity-60 shrink-0" aria-hidden="true" />
                 {item.label}
               </li>
             ))}
