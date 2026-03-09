@@ -61,8 +61,6 @@ export default function WorkOrders() {
   const [filterPriority, setFilterPriority] = useState('')
 
   const isMember = user?.role && user.role !== 'VISITOR'
-  if (!isMember) return <PermissionDenied message="You don't have permission to access work orders" />
-
   const isStaff = ['MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'MANAGER', 'EMPLOYEE'].includes(user?.role)
   const isAdmin = ['MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'MANAGER'].includes(user?.role)
   const isPlatformLevel = user?.role === 'MASTER_ADMIN'
@@ -72,7 +70,7 @@ export default function WorkOrders() {
   const { data: workOrders = [], isLoading, isError } = useQuery({
     queryKey: ['work-orders', effectiveSocietyId],
     queryFn: () => workOrderApi.getBySociety(effectiveSocietyId, user.id).then(r => r.data),
-    enabled: !!user?.id && !!effectiveSocietyId,
+    enabled: !!user?.id && !!effectiveSocietyId && isMember,
   })
 
   const createMutation = useMutation({
@@ -134,6 +132,10 @@ export default function WorkOrders() {
     return matchesSearch && matchesStatus && matchesCategory && matchesPriority
   }), [workOrders, searchTerm, filterStatus, filterCategory, filterPriority])
 
+  const showSkeleton = useMinLoadingTime(isLoading || isError)
+
+  if (!isMember) return <PermissionDenied message="You don't have permission to access work orders" />
+
   const handleSubmit = (e) => {
     e.preventDefault()
     const fd = new FormData(e.target)
@@ -150,7 +152,6 @@ export default function WorkOrders() {
     })
   }
 
-  const showSkeleton = useMinLoadingTime(isLoading || isError)
   if (showSkeleton) return (<div><WakeUpBanner /><HeroSkeleton /><SummaryRowSkeleton count={4} /><FiltersSkeleton filterCount={2} /><ListSkeleton count={4} /></div>)
 
   const openCount = workOrders.filter(w => w.status === 'OPEN').length
