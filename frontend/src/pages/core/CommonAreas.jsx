@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { useToast } from '../../context/ToastContext'
 import { commonAreaApi } from '../../../../api'
@@ -46,7 +47,13 @@ export default function CommonAreas() {
   const { user } = useAuth()
   const { showToast } = useToast()
   const queryClient = useQueryClient()
-  const societyId = user?.societyId
+  const [searchParams] = useSearchParams()
+  const societyIdFromUrl = searchParams.get('society')
+  const parsedSocietyIdFromUrl = Number(societyIdFromUrl)
+  const scopedSocietyId = user?.role === 'MASTER_ADMIN' && Number.isInteger(parsedSocietyIdFromUrl) && parsedSocietyIdFromUrl > 0
+    ? parsedSocietyIdFromUrl
+    : null
+  const effectiveSocietyId = scopedSocietyId || user?.societyId
 
   const [showModal, setShowModal] = useState(false)
   const [editItem, setEditItem] = useState(null)
@@ -61,15 +68,15 @@ export default function CommonAreas() {
   })
 
   const { data: schedules = [], isLoading } = useQuery({
-    queryKey: ['commonAreas', societyId],
-    queryFn: () => commonAreaApi.getBySociety(societyId, user.id).then(r => r.data),
-    enabled: !!societyId,
+    queryKey: ['commonAreas', effectiveSocietyId],
+    queryFn: () => commonAreaApi.getBySociety(effectiveSocietyId, user.id).then(r => r.data),
+    enabled: !!effectiveSocietyId,
   })
 
   const { data: counts = {} } = useQuery({
-    queryKey: ['commonAreaCounts', societyId],
-    queryFn: () => commonAreaApi.getCounts(societyId, user.id).then(r => r.data),
-    enabled: !!societyId,
+    queryKey: ['commonAreaCounts', effectiveSocietyId],
+    queryFn: () => commonAreaApi.getCounts(effectiveSocietyId, user.id).then(r => r.data),
+    enabled: !!effectiveSocietyId,
   })
 
   const createMutation = useMutation({
@@ -168,7 +175,7 @@ export default function CommonAreas() {
     e.preventDefault()
     const payload = {
       ...form,
-      societyId,
+      societyId: effectiveSocietyId,
       dayOfMonth: form.dayOfMonth ? parseInt(form.dayOfMonth) : null,
       costPerService: form.costPerService ? parseFloat(form.costPerService) : null,
       nextDueDate: form.nextDueDate || null,

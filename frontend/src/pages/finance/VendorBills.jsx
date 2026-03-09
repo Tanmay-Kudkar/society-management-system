@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '../../context'
 import { useConfirmDialog } from '../../context'
 import { useToast } from '../../context'
@@ -24,6 +25,7 @@ const statusIcons = {
 
 export default function VendorBills() {
   const { user, canManageVendorBills } = useAuth()
+  const [searchParams] = useSearchParams()
   const confirmDialog = useConfirmDialog()
   const toast = useToast()
   const queryClient = useQueryClient()
@@ -33,14 +35,32 @@ export default function VendorBills() {
   const [searchTerm, setSearchTerm] = useState('')
   const [filterStatus, setFilterStatus] = useState('')
 
+  const societyIdFromUrl = searchParams.get('society')
+  const parsedSocietyIdFromUrl = Number(societyIdFromUrl)
+  const scopedSocietyId = Number.isInteger(parsedSocietyIdFromUrl) && parsedSocietyIdFromUrl > 0
+    ? parsedSocietyIdFromUrl
+    : null
+  const isPlatformLevel = user?.role === 'MASTER_ADMIN' && !scopedSocietyId
+  const effectiveSocietyId = scopedSocietyId || user?.societyId
+
   const { data: bills = [], isLoading, isError } = useQuery({
-    queryKey: ['vendorBills'],
-    queryFn: () => vendorBillApi.getAll().then(res => res.data),
+    queryKey: ['vendorBills', effectiveSocietyId, isPlatformLevel],
+    queryFn: () => {
+      if (effectiveSocietyId) {
+        return vendorBillApi.getBySociety(effectiveSocietyId).then(res => res.data)
+      }
+      return vendorBillApi.getAll().then(res => res.data)
+    },
   })
 
   const { data: vendors = [] } = useQuery({
-    queryKey: ['vendors'],
-    queryFn: () => vendorApi.getAll().then(res => res.data),
+    queryKey: ['vendors', effectiveSocietyId, isPlatformLevel],
+    queryFn: () => {
+      if (effectiveSocietyId) {
+        return vendorApi.getBySociety(effectiveSocietyId).then(res => res.data)
+      }
+      return vendorApi.getAll().then(res => res.data)
+    },
   })
 
   const createMutation = useMutation({

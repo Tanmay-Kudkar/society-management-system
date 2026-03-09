@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useSearchParams } from 'react-router-dom'
 import { petRegistrationApi } from "../../../../api";
 import { useAuth } from "../../context/AuthContext";
 import { useToast } from "../../context/ToastContext";
@@ -66,9 +67,15 @@ export default function PetRegistrations() {
   const { user } = useAuth();
   const toast = useToast();
   const qc = useQueryClient();
-  const societyId = user?.societyId;
+  const [searchParams] = useSearchParams()
+  const societyIdFromUrl = searchParams.get('society')
+  const parsedSocietyIdFromUrl = Number(societyIdFromUrl)
+  const scopedSocietyId = user?.role === 'MASTER_ADMIN' && Number.isInteger(parsedSocietyIdFromUrl) && parsedSocietyIdFromUrl > 0
+    ? parsedSocietyIdFromUrl
+    : null
+  const effectiveSocietyId = scopedSocietyId || user?.societyId
   const userId = user?.id;
-  const canLoadSocietyData = Boolean(societyId && userId);
+  const canLoadSocietyData = Boolean(effectiveSocietyId && userId);
 
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState(null);
@@ -79,7 +86,7 @@ export default function PetRegistrations() {
   const [rejectReason, setRejectReason] = useState("");
 
   const empty = {
-    societyId,
+    societyId: effectiveSocietyId,
     ownerId: userId,
     flatNumber: "",
     wing: "",
@@ -105,18 +112,18 @@ export default function PetRegistrations() {
   if (filterType) queryParams.petType = filterType;
 
   const { data, isLoading } = useQuery({
-    queryKey: ["pet-registrations", societyId, filterStatus, filterType],
+    queryKey: ["pet-registrations", effectiveSocietyId, filterStatus, filterType],
     queryFn: () =>
       petRegistrationApi
-        .getBySociety(societyId, userId, queryParams)
+        .getBySociety(effectiveSocietyId, userId, queryParams)
         .then((r) => r.data),
     enabled: canLoadSocietyData,
   });
 
   const { data: counts } = useQuery({
-    queryKey: ["pet-registrations-counts", societyId],
+    queryKey: ["pet-registrations-counts", effectiveSocietyId],
     queryFn: () =>
-      petRegistrationApi.getCounts(societyId, userId).then((r) => r.data),
+      petRegistrationApi.getCounts(effectiveSocietyId, userId).then((r) => r.data),
     enabled: canLoadSocietyData,
   });
 
@@ -173,7 +180,7 @@ export default function PetRegistrations() {
   const openEdit = (p) => {
     setEditing(p);
     setForm({
-      societyId,
+      societyId: effectiveSocietyId,
       ownerId: p.ownerId,
       flatNumber: p.flatNumber || "",
       wing: p.wing || "",

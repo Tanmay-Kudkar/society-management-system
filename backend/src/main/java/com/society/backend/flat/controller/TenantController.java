@@ -44,6 +44,11 @@ public class TenantController {
         return ResponseEntity.ok(tenantService.getByFlatId(flatId));
     }
 
+    @GetMapping("/society/{societyId}")
+    public ResponseEntity<List<TenantResponse>> getBySocietyId(@PathVariable Long societyId) {
+        return ResponseEntity.ok(tenantService.getBySocietyId(societyId));
+    }
+
     @GetMapping
     public ResponseEntity<List<TenantResponse>> getAll() {
         return ResponseEntity.ok(tenantService.getAll());

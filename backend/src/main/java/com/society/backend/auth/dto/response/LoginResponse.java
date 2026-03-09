@@ -1,7 +1,5 @@
 package com.society.backend.auth.dto.response;
 
-import com.society.backend.user.entity.Role;
-
 public class LoginResponse {
 
     private Long id;

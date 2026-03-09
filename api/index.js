@@ -378,6 +378,7 @@ export const tenantApi = {
   getAll: () => api.get('/tenants'),
   getById: (id) => api.get(`/tenants/${id}`),
   getByFlat: (flatId) => api.get(`/tenants/flat/${flatId}`),
+  getBySociety: (societyId) => api.get(`/tenants/society/${societyId}`),
   getActive: () => api.get('/tenants/active'),
   create: (data, userId) => api.post(`/tenants?userId=${userId}`, data),
   update: (id, data, userId) => api.put(`/tenants/${id}?userId=${userId}`, data),

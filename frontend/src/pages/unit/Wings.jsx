@@ -34,10 +34,14 @@ export default function Wings() {
   const [formErrors, setFormErrors] = useState({})
   const [pageError, setPageError] = useState('')
 
-  const isPlatformLevel = user?.role === 'MASTER_ADMIN' || user?.role === 'MASTER_ADMIN'
+  const parsedSocietyIdFromUrl = Number(urlSocietyId)
+  const scopedSocietyId = user?.role === 'MASTER_ADMIN' && Number.isInteger(parsedSocietyIdFromUrl) && parsedSocietyIdFromUrl > 0
+    ? parsedSocietyIdFromUrl
+    : null
+  const isPlatformLevel = user?.role === 'MASTER_ADMIN' && !scopedSocietyId
 
   // Determine the effective society ID
-  const effectiveSocietyId = isPlatformLevel ? filterSociety : user?.societyId
+  const effectiveSocietyId = scopedSocietyId || (isPlatformLevel ? filterSociety : user?.societyId)
   const effectiveSocietyIdNum = effectiveSocietyId ? Number(effectiveSocietyId) : null
   const canEditWings = canManageWings()
 
@@ -161,7 +165,7 @@ export default function Wings() {
     
     const societyId = isPlatformLevel 
       ? parseInt(formData.get('societyId')) 
-      : user?.societyId
+      : effectiveSocietyId
 
     if (!societyId) {
       setFormErrors(prev => ({

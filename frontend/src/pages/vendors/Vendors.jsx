@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '../../context'
 import { useConfirmDialog } from '../../context'
 import { useToast } from '../../context'
@@ -20,6 +21,7 @@ const approvalBadgeClass = {
 
 export default function Vendors() {
   const { user, canManageVendors } = useAuth()
+  const [searchParams] = useSearchParams()
   const confirmDialog = useConfirmDialog()
   const toast = useToast()
   const queryClient = useQueryClient()
@@ -30,11 +32,22 @@ export default function Vendors() {
   const [searchTerm, setSearchTerm] = useState('')
   const [viewingVendor, setViewingVendor] = useState(null)
 
-  const isPlatformLevel = user?.role === 'MASTER_ADMIN' || user?.role === 'MASTER_ADMIN'
+  const societyIdFromUrl = searchParams.get('society')
+  const parsedSocietyIdFromUrl = Number(societyIdFromUrl)
+  const scopedSocietyId = user?.role === 'MASTER_ADMIN' && Number.isInteger(parsedSocietyIdFromUrl) && parsedSocietyIdFromUrl > 0
+    ? parsedSocietyIdFromUrl
+    : null
+  const isPlatformLevel = user?.role === 'MASTER_ADMIN' && !scopedSocietyId
+  const effectiveSocietyId = scopedSocietyId || user?.societyId
 
   const { data: vendors = [], isLoading, isError } = useQuery({
-    queryKey: ['vendors'],
-    queryFn: () => vendorApi.getAll().then(res => res.data),
+    queryKey: ['vendors', effectiveSocietyId, isPlatformLevel],
+    queryFn: () => {
+      if (effectiveSocietyId) {
+        return vendorApi.getBySociety(effectiveSocietyId).then(res => res.data)
+      }
+      return vendorApi.getAll().then(res => res.data)
+    },
   })
 
   const { data: societies = [] } = useQuery({
@@ -136,7 +149,7 @@ export default function Vendors() {
     // For non-MASTER_ADMIN, always set societyId to user's society
     const societyId = isPlatformLevel 
       ? parseInt(formData.get('societyId'))
-      : user?.societyId
+      : effectiveSocietyId
     
     if (!societyId) {
       toast.error('Society is required. Please select a society or log in again.')

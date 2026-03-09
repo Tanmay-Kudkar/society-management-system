@@ -65,6 +65,13 @@ public class TenantServiceImpl implements TenantService {
     }
 
     @Override
+    public List<TenantResponse> getBySocietyId(Long societyId) {
+        return tenantRepository.findBySocietyId(societyId).stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Override
     public List<TenantResponse> getAll() {
         return tenantRepository.findAll().stream()
                 .map(this::mapToResponse)

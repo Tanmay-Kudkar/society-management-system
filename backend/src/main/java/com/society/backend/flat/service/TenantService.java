@@ -12,6 +12,8 @@ public interface TenantService {
 
     List<TenantResponse> getByFlatId(Long flatId);
 
+    List<TenantResponse> getBySocietyId(Long societyId);
+
     List<TenantResponse> getAll();
 
     List<TenantResponse> getActive();

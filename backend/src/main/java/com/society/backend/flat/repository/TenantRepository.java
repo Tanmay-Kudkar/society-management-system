@@ -10,5 +10,7 @@ import java.util.List;
 public interface TenantRepository extends JpaRepository<Tenant, Long> {
     List<Tenant> findByFlatId(Long flatId);
 
+    List<Tenant> findBySocietyId(Long societyId);
+
     List<Tenant> findByIsActiveTrue();
 }

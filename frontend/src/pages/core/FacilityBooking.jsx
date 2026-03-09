@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useSearchParams } from 'react-router-dom'
 import { facilityBookingApi } from '../../../../api'
 import { useAuth } from '../../context/AuthContext'
 import { useToast } from '../../context/ToastContext'
@@ -47,9 +48,15 @@ export default function FacilityBooking() {
   const { user } = useAuth()
   const toast = useToast()
   const qc = useQueryClient()
-  const societyId = user?.societyId
+  const [searchParams] = useSearchParams()
+  const societyIdFromUrl = searchParams.get('society')
+  const parsedSocietyIdFromUrl = Number(societyIdFromUrl)
+  const scopedSocietyId = user?.role === 'MASTER_ADMIN' && Number.isInteger(parsedSocietyIdFromUrl) && parsedSocietyIdFromUrl > 0
+    ? parsedSocietyIdFromUrl
+    : null
+  const effectiveSocietyId = scopedSocietyId || user?.societyId
   const userId = user?.id
-  const canLoadSocietyData = Boolean(societyId && userId)
+  const canLoadSocietyData = Boolean(effectiveSocietyId && userId)
 
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
@@ -59,14 +66,14 @@ export default function FacilityBooking() {
   const [form, setForm] = useState(emptyForm)
 
   const { data: bookings = [], isLoading } = useQuery({
-    queryKey: ['facility-bookings', societyId],
-    queryFn: () => facilityBookingApi.getBySociety(societyId, userId).then(r => r.data),
+    queryKey: ['facility-bookings', effectiveSocietyId],
+    queryFn: () => facilityBookingApi.getBySociety(effectiveSocietyId, userId).then(r => r.data),
     enabled: canLoadSocietyData,
   })
 
   const { data: counts = {} } = useQuery({
-    queryKey: ['facility-bookings-counts', societyId],
-    queryFn: () => facilityBookingApi.getCounts(societyId, userId).then(r => r.data),
+    queryKey: ['facility-bookings-counts', effectiveSocietyId],
+    queryFn: () => facilityBookingApi.getCounts(effectiveSocietyId, userId).then(r => r.data),
     enabled: canLoadSocietyData,
   })
 
@@ -130,7 +137,7 @@ export default function FacilityBooking() {
 
   const handleSubmit = (e) => {
     e.preventDefault()
-    saveMutation.mutate({ ...form, societyId, bookedById: userId, attendees: Number(form.attendees) || 1, amount: form.amount ? Number(form.amount) : 0 })
+    saveMutation.mutate({ ...form, societyId: effectiveSocietyId, bookedById: userId, attendees: Number(form.attendees) || 1, amount: form.amount ? Number(form.amount) : 0 })
   }
 
   const summaryCards = [
