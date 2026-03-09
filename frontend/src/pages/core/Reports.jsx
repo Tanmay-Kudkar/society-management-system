@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useQuery, useMutation } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '../../context'
 import { reportApi, societyApi, exportApi, downloadBlob } from '../../../../api'
@@ -42,14 +42,12 @@ export default function Reports() {
   const { user, canViewReports } = useAuth()
   const [searchParams] = useSearchParams()
   
-  // Permission check
-  if (!canViewReports()) {
-    return <PermissionDenied message="You don't have permission to view financial reports" />
-  }
+  // All hooks must be called unconditionally at the top
   const [reportType, setReportType] = useState('MTD')
   const [selectedSocietyId, setSelectedSocietyId] = useState(user?.societyId || '')
   const [customStartDate, setCustomStartDate] = useState('')
   const [customEndDate, setCustomEndDate] = useState('')
+  const [isExporting, setIsExporting] = useState(false)
 
   const isPlatformLevel = user?.role === 'MASTER_ADMIN'
 
@@ -58,10 +56,12 @@ export default function Reports() {
   const hasValidSocietyIdInUrl = Number.isInteger(parsedSocietyIdFromUrl) && parsedSocietyIdFromUrl > 0
   const isScopedMode = isPlatformLevel && !!societyIdFromUrl
 
+  const hasPermission = canViewReports()
+
   const { data: societies = [] } = useQuery({
     queryKey: ['societies'],
     queryFn: () => societyApi.getAll().then(res => res.data),
-    enabled: isPlatformLevel && !isScopedMode,
+    enabled: isPlatformLevel && !isScopedMode && hasPermission,
   })
 
   const {
@@ -70,7 +70,7 @@ export default function Reports() {
   } = useQuery({
     queryKey: ['reports-society-exists', parsedSocietyIdFromUrl],
     queryFn: () => societyApi.getById(parsedSocietyIdFromUrl).then(res => res.data),
-    enabled: isScopedMode && hasValidSocietyIdInUrl,
+    enabled: isScopedMode && hasValidSocietyIdInUrl && hasPermission,
     retry: false,
   })
 
@@ -96,16 +96,21 @@ export default function Reports() {
       }
       return null
     },
-    enabled: !!societyId && !invalidUrlSociety,
+    enabled: !!societyId && !invalidUrlSociety && hasPermission,
   })
 
-  const { data: dashboardReport } = useQuery({
+  const { data: _dashboardReport } = useQuery({
     queryKey: ['dashboardReport', societyId],
     queryFn: () => societyId ? reportApi.getDashboard(societyId).then(res => res.data) : null,
-    enabled: !!societyId && !invalidUrlSociety,
+    enabled: !!societyId && !invalidUrlSociety && hasPermission,
   })
 
-  const [isExporting, setIsExporting] = useState(false)
+  const showSkeleton = useMinLoadingTime(isLoading || isError || isScopedSocietyLoading)
+
+  // Permission check
+  if (!hasPermission) {
+    return <PermissionDenied message="You don't have permission to view financial reports" />
+  }
 
   const handleExport = async () => {
     if (!societyId) return
@@ -125,8 +130,6 @@ export default function Reports() {
       setIsExporting(false)
     }
   }
-
-  const showSkeleton = useMinLoadingTime(isLoading || isError || isScopedSocietyLoading)
 
   if (showSkeleton) return (
     <div className="flex flex-col gap-6">

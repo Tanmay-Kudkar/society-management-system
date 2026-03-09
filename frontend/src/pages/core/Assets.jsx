@@ -53,8 +53,6 @@ export default function Assets() {
   const [filterCategory, setFilterCategory] = useState('')
 
   const isMember = user?.role && user.role !== 'VISITOR'
-  if (!isMember) return <PermissionDenied message="You don't have permission to access asset management" />
-
   const isStaff = ['MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'MANAGER', 'EMPLOYEE'].includes(user?.role)
   const isAdmin = ['MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'MANAGER'].includes(user?.role)
   const isPlatformLevel = user?.role === 'MASTER_ADMIN'
@@ -64,7 +62,7 @@ export default function Assets() {
   const { data: assets = [], isLoading, isError } = useQuery({
     queryKey: ['assets', effectiveSocietyId],
     queryFn: () => assetApi.getBySociety(effectiveSocietyId, user.id).then(r => r.data),
-    enabled: !!user?.id && !!effectiveSocietyId,
+    enabled: !!user?.id && !!effectiveSocietyId && isMember,
   })
 
   const createMutation = useMutation({
@@ -92,6 +90,10 @@ export default function Assets() {
     return matchesSearch && matchesStatus && matchesCategory
   }), [assets, searchTerm, filterStatus, filterCategory])
 
+  const showSkeleton = useMinLoadingTime(isLoading || isError)
+
+  if (!isMember) return <PermissionDenied message="You don't have permission to access asset management" />
+
   const handleSubmit = (e) => {
     e.preventDefault()
     const fd = new FormData(e.target)
@@ -114,7 +116,6 @@ export default function Assets() {
     })
   }
 
-  const showSkeleton = useMinLoadingTime(isLoading || isError)
   if (showSkeleton) return (<div><WakeUpBanner /><HeroSkeleton /><SummaryRowSkeleton count={4} /><FiltersSkeleton filterCount={2} /><ListSkeleton count={4} /></div>)
 
   const available = assets.filter(a => a.status === 'AVAILABLE').length
