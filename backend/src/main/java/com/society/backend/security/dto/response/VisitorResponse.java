@@ -21,7 +21,6 @@ public class VisitorResponse {
     private String status;
     private Boolean isPreApproved;
     private String approvalCode;
-    private String otpCode;
     private LocalDateTime otpExpiresAt;
     private LocalDateTime otpVerifiedAt;
     private Integer otpAttempts;

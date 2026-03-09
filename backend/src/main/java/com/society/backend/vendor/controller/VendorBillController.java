@@ -12,10 +12,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.util.List;
-
-import com.society.backend.finance.entity.Payment;
-import com.society.backend.society.entity.Society;
-import com.society.backend.vendor.entity.Vendor;
 @RestController
 @RequestMapping("/vendor-bills")
 @RequiredArgsConstructor

@@ -11,12 +11,14 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.security.access.prepost.PreAuthorize;
 import com.society.backend.finance.entity.Payment;
 import com.society.backend.society.entity.Society;
 import com.society.backend.user.entity.User;
 @RestController
 @RequestMapping("/penalties")
 @RequiredArgsConstructor
+@PreAuthorize("isAuthenticated()")
 public class PenaltyController {
 
     private final PenaltyService penaltyService;

@@ -114,6 +114,9 @@ public class VendorServiceImpl implements VendorService {
     public VendorResponse getById(Long id) {
         Vendor vendor = vendorRepository.findById(id)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Vendor not found"));
+        if (vendor.getSociety() != null) {
+            roleService.enforceSocietyScope(roleService.getCurrentUser(), vendor.getSociety().getId());
+        }
         return mapToResponse(vendor);
     }
 
@@ -133,7 +136,13 @@ public class VendorServiceImpl implements VendorService {
 
     @Override
     public List<VendorResponse> getByServiceType(String serviceType) {
+        var currentUser = roleService.getCurrentUser();
         return vendorRepository.findByServiceType(serviceType).stream()
+                .filter(v -> {
+                    if (currentUser.getRole() == com.society.backend.user.entity.Role.MASTER_ADMIN) return true;
+                    return v.getSociety() != null && currentUser.getSociety() != null
+                            && v.getSociety().getId().equals(currentUser.getSociety().getId());
+                })
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
@@ -164,6 +173,11 @@ public class VendorServiceImpl implements VendorService {
 
         Vendor vendor = vendorRepository.findById(id)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Vendor not found"));
+
+        // Enforce scope on existing vendor's society
+        if (vendor.getSociety() != null) {
+            roleService.enforceSocietyScope(roleService.getUser(userId), vendor.getSociety().getId());
+        }
 
         if (request.getSocietyId() != null) {
             Society society = societyRepository.findById(request.getSocietyId())
@@ -211,6 +225,10 @@ public class VendorServiceImpl implements VendorService {
         Vendor vendor = vendorRepository.findById(id)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Vendor not found"));
 
+        if (vendor.getSociety() != null) {
+            roleService.enforceSocietyScope(roleService.getUser(userId), vendor.getSociety().getId());
+        }
+
         vendor.setIsActive(false);
         Vendor saved = vendorRepository.save(vendor);
         return mapToResponse(saved);
@@ -223,6 +241,10 @@ public class VendorServiceImpl implements VendorService {
 
         Vendor vendor = vendorRepository.findById(id)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Vendor not found"));
+
+        if (vendor.getSociety() != null) {
+            roleService.enforceSocietyScope(roleService.getUser(userId), vendor.getSociety().getId());
+        }
 
         // Check for linked records
         int billCount = vendorBillRepository.findByVendorId(id).size();
@@ -247,6 +269,10 @@ public class VendorServiceImpl implements VendorService {
         Vendor vendor = vendorRepository.findById(id)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Vendor not found"));
 
+        if (vendor.getSociety() != null) {
+            roleService.enforceSocietyScope(roleService.getUser(userId), vendor.getSociety().getId());
+        }
+
         vendor.setApprovalStatus("APPROVED");
         vendor.setIsActive(true);
         Vendor saved = vendorRepository.save(vendor);
@@ -261,6 +287,10 @@ public class VendorServiceImpl implements VendorService {
         Vendor vendor = vendorRepository.findById(id)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Vendor not found"));
 
+        if (vendor.getSociety() != null) {
+            roleService.enforceSocietyScope(roleService.getUser(userId), vendor.getSociety().getId());
+        }
+
         vendor.setApprovalStatus("REJECTED");
         vendor.setIsActive(false);
         Vendor saved = vendorRepository.save(vendor);
@@ -269,15 +299,23 @@ public class VendorServiceImpl implements VendorService {
 
     @Override
     public List<VendorResponse> getPendingVendors(Long societyId) {
+        var currentUser = roleService.getCurrentUser();
         List<Vendor> vendors;
         if (societyId != null) {
+            roleService.enforceSocietyScope(currentUser, societyId);
             vendors = vendorRepository.findAll().stream()
                     .filter(v -> "PENDING".equals(v.getApprovalStatus()))
                     .filter(v -> v.getSociety() != null && v.getSociety().getId().equals(societyId))
                     .toList();
+        } else if (currentUser.getRole() == com.society.backend.user.entity.Role.MASTER_ADMIN) {
+            vendors = vendorRepository.findAll().stream()
+                    .filter(v -> "PENDING".equals(v.getApprovalStatus()))
+                    .toList();
         } else {
             vendors = vendorRepository.findAll().stream()
                     .filter(v -> "PENDING".equals(v.getApprovalStatus()))
+                    .filter(v -> v.getSociety() != null && currentUser.getSociety() != null
+                            && v.getSociety().getId().equals(currentUser.getSociety().getId()))
                     .toList();
         }
         return vendors.stream().map(this::mapToResponse).toList();

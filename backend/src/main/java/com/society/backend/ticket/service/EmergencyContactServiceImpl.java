@@ -76,7 +76,13 @@ public class EmergencyContactServiceImpl implements EmergencyContactService {
 
     @Override
     public List<EmergencyContactResponse> getByContactType(String contactType) {
+        var currentUser = roleService.getCurrentUser();
         return emergencyContactRepository.findByContactType(contactType).stream()
+                .filter(c -> {
+                    if (currentUser.getRole() == Role.MASTER_ADMIN) return true;
+                    return c.getSociety() != null && currentUser.getSociety() != null
+                            && c.getSociety().getId().equals(currentUser.getSociety().getId());
+                })
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
@@ -108,6 +114,10 @@ public class EmergencyContactServiceImpl implements EmergencyContactService {
         EmergencyContact contact = emergencyContactRepository.findById(id)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Emergency contact not found"));
 
+        if (contact.getSociety() != null) {
+            roleService.enforceSocietyScope(roleService.getUser(userId), contact.getSociety().getId());
+        }
+
         if (request.getContactType() != null)
             contact.setContactType(request.getContactType());
         if (request.getName() != null)
@@ -132,6 +142,10 @@ public class EmergencyContactServiceImpl implements EmergencyContactService {
 
         EmergencyContact contact = emergencyContactRepository.findById(id)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Emergency contact not found"));
+
+        if (contact.getSociety() != null) {
+            roleService.enforceSocietyScope(roleService.getUser(userId), contact.getSociety().getId());
+        }
 
         contact.setIsActive(false);
         EmergencyContact saved = emergencyContactRepository.save(contact);

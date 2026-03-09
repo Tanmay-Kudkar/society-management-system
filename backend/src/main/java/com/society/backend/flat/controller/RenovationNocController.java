@@ -11,11 +11,13 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.security.access.prepost.PreAuthorize;
 import com.society.backend.society.entity.Society;
 import com.society.backend.user.entity.User;
 @RestController
 @RequestMapping("/renovation-nocs")
 @RequiredArgsConstructor
+@PreAuthorize("isAuthenticated()")
 public class RenovationNocController {
 
     private final RenovationNocService renovationNocService;

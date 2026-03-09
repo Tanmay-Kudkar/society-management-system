@@ -51,19 +51,37 @@ public class VehicleServiceImpl implements VehicleService {
     public VehicleResponse getById(Long id) {
         Vehicle vehicle = vehicleRepository.findById(id)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Vehicle not found"));
+        if (vehicle.getSociety() != null) {
+            roleService.enforceSocietyScope(roleService.getCurrentUser(), vehicle.getSociety().getId());
+        }
         return mapToResponse(vehicle);
     }
 
     @Override
     public List<VehicleResponse> getByFlatId(Long flatId) {
-        return vehicleRepository.findByFlatId(flatId).stream()
+        List<Vehicle> vehicles = vehicleRepository.findByFlatId(flatId);
+        if (!vehicles.isEmpty() && vehicles.get(0).getSociety() != null) {
+            roleService.enforceSocietyScope(roleService.getCurrentUser(), vehicles.get(0).getSociety().getId());
+        }
+        return vehicles.stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
 
     @Override
     public List<VehicleResponse> getAll() {
+        var currentUser = roleService.getCurrentUser();
+        if (currentUser == null) {
+            throw new ApiException(HttpStatus.UNAUTHORIZED, "Not authenticated");
+        }
         return vehicleRepository.findAll().stream()
+                .filter(v -> {
+                    if (currentUser.getRole() == com.society.backend.user.entity.Role.MASTER_ADMIN) {
+                        return true;
+                    }
+                    return v.getSociety() != null && currentUser.getSociety() != null
+                            && v.getSociety().getId().equals(currentUser.getSociety().getId());
+                })
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
@@ -75,6 +93,10 @@ public class VehicleServiceImpl implements VehicleService {
 
         Vehicle vehicle = vehicleRepository.findById(id)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Vehicle not found"));
+
+        if (vehicle.getSociety() != null) {
+            roleService.enforceSocietyScope(roleService.getUser(userId), vehicle.getSociety().getId());
+        }
 
         if (request.getFlatId() != null) {
             Flat flat = flatRepository.findById(request.getFlatId())
@@ -107,8 +129,10 @@ public class VehicleServiceImpl implements VehicleService {
     public void delete(Long id, Long userId) {
         roleService.requireAdminOrCommittee(userId);
 
-        if (!vehicleRepository.existsById(id)) {
-            throw new ApiException(HttpStatus.NOT_FOUND, "Vehicle not found");
+        Vehicle vehicle = vehicleRepository.findById(id)
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Vehicle not found"));
+        if (vehicle.getSociety() != null) {
+            roleService.enforceSocietyScope(roleService.getUser(userId), vehicle.getSociety().getId());
         }
         vehicleRepository.deleteById(id);
     }

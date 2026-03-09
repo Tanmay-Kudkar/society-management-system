@@ -79,7 +79,13 @@ public class VendorBillServiceImpl implements VendorBillService {
 
     @Override
     public List<VendorBillResponse> getByVendorId(Long vendorId) {
+        var currentUser = roleService.getCurrentUser();
         return vendorBillRepository.findByVendorId(vendorId).stream()
+                .filter(b -> {
+                    if (currentUser.getRole() == com.society.backend.user.entity.Role.MASTER_ADMIN) return true;
+                    return b.getSociety() != null && currentUser.getSociety() != null
+                            && b.getSociety().getId().equals(currentUser.getSociety().getId());
+                })
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
@@ -94,7 +100,13 @@ public class VendorBillServiceImpl implements VendorBillService {
 
     @Override
     public List<VendorBillResponse> getByStatus(String status) {
+        var currentUser = roleService.getCurrentUser();
         return vendorBillRepository.findByStatus(status).stream()
+                .filter(b -> {
+                    if (currentUser.getRole() == com.society.backend.user.entity.Role.MASTER_ADMIN) return true;
+                    return b.getSociety() != null && currentUser.getSociety() != null
+                            && b.getSociety().getId().equals(currentUser.getSociety().getId());
+                })
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
@@ -132,6 +144,10 @@ public class VendorBillServiceImpl implements VendorBillService {
 
         VendorBill bill = vendorBillRepository.findById(id)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Vendor bill not found"));
+
+        if (bill.getSociety() != null) {
+            roleService.enforceSocietyScope(roleService.getUser(userId), bill.getSociety().getId());
+        }
 
         if (request.getBillNumber() != null)
             bill.setBillNumber(request.getBillNumber());

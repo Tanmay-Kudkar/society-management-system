@@ -13,11 +13,13 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.security.access.prepost.PreAuthorize;
 import com.society.backend.society.entity.Society;
 import com.society.backend.user.entity.User;
 @RestController
 @RequestMapping("/move-records")
 @RequiredArgsConstructor
+@PreAuthorize("isAuthenticated()")
 public class MoveRecordController {
 
     private final MoveRecordService moveRecordService;
