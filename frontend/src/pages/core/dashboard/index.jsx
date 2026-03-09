@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import {
   Activity,
   AlertTriangle,
@@ -8,10 +8,12 @@ import {
   Briefcase,
   Building2,
   Car,
+  ChevronRight,
   Clock,
   Cloud,
   CreditCard,
   DollarSign,
+  ExternalLink,
   FileText,
   Home,
   ShieldCheck,
@@ -271,6 +273,7 @@ export default function Dashboard() {
     canManageTenants,
   } = useAuth();
 
+  const navigate = useNavigate();
   const isPlatformOwner = hasRole("MASTER_ADMIN");
   const societyIdFromUrl = searchParams.get("society");
   const parsedSocietyIdFromUrl = Number(societyIdFromUrl);
@@ -320,15 +323,25 @@ export default function Dashboard() {
   });
 
   const { data: tenants = [] } = useQuery({
-    queryKey: ["tenants"],
-    queryFn: () => tenantApi.getAll().then((res) => res.data).catch(() => []),
+    queryKey: ["tenants", dashboardSocietyId],
+    queryFn: () => {
+      if (dashboardSocietyId) {
+        return tenantApi.getBySociety(dashboardSocietyId).then((res) => res.data).catch(() => []);
+      }
+      return tenantApi.getAll().then((res) => res.data).catch(() => []);
+    },
     enabled: isSocietyOpsLevel,
     placeholderData: [],
   });
 
   const { data: vehicles = [] } = useQuery({
-    queryKey: ["vehicles"],
-    queryFn: () => vehicleApi.getAll().then((res) => res.data).catch(() => []),
+    queryKey: ["vehicles", dashboardSocietyId],
+    queryFn: () => {
+      if (dashboardSocietyId) {
+        return vehicleApi.getBySociety(dashboardSocietyId).then((res) => res.data).catch(() => []);
+      }
+      return vehicleApi.getAll().then((res) => res.data).catch(() => []);
+    },
     enabled: isSocietyOpsLevel,
     placeholderData: [],
   });
@@ -357,8 +370,13 @@ export default function Dashboard() {
   });
 
   const { data: maintenanceBills = [] } = useQuery({
-    queryKey: ["maintenance-bills", user?.id],
-    queryFn: () => maintenanceBillApi.getAll().then((res) => res.data).catch(() => []),
+    queryKey: ["maintenance-bills", dashboardSocietyId, user?.id],
+    queryFn: () => {
+      if (dashboardSocietyId) {
+        return maintenanceBillApi.getBySociety(dashboardSocietyId).then((res) => res.data).catch(() => []);
+      }
+      return maintenanceBillApi.getAll().then((res) => res.data).catch(() => []);
+    },
     enabled: !!user?.id,
     placeholderData: [],
   });
@@ -467,27 +485,58 @@ export default function Dashboard() {
       .slice(0, 4);
   }, [societies]);
 
+  const priorityTicketBreakdown = useMemo(() => {
+    const rows = [
+      { label: "Urgent", count: allTickets.filter((t) => t.priority === "URGENT" && (t.status === "OPEN" || t.status === "IN_PROGRESS")).length, tone: "rose" },
+      { label: "High", count: allTickets.filter((t) => t.priority === "HIGH" && (t.status === "OPEN" || t.status === "IN_PROGRESS")).length, tone: "amber" },
+      { label: "Medium", count: allTickets.filter((t) => t.priority === "MEDIUM" && (t.status === "OPEN" || t.status === "IN_PROGRESS")).length, tone: "blue" },
+      { label: "Low", count: allTickets.filter((t) => t.priority === "LOW" && (t.status === "OPEN" || t.status === "IN_PROGRESS")).length, tone: "emerald" },
+    ];
+    const total = rows.reduce((sum, r) => sum + r.count, 0);
+    return rows
+      .filter((r) => r.count > 0)
+      .map((r) => ({
+        label: r.label,
+        value: r.count,
+        helper: total > 0 ? `${Math.round((r.count / total) * 100)}% of open tickets` : "No open tickets",
+        percent: total > 0 ? Math.round((r.count / total) * 100) : 0,
+        tone: r.tone,
+      }));
+  }, [allTickets]);
+
+  const ticketsBySociety = useMemo(() => {
+    const map = {};
+    allTickets.filter((t) => t.status === "OPEN" || t.status === "IN_PROGRESS").forEach((t) => {
+      const name = t.societyName || "Unknown";
+      if (!map[name]) map[name] = { name, count: 0, urgent: 0 };
+      map[name].count++;
+      if (t.priority === "URGENT" || t.priority === "HIGH") map[name].urgent++;
+    });
+    return Object.values(map).sort((a, b) => b.count - a.count).slice(0, 5);
+  }, [allTickets]);
+
   const totalUnits = flats.length;
-  const occupiedUnits = flats.filter((flat) => flat.ownerName).length;
+  const isUnitOccupied = (flat) => flat.isOccupied || !!flat.ownerUserId || !!flat.ownerName;
+  const occupiedUnits = flats.filter(isUnitOccupied).length;
 
   const unitBreakdown = useMemo(() => {
     const items = [
       {
         label: "Flats",
         total: flats.filter((flat) => !flat.unitType || flat.unitType === "FLAT").length,
-        occupied: flats.filter((flat) => (!flat.unitType || flat.unitType === "FLAT") && flat.ownerName).length,
+        occupied: flats.filter((flat) => (!flat.unitType || flat.unitType === "FLAT") && isUnitOccupied(flat)).length,
         tone: "blue",
       },
       {
         label: "Shops",
         total: flats.filter((flat) => flat.unitType === "SHOP").length,
-        occupied: flats.filter((flat) => flat.unitType === "SHOP" && flat.ownerName).length,
+        occupied: flats.filter((flat) => flat.unitType === "SHOP" && isUnitOccupied(flat)).length,
         tone: "emerald",
       },
       {
         label: "Offices",
         total: flats.filter((flat) => flat.unitType === "OFFICE").length,
-        occupied: flats.filter((flat) => flat.unitType === "OFFICE" && flat.ownerName).length,
+        occupied: flats.filter((flat) => flat.unitType === "OFFICE" && isUnitOccupied(flat)).length,
         tone: "violet",
       },
     ];
@@ -603,11 +652,12 @@ export default function Dashboard() {
       return [
         {
           key: "platform-societies",
-          title: isPlatformOwner ? "Total Societies" : "Managed Societies",
+          title: "Total Societies",
           value: societies.length,
           icon: Building2,
           variant: "blue",
           subtext: `${platformUsers.length} registered users`,
+          onClick: () => navigate("/society-admins"),
         },
         {
           key: "platform-admins",
@@ -616,22 +666,25 @@ export default function Dashboard() {
           icon: UserCheck,
           variant: "green",
           subtext: `${membersCount + tenantsCount} residents onboarded`,
+          onClick: () => navigate("/society-admins"),
         },
         {
-          key: "platform-issues",
-          title: "Open Issues",
-          value: openTickets.length + pendingComplaints.length,
-          icon: AlertTriangle,
+          key: "platform-tickets",
+          title: "Open Tickets",
+          value: openTickets.length,
+          icon: Ticket,
           variant: "yellow",
-          subtext: `${allTickets.length + complaints.length} total tracked`,
+          subtext: `${allTickets.filter((t) => t.priority === "HIGH" || t.priority === "URGENT").length} high/urgent priority`,
+          onClick: () => navigate("/tickets"),
         },
         {
-          key: "platform-collections",
-          title: "Collection Rate",
-          value: `${billCollectionRate}%`,
-          icon: DollarSign,
-          variant: "teal",
-          subtext: billTotalCount > 0 ? `${paidBills.length}/${billTotalCount} cleared` : "No bills generated yet",
+          key: "platform-complaints",
+          title: "Pending Complaints",
+          value: pendingComplaints.length,
+          icon: AlertTriangle,
+          variant: "red",
+          subtext: `${complaints.length} total tracked`,
+          onClick: () => navigate("/complaints"),
         },
       ];
     }
@@ -967,11 +1020,12 @@ export default function Dashboard() {
   }));
 
   const roleActionItems = useMemo(() => {
-    if (isPlatformOwner) {
+    if (isPlatformLevel) {
       return [
         { title: "Society onboarding", value: societies.length, helper: "Active societies in network", tone: "blue" },
         { title: "Admin coverage", value: societyAdminsCount, helper: "Society admins currently mapped", tone: "emerald" },
-        { title: "Network issues", value: openTickets.length + pendingComplaints.length, helper: "Open tickets and pending complaints", tone: "amber" },
+        { title: "Open tickets", value: openTickets.length, helper: "Tickets awaiting resolution", tone: "amber" },
+        { title: "Pending complaints", value: pendingComplaints.length, helper: "Complaints from residents", tone: "rose" },
       ];
     }
 
@@ -1211,14 +1265,14 @@ export default function Dashboard() {
 
   const overviewConfig = isPlatformLevel
     ? {
-        eyebrow: "OVERVIEW",
-        title: "Portfolio health",
-        description: "High-value operational signals across the network.",
+        eyebrow: "NETWORK OVERVIEW",
+        title: "Platform health",
+        description: "Society operations, ticket pressure, and user distribution across the network.",
         boardA: {
-          title: "User mix",
-          caption: "Distribution across key user groups.",
-          items: roleMix,
-          emptyText: "No user-distribution data available yet.",
+          title: "Ticket priority",
+          caption: "Open tickets grouped by priority level.",
+          items: priorityTicketBreakdown,
+          emptyText: "No open tickets across societies.",
         },
         boardB: {
           title: "Society spotlight",
@@ -1227,10 +1281,10 @@ export default function Dashboard() {
           emptyText: "No ranked societies available yet.",
         },
         boardC: {
-          title: "Collections",
-          caption: "Current recovery status across billing records.",
-          items: billingBreakdown,
-          emptyText: "No billing activity yet.",
+          title: "User mix",
+          caption: "Distribution across key user groups.",
+          items: roleMix,
+          emptyText: "No user-distribution data available yet.",
         },
       }
     : role === "TREASURER"
@@ -1424,6 +1478,7 @@ export default function Dashboard() {
               variant={card.variant}
               subtext={card.subtext}
               delay={index * 40}
+              onClick={card.onClick}
             />
           ))}
         </div>
@@ -1433,10 +1488,10 @@ export default function Dashboard() {
         <SectionHeader
           icon={Briefcase}
           eyebrow="ROLE PRIORITIES"
-          title={`${role || "USER"} action queue`}
+          title={`${(role || "USER").replace("_", " ")} action queue`}
           description="This queue is generated from live records and scoped to your role responsibilities."
         />
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className={clsx("grid gap-4", roleActionItems.length >= 4 ? "md:grid-cols-2 xl:grid-cols-4" : "md:grid-cols-3")}>
           {roleActionItems.map((item) => (
             <MetricPanel
               key={item.title}
@@ -1518,20 +1573,41 @@ export default function Dashboard() {
                   emptyText={overviewConfig.boardC.emptyText}
                 />
                 <div className={panelClass}>
-                  <h3 className="text-base font-semibold text-[var(--text-primary)]">Critical reminders</h3>
+                  <h3 className="text-base font-semibold text-[var(--text-primary)]">
+                    {isPlatformLevel ? "Tickets by society" : "Critical reminders"}
+                  </h3>
                   <div className="mt-4 space-y-3">
-                    <div className="rounded-2xl border border-[var(--border-default)] bg-[var(--bg-secondary)] px-4 py-3">
-                      <p className="text-sm font-semibold text-[var(--text-primary)]">Open issues</p>
-                      <p className="mt-1 text-sm text-[var(--text-secondary)]">{openTickets.length + pendingComplaints.length} items need attention right now.</p>
-                    </div>
-                    <div className="rounded-2xl border border-[var(--border-default)] bg-[var(--bg-secondary)] px-4 py-3">
-                      <p className="text-sm font-semibold text-[var(--text-primary)]">Expiring agreements</p>
-                      <p className="mt-1 text-sm text-[var(--text-secondary)]">{expiringTenants.length + expiringContracts.length} contracts or tenant agreements expire in 30 days.</p>
-                    </div>
-                    <div className="rounded-2xl border border-[var(--border-default)] bg-[var(--bg-secondary)] px-4 py-3">
-                      <p className="text-sm font-semibold text-[var(--text-primary)]">Parking footprint</p>
-                      <p className="mt-1 text-sm text-[var(--text-secondary)]">{fourWheelerCount + twoWheelerCount} registered vehicles currently mapped to units.</p>
-                    </div>
+                    {isPlatformLevel ? (
+                      ticketsBySociety.length > 0 ? ticketsBySociety.map((s) => (
+                        <div key={s.name} className="rounded-2xl border border-[var(--border-default)] bg-[var(--bg-secondary)] px-4 py-3 cursor-pointer transition-colors hover:border-[var(--border-strong)]" onClick={() => {
+                          const society = societies.find((soc) => soc.name === s.name);
+                          if (society) navigate(`/?society=${society.id}`);
+                        }}>
+                          <div className="flex items-center justify-between">
+                            <p className="text-sm font-semibold text-[var(--text-primary)]">{s.name}</p>
+                            <ChevronRight className="h-4 w-4 text-[var(--text-tertiary)]" />
+                          </div>
+                          <p className="mt-1 text-sm text-[var(--text-secondary)]">{s.count} open tickets{s.urgent > 0 ? ` · ${s.urgent} high/urgent` : ""}</p>
+                        </div>
+                      )) : (
+                        <p className="text-sm text-[var(--text-tertiary)]">No open tickets across societies.</p>
+                      )
+                    ) : (
+                      <>
+                        <div className="rounded-2xl border border-[var(--border-default)] bg-[var(--bg-secondary)] px-4 py-3">
+                          <p className="text-sm font-semibold text-[var(--text-primary)]">Open issues</p>
+                          <p className="mt-1 text-sm text-[var(--text-secondary)]">{openTickets.length + pendingComplaints.length} items need attention right now.</p>
+                        </div>
+                        <div className="rounded-2xl border border-[var(--border-default)] bg-[var(--bg-secondary)] px-4 py-3">
+                          <p className="text-sm font-semibold text-[var(--text-primary)]">Expiring agreements</p>
+                          <p className="mt-1 text-sm text-[var(--text-secondary)]">{expiringTenants.length + expiringContracts.length} contracts or tenant agreements expire in 30 days.</p>
+                        </div>
+                        <div className="rounded-2xl border border-[var(--border-default)] bg-[var(--bg-secondary)] px-4 py-3">
+                          <p className="text-sm font-semibold text-[var(--text-primary)]">Parking footprint</p>
+                          <p className="mt-1 text-sm text-[var(--text-secondary)]">{fourWheelerCount + twoWheelerCount} registered vehicles currently mapped to units.</p>
+                        </div>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>
@@ -1543,7 +1619,7 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {operationsCards.length > 0 && (canSeeFinanceSection || isSocietyOpsLevel) && (
+          {operationsCards.length > 0 && !isPlatformLevel && (canSeeFinanceSection || isSocietyOpsLevel) && (
             <section className={sectionShellClass}>
               <SectionHeader
                 icon={DollarSign}
@@ -1566,6 +1642,95 @@ export default function Dashboard() {
                 ))}
               </div>
             </section>
+          )}
+
+          {isPlatformLevel && (
+            <>
+              <section className={sectionShellClass}>
+                <SectionHeader
+                  icon={Ticket}
+                  eyebrow="PRIORITY TICKETS"
+                  title="High-priority ticket feed"
+                  description="Urgent and high-priority tickets across all societies requiring immediate attention."
+                />
+                {allTickets.filter((t) => (t.priority === "URGENT" || t.priority === "HIGH") && (t.status === "OPEN" || t.status === "IN_PROGRESS")).length > 0 ? (
+                  <div className="space-y-3">
+                    {allTickets
+                      .filter((t) => (t.priority === "URGENT" || t.priority === "HIGH") && (t.status === "OPEN" || t.status === "IN_PROGRESS"))
+                      .sort((a, b) => (a.priority === "URGENT" ? -1 : 1) - (b.priority === "URGENT" ? -1 : 1))
+                      .slice(0, 8)
+                      .map((ticket) => (
+                        <article
+                          key={ticket.id}
+                          className="flex items-center justify-between gap-4 rounded-2xl border border-[var(--border-default)] bg-[var(--bg-tertiary)] px-4 py-3 cursor-pointer transition-colors hover:border-[var(--border-strong)]"
+                          onClick={() => navigate(`/tickets`)}
+                        >
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-2">
+                              <p className="truncate text-sm font-semibold text-[var(--text-primary)]">{ticket.title}</p>
+                              <span className={clsx(
+                                "shrink-0 rounded-full border px-2.5 py-0.5 text-[11px] font-semibold",
+                                ticket.priority === "URGENT" ? badgeClasses.danger : badgeClasses.warning
+                              )}>
+                                {ticket.priority}
+                              </span>
+                            </div>
+                            <p className="mt-1 text-xs text-[var(--text-tertiary)]">
+                              {ticket.societyName} · {ticket.raisedByName || "Unknown"} · {ticket.type} · {ticket.status}
+                              {ticket.pendingDays > 0 ? ` · ${ticket.pendingDays}d pending` : ""}
+                            </p>
+                          </div>
+                          <ChevronRight className="h-4 w-4 shrink-0 text-[var(--text-tertiary)]" />
+                        </article>
+                      ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-[var(--text-tertiary)]">No high-priority tickets at this time.</p>
+                )}
+              </section>
+
+              <section className={sectionShellClass}>
+                <SectionHeader
+                  icon={Building2}
+                  eyebrow="SOCIETY DIRECTORY"
+                  title="Manage societies"
+                  description="Click any society to enter its dashboard and manage operations."
+                />
+                {societies.length > 0 ? (
+                  <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                    {societies.map((society) => {
+                      const sTotalUnits = (society.actualFlats ?? society.totalFlats ?? 0) + (society.actualShops ?? society.totalShops ?? 0) + (society.actualOffices ?? society.totalOffices ?? 0);
+                      const sOccupied = (society.occupiedFlats ?? 0) + (society.occupiedShops ?? 0) + (society.occupiedOffices ?? 0);
+                      const sTickets = allTickets.filter((t) => t.societyId === society.id && (t.status === "OPEN" || t.status === "IN_PROGRESS")).length;
+                      const sComplaints = complaints.filter((c) => c.societyId === society.id && (c.status === "PENDING" || c.status === "IN_PROGRESS")).length;
+                      return (
+                        <article
+                          key={society.id}
+                          className="group cursor-pointer rounded-2xl border border-[var(--border-default)] bg-[var(--bg-tertiary)] p-4 transition-all hover:border-[var(--border-strong)] hover:shadow-md"
+                          onClick={() => navigate(`/?society=${society.id}`)}
+                        >
+                          <div className="flex items-center justify-between gap-2">
+                            <h4 className="truncate text-sm font-bold text-[var(--text-primary)]">{society.name}</h4>
+                            <ExternalLink className="h-4 w-4 shrink-0 text-[var(--text-tertiary)] opacity-0 transition-opacity group-hover:opacity-100" />
+                          </div>
+                          <p className="mt-1 text-xs text-[var(--text-tertiary)]">
+                            {society.address || society.city || "No address"}
+                          </p>
+                          <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-[var(--text-secondary)]">
+                            <span>{sOccupied}/{sTotalUnits} units</span>
+                            {sTickets > 0 && <span className="text-amber-500">{sTickets} open tickets</span>}
+                            {sComplaints > 0 && <span className="text-rose-500">{sComplaints} complaints</span>}
+                            {sTickets === 0 && sComplaints === 0 && <span className="text-emerald-500">All clear</span>}
+                          </div>
+                        </article>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <p className="text-sm text-[var(--text-tertiary)]">No societies onboarded yet.</p>
+                )}
+              </section>
+            </>
           )}
 
           {isSocietyOpsLevel && (

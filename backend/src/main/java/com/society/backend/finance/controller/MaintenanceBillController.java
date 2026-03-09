@@ -61,6 +61,11 @@ public class MaintenanceBillController {
         return ResponseEntity.ok(maintenanceBillService.getAll());
     }
 
+    @GetMapping("/society/{societyId}")
+    public ResponseEntity<List<MaintenanceBillResponse>> getBySociety(@PathVariable Long societyId) {
+        return ResponseEntity.ok(maintenanceBillService.getBySociety(societyId));
+    }
+
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER')")
     public ResponseEntity<MaintenanceBillResponse> update(

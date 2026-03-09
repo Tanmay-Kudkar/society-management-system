@@ -42,6 +42,11 @@ public class VehicleController {
         return ResponseEntity.ok(vehicleService.getByFlatId(flatId));
     }
 
+    @GetMapping("/society/{societyId}")
+    public ResponseEntity<List<VehicleResponse>> getBySociety(@PathVariable Long societyId) {
+        return ResponseEntity.ok(vehicleService.getBySocietyId(societyId));
+    }
+
     @GetMapping
     public ResponseEntity<List<VehicleResponse>> getAll() {
         return ResponseEntity.ok(vehicleService.getAll());

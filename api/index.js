@@ -225,6 +225,7 @@ export const contractApi = {
 // Maintenance Bill API
 export const maintenanceBillApi = {
   getAll: () => api.get('/maintenance-bills'),
+  getBySociety: (societyId) => api.get(`/maintenance-bills/society/${societyId}`),
   getById: (id) => api.get(`/maintenance-bills/${id}`),
   getByFlat: (flatId) => api.get(`/maintenance-bills/flat/${flatId}`),
   getByMonth: (month) => api.get(`/maintenance-bills/month/${month}`),
@@ -410,6 +411,7 @@ export const vehicleApi = {
   getAll: () => api.get('/vehicles'),
   getById: (id) => api.get(`/vehicles/${id}`),
   getByFlat: (flatId) => api.get(`/vehicles/flat/${flatId}`),
+  getBySociety: (societyId) => api.get(`/vehicles/society/${societyId}`),
   create: (data, userId) => api.post(`/vehicles?userId=${userId}`, data),
   update: (id, data, userId) => api.put(`/vehicles/${id}?userId=${userId}`, data),
   delete: (id, userId, force = true) => api.delete(`/vehicles/${id}?userId=${userId}${force ? '&force=true' : ''}`),
