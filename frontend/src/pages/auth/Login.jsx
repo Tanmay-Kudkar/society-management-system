@@ -1,52 +1,34 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../../context'
 import { useTheme } from '../../context'
 import {
   Building2, Mail, Lock, AlertCircle, Eye, EyeOff,
-  Sun, Moon, Monitor, CheckCircle, ArrowRight,
-  Shield, Briefcase, Home, UserCheck, ChevronDown, FileText, Users
+  Sun, Moon, Monitor, ArrowRight,
+  Shield, Briefcase, FileText, Users
 } from 'lucide-react'
-
-const PORTALS = [
-  { key: 'admin',      label: 'Admin',      icon: Shield,    desc: 'Platform & Society Admin', detail: 'Full platform control' },
-  { key: 'management', label: 'Management', icon: Briefcase, desc: 'Chairman, Secretary, Manager', detail: 'Society operations' },
-  { key: 'resident',   label: 'Resident',   icon: Home,      desc: 'Flat Owner, Tenant', detail: 'Resident access' },
-  { key: 'visitor',    label: 'Visitor',     icon: UserCheck, desc: 'Guest access', detail: 'Temporary access' },
-]
 
 export default function Login() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [portalType, setPortalType] = useState('')
   const [rememberMe, setRememberMe] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [isLoaded, setIsLoaded] = useState(false)
-  const [dropdownOpen, setDropdownOpen] = useState(false)
   const [fieldErrors, setFieldErrors] = useState({})
-  const dropdownRef = useRef(null)
   const { login, user, loading: authLoading } = useAuth()
   const { theme, setTheme, resetToSystemTheme, isManual } = useTheme()
   const navigate = useNavigate()
 
   useEffect(() => {
     setIsLoaded(true)
-    const urlParams = new URLSearchParams(window.location.search)
-    const portalParam = urlParams.get('portal')
     const savedEmail = localStorage.getItem('rememberedEmail')
     const savedRememberMe = localStorage.getItem('rememberMe') === 'true'
-    const savedPortal = localStorage.getItem('rememberedPortal')
     
     if (savedEmail && savedRememberMe) {
       setEmail(savedEmail)
       setRememberMe(true)
-    }
-    if (portalParam && ['admin', 'management', 'resident', 'visitor'].includes(portalParam)) {
-      setPortalType(portalParam)
-    } else if (savedPortal) {
-      setPortalType(savedPortal)
     }
   }, [])
 
@@ -54,20 +36,11 @@ export default function Login() {
     if (!authLoading && user) navigate('/', { replace: true })
   }, [user, authLoading, navigate])
 
-  useEffect(() => {
-    const handler = (e) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) setDropdownOpen(false)
-    }
-    document.addEventListener('mousedown', handler)
-    return () => document.removeEventListener('mousedown', handler)
-  }, [])
-
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
 
     const nextFieldErrors = {}
-    if (!portalType) nextFieldErrors.portalType = 'Please select an access type.'
     if (!email.trim()) nextFieldErrors.email = 'Email address is required.'
     if (!password) nextFieldErrors.password = 'Password is required.'
 
@@ -78,16 +51,14 @@ export default function Login() {
     }
 
     setLoading(true)
-    const result = await login(email, password, { portalType, rememberMe })
+    const result = await login(email, password, { rememberMe })
     if (result.success) {
       if (rememberMe) {
         localStorage.setItem('rememberedEmail', email)
         localStorage.setItem('rememberMe', 'true')
-        localStorage.setItem('rememberedPortal', portalType)
       } else {
         localStorage.removeItem('rememberedEmail')
         localStorage.removeItem('rememberMe')
-        localStorage.removeItem('rememberedPortal')
       }
       navigate('/')
     } else {
@@ -96,8 +67,6 @@ export default function Login() {
     }
     setLoading(false)
   }
-
-  const selectedPortal = PORTALS.find(p => p.key === portalType)
 
   return (
     <div className="relative flex min-h-screen items-center justify-center bg-[color-mix(in_srgb,var(--bg-primary)_92%,#0f172a_8%)] px-4 py-8 sm:px-7">
@@ -173,63 +142,6 @@ export default function Login() {
               )}
 
               <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-                <div className="flex flex-col gap-2">
-                  <label className="text-sm font-semibold text-[color-mix(in_srgb,var(--text-primary)_88%,#e2e8f0_12%)]">Access Type</label>
-                  <div className="relative" ref={dropdownRef}>
-                    <button
-                      type="button"
-                      onClick={() => setDropdownOpen(!dropdownOpen)}
-                      className={`flex min-h-[2.95rem] w-full items-center justify-between rounded-[10px] border px-3 py-3 text-base transition ${
-                        fieldErrors.portalType
-                          ? 'border-red-500 shadow-[0_0_0_1px_color-mix(in_srgb,#ef4444_35%,transparent)]'
-                          : dropdownOpen
-                            ? 'border-[color-mix(in_srgb,var(--accent-primary)_76%,#1e40af_24%)] bg-[color-mix(in_srgb,var(--bg-primary)_80%,var(--accent-primary)_20%)] shadow-[0_0_0_3px_color-mix(in_srgb,var(--accent-primary)_20%,transparent)]'
-                            : 'border-[color-mix(in_srgb,var(--border-default)_82%,#334155_18%)] bg-[color-mix(in_srgb,var(--bg-primary)_92%,#111827_8%)]'
-                      } ${selectedPortal ? 'text-[var(--text-primary)]' : 'text-[var(--text-tertiary)]'}`}
-                      aria-invalid={Boolean(fieldErrors.portalType)}
-                    >
-                      {selectedPortal ? (
-                        <span className="inline-flex items-center gap-2">
-                          <selectedPortal.icon size={16} className="text-[var(--accent-primary)]" />
-                          {selectedPortal.label} Portal
-                        </span>
-                      ) : (
-                        <span>Select portal type...</span>
-                      )}
-                      <ChevronDown size={16} className={`text-[var(--text-tertiary)] transition ${dropdownOpen ? 'rotate-180' : ''}`} />
-                    </button>
-                    {dropdownOpen && (
-                      <div className="absolute left-0 right-0 top-[calc(100%+4px)] z-[60] rounded-md border border-[var(--border-default)] bg-[var(--bg-elevated)] p-1 shadow-lg">
-                        {PORTALS.map((p) => (
-                          <button
-                            key={p.key}
-                            type="button"
-                            onClick={() => {
-                              setPortalType(p.key)
-                              setDropdownOpen(false)
-                              setError('')
-                              setFieldErrors((prev) => {
-                                const rest = { ...prev }
-                                delete rest.portalType
-                                return rest
-                              })
-                            }}
-                            className={`flex w-full items-center gap-2 rounded px-3 py-2 text-left text-sm transition ${portalType === p.key ? 'bg-[rgba(47,129,247,0.08)] text-[var(--accent-primary)]' : 'text-[var(--text-secondary)] hover:bg-[var(--bg-tertiary)]'}`}
-                          >
-                            <p.icon size={16} />
-                            <div className="flex min-w-0 flex-1 flex-col">
-                              <span className={`font-medium ${portalType === p.key ? 'text-[var(--accent-primary)]' : 'text-[var(--text-primary)]'}`}>{p.label}</span>
-                              <span className="text-xs text-[var(--text-tertiary)]">{p.desc}</span>
-                            </div>
-                            {portalType === p.key && <CheckCircle size={16} className="shrink-0 text-[var(--accent-primary)]" />}
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                  {fieldErrors.portalType && <p className="text-xs text-red-500">{fieldErrors.portalType}</p>}
-                </div>
-
                 <div className="flex flex-col gap-2">
                   <label className="text-sm font-semibold text-[color-mix(in_srgb,var(--text-primary)_88%,#e2e8f0_12%)]">Email address</label>
                   <div className={`flex min-h-[2.95rem] items-center rounded-[10px] border bg-[color-mix(in_srgb,var(--bg-primary)_92%,#111827_8%)] transition ${fieldErrors.email ? 'border-red-500 shadow-[0_0_0_1px_color-mix(in_srgb,#ef4444_35%,transparent)]' : 'border-[color-mix(in_srgb,var(--border-default)_82%,#334155_18%)] focus-within:border-[color-mix(in_srgb,var(--accent-primary)_76%,#1e40af_24%)] focus-within:bg-[color-mix(in_srgb,var(--bg-primary)_80%,var(--accent-primary)_20%)] focus-within:shadow-[0_0_0_3px_color-mix(in_srgb,var(--accent-primary)_20%,transparent)]'}`}>
