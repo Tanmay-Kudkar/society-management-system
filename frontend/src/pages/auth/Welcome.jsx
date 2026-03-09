@@ -183,13 +183,13 @@ export default function Welcome() {
               {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
             </button>
 
-            <button onClick={() => navigate('/login')} className="flex items-center gap-[0.375rem] py-2 px-4 text-[0.8125rem] font-semibold text-[var(--text-primary)] bg-transparent border border-[var(--border-default)] rounded-[var(--radius-md)] cursor-pointer transition-all max-md:hidden hover:bg-[var(--bg-tertiary)] hover:border-[var(--border-muted)]">
+            <button onClick={() => navigate('/login')} className="flex items-center gap-[0.375rem] py-2 px-4 text-[0.8125rem] font-semibold text-[var(--text-primary)] bg-transparent border border-[var(--border-default)] rounded-[var(--radius-md)] cursor-pointer transition-all duration-200 max-md:hidden hover:bg-[var(--bg-tertiary)] hover:border-[color-mix(in_srgb,var(--text-secondary)_60%,transparent)] hover:text-[var(--text-primary)] hover:-translate-y-0.5 hover:shadow-[0_4px_14px_color-mix(in_srgb,#000_20%,transparent)] active:translate-y-0 active:scale-[0.97]">
               Society Login
             </button>
-            <button onClick={() => navigate('/login')} className="flex items-center gap-[0.375rem] py-2 px-4 text-[0.8125rem] font-semibold text-[var(--text-primary)] bg-transparent border border-[var(--border-default)] rounded-[var(--radius-md)] cursor-pointer transition-all max-md:hidden hover:bg-[var(--bg-tertiary)] hover:border-[var(--border-muted)]">
+            <button onClick={() => navigate('/login')} className="flex items-center gap-[0.375rem] py-2 px-4 text-[0.8125rem] font-semibold text-[var(--text-primary)] bg-transparent border border-[var(--border-default)] rounded-[var(--radius-md)] cursor-pointer transition-all duration-200 max-md:hidden hover:bg-[var(--bg-tertiary)] hover:border-[color-mix(in_srgb,var(--text-secondary)_60%,transparent)] hover:text-[var(--text-primary)] hover:-translate-y-0.5 hover:shadow-[0_4px_14px_color-mix(in_srgb,#000_20%,transparent)] active:translate-y-0 active:scale-[0.97]">
               Admin Portal
             </button>
-            <button onClick={() => scrollTo('hero')} className="flex items-center gap-[0.375rem] py-2 px-4 text-[0.8125rem] font-semibold text-white bg-[var(--accent-primary)] border-none rounded-[var(--radius-md)] cursor-pointer transition-all max-md:hidden hover:bg-[var(--accent-hover)] hover:-translate-y-px">
+            <button onClick={() => scrollTo('enroll')} className="flex items-center gap-[0.375rem] py-2 px-4 text-[0.8125rem] font-semibold text-white bg-[var(--accent-primary)] border-none rounded-[var(--radius-md)] cursor-pointer transition-all duration-200 max-md:hidden hover:bg-[var(--accent-hover)] hover:-translate-y-0.5 hover:shadow-[0_6px_20px_color-mix(in_srgb,var(--accent-primary)_50%,transparent)] active:translate-y-0 active:scale-[0.97] active:shadow-[0_2px_8px_color-mix(in_srgb,var(--accent-primary)_35%,transparent)]">
               Enroll your society
               <ArrowRight size={14} />
             </button>
