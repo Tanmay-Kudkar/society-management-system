@@ -17,12 +17,6 @@ import com.society.backend.common.dto.ErrorResponse;
 
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
-
-import com.society.backend.flat.entity.Flat;
-import com.society.backend.flat.entity.Wing;
-import com.society.backend.society.entity.Society;
-import com.society.backend.user.entity.User;
-import com.society.backend.vendor.entity.Vendor;
 @Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -165,6 +159,19 @@ public class GlobalExceptionHandler {
                                                 LocalDateTime.now(),
                                                 400,
                                                 "Bad Request",
+                                                ex.getMessage(),
+                                                request.getRequestURI()));
+        }
+
+        @ExceptionHandler(ResourceNotFoundException.class)
+        public ResponseEntity<ErrorResponse> handleResourceNotFound(
+                        ResourceNotFoundException ex,
+                        HttpServletRequest request) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
+                                new ErrorResponse(
+                                                LocalDateTime.now(),
+                                                404,
+                                                "Not Found",
                                                 ex.getMessage(),
                                                 request.getRequestURI()));
         }

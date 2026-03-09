@@ -14,9 +14,6 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
-
-import com.society.backend.flat.entity.Flat;
-import com.society.backend.society.entity.Society;
 @RestController
 @RequestMapping("/safety")
 @PreAuthorize("isAuthenticated()")

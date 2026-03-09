@@ -45,19 +45,38 @@ public class DocumentTemplateServiceImpl implements DocumentTemplateService {
     public DocumentTemplateResponse getById(Long id) {
         DocumentTemplate template = documentTemplateRepository.findById(id)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Document template not found"));
+        if (template.getSociety() != null) {
+            roleService.enforceSocietyScope(roleService.getCurrentUser(), template.getSociety().getId());
+        }
         return mapToResponse(template);
     }
 
     @Override
     public List<DocumentTemplateResponse> getByTemplateType(String templateType) {
+        var currentUser = roleService.getCurrentUser();
         return documentTemplateRepository.findByTemplateType(templateType).stream()
+                .filter(t -> {
+                    if (currentUser.getRole() == com.society.backend.user.entity.Role.MASTER_ADMIN) {
+                        return true;
+                    }
+                    return t.getSociety() != null && currentUser.getSociety() != null
+                            && t.getSociety().getId().equals(currentUser.getSociety().getId());
+                })
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
 
     @Override
     public List<DocumentTemplateResponse> getAll() {
+        var currentUser = roleService.getCurrentUser();
         return documentTemplateRepository.findByIsActiveTrue().stream()
+                .filter(t -> {
+                    if (currentUser.getRole() == com.society.backend.user.entity.Role.MASTER_ADMIN) {
+                        return true;
+                    }
+                    return t.getSociety() != null && currentUser.getSociety() != null
+                            && t.getSociety().getId().equals(currentUser.getSociety().getId());
+                })
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
@@ -69,6 +88,10 @@ public class DocumentTemplateServiceImpl implements DocumentTemplateService {
 
         DocumentTemplate template = documentTemplateRepository.findById(id)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Document template not found"));
+
+        if (template.getSociety() != null) {
+            roleService.enforceSocietyScope(roleService.getUser(userId), template.getSociety().getId());
+        }
 
         if (request.getTemplateType() != null)
             template.setTemplateType(request.getTemplateType());
@@ -89,6 +112,10 @@ public class DocumentTemplateServiceImpl implements DocumentTemplateService {
         DocumentTemplate template = documentTemplateRepository.findById(id)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Document template not found"));
 
+        if (template.getSociety() != null) {
+            roleService.enforceSocietyScope(roleService.getUser(userId), template.getSociety().getId());
+        }
+
         template.setIsActive(false);
         DocumentTemplate saved = documentTemplateRepository.save(template);
         return mapToResponse(saved);
@@ -99,8 +126,10 @@ public class DocumentTemplateServiceImpl implements DocumentTemplateService {
     public void delete(Long id, Long userId) {
         roleService.canManageDocuments(userId);
 
-        if (!documentTemplateRepository.existsById(id)) {
-            throw new ApiException(HttpStatus.NOT_FOUND, "Document template not found");
+        DocumentTemplate template = documentTemplateRepository.findById(id)
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Document template not found"));
+        if (template.getSociety() != null) {
+            roleService.enforceSocietyScope(roleService.getUser(userId), template.getSociety().getId());
         }
         documentTemplateRepository.deleteById(id);
     }
@@ -109,6 +138,10 @@ public class DocumentTemplateServiceImpl implements DocumentTemplateService {
     public String generateDocument(Long templateId, Map<String, String> placeholders) {
         DocumentTemplate template = documentTemplateRepository.findById(templateId)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Document template not found"));
+
+        if (template.getSociety() != null) {
+            roleService.enforceSocietyScope(roleService.getCurrentUser(), template.getSociety().getId());
+        }
 
         String content = template.getContent();
 

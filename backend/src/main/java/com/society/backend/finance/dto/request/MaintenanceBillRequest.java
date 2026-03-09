@@ -5,6 +5,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 
+import jakarta.validation.Valid;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
@@ -22,6 +23,7 @@ public class MaintenanceBillRequest {
     // Optional in itemized mode (calculated from line items)
     private BigDecimal amount;
 
+    @Valid
     private List<BillLineItemRequest> lineItems;
 
     private LocalDate dueDate;

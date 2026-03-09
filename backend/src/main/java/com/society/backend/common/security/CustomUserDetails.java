@@ -16,6 +16,7 @@ public class CustomUserDetails implements UserDetails {
     private final String password;
     private final String role;
     private final String name;
+    private final boolean active;
 
     public CustomUserDetails(User user) {
         this.id = user.getId();
@@ -23,6 +24,7 @@ public class CustomUserDetails implements UserDetails {
         this.password = user.getPassword();
         this.role = user.getRole().name();
         this.name = user.getName();
+        this.active = user.getIsActive() != null && user.getIsActive();
     }
 
     public Long getId() {
@@ -69,6 +71,6 @@ public class CustomUserDetails implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return true;
+        return active;
     }
 }
