@@ -130,6 +130,13 @@ public class MaintenanceBillServiceImpl implements MaintenanceBillService {
     }
 
     @Override
+    public List<MaintenanceBillResponse> getBySociety(Long societyId) {
+        return maintenanceBillRepository.findBySocietyId(societyId).stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Override
     @Transactional
     public MaintenanceBillResponse update(Long id, MaintenanceBillRequest request, Long userId) {
         roleService.requireAdminOrCommittee(userId);

@@ -12,6 +12,8 @@ public interface VehicleService {
 
     List<VehicleResponse> getByFlatId(Long flatId);
 
+    List<VehicleResponse> getBySocietyId(Long societyId);
+
     List<VehicleResponse> getAll();
 
     VehicleResponse update(Long id, VehicleRequest request, Long userId);

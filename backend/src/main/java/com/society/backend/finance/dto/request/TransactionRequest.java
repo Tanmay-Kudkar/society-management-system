@@ -42,6 +42,22 @@ public class TransactionRequest {
     private String bankName;
     private LocalDate chequeDate;
 
+    // UPI fields
+    private String upiId;
+    private String utrNumber; // Transaction ID / UTR
+
+    // Card fields
+    private String cardType; // CREDIT, DEBIT
+    private String cardLastFourDigits;
+
+    // Accounting fields
+    private String paymentMonth; // YYYY-MM for maintenance
+    private BigDecimal lateFee;
+    private BigDecimal discount;
+    private BigDecimal taxAmount;
+    private String receiptNumber;
+    private String invoiceNumber;
+
     // Related entity
     private Long relatedBillId;
     private String relatedBillType; // MAINTENANCE, VENDOR

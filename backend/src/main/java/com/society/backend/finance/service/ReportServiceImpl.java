@@ -84,10 +84,7 @@ public class ReportServiceImpl implements ReportService {
         BigDecimal cashBalance = totalIncome.subtract(totalExpense);
 
         // Bills summary
-        List<MaintenanceBill> allBills = maintenanceBillRepository.findAll().stream()
-                .filter(b -> b.getFlat() != null && b.getFlat().getSociety() != null
-                        && b.getFlat().getSociety().getId().equals(societyId))
-                .toList();
+        List<MaintenanceBill> allBills = maintenanceBillRepository.findBySocietyId(societyId);
 
         int billsPaid = (int) allBills.stream().filter(b -> "PAID".equals(b.getStatus())).count();
         int billsPending = (int) allBills.stream().filter(b -> !"PAID".equals(b.getStatus())).count();
@@ -237,9 +234,7 @@ public class ReportServiceImpl implements ReportService {
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         // Bills summary for period
-        List<MaintenanceBill> periodBills = maintenanceBillRepository.findAll().stream()
-                .filter(b -> b.getFlat() != null && b.getFlat().getSociety() != null
-                        && b.getFlat().getSociety().getId().equals(societyId))
+        List<MaintenanceBill> periodBills = maintenanceBillRepository.findBySocietyId(societyId).stream()
                 .filter(b -> b.getCreatedAt() != null
                         && !b.getCreatedAt().toLocalDate().isBefore(startDate)
                         && !b.getCreatedAt().toLocalDate().isAfter(endDate))
@@ -247,6 +242,44 @@ public class ReportServiceImpl implements ReportService {
 
         int billsPaid = (int) periodBills.stream().filter(b -> "PAID".equals(b.getStatus())).count();
         int billsPending = (int) periodBills.stream().filter(b -> !"PAID".equals(b.getStatus())).count();
+
+        BigDecimal billsCollectedAmount = periodBills.stream()
+                .filter(b -> "PAID".equals(b.getStatus()))
+                .map(MaintenanceBill::getPaidAmount)
+                .filter(Objects::nonNull)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BigDecimal billsPendingAmount = periodBills.stream()
+                .filter(b -> !"PAID".equals(b.getStatus()))
+                .map(b -> b.getAmount().subtract(b.getPaidAmount() != null ? b.getPaidAmount() : BigDecimal.ZERO))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        // Period statistics from new transaction fields
+        int transactionCount = transactions.size();
+
+        BigDecimal lateFeeCollected = transactions.stream()
+                .filter(t -> "INCOME".equals(t.getTransactionType()))
+                .map(Transaction::getLateFee)
+                .filter(Objects::nonNull)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BigDecimal discountGiven = transactions.stream()
+                .map(Transaction::getDiscount)
+                .filter(Objects::nonNull)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BigDecimal taxCollected = transactions.stream()
+                .map(Transaction::getTaxAmount)
+                .filter(Objects::nonNull)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        // All-time outstanding maintenance dues (UNPAID + PARTIAL)
+        List<MaintenanceBill> allUnpaidBills = maintenanceBillRepository.findBySocietyIdAndStatusNot(societyId, "PAID");
+
+        BigDecimal outstandingDuesAmount = allUnpaidBills.stream()
+                .map(b -> b.getAmount().subtract(b.getPaidAmount() != null ? b.getPaidAmount() : BigDecimal.ZERO))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        int outstandingDuesCount = allUnpaidBills.size();
 
         return FinancialReportResponse.builder()
                 .societyId(societyId)
@@ -269,6 +302,14 @@ public class ReportServiceImpl implements ReportService {
                 .totalBillsGenerated(periodBills.size())
                 .billsPaid(billsPaid)
                 .billsPending(billsPending)
+                .billsCollectedAmount(billsCollectedAmount)
+                .billsPendingAmount(billsPendingAmount)
+                .transactionCount(transactionCount)
+                .lateFeeCollected(lateFeeCollected)
+                .discountGiven(discountGiven)
+                .taxCollected(taxCollected)
+                .outstandingDuesCount(outstandingDuesCount)
+                .outstandingDuesAmount(outstandingDuesAmount)
                 .build();
     }
 

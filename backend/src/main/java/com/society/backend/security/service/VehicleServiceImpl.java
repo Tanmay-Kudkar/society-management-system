@@ -69,6 +69,14 @@ public class VehicleServiceImpl implements VehicleService {
     }
 
     @Override
+    public List<VehicleResponse> getBySocietyId(Long societyId) {
+        roleService.enforceSocietyScope(roleService.getCurrentUser(), societyId);
+        return vehicleRepository.findBySocietyId(societyId).stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Override
     public List<VehicleResponse> getAll() {
         var currentUser = roleService.getCurrentUser();
         if (currentUser == null) {

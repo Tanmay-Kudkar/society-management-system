@@ -23,9 +23,20 @@ public class TransactionResponse {
     private String chequeNumber;
     private String bankName;
     private LocalDate chequeDate;
+    private String upiId;
+    private String utrNumber;
+    private String cardType;
+    private String cardLastFourDigits;
+    private String paymentMonth;
+    private BigDecimal lateFee;
+    private BigDecimal discount;
+    private BigDecimal taxAmount;
+    private String receiptNumber;
+    private String invoiceNumber;
     private Long relatedBillId;
     private String relatedBillType;
     private Long flatId;
     private String flatNumber; // For display
+    private Long createdBy;
     private LocalDateTime createdAt;
 }
