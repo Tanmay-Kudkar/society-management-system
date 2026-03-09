@@ -52,10 +52,7 @@ export default function Approvals() {
   const canManage = ['MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'MANAGER'].includes(user?.role)
   const canCreate = !['VISITOR', 'VENDOR'].includes(user?.role)
 
-  if (!canCreate) {
-    return <PermissionDenied message="You don't have permission to access approvals" />
-  }
-
+  // All hooks must be called unconditionally at the top
   const [activeTab, setActiveTab] = useState('requests') // 'requests' | 'workflows'
   const [showRequestModal, setShowRequestModal] = useState(false)
   const [showWorkflowModal, setShowWorkflowModal] = useState(false)
@@ -72,13 +69,13 @@ export default function Approvals() {
   const { data: requests = [], isLoading: requestsLoading, isError: requestsError } = useQuery({
     queryKey: ['approval-requests', effectiveSocietyId],
     queryFn: () => approvalApi.getRequestsBySociety(effectiveSocietyId).then(r => r.data),
-    enabled: !!effectiveSocietyId && activeTab === 'requests',
+    enabled: !!effectiveSocietyId && activeTab === 'requests' && canCreate,
   })
 
   const { data: workflows = [], isLoading: workflowsLoading, isError: workflowsError } = useQuery({
     queryKey: ['approval-workflows', effectiveSocietyId],
     queryFn: () => approvalApi.getWorkflowsBySociety(effectiveSocietyId).then(r => r.data),
-    enabled: !!effectiveSocietyId,
+    enabled: !!effectiveSocietyId && canCreate,
   })
 
   // === MUTATIONS ===
@@ -119,6 +116,15 @@ export default function Approvals() {
     return w.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
            w.entityType?.toLowerCase().includes(searchTerm.toLowerCase())
   }), [workflows, searchTerm])
+
+  // === LOADING ===
+  const isLoading = activeTab === 'requests' ? requestsLoading : workflowsLoading
+  const isError = activeTab === 'requests' ? requestsError : workflowsError
+  const showSkeleton = useMinLoadingTime(isLoading || isError)
+
+  if (!canCreate) {
+    return <PermissionDenied message="You don't have permission to access approvals" />
+  }
 
   // === HANDLERS ===
   const handleCreateRequest = (e) => {
@@ -178,11 +184,6 @@ export default function Approvals() {
   const updateStep = (idx, field, value) => {
     setWorkflowSteps(prev => prev.map((s, i) => i === idx ? { ...s, [field]: value } : s))
   }
-
-  // === LOADING ===
-  const isLoading = activeTab === 'requests' ? requestsLoading : workflowsLoading
-  const isError = activeTab === 'requests' ? requestsError : workflowsError
-  const showSkeleton = useMinLoadingTime(isLoading || isError)
 
   if (showSkeleton) {
     return (

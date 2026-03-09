@@ -18,6 +18,28 @@ export default function PageShell({
   actions,
   className,
 }) {
+  // All hooks must be called unconditionally at the top
+  const location = useLocation()
+  const { isDark, theme, setTheme, resetToSystemTheme, isManual } = useTheme()
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [themeMenuOpen, setThemeMenuOpen] = useState(false)
+  const [scrolled, setScrolled] = useState(false)
+  const themeRef = useRef(null)
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 20)
+    window.addEventListener('scroll', onScroll)
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+
+  useEffect(() => {
+    const onClick = (e) => {
+      if (themeRef.current && !themeRef.current.contains(e.target)) setThemeMenuOpen(false)
+    }
+    document.addEventListener('mousedown', onClick)
+    return () => document.removeEventListener('mousedown', onClick)
+  }, [])
+
   const isAdminMode = title !== undefined || subtitle !== undefined || Icon !== undefined || actions !== undefined || loading !== undefined
 
   if (isAdminMode) {
@@ -51,27 +73,6 @@ export default function PageShell({
       </section>
     )
   }
-
-  const location = useLocation()
-  const { isDark, theme, setTheme, resetToSystemTheme, isManual } = useTheme()
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const [themeMenuOpen, setThemeMenuOpen] = useState(false)
-  const [scrolled, setScrolled] = useState(false)
-  const themeRef = useRef(null)
-
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 20)
-    window.addEventListener('scroll', onScroll)
-    return () => window.removeEventListener('scroll', onScroll)
-  }, [])
-
-  useEffect(() => {
-    const onClick = (e) => {
-      if (themeRef.current && !themeRef.current.contains(e.target)) setThemeMenuOpen(false)
-    }
-    document.addEventListener('mousedown', onClick)
-    return () => document.removeEventListener('mousedown', onClick)
-  }, [])
 
   const navLinks = [
     { label: 'About', path: '/about' },
