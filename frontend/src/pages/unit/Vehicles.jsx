@@ -24,24 +24,29 @@ export default function Vehicles() {
 
   // Get society filter from URL (for MASTER_ADMIN viewing specific society)
   const societyIdFromUrl = searchParams.get('society')
+  const parsedSocietyIdFromUrl = Number(societyIdFromUrl)
+  const scopedSocietyId = user?.role === 'MASTER_ADMIN' && Number.isInteger(parsedSocietyIdFromUrl) && parsedSocietyIdFromUrl > 0
+    ? parsedSocietyIdFromUrl
+    : null
 
   // Check if current user is MASTER_ADMIN or SOCIETY_ADMIN
-  const isPlatformLevel = user?.role === 'MASTER_ADMIN'
+  const isPlatformLevel = user?.role === 'MASTER_ADMIN' && !scopedSocietyId
 
   // Determine effective society ID for filtering
-  const effectiveSocietyId = isPlatformLevel && societyIdFromUrl ? parseInt(societyIdFromUrl) : user?.societyId
+  const effectiveSocietyId = scopedSocietyId || user?.societyId
   const canEditVehicles = canManageVehicles()
 
   const { data: allVehicles = [], isLoading, isError } = useQuery({
-    queryKey: ['vehicles'],
-    queryFn: () => vehicleApi.getAll().then(res => res.data),
+    queryKey: ['vehicles', effectiveSocietyId, isPlatformLevel],
+    queryFn: () => {
+      if (effectiveSocietyId) {
+        return vehicleApi.getBySociety(effectiveSocietyId).then(res => res.data)
+      }
+      return vehicleApi.getAll().then(res => res.data)
+    },
   })
 
-  // Filter vehicles by society
-  const vehicles = useMemo(() => {
-    if (!effectiveSocietyId) return allVehicles
-    return allVehicles.filter(v => v.societyId === effectiveSocietyId)
-  }, [allVehicles, effectiveSocietyId])
+  const vehicles = allVehicles
 
   const { data: flats = [] } = useQuery({
     queryKey: ['flats', effectiveSocietyId],

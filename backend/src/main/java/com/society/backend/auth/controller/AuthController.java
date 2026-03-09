@@ -5,7 +5,10 @@ import com.society.backend.auth.dto.response.*;
 import com.society.backend.user.dto.response.UserResponse;
 import com.society.backend.auth.service.AuthService;
 import com.society.backend.common.security.JwtUtils;
+import com.society.backend.auth.entity.LoginAudit;
+import com.society.backend.auth.repository.LoginAuditRepository;
 import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Value;
@@ -21,6 +24,7 @@ public class AuthController {
 
     private final AuthService authService;
     private final JwtUtils jwtUtils;
+    private final LoginAuditRepository loginAuditRepository;
 
     @Value("${jwt.cookie.max-age:86400}")
     private int cookieMaxAge; // Default 24 hours
@@ -31,9 +35,10 @@ public class AuthController {
     @Value("${jwt.cookie.secure:false}")
     private boolean cookieSecure; // Set to true in production with HTTPS
 
-    public AuthController(AuthService authService, JwtUtils jwtUtils) {
+    public AuthController(AuthService authService, JwtUtils jwtUtils, LoginAuditRepository loginAuditRepository) {
         this.authService = authService;
         this.jwtUtils = jwtUtils;
+        this.loginAuditRepository = loginAuditRepository;
     }
 
     @PostMapping("/register")
@@ -45,8 +50,9 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(
             @Valid @RequestBody LoginRequest request,
+            HttpServletRequest httpRequest,
             HttpServletResponse response) {
-        LoginResponse loginResponse = authService.login(request);
+        LoginResponse loginResponse = authService.login(request, httpRequest);
 
         // Set JWT in HTTP-only cookie (longer expiry if remember me)
         int maxAge = request.isRememberMe() ? cookieRememberMeMaxAge : cookieMaxAge;
@@ -64,7 +70,13 @@ public class AuthController {
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<Void> logout(HttpServletResponse response) {
+    public ResponseEntity<Void> logout(
+            @CookieValue(name = "jwt", required = false) String token,
+            HttpServletRequest httpRequest,
+            HttpServletResponse response) {
+        // Record logout audit before clearing the cookie
+        authService.recordLogout(token, httpRequest);
+
         // Clear the JWT cookie
         Cookie jwtCookie = new Cookie("jwt", null);
         jwtCookie.setHttpOnly(true);
@@ -110,9 +122,20 @@ public class AuthController {
         if (token == null || token.isEmpty()) {
             return ResponseEntity.status(401).build();
         }
-        String email = jwtUtils.getEmailFromToken(token);
         Long userId = jwtUtils.getUserIdFromToken(token);
         authService.changePassword(userId, request.getCurrentPassword(), request.getNewPassword());
         return ResponseEntity.ok(Map.of("message", "Password changed successfully"));
+    }
+
+    @GetMapping("/login-audit/user/{userId}")
+    @PreAuthorize("hasAuthority('MASTER_ADMIN')")
+    public ResponseEntity<java.util.List<LoginAudit>> getLoginAuditByUser(@PathVariable Long userId) {
+        return ResponseEntity.ok(loginAuditRepository.findByUserIdOrderByTimestampDesc(userId));
+    }
+
+    @GetMapping("/login-audit/society/{societyId}")
+    @PreAuthorize("hasAuthority('MASTER_ADMIN')")
+    public ResponseEntity<java.util.List<LoginAudit>> getLoginAuditBySociety(@PathVariable Long societyId) {
+        return ResponseEntity.ok(loginAuditRepository.findByUser_Society_IdOrderByTimestampDesc(societyId));
     }
 }

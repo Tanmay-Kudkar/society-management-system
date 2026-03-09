@@ -4,6 +4,8 @@ import java.time.LocalDateTime;
 import java.util.Set;
 import java.util.UUID;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -26,11 +28,10 @@ import com.society.backend.user.repository.UserRepository;
 import com.society.backend.common.security.JwtUtils;
 import com.society.backend.common.security.RolePermissions;
 import com.society.backend.common.service.EmailService;
-
-import com.society.backend.flat.entity.Flat;
-import com.society.backend.flat.entity.Tenant;
-import com.society.backend.security.entity.Visitor;
+import com.society.backend.auth.entity.LoginAudit;
+import com.society.backend.auth.repository.LoginAuditRepository;
 import com.society.backend.society.entity.Society;
+import com.society.backend.society.repository.SocietyRepository;
 /**
  * Auth service handles login and public self-registration.
  * 
@@ -49,6 +50,8 @@ public class AuthServiceImpl implements AuthService {
     private final AuthenticationManager authenticationManager;
     private final PasswordResetTokenRepository resetTokenRepository;
     private final EmailService emailService;
+    private final SocietyRepository societyRepository;
+    private final LoginAuditRepository loginAuditRepository;
 
     // Portal → allowed roles mapping
     private static final Set<Role> ADMIN_ROLES = Set.of(
@@ -58,21 +61,24 @@ public class AuthServiceImpl implements AuthService {
             Role.COMMITTEE, Role.MANAGER, Role.EMPLOYEE);
     private static final Set<Role> RESIDENT_ROLES = Set.of(
             Role.MEMBER, Role.TENANT);
-    private static final Set<Role> VISITOR_ROLES = Set.of(
-            Role.VISITOR);
+    // VISITOR_ROLES removed — visitors cannot log in (README §4.9)
 
     public AuthServiceImpl(UserRepository userRepository,
             PasswordEncoder passwordEncoder,
             JwtUtils jwtUtils,
             AuthenticationManager authenticationManager,
             PasswordResetTokenRepository resetTokenRepository,
-            EmailService emailService) {
+            EmailService emailService,
+            SocietyRepository societyRepository,
+            LoginAuditRepository loginAuditRepository) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtils = jwtUtils;
         this.authenticationManager = authenticationManager;
         this.resetTokenRepository = resetTokenRepository;
         this.emailService = emailService;
+        this.societyRepository = societyRepository;
+        this.loginAuditRepository = loginAuditRepository;
     }
 
     @Override
@@ -99,6 +105,13 @@ public class AuthServiceImpl implements AuthService {
         user.setIsActive(true);
         user.setCreatedAt(LocalDateTime.now());
 
+        // Link to society if provided
+        if (request.getSocietyId() != null) {
+            Society society = societyRepository.findById(request.getSocietyId())
+                    .orElseThrow(() -> new ApiException(HttpStatus.BAD_REQUEST, "Society not found"));
+            user.setSociety(society);
+        }
+
         User saved = userRepository.save(user);
 
         return new UserResponse(
@@ -109,7 +122,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public LoginResponse login(LoginRequest request) {
+    public LoginResponse login(LoginRequest request, HttpServletRequest httpRequest) {
 
         // Authenticate user credentials
         authenticationManager.authenticate(
@@ -125,6 +138,12 @@ public class AuthServiceImpl implements AuthService {
             throw new ApiException(HttpStatus.FORBIDDEN, "Account is disabled. Contact your administrator.");
         }
 
+        // VISITOR role cannot log in directly (README §4.9: entries created by security)
+        if (user.getRole() == Role.VISITOR) {
+            throw new ApiException(HttpStatus.FORBIDDEN,
+                    "Visitors do not have direct system access. Contact society security.");
+        }
+
         // Validate portal type against user role (if provided)
         validatePortalAccess(request.getPortalType(), user.getRole());
 
@@ -137,6 +156,16 @@ public class AuthServiceImpl implements AuthService {
         // Get flatId if user has a flat assigned
         Long flatId = user.getFlat() != null ? user.getFlat().getId() : null;
 
+        // Record login audit (with proximity data when available)
+        try {
+            String ip = extractIpAddress(httpRequest);
+            String ua = httpRequest.getHeader("User-Agent");
+            loginAuditRepository.save(new LoginAudit(user, LoginAudit.Action.LOGIN, ip, ua,
+                    request.getLatitude(), request.getLongitude()));
+        } catch (Exception e) {
+            logger.warn("Failed to record login audit for user {}: {}", user.getId(), e.getMessage());
+        }
+
         return new LoginResponse(
                 user.getId(),
                 user.getName(),
@@ -146,6 +175,24 @@ public class AuthServiceImpl implements AuthService {
                 societyId,
                 flatId,
                 token);
+    }
+
+    @Override
+    public void recordLogout(String token, HttpServletRequest httpRequest) {
+        if (token == null || !jwtUtils.validateToken(token)) {
+            return; // Nothing to audit if token is invalid
+        }
+        try {
+            String email = jwtUtils.getEmailFromToken(token);
+            User user = userRepository.findByEmail(email).orElse(null);
+            if (user != null) {
+                String ip = extractIpAddress(httpRequest);
+                String ua = httpRequest.getHeader("User-Agent");
+                loginAuditRepository.save(new LoginAudit(user, LoginAudit.Action.LOGOUT, ip, ua));
+            }
+        } catch (Exception e) {
+            logger.warn("Failed to record logout audit: {}", e.getMessage());
+        }
     }
 
     @Override
@@ -234,7 +281,6 @@ public class AuthServiceImpl implements AuthService {
             case "admin" -> ADMIN_ROLES;
             case "management" -> MANAGEMENT_ROLES;
             case "resident" -> RESIDENT_ROLES;
-            case "visitor" -> VISITOR_ROLES;
             default -> null;
         };
 
@@ -272,5 +318,13 @@ public class AuthServiceImpl implements AuthService {
 
         user.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);
+    }
+
+    private String extractIpAddress(HttpServletRequest request) {
+        String xForwardedFor = request.getHeader("X-Forwarded-For");
+        if (xForwardedFor != null && !xForwardedFor.isBlank()) {
+            return xForwardedFor.split(",")[0].trim();
+        }
+        return request.getRemoteAddr();
     }
 }

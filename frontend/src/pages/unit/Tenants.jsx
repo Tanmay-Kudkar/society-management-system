@@ -24,24 +24,27 @@ export default function Tenants() {
 
   // Get society filter from URL (for MASTER_ADMIN viewing specific society)
   const societyIdFromUrl = searchParams.get('society')
+  const parsedSocietyIdFromUrl = Number(societyIdFromUrl)
+  const scopedSocietyId = user?.role === 'MASTER_ADMIN' && Number.isInteger(parsedSocietyIdFromUrl) && parsedSocietyIdFromUrl > 0
+    ? parsedSocietyIdFromUrl
+    : null
 
   // Check if current user is MASTER_ADMIN or SOCIETY_ADMIN
-  const isPlatformLevel = user?.role === 'MASTER_ADMIN'
+  const isPlatformLevel = user?.role === 'MASTER_ADMIN' && !scopedSocietyId
 
   // Determine effective society ID for filtering
-  const effectiveSocietyId = isPlatformLevel && societyIdFromUrl ? parseInt(societyIdFromUrl) : user?.societyId
+  const effectiveSocietyId = scopedSocietyId || user?.societyId
   const canEditTenants = canManageTenants()
 
-  const { data: allTenants = [], isLoading, isError } = useQuery({
-    queryKey: ['tenants'],
-    queryFn: () => tenantApi.getAll().then(res => res.data),
+  const { data: tenants = [], isLoading, isError } = useQuery({
+    queryKey: ['tenants', effectiveSocietyId, isPlatformLevel],
+    queryFn: () => {
+      if (effectiveSocietyId) {
+        return tenantApi.getBySociety(effectiveSocietyId).then(res => res.data)
+      }
+      return tenantApi.getAll().then(res => res.data)
+    },
   })
-
-  // Filter tenants by society
-  const tenants = useMemo(() => {
-    if (!effectiveSocietyId) return allTenants
-    return allTenants.filter(t => t.societyId === effectiveSocietyId)
-  }, [allTenants, effectiveSocietyId])
 
   const { data: flats = [] } = useQuery({
     queryKey: ['flats', effectiveSocietyId],

@@ -5,11 +5,15 @@ import com.society.backend.auth.dto.response.LoginResponse;
 import com.society.backend.auth.dto.request.RegisterRequest;
 import com.society.backend.user.dto.response.UserResponse;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 public interface AuthService {
 
     UserResponse register(RegisterRequest request);
 
-    LoginResponse login(LoginRequest request);
+    LoginResponse login(LoginRequest request, HttpServletRequest httpRequest);
+
+    void recordLogout(String token, HttpServletRequest httpRequest);
 
     UserResponse getUserFromToken(String token);
 

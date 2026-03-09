@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { useToast } from '../../context/ToastContext'
 import { staffShiftApi } from '../../../../api'
@@ -22,7 +23,13 @@ export default function StaffShifts() {
   const { user } = useAuth()
   const { showToast } = useToast()
   const queryClient = useQueryClient()
-  const societyId = user?.societyId
+  const [searchParams] = useSearchParams()
+  const societyIdFromUrl = searchParams.get('society')
+  const parsedSocietyIdFromUrl = Number(societyIdFromUrl)
+  const scopedSocietyId = user?.role === 'MASTER_ADMIN' && Number.isInteger(parsedSocietyIdFromUrl) && parsedSocietyIdFromUrl > 0
+    ? parsedSocietyIdFromUrl
+    : null
+  const effectiveSocietyId = scopedSocietyId || user?.societyId
 
   const [showModal, setShowModal] = useState(false)
   const [search, setSearch] = useState('')
@@ -35,15 +42,15 @@ export default function StaffShifts() {
   })
 
   const { data: shifts = [], isLoading } = useQuery({
-    queryKey: ['staffShifts', societyId],
-    queryFn: () => staffShiftApi.getBySociety(societyId, user.id).then(r => r.data),
-    enabled: !!societyId,
+    queryKey: ['staffShifts', effectiveSocietyId],
+    queryFn: () => staffShiftApi.getBySociety(effectiveSocietyId, user.id).then(r => r.data),
+    enabled: !!effectiveSocietyId,
   })
 
   const { data: counts = {} } = useQuery({
-    queryKey: ['staffShiftCounts', societyId, filterDate],
-    queryFn: () => staffShiftApi.getDayCounts(societyId, filterDate, user.id).then(r => r.data),
-    enabled: !!societyId,
+    queryKey: ['staffShiftCounts', effectiveSocietyId, filterDate],
+    queryFn: () => staffShiftApi.getDayCounts(effectiveSocietyId, filterDate, user.id).then(r => r.data),
+    enabled: !!effectiveSocietyId,
   })
 
   const createMutation = useMutation({
@@ -106,7 +113,7 @@ export default function StaffShifts() {
     e.preventDefault()
     createMutation.mutate({
       ...form,
-      societyId,
+      societyId: effectiveSocietyId,
       staffUserId: parseInt(form.staffUserId),
     })
   }

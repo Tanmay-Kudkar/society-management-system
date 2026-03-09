@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '../../context'
 import { useConfirmDialog } from '../../context'
 import { useToast } from '../../context'
@@ -16,6 +17,7 @@ const contractTypes = [
 
 export default function Contracts() {
   const { user, canManageContracts } = useAuth()
+  const [searchParams] = useSearchParams()
   const confirmDialog = useConfirmDialog()
   const toast = useToast()
   const queryClient = useQueryClient()
@@ -24,17 +26,32 @@ export default function Contracts() {
   const [searchTerm, setSearchTerm] = useState('')
   const [filterType, setFilterType] = useState('')
 
-  // Check if current user is MASTER_ADMIN
-  const isPlatformLevel = user?.role === 'MASTER_ADMIN'
+  const societyIdFromUrl = searchParams.get('society')
+  const parsedSocietyIdFromUrl = Number(societyIdFromUrl)
+  const scopedSocietyId = user?.role === 'MASTER_ADMIN' && Number.isInteger(parsedSocietyIdFromUrl) && parsedSocietyIdFromUrl > 0
+    ? parsedSocietyIdFromUrl
+    : null
+  const isPlatformLevel = user?.role === 'MASTER_ADMIN' && !scopedSocietyId
+  const effectiveSocietyId = scopedSocietyId || user?.societyId
 
   const { data: contracts = [], isLoading, isError } = useQuery({
-    queryKey: ['contracts'],
-    queryFn: () => contractApi.getAll().then(res => res.data),
+    queryKey: ['contracts', effectiveSocietyId, isPlatformLevel],
+    queryFn: () => {
+      if (effectiveSocietyId) {
+        return contractApi.getBySociety(effectiveSocietyId).then(res => res.data)
+      }
+      return contractApi.getAll().then(res => res.data)
+    },
   })
 
   const { data: vendors = [] } = useQuery({
-    queryKey: ['vendors'],
-    queryFn: () => vendorApi.getAll().then(res => res.data),
+    queryKey: ['vendors', effectiveSocietyId, isPlatformLevel],
+    queryFn: () => {
+      if (effectiveSocietyId) {
+        return vendorApi.getBySociety(effectiveSocietyId).then(res => res.data)
+      }
+      return vendorApi.getAll().then(res => res.data)
+    },
   })
 
 
@@ -75,7 +92,7 @@ export default function Contracts() {
     e.preventDefault()
     const formData = new FormData(e.target)
     const data = {
-      societyId: user.societyId,
+      societyId: effectiveSocietyId,
       vendorId: formData.get('vendorId') ? parseInt(formData.get('vendorId')) : null,
       contractType: formData.get('contractType'),
       title: formData.get('title'),

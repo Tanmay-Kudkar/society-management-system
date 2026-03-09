@@ -12,8 +12,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-
 @Service
 @RequiredArgsConstructor
 public class NotificationPreferenceService {
@@ -55,11 +53,8 @@ public class NotificationPreferenceService {
     }
 
     private NotificationPreference resolvePreference(Long userId) {
-        List<NotificationPreference> prefs = preferenceRepository.findAllByUserIdOrderByIdDesc(userId);
-        if (!prefs.isEmpty()) {
-            return prefs.get(0);
-        }
-        return createDefaultPreferences(userId);
+        return preferenceRepository.findByUserId(userId)
+                .orElseGet(() -> createDefaultPreferences(userId));
     }
 
     private NotificationPreference createDefaultPreferences(Long userId) {
@@ -72,6 +67,10 @@ public class NotificationPreferenceService {
     }
 
     private NotificationPreferenceResponse mapToResponse(NotificationPreference pref) {
+        if (pref.getUser() == null || pref.getUser().getId() == null) {
+            throw new ApiException(HttpStatus.INTERNAL_SERVER_ERROR, "Invalid notification preference mapping");
+        }
+
         return NotificationPreferenceResponse.builder()
                 .id(pref.getId())
                 .userId(pref.getUser().getId())

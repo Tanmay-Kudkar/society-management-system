@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '../../context'
 import { useToast } from '../../context'
 import { transactionApi, exportApi, downloadBlob, flatApi } from '../../../../api'
@@ -11,6 +12,7 @@ import useMinLoadingTime from '../../hooks/useMinLoadingTime'
 
 export default function Transactions() {
   const { user, canManageTransactions } = useAuth()
+  const [searchParams] = useSearchParams()
   const { showToast } = useToast()
   
   // Permission check
@@ -29,18 +31,30 @@ export default function Transactions() {
   const [formCategory, setFormCategory] = useState('MAINTENANCE')
   const [formFlatId, setFormFlatId] = useState('')
 
+  const societyIdFromUrl = searchParams.get('society')
+  const parsedSocietyIdFromUrl = Number(societyIdFromUrl)
+  const scopedSocietyId = user?.role === 'MASTER_ADMIN' && Number.isInteger(parsedSocietyIdFromUrl) && parsedSocietyIdFromUrl > 0
+    ? parsedSocietyIdFromUrl
+    : null
+  const effectiveSocietyId = scopedSocietyId || user?.societyId
+
   const { data: transactions = [], isLoading, isError } = useQuery({
-    queryKey: ['transactions'],
-    queryFn: () => transactionApi.getAll().then(res => res.data),
+    queryKey: ['transactions', effectiveSocietyId],
+    queryFn: () => {
+      if (effectiveSocietyId) {
+        return transactionApi.getBySociety(effectiveSocietyId).then(res => res.data)
+      }
+      return transactionApi.getAll().then(res => res.data)
+    },
   })
 
   // Fetch flats for the society
   const { data: flats = [] } = useQuery({
-    queryKey: ['flats', user?.societyId],
-    queryFn: () => user?.societyId 
-      ? flatApi.getBySociety(user.societyId).then(res => res.data)
+    queryKey: ['flats', effectiveSocietyId],
+    queryFn: () => effectiveSocietyId
+      ? flatApi.getBySociety(effectiveSocietyId).then(res => res.data)
       : [],
-    enabled: !!user?.societyId,
+    enabled: !!effectiveSocietyId,
   })
 
   // Check if flat selector should be shown
@@ -95,7 +109,7 @@ export default function Transactions() {
     }
     
     const data = {
-      societyId: user.societyId,
+      societyId: effectiveSocietyId,
       transactionType: formType,
       paymentMode: formData.get('paymentMode'),
       amount: parseFloat(formData.get('amount')),
@@ -111,12 +125,16 @@ export default function Transactions() {
   }
 
   const handleExport = async () => {
+    if (!effectiveSocietyId) {
+      showToast('Society context is required for export', 'error')
+      return
+    }
     setIsExporting(true)
     try {
       // Export last 30 days by default
       const endDate = new Date().toISOString().split('T')[0]
       const startDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
-      const response = await exportApi.transactions(user.societyId, startDate, endDate)
+      const response = await exportApi.transactions(effectiveSocietyId, startDate, endDate)
       downloadBlob(response.data, `transactions_${endDate}.xlsx`)
     } catch (error) {
       console.error('Export failed:', error)
