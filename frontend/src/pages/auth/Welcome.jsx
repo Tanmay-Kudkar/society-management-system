@@ -387,14 +387,30 @@ export default function Welcome() {
                 key={i}
                 className={clsx(
                   'p-6 bg-[var(--bg-card)] border border-[var(--border-default)] rounded-[var(--radius-lg)] transition-all duration-300 relative group light:shadow-[var(--shadow-xs)]',
+                  'cursor-default',
+                  'hover:-translate-y-1.5 hover:shadow-[0_12px_32px_-4px_color-mix(in_srgb,var(--border-default)_60%,transparent)]',
                   featVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'
                 )}
-                style={{ transitionDelay: featVisible ? `${i * 80}ms` : '0ms', transitionTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)' }}
+                style={{
+                  transitionDelay: featVisible ? `${i * 80}ms` : '0ms',
+                  transitionTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)',
+                  '--card-color': f.color,
+                }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.borderColor = `color-mix(in srgb, ${f.color} 55%, transparent)`
+                  e.currentTarget.style.boxShadow = `0 12px 32px -4px color-mix(in srgb, ${f.color} 20%, transparent), 0 0 0 1px color-mix(in srgb, ${f.color} 30%, transparent)`
+                  e.currentTarget.style.background = `color-mix(in srgb, ${f.color} 4%, var(--bg-card))`
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.borderColor = ''
+                  e.currentTarget.style.boxShadow = ''
+                  e.currentTarget.style.background = ''
+                }}
               >
-                <div className="w-10 h-10 rounded-[var(--radius-md)] flex items-center justify-center mb-4 transition-transform duration-300 group-hover:scale-[1.08]" style={{ background: `color-mix(in srgb, ${f.color} 12%, transparent)`, color: f.color }}>
+                <div className="w-10 h-10 rounded-[var(--radius-md)] flex items-center justify-center mb-4 transition-transform duration-300 group-hover:scale-[1.15]" style={{ background: `color-mix(in srgb, ${f.color} 12%, transparent)`, color: f.color }}>
                   <f.icon size={22} />
                 </div>
-                <h3 className="text-[0.9375rem] font-semibold text-[var(--text-primary)] mb-2">{f.title}</h3>
+                <h3 className="text-[0.9375rem] font-semibold text-[var(--text-primary)] mb-2 transition-colors duration-200 group-hover:text-[var(--accent-primary)]">{f.title}</h3>
                 <p className="text-[0.8125rem] leading-[1.6] text-[var(--text-secondary)]">{f.desc}</p>
               </div>
             ))}
