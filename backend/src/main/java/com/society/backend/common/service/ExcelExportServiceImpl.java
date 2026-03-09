@@ -60,19 +60,26 @@ public class ExcelExportServiceImpl implements ExcelExportService {
             // Title row
             Row titleRow = sheet.createRow(0);
             Cell titleCell = titleRow.createCell(0);
-            titleCell.setCellValue("Transaction Report (" + startDate + " to " + endDate + ")");
+            String titleText;
+            if (start.getYear() <= 1947 && end.getYear() >= 3000) {
+                titleText = "Transaction Report (All Transactions)";
+            } else {
+                titleText = "Transaction Report (" + startDate + " to " + endDate + ")";
+            }
+            titleCell.setCellValue(titleText);
             CellStyle titleStyle = workbook.createCellStyle();
             Font titleFont = workbook.createFont();
             titleFont.setBold(true);
             titleFont.setFontHeightInPoints((short) 14);
             titleStyle.setFont(titleFont);
             titleCell.setCellStyle(titleStyle);
-            sheet.addMergedRegion(new CellRangeAddress(0, 0, 0, 7));
+            sheet.addMergedRegion(new CellRangeAddress(0, 0, 0, 17));
 
             // Headers
             Row headerRow = sheet.createRow(2);
             String[] headers = { "ID", "Date", "Type", "Category", "Payment Mode", "Amount", "Reference",
-                    "Description" };
+                    "Cheque #", "Bank Name", "UPI ID", "Transaction ID / UTR", "Card Type", "Card Last 4",
+                    "Payment Month", "Late Fee", "Discount", "Tax", "Unit/Flat", "Receipt #", "Invoice #", "Description" };
             for (int i = 0; i < headers.length; i++) {
                 Cell cell = headerRow.createCell(i);
                 cell.setCellValue(headers[i]);
@@ -94,14 +101,132 @@ public class ExcelExportServiceImpl implements ExcelExportService {
 
                 row.createCell(2).setCellValue(t.getTransactionType());
                 row.createCell(3).setCellValue(t.getCategory());
-                row.createCell(4).setCellValue(t.getPaymentMode());
+
+                String mode = t.getPaymentMode();
+                row.createCell(4).setCellValue(mode);
 
                 Cell amountCell = row.createCell(5);
                 amountCell.setCellValue(t.getAmount().doubleValue());
                 amountCell.setCellStyle(currencyStyle);
 
-                row.createCell(6).setCellValue(t.getReferenceNumber() != null ? t.getReferenceNumber() : "");
-                row.createCell(7).setCellValue(t.getDescription() != null ? t.getDescription() : "");
+                // Reference # — required for CHEQUE & ONLINE
+                if (t.getReferenceNumber() != null && !t.getReferenceNumber().isBlank()) {
+                    row.createCell(6).setCellValue(t.getReferenceNumber());
+                } else if ("CASH".equals(mode)) {
+                    row.createCell(6).setCellValue("N/A - Cash payment");
+                } else {
+                    row.createCell(6).setCellValue("Missing");
+                }
+
+                // Cheque # — only relevant for CHEQUE mode
+                if (t.getChequeNumber() != null && !t.getChequeNumber().isBlank()) {
+                    row.createCell(7).setCellValue(t.getChequeNumber());
+                } else if ("CHEQUE".equals(mode)) {
+                    row.createCell(7).setCellValue("Missing");
+                } else {
+                    row.createCell(7).setCellValue("N/A - Not a cheque payment");
+                }
+
+                // Bank Name — relevant for CHEQUE, BANK_TRANSFER, NET_BANKING, cards
+                if (t.getBankName() != null && !t.getBankName().isBlank()) {
+                    row.createCell(8).setCellValue(t.getBankName());
+                } else if ("CASH".equals(mode) || "UPI".equals(mode) || "WALLET".equals(mode)) {
+                    row.createCell(8).setCellValue("N/A");
+                } else {
+                    row.createCell(8).setCellValue("Missing");
+                }
+
+                // UPI ID — relevant for UPI mode
+                if (t.getUpiId() != null && !t.getUpiId().isBlank()) {
+                    row.createCell(9).setCellValue(t.getUpiId());
+                } else if ("UPI".equals(mode)) {
+                    row.createCell(9).setCellValue("Missing");
+                } else {
+                    row.createCell(9).setCellValue("N/A");
+                }
+
+                // Transaction ID / UTR — relevant for UPI, BANK_TRANSFER, cards, NET_BANKING, WALLET
+                if (t.getUtrNumber() != null && !t.getUtrNumber().isBlank()) {
+                    row.createCell(10).setCellValue(t.getUtrNumber());
+                } else if ("CASH".equals(mode) || "CHEQUE".equals(mode)) {
+                    row.createCell(10).setCellValue("N/A");
+                } else {
+                    row.createCell(10).setCellValue("Missing");
+                }
+
+                // Card Type — relevant for CREDIT_CARD, DEBIT_CARD
+                if (t.getCardType() != null && !t.getCardType().isBlank()) {
+                    row.createCell(11).setCellValue(t.getCardType());
+                } else if ("CREDIT_CARD".equals(mode) || "DEBIT_CARD".equals(mode)) {
+                    row.createCell(11).setCellValue("Missing");
+                } else {
+                    row.createCell(11).setCellValue("N/A");
+                }
+
+                // Card Last 4 — relevant for CREDIT_CARD, DEBIT_CARD
+                if (t.getCardLastFourDigits() != null && !t.getCardLastFourDigits().isBlank()) {
+                    row.createCell(12).setCellValue(t.getCardLastFourDigits());
+                } else if ("CREDIT_CARD".equals(mode) || "DEBIT_CARD".equals(mode)) {
+                    row.createCell(12).setCellValue("Missing");
+                } else {
+                    row.createCell(12).setCellValue("N/A");
+                }
+
+                // Payment Month — relevant for MAINTENANCE category
+                if (t.getPaymentMonth() != null && !t.getPaymentMonth().isBlank()) {
+                    row.createCell(13).setCellValue(t.getPaymentMonth());
+                } else if ("MAINTENANCE".equals(t.getCategory())) {
+                    row.createCell(13).setCellValue("Missing");
+                } else {
+                    row.createCell(13).setCellValue("N/A");
+                }
+
+                // Late Fee
+                Cell lateFeeCell = row.createCell(14);
+                if (t.getLateFee() != null && t.getLateFee().compareTo(BigDecimal.ZERO) > 0) {
+                    lateFeeCell.setCellValue(t.getLateFee().doubleValue());
+                    lateFeeCell.setCellStyle(currencyStyle);
+                } else {
+                    lateFeeCell.setCellValue(0);
+                    lateFeeCell.setCellStyle(currencyStyle);
+                }
+
+                // Discount
+                Cell discountCell = row.createCell(15);
+                if (t.getDiscount() != null && t.getDiscount().compareTo(BigDecimal.ZERO) > 0) {
+                    discountCell.setCellValue(t.getDiscount().doubleValue());
+                    discountCell.setCellStyle(currencyStyle);
+                } else {
+                    discountCell.setCellValue(0);
+                    discountCell.setCellStyle(currencyStyle);
+                }
+
+                // Tax Amount
+                Cell taxCell = row.createCell(16);
+                if (t.getTaxAmount() != null && t.getTaxAmount().compareTo(BigDecimal.ZERO) > 0) {
+                    taxCell.setCellValue(t.getTaxAmount().doubleValue());
+                    taxCell.setCellStyle(currencyStyle);
+                } else {
+                    taxCell.setCellValue(0);
+                    taxCell.setCellStyle(currencyStyle);
+                }
+
+                // Unit/Flat — relevant for MAINTENANCE income
+                if (t.getFlat() != null && t.getFlat().getFlatNumber() != null) {
+                    row.createCell(17).setCellValue(t.getFlat().getFlatNumber());
+                } else if ("MAINTENANCE".equals(t.getCategory()) && "INCOME".equals(t.getTransactionType())) {
+                    row.createCell(17).setCellValue("Missing - Unit not linked");
+                } else {
+                    row.createCell(17).setCellValue("N/A");
+                }
+
+                // Receipt #
+                row.createCell(18).setCellValue(t.getReceiptNumber() != null && !t.getReceiptNumber().isBlank() ? t.getReceiptNumber() : "");
+
+                // Invoice #
+                row.createCell(19).setCellValue(t.getInvoiceNumber() != null && !t.getInvoiceNumber().isBlank() ? t.getInvoiceNumber() : "");
+
+                row.createCell(20).setCellValue(t.getDescription() != null && !t.getDescription().isBlank() ? t.getDescription() : "No description provided");
 
                 if ("INCOME".equals(t.getTransactionType())) {
                     totalIncome = totalIncome.add(t.getAmount());

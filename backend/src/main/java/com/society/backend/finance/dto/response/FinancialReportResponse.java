@@ -59,6 +59,16 @@ public class FinancialReportResponse {
     private BigDecimal billsCollectedAmount;
     private BigDecimal billsPendingAmount;
 
+    // Period statistics (from new transaction fields)
+    private Integer transactionCount;
+    private BigDecimal lateFeeCollected;
+    private BigDecimal discountGiven;
+    private BigDecimal taxCollected;
+
+    // All-time outstanding dues (maintenance bills unpaid)
+    private Integer outstandingDuesCount;
+    private BigDecimal outstandingDuesAmount;
+
     @Data
     @Builder
     @NoArgsConstructor

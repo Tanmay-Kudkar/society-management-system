@@ -53,6 +53,39 @@ public class Transaction {
     @Column(name = "cheque_date")
     private LocalDate chequeDate;
 
+    // UPI fields
+    @Column(name = "upi_id")
+    private String upiId;
+
+    @Column(name = "utr_number")
+    private String utrNumber; // Unified Transaction Reference / Transaction ID
+
+    // Card fields
+    @Column(name = "card_type")
+    private String cardType; // CREDIT, DEBIT
+
+    @Column(name = "card_last_four_digits", length = 4)
+    private String cardLastFourDigits;
+
+    // Accounting fields
+    @Column(name = "payment_month", length = 7)
+    private String paymentMonth; // YYYY-MM for maintenance
+
+    @Column(name = "late_fee")
+    private BigDecimal lateFee;
+
+    @Column(name = "discount")
+    private BigDecimal discount;
+
+    @Column(name = "tax_amount")
+    private BigDecimal taxAmount;
+
+    @Column(name = "receipt_number")
+    private String receiptNumber;
+
+    @Column(name = "invoice_number")
+    private String invoiceNumber;
+
     @Column(name = "related_bill_id")
     private Long relatedBillId;
 

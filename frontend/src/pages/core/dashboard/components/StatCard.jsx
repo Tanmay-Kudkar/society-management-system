@@ -25,13 +25,18 @@ const StatCard = memo(function StatCard({
   variant = "neutral",
   subtext,
   delay = 0,
+  onClick,
 }) {
   const CardIcon = icon;
   const iconToneClass = statIconToneClasses[variant] || statIconToneClasses.neutral;
 
   return (
     <article
-      className="animate-slide-up rounded-xl border border-[var(--border-default)] bg-[var(--bg-secondary)] p-5 shadow-sm transition-all duration-200 hover:border-[var(--border-strong)] hover:shadow-md dark:border-[#1a1a1a] dark:bg-[var(--bg-secondary)] dark:hover:border-[rgba(47,129,247,0.2)] dark:hover:shadow-[0_0_24px_rgba(47,129,247,0.1),0_2px_8px_rgba(0,0,0,0.3)]"
+      onClick={onClick}
+      role={onClick ? "button" : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      onKeyDown={onClick ? (e) => { if (e.key === "Enter" || e.key === " ") onClick(); } : undefined}
+      className={`animate-slide-up rounded-xl border border-[var(--border-default)] bg-[var(--bg-secondary)] p-5 shadow-sm transition-all duration-200 hover:border-[var(--border-strong)] hover:shadow-md dark:border-[#1a1a1a] dark:bg-[var(--bg-secondary)] dark:hover:border-[rgba(47,129,247,0.2)] dark:hover:shadow-[0_0_24px_rgba(47,129,247,0.1),0_2px_8px_rgba(0,0,0,0.3)]${onClick ? ' cursor-pointer' : ''}`}
       style={{ animationDelay: `${delay}ms` }}
     >
       <div className="flex items-start justify-between gap-4">

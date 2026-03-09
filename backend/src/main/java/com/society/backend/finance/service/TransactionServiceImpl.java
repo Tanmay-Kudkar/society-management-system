@@ -64,8 +64,19 @@ public class TransactionServiceImpl implements TransactionService {
         transaction.setChequeNumber(request.getChequeNumber());
         transaction.setBankName(request.getBankName());
         transaction.setChequeDate(request.getChequeDate());
+        transaction.setUpiId(request.getUpiId());
+        transaction.setUtrNumber(request.getUtrNumber());
+        transaction.setCardType(request.getCardType());
+        transaction.setCardLastFourDigits(request.getCardLastFourDigits());
+        transaction.setPaymentMonth(request.getPaymentMonth());
+        transaction.setLateFee(request.getLateFee());
+        transaction.setDiscount(request.getDiscount());
+        transaction.setTaxAmount(request.getTaxAmount());
+        transaction.setReceiptNumber(request.getReceiptNumber());
+        transaction.setInvoiceNumber(request.getInvoiceNumber());
         transaction.setRelatedBillId(request.getRelatedBillId());
         transaction.setRelatedBillType(request.getRelatedBillType());
+        transaction.setCreatedBy(userId);
         
         // Set flat if provided
         if (request.getFlatId() != null) {
@@ -100,6 +111,16 @@ public class TransactionServiceImpl implements TransactionService {
         transaction.setChequeNumber(request.getChequeNumber());
         transaction.setBankName(request.getBankName());
         transaction.setChequeDate(request.getChequeDate());
+        transaction.setUpiId(request.getUpiId());
+        transaction.setUtrNumber(request.getUtrNumber());
+        transaction.setCardType(request.getCardType());
+        transaction.setCardLastFourDigits(request.getCardLastFourDigits());
+        transaction.setPaymentMonth(request.getPaymentMonth());
+        transaction.setLateFee(request.getLateFee());
+        transaction.setDiscount(request.getDiscount());
+        transaction.setTaxAmount(request.getTaxAmount());
+        transaction.setReceiptNumber(request.getReceiptNumber());
+        transaction.setInvoiceNumber(request.getInvoiceNumber());
         transaction.setRelatedBillId(request.getRelatedBillId());
         transaction.setRelatedBillType(request.getRelatedBillType());
         
@@ -217,6 +238,26 @@ public class TransactionServiceImpl implements TransactionService {
             transaction.setBankName(request.getBankName());
         if (request.getChequeDate() != null)
             transaction.setChequeDate(request.getChequeDate());
+        if (request.getUpiId() != null)
+            transaction.setUpiId(request.getUpiId());
+        if (request.getUtrNumber() != null)
+            transaction.setUtrNumber(request.getUtrNumber());
+        if (request.getCardType() != null)
+            transaction.setCardType(request.getCardType());
+        if (request.getCardLastFourDigits() != null)
+            transaction.setCardLastFourDigits(request.getCardLastFourDigits());
+        if (request.getPaymentMonth() != null)
+            transaction.setPaymentMonth(request.getPaymentMonth());
+        if (request.getLateFee() != null)
+            transaction.setLateFee(request.getLateFee());
+        if (request.getDiscount() != null)
+            transaction.setDiscount(request.getDiscount());
+        if (request.getTaxAmount() != null)
+            transaction.setTaxAmount(request.getTaxAmount());
+        if (request.getReceiptNumber() != null)
+            transaction.setReceiptNumber(request.getReceiptNumber());
+        if (request.getInvoiceNumber() != null)
+            transaction.setInvoiceNumber(request.getInvoiceNumber());
         
         // Update flat if provided
         if (request.getFlatId() != null) {
@@ -232,7 +273,7 @@ public class TransactionServiceImpl implements TransactionService {
     @Override
     @Transactional
     public void delete(Long id, Long userId) {
-        roleService.requireMasterAdmin(userId);
+        roleService.requireAdminOrCommittee(userId);
 
         if (!transactionRepository.existsById(id)) {
             throw new ApiException(HttpStatus.NOT_FOUND, "Transaction not found");
@@ -280,12 +321,23 @@ public class TransactionServiceImpl implements TransactionService {
         response.setChequeNumber(transaction.getChequeNumber());
         response.setBankName(transaction.getBankName());
         response.setChequeDate(transaction.getChequeDate());
+        response.setUpiId(transaction.getUpiId());
+        response.setUtrNumber(transaction.getUtrNumber());
+        response.setCardType(transaction.getCardType());
+        response.setCardLastFourDigits(transaction.getCardLastFourDigits());
+        response.setPaymentMonth(transaction.getPaymentMonth());
+        response.setLateFee(transaction.getLateFee());
+        response.setDiscount(transaction.getDiscount());
+        response.setTaxAmount(transaction.getTaxAmount());
+        response.setReceiptNumber(transaction.getReceiptNumber());
+        response.setInvoiceNumber(transaction.getInvoiceNumber());
         response.setRelatedBillId(transaction.getRelatedBillId());
         response.setRelatedBillType(transaction.getRelatedBillType());
         if (transaction.getFlat() != null) {
             response.setFlatId(transaction.getFlat().getId());
             response.setFlatNumber(transaction.getFlat().getFlatNumber());
         }
+        response.setCreatedBy(transaction.getCreatedBy());
         response.setCreatedAt(transaction.getCreatedAt());
         return response;
     }

@@ -23,6 +23,8 @@ public interface MaintenanceBillService {
 
     List<MaintenanceBillResponse> getAll();
 
+    List<MaintenanceBillResponse> getBySociety(Long societyId);
+
     MaintenanceBillResponse update(Long id, MaintenanceBillRequest request, Long userId);
 
     MaintenanceBillResponse recordPayment(Long id, BigDecimal amount, String paymentMode, String referenceNumber,
