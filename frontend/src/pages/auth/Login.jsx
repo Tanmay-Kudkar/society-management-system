@@ -17,6 +17,7 @@ export default function Login() {
   const [loading, setLoading] = useState(false)
   const [isLoaded, setIsLoaded] = useState(false)
   const [fieldErrors, setFieldErrors] = useState({})
+  const [shake, setShake] = useState(false)
   const { login, user, loading: authLoading } = useAuth()
   const { theme, setTheme, resetToSystemTheme, isManual } = useTheme()
   const navigate = useNavigate()
@@ -64,6 +65,8 @@ export default function Login() {
     } else {
       setError(result.error)
       setFieldErrors({ password: 'Invalid credentials. Please verify and try again.' })
+      setShake(true)
+      setTimeout(() => setShake(false), 600)
     }
     setLoading(false)
   }
@@ -141,7 +144,7 @@ export default function Login() {
                 </div>
               )}
 
-              <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+              <form onSubmit={handleSubmit} className={`flex flex-col gap-5 ${shake ? 'login-form-shake' : ''}`}>
                 <div className="flex flex-col gap-2">
                   <label className="text-sm font-semibold text-[color-mix(in_srgb,var(--text-primary)_88%,#e2e8f0_12%)]">Email address</label>
                   <div className={`flex min-h-[2.95rem] items-center rounded-[10px] border bg-[color-mix(in_srgb,var(--bg-primary)_92%,#111827_8%)] transition ${fieldErrors.email ? 'border-red-500 shadow-[0_0_0_1px_color-mix(in_srgb,#ef4444_35%,transparent)]' : 'border-[color-mix(in_srgb,var(--border-default)_82%,#334155_18%)] focus-within:border-[color-mix(in_srgb,var(--accent-primary)_76%,#1e40af_24%)] focus-within:bg-[color-mix(in_srgb,var(--bg-primary)_80%,var(--accent-primary)_20%)] focus-within:shadow-[0_0_0_3px_color-mix(in_srgb,var(--accent-primary)_20%,transparent)]'}`}>
