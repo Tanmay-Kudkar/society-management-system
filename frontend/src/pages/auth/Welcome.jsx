@@ -138,7 +138,7 @@ export default function Welcome() {
   }
 
   return (
-    <div className="min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)] overflow-x-hidden">
+    <div className="welcome-page">
       {/* Nav */}
       <nav className={clsx(
         'welcome-anim fixed top-0 left-0 right-0 z-[100] py-3 px-4 flex flex-col items-stretch backdrop-blur-[8px] transition-all duration-200 border-b border-transparent',
