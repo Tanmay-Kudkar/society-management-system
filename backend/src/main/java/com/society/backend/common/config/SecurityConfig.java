@@ -198,7 +198,12 @@ public class SecurityConfig {
                                                 .requestMatchers("/complaints/**").authenticated()
 
                                                 // Any other request requires authentication
-                                                .anyRequest().authenticated())
+                                                // Explicitly deny VISITOR and VENDOR from general endpoints
+                                                .anyRequest().hasAnyRole(
+                                                                "MASTER_ADMIN", "SOCIETY_ADMIN",
+                                                                "CHAIRMAN", "SECRETARY", "TREASURER",
+                                                                "COMMITTEE", "MANAGER", "EMPLOYEE",
+                                                                "MEMBER", "TENANT"))
                                 .authenticationProvider(authenticationProvider())
                                                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 

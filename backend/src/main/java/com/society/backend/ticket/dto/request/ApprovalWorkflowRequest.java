@@ -5,6 +5,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 
+import jakarta.validation.Valid;
 import java.math.BigDecimal;
 import java.util.List;
 
@@ -25,5 +26,6 @@ public class ApprovalWorkflowRequest {
     private BigDecimal minAmount;
     private BigDecimal maxAmount;
     private Boolean isActive = true;
+    @Valid
     private List<WorkflowStepRequest> steps;
 }

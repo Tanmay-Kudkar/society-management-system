@@ -11,9 +11,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-
-import com.society.backend.society.entity.Society;
-import com.society.backend.user.entity.User;
 @RestController
 @RequestMapping("/approvals")
 @RequiredArgsConstructor

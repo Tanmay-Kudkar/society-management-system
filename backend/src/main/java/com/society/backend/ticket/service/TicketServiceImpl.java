@@ -81,21 +81,39 @@ public class TicketServiceImpl implements TicketService {
 
     @Override
     public List<TicketResponse> getByRaisedBy(Long userId) {
+        var currentUser = roleService.getCurrentUser();
         return ticketRepository.findByRaisedById(userId).stream()
+                .filter(t -> {
+                    if (currentUser.getRole() == com.society.backend.user.entity.Role.MASTER_ADMIN) return true;
+                    return t.getSociety() != null && currentUser.getSociety() != null
+                            && t.getSociety().getId().equals(currentUser.getSociety().getId());
+                })
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
 
     @Override
     public List<TicketResponse> getByAssignedTo(Long userId) {
+        var currentUser = roleService.getCurrentUser();
         return ticketRepository.findByAssignedToId(userId).stream()
+                .filter(t -> {
+                    if (currentUser.getRole() == com.society.backend.user.entity.Role.MASTER_ADMIN) return true;
+                    return t.getSociety() != null && currentUser.getSociety() != null
+                            && t.getSociety().getId().equals(currentUser.getSociety().getId());
+                })
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
 
     @Override
     public List<TicketResponse> getByStatus(String status) {
+        var currentUser = roleService.getCurrentUser();
         return ticketRepository.findByStatus(status).stream()
+                .filter(t -> {
+                    if (currentUser.getRole() == com.society.backend.user.entity.Role.MASTER_ADMIN) return true;
+                    return t.getSociety() != null && currentUser.getSociety() != null
+                            && t.getSociety().getId().equals(currentUser.getSociety().getId());
+                })
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
@@ -127,6 +145,10 @@ public class TicketServiceImpl implements TicketService {
         Ticket ticket = ticketRepository.findById(id)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Ticket not found"));
 
+        if (ticket.getSociety() != null) {
+            roleService.enforceSocietyScope(roleService.getUser(userId), ticket.getSociety().getId());
+        }
+
         if (request.getType() != null)
             ticket.setType(request.getType());
         if (request.getTitle() != null)
@@ -150,6 +172,10 @@ public class TicketServiceImpl implements TicketService {
         Ticket ticket = ticketRepository.findById(id)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Ticket not found"));
 
+        if (ticket.getSociety() != null) {
+            roleService.enforceSocietyScope(roleService.getUser(userId), ticket.getSociety().getId());
+        }
+
         ticket.setStatus(status);
         if (resolution != null)
             ticket.setResolution(resolution);
@@ -170,6 +196,10 @@ public class TicketServiceImpl implements TicketService {
         Ticket ticket = ticketRepository.findById(id)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Ticket not found"));
 
+        if (ticket.getSociety() != null) {
+            roleService.enforceSocietyScope(roleService.getUser(userId), ticket.getSociety().getId());
+        }
+
         User assignedTo = userRepository.findById(assignedToId)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Assigned user not found"));
 
@@ -187,6 +217,10 @@ public class TicketServiceImpl implements TicketService {
 
         Ticket ticket = ticketRepository.findById(id)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Ticket not found"));
+
+        if (ticket.getSociety() != null) {
+            roleService.enforceSocietyScope(roleService.getUser(userId), ticket.getSociety().getId());
+        }
 
         // Validate progress is between 0 and 100
         if (progress < 0)
@@ -213,16 +247,25 @@ public class TicketServiceImpl implements TicketService {
     public void delete(Long id, Long userId) {
         roleService.requireAdminOrCommittee(userId);
 
-        if (!ticketRepository.existsById(id)) {
-            throw new ApiException(HttpStatus.NOT_FOUND, "Ticket not found");
+        Ticket ticket = ticketRepository.findById(id)
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Ticket not found"));
+        if (ticket.getSociety() != null) {
+            roleService.enforceSocietyScope(roleService.getUser(userId), ticket.getSociety().getId());
         }
         ticketRepository.deleteById(id);
     }
 
     @Override
     public List<TicketResponse> getOverdue() {
+        var currentUser = roleService.getCurrentUser();
         return ticketRepository.findAll().stream()
                 .filter(ticket -> {
+                    if (currentUser.getRole() != com.society.backend.user.entity.Role.MASTER_ADMIN) {
+                        if (ticket.getSociety() == null || currentUser.getSociety() == null
+                                || !ticket.getSociety().getId().equals(currentUser.getSociety().getId())) {
+                            return false;
+                        }
+                    }
                     ticket.updateOverdueStatus();
                     return ticket.getIsOverdue();
                 })
@@ -243,8 +286,15 @@ public class TicketServiceImpl implements TicketService {
 
     @Override
     public Long getOverdueCount() {
+        var currentUser = roleService.getCurrentUser();
         return ticketRepository.findAll().stream()
                 .filter(ticket -> {
+                    if (currentUser.getRole() != com.society.backend.user.entity.Role.MASTER_ADMIN) {
+                        if (ticket.getSociety() == null || currentUser.getSociety() == null
+                                || !ticket.getSociety().getId().equals(currentUser.getSociety().getId())) {
+                            return false;
+                        }
+                    }
                     ticket.updateOverdueStatus();
                     return ticket.getIsOverdue();
                 })

@@ -347,7 +347,7 @@ public class VisitorServiceImpl implements VisitorService {
         response.setStatus(visitor.getStatus());
         response.setIsPreApproved(visitor.getIsPreApproved());
         response.setApprovalCode(visitor.getApprovalCode());
-        response.setOtpCode(visitor.getOtpCode());
+        // OTP code intentionally excluded from response to prevent leaking secrets
         response.setOtpExpiresAt(visitor.getOtpExpiresAt());
         response.setOtpVerifiedAt(visitor.getOtpVerifiedAt());
         response.setOtpAttempts(visitor.getOtpAttempts());

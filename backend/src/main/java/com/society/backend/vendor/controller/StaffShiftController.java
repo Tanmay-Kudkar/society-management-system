@@ -13,10 +13,11 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
-import com.society.backend.society.entity.Society;
+import org.springframework.security.access.prepost.PreAuthorize;
 @RestController
 @RequestMapping("/staff-shifts")
 @RequiredArgsConstructor
+@PreAuthorize("isAuthenticated()")
 public class StaffShiftController {
 
     private final StaffShiftService service;

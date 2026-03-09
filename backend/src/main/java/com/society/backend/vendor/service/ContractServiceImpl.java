@@ -82,13 +82,20 @@ public class ContractServiceImpl implements ContractService {
 
     @Override
     public List<ContractResponse> getByContractType(String contractType) {
+        var currentUser = roleService.getCurrentUser();
         return contractRepository.findByContractType(contractType).stream()
+                .filter(c -> {
+                    if (currentUser.getRole() == com.society.backend.user.entity.Role.MASTER_ADMIN) return true;
+                    return c.getSociety() != null && currentUser.getSociety() != null
+                            && c.getSociety().getId().equals(currentUser.getSociety().getId());
+                })
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
 
     @Override
     public List<ContractResponse> getExpiringSoon(Long societyId, int days) {
+        roleService.enforceSocietyScope(roleService.getCurrentUser(), societyId);
         LocalDate targetDate = LocalDate.now().plusDays(days);
         return contractRepository.findExpiringSoonBySociety(societyId, targetDate).stream()
                 .map(this::mapToResponse)
@@ -121,6 +128,10 @@ public class ContractServiceImpl implements ContractService {
 
         Contract contract = contractRepository.findById(id)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Contract not found"));
+
+        if (contract.getSociety() != null) {
+            roleService.enforceSocietyScope(roleService.getUser(userId), contract.getSociety().getId());
+        }
 
         if (request.getVendorId() != null) {
             Vendor vendor = vendorRepository.findById(request.getVendorId())
@@ -155,6 +166,10 @@ public class ContractServiceImpl implements ContractService {
         Contract contract = contractRepository.findById(id)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Contract not found"));
 
+        if (contract.getSociety() != null) {
+            roleService.enforceSocietyScope(roleService.getUser(userId), contract.getSociety().getId());
+        }
+
         contract.setIsActive(false);
         Contract saved = contractRepository.save(contract);
         return mapToResponse(saved);
@@ -165,8 +180,10 @@ public class ContractServiceImpl implements ContractService {
     public void delete(Long id, Long userId) {
         roleService.requireAdminOrCommittee(userId);
 
-        if (!contractRepository.existsById(id)) {
-            throw new ApiException(HttpStatus.NOT_FOUND, "Contract not found");
+        Contract contract = contractRepository.findById(id)
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Contract not found"));
+        if (contract.getSociety() != null) {
+            roleService.enforceSocietyScope(roleService.getUser(userId), contract.getSociety().getId());
         }
         contractRepository.deleteById(id);
     }

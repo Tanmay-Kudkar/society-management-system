@@ -15,8 +15,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
-
-import com.society.backend.flat.entity.Flat;
 @RestController
 @RequestMapping("/vehicles")
 @RequiredArgsConstructor

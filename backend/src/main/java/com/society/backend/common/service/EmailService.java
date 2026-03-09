@@ -81,6 +81,7 @@ public class EmailService {
      */
     public void sendPasswordResetEmail(String toEmail, String userName, String resetToken) {
         String resetUrl = frontendUrl + "/reset-password?token=" + resetToken;
+        String safeUserName = escapeHtml(userName);
         String subject = appName + " \u2014 Password Reset Request";
 
         String htmlContent = String.format(
@@ -126,7 +127,7 @@ public class EmailService {
                         </body>
                         </html>
                         """,
-                appName, userName, resetUrl, resetUrl, appName);
+                appName, safeUserName, resetUrl, resetUrl, appName);
 
         sendHtmlEmail(toEmail, subject, htmlContent);
     }
@@ -355,5 +356,14 @@ public class EmailService {
                 appName);
 
         sendSimpleEmail(societyAdminEmail, subject, body);
+    }
+
+    private static String escapeHtml(String input) {
+        if (input == null) return "";
+        return input.replace("&", "&amp;")
+                    .replace("<", "&lt;")
+                    .replace(">", "&gt;")
+                    .replace("\"", "&quot;")
+                    .replace("'", "&#39;");
     }
 }

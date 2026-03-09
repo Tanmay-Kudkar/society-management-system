@@ -102,8 +102,9 @@ public class PaymentController {
     public ResponseEntity<Map<String, String>> handleWebhook(
             @RequestBody String payload,
             @RequestHeader("X-Razorpay-Signature") String signature) {
-        // TODO: Implement webhook verification and handling
-        // This is for handling async events like payment.captured, payment.failed, etc.
-        return ResponseEntity.ok(Map.of("status", "received"));
+        // TODO: Implement webhook signature verification and event handling
+        // Until implemented, reject with 501 to prevent unverified event processing
+        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED)
+                .body(Map.of("status", "not_implemented", "message", "Webhook handler not yet available"));
     }
 }

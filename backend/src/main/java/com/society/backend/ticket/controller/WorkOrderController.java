@@ -12,8 +12,6 @@ import org.springframework.web.bind.annotation.*;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
-
-import com.society.backend.society.entity.Society;
 @RestController
 @RequestMapping("/work-orders")
 @PreAuthorize("isAuthenticated()")

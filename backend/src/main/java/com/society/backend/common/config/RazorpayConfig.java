@@ -8,17 +8,23 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-@Getter
 public class RazorpayConfig {
 
+    @Getter
     @Value("${razorpay.key.id}")
     private String keyId;
 
     @Value("${razorpay.key.secret}")
     private String keySecret;
 
+    @Getter
     @Value("${razorpay.currency:INR}")
     private String currency;
+
+    /** Internal access only — not exposed via class-level @Getter to prevent accidental serialization */
+    public String getKeySecret() {
+        return keySecret;
+    }
 
     @Bean
     public RazorpayClient razorpayClient() throws RazorpayException {

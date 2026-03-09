@@ -68,12 +68,10 @@ public class ReminderScheduler {
         if (society == null)
             return masterAdminEmail;
 
-        return userRepository.findAll().stream()
-                .filter(u -> u.getRole() == Role.SOCIETY_ADMIN)
-                .filter(u -> u.getSociety() != null && u.getSociety().getId().equals(society.getId()))
+        return userRepository.findBySocietyIdAndRole(society.getId(), Role.SOCIETY_ADMIN).stream()
                 .map(User::getEmail)
                 .findFirst()
-                .orElse(masterAdminEmail); // Fallback to master admin
+                .orElse(masterAdminEmail);
     }
 
     /**
@@ -84,8 +82,7 @@ public class ReminderScheduler {
         if (society == null)
             return List.of(masterAdminEmail);
 
-        return userRepository.findAll().stream()
-                .filter(u -> u.getSociety() != null && u.getSociety().getId().equals(society.getId()))
+        return userRepository.findBySocietyId(society.getId()).stream()
                 .filter(u -> u.getRole() == Role.SOCIETY_ADMIN ||
                         u.getRole() == Role.CHAIRMAN ||
                         u.getRole() == Role.SECRETARY ||
@@ -129,10 +126,11 @@ public class ReminderScheduler {
         logger.info("Running contract expiry check...");
 
         LocalDate today = LocalDate.now();
-        List<Contract> contracts = contractRepository.findAll();
+        LocalDate reminderDeadline = today.plusDays(contractReminderDays);
+        List<Contract> contracts = contractRepository.findExpiringSoon(reminderDeadline);
 
         for (Contract contract : contracts) {
-            if (contract.getIsActive() && contract.getEndDate() != null) {
+            if (contract.getEndDate() != null) {
                 long daysUntilExpiry = ChronoUnit.DAYS.between(today, contract.getEndDate());
 
                 // Send reminder if within reminder window
@@ -180,10 +178,10 @@ public class ReminderScheduler {
         logger.info("Running tenant agreement expiry check...");
 
         LocalDate today = LocalDate.now();
-        List<Tenant> tenants = tenantRepository.findAll();
+        List<Tenant> tenants = tenantRepository.findByIsActiveTrue();
 
         for (Tenant tenant : tenants) {
-            if (tenant.getIsActive() && tenant.getAgreementEndDate() != null) {
+            if (tenant.getAgreementEndDate() != null) {
                 long daysUntilExpiry = ChronoUnit.DAYS.between(today, tenant.getAgreementEndDate());
 
                 if (daysUntilExpiry > 0 && daysUntilExpiry <= tenantReminderDays) {
@@ -249,9 +247,8 @@ public class ReminderScheduler {
         LocalDate today = LocalDate.now();
         LocalDate reminderDate = today.plusDays(billReminderDays);
 
-        List<MaintenanceBill> unpaidBills = maintenanceBillRepository.findAll()
+        List<MaintenanceBill> unpaidBills = maintenanceBillRepository.findByStatus("PENDING")
                 .stream()
-                .filter(bill -> !"PAID".equals(bill.getStatus()))
                 .filter(bill -> bill.getDueDate() != null && !bill.getDueDate().isBefore(today))
                 .filter(bill -> bill.getDueDate().isBefore(reminderDate) || bill.getDueDate().isEqual(reminderDate))
                 .toList();
@@ -334,28 +331,19 @@ public class ReminderScheduler {
         for (Society society : societies) {
             Long societyId = society.getId();
 
-            long totalContracts = contractRepository.findAll().stream()
-                    .filter(c -> c.getSociety() != null && c.getSociety().getId().equals(societyId))
-                    .count();
-            long activeContracts = contractRepository.findAll().stream()
-                    .filter(c -> c.getSociety() != null && c.getSociety().getId().equals(societyId))
+            long totalContracts = contractRepository.findBySocietyId(societyId).size();
+            long activeContracts = contractRepository.findBySocietyId(societyId).stream()
                     .filter(c -> c.getIsActive() && !c.isExpired())
                     .count();
 
-            long totalTenants = tenantRepository.findAll().stream()
-                    .filter(t -> t.getFlat() != null && t.getFlat().getSociety() != null
-                            && t.getFlat().getSociety().getId().equals(societyId))
-                    .count();
-            long activeTenants = tenantRepository.findAll().stream()
-                    .filter(t -> t.getFlat() != null && t.getFlat().getSociety() != null
-                            && t.getFlat().getSociety().getId().equals(societyId))
+            long totalTenants = tenantRepository.findBySocietyId(societyId).size();
+            long activeTenants = tenantRepository.findBySocietyId(societyId).stream()
                     .filter(Tenant::getIsActive)
                     .count();
 
-            long unpaidBills = maintenanceBillRepository.findAll().stream()
+            long unpaidBills = maintenanceBillRepository.findByStatus("PENDING").stream()
                     .filter(b -> b.getFlat() != null && b.getFlat().getSociety() != null
                             && b.getFlat().getSociety().getId().equals(societyId))
-                    .filter(b -> !"PAID".equals(b.getStatus()))
                     .count();
 
             String subject = "Society Management - Weekly Summary Report";

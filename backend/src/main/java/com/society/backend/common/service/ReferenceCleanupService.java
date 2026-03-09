@@ -8,6 +8,7 @@ import java.util.Collections;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Service
@@ -16,7 +17,13 @@ public class ReferenceCleanupService {
 
     private final JdbcTemplate jdbcTemplate;
 
+    // Only allow safe identifier characters (letters, digits, underscore)
+    private static final Pattern SAFE_IDENTIFIER = Pattern.compile("^[a-zA-Z_][a-zA-Z0-9_]*$");
+
     public void clearReferences(String columnName, Long referenceId, boolean deleteWhenNonNullable, Set<String> excludedTables) {
+        if (columnName == null || !SAFE_IDENTIFIER.matcher(columnName).matches()) {
+            throw new IllegalArgumentException("Invalid column name: " + columnName);
+        }
         Set<String> normalizedExcludes = (excludedTables == null ? Collections.<String>emptySet() : excludedTables)
                 .stream()
                 .map(table -> table.toLowerCase(Locale.ROOT))
@@ -38,12 +45,16 @@ public class ReferenceCleanupService {
                 continue;
             }
 
+            // Validate table name from DB result against safe identifier pattern
+            if (!SAFE_IDENTIFIER.matcher(table).matches()) {
+                continue;
+            }
             String isNullable = String.valueOf(ref.get("is_nullable"));
             if ("YES".equalsIgnoreCase(isNullable)) {
-                String sql = "UPDATE \"" + table + "\" SET " + columnName + " = NULL WHERE " + columnName + " = ?";
+                String sql = "UPDATE \"" + table + "\" SET \"" + columnName + "\" = NULL WHERE \"" + columnName + "\" = ?";
                 jdbcTemplate.update(sql, referenceId);
             } else if (deleteWhenNonNullable) {
-                String sql = "DELETE FROM \"" + table + "\" WHERE " + columnName + " = ?";
+                String sql = "DELETE FROM \"" + table + "\" WHERE \"" + columnName + "\" = ?";
                 jdbcTemplate.update(sql, referenceId);
             }
         }

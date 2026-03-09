@@ -124,6 +124,7 @@ public class ExportController {
         }
 
         @GetMapping("/all-transactions")
+        @PreAuthorize("hasRole('MASTER_ADMIN')")
         public ResponseEntity<byte[]> exportAllTransactions(
                         @RequestParam String startDate,
                         @RequestParam String endDate) {
@@ -140,6 +141,7 @@ public class ExportController {
         }
 
         @GetMapping("/all-tickets")
+        @PreAuthorize("hasRole('MASTER_ADMIN')")
         public ResponseEntity<byte[]> exportAllTickets(@RequestParam(required = false) String status) {
 
                 ByteArrayOutputStream outputStream = excelExportService.exportTickets(null, status);

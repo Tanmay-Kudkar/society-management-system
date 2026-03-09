@@ -1,7 +1,9 @@
 package com.society.backend.security.controller;
 
+import com.society.backend.security.dto.request.SecurityLogRequest;
 import com.society.backend.security.entity.SecurityLog;
 import com.society.backend.security.service.SecurityLogService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -26,7 +28,7 @@ public class SecurityLogController {
 
     @PostMapping
     @PreAuthorize("hasAnyRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'MANAGER')")
-    public ResponseEntity<SecurityLog> createLog(@RequestBody SecurityLog log) {
-        return ResponseEntity.ok(service.createLog(log));
+    public ResponseEntity<SecurityLog> createLog(@Valid @RequestBody SecurityLogRequest request) {
+        return ResponseEntity.ok(service.createLog(request));
     }
 }

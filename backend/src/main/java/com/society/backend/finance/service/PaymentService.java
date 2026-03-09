@@ -51,7 +51,7 @@ public class PaymentService {
             // Create Razorpay order
             JSONObject orderRequest = new JSONObject();
             // Razorpay expects amount in paise (smallest currency unit)
-            orderRequest.put("amount", request.getAmount().multiply(BigDecimal.valueOf(100)).intValue());
+            orderRequest.put("amount", request.getAmount().multiply(BigDecimal.valueOf(100)).longValue());
             orderRequest.put("currency", razorpayConfig.getCurrency());
             orderRequest.put("receipt", "rcpt_" + UUID.randomUUID().toString().substring(0, 8));
             

@@ -11,9 +11,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-
-import com.society.backend.flat.entity.Tenant;
-import com.society.backend.society.entity.Society;
 @RestController
 @RequestMapping("/tickets")
 @RequiredArgsConstructor
