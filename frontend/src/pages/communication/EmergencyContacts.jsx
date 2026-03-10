@@ -5,7 +5,7 @@ import { useToast } from '../../context'
 import { emergencyContactApi } from '../../../../api'
 import { Plus, Search, X, Phone, Edit, Trash2, AlertCircle, CheckCircle, Upload } from 'lucide-react'
 import clsx from 'clsx'
-import { FormInput, PhoneInput, SmartSelect, BulkImportModal, AsyncButton, InfoTooltip } from '../../components'
+import { FormInput, PhoneInput, SmartSelect, BulkImportModal, InfoTooltip, NeonSweepButton } from '../../components'
 import { HeroSkeleton, GroupedListSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
 import useMinLoadingTime from '../../hooks/useMinLoadingTime'
 
@@ -169,20 +169,24 @@ export default function EmergencyContacts() {
         </div>
         {canManageEmergencyContacts() && (
           <div className="flex gap-2">
-            <button
+            <NeonSweepButton
+              tone="cyan"
+              size="md"
               onClick={() => setShowBulkImport(true)}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl font-semibold border border-[rgba(15,23,42,0.12)] text-[#f8fafc] bg-[#0f172a] transition-all hover:shadow-[0_8px_20px_rgba(15,23,42,0.16)] hover:-translate-y-px dark:border-[rgba(148,163,184,0.26)] dark:bg-[#020617]"
+              className="w-full sm:w-auto"
             >
               <Upload size={20} />
               Bulk Import
-            </button>
-            <button
+            </NeonSweepButton>
+            <NeonSweepButton
+              tone="violet"
+              size="md"
               onClick={() => setShowModal(true)}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl font-semibold border border-[var(--border-default)] bg-[var(--bg-card)] text-[var(--text-primary)] transition-all hover:bg-[var(--bg-tertiary)] hover:shadow-[0_8px_20px_rgba(15,23,42,0.14)] hover:-translate-y-px dark:border-[rgba(148,163,184,0.22)] dark:bg-[#f8fafc] dark:text-[#0f172a] dark:hover:bg-white"
+              className="w-full sm:w-auto"
             >
               <Plus size={20} />
               Add Contact
-            </button>
+            </NeonSweepButton>
           </div>
         )}
       </div>
@@ -361,15 +365,18 @@ export default function EmergencyContacts() {
                 />
               </div>
               <div className="flex gap-3 pt-2">
-                <button type="button" onClick={closeModal} className="flex-1 py-2 px-4 rounded-lg font-semibold border border-[var(--border-light)] bg-transparent text-[#334155] hover:bg-[var(--bg-tertiary)]">Cancel</button>
-                <AsyncButton
+                <NeonSweepButton type="button" tone="slate" size="md" onClick={closeModal} className="flex-1">Cancel</NeonSweepButton>
+                <NeonSweepButton
                   type="submit"
-                  className="flex-1 py-2 px-4 rounded-lg font-semibold border border-[var(--border-default)] bg-[var(--bg-card)] text-[var(--text-primary)] transition-all hover:bg-[var(--bg-tertiary)] hover:shadow-[0_8px_20px_rgba(15,23,42,0.14)] dark:border-[rgba(148,163,184,0.22)] dark:bg-[#f8fafc] dark:text-[#0f172a] dark:hover:bg-white"
-                  isLoading={createMutation.isPending || updateMutation.isPending}
-                  loadingText={editingContact ? 'Updating...' : 'Creating...'}
+                  tone="cyan"
+                  size="md"
+                  className="flex-1"
+                  disabled={createMutation.isPending || updateMutation.isPending}
                 >
-                  {editingContact ? 'Update' : 'Create'}
-                </AsyncButton>
+                  {createMutation.isPending || updateMutation.isPending
+                    ? (editingContact ? 'Updating...' : 'Creating...')
+                    : (editingContact ? 'Update' : 'Create')}
+                </NeonSweepButton>
               </div>
             </form>
           </div>
@@ -392,32 +399,27 @@ export default function EmergencyContacts() {
                 This action cannot be undone.
               </p>
               <div className="flex gap-3">
-                <button
+                <NeonSweepButton
                   type="button"
+                  tone="slate"
+                  size="md"
                   onClick={cancelDelete}
                   disabled={deleteMutation.isPending}
-                  className="flex-1 py-2 px-4 rounded-xl font-semibold border border-[var(--border-light)] bg-transparent text-[#334155] hover:bg-[var(--bg-tertiary)]"
+                  className="flex-1"
                 >
                   Cancel
-                </button>
-                <button
+                </NeonSweepButton>
+                <NeonSweepButton
                   type="button"
+                  tone="danger"
+                  size="md"
                   onClick={confirmDelete}
                   disabled={deleteMutation.isPending}
-                  className="flex-1 py-2 px-4 rounded-xl font-semibold bg-[#dc2626] text-white inline-flex items-center justify-center gap-2 hover:bg-[#b91c1c]"
+                  className="flex-1"
                 >
-                  {deleteMutation.isPending ? (
-                    <>
-                      <div className="w-4 h-4 rounded-full border-2 border-[rgba(255,255,255,0.35)] border-t-white animate-spin" />
-                      Deleting...
-                    </>
-                  ) : (
-                    <>
-                      <Trash2 size={18} />
-                      Delete
-                    </>
-                  )}
-                </button>
+                  <Trash2 size={18} />
+                  {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
+                </NeonSweepButton>
               </div>
             </div>
           </div>

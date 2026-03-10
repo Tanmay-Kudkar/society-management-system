@@ -8,11 +8,11 @@ import { flatApi, societyApi, wingApi, userApi, tenantApi } from '../../../../ap
 import { 
   Plus, Edit, Trash2, Search, X, Home, Store, Briefcase, Layers, 
   Users, UserPlus, UserCheck, UserX, Upload, Download, AlertCircle,
-  Link, Unlink, UsersRound, UserCog, Building2, Shield, FileSpreadsheet, CheckCircle, XCircle, Info, Eye, EyeOff
+  Link, Unlink, UserCog, Building2, Shield, FileSpreadsheet, CheckCircle, XCircle, Info, Eye, EyeOff
 } from 'lucide-react'
 import clsx from 'clsx'
 import { validateFlatForm, validateUserForm, parseApiError } from '../../utils'
-import { SmartSelect, FormInput, NumberInput, PhoneInput, FormErrorSummary, AsyncButton, InfoTooltip } from '../../components'
+import { SmartSelect, FormInput, NumberInput, PhoneInput, FormErrorSummary, InfoTooltip, NeonSweepButton } from '../../components'
 import { BulkImportModal as SharedBulkImportModal } from '../../components'
 import { HeroSkeleton, TabsSkeleton, FiltersSkeleton, CardGridSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
 import useMinLoadingTime from '../../hooks/useMinLoadingTime'
@@ -108,8 +108,6 @@ export default function UnitManagement() {
   const [showUserModal, setShowUserModal] = useState(false)
   const [showEditUserModal, setShowEditUserModal] = useState(false)
   const [showBulkImportModal, setShowBulkImportModal] = useState(false)
-  const [showBulkCreateModal, setShowBulkCreateModal] = useState(false)
-  const [bulkCreateResults, setBulkCreateResults] = useState(null)
   
   // Editing states
   const [editingUnit, setEditingUnit] = useState(null)
@@ -303,21 +301,6 @@ export default function UnitManagement() {
     },
   })
 
-  // Bulk create users mutation
-  const bulkCreateUsersMutation = useMutation({
-    mutationFn: () => userApi.bulkCreateForUnits(effectiveSocietyId),
-    onSuccess: (response) => {
-      queryClient.invalidateQueries(['users'])
-      queryClient.invalidateQueries(['flats'])
-      setBulkCreateResults(response.data)
-      showToast(`Created ${response.data.usersCreated} users successfully`, 'success')
-    },
-    onError: (err) => {
-      showToast(parseApiError(err), 'error')
-      setShowBulkCreateModal(false)
-    },
-  })
-
   // ─── User Management Tab: queries & mutations ─────────────────────────
 
   // Fetch roles that current user can create/update/delete
@@ -371,23 +354,6 @@ export default function UnitManagement() {
     onError: (err) => {
       const msg = err.response?.data?.message || parseApiError(err)
       showToast(msg, 'error')
-    },
-  })
-
-  // Standalone user create mutation (for Users tab)
-  const standaloneCreateUserMutation = useMutation({
-    mutationFn: (data) => userApi.create(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries(['users'])
-      queryClient.invalidateQueries(['flats'])
-      setShowStandaloneUserModal(false)
-      setEditingStandaloneUser(null)
-      setShowStandalonePassword(false)
-      setUserError('')
-      showToast('User created successfully', 'success')
-    },
-    onError: (err) => {
-      setUserError(parseApiError(err))
     },
   })
 
@@ -470,9 +436,7 @@ export default function UnitManagement() {
   }, [scopedUsers])
 
   const standaloneRoleOptions = useMemo(() => {
-    if (!editingStandaloneUser) {
-      return creatableRoles.length > 0 ? creatableRoles : ['MEMBER']
-    }
+    if (!editingStandaloneUser) return ['MEMBER']
 
     if (editingStandaloneUser.flatId) {
       const allowed = updatableRoles.filter((role) => UNIT_ASSIGNABLE_ROLES.includes(role))
@@ -491,11 +455,11 @@ export default function UnitManagement() {
       allowed.unshift(editingStandaloneUser.role)
     }
     return allowed.length > 0 ? allowed : [editingStandaloneUser.role || 'MEMBER']
-  }, [editingStandaloneUser, creatableRoles, updatableRoles])
+  }, [editingStandaloneUser, updatableRoles])
 
   const handleOpenStandaloneUserModal = (userToEdit = null) => {
     setEditingStandaloneUser(userToEdit)
-    setSelectedRole(userToEdit?.role || creatableRoles[0] || 'MEMBER')
+    setSelectedRole(userToEdit?.role || updatableRoles[0] || 'MEMBER')
     setUserError('')
     setShowStandalonePassword(false)
     setShowStandaloneUserModal(true)
@@ -552,11 +516,12 @@ export default function UnitManagement() {
       }
     }
 
-    if (editingStandaloneUser) {
-      standaloneUpdateUserMutation.mutate({ id: editingStandaloneUser.id, data })
-    } else {
-      standaloneCreateUserMutation.mutate(data)
+    if (!editingStandaloneUser) {
+      setUserError('User context missing for update')
+      return
     }
+
+    standaloneUpdateUserMutation.mutate({ id: editingStandaloneUser.id, data })
   }
 
   // ─── End User Management Tab ──────────────────────────────────────────
@@ -807,65 +772,48 @@ export default function UnitManagement() {
             <InfoTooltip text="Manage units and their assigned users in one place" />
           </h1>
         </div>
-        <div className="flex flex-wrap gap-3">
+        <div className="w-full sm:w-auto flex flex-wrap gap-3">
           {canEditUnits && (
             <>
-              <button
-                onClick={() => setShowBulkCreateModal(true)}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl font-semibold border border-[#16a34a] bg-[#16a34a] text-[#f8fafc] shadow-[0_1px_3px_rgba(15,23,42,0.14)] transition-all hover:bg-[#15803d] hover:border-[#15803d] dark:border-[rgba(22,163,74,0.55)]"
-              >
-                <UsersRound size={18} />
-                Bulk Create Users
-              </button>
-              <button
+              <NeonSweepButton
+                tone="cyan"
+                size="md"
                 onClick={() => setShowBulkImportModal(true)}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl font-semibold border border-[rgba(15,23,42,0.12)] bg-[#0f172a] text-[#f8fafc] shadow-[0_1px_3px_rgba(15,23,42,0.14)] transition-all hover:bg-[#1e293b] hover:shadow-[0_4px_12px_rgba(15,23,42,0.2)] dark:border-[rgba(148,163,184,0.26)] dark:bg-[#020617] dark:hover:bg-[#0f172a]"
+                className="w-full sm:w-auto"
               >
                 <Upload size={18} />
                 Import Units
-              </button>
-              <button
+              </NeonSweepButton>
+              <NeonSweepButton
+                tone="violet"
+                size="md"
                 onClick={() => openUnitModal()}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl font-semibold border border-[var(--border-default)] bg-[var(--bg-card)] text-[var(--text-primary)] shadow-[0_1px_3px_rgba(15,23,42,0.06)] transition-all hover:shadow-[0_4px_12px_rgba(15,23,42,0.08)] dark:border-[rgba(148,163,184,0.22)] dark:bg-[#f8fafc] dark:text-[#0f172a] dark:hover:bg-white"
+                className="w-full sm:w-auto"
               >
                 <Plus size={20} />
                 Add Unit
-              </button>
+              </NeonSweepButton>
             </>
           )}
           {activeTab === 'users' && (
             <>
               {['SECRETARY', 'COMMITTEE'].includes(user?.role) && (
                 <>
-                  <button
+                  <NeonSweepButton
+                    tone="cyan"
+                    size="md"
                     onClick={() => {
                       setBulkImportFile(null)
                       setBulkImportPreview(null)
                       setBulkImportError('')
                       setShowUserBulkImportModal(true)
                     }}
-                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl font-semibold border border-[#16a34a] bg-[#16a34a] text-[#f8fafc] shadow-[0_1px_3px_rgba(15,23,42,0.14)] transition-all hover:bg-[#15803d] hover:border-[#15803d] dark:border-[rgba(22,163,74,0.55)]"
+                    className="w-full sm:w-auto"
                   >
                     <Upload size={18} />
                     Import Excel
-                  </button>
-                  <button
-                    onClick={() => setShowBulkCreateModal(true)}
-                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl font-semibold border border-[#7c3aed] bg-[#7c3aed] text-[#f8fafc] shadow-[0_1px_3px_rgba(15,23,42,0.14)] transition-all hover:bg-[#6d28d9] hover:border-[#6d28d9] dark:border-[rgba(124,58,237,0.55)]"
-                  >
-                    <UserPlus size={18} />
-                    Auto-Create
-                  </button>
+                  </NeonSweepButton>
                 </>
-              )}
-              {!isPlatformLevel && creatableRoles.length > 0 && (
-                <button
-                  onClick={() => handleOpenStandaloneUserModal(null)}
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl font-semibold border border-[var(--border-default)] bg-[var(--bg-card)] text-[var(--text-primary)] shadow-[0_1px_3px_rgba(15,23,42,0.06)] transition-all hover:shadow-[0_4px_12px_rgba(15,23,42,0.08)] dark:border-[rgba(148,163,184,0.22)] dark:bg-[#f8fafc] dark:text-[#0f172a] dark:hover:bg-white"
-                >
-                  <Plus size={20} />
-                  Add Society User
-                </button>
               )}
             </>
           )}
@@ -1538,7 +1486,7 @@ export default function UnitManagement() {
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[rgba(15,23,42,0.6)]">
             <div className="w-full max-w-[28rem] max-h-[90vh] overflow-y-auto rounded-2xl bg-[var(--bg-card)] border border-[var(--border-light)] shadow-[0_24px_48px_rgba(15,23,42,0.24)]">
               <div className="sticky top-0 flex items-center justify-between p-4 px-5 border-b border-[var(--border-light)] bg-[var(--bg-card)] z-[1]">
-                <h3 className="text-[1.1rem] font-semibold text-[var(--text-primary)]">{editingStandaloneUser ? 'Edit User' : 'Add User'}</h3>
+                <h3 className="text-[1.1rem] font-semibold text-[var(--text-primary)]">Edit User</h3>
                 <button onClick={() => { setShowStandaloneUserModal(false); setUserError(''); setShowStandalonePassword(false); }} className="p-[0.35rem] rounded-[0.6rem] text-[var(--text-tertiary)] hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-primary)]">
                   <X size={20} />
                 </button>
@@ -1549,11 +1497,11 @@ export default function UnitManagement() {
                 <FormInput label="Email" name="email" type="email" defaultValue={editingStandaloneUser?.email} required placeholder="user@example.com" />
                 <div className="relative">
                   <FormInput
-                    label={editingStandaloneUser ? 'New Password (optional)' : 'Password'}
+                    label="New Password (optional)"
                     name="password"
                     type={showStandalonePassword ? 'text' : 'password'}
-                    required={!editingStandaloneUser}
-                    placeholder={editingStandaloneUser ? 'Leave blank to keep current' : 'Min 6 characters'}
+                    required={false}
+                    placeholder="Leave blank to keep current"
                   />
                   <button
                     type="button"
@@ -1605,18 +1553,18 @@ export default function UnitManagement() {
                 <PhoneInput label="Phone" name="phone" defaultValue={editingStandaloneUser?.phone} required />
                 
                 <div className="flex gap-3 pt-3 border-t border-[var(--border-light)]">
-                  <button type="button" onClick={() => { setShowStandaloneUserModal(false); setUserError(''); setShowStandalonePassword(false); }}
-                    className="flex-1 py-[0.65rem] px-4 rounded-xl font-semibold bg-[var(--bg-tertiary)] border border-[var(--border-default)] text-[var(--text-secondary)]">
+                  <NeonSweepButton type="button" tone="slate" size="md" onClick={() => { setShowStandaloneUserModal(false); setUserError(''); setShowStandalonePassword(false); }} className="flex-1">
                     Cancel
-                  </button>
-                  <AsyncButton
+                  </NeonSweepButton>
+                  <NeonSweepButton
                     type="submit"
-                    className="flex-1 py-[0.65rem] px-4 rounded-xl font-semibold border border-[var(--border-default)] bg-[var(--bg-card)] text-[var(--text-primary)] transition-all disabled:opacity-50 disabled:cursor-not-allowed dark:border-[rgba(148,163,184,0.22)] dark:bg-[#f8fafc] dark:text-[#0f172a] dark:hover:bg-white"
-                    isLoading={standaloneCreateUserMutation.isPending || standaloneUpdateUserMutation.isPending}
-                    loadingText="Saving..."
+                    tone="cyan"
+                    size="md"
+                    className="flex-1"
+                    disabled={standaloneUpdateUserMutation.isPending}
                   >
-                    {editingStandaloneUser ? 'Update' : 'Create'}
-                  </AsyncButton>
+                    {standaloneUpdateUserMutation.isPending ? 'Saving...' : 'Update'}
+                  </NeonSweepButton>
                 </div>
               </form>
             </div>
@@ -1863,18 +1811,6 @@ export default function UnitManagement() {
         />
       )}
 
-      {/* Bulk Create Users Modal */}
-      {showBulkCreateModal && (
-        <BulkCreateUsersModal
-          isLoading={bulkCreateUsersMutation.isPending}
-          results={bulkCreateResults}
-          onConfirm={() => bulkCreateUsersMutation.mutate()}
-          onClose={() => {
-            setShowBulkCreateModal(false)
-            setBulkCreateResults(null)
-          }}
-        />
-      )}
     </div>
   )
 }
@@ -2076,21 +2012,24 @@ function UnitFormModal({ unit, societies, wings, isPlatformLevel, userSocietyId,
 
           {/* Submit Button */}
           <div className="flex gap-3 pt-3 border-t border-[var(--border-light)]">
-            <button
+            <NeonSweepButton
               type="button"
+              tone="slate"
+              size="md"
               onClick={onClose}
-              className="flex-1 py-[0.65rem] px-4 rounded-xl font-semibold bg-[var(--bg-tertiary)] border border-[var(--border-default)] text-[var(--text-secondary)]"
+              className="flex-1"
             >
               Cancel
-            </button>
-            <AsyncButton
+            </NeonSweepButton>
+            <NeonSweepButton
               type="submit"
-              className="flex-1 py-[0.65rem] px-4 rounded-xl font-semibold border border-[var(--border-default)] bg-[var(--bg-card)] text-[var(--text-primary)] transition-all dark:border-[rgba(148,163,184,0.22)] dark:bg-[#f8fafc] dark:text-[#0f172a] dark:hover:bg-white"
-              isLoading={isLoading}
-              loadingText="Saving..."
+              tone="cyan"
+              size="md"
+              className="flex-1"
+              disabled={isLoading}
             >
-              {unit ? 'Update Unit' : 'Create Unit'}
-            </AsyncButton>
+              {isLoading ? 'Saving...' : (unit ? 'Update Unit' : 'Create Unit')}
+            </NeonSweepButton>
           </div>
         </form>
       </div>
@@ -2154,21 +2093,24 @@ function UserFormModal({ unit, roleOptions, errors, apiError, onSubmit, onClose,
           />
 
           <div className="flex gap-3 pt-3 border-t border-[var(--border-light)]">
-            <button
+            <NeonSweepButton
               type="button"
+              tone="slate"
+              size="md"
               onClick={onClose}
-              className="flex-1 py-[0.65rem] px-4 rounded-xl font-semibold bg-[var(--bg-tertiary)] border border-[var(--border-default)] text-[var(--text-secondary)]"
+              className="flex-1"
             >
               Cancel
-            </button>
-            <AsyncButton
+            </NeonSweepButton>
+            <NeonSweepButton
               type="submit"
-              className="flex-1 py-[0.65rem] px-4 rounded-xl font-semibold border border-[var(--border-default)] bg-[var(--bg-card)] text-[var(--text-primary)] transition-all dark:border-[rgba(148,163,184,0.22)] dark:bg-[#f8fafc] dark:text-[#0f172a] dark:hover:bg-white"
-              isLoading={isLoading}
-              loadingText="Creating..."
+              tone="cyan"
+              size="md"
+              className="flex-1"
+              disabled={isLoading}
             >
-              Create User
-            </AsyncButton>
+              {isLoading ? 'Creating...' : 'Create User'}
+            </NeonSweepButton>
           </div>
         </form>
       </div>
@@ -2234,21 +2176,24 @@ function EditUserFormModal({ user, unit, roleOptions, errors, apiError, onSubmit
           />
 
           <div className="flex gap-3 pt-3 border-t border-[var(--border-light)]">
-            <button
+            <NeonSweepButton
               type="button"
+              tone="slate"
+              size="md"
               onClick={onClose}
-              className="flex-1 py-[0.65rem] px-4 rounded-xl font-semibold bg-[var(--bg-tertiary)] border border-[var(--border-default)] text-[var(--text-secondary)]"
+              className="flex-1"
             >
               Cancel
-            </button>
-            <AsyncButton
+            </NeonSweepButton>
+            <NeonSweepButton
               type="submit"
-              className="flex-1 py-[0.65rem] px-4 rounded-xl font-semibold border border-[var(--border-default)] bg-[var(--bg-card)] text-[var(--text-primary)] transition-all dark:border-[rgba(148,163,184,0.22)] dark:bg-[#f8fafc] dark:text-[#0f172a] dark:hover:bg-white"
-              isLoading={isLoading}
-              loadingText="Saving..."
+              tone="cyan"
+              size="md"
+              className="flex-1"
+              disabled={isLoading}
             >
-              Update User
-            </AsyncButton>
+              {isLoading ? 'Saving...' : 'Update User'}
+            </NeonSweepButton>
           </div>
         </form>
       </div>
@@ -2256,164 +2201,3 @@ function EditUserFormModal({ user, unit, roleOptions, errors, apiError, onSubmit
   )
 }
 
-// Bulk Create Users Modal
-function BulkCreateUsersModal({ isLoading, results, onConfirm, onClose }) {
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[rgba(15,23,42,0.6)]">
-      <div className="w-full max-w-[48rem] max-h-[90vh] overflow-y-auto rounded-2xl bg-[var(--bg-card)] border border-[var(--border-light)] shadow-[0_24px_48px_rgba(15,23,42,0.24)]">
-        <div className="sticky top-0 flex items-center justify-between p-4 px-5 border-b border-[var(--border-light)] bg-[var(--bg-card)] z-[1]">
-          <h3 className="text-[1.1rem] font-semibold text-[var(--text-primary)]">
-            {results ? 'Bulk Create Results' : 'Create Users in Bulk'}
-          </h3>
-          <button onClick={onClose} className="p-[0.35rem] rounded-[0.6rem] text-[var(--text-tertiary)] hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-primary)]">
-            <X size={20} />
-          </button>
-        </div>
-
-        <div className="p-4 max-h-[calc(90vh-120px)] overflow-y-auto">
-          {!results ? (
-            <>
-              <div className="text-center py-6">
-                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[rgba(22,163,74,0.15)] flex items-center justify-center">
-                  <UsersRound className="w-8 h-8 text-[#16a34a]" />
-                </div>
-                <h4 className="text-[1.1rem] font-semibold text-[var(--text-primary)] mb-2">Create Users for All Units</h4>
-                <p className="text-[var(--text-secondary)] mb-4">
-                  This will automatically create user accounts for all units that have an owner email configured but don't have an associated user yet.
-                </p>
-                <div className="rounded-xl p-4 text-left mb-4 border" style={{ background: 'color-mix(in srgb, var(--bg-card) 80%, var(--accent-primary) 20%)', borderColor: 'color-mix(in srgb, var(--accent-primary) 40%, var(--border-light))' }}>
-                  <h5 className="font-semibold text-[var(--text-primary)] mb-2">How it works:</h5>
-                  <ul className="text-[0.85rem] text-[var(--text-secondary)] flex flex-col gap-1">
-                    <li>• Email from unit owner details will be used as username</li>
-                    <li>• Flat/Unit number will be used as the default password</li>
-                    <li>• Units without owner email will be skipped</li>
-                    <li>• Units with existing users will be skipped</li>
-                    <li>• All users will be created with MEMBER role</li>
-                  </ul>
-                </div>
-                <div className="rounded-xl p-3 text-left bg-[rgba(234,179,8,0.15)] border border-[rgba(234,179,8,0.35)]">
-                  <p className="inline-flex items-center gap-2 text-[0.85rem] text-[#d97706]">
-                    <AlertCircle size={16} />
-                    Users should change their password after first login
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex gap-3">
-                <button
-                  onClick={onClose}
-                  className="flex-1 py-[0.65rem] px-4 rounded-xl font-semibold bg-[var(--bg-tertiary)] border border-[var(--border-default)] text-[var(--text-secondary)]"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={onConfirm}
-                  disabled={isLoading}
-                  className="flex-1 py-[0.65rem] px-4 rounded-xl font-semibold border border-[var(--border-default)] bg-[var(--bg-card)] text-[var(--text-primary)] transition-all dark:border-[rgba(148,163,184,0.22)] dark:bg-[#f8fafc] dark:text-[#0f172a] dark:hover:bg-white"
-                >
-                  {isLoading ? (
-                    <>
-                      <div className="w-4 h-4 rounded-full border-2 border-white/40 border-t-white animate-spin" />
-                      Creating Users...
-                    </>
-                  ) : (
-                    <>
-                      <UsersRound size={18} />
-                      Create Users
-                    </>
-                  )}
-                </button>
-              </div>
-            </>
-          ) : (
-            <>
-              <div className="text-center py-4">
-                <div className={clsx(
-                  'w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center',
-                  results.usersCreated > 0 ? 'bg-[rgba(22,163,74,0.15)] text-[#16a34a]' : 'bg-[rgba(148,163,184,0.2)] text-[var(--text-tertiary)]'
-                )}>
-                  {results.usersCreated > 0 ? (
-                    <UserCheck className="w-8 h-8" />
-                  ) : (
-                    <UserX className="w-8 h-8" />
-                  )}
-                </div>
-                <h4 className="text-[1.1rem] font-semibold text-[var(--text-primary)]">{results.message}</h4>
-              </div>
-
-              <div className="grid grid-cols-3 gap-4 mb-4">
-                <div className="p-3 rounded-xl text-center bg-[rgba(22,163,74,0.12)] text-[#15803d]">
-                  <div className="text-xl font-bold">
-                    {results.usersCreated}
-                  </div>
-                  <div className="text-xs">Created</div>
-                </div>
-                <div className="p-3 rounded-xl text-center bg-[rgba(234,179,8,0.12)] text-[#b45309]">
-                  <div className="text-xl font-bold">
-                    {results.usersSkipped}
-                  </div>
-                  <div className="text-xs">Skipped</div>
-                </div>
-                <div className="p-3 rounded-xl text-center bg-[rgba(239,68,68,0.12)] text-[#b91c1c]">
-                  <div className="text-xl font-bold">
-                    {results.errors}
-                  </div>
-                  <div className="text-xs">Errors</div>
-                </div>
-              </div>
-
-              {results.results && results.results.length > 0 && (
-                <div className="rounded-xl border border-[var(--border-light)] overflow-hidden max-h-64 overflow-y-auto">
-                  <table className="w-full text-[0.85rem] border-collapse">
-                    <thead className="bg-[var(--bg-tertiary)] sticky top-0">
-                      <tr>
-                        <th className="py-2 px-3 text-left font-semibold">Unit</th>
-                        <th className="py-2 px-3 text-left font-semibold">Status</th>
-                        <th className="py-2 px-3 text-left font-semibold">Details</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {results.results.map((result, idx) => (
-                        <tr key={idx} className={
-                          result.status === 'CREATED' ? 'bg-[rgba(22,163,74,0.06)]' :
-                          result.status === 'ERROR' ? 'bg-[rgba(239,68,68,0.06)]' :
-                          ''
-                        }>
-                          <td className="py-2 px-3 text-[var(--text-secondary)]">{result.flatNumber}</td>
-                          <td className="py-2 px-3 text-[var(--text-secondary)]">
-                            <span className={clsx(
-                              'inline-flex items-center py-[0.2rem] px-[0.6rem] rounded-full text-[0.7rem] font-semibold',
-                              result.status === 'CREATED'
-                                ? 'bg-[rgba(22,163,74,0.12)] text-[#15803d]'
-                                : result.status === 'SKIPPED'
-                                  ? 'bg-[rgba(234,179,8,0.12)] text-[#b45309]'
-                                  : 'bg-[rgba(239,68,68,0.12)] text-[#b91c1c]'
-                            )}>
-                              {result.status}
-                            </span>
-                          </td>
-                          <td className="py-2 px-3 text-xs text-[var(--text-tertiary)]">
-                            {result.email || result.errorMessage}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-
-              <div className="flex gap-3">
-                <button
-                  onClick={onClose}
-                  className="flex-1 py-[0.65rem] px-4 rounded-xl font-semibold border border-[var(--border-default)] bg-[var(--bg-card)] text-[var(--text-primary)] transition-all dark:border-[rgba(148,163,184,0.22)] dark:bg-[#f8fafc] dark:text-[#0f172a] dark:hover:bg-white"
-                >
-                  Done
-                </button>
-              </div>
-            </>
-          )}
-        </div>
-      </div>
-    </div>
-  )
-}

@@ -7,6 +7,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 
 @Getter
 @Setter
@@ -68,4 +69,14 @@ public class SocietySettingRequest {
 
     private String billNumberPrefix;
     private String receiptNumberPrefix;
+
+    private String accountHolderName;
+    private String bankName;
+    private String accountNumber;
+    private String ifscCode;
+    private String upiId;
+    private String paymentLink;
+
+    private LocalDate committeeElectionStartDate;
+    private LocalDate committeeElectionEndDate;
 }

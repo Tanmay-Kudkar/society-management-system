@@ -7,7 +7,7 @@ import { useToast } from '../../context'
 import { vendorBillApi, vendorApi } from '../../../../api'
 import { Plus, Edit, Trash2, Search, X, Receipt, CheckCircle, Clock, AlertCircle } from 'lucide-react'
 import clsx from 'clsx'
-import { AsyncButton, InfoTooltip } from '../../components'
+import { InfoTooltip, NeonSweepButton } from '../../components'
 import { HeroSkeleton, FinancePageSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
 import useMinLoadingTime from '../../hooks/useMinLoadingTime'
 
@@ -145,13 +145,15 @@ export default function VendorBills() {
           </div>
         </div>
         {canManageVendorBills() && (
-          <button
+          <NeonSweepButton
+            tone="violet"
+            size="md"
             onClick={() => { setEditingBill(null); setShowModal(true) }}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-[10px] font-semibold border border-[var(--border-default)] bg-[var(--bg-card)] text-[var(--text-primary)] transition-colors hover:bg-[var(--bg-tertiary)] dark:border-slate-400/22 dark:bg-slate-50 dark:text-slate-900 dark:hover:bg-white"
+            className="w-full sm:w-auto"
           >
             <Plus size={20} />
             Add Bill
-          </button>
+          </NeonSweepButton>
         )}
       </div>
 
@@ -346,21 +348,24 @@ export default function VendorBills() {
                 />
               </div>
               <div className="flex gap-3 pt-4">
-                <button
+                <NeonSweepButton
                   type="button"
+                  tone="slate"
+                  size="md"
                   onClick={() => setShowModal(false)}
-                  className="flex-1 px-4 py-2 rounded-[10px] font-semibold border border-[var(--border-light)] bg-[var(--bg-card)] text-slate-700 hover:bg-[var(--bg-tertiary)] transition-colors"
+                  className="flex-1"
                 >
                   Cancel
-                </button>
-                <AsyncButton
+                </NeonSweepButton>
+                <NeonSweepButton
                   type="submit"
-                  className="flex-1 px-4 py-2 rounded-[10px] font-semibold border-none bg-blue-600 text-white hover:bg-blue-700 transition-colors"
-                  isLoading={createMutation.isPending}
-                  loadingText="Creating..."
+                  tone="cyan"
+                  size="md"
+                  className="flex-1"
+                  disabled={createMutation.isPending}
                 >
-                  Create
-                </AsyncButton>
+                  {createMutation.isPending ? 'Creating...' : 'Create'}
+                </NeonSweepButton>
               </div>
             </form>
           </div>
@@ -416,21 +421,24 @@ export default function VendorBills() {
                 />
               </div>
               <div className="flex gap-3 pt-4">
-                <button
+                <NeonSweepButton
                   type="button"
+                  tone="slate"
+                  size="md"
                   onClick={() => setShowPaymentModal(false)}
-                  className="flex-1 px-4 py-2 rounded-[10px] font-semibold border border-[var(--border-light)] bg-[var(--bg-card)] text-slate-700 hover:bg-[var(--bg-tertiary)] transition-colors"
+                  className="flex-1"
                 >
                   Cancel
-                </button>
-                <AsyncButton
+                </NeonSweepButton>
+                <NeonSweepButton
                   type="submit"
-                  className="flex-1 px-4 py-2 rounded-[10px] font-semibold border-none bg-green-600 text-white hover:bg-green-700 transition-colors"
-                  isLoading={paymentMutation.isPending}
-                  loadingText="Recording..."
+                  tone="cyan"
+                  size="md"
+                  className="flex-1"
+                  disabled={paymentMutation.isPending}
                 >
-                  Record Payment
-                </AsyncButton>
+                  {paymentMutation.isPending ? 'Recording...' : 'Record Payment'}
+                </NeonSweepButton>
               </div>
             </form>
           </div>

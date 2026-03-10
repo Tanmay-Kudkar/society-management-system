@@ -7,7 +7,7 @@ import { useToast } from '../../context'
 import { vendorApi, societyApi } from '../../../../api'
 import { Plus, Edit, Trash2, Search, X, Truck, Phone, Mail, Eye, Building2, Landmark, FileText, User, MapPin, Upload } from 'lucide-react'
 import clsx from 'clsx'
-import { FormInput, PhoneInput, SmartSelect, FormTextarea, AsyncButton, InfoTooltip } from '../../components'
+import { FormInput, PhoneInput, SmartSelect, FormTextarea, InfoTooltip, NeonSweepButton } from '../../components'
 import { PermissionDenied } from '../../components'
 import { BulkImportModal } from '../../components'
 import { HeroSkeleton, FiltersSkeleton, CardGridSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
@@ -147,8 +147,9 @@ export default function Vendors() {
     const formData = new FormData(e.target)
     
     // For non-MASTER_ADMIN, always set societyId to user's society
-    const societyId = isPlatformLevel 
-      ? parseInt(formData.get('societyId'))
+    const submittedSocietyId = Number(formData.get('societyId'))
+    const societyId = isPlatformLevel
+      ? (submittedSocietyId || editingVendor?.societyId)
       : effectiveSocietyId
     
     if (!societyId) {
@@ -208,23 +209,27 @@ export default function Vendors() {
         </div>
         {canManageVendors() && (
           <div className="flex gap-2 flex-wrap">
-            <button
+            <NeonSweepButton
+              tone="slate"
+              size="md"
               onClick={() => setShowBulkImport(true)}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-[10px] font-semibold border border-slate-900/12 bg-slate-900 text-slate-50 transition-colors hover:shadow-lg dark:border-slate-400/26 dark:bg-slate-950"
+              className="w-full sm:w-auto"
             >
               <Upload size={20} />
               Bulk Import
-            </button>
-            <button
+            </NeonSweepButton>
+            <NeonSweepButton
+              tone="violet"
+              size="md"
               onClick={() => { 
                 setEditingVendor(null)
                 setShowModal(true) 
               }}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-[10px] font-semibold border border-[var(--border-default)] bg-[var(--bg-card)] text-[var(--text-primary)] transition-colors hover:bg-[var(--bg-tertiary)] dark:border-slate-400/22 dark:bg-slate-50 dark:text-slate-900 dark:hover:bg-white"
+              className="w-full sm:w-auto"
             >
               <Plus size={20} />
               Add Vendor
-            </button>
+            </NeonSweepButton>
           </div>
         )}
       </div>
@@ -527,21 +532,24 @@ export default function Vendors() {
               </div>
 
               <div className="flex gap-3 pt-4">
-                <button
+                <NeonSweepButton
                   type="button"
+                  tone="slate"
+                  size="md"
                   onClick={() => setShowModal(false)}
-                  className="flex-1 px-4 py-2 rounded-[10px] font-semibold border border-[var(--border-light)] bg-[var(--bg-card)] text-slate-700 hover:bg-[var(--bg-tertiary)] transition-colors"
+                  className="flex-1"
                 >
                   Cancel
-                </button>
-                <AsyncButton
+                </NeonSweepButton>
+                <NeonSweepButton
                   type="submit"
-                  className="flex-1 px-4 py-2 rounded-[10px] font-semibold border border-[var(--border-default)] bg-[var(--bg-card)] text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] transition-colors dark:border-slate-400/22 dark:bg-slate-50 dark:text-slate-900 dark:hover:bg-white"
-                  isLoading={createMutation.isPending || updateMutation.isPending}
-                  loadingText="Saving..."
+                  tone="cyan"
+                  size="md"
+                  className="flex-1"
+                  disabled={createMutation.isPending || updateMutation.isPending}
                 >
-                  {editingVendor ? 'Update' : 'Create'}
-                </AsyncButton>
+                  {createMutation.isPending || updateMutation.isPending ? 'Saving...' : (editingVendor ? 'Update' : 'Create')}
+                </NeonSweepButton>
               </div>
             </form>
           </div>
