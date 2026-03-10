@@ -1,48 +1,12 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import { MapContainer, TileLayer, Circle, CircleMarker, useMapEvents } from 'react-leaflet'
 import { useAuth } from '../../context'
 import { useTheme } from '../../context'
 import {
   Building2, Mail, Lock, AlertCircle, Eye, EyeOff,
   Sun, Moon, Monitor, ArrowRight,
-  Shield, Briefcase, FileText, Users, MapPin, X
+  Shield, Briefcase, FileText, Users
 } from 'lucide-react'
-
-const DEFAULT_LOCATION = {
-  latitude: 19.076,
-  longitude: 72.8777,
-}
-
-function LocationPicker({ location, onPick }) {
-  useMapEvents({
-    click: (event) => {
-      onPick({
-        latitude: event.latlng.lat,
-        longitude: event.latlng.lng,
-      })
-    },
-  })
-
-  return (
-    <>
-      <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-      />
-      <Circle
-        center={[location.latitude, location.longitude]}
-        radius={300}
-        pathOptions={{ color: '#0ea5e9', fillColor: '#38bdf8', fillOpacity: 0.2 }}
-      />
-      <CircleMarker
-        center={[location.latitude, location.longitude]}
-        radius={8}
-        pathOptions={{ color: '#f97316', fillColor: '#fb923c', fillOpacity: 0.95 }}
-      />
-    </>
-  )
-}
 
 export default function Login() {
   const [email, setEmail] = useState('')
@@ -54,78 +18,11 @@ export default function Login() {
   const [isLoaded, setIsLoaded] = useState(false)
   const [fieldErrors, setFieldErrors] = useState({})
   const [shake, setShake] = useState(false)
-  const [location, setLocation] = useState(DEFAULT_LOCATION)
-  const [locationStatus, setLocationStatus] = useState('Detecting your location for society-admin session monitoring...')
-  const [locating, setLocating] = useState(false)
-  const [isLocationPanelOpen, setIsLocationPanelOpen] = useState(false)
-  const [locationName, setLocationName] = useState('Resolving location name...')
-  const [isResolvingLocation, setIsResolvingLocation] = useState(false)
-  const [showCoordinates, setShowCoordinates] = useState(false)
+  const [focusedField, setFocusedField] = useState(null)
+  const [btnHovered, setBtnHovered] = useState(false)
   const { login, user, loading: authLoading } = useAuth()
   const { theme, setTheme, resetToSystemTheme, isManual } = useTheme()
   const navigate = useNavigate()
-
-  const resolveLocationName = useCallback(async (latitude, longitude) => {
-    setIsResolvingLocation(true)
-    try {
-      const response = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`,
-        {
-          headers: {
-            Accept: 'application/json',
-          },
-        },
-      )
-
-      if (!response.ok) {
-        throw new Error('Failed to resolve location name')
-      }
-
-      const data = await response.json()
-      const address = data?.address || {}
-      const conciseName = [
-        address.suburb || address.neighbourhood || address.road || address.hamlet,
-        address.city || address.town || address.village || address.county,
-        address.state,
-      ]
-        .filter(Boolean)
-        .join(', ')
-
-      setLocationName(conciseName || data?.display_name || 'Pinned location selected')
-    } catch (_) {
-      setLocationName('Pinned location selected')
-    } finally {
-      setIsResolvingLocation(false)
-    }
-  }, [])
-
-  const detectLocation = useCallback(() => {
-    if (!navigator.geolocation) {
-      setLocationStatus('Geolocation is not supported by this browser. Default map point is being used.')
-      return
-    }
-
-    setLocating(true)
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        setLocation({
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
-        })
-        setLocationStatus('Location captured. Click map to fine-tune the pin for accurate audit tracking.')
-        setLocating(false)
-      },
-      () => {
-        setLocationStatus('Location permission denied or timed out. You can click the map to set location manually.')
-        setLocating(false)
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 7000,
-        maximumAge: 120000,
-      },
-    )
-  }, [])
 
   useEffect(() => {
     setIsLoaded(true)
@@ -136,16 +33,10 @@ export default function Login() {
       setEmail(savedEmail)
       setRememberMe(true)
     }
-
-    detectLocation()
-  }, [detectLocation])
+  }, [])
 
   useEffect(() => {
-    resolveLocationName(location.latitude, location.longitude)
-  }, [location.latitude, location.longitude, resolveLocationName])
-
-  useEffect(() => {
-    if (!authLoading && user) navigate('/dashboard', { replace: true })
+    if (!authLoading && user) navigate('/', { replace: true })
   }, [user, authLoading, navigate])
 
   const handleSubmit = async (e) => {
@@ -163,11 +54,7 @@ export default function Login() {
     }
 
     setLoading(true)
-    const result = await login(email, password, {
-      rememberMe,
-      latitude: location.latitude,
-      longitude: location.longitude,
-    })
+    const result = await login(email, password, { rememberMe })
     if (result.success) {
       if (rememberMe) {
         localStorage.setItem('rememberedEmail', email)
@@ -176,7 +63,7 @@ export default function Login() {
         localStorage.removeItem('rememberedEmail')
         localStorage.removeItem('rememberMe')
       }
-      navigate('/dashboard')
+      navigate('/')
     } else {
       setError(result.error)
       setFieldErrors({ password: 'Invalid credentials. Please verify and try again.' })
@@ -187,285 +74,302 @@ export default function Login() {
   }
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center bg-[color-mix(in_srgb,var(--bg-primary)_92%,#0f172a_8%)] px-4 py-8 sm:px-7">
-      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,color-mix(in_srgb,var(--accent-primary)_2%,var(--bg-primary))_0%,var(--bg-primary)_50%)]" />
+    <div
+      className="relative flex min-h-screen items-center justify-center px-4 py-8 sm:px-7"
+      style={{ background: 'linear-gradient(160deg, #0b0f19 0%, #080c14 55%, #05070d 100%)' }}
+    >
+      {/* Ambient glows */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div
+          className="absolute left-1/4 top-0 h-[520px] w-[760px] -translate-x-1/2 -translate-y-1/3 rounded-full"
+          style={{ background: 'radial-gradient(ellipse at center, rgba(37,99,235,0.15) 0%, transparent 62%)' }}
+        />
+        <div
+          className="absolute right-1/4 bottom-0 h-[400px] w-[600px] translate-x-1/3 translate-y-1/3 rounded-full"
+          style={{ background: 'radial-gradient(ellipse at center, rgba(59,130,246,0.08) 0%, transparent 65%)' }}
+        />
+      </div>
 
       <div className={`relative z-[1] w-full max-w-[1320px] transition-all duration-300 ${isLoaded ? 'translate-y-0 opacity-100' : 'translate-y-2.5 opacity-0'}`}>
-        <div className="grid overflow-hidden rounded-2xl border border-[color-mix(in_srgb,var(--border-default)_85%,#334155_15%)] bg-[color-mix(in_srgb,var(--bg-secondary)_95%,#0f172a_5%)] shadow-[0_25px_50px_-12px_color-mix(in_srgb,#000_25%,transparent)] lg:grid-cols-[minmax(460px,1.2fr)_minmax(460px,560px)]">
-          <aside className="flex flex-col gap-6 border-r border-[color-mix(in_srgb,var(--border-default)_90%,#334155_10%)] bg-[color-mix(in_srgb,var(--bg-secondary)_50%,var(--bg-tertiary)_50%)] p-8">
-            <Link to="/" className="mb-6 inline-flex items-center gap-3 no-underline">
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-[color-mix(in_srgb,var(--accent-primary)_55%,var(--border-default))] bg-[color-mix(in_srgb,var(--accent-primary)_90%,#1e40af_10%)] text-white">
+        <div
+          className="grid overflow-hidden rounded-2xl lg:grid-cols-[minmax(460px,1.2fr)_minmax(460px,560px)]"
+          style={{
+            border: '1px solid rgba(48,54,61,0.6)',
+            background: 'rgba(10,14,22,0.75)',
+            backdropFilter: 'blur(24px)',
+            WebkitBackdropFilter: 'blur(24px)',
+            boxShadow: '0 25px 50px -12px rgba(0,0,0,0.65), 0 0 0 1px rgba(255,255,255,0.025)',
+          }}
+        >
+          {/* === LEFT PANEL === */}
+          <aside
+            className="flex flex-col justify-center gap-6 p-8"
+            style={{
+              borderRight: '1px solid rgba(48,54,61,0.5)',
+              background: 'rgba(8,12,20,0.55)',
+            }}
+          >
+            <Link to="/welcome" className="mb-6 inline-flex items-center gap-3 no-underline">
+              <div
+                className="flex h-11 w-11 items-center justify-center rounded-xl text-white"
+                style={{
+                  background: 'linear-gradient(135deg, #1e40af 0%, #2563eb 60%, #3b82f6 100%)',
+                  border: '1px solid rgba(59,130,246,0.4)',
+                  boxShadow: '0 0 20px rgba(37,99,235,0.3)',
+                }}
+              >
                 <Building2 size={24} />
               </div>
-              <span className="text-2xl font-extrabold tracking-[-0.03em] text-[var(--text-primary)]">SocietyHub</span>
+              <span className="text-2xl font-extrabold" style={{ letterSpacing: '-0.03em', color: '#e6edf3' }}>
+                SocietyHub
+              </span>
             </Link>
 
             <div className="flex flex-col gap-4">
-              <span className="inline-flex w-fit rounded-full border border-[color-mix(in_srgb,var(--border-default)_90%,#334155_10%)] bg-[color-mix(in_srgb,var(--bg-primary)_88%,#111827_12%)] px-3 py-1 text-xs font-bold uppercase tracking-[0.03em] text-[color-mix(in_srgb,var(--text-secondary)_84%,#94a3b8_16%)]">
+              <span
+                className="inline-flex w-fit rounded-full px-3 py-1 text-xs font-bold uppercase"
+                style={{
+                  letterSpacing: '0.04em',
+                  background: 'rgba(59,130,246,0.1)',
+                  border: '1px solid rgba(59,130,246,0.25)',
+                  color: '#60a5fa',
+                }}
+              >
                 Cooperative Governance Portal
               </span>
-              <h2 className="max-w-[28ch] text-[clamp(1.6rem,1.9vw,1.85rem)] font-extrabold leading-[1.24] tracking-[-0.02em] text-[color-mix(in_srgb,var(--text-primary)_90%,#e2e8f0_10%)]">
+              <h2
+                className="max-w-[28ch] font-extrabold leading-[1.24]"
+                style={{ fontSize: 'clamp(1.6rem, 1.9vw, 1.85rem)', letterSpacing: '-0.03em', color: '#e6edf3' }}
+              >
                 Centralized Cooperative Society Administration System
               </h2>
-              <p className="max-w-[58ch] text-[0.99rem] leading-[1.68] text-[color-mix(in_srgb,var(--text-secondary)_86%,#94a3b8_14%)]">
+              <p className="max-w-[58ch] text-[0.99rem] leading-[1.68]" style={{ color: '#6e7985' }}>
                 Designed for committees and administrators to operate core society workflows with accountability and control.
               </p>
             </div>
 
-            <div className="grid gap-3 rounded-xl border border-[color-mix(in_srgb,var(--border-light)_90%,#334155_10%)] bg-[color-mix(in_srgb,var(--bg-primary)_90%,#111827_10%)] p-4">
+            <div
+              className="overflow-hidden rounded-xl"
+              style={{ border: '1px solid rgba(48,54,61,0.5)', background: 'rgba(10,14,22,0.5)' }}
+            >
               {[
-                { icon: Users, text: 'Member & Committee Management' },
-                { icon: Briefcase, text: 'Maintenance & Billing Control' },
-                { icon: FileText, text: 'Complaint & Notice Tracking' },
-                { icon: Shield, text: 'Secure Role-Based Access Control' },
-              ].map((item, idx) => (
-                <div className="flex items-start gap-3 text-[0.95rem] leading-[1.45] text-[var(--text-primary)]" key={idx}>
-                  <item.icon size={16} className="mt-0.5 shrink-0 text-[color-mix(in_srgb,var(--accent-primary)_82%,#1e40af_18%)]" />
+                { icon: Users,     text: 'Member & Committee Management',   color: '#3b82f6', bg: 'rgba(59,130,246,0.1)',  border: 'rgba(59,130,246,0.22)'  },
+                { icon: Briefcase, text: 'Maintenance & Billing Control',    color: '#34d399', bg: 'rgba(52,211,153,0.1)',  border: 'rgba(52,211,153,0.22)'  },
+                { icon: FileText,  text: 'Complaint & Notice Tracking',      color: '#a78bfa', bg: 'rgba(167,139,250,0.1)', border: 'rgba(167,139,250,0.22)' },
+                { icon: Shield,    text: 'Secure Role-Based Access Control', color: '#fb923c', bg: 'rgba(251,146,60,0.1)',  border: 'rgba(251,146,60,0.22)'  },
+              ].map((item, idx, arr) => (
+                <div
+                  key={idx}
+                  className="flex items-center gap-3 px-4 py-3 text-[0.95rem] leading-[1.45]"
+                  style={{
+                    color: '#c9d1d9',
+                    borderBottom: idx < arr.length - 1 ? '1px solid rgba(48,54,61,0.35)' : undefined,
+                  }}
+                >
+                  <div
+                    className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md"
+                    style={{ background: item.bg, border: `1px solid ${item.border}` }}
+                  >
+                    <item.icon size={14} style={{ color: item.color }} />
+                  </div>
                   <span>{item.text}</span>
                 </div>
               ))}
             </div>
           </aside>
 
-          <section className="relative flex flex-col bg-transparent p-8">
-            <div className="absolute right-2 top-2 z-10 rounded-xl border border-[color-mix(in_srgb,var(--border-light)_90%,#334155_10%)] bg-[color-mix(in_srgb,var(--bg-primary)_86%,#111827_14%)] p-1 md:right-3 md:top-3">
-              <div className="flex items-center gap-1">
-                {[
-                  { key: 'system', icon: Monitor, label: 'System', active: !isManual, action: resetToSystemTheme },
-                  { key: 'light', icon: Sun, label: 'Light', active: isManual && theme === 'light', action: () => setTheme('light') },
-                  { key: 'dark', icon: Moon, label: 'Dark', active: isManual && theme === 'dark', action: () => setTheme('dark') },
-                ].map((opt) => (
-                  <button
-                    key={opt.key}
-                    onClick={opt.action}
-                    className={`inline-flex min-h-9 items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold transition-colors duration-200 ${opt.active ? 'bg-[var(--accent-primary)] text-white' : 'text-[var(--text-secondary)] hover:bg-[color-mix(in_srgb,var(--bg-tertiary)_76%,transparent)]'}`}
-                    title={opt.label}
-                  >
-                    <opt.icon size={15} />
-                    <span>{opt.label}</span>
-                  </button>
-                ))}
-              </div>
+          {/* === RIGHT PANEL === */}
+          <section className="relative flex flex-col p-8" style={{ background: 'transparent' }}>
+            {/* Theme switcher */}
+            <div
+              className="absolute right-5 top-5 z-10 flex gap-0.5 rounded-md p-0.5"
+              style={{ border: '1px solid rgba(48,54,61,0.6)', background: 'rgba(8,12,20,0.75)' }}
+            >
+              {[
+                { key: 'system', icon: Monitor, active: !isManual,                        action: resetToSystemTheme     },
+                { key: 'light',  icon: Sun,     active: isManual && theme === 'light',    action: () => setTheme('light') },
+                { key: 'dark',   icon: Moon,    active: isManual && theme === 'dark',     action: () => setTheme('dark')  },
+              ].map((opt) => (
+                <button
+                  key={opt.key}
+                  onClick={opt.action}
+                  className="flex h-7 w-7 items-center justify-center rounded transition"
+                  style={opt.active ? { background: 'rgba(37,99,235,0.85)', color: '#fff' } : { color: '#6e7985' }}
+                  title={opt.key}
+                >
+                  <opt.icon size={14} />
+                </button>
+              ))}
             </div>
-            <div className="flex h-full flex-col justify-start pt-14 md:pt-16">
+
+            <div className="flex h-full flex-col justify-center">
               <div className="mb-7">
-                <h1 className="mb-2 text-[clamp(1.95rem,2.2vw,2.2rem)] font-extrabold leading-none tracking-[-0.02em] text-[color-mix(in_srgb,var(--text-primary)_92%,#e2e8f0_8%)]">Sign in</h1>
-                <p className="pt-3 text-sm text-[color-mix(in_srgb,var(--text-secondary)_88%,#94a3b8_12%)]">Access your society management dashboard</p>
+                <h1
+                  className="mb-2 font-extrabold leading-none"
+                  style={{ fontSize: 'clamp(1.95rem, 2.2vw, 2.2rem)', letterSpacing: '-0.03em', color: '#e6edf3' }}
+                >
+                  Sign in
+                </h1>
+                <p className="text-sm" style={{ color: '#6e7985' }}>Access your society management dashboard</p>
               </div>
 
               {error && (
-                <div className="mb-4 flex items-center gap-2 rounded-md border border-[rgba(248,81,73,0.3)] bg-[rgba(248,81,73,0.1)] px-4 py-3 text-sm text-[#f85149]">
-                  <AlertCircle size={16} />
+                <div
+                  className="mb-4 flex items-center gap-2 rounded-lg px-4 py-3 text-sm"
+                  style={{
+                    background: 'rgba(248,81,73,0.07)',
+                    borderTop: '1px solid rgba(248,81,73,0.2)',
+                    borderRight: '1px solid rgba(248,81,73,0.2)',
+                    borderBottom: '1px solid rgba(248,81,73,0.2)',
+                    borderLeft: '3px solid rgba(248,81,73,0.85)',
+                    color: '#f85149',
+                  }}
+                >
+                  <AlertCircle size={15} className="shrink-0" />
                   <span>{error}</span>
-                  <button onClick={() => setError('')} className="ml-auto px-1 text-lg leading-none text-[#f85149]">&times;</button>
+                  <button
+                    onClick={() => setError('')}
+                    className="ml-auto px-1 text-lg leading-none opacity-60 transition hover:opacity-100"
+                    style={{ color: '#f85149' }}
+                  >
+                    &times;
+                  </button>
                 </div>
               )}
 
               <form onSubmit={handleSubmit} className={`flex flex-col gap-5 ${shake ? 'login-form-shake' : ''}`}>
+                {/* Email */}
                 <div className="flex flex-col gap-2">
-                  <label className="text-sm font-semibold text-[color-mix(in_srgb,var(--text-primary)_88%,#e2e8f0_12%)]">Email address</label>
-                  <div className={`flex min-h-[2.95rem] items-center rounded-[10px] border bg-[color-mix(in_srgb,var(--bg-primary)_92%,#111827_8%)] transition ${fieldErrors.email ? 'border-red-500 shadow-[0_0_0_1px_color-mix(in_srgb,#ef4444_35%,transparent)]' : 'border-[color-mix(in_srgb,var(--border-default)_82%,#334155_18%)] focus-within:border-[color-mix(in_srgb,var(--accent-primary)_76%,#1e40af_24%)] focus-within:bg-[color-mix(in_srgb,var(--bg-primary)_80%,var(--accent-primary)_20%)] focus-within:shadow-[0_0_0_3px_color-mix(in_srgb,var(--accent-primary)_20%,transparent)]'}`}>
-                    <Mail size={16} className="ml-3 text-[var(--text-tertiary)]" />
+                  <label className="text-sm font-semibold" style={{ color: '#c9d1d9' }}>Email address</label>
+                  <div
+                    className="flex min-h-[2.95rem] items-center rounded-[10px] transition-all duration-150"
+                    style={
+                      fieldErrors.email
+                        ? { background: 'rgba(16,21,31,0.92)', border: '1px solid rgba(248,81,73,0.55)', boxShadow: '0 0 0 3px rgba(248,81,73,0.08)' }
+                        : focusedField === 'email'
+                          ? { background: 'rgba(16,21,31,0.92)', border: '1px solid rgba(59,130,246,0.5)', boxShadow: '0 0 0 3px rgba(59,130,246,0.12)' }
+                          : { background: 'rgba(16,21,31,0.92)', border: '1px solid rgba(48,54,61,0.88)' }
+                    }
+                  >
+                    <Mail size={16} className="ml-3 shrink-0" style={{ color: '#6e7985' }} />
                     <input
                       type="email"
                       value={email}
                       onChange={(e) => {
                         setEmail(e.target.value)
-                        setFieldErrors((prev) => {
-                          const rest = { ...prev }
-                          delete rest.email
-                          return rest
-                        })
+                        setFieldErrors((prev) => { const rest = { ...prev }; delete rest.email; return rest })
                       }}
-                      className="min-w-0 flex-1 border-none bg-transparent px-3 py-3 text-base text-[var(--text-primary)] outline-none focus:outline-none focus-visible:outline-none placeholder:text-[var(--text-tertiary)]"
+                      onFocus={() => setFocusedField('email')}
+                      onBlur={() => setFocusedField(null)}
+                      className="min-w-0 flex-1 border-none bg-transparent px-3 py-3 text-base outline-none placeholder:text-[#3d444d]"
+                      style={{ color: '#e6edf3', caretColor: '#3b82f6' }}
                       placeholder="you@example.com"
                       required
                       autoComplete="email"
                       aria-invalid={Boolean(fieldErrors.email)}
                     />
                   </div>
-                  {fieldErrors.email && <p className="text-xs text-red-500">{fieldErrors.email}</p>}
+                  {fieldErrors.email && <p className="text-xs" style={{ color: '#f85149' }}>{fieldErrors.email}</p>}
                 </div>
 
+                {/* Password */}
                 <div className="flex flex-col gap-2">
                   <div className="flex items-center justify-between">
-                    <label className="text-sm font-semibold text-[color-mix(in_srgb,var(--text-primary)_88%,#e2e8f0_12%)]">Password</label>
-                    <Link to="/forgot-password" className="text-xs text-[color-mix(in_srgb,var(--text-secondary)_80%,var(--accent-primary)_20%)] no-underline transition-colors duration-200 hover:text-[var(--accent-primary)]">Forgot password?</Link>
+                    <label className="text-sm font-semibold" style={{ color: '#c9d1d9' }}>Password</label>
+                    <Link
+                      to="/forgot-password"
+                      className="text-xs font-semibold no-underline transition hover:underline"
+                      style={{ color: '#3b82f6' }}
+                    >
+                      Forgot password?
+                    </Link>
                   </div>
-                  <div className={`flex min-h-[2.95rem] items-center rounded-[10px] border bg-[color-mix(in_srgb,var(--bg-primary)_92%,#111827_8%)] transition ${fieldErrors.password ? 'border-red-500 shadow-[0_0_0_1px_color-mix(in_srgb,#ef4444_35%,transparent)]' : 'border-[color-mix(in_srgb,var(--border-default)_82%,#334155_18%)] focus-within:border-[color-mix(in_srgb,var(--accent-primary)_76%,#1e40af_24%)] focus-within:bg-[color-mix(in_srgb,var(--bg-primary)_80%,var(--accent-primary)_20%)] focus-within:shadow-[0_0_0_3px_color-mix(in_srgb,var(--accent-primary)_20%,transparent)]'}`}>
-                    <Lock size={16} className="ml-3 text-[var(--text-tertiary)]" />
+                  <div
+                    className="flex min-h-[2.95rem] items-center rounded-[10px] transition-all duration-150"
+                    style={
+                      fieldErrors.password
+                        ? { background: 'rgba(16,21,31,0.92)', border: '1px solid rgba(248,81,73,0.55)', boxShadow: '0 0 0 3px rgba(248,81,73,0.08)' }
+                        : focusedField === 'password'
+                          ? { background: 'rgba(16,21,31,0.92)', border: '1px solid rgba(59,130,246,0.5)', boxShadow: '0 0 0 3px rgba(59,130,246,0.12)' }
+                          : { background: 'rgba(16,21,31,0.92)', border: '1px solid rgba(48,54,61,0.88)' }
+                    }
+                  >
+                    <Lock size={16} className="ml-3 shrink-0" style={{ color: '#6e7985' }} />
                     <input
                       type={showPassword ? 'text' : 'password'}
                       value={password}
                       onChange={(e) => {
                         setPassword(e.target.value)
-                        setFieldErrors((prev) => {
-                          const rest = { ...prev }
-                          delete rest.password
-                          return rest
-                        })
+                        setFieldErrors((prev) => { const rest = { ...prev }; delete rest.password; return rest })
                       }}
-                      className="min-w-0 flex-1 border-none bg-transparent px-3 py-3 text-base text-[var(--text-primary)] outline-none focus:outline-none focus-visible:outline-none placeholder:text-[var(--text-tertiary)]"
+                      onFocus={() => setFocusedField('password')}
+                      onBlur={() => setFocusedField(null)}
+                      className="min-w-0 flex-1 border-none bg-transparent px-3 py-3 text-base outline-none placeholder:text-[#3d444d]"
+                      style={{ color: '#e6edf3', caretColor: '#3b82f6' }}
                       placeholder="Enter password"
                       required
                       autoComplete="current-password"
                       aria-invalid={Boolean(fieldErrors.password)}
                     />
-                    <button type="button" onClick={() => setShowPassword(!showPassword)} className="mr-1 rounded-lg p-2 text-[var(--text-tertiary)] transition-colors duration-200 hover:text-[var(--text-secondary)]" aria-label={showPassword ? 'Hide password' : 'Show password'}>
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="mr-1 rounded-lg p-2 transition hover:opacity-80"
+                      style={{ color: '#6e7985' }}
+                      aria-label={showPassword ? 'Hide password' : 'Show password'}
+                    >
                       {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                     </button>
                   </div>
-                  {fieldErrors.password && <p className="text-xs text-red-500">{fieldErrors.password}</p>}
+                  {fieldErrors.password && <p className="text-xs" style={{ color: '#f85149' }}>{fieldErrors.password}</p>}
                 </div>
 
-                <div className="mt-[-2px] inline-flex items-center gap-2 text-sm text-[var(--text-secondary)]">
+                {/* Remember me */}
+                <label className="mt-[-2px] inline-flex cursor-pointer items-center gap-2 text-sm" style={{ color: '#6e7985' }}>
                   <input
                     type="checkbox"
                     checked={rememberMe}
                     onChange={(e) => setRememberMe(e.target.checked)}
-                    aria-label="Remember me"
-                    className="h-[17px] w-[17px] translate-y-[-1px] accent-[var(--accent-primary)]"
+                    className="h-[17px] w-[17px] translate-y-[-1px] accent-blue-500"
                   />
                   <span>Remember me</span>
-                </div>
+                </label>
 
-                <div className="rounded-[10px] border border-[color-mix(in_srgb,var(--border-default)_78%,#334155_22%)] bg-[color-mix(in_srgb,var(--bg-primary)_90%,#0f172a_10%)] p-3.5 transition-colors duration-300 hover:border-[color-mix(in_srgb,var(--accent-primary)_40%,var(--border-default))]">
-                  <div className="flex flex-col gap-2.5">
-                    <div className="flex items-center justify-between gap-3">
-                      <p className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.04em] text-[color-mix(in_srgb,var(--text-secondary)_75%,#94a3b8_25%)]">
-                        <MapPin size={12} />
-                        OSM Proximity Monitor
-                      </p>
-                      <span className="rounded-full bg-[color-mix(in_srgb,var(--bg-primary)_80%,transparent)] px-2 py-0.5 text-[10px] font-medium text-[var(--text-tertiary)]">
-                        Session Pin
-                      </span>
-                    </div>
-
-                    <p
-                      key={locationStatus}
-                      className="animate-fadeIn text-xs leading-5 text-[var(--text-secondary)] line-clamp-2"
-                    >
-                      {locationStatus}
-                    </p>
-
-                    <div className="rounded-md border border-[color-mix(in_srgb,var(--border-default)_70%,#334155_30%)] bg-[color-mix(in_srgb,var(--bg-primary)_78%,#0f172a_22%)] px-2.5 py-2 transition-colors duration-300">
-                      <p
-                        key={locationName}
-                        className="animate-fade-in-up text-[13px] font-semibold leading-5 text-[var(--text-primary)] break-words"
-                      >
-                        {isResolvingLocation ? 'Resolving place name...' : locationName}
-                      </p>
-
-                      <div
-                        className={`grid transition-all duration-300 ease-out ${showCoordinates ? 'grid-rows-[1fr] opacity-100 mt-1' : 'grid-rows-[0fr] opacity-0 mt-0'}`}
-                      >
-                        <p className="overflow-hidden text-[11px] text-[var(--text-tertiary)]">
-                          Lat: {location.latitude.toFixed(5)} | Lng: {location.longitude.toFixed(5)}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="flex flex-wrap gap-2 pt-0.5">
-                      <button
-                        type="button"
-                        onClick={detectLocation}
-                        disabled={locating}
-                        className="rounded-md border border-[color-mix(in_srgb,var(--border-default)_78%,#334155_22%)] px-2.5 py-1.5 text-xs font-semibold text-[var(--text-primary)] transition-all duration-200 hover:border-[color-mix(in_srgb,var(--accent-primary)_44%,var(--border-default))] hover:bg-[color-mix(in_srgb,var(--bg-tertiary)_72%,transparent)] disabled:opacity-60"
-                      >
-                        {locating ? 'Locating...' : 'Refresh'}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setIsLocationPanelOpen(true)}
-                        className="rounded-md border border-[color-mix(in_srgb,var(--border-default)_78%,#334155_22%)] px-2.5 py-1.5 text-xs font-semibold text-[var(--text-primary)] transition-all duration-200 hover:border-[color-mix(in_srgb,var(--accent-primary)_44%,var(--border-default))] hover:bg-[color-mix(in_srgb,var(--bg-tertiary)_72%,transparent)]"
-                      >
-                        Adjust Map
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setShowCoordinates((prev) => !prev)}
-                        className="rounded-md border border-[color-mix(in_srgb,var(--border-default)_78%,#334155_22%)] px-2.5 py-1.5 text-xs font-semibold text-[var(--text-primary)] transition-all duration-200 hover:border-[color-mix(in_srgb,var(--accent-primary)_44%,var(--border-default))] hover:bg-[color-mix(in_srgb,var(--bg-tertiary)_72%,transparent)]"
-                      >
-                        {showCoordinates ? 'Hide Coords' : 'Show Coords'}
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                <button type="submit" disabled={loading} className="mt-1 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-[10px] bg-[color-mix(in_srgb,var(--accent-primary)_86%,#1e40af_14%)] px-4 py-3 text-base font-semibold text-white transition-colors duration-200 hover:bg-[color-mix(in_srgb,var(--accent-secondary)_82%,#1e40af_18%)] disabled:cursor-not-allowed disabled:opacity-60">
-                  {loading ? <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/35 border-t-white" /> : <>
-                    Secure Login
-                    <ArrowRight size={16} />
-                  </>}
+                {/* Submit */}
+                <button
+                  type="submit"
+                  disabled={loading}
+                  onMouseEnter={() => setBtnHovered(true)}
+                  onMouseLeave={() => setBtnHovered(false)}
+                  className="mt-1 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-[10px] px-4 py-3 text-base font-semibold text-white transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-60"
+                  style={{
+                    background: 'linear-gradient(135deg, #1e40af 0%, #2563eb 60%, #3b82f6 100%)',
+                    boxShadow: btnHovered && !loading ? '0 8px 30px rgba(37,99,235,0.65)' : '0 4px 15px rgba(37,99,235,0.35)',
+                    transform: btnHovered && !loading ? 'translateY(-2px)' : 'none',
+                  }}
+                >
+                  {loading
+                    ? <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/35 border-t-white" />
+                    : <><span>Secure Login</span><ArrowRight size={16} /></>
+                  }
                 </button>
 
-                <p className="text-center text-xs text-[var(--text-tertiary)]">Authorized users only. Activity may be monitored.</p>
+                <p className="text-center text-xs" style={{ color: '#4d555e' }}>
+                  Authorized users only. Activity may be monitored.
+                </p>
               </form>
 
-              <p className="mt-5 text-center text-sm text-[var(--text-secondary)]">
+              <p className="mt-5 text-center text-sm" style={{ color: '#6e7985' }}>
                 Don't have an account?{' '}
-                <Link to="/contact" className="font-semibold text-[var(--accent-primary)] no-underline transition-colors duration-200 hover:text-[color-mix(in_srgb,var(--accent-primary)_78%,var(--accent-secondary))]">Contact Administrator</Link>
+                <Link
+                  to="/contact"
+                  className="font-semibold no-underline transition hover:underline"
+                  style={{ color: '#3b82f6' }}
+                >
+                  Contact Administrator
+                </Link>
               </p>
             </div>
-
-            {isLocationPanelOpen && (
-              <div className="animate-fadeIn fixed inset-0 z-50 flex items-center justify-center bg-black/45 px-4">
-                <div className="animate-scale-in w-full max-w-[560px] rounded-xl border border-[color-mix(in_srgb,var(--border-default)_80%,#334155_20%)] bg-[var(--bg-secondary)] p-4 shadow-2xl">
-                  <div className="mb-3 flex items-center justify-between">
-                    <div>
-                      <h3 className="text-sm font-bold text-[var(--text-primary)]">Adjust Login Location</h3>
-                      <p className="text-xs text-[var(--text-secondary)]">Click the map to place the location pin for proximity monitoring.</p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setIsLocationPanelOpen(false)}
-                      className="rounded-md p-1.5 text-[var(--text-tertiary)] transition-colors duration-200 hover:text-[var(--text-primary)]"
-                      aria-label="Close map dialog"
-                    >
-                      <X size={16} />
-                    </button>
-                  </div>
-
-                  <div className="overflow-hidden rounded-lg border border-[color-mix(in_srgb,var(--border-default)_72%,#334155_28%)]">
-                    <MapContainer
-                      key={`${location.latitude}-${location.longitude}`}
-                      center={[location.latitude, location.longitude]}
-                      zoom={16}
-                      scrollWheelZoom
-                      style={{ height: '260px', width: '100%' }}
-                    >
-                      <LocationPicker
-                        location={location}
-                        onPick={(coords) => {
-                          setLocation(coords)
-                          setLocationStatus('Location pin updated manually. This location will be used for login audit.')
-                        }}
-                      />
-                    </MapContainer>
-                  </div>
-
-                  <div className="mt-3 flex items-center justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="truncate text-[11px] text-[var(--text-tertiary)]">
-                        {isResolvingLocation ? 'Resolving place name...' : locationName}
-                      </p>
-                      {showCoordinates && (
-                        <p className="text-[11px] text-[var(--text-tertiary)]">
-                          Lat: {location.latitude.toFixed(6)} | Lng: {location.longitude.toFixed(6)}
-                        </p>
-                      )}
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setIsLocationPanelOpen(false)}
-                      className="rounded-md bg-[var(--accent-primary)] px-3 py-1.5 text-xs font-semibold text-white transition-colors duration-200 hover:bg-[color-mix(in_srgb,var(--accent-secondary)_78%,var(--accent-primary))]"
-                    >
-                      Done
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
           </section>
         </div>
       </div>

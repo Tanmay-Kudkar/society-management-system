@@ -129,382 +129,196 @@ export default function Welcome() {
     <div className="min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)] overflow-x-hidden">
       {/* Nav */}
       <nav className={clsx(
-        'welcome-anim fixed top-0 left-0 right-0 z-[100] transition-all duration-300',
-        isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-3'
-      )}>
-        {/* Floating pill bar */}
-        <div className="mx-auto mt-3 max-w-[1180px] px-4">
-          <div
-            className={clsx(
-              'flex items-center justify-between gap-4 rounded-2xl px-4 py-2.5 transition-all duration-300',
-              scrolled
-                ? 'shadow-[0_8px_32px_rgba(0,0,0,0.45),0_0_0_1px_rgba(255,255,255,0.08)]'
-                : 'shadow-[0_4px_20px_rgba(0,0,0,0.3),0_0_0_1px_rgba(255,255,255,0.07)]'
-            )}
-            style={{
-              background: mobileMenuOpen
-                ? 'rgba(3,7,18,0.98)'
-                : 'rgba(255,255,255,0.04)',
-              backdropFilter: 'blur(20px)',
-              WebkitBackdropFilter: 'blur(20px)',
-              border: '1px solid rgba(255,255,255,0.09)',
-            }}
-          >
-            {/* ── LEFT: Logo ── */}
-            <button
-              className="flex items-center gap-2.5 cursor-pointer bg-transparent border-none text-inherit p-0 shrink-0 group"
-              onClick={() => scrollTo('hero')}
-            >
-              <div
-                className="w-8 h-8 rounded-xl flex items-center justify-center text-white transition-all duration-300 group-hover:scale-[1.06] group-hover:-rotate-3"
-                style={{
-                  background: 'linear-gradient(135deg, #1d4ed8 0%, #2563eb 55%, #3b82f6 100%)',
-                  boxShadow: '0 2px 12px rgba(37,99,235,0.45)',
-                }}
-              >
-                <Building2 size={17} />
-              </div>
-              <span className="text-[1.125rem] font-black tracking-[-0.03em]" style={{ color: '#f1f5f9' }}>
-                SocietyHub
-              </span>
-            </button>
-
-            {/* ── CENTER: Nav links ── */}
-            <div className="hidden md:flex items-center gap-0.5">
-              {[
-                { label: 'About Us',  action: () => navigate('/about')       },
-                { label: 'Features',  action: () => scrollTo('features')     },
-                { label: 'Pricing',   action: () => navigate('/pricing')     },
-                { label: 'Contact',   action: () => navigate('/contact')     },
-              ].map((item) => (
-                <button
-                  key={item.label}
-                  onClick={item.action}
-                  className="relative text-[0.8125rem] font-semibold bg-transparent border-none cursor-pointer py-[6px] px-3.5 rounded-xl transition-all duration-150"
-                  style={{ color: '#64748b' }}
-                  onMouseEnter={e => { e.currentTarget.style.color = '#e2e8f0'; e.currentTarget.style.background = 'rgba(255,255,255,0.06)' }}
-                  onMouseLeave={e => { e.currentTarget.style.color = '#64748b'; e.currentTarget.style.background = 'transparent' }}
-                >
-                  {item.label}
-                </button>
-              ))}
+        'welcome-anim fixed top-0 left-0 right-0 z-[100] py-3 px-4 flex flex-col items-stretch backdrop-blur-[8px] transition-all duration-200 border-b border-transparent',
+        isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2',
+        scrolled ? 'border-b-[var(--border-default)] shadow-[var(--shadow-sm)]' : '',
+        mobileMenuOpen ? 'bg-[var(--bg-primary)] backdrop-blur-none' : ''
+      )} style={{ background: mobileMenuOpen ? 'var(--bg-primary)' : scrolled ? 'color-mix(in srgb, var(--bg-primary) 92%, transparent)' : 'color-mix(in srgb, var(--bg-primary) 88%, transparent)' }}>
+        <div className="max-w-[1200px] mx-auto w-full flex items-center justify-between gap-6 border border-[var(--border-default)] rounded-xl py-[0.55rem] px-3 shadow-[var(--shadow-sm)]" style={{ background: 'color-mix(in srgb, var(--bg-secondary) 88%, transparent)' }}>
+          <button className="flex items-center gap-[0.625rem] cursor-pointer bg-transparent border-none text-inherit p-0 transition-opacity hover:opacity-[0.85] group" onClick={() => scrollTo('hero')}>
+            <div className="w-8 h-8 rounded-[var(--radius-md)] bg-[var(--accent-primary)] flex items-center justify-center text-white transition-transform duration-300 group-hover:scale-[1.08] group-hover:-rotate-3">
+              <Building2 size={18} />
             </div>
+            <span className="text-[1.35rem] font-extrabold text-[var(--text-primary)] tracking-[-0.02em]">SocietyHub</span>
+          </button>
 
-            {/* ── RIGHT: Actions ── */}
-            <div className="flex items-center gap-2 shrink-0">
-              {/* Phone — visible ≥1024px */}
-              <a
-                href="tel:+919119300000"
-                className="hidden lg:inline-flex items-center gap-1.5 text-[0.8rem] font-semibold no-underline transition-colors duration-150 px-2 py-1.5 rounded-xl"
-                style={{ color: '#475569' }}
-                aria-label="Call SocietyHub"
-                onMouseEnter={e => { e.currentTarget.style.color = '#94a3b8'; e.currentTarget.style.background = 'rgba(255,255,255,0.05)' }}
-                onMouseLeave={e => { e.currentTarget.style.color = '#475569'; e.currentTarget.style.background = 'transparent' }}
-              >
-                <Phone size={13} />
-                +91 91193 00000
-              </a>
-
-              {/* Divider */}
-              <div className="hidden lg:block w-px h-5 mx-1" style={{ background: 'rgba(255,255,255,0.1)' }} />
-
-              {/* Theme picker */}
-              <div className="relative" ref={themeMenuRef}>
-                <button
-                  onClick={() => setThemeMenuOpen(!themeMenuOpen)}
-                  className="w-8 h-8 rounded-xl flex items-center justify-center cursor-pointer transition-all duration-150 border"
-                  style={{ background: 'rgba(255,255,255,0.04)', borderColor: 'rgba(255,255,255,0.09)', color: '#475569' }}
-                  onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.09)'; e.currentTarget.style.color = '#94a3b8' }}
-                  onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; e.currentTarget.style.color = '#475569' }}
-                  aria-label="Theme"
-                >
-                  {!isManual ? <Monitor size={14} /> : isDark ? <Moon size={14} /> : <Sun size={14} />}
-                </button>
-                {themeMenuOpen && (
-                  <div
-                    className="absolute top-[calc(100%+8px)] right-0 rounded-xl p-1.5 min-w-[138px] z-50 origin-top-right"
-                    style={{
-                      background: 'rgba(10,15,28,0.95)',
-                      border: '1px solid rgba(255,255,255,0.1)',
-                      boxShadow: '0 16px 40px rgba(0,0,0,0.55)',
-                      backdropFilter: 'blur(16px)',
-                      animation: 'welcomeDropIn 0.18s cubic-bezier(0.16, 1, 0.3, 1)',
-                    }}
-                  >
-                    {[
-                      { label: 'System', icon: Monitor, active: !isManual,                     action: () => { resetToSystemTheme(); setThemeMenuOpen(false) } },
-                      { label: 'Light',  icon: Sun,     active: isManual && theme === 'light', action: () => { setTheme('light'); setThemeMenuOpen(false) }    },
-                      { label: 'Dark',   icon: Moon,    active: isManual && theme === 'dark',  action: () => { setTheme('dark'); setThemeMenuOpen(false) }     },
-                    ].map((opt) => (
-                      <button
-                        key={opt.label}
-                        onClick={opt.action}
-                        className="flex items-center gap-2 w-full py-[7px] px-2.5 text-[0.8rem] bg-transparent border-none rounded-lg cursor-pointer transition-all duration-100"
-                        style={opt.active
-                          ? { color: '#60a5fa', background: 'rgba(59,130,246,0.1)' }
-                          : { color: '#64748b' }}
-                        onMouseEnter={e => { if (!opt.active) { e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; e.currentTarget.style.color = '#e2e8f0' } }}
-                        onMouseLeave={e => { if (!opt.active) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#64748b' } }}
-                      >
-                        <opt.icon size={13} />
-                        <span>{opt.label}</span>
-                        {opt.active && <CheckCircle size={13} className="ml-auto" />}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Mobile hamburger */}
-              <button
-                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="md:hidden w-8 h-8 flex items-center justify-center rounded-xl cursor-pointer transition-all duration-150 border"
-                style={{ background: 'rgba(255,255,255,0.04)', borderColor: 'rgba(255,255,255,0.09)', color: '#64748b' }}
-                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.09)'; e.currentTarget.style.color = '#e2e8f0' }}
-                onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; e.currentTarget.style.color = '#64748b' }}
-              >
-                {mobileMenuOpen ? <X size={17} /> : <Menu size={17} />}
-              </button>
-
-              {/* Divider before buttons */}
-              <div className="hidden md:block w-px h-5 mx-0.5" style={{ background: 'rgba(255,255,255,0.1)' }} />
-
-              {/* Society Login */}
-              <button
-                onClick={() => navigate('/login')}
-                className="hidden md:flex items-center gap-1.5 py-[7px] px-3.5 text-[0.8125rem] font-semibold rounded-xl cursor-pointer transition-all duration-150 border"
-                style={{ background: 'transparent', borderColor: 'rgba(255,255,255,0.1)', color: '#94a3b8' }}
-                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.07)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.18)'; e.currentTarget.style.color = '#e2e8f0' }}
-                onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'; e.currentTarget.style.color = '#94a3b8' }}
-              >
-                Society Login
-              </button>
-
-              {/* Admin Portal */}
-              <button
-                onClick={() => navigate('/login')}
-                className="hidden md:flex items-center gap-1.5 py-[7px] px-3.5 text-[0.8125rem] font-semibold rounded-xl cursor-pointer transition-all duration-150 border"
-                style={{ background: 'transparent', borderColor: 'rgba(255,255,255,0.1)', color: '#94a3b8' }}
-                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.07)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.18)'; e.currentTarget.style.color = '#e2e8f0' }}
-                onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'; e.currentTarget.style.color = '#94a3b8' }}
-              >
-                Admin Portal
-              </button>
-
-              {/* Primary CTA */}
-              <button
-                onClick={() => scrollTo('enroll')}
-                className="hidden md:flex items-center gap-1.5 py-[7px] px-4 text-[0.8125rem] font-bold text-white border-none rounded-xl cursor-pointer transition-all duration-150"
-                style={{
-                  background: 'linear-gradient(135deg, #1d4ed8 0%, #2563eb 50%, #3b82f6 100%)',
-                  boxShadow: '0 2px 14px rgba(37,99,235,0.4), inset 0 1px 0 rgba(255,255,255,0.15)',
-                }}
-                onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 6px 24px rgba(37,99,235,0.6), inset 0 1px 0 rgba(255,255,255,0.18)'; e.currentTarget.style.transform = 'translateY(-1px)' }}
-                onMouseLeave={e => { e.currentTarget.style.boxShadow = '0 2px 14px rgba(37,99,235,0.4), inset 0 1px 0 rgba(255,255,255,0.15)'; e.currentTarget.style.transform = 'none' }}
-              >
-                Enroll your society
-                <ArrowRight size={14} />
-              </button>
-            </div>
+          <div className="flex gap-1 max-md:hidden">
+            <button onClick={() => navigate('/about')} className="text-sm font-semibold text-[var(--text-secondary)] bg-transparent border-none cursor-pointer py-[0.375rem] px-3 rounded-[var(--radius-md)] transition-colors relative hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)]">About Us</button>
+            <button onClick={() => scrollTo('features')} className="text-sm font-semibold text-[var(--text-secondary)] bg-transparent border-none cursor-pointer py-[0.375rem] px-3 rounded-[var(--radius-md)] transition-colors relative hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)]">Features</button>
+            <button onClick={() => navigate('/pricing')} className="text-sm font-semibold text-[var(--text-secondary)] bg-transparent border-none cursor-pointer py-[0.375rem] px-3 rounded-[var(--radius-md)] transition-colors relative hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)]">Pricing</button>
+            <button onClick={() => navigate('/contact')} className="text-sm font-semibold text-[var(--text-secondary)] bg-transparent border-none cursor-pointer py-[0.375rem] px-3 rounded-[var(--radius-md)] transition-colors relative hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)]">Contact</button>
           </div>
 
-          {/* Mobile menu dropdown */}
-          {mobileMenuOpen && (
-            <div
-              className="mt-1 rounded-2xl overflow-hidden"
-              style={{
-                background: 'rgba(3,7,18,0.97)',
-                border: '1px solid rgba(255,255,255,0.09)',
-                boxShadow: '0 16px 40px rgba(0,0,0,0.55)',
-                backdropFilter: 'blur(20px)',
-                animation: 'welcomeMobileSlide 0.22s cubic-bezier(0.16, 1, 0.3, 1)',
-              }}
-            >
-              {/* Nav links */}
-              <div className="p-3 flex flex-col gap-0.5" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
-                {[
-                  { label: 'About Us', action: () => { navigate('/about'); setMobileMenuOpen(false) } },
-                  { label: 'Features', action: () => { scrollTo('features'); setMobileMenuOpen(false) } },
-                  { label: 'Pricing',  action: () => { navigate('/pricing'); setMobileMenuOpen(false) } },
-                  { label: 'Contact',  action: () => { navigate('/contact'); setMobileMenuOpen(false) } },
-                ].map((item, i) => (
-                  <button
-                    key={item.label}
-                    onClick={item.action}
-                    className="text-[0.875rem] font-medium text-left py-2.5 px-3 rounded-xl bg-transparent border-none cursor-pointer transition-all duration-120"
-                    style={{ color: '#64748b', opacity: 0, animation: `welcomeMenuItemIn 0.28s cubic-bezier(0.16,1,0.3,1) ${0.04 * (i + 1)}s forwards` }}
-                    onMouseEnter={e => { e.currentTarget.style.color = '#e2e8f0'; e.currentTarget.style.background = 'rgba(255,255,255,0.05)' }}
-                    onMouseLeave={e => { e.currentTarget.style.color = '#64748b'; e.currentTarget.style.background = 'transparent' }}
-                  >
-                    {item.label}
-                  </button>
-                ))}
-              </div>
-              {/* Action buttons */}
-              <div className="p-3 flex flex-col gap-2" style={{ opacity: 0, animation: 'welcomeMenuItemIn 0.3s cubic-bezier(0.16,1,0.3,1) 0.22s forwards' }}>
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    onClick={() => { navigate('/login'); setMobileMenuOpen(false) }}
-                    className="py-2.5 px-4 text-[0.8375rem] font-semibold rounded-xl border cursor-pointer transition-all duration-150"
-                    style={{ background: 'transparent', borderColor: 'rgba(255,255,255,0.12)', color: '#94a3b8' }}
-                  >
-                    Society Login
-                  </button>
-                  <button
-                    onClick={() => { navigate('/login'); setMobileMenuOpen(false) }}
-                    className="py-2.5 px-4 text-[0.8375rem] font-semibold rounded-xl border cursor-pointer transition-all duration-150"
-                    style={{ background: 'transparent', borderColor: 'rgba(255,255,255,0.12)', color: '#94a3b8' }}
-                  >
-                    Admin Portal
-                  </button>
+          <div className="flex items-center gap-2">
+            <a className="hidden min-[900px]:inline-flex items-center text-sm font-bold text-[var(--text-secondary)] no-underline py-[0.375rem] px-2 rounded-[var(--radius-md)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)]" href="tel:+919119300000" aria-label="Call SocietyHub">
+              +91 91193 00000
+            </a>
+
+            {/* Theme dropdown */}
+            <div className="relative" ref={themeMenuRef}>
+              <button onClick={() => setThemeMenuOpen(!themeMenuOpen)} className="w-[34px] h-[34px] rounded-[var(--radius-md)] bg-[var(--bg-tertiary)] border border-[var(--border-default)] text-[var(--text-secondary)] flex items-center justify-center cursor-pointer transition-colors hover:text-[var(--text-primary)] hover:border-[var(--border-muted)]" aria-label="Theme">
+                {!isManual ? <Monitor size={16} /> : isDark ? <Moon size={16} /> : <Sun size={16} />}
+              </button>
+              {themeMenuOpen && (
+                <div className="absolute top-[calc(100%+6px)] right-0 bg-[var(--bg-secondary)] border border-[var(--border-default)] rounded-[var(--radius-lg)] p-[0.375rem] min-w-[140px] shadow-[var(--shadow-lg)] z-50 origin-top-right" style={{ animation: 'welcomeDropIn 0.2s cubic-bezier(0.16, 1, 0.3, 1)' }}>
+                  {[
+                    { label: 'System', icon: Monitor, active: !isManual, action: () => { resetToSystemTheme(); setThemeMenuOpen(false) } },
+                    { label: 'Light', icon: Sun, active: isManual && theme === 'light', action: () => { setTheme('light'); setThemeMenuOpen(false) } },
+                    { label: 'Dark', icon: Moon, active: isManual && theme === 'dark', action: () => { setTheme('dark'); setThemeMenuOpen(false) } },
+                  ].map((opt) => (
+                    <button key={opt.label} onClick={opt.action} className={clsx(
+                      'flex items-center gap-2 w-full py-2 px-[0.625rem] text-[0.8125rem] bg-transparent border-none rounded-[var(--radius-sm)] cursor-pointer transition-colors',
+                      opt.active ? 'text-[var(--accent-primary)]' : 'text-[var(--text-secondary)] hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-primary)]'
+                    )} style={opt.active ? { background: 'color-mix(in srgb, var(--accent-primary) 10%, transparent)' } : undefined}>
+                      <opt.icon size={14} />
+                      <span>{opt.label}</span>
+                      {opt.active && <CheckCircle size={14} className="ml-auto" />}
+                    </button>
+                  ))}
                 </div>
-                <button
-                  onClick={() => { scrollTo('enroll'); setMobileMenuOpen(false) }}
-                  className="w-full py-2.5 px-4 text-[0.875rem] font-bold text-white border-none rounded-xl cursor-pointer transition-all duration-150 flex items-center justify-center gap-2"
-                  style={{
-                    background: 'linear-gradient(135deg, #1d4ed8 0%, #2563eb 50%, #3b82f6 100%)',
-                    boxShadow: '0 4px 20px rgba(37,99,235,0.45)',
-                  }}
-                >
-                  Enroll your society <ArrowRight size={14} />
-                </button>
-              </div>
+              )}
             </div>
-          )}
+
+            <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="hidden max-md:flex w-[34px] h-[34px] items-center justify-center bg-transparent border border-[var(--border-default)] rounded-[var(--radius-md)] text-[var(--text-secondary)] cursor-pointer transition-all hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] active:scale-[0.92]">
+              {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+            </button>
+
+            <button onClick={() => navigate('/login')} className="flex items-center gap-[0.375rem] py-2 px-4 text-[0.8125rem] font-semibold text-[var(--text-primary)] bg-transparent border border-[var(--border-default)] rounded-[var(--radius-md)] cursor-pointer transition-all duration-200 max-md:hidden hover:bg-[var(--bg-tertiary)] hover:border-[color-mix(in_srgb,var(--text-secondary)_60%,transparent)] hover:text-[var(--text-primary)] hover:-translate-y-0.5 hover:shadow-[0_4px_14px_color-mix(in_srgb,#000_20%,transparent)] active:translate-y-0 active:scale-[0.97]">
+              Society Login
+            </button>
+            <button onClick={() => navigate('/login')} className="flex items-center gap-[0.375rem] py-2 px-4 text-[0.8125rem] font-semibold text-[var(--text-primary)] bg-transparent border border-[var(--border-default)] rounded-[var(--radius-md)] cursor-pointer transition-all duration-200 max-md:hidden hover:bg-[var(--bg-tertiary)] hover:border-[color-mix(in_srgb,var(--text-secondary)_60%,transparent)] hover:text-[var(--text-primary)] hover:-translate-y-0.5 hover:shadow-[0_4px_14px_color-mix(in_srgb,#000_20%,transparent)] active:translate-y-0 active:scale-[0.97]">
+              Admin Portal
+            </button>
+            <button onClick={() => scrollTo('enroll')} className="flex items-center gap-[0.375rem] py-2 px-4 text-[0.8125rem] font-semibold text-white bg-[var(--accent-primary)] border-none rounded-[var(--radius-md)] cursor-pointer transition-all duration-200 max-md:hidden hover:bg-[var(--accent-hover)] hover:-translate-y-0.5 hover:shadow-[0_6px_20px_color-mix(in_srgb,var(--accent-primary)_50%,transparent)] active:translate-y-0 active:scale-[0.97] active:shadow-[0_2px_8px_color-mix(in_srgb,var(--accent-primary)_35%,transparent)]">
+              Enroll your society
+              <ArrowRight size={14} />
+            </button>
+          </div>
         </div>
+
+        {/* Mobile menu */}
+        {mobileMenuOpen && (
+          <div className="welcome-anim flex flex-col gap-1 py-3 px-4 pb-4" style={{ animation: 'welcomeMobileSlide 0.25s cubic-bezier(0.16, 1, 0.3, 1)' }}>
+            {[
+              { label: 'About Us', action: () => { navigate('/about'); setMobileMenuOpen(false) } },
+              { label: 'Features', action: () => { scrollTo('features'); setMobileMenuOpen(false) } },
+              { label: 'Pricing', action: () => { navigate('/pricing'); setMobileMenuOpen(false) } },
+              { label: 'Contact', action: () => { navigate('/contact'); setMobileMenuOpen(false) } },
+            ].map((item, i) => (
+              <button key={item.label} onClick={item.action} className="welcome-anim text-sm font-medium text-[var(--text-secondary)] bg-transparent border-none text-left py-[0.625rem] px-3 rounded-[var(--radius-md)] cursor-pointer transition-all hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] hover:pl-4 active:scale-[0.98]" style={{ opacity: 0, animation: `welcomeMenuItemIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) ${0.04 * (i + 1)}s forwards` }}>
+                {item.label}
+              </button>
+            ))}
+
+            <button onClick={() => { navigate('/login'); setMobileMenuOpen(false) }} className="welcome-anim mt-2 py-[0.625rem] px-4 text-sm font-semibold text-[var(--accent-primary)] bg-transparent border-[1.5px] border-[var(--accent-primary)] rounded-[var(--radius-md)] cursor-pointer transition-all hover:-translate-y-px" style={{ opacity: 0, animation: 'welcomeMenuItemIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) 0.2s forwards' }}>
+              Society Login
+            </button>
+            <button onClick={() => { navigate('/login'); setMobileMenuOpen(false) }} className="welcome-anim py-[0.625rem] px-4 text-sm font-semibold text-white bg-[var(--accent-primary)] border-none rounded-[var(--radius-md)] cursor-pointer transition-all hover:bg-[var(--accent-hover)] hover:-translate-y-px active:translate-y-0 active:scale-[0.98]" style={{ opacity: 0, animation: 'welcomeMenuItemIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) 0.25s forwards' }}>
+              Admin Portal
+            </button>
+          </div>
+        )}
       </nav>
 
       {/* Hero */}
-      <section id="hero" className="relative min-h-screen flex items-center justify-center pt-28 pb-24 px-6 overflow-hidden" style={{ background: '#030712' }}>
+      <section id="hero" className="relative min-h-screen flex items-center justify-center pt-24 pb-20 px-6 overflow-hidden" style={{ background: '#050509' }}>
 
-        {/* ── Background layer ── */}
+        {/* ── Ambient background layer ── */}
         <div className="absolute inset-0 pointer-events-none select-none overflow-hidden" aria-hidden="true">
-          {/* Dark grid */}
-          <div className="absolute inset-0" style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,0.046) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.046) 1px, transparent 1px)', backgroundSize: '56px 56px', backgroundPosition: 'center center' }} />
-          {/* Central spotlight glow */}
-          <div className="absolute -top-[8%] left-1/2 -translate-x-1/2 w-[1100px] h-[750px]" style={{ background: 'radial-gradient(ellipse 68% 58% at 50% 0%, rgba(37,99,235,0.28) 0%, rgba(59,130,246,0.1) 42%, transparent 72%)' }} />
-          {/* Top horizon line */}
-          <div className="absolute top-0 inset-x-0 h-px" style={{ background: 'linear-gradient(90deg, transparent 0%, rgba(59,130,246,0.6) 50%, transparent 100%)' }} />
-          {/* Bottom fade */}
-          <div className="absolute bottom-0 inset-x-0 h-44" style={{ background: 'linear-gradient(to top, rgba(3,7,18,0.9), transparent)' }} />
-          {/* Soft edge glows */}
-          <div className="absolute -left-48 top-[28%] w-96 h-[580px] rounded-full blur-3xl" style={{ background: 'rgba(37,99,235,0.075)' }} />
-          <div className="absolute -right-48 top-[28%] w-96 h-[580px] rounded-full blur-3xl" style={{ background: 'rgba(37,99,235,0.055)' }} />
+          {/* Blue radial glow */}
+          <div className="absolute -top-[6%] left-1/2 -translate-x-1/2 w-[1000px] h-[700px]" style={{ background: 'radial-gradient(ellipse 65% 55% at 50% 0%, rgba(29,111,243,0.14) 0%, rgba(59,130,246,0.05) 50%, transparent 80%)' }} />
+          {/* Subtle dot / grid */}
+          <div className="absolute inset-0" style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,0.022) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.022) 1px, transparent 1px)', backgroundSize: '64px 64px' }} />
+          {/* Bottom accent line */}
+          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 h-px w-[55%]" style={{ background: 'linear-gradient(90deg, transparent, rgba(47,129,247,0.5), transparent)' }} />
+          {/* Faint left / right edge glow */}
+          <div className="absolute -left-32 top-1/2 -translate-y-1/2 w-64 h-[500px] rounded-full blur-3xl" style={{ background: 'rgba(29,111,243,0.055)' }} />
+          <div className="absolute -right-32 top-1/2 -translate-y-1/2 w-64 h-[500px] rounded-full blur-3xl" style={{ background: 'rgba(29,111,243,0.04)' }} />
         </div>
 
-        <div className="max-w-[780px] w-full mx-auto relative z-[1] flex flex-col items-center text-center">
+        <div className="max-w-[820px] w-full mx-auto relative z-[1]">
 
           {/* Badge */}
           <div className={clsx(
-            'welcome-anim inline-flex items-center gap-[6px] py-[5px] pl-[10px] pr-[14px] text-xs font-semibold rounded-full mb-8 transition-all duration-500',
+            'welcome-anim inline-flex items-center gap-2 py-[0.375rem] px-4 text-xs font-medium rounded-full mb-7 border transition-all duration-500',
             isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'
-          )} style={{ transitionDelay: '0.1s', background: 'linear-gradient(135deg, rgba(37,99,235,0.1), rgba(96,165,250,0.05))', border: '1px solid rgba(59,130,246,0.3)', color: '#93c5fd', backdropFilter: 'blur(8px)' }}>
-            <span className="w-[6px] h-[6px] rounded-full bg-[#60a5fa] shrink-0" style={{ boxShadow: '0 0 8px 1px rgba(96,165,250,0.75)', animation: 'heroPulse 2s ease-in-out infinite' }} />
+          )} style={{ transitionDelay: '0.1s', background: 'rgba(22,27,34,0.85)', borderColor: '#21262d', color: '#8b949e' }}>
+            <span className="w-[6px] h-[6px] rounded-full bg-[#3fb950] shrink-0" style={{ animation: 'heroPulse 2s ease-in-out infinite' }} />
             Trusted by housing communities across India
           </div>
 
           {/* Headline */}
           <h1 className={clsx(
-            'welcome-anim text-[clamp(2.8rem,6.2vw,4.625rem)] font-black leading-[1.06] tracking-[-0.042em] text-white mb-6 transition-all duration-500',
+            'welcome-anim text-[clamp(2.65rem,5.8vw,4.375rem)] font-extrabold leading-[1.08] tracking-[-0.038em] text-white mb-5 transition-all duration-500',
             isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
           )} style={{ transitionDelay: '0.2s' }}>
             Visitor, Society and Accounting<br />
-            <span style={{ background: 'linear-gradient(135deg, #2563eb 0%, #3b82f6 35%, #60a5fa 68%, #93c5fd 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', filter: 'drop-shadow(0 2px 28px rgba(59,130,246,0.35))' }}>
+            <span style={{ background: 'linear-gradient(130deg, #2563eb 0%, #3b82f6 40%, #60a5fa 75%, #93c5fd 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
               Management System
             </span>
           </h1>
 
           {/* Description */}
           <p className={clsx(
-            'welcome-anim text-[1.0625rem] leading-[1.78] mb-10 max-w-[540px] transition-all duration-500',
+            'welcome-anim text-[1.0625rem] leading-[1.72] mb-8 max-w-[580px] transition-all duration-500',
             isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'
-          )} style={{ transitionDelay: '0.3s', color: '#64748b' }}>
+          )} style={{ transitionDelay: '0.3s', color: '#7d8590' }}>
             A complete platform to manage residents, visitor entries, billing, complaints,
             notices, and daily operations — built for modern housing societies.
           </p>
 
           {/* Enroll form card */}
-          <div id="enroll" className={clsx(
-            'welcome-anim w-full mb-6 transition-all duration-500',
+          <div className={clsx(
+            'welcome-anim mb-6 transition-all duration-500',
             isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'
           )} style={{ transitionDelay: '0.35s' }}>
             {enrollSubmitted ? (
-              <div className="p-8 rounded-2xl text-center" style={{ background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.09)', boxShadow: '0 0 0 1px rgba(59,130,246,0.08), 0 32px 64px -12px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.06)', backdropFilter: 'blur(24px)' }}>
-                <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full" style={{ background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.22)' }}>
+              <div className="p-7 rounded-2xl text-center" style={{ background: 'rgba(13,17,23,0.94)', border: '1px solid #21262d', boxShadow: '0 20px 60px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.04)' }}>
+                <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full" style={{ background: 'rgba(34,197,94,0.12)' }}>
                   <CheckCircle size={28} style={{ color: '#22c55e' }} />
                 </div>
-                <p className="font-bold text-white text-lg mb-1">Enquiry Received!</p>
-                <p className="text-sm mb-5" style={{ color: '#64748b' }}>
-                  We'll reach out to <span className="font-semibold text-white">+91 {enrollPhone}</span> within 24 hours.
+                <p className="font-extrabold text-white text-base mb-1">Enquiry Received!</p>
+                <p className="text-sm mb-5" style={{ color: '#7d8590' }}>
+                  We'll reach out to <span className="font-bold text-white">+91 {enrollPhone}</span> within 24 hours.
                 </p>
                 <button
                   onClick={() => { setEnrollSubmitted(false); setEnrollName(''); setEnrollPhone(''); setEnrollReason('') }}
-                  className="text-sm font-semibold bg-transparent border-none cursor-pointer"
-                  style={{ color: '#3b82f6', textDecoration: 'underline', textUnderlineOffset: '3px' }}
+                  className="text-xs font-semibold bg-transparent border-none cursor-pointer underline underline-offset-2"
+                  style={{ color: '#3b82f6' }}
                 >
                   Submit another enquiry
                 </button>
               </div>
             ) : (
               <form onSubmit={handleEnrollSubmit}>
-                <div className="rounded-2xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 0 0 1px rgba(59,130,246,0.1), 0 28px 56px -8px rgba(0,0,0,0.65), inset 0 1px 0 rgba(255,255,255,0.07)', backdropFilter: 'blur(28px)' }}>
+                <div className="p-5 rounded-2xl" style={{ background: 'rgba(13,17,23,0.94)', border: '1px solid #21262d', boxShadow: '0 20px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.04)', backdropFilter: 'blur(16px)' }}>
 
-                  {/* Card header */}
-                  <div className="flex items-center gap-3.5 px-6 py-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.02)' }}>
-                    <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'linear-gradient(135deg, rgba(37,99,235,0.28), rgba(59,130,246,0.12))', border: '1px solid rgba(59,130,246,0.35)' }}>
-                      <Building2 size={17} style={{ color: '#60a5fa' }} />
-                    </div>
-                    <div className="text-left">
-                      <p className="text-sm font-bold leading-none mb-[3px]" style={{ color: '#f1f5f9' }}>Enroll Your Society</p>
-                      <p className="text-xs" style={{ color: '#475569' }}>Fill in your details — we'll reach out within 24 hours</p>
-                    </div>
-                  </div>
-
-                  {/* Fields */}
-                  <div className="p-6 flex flex-col gap-4">
-
-                    {/* Name – full width */}
+                  {/* Row 1 – Name + Phone */}
+                  <div className="grid grid-cols-2 max-[580px]:grid-cols-1 gap-3 mb-3">
                     <div className="flex flex-col gap-[6px]">
-                      <label className="text-[0.7rem] font-bold uppercase tracking-[0.08em] text-left" style={{ color: '#475569' }}>Name</label>
+                      <span className="text-[0.675rem] font-bold uppercase tracking-widest" style={{ color: '#6e7681' }}>Name</span>
                       <input
                         value={enrollName}
                         onChange={(e) => setEnrollName(e.target.value)}
-                        className="w-full h-[44px] px-4 rounded-xl text-[0.875rem] font-medium transition-all duration-150 focus:outline-none"
-                        style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#f1f5f9' }}
-                        onFocus={e => { e.target.style.borderColor = 'rgba(59,130,246,0.7)'; e.target.style.boxShadow = '0 0 0 3px rgba(59,130,246,0.12)'; e.target.style.background = 'rgba(255,255,255,0.08)' }}
-                        onBlur={e => { e.target.style.borderColor = 'rgba(255,255,255,0.1)'; e.target.style.boxShadow = 'none'; e.target.style.background = 'rgba(255,255,255,0.05)' }}
+                        className="h-[44px] px-3.5 rounded-xl text-sm font-medium transition-all duration-150 focus:outline-none"
+                        style={{ background: 'rgba(22,27,34,0.85)', border: '1px solid #30363d', color: '#e6edf3' }}
+                        onFocus={e => { e.target.style.borderColor = '#3b82f6'; e.target.style.boxShadow = '0 0 0 3px rgba(59,130,246,0.16)' }}
+                        onBlur={e => { e.target.style.borderColor = '#30363d'; e.target.style.boxShadow = 'none' }}
                         placeholder="Your full name"
                         autoComplete="name"
                       />
                     </div>
-
-                    {/* Phone – full width with inline +91 prefix */}
                     <div className="flex flex-col gap-[6px]">
-                      <label className="text-[0.7rem] font-bold uppercase tracking-[0.08em] text-left" style={{ color: '#475569' }}>Phone</label>
-                      <div
-                        id="phone-wrapper"
-                        className="flex h-[44px] rounded-xl overflow-hidden transition-all duration-150"
-                        style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}
-                      >
-                        <span
-                          className="inline-flex items-center px-3.5 text-[0.875rem] font-bold shrink-0 select-none"
-                          style={{ color: '#475569', borderRight: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.03)' }}
-                        >
-                          +91
-                        </span>
+                      <span className="text-[0.675rem] font-bold uppercase tracking-widest" style={{ color: '#6e7681' }}>Phone</span>
+                      <div className="flex items-center gap-2">
+                        <span className="inline-flex items-center justify-center h-[44px] px-3 rounded-xl text-sm font-bold shrink-0" style={{ background: 'rgba(30,37,48,0.9)', border: '1px solid #30363d', color: '#8b949e' }}>+91</span>
                         <input
                           value={enrollPhone}
                           onChange={(e) => setEnrollPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
-                          className="flex-1 h-full px-3.5 bg-transparent text-[0.875rem] font-medium focus:outline-none"
-                          style={{ color: '#f1f5f9' }}
-                          onFocus={e => {
-                            const wrapper = document.getElementById('phone-wrapper')
-                            if (wrapper) { wrapper.style.borderColor = 'rgba(59,130,246,0.7)'; wrapper.style.boxShadow = '0 0 0 3px rgba(59,130,246,0.12)'; wrapper.style.background = 'rgba(255,255,255,0.08)' }
-                          }}
-                          onBlur={e => {
-                            const wrapper = document.getElementById('phone-wrapper')
-                            if (wrapper) { wrapper.style.borderColor = 'rgba(255,255,255,0.1)'; wrapper.style.boxShadow = 'none'; wrapper.style.background = 'rgba(255,255,255,0.05)' }
-                          }}
+                          className="flex-1 h-[44px] px-3.5 rounded-xl text-sm font-medium transition-all duration-150 focus:outline-none"
+                          style={{ background: 'rgba(22,27,34,0.85)', border: '1px solid #30363d', color: '#e6edf3' }}
+                          onFocus={e => { e.target.style.borderColor = '#3b82f6'; e.target.style.boxShadow = '0 0 0 3px rgba(59,130,246,0.16)' }}
+                          onBlur={e => { e.target.style.borderColor = '#30363d'; e.target.style.boxShadow = 'none' }}
                           placeholder="10-digit number"
                           type="tel"
                           inputMode="numeric"
@@ -513,49 +327,49 @@ export default function Welcome() {
                         />
                       </div>
                     </div>
-
-                    {/* Reason – full width */}
-                    <div className="flex flex-col gap-[6px]">
-                      <label className="text-[0.7rem] font-bold uppercase tracking-[0.08em] text-left" style={{ color: '#475569' }}>Reason</label>
-                      <div className="relative">
-                        <select
-                          value={enrollReason}
-                          onChange={(e) => setEnrollReason(e.target.value)}
-                          className="w-full h-[44px] pl-4 pr-10 rounded-xl text-[0.875rem] font-medium appearance-none cursor-pointer transition-all duration-150 focus:outline-none"
-                          style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: enrollReason ? '#f1f5f9' : '#475569' }}
-                          onFocus={e => { e.target.style.borderColor = 'rgba(59,130,246,0.7)'; e.target.style.boxShadow = '0 0 0 3px rgba(59,130,246,0.12)'; e.target.style.background = 'rgba(255,255,255,0.08)' }}
-                          onBlur={e => { e.target.style.borderColor = 'rgba(255,255,255,0.1)'; e.target.style.boxShadow = 'none'; e.target.style.background = 'rgba(255,255,255,0.05)' }}
-                        >
-                          <option value="" style={{ background: '#0a0f1e' }}>Select a reason…</option>
-                          <option value="DEMO" style={{ background: '#0a0f1e' }}>Request a demo</option>
-                          <option value="ONBOARDING" style={{ background: '#0a0f1e' }}>New society onboarding</option>
-                          <option value="PRICING" style={{ background: '#0a0f1e' }}>Pricing enquiry</option>
-                        </select>
-                        <ChevronDown size={14} className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2" style={{ color: '#475569' }} />
-                      </div>
-                    </div>
-
-                    {/* Submit – full width */}
-                    <button
-                      type="submit"
-                      disabled={enrollSubmitting}
-                      className="h-[48px] w-full inline-flex items-center justify-center gap-2 rounded-xl border-none cursor-pointer text-[0.9rem] font-bold text-white transition-all duration-200 hover:-translate-y-[2px] active:translate-y-0 active:brightness-95 disabled:opacity-55 disabled:cursor-not-allowed disabled:hover:translate-y-0"
-                      style={{ background: 'linear-gradient(135deg, #1d4ed8 0%, #2563eb 50%, #3b82f6 100%)', boxShadow: enrollSubmitting ? 'none' : '0 4px 24px rgba(37,99,235,0.5), inset 0 1px 0 rgba(255,255,255,0.16)' }}
-                      onMouseEnter={e => { if (!enrollSubmitting) e.currentTarget.style.boxShadow = '0 8px 40px rgba(37,99,235,0.68), inset 0 1px 0 rgba(255,255,255,0.2)' }}
-                      onMouseLeave={e => { if (!enrollSubmitting) e.currentTarget.style.boxShadow = '0 4px 24px rgba(37,99,235,0.5), inset 0 1px 0 rgba(255,255,255,0.16)' }}
-                    >
-                      {enrollSubmitting
-                        ? <><span className="h-4 w-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />Submitting…</>
-                        : <>Enroll your society <ArrowRight size={15} /></>}
-                    </button>
-
-                    {enrollError && (
-                      <p className="text-[0.8rem] font-semibold flex items-center gap-1.5" style={{ color: '#f87171' }}>
-                        <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#f87171] shrink-0" />
-                        {enrollError}
-                      </p>
-                    )}
                   </div>
+
+                  {/* Row 2 – Reason + Submit */}
+                  <div className="grid grid-cols-2 max-[580px]:grid-cols-1 gap-3">
+                    <div className="flex flex-col gap-[6px]">
+                      <span className="text-[0.675rem] font-bold uppercase tracking-widest" style={{ color: '#6e7681' }}>Reason</span>
+                      <select
+                        value={enrollReason}
+                        onChange={(e) => setEnrollReason(e.target.value)}
+                        className="h-[44px] px-3.5 rounded-xl text-sm font-medium appearance-none cursor-pointer transition-all duration-150 focus:outline-none"
+                        style={{ background: 'rgba(22,27,34,0.85)', border: '1px solid #30363d', color: enrollReason ? '#e6edf3' : '#4a5568' }}
+                        onFocus={e => { e.target.style.borderColor = '#3b82f6'; e.target.style.boxShadow = '0 0 0 3px rgba(59,130,246,0.16)' }}
+                        onBlur={e => { e.target.style.borderColor = '#30363d'; e.target.style.boxShadow = 'none' }}
+                      >
+                        <option value="" style={{ background: '#0d1117' }}>Select a reason…</option>
+                        <option value="DEMO" style={{ background: '#0d1117' }}>Request a demo</option>
+                        <option value="ONBOARDING" style={{ background: '#0d1117' }}>New society onboarding</option>
+                        <option value="PRICING" style={{ background: '#0d1117' }}>Pricing enquiry</option>
+                      </select>
+                    </div>
+                    <div className="flex flex-col gap-[6px]">
+                      <span className="text-[0.675rem] font-bold uppercase tracking-widest select-none" style={{ color: 'transparent' }}>Submit</span>
+                      <button
+                        type="submit"
+                        disabled={enrollSubmitting}
+                        className="h-[44px] w-full inline-flex items-center justify-center gap-2 px-5 rounded-xl border-none cursor-pointer text-sm font-bold text-white transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0 active:brightness-95 disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:translate-y-0"
+                        style={{ background: 'linear-gradient(135deg, #1d4ed8 0%, #2563eb 45%, #3b82f6 100%)', boxShadow: enrollSubmitting ? 'none' : '0 4px 22px rgba(37,99,235,0.45), inset 0 1px 0 rgba(255,255,255,0.12)' }}
+                        onMouseEnter={e => { if (!enrollSubmitting) e.currentTarget.style.boxShadow = '0 8px 32px rgba(37,99,235,0.6), inset 0 1px 0 rgba(255,255,255,0.14)' }}
+                        onMouseLeave={e => { if (!enrollSubmitting) e.currentTarget.style.boxShadow = '0 4px 22px rgba(37,99,235,0.45), inset 0 1px 0 rgba(255,255,255,0.12)' }}
+                      >
+                        {enrollSubmitting
+                          ? <><span className="h-4 w-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />Submitting…</>
+                          : <>Enroll your society <ArrowRight size={15} /></>}
+                      </button>
+                    </div>
+                  </div>
+
+                  {enrollError && (
+                    <p className="text-xs font-semibold flex items-center gap-1.5 mt-3" style={{ color: '#f87171' }}>
+                      <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#f87171] shrink-0" />
+                      {enrollError}
+                    </p>
+                  )}
                 </div>
               </form>
             )}
@@ -563,28 +377,28 @@ export default function Welcome() {
 
           {/* CTA buttons */}
           <div className={clsx(
-            'welcome-anim flex flex-wrap justify-center gap-3 transition-all duration-500',
+            'welcome-anim flex flex-wrap justify-start gap-3 transition-all duration-500',
             isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'
           )} style={{ transitionDelay: '0.42s' }}>
             <button
               onClick={() => navigate('/login')}
-              className="inline-flex items-center gap-2 py-3 px-6 text-sm font-semibold rounded-xl cursor-pointer transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98]"
-              style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.13)', color: '#cbd5e1', boxShadow: '0 1px 4px rgba(0,0,0,0.3)' }}
-              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.22)'; e.currentTarget.style.boxShadow = '0 4px 20px rgba(0,0,0,0.4)' }}
-              onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.13)'; e.currentTarget.style.boxShadow = '0 1px 4px rgba(0,0,0,0.3)' }}
+              className="inline-flex items-center gap-2 py-[0.625rem] px-5 text-sm font-semibold rounded-xl cursor-pointer transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98]"
+              style={{ background: 'rgba(22,27,34,0.92)', border: '1px solid #30363d', color: '#e6edf3', boxShadow: '0 2px 10px rgba(0,0,0,0.3)' }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = '#484f58'; e.currentTarget.style.background = 'rgba(33,40,50,0.97)'; e.currentTarget.style.boxShadow = '0 6px 18px rgba(0,0,0,0.4)' }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = '#30363d'; e.currentTarget.style.background = 'rgba(22,27,34,0.92)'; e.currentTarget.style.boxShadow = '0 2px 10px rgba(0,0,0,0.3)' }}
             >
-              <Key size={14} />
+              <Key size={15} />
               Society Login
             </button>
             <button
               onClick={() => scrollTo('features')}
-              className="inline-flex items-center gap-2 py-3 px-6 text-sm font-semibold rounded-xl cursor-pointer transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98]"
-              style={{ color: '#60a5fa', background: 'rgba(37,99,235,0.08)', border: '1px solid rgba(59,130,246,0.26)', boxShadow: '0 1px 4px rgba(37,99,235,0.12)' }}
-              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(37,99,235,0.15)'; e.currentTarget.style.borderColor = 'rgba(59,130,246,0.46)'; e.currentTarget.style.boxShadow = '0 6px 24px rgba(37,99,235,0.28)' }}
-              onMouseLeave={e => { e.currentTarget.style.background = 'rgba(37,99,235,0.08)'; e.currentTarget.style.borderColor = 'rgba(59,130,246,0.26)'; e.currentTarget.style.boxShadow = '0 1px 4px rgba(37,99,235,0.12)' }}
+              className="inline-flex items-center gap-2 py-[0.625rem] px-5 text-sm font-semibold rounded-xl cursor-pointer transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98]"
+              style={{ color: '#60a5fa', background: 'rgba(37,99,235,0.1)', border: '1px solid rgba(59,130,246,0.28)', boxShadow: '0 2px 14px rgba(37,99,235,0.14)' }}
+              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(37,99,235,0.18)'; e.currentTarget.style.borderColor = 'rgba(59,130,246,0.52)'; e.currentTarget.style.boxShadow = '0 6px 22px rgba(37,99,235,0.28)' }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'rgba(37,99,235,0.1)'; e.currentTarget.style.borderColor = 'rgba(59,130,246,0.28)'; e.currentTarget.style.boxShadow = '0 2px 14px rgba(37,99,235,0.14)' }}
             >
               Explore Features
-              <ChevronDown size={14} />
+              <ChevronDown size={15} />
             </button>
           </div>
 
