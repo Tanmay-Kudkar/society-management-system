@@ -13,4 +13,8 @@ public interface VehicleRepository extends JpaRepository<Vehicle, Long> {
     List<Vehicle> findByVehicleType(String vehicleType);
 
     List<Vehicle> findBySocietyId(Long societyId);
+
+    long countBySocietyIdAndVehicleType(Long societyId, String vehicleType);
+
+    long countBySocietyIdAndVehicleTypeAndIdNot(Long societyId, String vehicleType, Long id);
 }

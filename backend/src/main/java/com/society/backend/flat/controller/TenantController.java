@@ -76,6 +76,14 @@ public class TenantController {
         return ResponseEntity.ok(tenantService.deactivate(id, userId));
     }
 
+    @PatchMapping("/{id}/activate")
+    @PreAuthorize("hasAnyRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'COMMITTEE', 'MANAGER', 'MEMBER')")
+    public ResponseEntity<TenantResponse> activate(
+            @PathVariable Long id,
+            @RequestParam Long userId) {
+        return ResponseEntity.ok(tenantService.activate(id, userId));
+    }
+
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAnyRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'COMMITTEE', 'MANAGER')")
     public ResponseEntity<Void> delete(

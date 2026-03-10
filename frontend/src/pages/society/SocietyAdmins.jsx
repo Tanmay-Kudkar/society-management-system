@@ -767,7 +767,7 @@ export default function SocietyAdmins() {
       pincode: fd.get('pincode')?.trim(),
       registrationNumber: fd.get('registrationNumber')?.trim(),
       email: fd.get('societyEmail')?.trim(),
-      telephone: fd.get('telephone')?.trim(),
+      telephone: (fd.get('telephone') || fd.get('societyPhone'))?.trim(),
       totalFlats: parseInt(fd.get('totalFlats'), 10),
       totalShops: parseInt(fd.get('totalShops'), 10),
       totalOffices: parseInt(fd.get('totalOffices'), 10),
@@ -794,21 +794,23 @@ export default function SocietyAdmins() {
       return
     }
 
-    if (
-      !societyData.name ||
-      !societyData.address ||
-      !societyData.state ||
-      !societyData.city ||
-      !societyData.pincode ||
-      !societyData.registrationNumber ||
-      !societyData.email ||
-      !societyData.telephone ||
-      Number.isNaN(societyData.totalFlats) ||
-      Number.isNaN(societyData.totalShops) ||
-      Number.isNaN(societyData.totalOffices) ||
-      Number.isNaN(societyData.totalWings)
-    ) {
-      setFormError('All society fields are mandatory. Fill every field before submitting.')
+    const missingSocietyFields = []
+
+    if (!societyData.name) missingSocietyFields.push('Society Name')
+    if (!societyData.address) missingSocietyFields.push('Address')
+    if (!societyData.state) missingSocietyFields.push('State')
+    if (!societyData.city) missingSocietyFields.push('City')
+    if (!societyData.pincode) missingSocietyFields.push('Pincode')
+    if (!societyData.registrationNumber) missingSocietyFields.push('Registration Number')
+    if (!societyData.email) missingSocietyFields.push('Society Email')
+    if (!societyData.telephone) missingSocietyFields.push('Society Phone')
+    if (Number.isNaN(societyData.totalFlats)) missingSocietyFields.push('Flats')
+    if (Number.isNaN(societyData.totalShops)) missingSocietyFields.push('Shops')
+    if (Number.isNaN(societyData.totalOffices)) missingSocietyFields.push('Offices')
+    if (Number.isNaN(societyData.totalWings)) missingSocietyFields.push('Wings')
+
+    if (missingSocietyFields.length > 0) {
+      setFormError(`Please fill required fields: ${missingSocietyFields.join(', ')}`)
       return
     }
 

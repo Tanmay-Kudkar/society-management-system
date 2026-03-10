@@ -4,7 +4,7 @@ import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '../../context'
 import { useToast } from '../../context'
 import { useConfirmDialog } from '../../context'
-import { flatApi, societyApi, wingApi, userApi } from '../../../../api'
+import { flatApi, societyApi, wingApi, userApi, tenantApi } from '../../../../api'
 import { 
   Plus, Edit, Trash2, Search, X, Home, Store, Briefcase, Layers, 
   Users, UserPlus, UserCheck, UserX, Upload, Download, AlertCircle,
@@ -147,6 +147,15 @@ export default function UnitManagement() {
     enabled: !!user?.id,
   })
 
+  const { data: tenants = [] } = useQuery({
+    queryKey: ['tenants', effectiveSocietyId],
+    queryFn: () => effectiveSocietyId
+      ? tenantApi.getBySociety(effectiveSocietyId).then(res => res.data).catch(() => [])
+      : tenantApi.getAll().then(res => res.data).catch(() => []),
+    enabled: !!user?.id,
+    refetchOnMount: 'always',
+  })
+
   // Fetch societies (for MASTER_ADMIN)
   const { data: societies = [] } = useQuery({
     queryKey: ['societies'],
@@ -187,20 +196,34 @@ export default function UnitManagement() {
     return scopedUsers.filter(u => u.flatId && UNIT_ASSIGNABLE_ROLES.includes(u.role))
   }, [scopedUsers])
 
+  const activeTenantByFlatId = useMemo(() => {
+    const map = {}
+    tenants
+      .filter(t => t.isActive && t.flatId)
+      .forEach((tenant) => {
+        if (!map[tenant.flatId]) {
+          map[tenant.flatId] = tenant
+        }
+      })
+    return map
+  }, [tenants])
+
   // Create unit-user mapping (1 user per unit)
   const unitUserMap = useMemo(() => {
     const map = {}
     flats.forEach(flat => {
       // Only one user should be assigned per unit. If legacy data has multiple, show the first one returned.
       const assignedUser = memberUsers.find(u => u.flatId === flat.id)
+      const activeTenant = activeTenantByFlatId[flat.id] || null
       map[flat.id] = {
         flat,
         owner: flat.ownerEmail ? scopedUsers.find(u => u.email === flat.ownerEmail) : null,
-        member: assignedUser || null
+        member: assignedUser || null,
+        tenant: activeTenant,
       }
     })
     return map
-  }, [flats, scopedUsers, memberUsers])
+  }, [flats, scopedUsers, memberUsers, activeTenantByFlatId])
 
   // Filtered data - search includes assigned user name
   const filteredUnits = useMemo(() => {
@@ -991,7 +1014,9 @@ export default function UnitManagement() {
             const UnitIcon = getUnitIcon(unit.unitType)
             const unitColor = getUnitColor(unit.unitType)
             const assignedUser = unitUserMap[unit.id]?.member
+            const linkedTenant = unitUserMap[unit.id]?.tenant
             const hasAssignedUser = !!assignedUser
+            const isOccupied = !!assignedUser || !!linkedTenant
             
             return (
               <div key={unit.id} className="p-[1.15rem] rounded-[14px] bg-[var(--bg-card)] border border-[var(--border-default)] shadow-[var(--shadow-sm)] transition-all duration-200 hover:-translate-y-px hover:shadow-[var(--shadow-md)] dark:border-[rgba(148,163,184,0.22)] dark:shadow-[0_10px_22px_rgba(2,6,23,0.45)]">
@@ -1016,11 +1041,11 @@ export default function UnitManagement() {
                   </div>
                   <span className={clsx(
                     'py-1 px-[0.7rem] rounded-full text-xs font-semibold',
-                    hasAssignedUser
+                    isOccupied
                       ? 'text-[color-mix(in_srgb,var(--color-success)_80%,var(--text-primary))]'
                       : 'text-[var(--text-secondary)]'
-                  )} style={{ background: hasAssignedUser ? 'color-mix(in srgb, var(--color-success) 22%, transparent)' : 'color-mix(in srgb, var(--bg-tertiary) 80%, transparent)' }}>
-                    {hasAssignedUser ? 'Occupied' : 'Vacant'}
+                  )} style={{ background: isOccupied ? 'color-mix(in srgb, var(--color-success) 22%, transparent)' : 'color-mix(in srgb, var(--bg-tertiary) 80%, transparent)' }}>
+                    {isOccupied ? 'Occupied' : 'Vacant'}
                   </span>
                 </div>
 
@@ -1075,6 +1100,20 @@ export default function UnitManagement() {
                     </div>
                   ) : (
                     <p className="text-[var(--text-tertiary)] text-[0.85rem] italic">No user assigned</p>
+                  )}
+                  {linkedTenant && (
+                    <div className="mt-3 rounded-xl border border-[var(--border-default)] px-3 py-2" style={{ background: 'color-mix(in srgb, var(--bg-tertiary) 70%, transparent)' }}>
+                      <p className="text-[0.68rem] uppercase tracking-[0.08em] text-[var(--text-tertiary)]">Active Tenant</p>
+                      <div className="mt-1 flex items-center justify-between gap-2">
+                        <div className="min-w-0">
+                          <p className="text-[0.83rem] font-semibold text-[var(--text-primary)] truncate">{linkedTenant.name}</p>
+                          <p className="text-[0.72rem] text-[var(--text-tertiary)] truncate">{linkedTenant.phone || linkedTenant.email || 'No contact'}</p>
+                        </div>
+                        <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[0.68rem] font-semibold bg-[rgba(249,115,22,0.15)] text-[#c2410c]">
+                          Tenant
+                        </span>
+                      </div>
+                    </div>
                   )}
                 </div>
 
@@ -1169,7 +1208,9 @@ export default function UnitManagement() {
                 {filteredUnits.map((unit) => {
                   const UnitIcon = getUnitIcon(unit.unitType)
                   const assignedUser = unitUserMap[unit.id]?.member
+                  const linkedTenant = unitUserMap[unit.id]?.tenant
                   const hasAssignedUser = !!assignedUser
+                  const isOccupied = !!assignedUser || !!linkedTenant
                   return (
                     <tr key={unit.id} className="transition-colors hover:bg-[rgba(30,41,59,0.04)] dark:hover:bg-[rgba(30,41,59,0.45)]">
                       <td className="py-[0.85rem] px-6 text-[0.9rem] text-[var(--text-primary)]">
@@ -1197,22 +1238,27 @@ export default function UnitManagement() {
                         {unit.flatType || unit.unitType || 'FLAT'}
                       </td>
                       <td className="py-[0.85rem] px-6 text-[0.9rem] text-[var(--text-primary)]">
-                        <span className="font-semibold">{assignedUser?.name || '-'}</span>
+                        <div className="flex flex-col gap-[0.2rem]">
+                          <span className="font-semibold">{assignedUser?.name || '-'}</span>
+                          {linkedTenant && (
+                            <span className="text-[0.72rem] text-[#c2410c]">Tenant: {linkedTenant.name}</span>
+                          )}
+                        </div>
                       </td>
                       <td className="py-[0.85rem] px-6 text-[0.9rem] text-[var(--text-primary)]">
                         <div className="flex flex-col gap-[0.2rem] text-[0.8rem]">
-                          <p className="text-[var(--text-tertiary)]">{assignedUser?.phone || '-'}</p>
-                          <p className="text-[var(--text-tertiary)] text-[0.7rem]">{assignedUser?.email || ''}</p>
+                          <p className="text-[var(--text-tertiary)]">{assignedUser?.phone || linkedTenant?.phone || '-'}</p>
+                          <p className="text-[var(--text-tertiary)] text-[0.7rem]">{assignedUser?.email || linkedTenant?.email || ''}</p>
                         </div>
                       </td>
                       <td className="py-[0.85rem] px-6 text-[0.9rem] text-[var(--text-primary)]">
                         <span className={clsx(
                           'py-1 px-[0.7rem] rounded-full text-xs font-semibold',
-                          hasAssignedUser
+                          isOccupied
                             ? 'text-[color-mix(in_srgb,var(--color-success)_80%,var(--text-primary))]'
                             : 'text-[var(--text-secondary)]'
-                        )} style={{ background: hasAssignedUser ? 'color-mix(in srgb, var(--color-success) 22%, transparent)' : 'color-mix(in srgb, var(--bg-tertiary) 80%, transparent)' }}>
-                          {hasAssignedUser ? 'Occupied' : 'Vacant'}
+                        )} style={{ background: isOccupied ? 'color-mix(in srgb, var(--color-success) 22%, transparent)' : 'color-mix(in srgb, var(--bg-tertiary) 80%, transparent)' }}>
+                          {isOccupied ? 'Occupied' : 'Vacant'}
                         </span>
                       </td>
                       {canEditUnits && (

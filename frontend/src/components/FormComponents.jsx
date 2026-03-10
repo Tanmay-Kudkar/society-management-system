@@ -25,7 +25,12 @@ const FieldHint = ({ message, type = "error" }) => {
     info: "bg-blue-500/10 border-blue-500/30 text-blue-700",
   };
   return (
-    <div className={clsx("inline-flex items-start gap-1.5 rounded-md border py-1.5 px-2.5 text-xs", hintStyles[type])}>
+    <div
+      className={clsx(
+        "inline-flex items-start gap-1.5 rounded-md border py-1.5 px-2.5 text-xs",
+        hintStyles[type],
+      )}
+    >
       <Icon size={14} className="mt-0.5 shrink-0" />
       <span>{message}</span>
     </div>
@@ -61,7 +66,10 @@ export const FormInput = ({
   return (
     <div className={clsx("flex flex-col gap-1.5 min-w-0", className)}>
       {label && (
-        <label htmlFor={name} className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-[var(--text-secondary)]">
+        <label
+          htmlFor={name}
+          className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-[var(--text-secondary)]"
+        >
           {Icon && <Icon size={14} className="text-[var(--text-tertiary)]" />}
           {label}
           {required && <span className="text-red-500 ml-0.5">*</span>}
@@ -155,7 +163,8 @@ export const PhoneInput = ({
   const isValid =
     localValue.length === 10 && /^[6-9]/.test(localValue) && !localError;
 
-  const inputBase = "w-full rounded-lg border py-2.5 px-3 bg-[var(--bg-card)] text-[var(--text-primary)] text-sm outline-none transition border-[var(--border-default)] pr-14";
+  const inputBase =
+    "w-full rounded-lg border py-2.5 px-3 bg-[var(--bg-card)] text-[var(--text-primary)] text-sm outline-none transition border-[var(--border-default)] pr-14";
   const inputFocus = "border-blue-500 ring-2 ring-blue-500/20";
   const inputWarn = "border-amber-500 ring-2 ring-amber-500/20";
   const inputValid = "border-emerald-500 ring-2 ring-emerald-500/20";
@@ -163,13 +172,18 @@ export const PhoneInput = ({
   return (
     <div className={clsx("flex flex-col gap-1.5 min-w-0", className)}>
       {label && (
-        <label htmlFor={name} className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-[var(--text-secondary)]">
+        <label
+          htmlFor={name}
+          className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-[var(--text-secondary)]"
+        >
           {label}
           {required && <span className="text-red-500 ml-0.5">*</span>}
         </label>
       )}
       <div className="flex items-center gap-2 min-w-0 w-full">
-        <div className="inline-flex items-center py-2.5 px-3 rounded-lg border border-[var(--border-default)] bg-[var(--bg-tertiary)] text-[var(--text-tertiary)] text-[13px] font-semibold shrink-0">+91</div>
+        <div className="inline-flex items-center py-2.5 px-3 rounded-lg border border-[var(--border-default)] bg-[var(--bg-tertiary)] text-[var(--text-tertiary)] text-[13px] font-semibold shrink-0">
+          +91
+        </div>
         <div className="relative flex-1 min-w-0">
           <input
             type="tel"
@@ -196,7 +210,11 @@ export const PhoneInput = ({
             <span
               className={clsx(
                 "absolute right-3 top-1/2 -translate-y-1/2 text-[11px] pointer-events-none",
-                isValid ? "text-emerald-500" : localValue.length > 0 ? "text-blue-400" : "text-[var(--text-tertiary)]",
+                isValid
+                  ? "text-emerald-500"
+                  : localValue.length > 0
+                    ? "text-blue-400"
+                    : "text-[var(--text-tertiary)]",
               )}
             >
               {localValue.length}/10
@@ -232,7 +250,8 @@ export const SmartSelect = ({
   const [focused, setFocused] = useState(false);
 
   // If only 1 option → show as a locked badge
-  const inputBase = "w-full rounded-lg border border-[var(--border-default)] bg-[var(--bg-card)] py-2.5 px-3 text-sm text-[var(--text-primary)] outline-none transition pr-9 cursor-pointer";
+  const inputBase =
+    "w-full appearance-none rounded-lg border border-[var(--border-default)] bg-[var(--bg-card)] py-2.5 px-3 text-sm text-[var(--text-primary)] outline-none transition pr-9 cursor-pointer";
   const inputFocus = "border-blue-500 ring-2 ring-blue-500/20";
   const inputWarn = "border-amber-500 ring-2 ring-amber-500/20";
   const inputDisabled = "opacity-60 cursor-not-allowed";
@@ -250,8 +269,12 @@ export const SmartSelect = ({
         )}
         <div className="inline-flex items-center gap-2 py-2.5 px-3 rounded-lg border border-[var(--border-default)] bg-[var(--bg-tertiary)]">
           <Lock size={14} className="text-blue-600 shrink-0" />
-          <span className="font-semibold text-[var(--text-primary)]">{only.label}</span>
-          <span className="ml-auto text-[10px] font-bold uppercase tracking-wider text-blue-600">Auto-selected</span>
+          <span className="font-semibold text-[var(--text-primary)]">
+            {only.label}
+          </span>
+          <span className="ml-auto text-[10px] font-bold uppercase tracking-wider text-blue-600">
+            Auto-selected
+          </span>
         </div>
         <input type="hidden" name={name} value={only.value} />
       </div>
@@ -278,7 +301,10 @@ export const SmartSelect = ({
   return (
     <div className={clsx("flex flex-col gap-1.5 min-w-0", className)}>
       {label && (
-        <label htmlFor={name} className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-[var(--text-secondary)]">
+        <label
+          htmlFor={name}
+          className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-[var(--text-secondary)]"
+        >
           {Icon && <Icon size={14} className="text-[var(--text-tertiary)]" />}
           {label}
           {required && <span className="text-red-500 ml-0.5">*</span>}
@@ -309,7 +335,10 @@ export const SmartSelect = ({
             </option>
           ))}
         </select>
-        <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)] pointer-events-none" />
+        <ChevronDown
+          size={16}
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)] pointer-events-none"
+        />
       </div>
       <FieldHint message={error} type="error" />
     </div>
@@ -366,14 +395,18 @@ export const FormTextarea = ({
 }) => {
   const [focused, setFocused] = useState(false);
 
-  const inputBase = "w-full rounded-lg border border-[var(--border-default)] bg-[var(--bg-card)] py-2.5 px-3 text-sm text-[var(--text-primary)] outline-none transition placeholder:text-[var(--text-tertiary)] resize-y min-h-[96px]";
+  const inputBase =
+    "w-full rounded-lg border border-[var(--border-default)] bg-[var(--bg-card)] py-2.5 px-3 text-sm text-[var(--text-primary)] outline-none transition placeholder:text-[var(--text-tertiary)] resize-y min-h-[96px]";
   const inputFocus = "border-blue-500 ring-2 ring-blue-500/20";
   const inputWarn = "border-amber-500 ring-2 ring-amber-500/20";
   const inputDisabled = "opacity-60 cursor-not-allowed";
   return (
     <div className={clsx("flex flex-col gap-1.5 min-w-0", className)}>
       {label && (
-        <label htmlFor={name} className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-[var(--text-secondary)]">
+        <label
+          htmlFor={name}
+          className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-[var(--text-secondary)]"
+        >
           {label}
           {required && <span className="text-red-500 ml-0.5">*</span>}
         </label>
@@ -422,14 +455,18 @@ export const NumberInput = ({
 }) => {
   const [focused, setFocused] = useState(false);
 
-  const inputBase = "w-full rounded-lg border border-[var(--border-default)] bg-[var(--bg-card)] py-2.5 px-3 text-sm text-[var(--text-primary)] outline-none transition placeholder:text-[var(--text-tertiary)]";
+  const inputBase =
+    "w-full rounded-lg border border-[var(--border-default)] bg-[var(--bg-card)] py-2.5 px-3 text-sm text-[var(--text-primary)] outline-none transition placeholder:text-[var(--text-tertiary)]";
   const inputFocus = "border-blue-500 ring-2 ring-blue-500/20";
   const inputWarn = "border-amber-500 ring-2 ring-amber-500/20";
   const inputDisabled = "opacity-60 cursor-not-allowed";
   return (
     <div className={clsx("flex flex-col gap-1.5 min-w-0", className)}>
       {label && (
-        <label htmlFor={name} className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-[var(--text-secondary)]">
+        <label
+          htmlFor={name}
+          className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-[var(--text-secondary)]"
+        >
           {Icon && <Icon size={14} className="text-[var(--text-tertiary)]" />}
           {label}
           {required && <span className="text-red-500 ml-0.5">*</span>}
@@ -717,6 +754,7 @@ const INDIAN_STATES_CITIES = {
   ],
   Maharashtra: [
     "Mumbai",
+    "Palghar",
     "Pune",
     "Nagpur",
     "Nashik",
@@ -1126,11 +1164,17 @@ export const StateCitySelector = ({
       ? INDIAN_STATES_CITIES[selectedState] || []
       : [];
 
-  const selectBase = "w-full rounded-lg border border-[var(--border-default)] bg-[var(--bg-card)] py-2.5 px-3 pr-9 text-sm text-[var(--text-primary)] outline-none transition cursor-pointer";
+  const selectBase =
+    "w-full appearance-none rounded-lg border border-[var(--border-default)] bg-[var(--bg-card)] py-2.5 px-3 pr-9 text-sm text-[var(--text-primary)] outline-none transition cursor-pointer";
   const selectWarn = "border-amber-500 ring-2 ring-amber-500/20";
   const selectDisabled = "opacity-60 cursor-not-allowed";
   return (
-    <div className={clsx("grid gap-4 grid-cols-[repeat(auto-fit,minmax(220px,1fr))]", className)}>
+    <div
+      className={clsx(
+        "grid gap-4 grid-cols-[repeat(auto-fit,minmax(220px,1fr))]",
+        className,
+      )}
+    >
       {/* State Selection */}
       <div className="flex flex-col gap-1.5 min-w-0">
         <label className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-[var(--text-secondary)]">
@@ -1155,7 +1199,10 @@ export const StateCitySelector = ({
             ))}
             <option value="OTHER">Other (Custom)</option>
           </select>
-          <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)] pointer-events-none" />
+          <ChevronDown
+            size={16}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)] pointer-events-none"
+          />
         </div>
         <FieldHint message={stateError} type="error" />
       </div>
@@ -1165,7 +1212,7 @@ export const StateCitySelector = ({
         <div className="col-span-full">
           <FormInput
             label="Custom State Name"
-            name="state"
+            name="stateCustom"
             value={customState}
             onChange={handleCustomStateChange}
             placeholder="Enter state name"
@@ -1174,10 +1221,18 @@ export const StateCitySelector = ({
         </div>
       )}
 
-      {/* Hidden state input for predefined states */}
-      {!isStateOther && selectedState && selectedState !== "OTHER" && (
-        <input type="hidden" name="state" value={selectedState} />
-      )}
+      {/* Canonical state value for form submission */}
+      <input
+        type="hidden"
+        name="state"
+        value={
+          isStateOther
+            ? customState
+            : selectedState && selectedState !== "OTHER"
+              ? selectedState
+              : ""
+        }
+      />
 
       {/* City Selection */}
       <div className="flex flex-col gap-1.5 min-w-0">
@@ -1204,7 +1259,8 @@ export const StateCitySelector = ({
             className={clsx(
               selectBase,
               cityError && selectWarn,
-              (!selectedState || (selectedState === "OTHER" && !customState)) && selectDisabled,
+              (!selectedState || (selectedState === "OTHER" && !customState)) &&
+                selectDisabled,
             )}
           >
             <option value="">
@@ -1223,7 +1279,10 @@ export const StateCitySelector = ({
               <option value="OTHER">Other (Custom)</option>
             )}
           </select>
-          <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)] pointer-events-none" />
+          <ChevronDown
+            size={16}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)] pointer-events-none"
+          />
         </div>
         <FieldHint message={cityError} type="error" />
       </div>
@@ -1233,7 +1292,7 @@ export const StateCitySelector = ({
         <div className="col-span-full">
           <FormInput
             label="Custom City Name"
-            name="city"
+            name="cityCustom"
             value={customCity}
             onChange={handleCustomCityChange}
             placeholder="Enter city name"
@@ -1242,10 +1301,18 @@ export const StateCitySelector = ({
         </div>
       )}
 
-      {/* Hidden city input for predefined cities */}
-      {!isCityOther && selectedCity && selectedCity !== "OTHER" && (
-        <input type="hidden" name="city" value={selectedCity} />
-      )}
+      {/* Canonical city value for form submission */}
+      <input
+        type="hidden"
+        name="city"
+        value={
+          isCityOther
+            ? customCity
+            : selectedCity && selectedCity !== "OTHER"
+              ? selectedCity
+              : ""
+        }
+      />
     </div>
   );
 };
@@ -1267,7 +1334,9 @@ export const FormErrorSummary = ({ errors, message }) => {
           <AlertCircle size={14} />
         </div>
         <div>
-          <p className="m-0 text-[13px] font-semibold">Please fix the following:</p>
+          <p className="m-0 text-[13px] font-semibold">
+            Please fix the following:
+          </p>
           <ul className="mt-1.5 grid list-inside list-none gap-1 pl-0">
             {errorList.map((err, i) => (
               <li key={i} className="flex items-start gap-1.5">
@@ -1279,8 +1348,8 @@ export const FormErrorSummary = ({ errors, message }) => {
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
 export default {
   FormInput,
@@ -1292,4 +1361,4 @@ export default {
   NumberInput,
   PincodeInput,
   StateCitySelector,
-}
+};
