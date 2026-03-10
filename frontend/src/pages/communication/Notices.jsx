@@ -7,7 +7,7 @@ import { useToast } from '../../context'
 import { noticeApi } from '../../../../api'
 import { Plus, Search, X, Megaphone, Edit, Trash2 } from 'lucide-react'
 import clsx from 'clsx'
-import { FormInput, SmartSelect, FormTextarea, AsyncButton } from '../../components'
+import { FormInput, SmartSelect, FormTextarea, AsyncButton, InfoTooltip } from '../../components'
 import { HeroSkeleton, FiltersSkeleton, CardGridSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
 import useMinLoadingTime from '../../hooks/useMinLoadingTime'
 
@@ -130,8 +130,10 @@ export default function Notices() {
       {/* Header */}
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-[var(--text-primary)]">Notices</h1>
-          <p className="mt-1 text-[var(--text-secondary)]">Manage society announcements and notices</p>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-bold text-[var(--text-primary)]">Notices</h1>
+            <InfoTooltip text="Manage society announcements and notices" />
+          </div>
         </div>
         {canManageNotices() && (
           <button

@@ -6,7 +6,7 @@ import { useToast } from '../../context'
 import { documentTemplateApi } from '../../../../api'
 import { Plus, Search, X, FileText, Edit, Trash2 } from 'lucide-react'
 import clsx from 'clsx'
-import { AsyncButton } from '../../components'
+import { AsyncButton, InfoTooltip } from '../../components'
 import { HeroSkeleton, DocumentsSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
 import useMinLoadingTime from '../../hooks/useMinLoadingTime'
 
@@ -127,8 +127,10 @@ export default function Documents() {
       {/* Header */}
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-[var(--text-primary)]">Document Templates</h1>
-          <p className="mt-1 text-[var(--text-secondary)]">Manage document templates for NOC, certificates, etc.</p>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-bold text-[var(--text-primary)]">Document Templates</h1>
+            <InfoTooltip text="Manage document templates for NOC, certificates, etc." />
+          </div>
         </div>
         {canManageDocuments() && (
           <button

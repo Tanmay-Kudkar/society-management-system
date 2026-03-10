@@ -6,7 +6,7 @@ import { useToast } from '../../context'
 import { transactionApi, exportApi, downloadBlob, flatApi } from '../../../../api'
 import { Plus, Search, X, TrendingUp, TrendingDown, DollarSign, FileSpreadsheet, Home, Pencil, Trash2 } from 'lucide-react'
 import clsx from 'clsx'
-import { PermissionDenied, AsyncButton } from '../../components'
+import { PermissionDenied, AsyncButton, InfoTooltip } from '../../components'
 import { HeroSkeleton, FinancePageSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
 import useMinLoadingTime from '../../hooks/useMinLoadingTime'
 
@@ -272,8 +272,10 @@ export default function Transactions() {
       {/* Header */}
       <div className="flex flex-col gap-4 mb-6 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-[var(--text-primary)]">Transactions</h1>
-          <p className="mt-1 text-[var(--text-secondary)]">Track income and expenses</p>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-bold text-[var(--text-primary)]">Transactions</h1>
+            <InfoTooltip text="Track income and expenses" />
+          </div>
         </div>
         <div className="flex flex-wrap gap-3">
           <button

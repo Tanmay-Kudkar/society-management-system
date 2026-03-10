@@ -146,6 +146,8 @@ public class SocietyServiceImpl implements SocietyService {
         society.setTotalShops(request.getTotalShops() != null ? request.getTotalShops() : 0);
         society.setTotalOffices(request.getTotalOffices() != null ? request.getTotalOffices() : 0);
         society.setTotalWings(request.getTotalWings() != null ? request.getTotalWings() : 0);
+        society.setTwoWheelerParkingCapacity(request.getTwoWheelerParkingCapacity());
+        society.setFourWheelerParkingCapacity(request.getFourWheelerParkingCapacity());
     }
 
     private SocietyResponse toResponse(Society society) {
@@ -165,6 +167,8 @@ public class SocietyServiceImpl implements SocietyService {
         response.setTotalShops(society.getTotalShops());
         response.setTotalOffices(society.getTotalOffices());
         response.setTotalWings(society.getTotalWings());
+        response.setTwoWheelerParkingCapacity(society.getTwoWheelerParkingCapacity());
+        response.setFourWheelerParkingCapacity(society.getFourWheelerParkingCapacity());
 
         // Calculate actual counts from database
         Long societyId = society.getId();

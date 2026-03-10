@@ -6,7 +6,7 @@ import { useConfirmDialog } from '../../context'
 import { useToast } from '../../context'
 import { vehicleApi, flatApi } from '../../../../api'
 import { Plus, Edit, Trash2, Search, X, Car, Bike, Upload } from 'lucide-react'
-import { FormInput, SmartSelect, BulkImportModal, AsyncButton } from '../../components'
+import { FormInput, SmartSelect, BulkImportModal, AsyncButton, InfoTooltip } from '../../components'
 import { HeroSkeleton, StatCardSkeleton, CardGridSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
 import useMinLoadingTime from '../../hooks/useMinLoadingTime'
 
@@ -151,8 +151,10 @@ export default function Vehicles() {
       {/* Header */}
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-[var(--text-primary)]">Vehicles</h1>
-          <p className="mt-1 text-[var(--text-secondary)]">Manage resident vehicles and parking</p>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-bold text-[var(--text-primary)]">Vehicles</h1>
+            <InfoTooltip text="Manage resident vehicles and parking" />
+          </div>
         </div>
         {canEditVehicles && (
           <div className="flex gap-2">

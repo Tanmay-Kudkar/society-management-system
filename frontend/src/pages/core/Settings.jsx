@@ -9,7 +9,7 @@ import {
 } from 'lucide-react'
 import clsx from 'clsx'
 import Toggle from '../../components/Toggle'
-import { PhoneInput, NeonSweepButton } from '../../components'
+import { PhoneInput, NeonSweepButton, InfoTooltip } from '../../components'
 import { SettingsSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
 import { getDeviceInfo } from '../../utils'
 
@@ -345,8 +345,10 @@ export default function Settings() {
   return (
     <div className="min-h-[calc(100vh-68px)] bg-[var(--bg-secondary)] p-5 md:p-6">
       <div className="mb-5">
-        <h1 className="text-2xl font-bold text-[var(--text-primary)]">Settings</h1>
-        <p className="mt-1 text-sm text-[var(--text-secondary)]">Manage your account preferences</p>
+        <div className="flex items-center gap-2">
+          <h1 className="text-2xl font-bold text-[var(--text-primary)]">Settings</h1>
+          <InfoTooltip text="Manage your account preferences" />
+        </div>
       </div>
 
       <div className="overflow-hidden rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] shadow-[0_4px_12px_rgba(15,23,42,0.08)]">

@@ -1,7 +1,7 @@
 import { Link, useLocation } from 'react-router-dom'
 import clsx from 'clsx'
 import { useTheme } from '../context/ThemeContext'
-import { Building2, Sun, Moon, Monitor, CheckCircle, Menu, X, Github, Twitter, Linkedin } from 'lucide-react'
+import { Building2, Sun, Moon, Monitor, CheckCircle, Menu, X, Github, Twitter, Linkedin, Info } from 'lucide-react'
 import { useState, useRef, useEffect } from 'react'
 
 /**
@@ -40,6 +40,8 @@ export default function PageShell({
     return () => document.removeEventListener('mousedown', onClick)
   }, [])
 
+  const [subtitleTooltip, setSubtitleTooltip] = useState(false)
+
   const isAdminMode = title !== undefined || subtitle !== undefined || Icon !== undefined || actions !== undefined || loading !== undefined
 
   if (isAdminMode) {
@@ -56,9 +58,23 @@ export default function PageShell({
                   <Icon className="h-[1.1rem] w-[1.1rem]" />
                 </span>
               )}
-              <div>
+              <div className="flex items-center gap-2">
                 {title && <h1 className="m-0 text-[1.8rem] font-extrabold leading-[1.15] text-[var(--text-primary)]">{title}</h1>}
-                {subtitle && <p className="mt-1.5 text-base text-[var(--text-secondary)]">{subtitle}</p>}
+                {subtitle && (
+                  <div className="relative"
+                    onMouseEnter={() => setSubtitleTooltip(true)}
+                    onMouseLeave={() => setSubtitleTooltip(false)}
+                    onClick={() => setSubtitleTooltip(prev => !prev)}
+                  >
+                    <Info size={16} className="cursor-pointer text-[var(--text-tertiary)] hover:text-[var(--accent-primary)] transition-colors" aria-label={subtitle} />
+                    {subtitleTooltip && (
+                      <div className="absolute left-1/2 top-full z-50 mt-2 -translate-x-1/2 whitespace-nowrap rounded-lg border border-[var(--border-default)] bg-[var(--bg-elevated,var(--bg-card))] px-3 py-2 text-xs font-normal text-[var(--text-secondary)] shadow-lg">
+                        <div className="absolute -top-1 left-1/2 h-2 w-2 -translate-x-1/2 rotate-45 border-l border-t border-[var(--border-default)] bg-[var(--bg-elevated,var(--bg-card))]" />
+                        {subtitle}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
             {actions ? <div className="inline-flex items-center gap-2.5">{actions}</div> : null}

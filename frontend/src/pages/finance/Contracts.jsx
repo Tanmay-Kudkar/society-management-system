@@ -6,7 +6,7 @@ import { useConfirmDialog } from '../../context'
 import { useToast } from '../../context'
 import { contractApi, vendorApi } from '../../../../api'
 import { Plus, Edit, Trash2, Search, X, FileText, AlertTriangle, CheckCircle } from 'lucide-react'
-import { FormInput, SmartSelect, NumberInput, FormTextarea, AsyncButton } from '../../components'
+import { FormInput, SmartSelect, NumberInput, FormTextarea, AsyncButton, InfoTooltip } from '../../components'
 import { HeroSkeleton, FinancePageSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
 import useMinLoadingTime from '../../hooks/useMinLoadingTime'
 
@@ -133,8 +133,10 @@ export default function Contracts() {
       {/* Header */}
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-[var(--text-primary)]">Contracts</h1>
-          <p className="mt-1 text-[var(--text-tertiary)]">Manage AMC and service contracts</p>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-bold text-[var(--text-primary)]">Contracts</h1>
+            <InfoTooltip text="Manage AMC and service contracts" />
+          </div>
         </div>
         {canManageContracts() && (
           <button

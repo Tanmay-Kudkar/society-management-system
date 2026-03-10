@@ -5,7 +5,7 @@ import { useAuth } from '../../context'
 import { maintenanceBillApi, flatApi } from '../../../../api'
 import { Plus, Search, X, CreditCard, CheckCircle, Clock, AlertCircle, Info, Wallet, ChevronRight } from 'lucide-react'
 import clsx from 'clsx'
-import { PermissionDenied, AsyncButton } from '../../components'
+import { PermissionDenied, AsyncButton, InfoTooltip } from '../../components'
 import { HeroSkeleton, FinancePageSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
 import { useRazorpay } from '../../hooks/useRazorpay'
 import useMinLoadingTime from '../../hooks/useMinLoadingTime'
@@ -313,8 +313,10 @@ export default function MaintenanceBills() {
       {/* Header */}
       <div className="flex flex-col gap-4 mb-6 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-[var(--text-primary)]">Maintenance Bills</h1>
-          <p className="mt-1 text-[var(--text-secondary)]">Generate and track maintenance bills</p>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-bold text-[var(--text-primary)]">Maintenance Bills</h1>
+            <InfoTooltip text="Generate and track maintenance bills" />
+          </div>
         </div>
         {canManageMaintenanceBills() && (
           <div className="flex flex-wrap gap-3">
