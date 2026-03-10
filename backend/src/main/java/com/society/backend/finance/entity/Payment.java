@@ -49,7 +49,7 @@ public class Payment {
     private String currency = "INR";
 
     @Column(nullable = false)
-    private String status = "CREATED"; // CREATED, AUTHORIZED, CAPTURED, FAILED, REFUNDED
+    private String status = "CREATED"; // CREATED, AUTHORIZED, CAPTURED, FAILED, CANCELLED, REFUNDED
 
     @Column(name = "payment_type")
     private String paymentType; // MAINTENANCE, VENDOR_BILL, OTHER
@@ -77,6 +77,12 @@ public class Payment {
 
     @Column(name = "paid_at")
     private LocalDateTime paidAt;
+
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
+
+    @Column(name = "deleted_by")
+    private Long deletedBy;
 
     @PrePersist
     protected void onCreate() {

@@ -13,9 +13,6 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Map;
 
-import com.society.backend.finance.entity.Payment;
-import com.society.backend.society.entity.Society;
-import com.society.backend.user.entity.User;
 @RestController
 @RequestMapping("/api/payments")
 @RequiredArgsConstructor
@@ -55,6 +52,17 @@ public class PaymentController {
     }
 
     /**
+     * Mark payment as cancelled when user dismisses Razorpay checkout.
+     */
+    @PostMapping("/cancel")
+    public ResponseEntity<PaymentResponse> handleCancel(
+            @RequestParam Long paymentId,
+            @RequestParam(required = false) String reason) {
+        PaymentResponse response = paymentService.handlePaymentCancelled(paymentId, reason);
+        return ResponseEntity.ok(response);
+    }
+
+    /**
      * Get payment by ID
      */
     @GetMapping("/{id}")
@@ -88,6 +96,15 @@ public class PaymentController {
     }
 
     /**
+     * Get recently deleted payments for a society (undo-eligible records only).
+     */
+    @GetMapping("/deleted/society/{societyId}")
+    @PreAuthorize("hasAnyRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER')")
+    public ResponseEntity<List<PaymentResponse>> getDeletedPaymentsBySociety(@PathVariable Long societyId) {
+        return ResponseEntity.ok(paymentService.getDeletedPaymentsBySociety(societyId));
+    }
+
+    /**
      * Get all payments for a maintenance bill
      */
     @GetMapping("/bill/{billId}")
@@ -96,15 +113,32 @@ public class PaymentController {
     }
 
     /**
+     * Soft-delete payment record (undo available for 30 minutes).
+     */
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER')")
+    public ResponseEntity<Void> deletePayment(@PathVariable Long id, @RequestParam Long userId) {
+        paymentService.deletePayment(id, userId);
+        return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * Undo soft-delete if requested within 30 minutes.
+     */
+    @PostMapping("/{id}/undo-delete")
+    @PreAuthorize("hasAnyRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER')")
+    public ResponseEntity<PaymentResponse> undoDeletePayment(@PathVariable Long id) {
+        return ResponseEntity.ok(paymentService.undoDeletePayment(id));
+    }
+
+    /**
      * Razorpay webhook handler (for async payment notifications)
      */
     @PostMapping("/webhook")
+    @PreAuthorize("permitAll()")
     public ResponseEntity<Map<String, String>> handleWebhook(
             @RequestBody String payload,
             @RequestHeader("X-Razorpay-Signature") String signature) {
-        // TODO: Implement webhook signature verification and event handling
-        // Until implemented, reject with 501 to prevent unverified event processing
-        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED)
-                .body(Map.of("status", "not_implemented", "message", "Webhook handler not yet available"));
+        return ResponseEntity.ok(paymentService.handleWebhook(payload, signature));
     }
 }

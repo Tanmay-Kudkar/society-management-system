@@ -310,7 +310,7 @@ export default function Vehicles() {
 
       {/* Table */}
       <div className="overflow-hidden rounded-xl border border-[var(--border-default)] bg-[var(--bg-card)] shadow-sm">
-          <div className="overflow-x-auto">
+          <div className="hidden lg:block overflow-x-auto">
             <table className="w-full border-collapse">
               <thead className="border-b border-[var(--border-light)] bg-[var(--bg-tertiary)]">
                 <tr>
@@ -408,6 +408,82 @@ export default function Vehicles() {
                 )}
               </tbody>
             </table>
+          </div>
+
+          <div className="lg:hidden divide-y divide-[var(--border-light)]">
+            {filteredVehicles.length === 0 ? (
+              <div className="px-6 py-8 text-center text-sm text-[var(--text-tertiary)]">No vehicles found</div>
+            ) : (
+              filteredVehicles.map((vehicle) => (
+                <div key={vehicle.id} className="p-3 sm:p-4">
+                  <div className="mb-2 flex items-start justify-between gap-2 sm:gap-3">
+                    <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+                      <div className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-lg bg-[var(--bg-tertiary)]">
+                        <VehicleIcon type={vehicle.vehicleType} />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-[13px] sm:text-sm font-semibold text-[var(--text-primary)] break-all">{vehicle.vehicleNumber}</p>
+                        <p className="text-[11px] sm:text-xs text-[var(--text-tertiary)] break-words">{vehicle.brand} {vehicle.model}</p>
+                      </div>
+                    </div>
+                    <span className={`inline-flex rounded-full px-2 py-0.5 sm:py-1 text-[11px] sm:text-xs font-medium ${
+                      vehicle.vehicleType === 'FOUR_WHEELER' ? 'bg-blue-500/15 text-blue-600' : 'bg-green-500/15 text-green-600'
+                    }`}>
+                      {vehicle.vehicleType === 'FOUR_WHEELER' ? 'Four Wheeler' : 'Two Wheeler'}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-1.5 sm:gap-2 text-[11px] sm:text-xs">
+                    <p className="text-[var(--text-secondary)]">Flat</p>
+                    <p className="text-right text-[var(--text-primary)] break-words">{getFlatDisplay(vehicle.flatId)}</p>
+                    <p className="text-[var(--text-secondary)]">Owner</p>
+                    <p className="text-right text-[var(--text-primary)] break-words">{vehicle.ownerName || 'N/A'}</p>
+                    <p className="text-[var(--text-secondary)]">Parking</p>
+                    <p className="text-right text-[var(--text-primary)]">{vehicle.parkingSlot || 'Not assigned'}</p>
+                  </div>
+
+                  <div className="mt-2.5 sm:mt-3 flex justify-end gap-1.5 sm:gap-2">
+                    {canEditVehicles ? (
+                      <>
+                        <button
+                          onClick={() => { setEditingVehicle(vehicle); setShowModal(true) }}
+                          className="rounded-lg p-2 text-[var(--text-secondary)] transition hover:bg-blue-500/10 hover:text-blue-600"
+                          title="Edit"
+                        >
+                          <Edit size={18} />
+                        </button>
+                        <button
+                          onClick={async () => {
+                            const confirmed = await confirmDialog({
+                              title: 'Delete Vehicle',
+                              message: 'Are you sure you want to delete this vehicle? This action cannot be undone.',
+                              confirmText: 'Delete',
+                              tone: 'danger',
+                              details: [
+                                { label: 'Vehicle No', value: vehicle.vehicleNumber || '-' },
+                                { label: 'Type', value: vehicle.vehicleType === 'FOUR_WHEELER' ? 'Four Wheeler' : 'Two Wheeler' },
+                                { label: 'Owner', value: vehicle.ownerName || '-' },
+                                { label: 'Parking', value: vehicle.parkingSlot || 'Not assigned' },
+                              ],
+                              caution: 'This action permanently removes vehicle details.',
+                            })
+                            if (confirmed) {
+                              deleteMutation.mutate(vehicle.id)
+                            }
+                          }}
+                          className="rounded-lg p-2 text-[var(--text-secondary)] transition hover:bg-red-500/10 hover:text-red-600"
+                          title="Delete"
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                      </>
+                    ) : (
+                      <span className="text-xs text-[var(--text-secondary)]">Read only</span>
+                    )}
+                  </div>
+                </div>
+              ))
+            )}
           </div>
       </div>
 
