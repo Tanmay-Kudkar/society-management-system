@@ -5,10 +5,11 @@ import { useAuth } from '../../context'
 import { complaintApi } from '../../../../api'
 import { Plus, Search, X, AlertTriangle, Clock, CheckCircle, XCircle } from 'lucide-react'
 import clsx from 'clsx'
-import { FormInput, SmartSelect, FormTextarea, AsyncButton, InfoTooltip } from '../../components'
+import { FormInput, SmartSelect, FormTextarea, InfoTooltip, NeonSweepButton } from '../../components'
 import { PermissionDenied } from '../../components'
 import { HeroSkeleton, SummaryRowSkeleton, FiltersSkeleton, ListSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
 import useMinLoadingTime from '../../hooks/useMinLoadingTime'
+import { useToast } from '../../context'
 
 const statusColors = {
   PENDING: 'bg-amber-100 text-amber-700',
@@ -27,6 +28,7 @@ const statusIcons = {
 export default function Complaints() {
   const { user, canRaiseComplaints, canManageComplaints } = useAuth()
   const queryClient = useQueryClient()
+  const toast = useToast()
   
   const [searchParams] = useSearchParams()
   const [showModal, setShowModal] = useState(false)
@@ -76,8 +78,14 @@ export default function Complaints() {
   const handleSubmit = (e) => {
     e.preventDefault()
     const formData = new FormData(e.target)
+
+    if (!effectiveSocietyId) {
+      toast.error('Society is required. Select a society first.')
+      return
+    }
+
     createMutation.mutate({
-      societyId: user.societyId,
+      societyId: Number(effectiveSocietyId),
       subject: formData.get('subject'),
       description: formData.get('description'),
       category: formData.get('category'),
@@ -120,13 +128,15 @@ export default function Complaints() {
           </div>
         </div>
         {canRaiseComplaints() && (
-          <button
+          <NeonSweepButton
+            tone="violet"
+            size="md"
             onClick={() => setShowModal(true)}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-[10px] font-semibold border border-[var(--border-default)] bg-[var(--bg-card)] text-[var(--text-primary)] transition-colors hover:bg-[var(--bg-tertiary)] dark:border-slate-400/22 dark:bg-slate-50 dark:text-slate-900 dark:hover:bg-white"
+            className="w-full sm:w-auto"
           >
             <Plus size={20} />
             Log Complaint
-          </button>
+          </NeonSweepButton>
         )}
       </div>
 
@@ -281,8 +291,8 @@ export default function Complaints() {
                 required
               />
               <div className="flex gap-3 pt-4">
-                <button type="button" onClick={() => setShowModal(false)} className="flex-1 px-4 py-2 rounded-[10px] font-semibold border border-[var(--border-light)] bg-[var(--bg-card)] text-slate-700 hover:bg-[var(--bg-tertiary)] transition-colors">Cancel</button>
-                <AsyncButton type="submit" className="flex-1 px-4 py-2 rounded-[10px] font-semibold border-none bg-blue-600 text-white hover:bg-blue-700 transition-colors" isLoading={createMutation.isPending} loadingText="Submitting...">Submit</AsyncButton>
+                <NeonSweepButton type="button" tone="slate" size="md" onClick={() => setShowModal(false)} className="flex-1">Cancel</NeonSweepButton>
+                <NeonSweepButton type="submit" tone="cyan" size="md" className="flex-1" disabled={createMutation.isPending}>{createMutation.isPending ? 'Submitting...' : 'Submit'}</NeonSweepButton>
               </div>
             </form>
           </div>

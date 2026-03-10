@@ -132,6 +132,14 @@ CREATE TABLE IF NOT EXISTS society_settings (
     financial_year_start_month      INT NOT NULL DEFAULT 4,
     bill_number_prefix              VARCHAR(20) NOT NULL DEFAULT 'BILL',
     receipt_number_prefix           VARCHAR(20) NOT NULL DEFAULT 'RCT',
+    account_holder_name             VARCHAR(255),
+    bank_name                       VARCHAR(255),
+    account_number                  VARCHAR(255),
+    ifsc_code                       VARCHAR(32),
+    upi_id                          VARCHAR(255),
+    payment_link                    VARCHAR(512),
+    committee_election_start_date   DATE,
+    committee_election_end_date     DATE,
     created_at                      TIMESTAMP NOT NULL DEFAULT NOW(),
     updated_at                      TIMESTAMP NOT NULL DEFAULT NOW()
 );

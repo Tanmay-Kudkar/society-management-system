@@ -7,7 +7,7 @@ import { useToast } from '../../context'
 import { noticeApi } from '../../../../api'
 import { Plus, Search, X, Megaphone, Edit, Trash2 } from 'lucide-react'
 import clsx from 'clsx'
-import { FormInput, SmartSelect, FormTextarea, AsyncButton, InfoTooltip } from '../../components'
+import { FormInput, SmartSelect, FormTextarea, InfoTooltip, NeonSweepButton } from '../../components'
 import { HeroSkeleton, FiltersSkeleton, CardGridSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
 import useMinLoadingTime from '../../hooks/useMinLoadingTime'
 
@@ -136,13 +136,15 @@ export default function Notices() {
           </div>
         </div>
         {canManageNotices() && (
-          <button
+          <NeonSweepButton
+            tone="violet"
+            size="md"
             onClick={() => setShowModal(true)}
-            className="inline-flex items-center gap-2 rounded-xl border border-[var(--border-default)] bg-[var(--bg-card)] px-4 py-2 font-semibold text-[var(--text-primary)] transition hover:-translate-y-0.5 hover:bg-[color-mix(in_srgb,var(--bg-tertiary)_70%,var(--bg-card))] hover:shadow-[0_8px_20px_rgba(15,23,42,0.14)] dark:border-slate-400/25 dark:bg-slate-50 dark:text-slate-900 dark:hover:bg-white"
+            className="w-full sm:w-auto"
           >
             <Plus size={20} />
             Add Notice
-          </button>
+          </NeonSweepButton>
         )}
       </div>
 
@@ -257,15 +259,16 @@ export default function Notices() {
                 />
               </div>
               <div className="flex gap-3 pt-2">
-                <button type="button" onClick={closeModal} className="flex-1 rounded-xl border border-[var(--border-light)] bg-transparent px-4 py-2 font-semibold text-slate-700 transition hover:bg-[var(--bg-tertiary)]">Cancel</button>
-                <AsyncButton
+                <NeonSweepButton type="button" tone="slate" size="md" onClick={closeModal} className="flex-1">Cancel</NeonSweepButton>
+                <NeonSweepButton
                   type="submit"
-                  className="flex-1 rounded-xl border border-[var(--border-default)] bg-[var(--bg-card)] px-4 py-2 font-semibold text-[var(--text-primary)] transition hover:bg-[color-mix(in_srgb,var(--bg-tertiary)_70%,var(--bg-card))] hover:shadow-[0_8px_20px_rgba(15,23,42,0.14)] dark:border-slate-400/25 dark:bg-slate-50 dark:text-slate-900 dark:hover:bg-white"
-                  isLoading={createMutation.isPending || updateMutation.isPending}
-                  loadingText="Saving..."
+                  tone="cyan"
+                  size="md"
+                  className="flex-1"
+                  disabled={createMutation.isPending || updateMutation.isPending}
                 >
-                  {editingNotice ? 'Update' : 'Create'}
-                </AsyncButton>
+                  {createMutation.isPending || updateMutation.isPending ? 'Saving...' : (editingNotice ? 'Update' : 'Create')}
+                </NeonSweepButton>
               </div>
             </form>
           </div>

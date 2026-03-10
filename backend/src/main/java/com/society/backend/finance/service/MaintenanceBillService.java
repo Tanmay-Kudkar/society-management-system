@@ -42,5 +42,7 @@ public interface MaintenanceBillService {
     
     int getGenerationPreviewCount(Long societyId, String billMonth, String propertyType);
 
+        byte[] downloadInvoicePdf(Long billId, Long userId);
+
     void delete(Long id, Long userId);
 }

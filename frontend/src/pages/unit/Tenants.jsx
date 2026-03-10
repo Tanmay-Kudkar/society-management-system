@@ -6,7 +6,7 @@ import { useConfirmDialog } from '../../context'
 import { useToast } from '../../context'
 import { tenantApi, flatApi, userApi } from '../../../../api'
 import { Plus, Edit, Trash2, Search, X, User, Calendar, Phone, Mail, Upload } from 'lucide-react'
-import { FormInput, PhoneInput, SmartSelect, NumberInput, BulkImportModal, AsyncButton, InfoTooltip } from '../../components'
+import { FormInput, PhoneInput, SmartSelect, NumberInput, BulkImportModal, InfoTooltip, NeonSweepButton } from '../../components'
 import { HeroSkeleton, FiltersSkeleton, TableSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
 import useMinLoadingTime from '../../hooks/useMinLoadingTime'
 
@@ -177,20 +177,24 @@ export default function Tenants() {
         </div>
         {canEditTenants && (
           <div className="flex flex-wrap gap-3">
-            <button
+            <NeonSweepButton
+              tone="cyan"
+              size="md"
               onClick={() => setShowBulkImport(true)}
-              className="inline-flex items-center gap-2 py-[0.55rem] px-4 rounded-xl font-semibold border border-[rgba(15,23,42,0.12)] text-[#f8fafc] bg-[#0f172a] transition-transform hover:-translate-y-px hover:shadow-[0_8px_20px_rgba(15,23,42,0.16)] dark:border-[rgba(148,163,184,0.26)] dark:bg-[#020617]"
+              className="w-full sm:w-auto"
             >
               <Upload size={20} />
               Bulk Import
-            </button>
-            <button
+            </NeonSweepButton>
+            <NeonSweepButton
+              tone="violet"
+              size="md"
               onClick={() => { setEditingTenant(null); setShowModal(true) }}
-              className="inline-flex items-center gap-2 py-[0.55rem] px-4 rounded-xl font-semibold border border-[var(--border-default)] bg-[var(--bg-card)] text-[var(--text-primary)] transition-transform hover:-translate-y-px hover:shadow-[0_8px_20px_rgba(15,23,42,0.14)] hover:opacity-90 dark:border-[rgba(148,163,184,0.22)] dark:bg-[#f8fafc] dark:text-[#0f172a] dark:hover:bg-white"
+              className="w-full sm:w-auto"
             >
               <Plus size={20} />
               Add Tenant
-            </button>
+            </NeonSweepButton>
           </div>
         )}
       </div>
@@ -491,21 +495,24 @@ export default function Tenants() {
                 </div>
 
                 <div className="flex justify-end gap-3 pt-2">
-                  <button
+                  <NeonSweepButton
                     type="button"
+                    tone="slate"
+                    size="md"
                     onClick={() => { setShowModal(false); setEditingTenant(null) }}
-                    className="py-[0.55rem] px-4 rounded-xl font-semibold bg-[rgba(255,255,255,0.1)] text-[#334155]"
+                    className="w-full sm:w-auto"
                   >
                     Cancel
-                  </button>
-                  <AsyncButton
+                  </NeonSweepButton>
+                  <NeonSweepButton
                     type="submit"
-                    className="py-[0.55rem] px-4 rounded-xl font-semibold border border-[var(--border-default)] bg-[var(--bg-card)] text-[var(--text-primary)] hover:opacity-90 hover:shadow-[0_8px_20px_rgba(15,23,42,0.14)] disabled:opacity-60 disabled:cursor-not-allowed dark:border-[rgba(148,163,184,0.22)] dark:bg-[#f8fafc] dark:text-[#0f172a] dark:hover:bg-white"
-                    isLoading={createMutation.isPending || updateMutation.isPending}
-                    loadingText="Saving..."
+                    tone="cyan"
+                    size="md"
+                    disabled={createMutation.isPending || updateMutation.isPending}
+                    className="w-full sm:w-auto"
                   >
-                    Save
-                  </AsyncButton>
+                    {createMutation.isPending || updateMutation.isPending ? 'Saving...' : 'Save'}
+                  </NeonSweepButton>
                 </div>
               </form>
             </div>

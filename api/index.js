@@ -239,6 +239,8 @@ export const maintenanceBillApi = {
     api.post(`/maintenance-bills/generate?societyId=${societyId}&billMonth=${billMonth}&amount=${amount}&userId=${userId}${propertyType ? '&propertyType=' + propertyType : ''}`),
   getGenerationPreview: (societyId, billMonth, propertyType) =>
     api.get(`/maintenance-bills/generate/preview?societyId=${societyId}&billMonth=${billMonth}${propertyType ? '&propertyType=' + propertyType : ''}`),
+  downloadInvoicePdf: (id, userId) =>
+    api.get(`/maintenance-bills/${id}/invoice/pdf?userId=${userId}`, { responseType: 'blob' }),
   delete: (id, userId, force = true) => api.delete(`/maintenance-bills/${id}?userId=${userId}${force ? '&force=true' : ''}`),
 }
 

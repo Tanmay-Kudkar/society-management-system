@@ -4,7 +4,7 @@ import { useSearchParams } from 'react-router-dom'
 import { Building2, Save, SlidersHorizontal } from 'lucide-react'
 import { societyApi, societySettingApi } from '../../../../api'
 import { useAuth, useToast } from '../../context'
-import { AsyncButton, FormInput, PermissionDenied, InfoTooltip } from '../../components'
+import { FormInput, PermissionDenied, InfoTooltip, NeonSweepButton } from '../../components'
 import { HeroSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
 import useMinLoadingTime from '../../hooks/useMinLoadingTime'
 
@@ -34,6 +34,24 @@ const defaultForm = {
   financialYearStartMonth: 4,
   billNumberPrefix: 'BILL',
   receiptNumberPrefix: 'RCT',
+  accountHolderName: '',
+  bankName: '',
+  accountNumber: '',
+  ifscCode: '',
+  upiId: '',
+  paymentLink: '',
+  committeeElectionStartDate: '',
+  committeeElectionEndDate: '',
+}
+
+const defaultPreviewInput = {
+  areaSqft: 1000,
+  isOccupied: true,
+  occupantCount: 3,
+  twoWheelerCount: 1,
+  fourWheelerOpenCount: 0,
+  fourWheelerCoveredCount: 1,
+  fourWheelerStiltCount: 0,
 }
 
 const amountFields = [
@@ -80,6 +98,7 @@ export default function SocietySettings() {
   const [searchParams] = useSearchParams()
 
   const [form, setForm] = useState(defaultForm)
+  const [previewInput, setPreviewInput] = useState(defaultPreviewInput)
   const [errors, setErrors] = useState({})
 
   const canManageSettings = hasRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER')
@@ -128,8 +147,17 @@ export default function SocietySettings() {
 
   const updateMutation = useMutation({
     mutationFn: (payload) => societySettingApi.upsertBySocietyId(effectiveSocietyId, payload, user.id),
-    onSuccess: () => {
-      queryClient.invalidateQueries(['society-settings', effectiveSocietyId])
+    onSuccess: (response) => {
+      const saved = response?.data
+      if (saved) {
+        setForm({
+          ...defaultForm,
+          ...saved,
+          billNumberPrefix: saved.billNumberPrefix ?? 'BILL',
+          receiptNumberPrefix: saved.receiptNumberPrefix ?? 'RCT',
+        })
+      }
+      queryClient.invalidateQueries({ queryKey: ['society-settings', effectiveSocietyId] })
       toast.success('Society settings updated successfully')
     },
     onError: (error) => {
@@ -138,6 +166,135 @@ export default function SocietySettings() {
   })
 
   const showSkeleton = useMinLoadingTime(isLoading || isScopedSocietyLoading)
+
+  const previewMath = useMemo(() => {
+    const area = Math.max(0, toNumber(previewInput.areaSqft, 0))
+    const occupantCount = Math.max(0, Math.floor(toNumber(previewInput.occupantCount, 0)))
+    const twoWheelerCount = Math.max(0, Math.floor(toNumber(previewInput.twoWheelerCount, 0)))
+    const fourWheelerOpenCount = Math.max(0, Math.floor(toNumber(previewInput.fourWheelerOpenCount, 0)))
+    const fourWheelerCoveredCount = Math.max(0, Math.floor(toNumber(previewInput.fourWheelerCoveredCount, 0)))
+    const fourWheelerStiltCount = Math.max(0, Math.floor(toNumber(previewInput.fourWheelerStiltCount, 0)))
+
+    const lines = [
+      {
+        key: 'maintenance',
+        label: 'Maintenance charge',
+        amount: toNumber(form.maintenanceRatePerSqft) * area,
+        taxable: true,
+      },
+      {
+        key: 'sinking',
+        label: 'Sinking fund',
+        amount: toNumber(form.sinkingFundPerSqft) * area,
+        taxable: false,
+      },
+      {
+        key: 'repair',
+        label: 'Repair fund',
+        amount: toNumber(form.repairFundPerSqft) * area,
+        taxable: false,
+      },
+      {
+        key: 'waterFixed',
+        label: 'Water charges (fixed)',
+        amount: toNumber(form.waterChargesFixed),
+        taxable: true,
+      },
+      {
+        key: 'waterPerPerson',
+        label: 'Water charges (per person)',
+        amount: toNumber(form.waterChargesPerPerson) * occupantCount,
+        taxable: true,
+      },
+      {
+        key: 'parkingTwoW',
+        label: 'Parking (two-wheeler)',
+        amount: toNumber(form.parkingChargeTwoWheeler) * twoWheelerCount,
+        taxable: true,
+      },
+      {
+        key: 'parkingOpen',
+        label: 'Parking (open)',
+        amount: toNumber(form.parkingChargeOpen) * fourWheelerOpenCount,
+        taxable: true,
+      },
+      {
+        key: 'parkingCovered',
+        label: 'Parking (covered)',
+        amount: toNumber(form.parkingChargeCovered) * fourWheelerCoveredCount,
+        taxable: true,
+      },
+      {
+        key: 'parkingStilt',
+        label: 'Parking (stilt)',
+        amount: toNumber(form.parkingChargeStilt) * fourWheelerStiltCount,
+        taxable: true,
+      },
+      {
+        key: 'lift',
+        label: 'Lift maintenance',
+        amount: toNumber(form.liftMaintenanceCharge),
+        taxable: true,
+      },
+      {
+        key: 'electricity',
+        label: 'Common electricity',
+        amount: toNumber(form.electricityCommonCharge),
+        taxable: true,
+      },
+      {
+        key: 'security',
+        label: 'Security charge',
+        amount: toNumber(form.securityCharge),
+        taxable: true,
+      },
+      {
+        key: 'insurance',
+        label: 'Insurance',
+        amount: toNumber(form.insuranceCharge),
+        taxable: false,
+      },
+      {
+        key: 'club',
+        label: 'Club house',
+        amount: toNumber(form.clubHouseCharge),
+        taxable: true,
+      },
+      {
+        key: 'propertyTax',
+        label: 'Property tax share',
+        amount: toNumber(form.propertyTaxShare),
+        taxable: false,
+      },
+    ]
+
+    if (!previewInput.isOccupied) {
+      const maintenanceBase = lines.find((line) => line.key === 'maintenance')?.amount || 0
+      const surchargeAmount = maintenanceBase * (toNumber(form.nonOccupancySurchargePct) / 100)
+      lines.push({
+        key: 'nonOccupancy',
+        label: `Non-occupancy surcharge @ ${toNumber(form.nonOccupancySurchargePct)}%`,
+        amount: surchargeAmount,
+        taxable: false,
+      })
+    }
+
+    const subtotal = lines.reduce((sum, line) => sum + (line.amount > 0 ? line.amount : 0), 0)
+    const taxableBase = lines.reduce(
+      (sum, line) => sum + (line.taxable && line.amount > 0 ? line.amount : 0),
+      0,
+    )
+    const gstAmount = taxableBase * (toNumber(form.gstPercentage) / 100)
+    const total = subtotal + gstAmount
+
+    return {
+      lines: lines.filter((line) => line.amount > 0),
+      subtotal,
+      taxableBase,
+      gstAmount,
+      total,
+    }
+  }, [form, previewInput])
 
   if (!canManageSettings) {
     return <PermissionDenied message="You don't have permission to manage society settings" />
@@ -169,6 +326,14 @@ export default function SocietySettings() {
     financialYearStartMonth: '1=Jan, 4=Apr, 12=Dec',
     billNumberPrefix: 'Used as prefix for generated bill numbers',
     receiptNumberPrefix: 'Used as prefix for generated receipt numbers',
+    accountHolderName: 'Beneficiary/account holder name for invoice payment details',
+    bankName: 'Bank name shown in invoice payment details',
+    accountNumber: 'Bank account number shown in invoice payment details',
+    ifscCode: 'IFSC code shown in invoice payment details',
+    upiId: 'UPI ID shown in invoice payment details',
+    paymentLink: 'Payment URL used for invoice QR code and quick pay',
+    committeeElectionStartDate: 'Start date of committee election period (optional)',
+    committeeElectionEndDate: 'End date of committee election period (optional)',
   }
 
   const validateForm = (payload) => {
@@ -204,6 +369,15 @@ export default function SocietySettings() {
       nextErrors.receiptNumberPrefix = 'Use 1-20 chars: letters, numbers, _ or -'
     }
 
+    if (payload.committeeElectionStartDate && payload.committeeElectionEndDate) {
+      const startDate = new Date(payload.committeeElectionStartDate)
+      const endDate = new Date(payload.committeeElectionEndDate)
+      if (startDate > endDate) {
+        nextErrors.committeeElectionStartDate = 'Start date cannot be after end date'
+        nextErrors.committeeElectionEndDate = 'End date cannot be before start date'
+      }
+    }
+
     setErrors(nextErrors)
     return Object.keys(nextErrors).length === 0
   }
@@ -216,6 +390,11 @@ export default function SocietySettings() {
       })
     }
     setForm((prev) => ({ ...prev, [key]: e.target.value }))
+  }
+
+  const handlePreviewChange = (key) => (e) => {
+    const nextValue = key === 'isOccupied' ? e.target.checked : e.target.value
+    setPreviewInput((prev) => ({ ...prev, [key]: nextValue }))
   }
 
   const handleSubmit = (e) => {
@@ -253,6 +432,14 @@ export default function SocietySettings() {
       financialYearStartMonth: Math.min(12, Math.max(1, Math.floor(toNumber(form.financialYearStartMonth, 4)))),
       billNumberPrefix: String(form.billNumberPrefix || 'BILL').trim(),
       receiptNumberPrefix: String(form.receiptNumberPrefix || 'RCT').trim(),
+      accountHolderName: String(form.accountHolderName || '').trim(),
+      bankName: String(form.bankName || '').trim(),
+      accountNumber: String(form.accountNumber || '').trim(),
+      ifscCode: String(form.ifscCode || '').trim(),
+      upiId: String(form.upiId || '').trim(),
+      paymentLink: String(form.paymentLink || '').trim(),
+      committeeElectionStartDate: form.committeeElectionStartDate || null,
+      committeeElectionEndDate: form.committeeElectionEndDate || null,
     }
 
     if (!validateForm(payload)) {
@@ -410,17 +597,142 @@ export default function SocietySettings() {
           </div>
         </section>
 
+        <section className="rounded-[14px] border border-[var(--border-default)] bg-[var(--bg-elevated)] px-5 py-4">
+          <h3 className="mb-3.5 text-base font-semibold text-[var(--text-primary)]">Invoice Payment Details</h3>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <FormInput
+              label="Account Holder Name"
+              name="accountHolderName"
+              value={form.accountHolderName ?? ''}
+              onChange={handleChange('accountHolderName')}
+              hint={fieldHints.accountHolderName}
+            />
+            <FormInput
+              label="Bank Name"
+              name="bankName"
+              value={form.bankName ?? ''}
+              onChange={handleChange('bankName')}
+              hint={fieldHints.bankName}
+            />
+            <FormInput
+              label="Account Number"
+              name="accountNumber"
+              value={form.accountNumber ?? ''}
+              onChange={handleChange('accountNumber')}
+              hint={fieldHints.accountNumber}
+            />
+            <FormInput
+              label="IFSC Code"
+              name="ifscCode"
+              value={form.ifscCode ?? ''}
+              onChange={handleChange('ifscCode')}
+              hint={fieldHints.ifscCode}
+            />
+            <FormInput
+              label="UPI ID"
+              name="upiId"
+              value={form.upiId ?? ''}
+              onChange={handleChange('upiId')}
+              hint={fieldHints.upiId}
+            />
+            <FormInput
+              label="Payment Link"
+              name="paymentLink"
+              type="url"
+              value={form.paymentLink ?? ''}
+              onChange={handleChange('paymentLink')}
+              hint={fieldHints.paymentLink}
+            />
+          </div>
+        </section>
+
+        <section className="rounded-[14px] border border-[var(--border-default)] bg-[var(--bg-elevated)] px-5 py-4">
+          <h3 className="mb-3.5 text-base font-semibold text-[var(--text-primary)]">Committee Election Window (Optional)</h3>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <FormInput
+              label="Election Start Date"
+              name="committeeElectionStartDate"
+              type="date"
+              value={form.committeeElectionStartDate ?? ''}
+              onChange={handleChange('committeeElectionStartDate')}
+              error={errors.committeeElectionStartDate}
+              hint={fieldHints.committeeElectionStartDate}
+            />
+            <FormInput
+              label="Election End Date"
+              name="committeeElectionEndDate"
+              type="date"
+              value={form.committeeElectionEndDate ?? ''}
+              onChange={handleChange('committeeElectionEndDate')}
+              error={errors.committeeElectionEndDate}
+              hint={fieldHints.committeeElectionEndDate}
+            />
+          </div>
+        </section>
+
+        <section className="rounded-[14px] border border-[var(--border-default)] bg-[var(--bg-elevated)] px-5 py-4">
+          <h3 className="mb-3.5 text-base font-semibold text-[var(--text-primary)]">Bill Math Preview</h3>
+          <p className="mb-3 text-xs text-[var(--text-tertiary)]">
+            Preview per-unit calculation before bill generation. Uses current settings and sample inputs.
+          </p>
+
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <FormInput label="Area (SqFt)" name="preview-area" type="number" min="0" step="0.01" value={previewInput.areaSqft} onChange={handlePreviewChange('areaSqft')} />
+            <FormInput label="Occupant Count" name="preview-occupants" type="number" min="0" step="1" value={previewInput.occupantCount} onChange={handlePreviewChange('occupantCount')} />
+            <FormInput label="Two-Wheeler Count" name="preview-2w" type="number" min="0" step="1" value={previewInput.twoWheelerCount} onChange={handlePreviewChange('twoWheelerCount')} />
+            <div className="flex items-end pb-2">
+              <label className="inline-flex items-center gap-2 text-sm text-[var(--text-secondary)]">
+                <input type="checkbox" checked={previewInput.isOccupied} onChange={handlePreviewChange('isOccupied')} />
+                Unit occupied
+              </label>
+            </div>
+            <FormInput label="4W Open Count" name="preview-open" type="number" min="0" step="1" value={previewInput.fourWheelerOpenCount} onChange={handlePreviewChange('fourWheelerOpenCount')} />
+            <FormInput label="4W Covered Count" name="preview-covered" type="number" min="0" step="1" value={previewInput.fourWheelerCoveredCount} onChange={handlePreviewChange('fourWheelerCoveredCount')} />
+            <FormInput label="4W Stilt Count" name="preview-stilt" type="number" min="0" step="1" value={previewInput.fourWheelerStiltCount} onChange={handlePreviewChange('fourWheelerStiltCount')} />
+          </div>
+
+          <div className="mt-4 overflow-hidden rounded-lg border border-[var(--border-default)]">
+            <div className="grid grid-cols-[1fr_auto] gap-2 border-b border-[var(--border-default)] bg-[var(--bg-tertiary)] px-3 py-2 text-xs font-semibold uppercase tracking-wide text-[var(--text-tertiary)]">
+              <span>Charge Item</span>
+              <span>Amount</span>
+            </div>
+            <div className="divide-y divide-[var(--border-default)]">
+              {previewMath.lines.length === 0 && (
+                <div className="px-3 py-3 text-sm text-[var(--text-tertiary)]">No charge lines from current sample inputs.</div>
+              )}
+              {previewMath.lines.map((line) => (
+                <div key={line.key} className="grid grid-cols-[1fr_auto] gap-2 px-3 py-2 text-sm">
+                  <span className="text-[var(--text-secondary)]">{line.label}</span>
+                  <span className="font-semibold text-[var(--text-primary)]">{line.amount.toFixed(2)}</span>
+                </div>
+              ))}
+              <div className="grid grid-cols-[1fr_auto] gap-2 px-3 py-2 text-sm">
+                <span className="text-[var(--text-secondary)]">Taxable Base</span>
+                <span className="font-semibold text-[var(--text-primary)]">{previewMath.taxableBase.toFixed(2)}</span>
+              </div>
+              <div className="grid grid-cols-[1fr_auto] gap-2 px-3 py-2 text-sm">
+                <span className="text-[var(--text-secondary)]">GST @ {toNumber(form.gstPercentage).toFixed(2)}%</span>
+                <span className="font-semibold text-[var(--text-primary)]">{previewMath.gstAmount.toFixed(2)}</span>
+              </div>
+              <div className="grid grid-cols-[1fr_auto] gap-2 bg-[var(--bg-tertiary)] px-3 py-2 text-sm">
+                <span className="font-semibold text-[var(--text-primary)]">Total (Before Late Interest/Penalty)</span>
+                <span className="font-bold text-[var(--accent-primary)]">{previewMath.total.toFixed(2)}</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
         <div className="flex justify-end">
-          <AsyncButton
+          <NeonSweepButton
             type="submit"
-            isLoading={updateMutation.isPending}
+            tone="cyan"
+            size="md"
             disabled={!effectiveSocietyId}
-            loadingText="Saving..."
-            className="inline-flex items-center gap-2 rounded-[10px] border-none bg-[var(--accent-primary)] px-4 py-2.5 font-semibold text-white disabled:cursor-not-allowed disabled:opacity-65"
+            className="w-full sm:w-auto"
           >
             <Save size={16} />
-            Save Settings
-          </AsyncButton>
+            {updateMutation.isPending ? 'Saving...' : 'Save Settings'}
+          </NeonSweepButton>
         </div>
       </form>
       )}
