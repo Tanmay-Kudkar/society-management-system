@@ -438,6 +438,10 @@ export const paymentApi = {
   // Handle payment failure
   handleFailure: (paymentId, errorCode, errorDescription) => 
     api.post(`/api/payments/failure?paymentId=${paymentId}&errorCode=${encodeURIComponent(errorCode || '')}&errorDescription=${encodeURIComponent(errorDescription || '')}`),
+
+  // Mark payment as cancelled when checkout is dismissed
+  handleCancel: (paymentId, reason) =>
+    api.post(`/api/payments/cancel?paymentId=${paymentId}&reason=${encodeURIComponent(reason || '')}`),
   
   // Get payment by ID
   getById: (id) => api.get(`/api/payments/${id}`),
@@ -450,9 +454,18 @@ export const paymentApi = {
   
   // Get all payments for a society
   getBySociety: (societyId) => api.get(`/api/payments/society/${societyId}`),
+
+  // Get recently deleted payments for a society (undo eligible)
+  getDeletedBySociety: (societyId) => api.get(`/api/payments/deleted/society/${societyId}`),
   
   // Get all payments for a maintenance bill
   getByBill: (billId) => api.get(`/api/payments/bill/${billId}`),
+
+  // Soft delete payment and allow undo for 30 minutes
+  delete: (id, userId) => api.delete(`/api/payments/${id}?userId=${userId}`),
+
+  // Undo payment deletion within 30 minutes
+  undoDelete: (id) => api.post(`/api/payments/${id}/undo-delete`),
 }
 
 // Reports API

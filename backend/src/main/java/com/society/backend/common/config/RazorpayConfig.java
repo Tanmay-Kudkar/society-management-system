@@ -19,6 +19,10 @@ public class RazorpayConfig {
     private String keySecret;
 
     @Getter
+    @Value("${razorpay.webhook.secret:}")
+    private String webhookSecret;
+
+    @Getter
     @Value("${razorpay.currency:INR}")
     private String currency;
 
