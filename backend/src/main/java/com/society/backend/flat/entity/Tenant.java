@@ -8,6 +8,7 @@ import lombok.Setter;
 import java.time.LocalDate;
 
 import com.society.backend.society.entity.Society;
+import com.society.backend.user.entity.User;
 @Entity
 @Table(name = "tenants")
 @Getter
@@ -26,6 +27,10 @@ public class Tenant {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "society_id")
     private Society society;
+
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    private User user;
 
     @Column(nullable = false)
     private String name;
