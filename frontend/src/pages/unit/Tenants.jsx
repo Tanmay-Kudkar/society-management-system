@@ -4,7 +4,7 @@ import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '../../context'
 import { useConfirmDialog } from '../../context'
 import { useToast } from '../../context'
-import { tenantApi, flatApi } from '../../../../api'
+import { tenantApi, flatApi, userApi } from '../../../../api'
 import { Plus, Edit, Trash2, Search, X, User, Calendar, Phone, Mail, Upload } from 'lucide-react'
 import { FormInput, PhoneInput, SmartSelect, NumberInput, BulkImportModal, AsyncButton } from '../../components'
 import { HeroSkeleton, FiltersSkeleton, TableSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
@@ -99,6 +99,7 @@ export default function Tenants() {
     const formData = new FormData(e.target)
     const data = {
       flatId: parseInt(formData.get('flatId')),
+      userId: formData.get('userId') ? parseInt(formData.get('userId')) : null,
       name: formData.get('name'),
       email: formData.get('email'),
       phone: formData.get('phone'),

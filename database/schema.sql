@@ -188,6 +188,7 @@ CREATE TABLE IF NOT EXISTS tenants (
     id                      BIGSERIAL PRIMARY KEY,
     flat_id                 BIGINT NOT NULL REFERENCES flats(id),
     society_id              BIGINT REFERENCES societies(id),
+    user_id                 BIGINT UNIQUE REFERENCES users(id),
     name                    VARCHAR(255) NOT NULL,
     phone                   VARCHAR(255),
     email                   VARCHAR(255),
@@ -230,6 +231,7 @@ CREATE TABLE IF NOT EXISTS tickets (
 CREATE TABLE IF NOT EXISTS vendors (
     id                      BIGSERIAL PRIMARY KEY,
     society_id              BIGINT REFERENCES societies(id),
+    user_id                 BIGINT UNIQUE REFERENCES users(id),
     name                    VARCHAR(255) NOT NULL,
     service_type            VARCHAR(255) NOT NULL,
     contact_person          VARCHAR(255),
@@ -983,3 +985,4 @@ CREATE TABLE IF NOT EXISTS society_rules (
     created_at      TIMESTAMP DEFAULT NOW(),
     updated_at      TIMESTAMP DEFAULT NOW()
 );
+

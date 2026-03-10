@@ -42,7 +42,7 @@ const roleColors = {
   default: ROLE_TAG_CLS,
 }
 
-const UNIT_ASSIGNABLE_ROLES = ['MEMBER', 'TENANT', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE']
+const UNIT_ASSIGNABLE_ROLES = ['MEMBER', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE']
 
 const formatRoleLabel = (role) => {
   if (role === 'MEMBER') return 'Member (Owner)'
@@ -312,7 +312,7 @@ export default function UnitManagement() {
   const unitAssignableCreatableRoles = useMemo(() => {
     const allowed = creatableRoles.filter((role) => UNIT_ASSIGNABLE_ROLES.includes(role))
     if (allowed.length > 0) return allowed
-    return ['MEMBER', 'TENANT']
+    return ['MEMBER']
   }, [creatableRoles])
 
   const unitAssignableUpdatableRoles = useMemo(() => {
@@ -321,7 +321,7 @@ export default function UnitManagement() {
       return [editingUser.role, ...allowed]
     }
     if (allowed.length > 0) return allowed
-    return ['MEMBER', 'TENANT']
+    return ['MEMBER']
   }, [updatableRoles, editingUser])
 
   const handleDeleteSuccess = (force = false) => {
@@ -460,7 +460,7 @@ export default function UnitManagement() {
       ) {
         return [editingStandaloneUser.role, ...allowed]
       }
-      return allowed.length > 0 ? allowed : ['MEMBER', 'TENANT']
+      return allowed.length > 0 ? allowed : ['MEMBER']
     }
 
     const allowed = [...updatableRoles]
@@ -843,7 +843,7 @@ export default function UnitManagement() {
                   className="inline-flex items-center gap-2 px-4 py-2 rounded-xl font-semibold border border-[var(--border-default)] bg-[var(--bg-card)] text-[var(--text-primary)] shadow-[0_1px_3px_rgba(15,23,42,0.06)] transition-all hover:shadow-[0_4px_12px_rgba(15,23,42,0.08)] dark:border-[rgba(148,163,184,0.22)] dark:bg-[#f8fafc] dark:text-[#0f172a] dark:hover:bg-white"
                 >
                   <Plus size={20} />
-                  Add User
+                  Add Society User
                 </button>
               )}
             </>
@@ -1098,7 +1098,7 @@ export default function UnitManagement() {
                         style={{ borderColor: 'color-mix(in srgb, var(--border-light) 78%, transparent)', background: 'color-mix(in srgb, var(--bg-tertiary) 85%, transparent)' }}
                       >
                         <UserPlus size={14} />
-                        Add User
+                        Assign Owner
                       </button>
                     )}
                     <button
@@ -2061,7 +2061,7 @@ function UserFormModal({ unit, roleOptions, errors, apiError, onSubmit, onClose,
       <div className="w-full max-w-[28rem] max-h-[90vh] overflow-y-auto rounded-2xl bg-[var(--bg-card)] border border-[var(--border-light)] shadow-[0_24px_48px_rgba(15,23,42,0.24)]">
         <div className="sticky top-0 flex items-center justify-between p-4 px-5 border-b border-[var(--border-light)] bg-[var(--bg-card)] z-[1]">
           <div>
-            <h3 className="text-[1.1rem] font-semibold text-[var(--text-primary)]">Add User to Unit</h3>
+            <h3 className="text-[1.1rem] font-semibold text-[var(--text-primary)]">Assign User to Unit</h3>
             <p className="text-[0.8rem] text-[var(--text-tertiary)]">Unit: {unit.flatNumber}</p>
           </div>
           <button onClick={onClose} className="p-[0.35rem] rounded-[0.6rem] text-[var(--text-tertiary)] hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-primary)]">
@@ -2106,7 +2106,7 @@ function UserFormModal({ unit, roleOptions, errors, apiError, onSubmit, onClose,
             name="role"
             defaultValue={roleOptions?.[0] || 'MEMBER'}
             required
-            options={(roleOptions || ['MEMBER', 'TENANT']).map((role) => ({ value: role, label: formatRoleLabel(role) }))}
+            options={(roleOptions || ['MEMBER']).map((role) => ({ value: role, label: formatRoleLabel(role) }))}
           />
 
           <div className="flex gap-3 pt-3 border-t border-[var(--border-light)]">
@@ -2186,7 +2186,7 @@ function EditUserFormModal({ user, unit, roleOptions, errors, apiError, onSubmit
             name="role"
             defaultValue={user.role}
             required
-            options={(roleOptions || ['MEMBER', 'TENANT']).map((role) => ({ value: role, label: formatRoleLabel(role) }))}
+            options={(roleOptions || ['MEMBER']).map((role) => ({ value: role, label: formatRoleLabel(role) }))}
           />
 
           <div className="flex gap-3 pt-3 border-t border-[var(--border-light)]">
