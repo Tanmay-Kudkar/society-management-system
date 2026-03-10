@@ -792,7 +792,7 @@ export default function Layout() {
 
   const isMasterSocietyMode = isMasterAdmin && Boolean(scopedSocietyId);
   const menuGroups = isMasterSocietyMode
-    ? standardMenuGroups
+    ? [platformOwnerMenu[1], ...standardMenuGroups]
     : isMasterAdmin
       ? platformOwnerMenu
       : standardMenuGroups;

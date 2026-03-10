@@ -8,6 +8,9 @@ import com.society.backend.common.exception.ApiException;
 import com.society.backend.flat.repository.FlatRepository;
 import com.society.backend.flat.repository.TenantRepository;
 import com.society.backend.common.service.RoleService;
+import com.society.backend.user.entity.Role;
+import com.society.backend.user.entity.User;
+import com.society.backend.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -23,6 +26,7 @@ public class TenantServiceImpl implements TenantService {
     private final TenantRepository tenantRepository;
     private final FlatRepository flatRepository;
     private final RoleService roleService;
+    private final UserRepository userRepository;
 
     @Override
     @Transactional
@@ -45,6 +49,7 @@ public class TenantServiceImpl implements TenantService {
         tenant.setRentAmount(request.getRentAmount());
         tenant.setDepositAmount(request.getDepositAmount());
         tenant.setIsActive(true);
+        tenant.setUser(resolveLinkedTenantUser(request.getUserId(), flat));
 
         Tenant saved = tenantRepository.save(tenant);
         return mapToResponse(saved);
@@ -118,6 +123,9 @@ public class TenantServiceImpl implements TenantService {
             tenant.setRentAmount(request.getRentAmount());
         if (request.getDepositAmount() != null)
             tenant.setDepositAmount(request.getDepositAmount());
+        if (request.getUserId() != null) {
+            tenant.setUser(resolveLinkedTenantUser(request.getUserId(), tenant.getFlat()));
+        }
 
         Tenant saved = tenantRepository.save(tenant);
         return mapToResponse(saved);
@@ -155,6 +163,10 @@ public class TenantServiceImpl implements TenantService {
         if (tenant.getFlat().getSociety() != null) {
             response.setSocietyId(tenant.getFlat().getSociety().getId());
         }
+        if (tenant.getUser() != null) {
+            response.setUserId(tenant.getUser().getId());
+            response.setUserName(tenant.getUser().getName());
+        }
         response.setName(tenant.getName());
         response.setPhone(tenant.getPhone());
         response.setEmail(tenant.getEmail());
@@ -167,5 +179,29 @@ public class TenantServiceImpl implements TenantService {
         response.setIsActive(tenant.getIsActive());
         response.setCreatedAt(tenant.getCreatedAt());
         return response;
+    }
+
+    private User resolveLinkedTenantUser(Long userId, Flat flat) {
+        if (userId == null) {
+            return null;
+        }
+
+        User linkedUser = userRepository.findById(userId)
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Linked user not found"));
+
+        if (linkedUser.getRole() != Role.TENANT) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Only users with TENANT role can be linked");
+        }
+
+        if (linkedUser.getSociety() != null && flat.getSociety() != null
+                && !linkedUser.getSociety().getId().equals(flat.getSociety().getId())) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Linked tenant user must belong to the same society");
+        }
+
+        if (linkedUser.getFlat() != null && !linkedUser.getFlat().getId().equals(flat.getId())) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Linked tenant user is assigned to a different unit");
+        }
+
+        return linkedUser;
     }
 }

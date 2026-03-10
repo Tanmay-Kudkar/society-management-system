@@ -42,4 +42,6 @@ public class TenantRequest {
 
     @NotNull(message = "Deposit amount is required")
     private java.math.BigDecimal depositAmount;
+
+    private Long userId;
 }
