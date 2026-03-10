@@ -145,9 +145,6 @@ public class SecurityConfig {
                                                 .requestMatchers(HttpMethod.GET, "/contracts/**")
                                                 .hasAnyRole("MASTER_ADMIN", "SOCIETY_ADMIN",
                                                                 "CHAIRMAN", "SECRETARY", "TREASURER", "COMMITTEE")
-                                                .requestMatchers("/banners/**")
-                                                .hasAnyRole("MASTER_ADMIN", "SOCIETY_ADMIN",
-                                                                "CHAIRMAN", "SECRETARY", "MANAGER")
                                                 .requestMatchers(HttpMethod.PUT, "/users/**")
                                                 .hasAnyRole("MASTER_ADMIN", "SOCIETY_ADMIN",
                                                                 "CHAIRMAN", "SECRETARY", "TREASURER", "COMMITTEE")

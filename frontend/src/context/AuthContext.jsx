@@ -139,7 +139,6 @@ export const AuthProvider = ({ children }) => {
   const canManageNotices = useCallback(() => hasPermissionRole('SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'MANAGER', 'EMPLOYEE'), [hasPermissionRole])
   const canManageDocuments = useCallback(() => hasPermissionRole('SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'MANAGER', 'EMPLOYEE'), [hasPermissionRole])
   const canViewFinancials = useCallback(() => hasPermissionRole('SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE'), [hasPermissionRole])
-  const canManageBanners = useCallback(() => hasPermissionRole('SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'MANAGER'), [hasPermissionRole])
   const canManageContracts = useCallback(() => hasPermissionRole('SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY'), [hasPermissionRole])
   const canManageEmergencyContacts = useCallback(() => hasPermissionRole('SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'MANAGER'), [hasPermissionRole])
   const canManageMaintenanceBills = useCallback(() => hasPermissionRole('SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER'), [hasPermissionRole])
@@ -192,7 +191,6 @@ export const AuthProvider = ({ children }) => {
     canManageNotices,
     canManageDocuments,
     canViewFinancials,
-    canManageBanners,
     canManageContracts,
     canManageEmergencyContacts,
     canManageMaintenanceBills,
@@ -217,7 +215,7 @@ export const AuthProvider = ({ children }) => {
     isPlatformOwner, isMasterAdmin, isOrganizationOwner, isSocietyAdmin, isChairman,
     isSecretary, isTreasurer, isCommittee, isManager, isEmployee, isMember,
     isTenant, isVendor, isVisitor, isAdminLevel, isCommitteeLevel,
-    canManageNotices, canManageDocuments, canViewFinancials, canManageBanners,
+    canManageNotices, canManageDocuments, canViewFinancials,
     canManageContracts, canManageEmergencyContacts, canManageMaintenanceBills,
     canManageTenants, canManageTickets, canCreateTickets, canManageTransactions,
     canManageVendors, canManageVendorBills, canViewSecurityLogs, canExportData,
