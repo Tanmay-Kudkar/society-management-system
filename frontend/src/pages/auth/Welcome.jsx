@@ -221,151 +221,187 @@ export default function Welcome() {
       </nav>
 
       {/* Hero */}
-      <section id="hero" className="min-h-screen flex items-center justify-center pt-28 px-6 pb-16 relative overflow-hidden before:content-[''] before:absolute before:-top-[30%] before:left-1/2 before:-translate-x-1/2 before:w-[800px] before:h-[800px] before:rounded-full before:pointer-events-none" style={{ '--tw-before-bg': 'radial-gradient(circle, color-mix(in srgb, var(--accent-primary) 8%, transparent) 0%, transparent 70%)' }}>
-        <div className="max-w-[1200px] text-left relative z-[1]" style={{ position: 'relative' }}>
-          <div className="grid grid-cols-[1.2fr_0.8fr] max-[980px]:grid-cols-1 gap-8 items-center">
-            <div className="min-w-0">
-              <div className={clsx(
-                'welcome-anim inline-flex items-center gap-2 py-[0.375rem] px-[0.875rem] text-xs font-medium text-[var(--text-secondary)] bg-[var(--bg-secondary)] border border-[var(--border-default)] rounded-full mb-6 transition-all duration-500',
-                isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'
-              )} style={{ transitionDelay: '0.1s' }}>
-                <span className="welcome-anim w-[6px] h-[6px] rounded-full bg-[#3fb950]" style={{ animation: 'heroPulse 2s ease-in-out infinite' }} />
-                Trusted by housing communities across India
+      <section id="hero" className="relative min-h-screen flex items-center justify-center pt-24 pb-20 px-6 overflow-hidden" style={{ background: '#050509' }}>
+
+        {/* ── Ambient background layer ── */}
+        <div className="absolute inset-0 pointer-events-none select-none overflow-hidden" aria-hidden="true">
+          {/* Blue radial glow */}
+          <div className="absolute -top-[6%] left-1/2 -translate-x-1/2 w-[1000px] h-[700px]" style={{ background: 'radial-gradient(ellipse 65% 55% at 50% 0%, rgba(29,111,243,0.14) 0%, rgba(59,130,246,0.05) 50%, transparent 80%)' }} />
+          {/* Subtle dot / grid */}
+          <div className="absolute inset-0" style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,0.022) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.022) 1px, transparent 1px)', backgroundSize: '64px 64px' }} />
+          {/* Bottom accent line */}
+          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 h-px w-[55%]" style={{ background: 'linear-gradient(90deg, transparent, rgba(47,129,247,0.5), transparent)' }} />
+          {/* Faint left / right edge glow */}
+          <div className="absolute -left-32 top-1/2 -translate-y-1/2 w-64 h-[500px] rounded-full blur-3xl" style={{ background: 'rgba(29,111,243,0.055)' }} />
+          <div className="absolute -right-32 top-1/2 -translate-y-1/2 w-64 h-[500px] rounded-full blur-3xl" style={{ background: 'rgba(29,111,243,0.04)' }} />
+        </div>
+
+        <div className="max-w-[820px] w-full mx-auto relative z-[1]">
+
+          {/* Badge */}
+          <div className={clsx(
+            'welcome-anim inline-flex items-center gap-2 py-[0.375rem] px-4 text-xs font-medium rounded-full mb-7 border transition-all duration-500',
+            isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'
+          )} style={{ transitionDelay: '0.1s', background: 'rgba(22,27,34,0.85)', borderColor: '#21262d', color: '#8b949e' }}>
+            <span className="w-[6px] h-[6px] rounded-full bg-[#3fb950] shrink-0" style={{ animation: 'heroPulse 2s ease-in-out infinite' }} />
+            Trusted by housing communities across India
+          </div>
+
+          {/* Headline */}
+          <h1 className={clsx(
+            'welcome-anim text-[clamp(2.65rem,5.8vw,4.375rem)] font-extrabold leading-[1.08] tracking-[-0.038em] text-white mb-5 transition-all duration-500',
+            isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
+          )} style={{ transitionDelay: '0.2s' }}>
+            Visitor, Society and Accounting<br />
+            <span style={{ background: 'linear-gradient(130deg, #2563eb 0%, #3b82f6 40%, #60a5fa 75%, #93c5fd 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+              Management System
+            </span>
+          </h1>
+
+          {/* Description */}
+          <p className={clsx(
+            'welcome-anim text-[1.0625rem] leading-[1.72] mb-8 max-w-[580px] transition-all duration-500',
+            isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'
+          )} style={{ transitionDelay: '0.3s', color: '#7d8590' }}>
+            A complete platform to manage residents, visitor entries, billing, complaints,
+            notices, and daily operations — built for modern housing societies.
+          </p>
+
+          {/* Enroll form card */}
+          <div className={clsx(
+            'welcome-anim mb-6 transition-all duration-500',
+            isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'
+          )} style={{ transitionDelay: '0.35s' }}>
+            {enrollSubmitted ? (
+              <div className="p-7 rounded-2xl text-center" style={{ background: 'rgba(13,17,23,0.94)', border: '1px solid #21262d', boxShadow: '0 20px 60px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.04)' }}>
+                <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full" style={{ background: 'rgba(34,197,94,0.12)' }}>
+                  <CheckCircle size={28} style={{ color: '#22c55e' }} />
+                </div>
+                <p className="font-extrabold text-white text-base mb-1">Enquiry Received!</p>
+                <p className="text-sm mb-5" style={{ color: '#7d8590' }}>
+                  We'll reach out to <span className="font-bold text-white">+91 {enrollPhone}</span> within 24 hours.
+                </p>
+                <button
+                  onClick={() => { setEnrollSubmitted(false); setEnrollName(''); setEnrollPhone(''); setEnrollReason('') }}
+                  className="text-xs font-semibold bg-transparent border-none cursor-pointer underline underline-offset-2"
+                  style={{ color: '#3b82f6' }}
+                >
+                  Submit another enquiry
+                </button>
               </div>
+            ) : (
+              <form onSubmit={handleEnrollSubmit}>
+                <div className="p-5 rounded-2xl" style={{ background: 'rgba(13,17,23,0.94)', border: '1px solid #21262d', boxShadow: '0 20px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.04)', backdropFilter: 'blur(16px)' }}>
 
-              <h1 className={clsx(
-                'welcome-anim text-[clamp(2.5rem,6vw,4rem)] font-extrabold leading-[1.1] tracking-[-0.03em] text-[var(--text-primary)] mb-5 transition-all duration-500',
-                isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
-              )} style={{ transitionDelay: '0.2s' }}>
-                Visitor, Society and Accounting<br />
-                <span className="bg-gradient-to-br from-[var(--accent-primary)] via-[#58a6ff] to-[#79c0ff] bg-clip-text text-transparent">Management System</span>
-              </h1>
-
-              <p className={clsx(
-                'welcome-anim text-lg leading-[1.65] text-[var(--text-secondary)] max-w-[560px] mb-6 transition-all duration-500',
-                isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'
-              )} style={{ transitionDelay: '0.3s' }}>
-                A complete platform to manage residents, bills, complaints, notices, and daily operations —
-                built for modern housing societies.
-              </p>
-
-              <div className={clsx(
-                'welcome-anim mb-5 transition-all duration-500',
-                isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'
-              )} style={{ transitionDelay: '0.35s' }}>
-                {enrollSubmitted ? (
-                  <div className="grid gap-3 p-[0.875rem] rounded-xl border border-[var(--border-default)] shadow-[var(--shadow-sm)] text-center" style={{ background: 'color-mix(in srgb, var(--bg-secondary) 88%, transparent)' }}>
-                    <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full" style={{ background: 'color-mix(in srgb, #22c55e 15%, transparent)' }}>
-                      <CheckCircle size={28} className="text-emerald-500" />
+                  {/* Row 1 – Name + Phone */}
+                  <div className="grid grid-cols-2 max-[580px]:grid-cols-1 gap-3 mb-3">
+                    <div className="flex flex-col gap-[6px]">
+                      <span className="text-[0.675rem] font-bold uppercase tracking-widest" style={{ color: '#6e7681' }}>Name</span>
+                      <input
+                        value={enrollName}
+                        onChange={(e) => setEnrollName(e.target.value)}
+                        className="h-[44px] px-3.5 rounded-xl text-sm font-medium transition-all duration-150 focus:outline-none"
+                        style={{ background: 'rgba(22,27,34,0.85)', border: '1px solid #30363d', color: '#e6edf3' }}
+                        onFocus={e => { e.target.style.borderColor = '#3b82f6'; e.target.style.boxShadow = '0 0 0 3px rgba(59,130,246,0.16)' }}
+                        onBlur={e => { e.target.style.borderColor = '#30363d'; e.target.style.boxShadow = 'none' }}
+                        placeholder="Your full name"
+                        autoComplete="name"
+                      />
                     </div>
-                    <div>
-                      <p className="font-extrabold text-[var(--text-primary)] text-base">Enquiry Received!</p>
-                      <p className="text-sm text-[var(--text-secondary)] mt-1">We'll reach out to <span className="font-bold text-[var(--text-primary)]">+91 {enrollPhone}</span> within 24 hours.</p>
-                    </div>
-                    <button
-                      onClick={() => { setEnrollSubmitted(false); setEnrollName(''); setEnrollPhone(''); setEnrollReason('') }}
-                      className="mx-auto text-xs font-semibold text-[var(--accent-primary)] bg-transparent border-none cursor-pointer underline underline-offset-2 hover:opacity-70"
-                    >
-                      Submit another enquiry
-                    </button>
-                  </div>
-                ) : (
-                  <form onSubmit={handleEnrollSubmit}>
-                    <div className="grid grid-cols-2 max-[680px]:grid-cols-1 gap-3 p-[0.875rem] rounded-xl border border-[var(--border-default)] shadow-[var(--shadow-sm)]" style={{ background: 'color-mix(in srgb, var(--bg-secondary) 88%, transparent)' }}>
-                      <label className="flex flex-col gap-[0.35rem] min-w-0">
-                        <span className="text-xs font-bold text-[var(--text-secondary)]">Name</span>
+                    <div className="flex flex-col gap-[6px]">
+                      <span className="text-[0.675rem] font-bold uppercase tracking-widest" style={{ color: '#6e7681' }}>Phone</span>
+                      <div className="flex items-center gap-2">
+                        <span className="inline-flex items-center justify-center h-[44px] px-3 rounded-xl text-sm font-bold shrink-0" style={{ background: 'rgba(30,37,48,0.9)', border: '1px solid #30363d', color: '#8b949e' }}>+91</span>
                         <input
-                          value={enrollName}
-                          onChange={(e) => setEnrollName(e.target.value)}
-                          className="h-[42px] py-[0.55rem] px-[0.8rem] rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--bg-primary)] text-[var(--text-primary)] text-[0.95rem] font-semibold focus:outline-2 focus:outline-[color-mix(in_srgb,var(--accent-primary)_50%,transparent)] focus:outline-offset-2"
-                          placeholder="Your name"
-                          autoComplete="name"
+                          value={enrollPhone}
+                          onChange={(e) => setEnrollPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                          className="flex-1 h-[44px] px-3.5 rounded-xl text-sm font-medium transition-all duration-150 focus:outline-none"
+                          style={{ background: 'rgba(22,27,34,0.85)', border: '1px solid #30363d', color: '#e6edf3' }}
+                          onFocus={e => { e.target.style.borderColor = '#3b82f6'; e.target.style.boxShadow = '0 0 0 3px rgba(59,130,246,0.16)' }}
+                          onBlur={e => { e.target.style.borderColor = '#30363d'; e.target.style.boxShadow = 'none' }}
+                          placeholder="10-digit number"
+                          type="tel"
+                          inputMode="numeric"
+                          maxLength={10}
+                          autoComplete="tel"
                         />
-                      </label>
+                      </div>
+                    </div>
+                  </div>
 
-                      <label className="flex flex-col gap-[0.35rem] min-w-0">
-                        <span className="text-xs font-bold text-[var(--text-secondary)]">Phone</span>
-                        <div className="flex items-stretch gap-2">
-                          <span className="inline-flex items-center px-3 rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--bg-tertiary)] text-[var(--text-secondary)] font-extrabold">+91</span>
-                          <input
-                            value={enrollPhone}
-                            onChange={(e) => setEnrollPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
-                            className="flex-1 h-[42px] py-[0.55rem] px-[0.8rem] rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--bg-primary)] text-[var(--text-primary)] text-[0.95rem] font-semibold focus:outline-2 focus:outline-[color-mix(in_srgb,var(--accent-primary)_50%,transparent)] focus:outline-offset-2"
-                            placeholder="Enter phone number"
-                            type="tel"
-                            inputMode="tel"
-                            maxLength={10}
-                            autoComplete="tel"
-                          />
-                        </div>
-                      </label>
-
-                      <label className="flex flex-col gap-[0.35rem] min-w-0">
-                        <span className="text-xs font-bold text-[var(--text-secondary)]">Select Reason</span>
-                        <select
-                          value={enrollReason}
-                          onChange={(e) => setEnrollReason(e.target.value)}
-                          className="h-[42px] py-[0.55rem] px-[0.8rem] rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--bg-primary)] text-[var(--text-primary)] text-[0.95rem] font-semibold appearance-none focus:outline-2 focus:outline-[color-mix(in_srgb,var(--accent-primary)_50%,transparent)] focus:outline-offset-2"
-                        >
-                          <option value="">Select reason</option>
-                          <option value="DEMO">Request a demo</option>
-                          <option value="ONBOARDING">New society onboarding</option>
-                          <option value="PRICING">Pricing enquiry</option>
-                        </select>
-                      </label>
-
-                      <button type="submit" disabled={enrollSubmitting} className="self-end h-[42px] inline-flex items-center justify-center gap-2 px-4 rounded-[var(--radius-md)] border-none cursor-pointer bg-[var(--accent-primary)] text-white font-extrabold text-[0.95rem] transition-all hover:bg-[var(--accent-hover)] hover:-translate-y-[2px] active:translate-y-0 active:shadow-none disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:translate-y-0" style={{ boxShadow: 'none' }}>
-                        {enrollSubmitting ? 'Submitting…' : 'Enroll your society'}
-                        {!enrollSubmitting && <ArrowRight size={16} />}
+                  {/* Row 2 – Reason + Submit */}
+                  <div className="grid grid-cols-2 max-[580px]:grid-cols-1 gap-3">
+                    <div className="flex flex-col gap-[6px]">
+                      <span className="text-[0.675rem] font-bold uppercase tracking-widest" style={{ color: '#6e7681' }}>Reason</span>
+                      <select
+                        value={enrollReason}
+                        onChange={(e) => setEnrollReason(e.target.value)}
+                        className="h-[44px] px-3.5 rounded-xl text-sm font-medium appearance-none cursor-pointer transition-all duration-150 focus:outline-none"
+                        style={{ background: 'rgba(22,27,34,0.85)', border: '1px solid #30363d', color: enrollReason ? '#e6edf3' : '#4a5568' }}
+                        onFocus={e => { e.target.style.borderColor = '#3b82f6'; e.target.style.boxShadow = '0 0 0 3px rgba(59,130,246,0.16)' }}
+                        onBlur={e => { e.target.style.borderColor = '#30363d'; e.target.style.boxShadow = 'none' }}
+                      >
+                        <option value="" style={{ background: '#0d1117' }}>Select a reason…</option>
+                        <option value="DEMO" style={{ background: '#0d1117' }}>Request a demo</option>
+                        <option value="ONBOARDING" style={{ background: '#0d1117' }}>New society onboarding</option>
+                        <option value="PRICING" style={{ background: '#0d1117' }}>Pricing enquiry</option>
+                      </select>
+                    </div>
+                    <div className="flex flex-col gap-[6px]">
+                      <span className="text-[0.675rem] font-bold uppercase tracking-widest select-none" style={{ color: 'transparent' }}>Submit</span>
+                      <button
+                        type="submit"
+                        disabled={enrollSubmitting}
+                        className="h-[44px] w-full inline-flex items-center justify-center gap-2 px-5 rounded-xl border-none cursor-pointer text-sm font-bold text-white transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0 active:brightness-95 disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:translate-y-0"
+                        style={{ background: 'linear-gradient(135deg, #1d4ed8 0%, #2563eb 45%, #3b82f6 100%)', boxShadow: enrollSubmitting ? 'none' : '0 4px 22px rgba(37,99,235,0.45), inset 0 1px 0 rgba(255,255,255,0.12)' }}
+                        onMouseEnter={e => { if (!enrollSubmitting) e.currentTarget.style.boxShadow = '0 8px 32px rgba(37,99,235,0.6), inset 0 1px 0 rgba(255,255,255,0.14)' }}
+                        onMouseLeave={e => { if (!enrollSubmitting) e.currentTarget.style.boxShadow = '0 4px 22px rgba(37,99,235,0.45), inset 0 1px 0 rgba(255,255,255,0.12)' }}
+                      >
+                        {enrollSubmitting
+                          ? <><span className="h-4 w-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />Submitting…</>
+                          : <>Enroll your society <ArrowRight size={15} /></>}
                       </button>
                     </div>
-
-                    {enrollError && <p className="mt-2 text-sm font-bold" style={{ color: 'var(--danger-600, var(--text-secondary))' }}>{enrollError}</p>}
-                  </form>
-                )}
-              </div>
-
-              <div className={clsx(
-                'welcome-anim flex flex-wrap justify-start gap-3 transition-all duration-500',
-                isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'
-              )} style={{ transitionDelay: '0.4s' }}>
-                <button onClick={() => navigate('/login')} className="inline-flex items-center gap-2 py-3 px-6 text-[0.9375rem] font-semibold text-[var(--text-primary)] bg-[var(--bg-secondary)] border border-[var(--border-strong)] rounded-[var(--radius-md)] cursor-pointer transition-all hover:bg-[var(--bg-tertiary)] hover:border-[var(--border-muted)]">
-                  Society Login
-                  <Key size={16} />
-                </button>
-                <button onClick={() => scrollTo('features')} className="inline-flex items-center gap-2 py-3 px-6 text-[0.9375rem] font-semibold text-[var(--text-primary)] bg-[var(--bg-secondary)] border border-[var(--border-strong)] rounded-[var(--radius-md)] cursor-pointer transition-all hover:bg-[var(--bg-tertiary)] hover:border-[var(--border-muted)]">
-                  Explore Features
-                  <ChevronDown size={16} />
-                </button>
-              </div>
-            </div>
-
-            <div className="flex justify-center" aria-hidden="true">
-              <div className="w-[min(420px,100%)] rounded-2xl border border-[var(--border-default)] shadow-[var(--shadow-md)] p-4" style={{ background: 'color-mix(in srgb, var(--bg-secondary) 90%, transparent)' }}>
-                <div className="flex gap-2 justify-between">
-                  <div className="inline-flex items-center gap-2 py-[0.55rem] px-3 rounded-full border border-[var(--border-default)] bg-[var(--bg-primary)] text-[var(--text-secondary)] font-extrabold text-[0.85rem]">
-                    <Shield size={18} />
-                    Secure
                   </div>
-                  <div className="inline-flex items-center gap-2 py-[0.55rem] px-3 rounded-full border border-[var(--border-default)] bg-[var(--bg-primary)] text-[var(--text-secondary)] font-extrabold text-[0.85rem]">
-                    <Users size={18} />
-                    Residents
-                  </div>
+
+                  {enrollError && (
+                    <p className="text-xs font-semibold flex items-center gap-1.5 mt-3" style={{ color: '#f87171' }}>
+                      <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#f87171] shrink-0" />
+                      {enrollError}
+                    </p>
+                  )}
                 </div>
-                <div className="my-[0.85rem] h-[220px] rounded-xl border border-dashed border-[var(--border-default)]" style={{ background: 'color-mix(in srgb, var(--accent-primary) 6%, var(--bg-primary))' }} />
-                <div className="flex gap-2 justify-between">
-                  <div className="inline-flex items-center gap-2 py-[0.55rem] px-3 rounded-full border border-[var(--border-default)] bg-[var(--bg-primary)] text-[var(--text-secondary)] font-extrabold text-[0.85rem]">
-                    <CreditCard size={18} />
-                    Payments
-                  </div>
-                  <div className="inline-flex items-center gap-2 py-[0.55rem] px-3 rounded-full border border-[var(--border-default)] bg-[var(--bg-primary)] text-[var(--text-secondary)] font-extrabold text-[0.85rem]">
-                    <Bell size={18} />
-                    Notices
-                  </div>
-                </div>
-              </div>
-            </div>
+              </form>
+            )}
           </div>
+
+          {/* CTA buttons */}
+          <div className={clsx(
+            'welcome-anim flex flex-wrap justify-start gap-3 transition-all duration-500',
+            isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'
+          )} style={{ transitionDelay: '0.42s' }}>
+            <button
+              onClick={() => navigate('/login')}
+              className="inline-flex items-center gap-2 py-[0.625rem] px-5 text-sm font-semibold rounded-xl cursor-pointer transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98]"
+              style={{ background: 'rgba(22,27,34,0.92)', border: '1px solid #30363d', color: '#e6edf3', boxShadow: '0 2px 10px rgba(0,0,0,0.3)' }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = '#484f58'; e.currentTarget.style.background = 'rgba(33,40,50,0.97)'; e.currentTarget.style.boxShadow = '0 6px 18px rgba(0,0,0,0.4)' }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = '#30363d'; e.currentTarget.style.background = 'rgba(22,27,34,0.92)'; e.currentTarget.style.boxShadow = '0 2px 10px rgba(0,0,0,0.3)' }}
+            >
+              <Key size={15} />
+              Society Login
+            </button>
+            <button
+              onClick={() => scrollTo('features')}
+              className="inline-flex items-center gap-2 py-[0.625rem] px-5 text-sm font-semibold rounded-xl cursor-pointer transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98]"
+              style={{ color: '#60a5fa', background: 'rgba(37,99,235,0.1)', border: '1px solid rgba(59,130,246,0.28)', boxShadow: '0 2px 14px rgba(37,99,235,0.14)' }}
+              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(37,99,235,0.18)'; e.currentTarget.style.borderColor = 'rgba(59,130,246,0.52)'; e.currentTarget.style.boxShadow = '0 6px 22px rgba(37,99,235,0.28)' }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'rgba(37,99,235,0.1)'; e.currentTarget.style.borderColor = 'rgba(59,130,246,0.28)'; e.currentTarget.style.boxShadow = '0 2px 14px rgba(37,99,235,0.14)' }}
+            >
+              Explore Features
+              <ChevronDown size={15} />
+            </button>
+          </div>
+
         </div>
       </section>
 
