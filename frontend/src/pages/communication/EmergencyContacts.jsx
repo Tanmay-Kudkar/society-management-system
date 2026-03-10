@@ -5,7 +5,7 @@ import { useToast } from '../../context'
 import { emergencyContactApi } from '../../../../api'
 import { Plus, Search, X, Phone, Edit, Trash2, AlertCircle, CheckCircle, Upload } from 'lucide-react'
 import clsx from 'clsx'
-import { FormInput, PhoneInput, SmartSelect, BulkImportModal, AsyncButton } from '../../components'
+import { FormInput, PhoneInput, SmartSelect, BulkImportModal, AsyncButton, InfoTooltip } from '../../components'
 import { HeroSkeleton, GroupedListSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
 import useMinLoadingTime from '../../hooks/useMinLoadingTime'
 
@@ -162,8 +162,10 @@ export default function EmergencyContacts() {
       {/* Header */}
       <div className="flex flex-col gap-4 mb-6 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-[var(--text-primary)]">Emergency Contacts</h1>
-          <p className="mt-1 text-[var(--text-secondary)]">Manage emergency contact directory</p>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-bold text-[var(--text-primary)]">Emergency Contacts</h1>
+            <InfoTooltip text="Manage emergency contact directory" />
+          </div>
         </div>
         {canManageEmergencyContacts() && (
           <div className="flex gap-2">

@@ -4,7 +4,7 @@ import { useSearchParams } from 'react-router-dom'
 import { Building2, Save, SlidersHorizontal } from 'lucide-react'
 import { societyApi, societySettingApi } from '../../../../api'
 import { useAuth, useToast } from '../../context'
-import { AsyncButton, FormInput, PermissionDenied } from '../../components'
+import { AsyncButton, FormInput, PermissionDenied, InfoTooltip } from '../../components'
 import { HeroSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
 import useMinLoadingTime from '../../hooks/useMinLoadingTime'
 
@@ -290,8 +290,8 @@ export default function SocietySettings() {
           <h1 className="m-0 flex items-center gap-2 text-lg font-semibold text-[var(--text-primary)]">
             <SlidersHorizontal size={20} />
             Society Rate Settings
+            <InfoTooltip text="Configure default finance rates and billing schedule" />
           </h1>
-          <p className="mt-1.5 text-sm text-[var(--text-secondary)]">Configure default finance rates and billing schedule</p>
         </div>
         <div className="inline-flex items-center gap-1.5 text-[0.85rem] font-semibold text-[var(--text-secondary)]">
           <Building2 size={16} />

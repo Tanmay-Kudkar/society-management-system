@@ -5,7 +5,7 @@ import { useAuth } from '../../context'
 import { approvalApi } from '../../../../api'
 import { Plus, Search, X, Clock, CheckCircle, XCircle, AlertTriangle, ArrowRight, RotateCcw, ChevronUp, GitBranch } from 'lucide-react'
 import clsx from 'clsx'
-import { FormInput, SmartSelect, FormTextarea, NumberInput, AsyncButton } from '../../components'
+import { FormInput, SmartSelect, FormTextarea, NumberInput, AsyncButton, InfoTooltip } from '../../components'
 import { PermissionDenied } from '../../components'
 import { HeroSkeleton, SummaryRowSkeleton, FiltersSkeleton, ListSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
 import useMinLoadingTime from '../../hooks/useMinLoadingTime'
@@ -212,8 +212,10 @@ export default function Approvals() {
       {/* Header */}
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-[var(--text-primary)]">Approvals</h1>
-          <p className="mt-1 text-[var(--text-tertiary)]">Manage approval workflows and requests</p>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-bold text-[var(--text-primary)]">Approvals</h1>
+            <InfoTooltip text="Manage approval workflows and requests" />
+          </div>
         </div>
         <div className="flex gap-2">
           {canManage && activeTab === 'workflows' && (

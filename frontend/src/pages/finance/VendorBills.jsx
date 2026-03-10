@@ -7,7 +7,7 @@ import { useToast } from '../../context'
 import { vendorBillApi, vendorApi } from '../../../../api'
 import { Plus, Edit, Trash2, Search, X, Receipt, CheckCircle, Clock, AlertCircle } from 'lucide-react'
 import clsx from 'clsx'
-import { AsyncButton } from '../../components'
+import { AsyncButton, InfoTooltip } from '../../components'
 import { HeroSkeleton, FinancePageSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
 import useMinLoadingTime from '../../hooks/useMinLoadingTime'
 
@@ -139,8 +139,10 @@ export default function VendorBills() {
       {/* Header */}
       <div className="flex flex-col gap-4 mb-6 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-[var(--text-primary)]">Vendor Bills</h1>
-          <p className="mt-1 text-[var(--text-tertiary)]">Track vendor invoices and payments</p>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-bold text-[var(--text-primary)]">Vendor Bills</h1>
+            <InfoTooltip text="Track vendor invoices and payments" />
+          </div>
         </div>
         {canManageVendorBills() && (
           <button

@@ -49,13 +49,26 @@ public class MaintenanceBillServiceImpl implements MaintenanceBillService {
     public MaintenanceBillResponse create(MaintenanceBillRequest request, Long userId) {
         roleService.requireAdminOrCommittee(userId);
 
+        // Validate billing data
+        if (request.getFlatId() == null) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Invalid billing data");
+        }
+        if (request.getBillMonth() == null || request.getBillMonth().isBlank()) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Invalid billing data");
+        }
+
         Flat flat = flatRepository.findById(request.getFlatId())
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Flat not found"));
+
+        // Ensure the unit is assigned to a society
+        if (flat.getSociety() == null) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Unit not assigned");
+        }
 
         // Check if bill already exists for this flat and month
         if (maintenanceBillRepository.findByFlatIdAndBillMonth(request.getFlatId(), request.getBillMonth())
                 .isPresent()) {
-            throw new ApiException(HttpStatus.BAD_REQUEST, "Bill already exists for this flat and month");
+            throw new ApiException(HttpStatus.CONFLICT, "Bill already exists for this billing period");
         }
 
         MaintenanceBill bill = new MaintenanceBill();
@@ -281,6 +294,10 @@ public class MaintenanceBillServiceImpl implements MaintenanceBillService {
         for (Flat flat : flats) {
             // Skip if bill already exists
             if (maintenanceBillRepository.findByFlatIdAndBillMonth(flat.getId(), billMonth).isPresent()) {
+                continue;
+            }
+            // Skip flats not assigned to a society
+            if (flat.getSociety() == null) {
                 continue;
             }
 

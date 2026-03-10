@@ -6,7 +6,7 @@ import { useConfirmDialog } from '../../context'
 import { useToast } from '../../context'
 import { tenantApi, flatApi, userApi } from '../../../../api'
 import { Plus, Edit, Trash2, Search, X, User, Calendar, Phone, Mail, Upload } from 'lucide-react'
-import { FormInput, PhoneInput, SmartSelect, NumberInput, BulkImportModal, AsyncButton } from '../../components'
+import { FormInput, PhoneInput, SmartSelect, NumberInput, BulkImportModal, AsyncButton, InfoTooltip } from '../../components'
 import { HeroSkeleton, FiltersSkeleton, TableSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
 import useMinLoadingTime from '../../hooks/useMinLoadingTime'
 
@@ -154,8 +154,10 @@ export default function Tenants() {
       {/* Header */}
       <div className="flex flex-col gap-4 mb-6 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-[var(--text-primary)]">Tenants</h1>
-          <p className="mt-1 text-[var(--text-secondary)]">Manage tenant details and agreements</p>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-bold text-[var(--text-primary)]">Tenants</h1>
+            <InfoTooltip text="Manage tenant details and agreements" />
+          </div>
         </div>
         {canEditTenants && (
           <div className="flex flex-wrap gap-3">

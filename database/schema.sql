@@ -20,6 +20,8 @@ CREATE TABLE IF NOT EXISTS societies (
     total_shops     INT DEFAULT 0,
     total_offices   INT DEFAULT 0,
     total_wings     INT DEFAULT 0,
+    two_wheeler_parking_capacity INT DEFAULT NULL,
+    four_wheeler_parking_capacity INT DEFAULT NULL,
     created_at      TIMESTAMP DEFAULT NOW()
 );
 

@@ -4,7 +4,7 @@ import { useAuth } from '../../context'
 import { useToast } from '../../context'
 import { maintenanceBillApi } from '../../../../api'
 import { useRazorpay } from '../../hooks/useRazorpay'
-import { PermissionDenied } from '../../components'
+import { PermissionDenied, InfoTooltip } from '../../components'
 import { HeroSkeleton, SummaryRowSkeleton, ListSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
 import { CreditCard, CheckCircle, Clock, AlertCircle, Wallet, Receipt, Calendar } from 'lucide-react'
 import clsx from 'clsx'
@@ -59,10 +59,15 @@ export default function MyBills() {
 
   const showSkeleton = useMinLoadingTime(isLoading || isError)
 
+  const getBillTotal = (bill) => {
+    const total = Number(bill?.totalAmount)
+    return Number.isFinite(total) && total > 0 ? total : Number(bill?.amount) || 0
+  }
+
   // Calculate summary
   const summary = useMemo(() => {
     const pending = bills.filter(b => b.status !== 'PAID')
-    const totalDue = pending.reduce((sum, b) => sum + (b.amount - (b.paidAmount || 0)), 0)
+    const totalDue = pending.reduce((sum, b) => sum + Math.max(0, getBillTotal(b) - (b.paidAmount || 0)), 0)
     const overdue = pending.filter(b => b.isOverdue || b.status === 'OVERDUE')
     return {
       totalBills: bills.length,
@@ -74,7 +79,7 @@ export default function MyBills() {
 
   // Handle online payment
   const handlePayOnline = (bill) => {
-    const balance = bill.amount - (bill.paidAmount || 0)
+    const balance = Math.max(0, getBillTotal(bill) - (bill.paidAmount || 0))
     setSelectedBill(bill)
     initiatePayment({
       amount: balance,
@@ -132,8 +137,10 @@ export default function MyBills() {
       {/* Header */}
       <div className="mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-[var(--text-primary)]">My Bills</h1>
-          <p className="mt-1 text-[var(--text-secondary)]">View and pay your maintenance bills online</p>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-bold text-[var(--text-primary)]">My Bills</h1>
+            <InfoTooltip text="View and pay your maintenance bills online" />
+          </div>
         </div>
       </div>
 
@@ -188,7 +195,7 @@ export default function MyBills() {
           sortedBills.map((bill) => {
             const status = statusConfig[bill.status] || statusConfig.PENDING
             const StatusIcon = status.icon
-            const balance = bill.amount - (bill.paidAmount || 0)
+            const balance = Math.max(0, getBillTotal(bill) - (bill.paidAmount || 0))
             const isPaid = bill.status === 'PAID'
 
             return (
@@ -208,7 +215,7 @@ export default function MyBills() {
                   <div className="flex flex-col gap-2">
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-[var(--text-secondary)]">Bill Amount</span>
-                      <span className="text-base font-semibold text-[var(--text-primary)]">₹{bill.amount?.toLocaleString()}</span>
+                      <span className="text-base font-semibold text-[var(--text-primary)]">₹{getBillTotal(bill).toLocaleString()}</span>
                     </div>
                     {bill.paidAmount > 0 && (
                       <div className="flex items-center justify-between">

@@ -1,4 +1,9 @@
+import { useState } from 'react';
+import { Info } from 'lucide-react';
+
 export default function SectionHeader({ icon: Icon, eyebrow, title, description }) {
+  const [showTooltip, setShowTooltip] = useState(false);
+
   return (
     <div className="mb-5 flex items-start justify-between gap-4">
       <div>
@@ -13,9 +18,23 @@ export default function SectionHeader({ icon: Icon, eyebrow, title, description 
               <Icon className="h-5 w-5" aria-hidden="true" />
             </div>
           )}
-          <div>
+          <div className="flex items-center gap-2">
             <h2 className="text-xl font-bold tracking-tight text-[var(--text-primary)]">{title}</h2>
-            {description && <p className="mt-1 text-sm text-[var(--text-secondary)]">{description}</p>}
+            {description && (
+              <div className="relative"
+                onMouseEnter={() => setShowTooltip(true)}
+                onMouseLeave={() => setShowTooltip(false)}
+                onClick={() => setShowTooltip(prev => !prev)}
+              >
+                <Info size={16} className="cursor-pointer text-[var(--text-tertiary)] hover:text-[var(--accent-primary)] transition-colors" aria-label={description} />
+                {showTooltip && (
+                  <div className="absolute left-1/2 top-full z-50 mt-2 -translate-x-1/2 whitespace-nowrap rounded-lg border border-[var(--border-default)] bg-[var(--bg-elevated,var(--bg-card))] px-3 py-2 text-xs font-normal text-[var(--text-secondary)] shadow-lg">
+                    <div className="absolute -top-1 left-1/2 h-2 w-2 -translate-x-1/2 rotate-45 border-l border-t border-[var(--border-default)] bg-[var(--bg-elevated,var(--bg-card))]" />
+                    {description}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>

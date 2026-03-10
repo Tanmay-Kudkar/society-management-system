@@ -6,7 +6,7 @@ import { useConfirmDialog } from '../../context'
 import { useToast } from '../../context'
 import { flatApi, societyApi, wingApi } from '../../../../api'
 import { Plus, Edit, Trash2, Search, X, Home, Store, Briefcase, Layers, AlertCircle } from 'lucide-react'
-import { FormInput, PhoneInput, SmartSelect, NumberInput, FormErrorSummary, AsyncButton } from '../../components'
+import { FormInput, PhoneInput, SmartSelect, NumberInput, FormErrorSummary, AsyncButton, InfoTooltip } from '../../components'
 import { PermissionDenied } from '../../components'
 
 export default function Flats() {
@@ -254,8 +254,10 @@ export default function Flats() {
       {/* Header */}
       <div className="flex flex-col gap-4 mb-6 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-[var(--text-primary)]">Units</h1>
-          <p className="mt-1 text-[var(--text-secondary)]">Manage society flats, shops, and offices</p>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-bold text-[var(--text-primary)]">Units</h1>
+            <InfoTooltip text="Manage society flats, shops, and offices" />
+          </div>
         </div>
         <button
           onClick={() => handleOpenModal(null)}
