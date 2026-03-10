@@ -17,10 +17,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.json.JSONObject;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -35,7 +37,7 @@ import com.society.backend.user.entity.User;
 @Slf4j
 public class PaymentService {
 
-    private final RazorpayClient razorpayClient;
+    private final Optional<RazorpayClient> razorpayClient;
     private final RazorpayConfig razorpayConfig;
     private final PaymentRepository paymentRepository;
     private final UserRepository userRepository;
@@ -44,6 +46,7 @@ public class PaymentService {
 
     @Transactional
     public CreateOrderResponse createOrder(CreateOrderRequest request) {
+        RazorpayClient client = requireRazorpayClient();
         try {
             User user = userRepository.findById(request.getUserId())
                     .orElseThrow(() -> new ResourceNotFoundException("User not found"));
@@ -64,7 +67,7 @@ public class PaymentService {
             notes.put("payment_type", request.getPaymentType());
             orderRequest.put("notes", notes);
 
-            Order order = razorpayClient.orders.create(orderRequest);
+            Order order = client.orders.create(orderRequest);
 
             // Create payment record in database
             Payment payment = new Payment();
@@ -117,6 +120,7 @@ public class PaymentService {
 
     @Transactional
     public PaymentResponse verifyAndCapturePayment(VerifyPaymentRequest request) {
+        RazorpayClient client = requireRazorpayClient();
         Payment payment = paymentRepository.findById(request.getPaymentId())
                 .orElseThrow(() -> new ResourceNotFoundException("Payment not found"));
 
@@ -144,7 +148,7 @@ public class PaymentService {
 
             // Fetch payment details from Razorpay to get payment method
             try {
-                com.razorpay.Payment razorpayPayment = razorpayClient.payments.fetch(request.getRazorpayPaymentId());
+                com.razorpay.Payment razorpayPayment = client.payments.fetch(request.getRazorpayPaymentId());
                 payment.setPaymentMethod(razorpayPayment.get("method"));
             } catch (RazorpayException e) {
                 log.warn("Could not fetch payment details: {}", e.getMessage());
@@ -218,6 +222,15 @@ public class PaymentService {
                 .stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
+    }
+
+    private RazorpayClient requireRazorpayClient() {
+        if (razorpayClient.isPresent()
+                && StringUtils.hasText(razorpayConfig.getKeyId())
+                && StringUtils.hasText(razorpayConfig.getKeySecret())) {
+            return razorpayClient.get();
+        }
+        throw new IllegalStateException("Razorpay is not configured. Set RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET to enable online payments.");
     }
 
     private PaymentResponse mapToResponse(Payment payment) {
