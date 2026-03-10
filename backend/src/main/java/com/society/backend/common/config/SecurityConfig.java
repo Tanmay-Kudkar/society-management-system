@@ -73,6 +73,7 @@ public class SecurityConfig {
                                                 .requestMatchers("/health").permitAll()
                                                 .requestMatchers("/api/test/**").permitAll() // Test endpoints (remove
                                                                                              // in production)
+                                                .requestMatchers(HttpMethod.POST, "/api/payments/webhook").permitAll()
                                                 .requestMatchers(HttpMethod.POST, "/enquiries").permitAll() // Landing page enrolment form
 
                                                 // ==================== MASTER_ADMIN ONLY ====================

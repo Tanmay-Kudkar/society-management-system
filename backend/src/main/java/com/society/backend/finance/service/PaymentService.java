@@ -7,35 +7,36 @@ import com.razorpay.Utils;
 import com.society.backend.common.config.RazorpayConfig;
 import com.society.backend.finance.dto.request.*;
 import com.society.backend.finance.dto.response.*;
+import com.society.backend.common.exception.ApiException;
 import com.society.backend.common.exception.ResourceNotFoundException;
 import com.society.backend.finance.repository.MaintenanceBillRepository;
 import com.society.backend.finance.repository.PaymentRepository;
 import com.society.backend.user.repository.UserRepository;
-import com.society.backend.finance.service.MaintenanceBillService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.json.JSONObject;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
+import org.springframework.http.HttpStatus;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.society.backend.finance.entity.MaintenanceBill;
 import com.society.backend.finance.entity.Payment;
-import com.society.backend.flat.entity.Flat;
-import com.society.backend.society.entity.Society;
-import com.society.backend.user.entity.Role;
 import com.society.backend.user.entity.User;
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class PaymentService {
+
+    private static final long UNDO_WINDOW_MINUTES = 30;
 
     private final Optional<RazorpayClient> razorpayClient;
     private final RazorpayConfig razorpayConfig;
@@ -121,8 +122,12 @@ public class PaymentService {
     @Transactional
     public PaymentResponse verifyAndCapturePayment(VerifyPaymentRequest request) {
         RazorpayClient client = requireRazorpayClient();
-        Payment payment = paymentRepository.findById(request.getPaymentId())
+        Payment payment = paymentRepository.findByIdAndDeletedAtIsNull(request.getPaymentId())
                 .orElseThrow(() -> new ResourceNotFoundException("Payment not found"));
+
+        if ("CAPTURED".equals(payment.getStatus())) {
+            return mapToResponse(payment);
+        }
 
         // Verify signature
         try {
@@ -155,18 +160,7 @@ public class PaymentService {
             }
 
             Payment savedPayment = paymentRepository.save(payment);
-
-            // Update maintenance bill if linked - use recordOnlinePayment to bypass role check
-            if (payment.getMaintenanceBill() != null) {
-                maintenanceBillService.recordOnlinePayment(
-                        payment.getMaintenanceBill().getId(),
-                        payment.getAmount(),
-                        "RAZORPAY",
-                        request.getRazorpayPaymentId(),
-                        payment.getUser().getId()
-                );
-            }
-
+            applyMaintenanceBillPaymentIfNeeded(savedPayment, request.getRazorpayPaymentId());
             return mapToResponse(savedPayment);
 
         } catch (RazorpayException e) {
@@ -181,8 +175,12 @@ public class PaymentService {
 
     @Transactional
     public PaymentResponse handlePaymentFailure(Long paymentId, String errorCode, String errorDescription) {
-        Payment payment = paymentRepository.findById(paymentId)
+        Payment payment = paymentRepository.findByIdAndDeletedAtIsNull(paymentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Payment not found"));
+
+        if ("CAPTURED".equals(payment.getStatus())) {
+            return mapToResponse(payment);
+        }
 
         payment.setStatus("FAILED");
         payment.setErrorCode(errorCode);
@@ -191,34 +189,123 @@ public class PaymentService {
         return mapToResponse(paymentRepository.save(payment));
     }
 
-    public PaymentResponse getPaymentById(Long id) {
+    @Transactional
+    public PaymentResponse handlePaymentCancelled(Long paymentId, String reason) {
+        Payment payment = paymentRepository.findByIdAndDeletedAtIsNull(paymentId)
+                .orElseThrow(() -> new ResourceNotFoundException("Payment not found"));
+
+        if ("CAPTURED".equals(payment.getStatus()) || "FAILED".equals(payment.getStatus()) || "REFUNDED".equals(payment.getStatus())) {
+            return mapToResponse(payment);
+        }
+
+        payment.setStatus("CANCELLED");
+        payment.setErrorCode("CHECKOUT_CANCELLED");
+        payment.setErrorDescription(StringUtils.hasText(reason) ? reason : "Payment cancelled by user");
+
+        return mapToResponse(paymentRepository.save(payment));
+    }
+
+    @Transactional
+    public Map<String, String> handleWebhook(String payload, String signature) {
+        if (!StringUtils.hasText(razorpayConfig.getWebhookSecret())) {
+            throw new ApiException(HttpStatus.BAD_REQUEST,
+                    "Razorpay webhook secret is not configured. Set RAZORPAY_WEBHOOK_SECRET.");
+        }
+
+        boolean isValid;
+        try {
+            isValid = Utils.verifyWebhookSignature(payload, signature, razorpayConfig.getWebhookSecret());
+        } catch (RazorpayException e) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Unable to verify webhook signature");
+        }
+        if (!isValid) {
+            throw new ApiException(HttpStatus.UNAUTHORIZED, "Invalid webhook signature");
+        }
+
+        JSONObject eventObject = new JSONObject(payload);
+        String event = eventObject.optString("event", "");
+        JSONObject eventPayload = eventObject.optJSONObject("payload");
+
+        switch (event) {
+            case "payment.captured" -> handlePaymentCapturedWebhook(eventPayload);
+            case "payment.authorized" -> handlePaymentAuthorizedWebhook(eventPayload);
+            case "payment.failed" -> handlePaymentFailedWebhook(eventPayload);
+            case "payment.refunded" -> handlePaymentRefundedWebhook(eventPayload);
+            case "order.paid" -> handleOrderPaidWebhook(eventPayload);
+            default -> {
+                log.debug("Unhandled Razorpay webhook event: {}", event);
+                return Map.of("status", "ignored", "event", event);
+            }
+        }
+
+        return Map.of("status", "processed", "event", event);
+    }
+
+    @Transactional
+    public void deletePayment(Long id, Long deletedByUserId) {
+        Payment payment = paymentRepository.findByIdAndDeletedAtIsNull(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Payment not found"));
+
+        payment.setDeletedAt(LocalDateTime.now());
+        payment.setDeletedBy(deletedByUserId);
+        paymentRepository.save(payment);
+    }
+
+    @Transactional
+    public PaymentResponse undoDeletePayment(Long id) {
         Payment payment = paymentRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Payment not found"));
+
+        if (payment.getDeletedAt() == null) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Payment is not deleted");
+        }
+
+        LocalDateTime undoExpiry = payment.getDeletedAt().plusMinutes(UNDO_WINDOW_MINUTES);
+        if (LocalDateTime.now().isAfter(undoExpiry)) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Undo window expired for this payment");
+        }
+
+        payment.setDeletedAt(null);
+        payment.setDeletedBy(null);
+        return mapToResponse(paymentRepository.save(payment));
+    }
+
+    public List<PaymentResponse> getDeletedPaymentsBySociety(Long societyId) {
+        return paymentRepository.findBySocietyIdAndDeletedAtIsNotNullOrderByDeletedAtDesc(societyId)
+                .stream()
+                .map(this::mapToResponse)
+                .filter(PaymentResponse::getUndoAvailable)
+                .collect(Collectors.toList());
+    }
+
+    public PaymentResponse getPaymentById(Long id) {
+        Payment payment = paymentRepository.findByIdAndDeletedAtIsNull(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Payment not found"));
         return mapToResponse(payment);
     }
 
     public PaymentResponse getPaymentByOrderId(String orderId) {
-        Payment payment = paymentRepository.findByRazorpayOrderId(orderId)
+        Payment payment = paymentRepository.findByRazorpayOrderIdAndDeletedAtIsNull(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Payment not found for order: " + orderId));
         return mapToResponse(payment);
     }
 
     public List<PaymentResponse> getPaymentsByUser(Long userId) {
-        return paymentRepository.findByUserIdOrderByCreatedAtDesc(userId)
+        return paymentRepository.findByUserIdAndDeletedAtIsNullOrderByCreatedAtDesc(userId)
                 .stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
 
     public List<PaymentResponse> getPaymentsBySociety(Long societyId) {
-        return paymentRepository.findBySocietyIdOrderByCreatedAtDesc(societyId)
+        return paymentRepository.findBySocietyIdAndDeletedAtIsNullOrderByCreatedAtDesc(societyId)
                 .stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
 
     public List<PaymentResponse> getPaymentsByMaintenanceBill(Long billId) {
-        return paymentRepository.findByMaintenanceBillId(billId)
+        return paymentRepository.findByMaintenanceBillIdAndDeletedAtIsNull(billId)
                 .stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
@@ -233,7 +320,173 @@ public class PaymentService {
         throw new IllegalStateException("Razorpay is not configured. Set RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET to enable online payments.");
     }
 
+    private void handlePaymentCapturedWebhook(JSONObject payload) {
+        if (payload == null) {
+            return;
+        }
+        JSONObject paymentEntity = payload.optJSONObject("payment") != null
+                ? payload.getJSONObject("payment").optJSONObject("entity")
+                : null;
+        if (paymentEntity == null) {
+            return;
+        }
+        upsertCapturedStatusFromRazorpayPayment(paymentEntity);
+    }
+
+    private void handlePaymentAuthorizedWebhook(JSONObject payload) {
+        if (payload == null) {
+            return;
+        }
+        JSONObject paymentEntity = payload.optJSONObject("payment") != null
+                ? payload.getJSONObject("payment").optJSONObject("entity")
+                : null;
+        if (paymentEntity == null) {
+            return;
+        }
+
+        Payment payment = findPaymentFromRazorpayPayment(paymentEntity);
+        if (payment == null || "CAPTURED".equals(payment.getStatus())) {
+            return;
+        }
+
+        payment.setStatus("AUTHORIZED");
+        payment.setRazorpayPaymentId(paymentEntity.optString("id", payment.getRazorpayPaymentId()));
+        payment.setPaymentMethod(paymentEntity.optString("method", payment.getPaymentMethod()));
+        paymentRepository.save(payment);
+    }
+
+    private void handlePaymentFailedWebhook(JSONObject payload) {
+        if (payload == null) {
+            return;
+        }
+        JSONObject paymentEntity = payload.optJSONObject("payment") != null
+                ? payload.getJSONObject("payment").optJSONObject("entity")
+                : null;
+        if (paymentEntity == null) {
+            return;
+        }
+
+        Payment payment = findPaymentFromRazorpayPayment(paymentEntity);
+        if (payment == null || "CAPTURED".equals(payment.getStatus())) {
+            return;
+        }
+
+        payment.setStatus("FAILED");
+        payment.setRazorpayPaymentId(paymentEntity.optString("id", payment.getRazorpayPaymentId()));
+        payment.setPaymentMethod(paymentEntity.optString("method", payment.getPaymentMethod()));
+        payment.setErrorCode(paymentEntity.optString("error_code", payment.getErrorCode()));
+        payment.setErrorDescription(
+                paymentEntity.optString("error_description",
+                        paymentEntity.optString("error_reason", "Payment failed")));
+        paymentRepository.save(payment);
+    }
+
+    private void handleOrderPaidWebhook(JSONObject payload) {
+        if (payload == null) {
+            return;
+        }
+
+        JSONObject paymentEntity = payload.optJSONObject("payment") != null
+                ? payload.getJSONObject("payment").optJSONObject("entity")
+                : null;
+        if (paymentEntity != null) {
+            upsertCapturedStatusFromRazorpayPayment(paymentEntity);
+            return;
+        }
+
+        JSONObject orderEntity = payload.optJSONObject("order") != null
+                ? payload.getJSONObject("order").optJSONObject("entity")
+                : null;
+        if (orderEntity == null) {
+            return;
+        }
+
+        Payment payment = paymentRepository.findByRazorpayOrderId(orderEntity.optString("id", ""))
+                .orElse(null);
+        if (payment == null || "CAPTURED".equals(payment.getStatus())) {
+            return;
+        }
+
+        payment.setStatus("CAPTURED");
+        payment.setPaidAt(LocalDateTime.now());
+        Payment saved = paymentRepository.save(payment);
+        applyMaintenanceBillPaymentIfNeeded(saved, payment.getRazorpayPaymentId());
+    }
+
+    private void handlePaymentRefundedWebhook(JSONObject payload) {
+        if (payload == null) {
+            return;
+        }
+        JSONObject paymentEntity = payload.optJSONObject("payment") != null
+                ? payload.getJSONObject("payment").optJSONObject("entity")
+                : null;
+        if (paymentEntity == null) {
+            return;
+        }
+
+        Payment payment = findPaymentFromRazorpayPayment(paymentEntity);
+        if (payment == null) {
+            return;
+        }
+
+        payment.setStatus("REFUNDED");
+        payment.setRazorpayPaymentId(paymentEntity.optString("id", payment.getRazorpayPaymentId()));
+        payment.setPaymentMethod(paymentEntity.optString("method", payment.getPaymentMethod()));
+        paymentRepository.save(payment);
+    }
+
+    private void upsertCapturedStatusFromRazorpayPayment(JSONObject paymentEntity) {
+        Payment payment = findPaymentFromRazorpayPayment(paymentEntity);
+        if (payment == null || "CAPTURED".equals(payment.getStatus())) {
+            return;
+        }
+
+        payment.setStatus("CAPTURED");
+        payment.setRazorpayPaymentId(paymentEntity.optString("id", payment.getRazorpayPaymentId()));
+        payment.setPaymentMethod(paymentEntity.optString("method", payment.getPaymentMethod()));
+        payment.setPaidAt(LocalDateTime.now());
+        Payment saved = paymentRepository.save(payment);
+        applyMaintenanceBillPaymentIfNeeded(saved, saved.getRazorpayPaymentId());
+    }
+
+    private Payment findPaymentFromRazorpayPayment(JSONObject paymentEntity) {
+        String razorpayPaymentId = paymentEntity.optString("id", "");
+        String orderId = paymentEntity.optString("order_id", "");
+
+        if (StringUtils.hasText(razorpayPaymentId)) {
+            Payment byPaymentId = paymentRepository.findByRazorpayPaymentId(razorpayPaymentId).orElse(null);
+            if (byPaymentId != null) {
+                return byPaymentId;
+            }
+        }
+
+        if (StringUtils.hasText(orderId)) {
+            return paymentRepository.findByRazorpayOrderId(orderId).orElse(null);
+        }
+
+        return null;
+    }
+
+    private void applyMaintenanceBillPaymentIfNeeded(Payment payment, String referenceNumber) {
+        if (payment.getMaintenanceBill() == null || payment.getUser() == null) {
+            return;
+        }
+
+        maintenanceBillService.recordOnlinePayment(
+                payment.getMaintenanceBill().getId(),
+                payment.getAmount(),
+                "RAZORPAY",
+                referenceNumber,
+                payment.getUser().getId()
+        );
+    }
+
     private PaymentResponse mapToResponse(Payment payment) {
+        LocalDateTime undoExpiresAt = payment.getDeletedAt() == null
+            ? null
+            : payment.getDeletedAt().plusMinutes(UNDO_WINDOW_MINUTES);
+        boolean undoAvailable = undoExpiresAt != null && LocalDateTime.now().isBefore(undoExpiresAt);
+
         return PaymentResponse.builder()
                 .id(payment.getId())
                 .razorpayOrderId(payment.getRazorpayOrderId())
@@ -252,6 +505,9 @@ public class PaymentService {
                 .societyName(payment.getSociety() != null ? payment.getSociety().getName() : null)
                 .createdAt(payment.getCreatedAt())
                 .paidAt(payment.getPaidAt())
+                .deletedAt(payment.getDeletedAt())
+                .undoExpiresAt(undoExpiresAt)
+                .undoAvailable(undoAvailable)
                 .errorCode(payment.getErrorCode())
                 .errorDescription(payment.getErrorDescription())
                 .build();
