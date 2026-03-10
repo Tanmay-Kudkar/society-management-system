@@ -44,7 +44,6 @@ public class DeleteForceCleanupInterceptor implements HandlerInterceptor {
             case "maintenance-bills" -> referenceCleanupService.clearReferences("maintenance_bill_id", parsed.id, true, Set.of("maintenance_bills"));
             case "transactions" -> referenceCleanupService.clearReferences("transaction_id", parsed.id, true, Set.of("transactions"));
             case "notices" -> referenceCleanupService.clearReferences("notice_id", parsed.id, true, Set.of("notices"));
-            case "banners" -> referenceCleanupService.clearReferences("banner_id", parsed.id, true, Set.of("banners"));
             case "tickets" -> referenceCleanupService.clearReferences("ticket_id", parsed.id, true, Set.of("tickets"));
             case "complaints" -> referenceCleanupService.clearReferences("complaint_id", parsed.id, true, Set.of("complaints"));
             case "emergency-contacts" -> referenceCleanupService.clearReferences("emergency_contact_id", parsed.id, true, Set.of("emergency_contacts"));

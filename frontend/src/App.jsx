@@ -63,7 +63,6 @@ const Payments = lazyWithMinDelay(() => import("./pages/finance/Payments"));
 const MyBills = lazyWithMinDelay(() => import("./pages/finance/MyBills"));
 
 const Notices = lazyWithMinDelay(() => import("./pages/communication/Notices"));
-const Banners = lazyWithMinDelay(() => import("./pages/communication/Banners"));
 const Tickets = lazyWithMinDelay(() => import("./pages/communication/Tickets"));
 const Complaints = lazyWithMinDelay(
   () => import("./pages/communication/Complaints"),
@@ -81,31 +80,7 @@ const Documents = lazyWithMinDelay(
 const Vendors = lazyWithMinDelay(() => import("./pages/vendors/Vendors"));
 
 const Visitors = lazyWithMinDelay(() => import("./pages/security/Visitors"));
-const DomesticStaff = lazyWithMinDelay(
-  () => import("./pages/security/DomesticStaff"),
-);
-const Safety = lazyWithMinDelay(() => import("./pages/security/Safety"));
-const GuardPatrol = lazyWithMinDelay(
-  () => import("./pages/security/GuardPatrol"),
-);
-const WorkOrders = lazyWithMinDelay(() => import("./pages/core/WorkOrders"));
-const Assets = lazyWithMinDelay(() => import("./pages/core/Assets"));
-const CommonAreas = lazyWithMinDelay(() => import("./pages/core/CommonAreas"));
-const StaffShifts = lazyWithMinDelay(() => import("./pages/core/StaffShifts"));
-const FacilityBooking = lazyWithMinDelay(
-  () => import("./pages/core/FacilityBooking"),
-);
-const RenovationNocs = lazyWithMinDelay(
-  () => import("./pages/core/RenovationNocs"),
-);
-const MoveTracking = lazyWithMinDelay(
-  () => import("./pages/core/MoveTracking"),
-);
 const Penalties = lazyWithMinDelay(() => import("./pages/core/Penalties"));
-const PetRegistrations = lazyWithMinDelay(
-  () => import("./pages/core/PetRegistrations"),
-);
-const Classifieds = lazyWithMinDelay(() => import("./pages/core/Classifieds"));
 const SocietyRules = lazyWithMinDelay(
   () => import("./pages/core/SocietyRules"),
 );
@@ -182,26 +157,13 @@ const PAGE_TITLES = {
   "/reports": "Reports",
   "/roles-permissions": "Roles & Permissions",
   "/notices": "Notices",
-  "/banners": "Banners",
   "/tickets": "Tickets",
   "/complaints": "Complaints",
   "/approvals": "Approvals",
   "/emergency-contacts": "Emergency Contacts",
   "/documents": "Documents",
   "/visitors": "Visitors",
-  "/domestic-staff": "Domestic Staff",
-  "/safety": "Safety & Security",
-  "/guard-patrol": "Guard Patrol & Duty Roster",
-  "/work-orders": "Work Orders",
-  "/assets": "Assets & Inventory",
-  "/common-areas": "Common Area Maintenance",
-  "/staff-shifts": "Staff Attendance & Shifts",
-  "/facility-booking": "Facility Booking",
-  "/renovation-nocs": "Renovation NOC",
-  "/move-tracking": "Move-In / Move-Out",
   "/penalties": "Penalties & Fines",
-  "/pet-registrations": "Pet Registrations",
-  "/classifieds": "Classifieds",
   "/society-rules": "Society Rules & Bylaws",
   "/settings": "Settings",
 };
@@ -362,7 +324,6 @@ function App() {
                   element={<RolesPermissions />}
                 />
                 <Route path="notices" element={<Notices />} />
-                <Route path="banners" element={<Banners />} />
                 <Route path="tickets" element={<Tickets />} />
                 <Route path="complaints" element={<Complaints />} />
                 <Route path="approvals" element={<Approvals />} />
@@ -372,22 +333,7 @@ function App() {
                 />
                 <Route path="documents" element={<Documents />} />
                 <Route path="visitors" element={<Visitors />} />
-                <Route path="domestic-staff" element={<DomesticStaff />} />
-                <Route path="safety" element={<Safety />} />
-                <Route path="guard-patrol" element={<GuardPatrol />} />
-                <Route path="work-orders" element={<WorkOrders />} />
-                <Route path="assets" element={<Assets />} />
-                <Route path="common-areas" element={<CommonAreas />} />
-                <Route path="staff-shifts" element={<StaffShifts />} />
-                <Route path="facility-booking" element={<FacilityBooking />} />
-                <Route path="renovation-nocs" element={<RenovationNocs />} />
-                <Route path="move-tracking" element={<MoveTracking />} />
                 <Route path="penalties" element={<Penalties />} />
-                <Route
-                  path="pet-registrations"
-                  element={<PetRegistrations />}
-                />
-                <Route path="classifieds" element={<Classifieds />} />
                 <Route path="society-rules" element={<SocietyRules />} />
                 <Route path="settings" element={<Settings />} />
               </Route>

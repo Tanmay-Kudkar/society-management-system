@@ -274,24 +274,6 @@ export const noticeApi = {
   delete: (id, userId, force = true) => api.delete(`/notices/${id}?userId=${userId}${force ? '&force=true' : ''}`),
 }
 
-// Security Log API
-export const securityLogApi = {
-  getRecent: (societyId, limit = 10) => api.get(`/api/security-logs?societyId=${societyId}&limit=${limit}`),
-  create: (data) => api.post('/api/security-logs', data),
-}
-
-// Banner API
-export const bannerApi = {
-  getAll: () => api.get('/banners'),
-  getById: (id) => api.get(`/banners/${id}`),
-  getBySociety: (societyId) => api.get(`/banners/society/${societyId}`),
-  getActive: (societyId) => api.get(`/banners/active/${societyId}`),
-  create: (data, userId) => api.post(`/banners?userId=${userId}`, data),
-  update: (id, data, userId) => api.put(`/banners/${id}?userId=${userId}`, data),
-  deactivate: (id, userId) => api.patch(`/banners/${id}/deactivate?userId=${userId}`),
-  delete: (id, userId, force = true) => api.delete(`/banners/${id}?userId=${userId}${force ? '&force=true' : ''}`),
-}
-
 // Ticket API
 export const ticketApi = {
   getAll: () => api.get('/tickets'),
@@ -528,111 +510,6 @@ export const visitorApi = {
   delete: (id, userId) => api.delete(`/visitors/${id}?userId=${userId}`),
 }
 
-// Domestic Staff API
-export const domesticStaffApi = {
-  getAll: (userId) => api.get(`/domestic-staff?userId=${userId}`),
-  getById: (id, userId) => api.get(`/domestic-staff/${id}?userId=${userId}`),
-  getBySociety: (societyId, userId) => api.get(`/domestic-staff/society/${societyId}?userId=${userId}`),
-  getActiveBySociety: (societyId, userId) => api.get(`/domestic-staff/society/${societyId}/active?userId=${userId}`),
-  getByType: (societyId, type, userId) => api.get(`/domestic-staff/society/${societyId}/type/${type}?userId=${userId}`),
-  create: (userId, data) => api.post(`/domestic-staff?userId=${userId}`, data),
-  update: (id, userId, data) => api.put(`/domestic-staff/${id}?userId=${userId}`, data),
-  toggleStatus: (id, userId) => api.patch(`/domestic-staff/${id}/toggle-status?userId=${userId}`),
-  verify: (id, userId) => api.patch(`/domestic-staff/${id}/verify?userId=${userId}`),
-  delete: (id, userId) => api.delete(`/domestic-staff/${id}?userId=${userId}`),
-  // Attendance
-  recordAttendance: (userId, data) => api.post(`/domestic-staff/attendance?userId=${userId}`, data),
-  getAttendanceBySociety: (societyId, userId, date) => api.get(`/domestic-staff/attendance/society/${societyId}?userId=${userId}${date ? `&date=${date}` : ''}`),
-  getAttendanceByStaff: (staffId, userId, startDate, endDate) => api.get(`/domestic-staff/attendance/staff/${staffId}?userId=${userId}&startDate=${startDate}&endDate=${endDate}`),
-  getAttendanceByFlat: (flatId, userId) => api.get(`/domestic-staff/attendance/flat/${flatId}?userId=${userId}`),
-  markCheckOut: (attendanceId, userId) => api.patch(`/domestic-staff/attendance/${attendanceId}/check-out?userId=${userId}`),
-}
-
-// Safety API (SOS Alerts + Gate Logs)
-export const safetyApi = {
-  // SOS Alerts
-  createAlert: (userId, data) => api.post(`/safety/sos?userId=${userId}`, data),
-  getAllAlerts: (userId) => api.get(`/safety/sos?userId=${userId}`),
-  getAlertsBySociety: (societyId, userId) => api.get(`/safety/sos/society/${societyId}?userId=${userId}`),
-  getAlertsByStatus: (societyId, status, userId) => api.get(`/safety/sos/society/${societyId}/status/${status}?userId=${userId}`),
-  getAlertById: (id, userId) => api.get(`/safety/sos/${id}?userId=${userId}`),
-  acknowledgeAlert: (id, userId) => api.patch(`/safety/sos/${id}/acknowledge?userId=${userId}`),
-  resolveAlert: (id, userId, notes) => api.patch(`/safety/sos/${id}/resolve?userId=${userId}${notes ? `&resolutionNotes=${encodeURIComponent(notes)}` : ''}`),
-  markFalseAlarm: (id, userId) => api.patch(`/safety/sos/${id}/false-alarm?userId=${userId}`),
-  escalateAlert: (id, userId) => api.patch(`/safety/sos/${id}/escalate?userId=${userId}`),
-  getAlertsByPriority: (societyId, priority, userId) => api.get(`/safety/sos/society/${societyId}/priority/${priority}?userId=${userId}`),
-  getActiveAlerts: (societyId, userId) => api.get(`/safety/sos/society/${societyId}/active?userId=${userId}`),
-  getAlertCounts: (societyId, userId) => api.get(`/safety/sos/society/${societyId}/counts?userId=${userId}`),
-  // Gate Logs
-  createGateLog: (userId, data) => api.post(`/safety/gate-log?userId=${userId}`, data),
-  getGateLogsBySociety: (societyId, userId) => api.get(`/safety/gate-log/society/${societyId}?userId=${userId}`),
-  getGateLogsByFlat: (flatId, userId) => api.get(`/safety/gate-log/flat/${flatId}?userId=${userId}`),
-  getGateLogsByDateRange: (societyId, userId, start, end) => api.get(`/safety/gate-log/society/${societyId}/range?userId=${userId}&start=${start}&end=${end}`),
-  getGateLogsByEntryType: (societyId, entryType, userId) => api.get(`/safety/gate-log/society/${societyId}/type/${entryType}?userId=${userId}`),
-  getGateLogsByStatus: (societyId, status, userId) => api.get(`/safety/gate-log/society/${societyId}/status/${status}?userId=${userId}`),
-  getGateLogById: (id, userId) => api.get(`/safety/gate-log/${id}?userId=${userId}`),
-  markExit: (id, userId) => api.patch(`/safety/gate-log/${id}/exit?userId=${userId}`),
-  deleteGateLog: (id, userId) => api.delete(`/safety/gate-log/${id}?userId=${userId}`),
-}
-
-// ===================== ASSETS / INVENTORY =====================
-export const assetApi = {
-  create: (userId, data) => api.post(`/assets?userId=${userId}`, data),
-  update: (id, userId, data) => api.put(`/assets/${id}?userId=${userId}`, data),
-  getById: (id, userId) => api.get(`/assets/${id}?userId=${userId}`),
-  getBySociety: (societyId, userId) => api.get(`/assets/society/${societyId}?userId=${userId}`),
-  getByStatus: (societyId, status, userId) => api.get(`/assets/society/${societyId}/status/${status}?userId=${userId}`),
-  getByCategory: (societyId, category, userId) => api.get(`/assets/society/${societyId}/category/${category}?userId=${userId}`),
-  updateStatus: (id, userId, status) => api.patch(`/assets/${id}/status?userId=${userId}&status=${status}`),
-  assign: (id, userId, assignedToId) => api.patch(`/assets/${id}/assign?userId=${userId}&assignedToId=${assignedToId}`),
-  unassign: (id, userId) => api.patch(`/assets/${id}/unassign?userId=${userId}`),
-  getLowStock: (societyId, userId) => api.get(`/assets/society/${societyId}/low-stock?userId=${userId}`),
-  getCounts: (societyId, userId) => api.get(`/assets/society/${societyId}/counts?userId=${userId}`),
-  delete: (id, userId) => api.delete(`/assets/${id}?userId=${userId}`),
-}
-
-// ===================== WORK ORDERS =====================
-export const workOrderApi = {
-  create: (userId, data) => api.post(`/work-orders?userId=${userId}`, data),
-  getById: (id, userId) => api.get(`/work-orders/${id}?userId=${userId}`),
-  getBySociety: (societyId, userId) => api.get(`/work-orders/society/${societyId}?userId=${userId}`),
-  getByStatus: (societyId, status, userId) => api.get(`/work-orders/society/${societyId}/status/${status}?userId=${userId}`),
-  getByCategory: (societyId, category, userId) => api.get(`/work-orders/society/${societyId}/category/${category}?userId=${userId}`),
-  getByPriority: (societyId, priority, userId) => api.get(`/work-orders/society/${societyId}/priority/${priority}?userId=${userId}`),
-  getByAssignee: (assigneeId, userId) => api.get(`/work-orders/assignee/${assigneeId}?userId=${userId}`),
-  getByRequester: (requesterId, userId) => api.get(`/work-orders/requester/${requesterId}?userId=${userId}`),
-  assign: (id, userId, assignedToId) => api.patch(`/work-orders/${id}/assign?userId=${userId}&assignedToId=${assignedToId}`),
-  startWork: (id, userId) => api.patch(`/work-orders/${id}/start?userId=${userId}`),
-  putOnHold: (id, userId, notes) => api.patch(`/work-orders/${id}/hold?userId=${userId}${notes ? `&notes=${encodeURIComponent(notes)}` : ''}`),
-  complete: (id, userId, resolutionNotes, actualCost) => api.patch(`/work-orders/${id}/complete?userId=${userId}${resolutionNotes ? `&resolutionNotes=${encodeURIComponent(resolutionNotes)}` : ''}${actualCost ? `&actualCost=${actualCost}` : ''}`),
-  cancel: (id, userId, reason) => api.patch(`/work-orders/${id}/cancel?userId=${userId}${reason ? `&reason=${encodeURIComponent(reason)}` : ''}`),
-  getCounts: (societyId, userId) => api.get(`/work-orders/society/${societyId}/counts?userId=${userId}`),
-  delete: (id, userId) => api.delete(`/work-orders/${id}?userId=${userId}`),
-}
-
-// ===================== PATROL & DUTY ROSTER =====================
-export const patrolApi = {
-  // Checkpoints
-  createCheckpoint: (userId, data) => api.post(`/patrol/checkpoints?userId=${userId}`, data),
-  getCheckpoints: (societyId, userId) => api.get(`/patrol/checkpoints/society/${societyId}?userId=${userId}`),
-  updateCheckpoint: (id, userId, data) => api.put(`/patrol/checkpoints/${id}?userId=${userId}`, data),
-  deleteCheckpoint: (id, userId) => api.delete(`/patrol/checkpoints/${id}?userId=${userId}`),
-  // Patrol Logs
-  logPatrol: (userId, data) => api.post(`/patrol/logs?userId=${userId}`, data),
-  getPatrolLogs: (societyId, userId) => api.get(`/patrol/logs/society/${societyId}?userId=${userId}`),
-  getPatrolLogsByGuard: (guardId, userId) => api.get(`/patrol/logs/guard/${guardId}?userId=${userId}`),
-  getPatrolLogsByDateRange: (societyId, userId, start, end) => api.get(`/patrol/logs/society/${societyId}/range?userId=${userId}&start=${start}&end=${end}`),
-  // Duty Rosters
-  createDutyRoster: (userId, data) => api.post(`/patrol/duty?userId=${userId}`, data),
-  getDutyRosterByDate: (societyId, userId, date) => api.get(`/patrol/duty/society/${societyId}?userId=${userId}&date=${date}`),
-  getDutyRosterByDateRange: (societyId, userId, start, end) => api.get(`/patrol/duty/society/${societyId}/range?userId=${userId}&start=${start}&end=${end}`),
-  checkIn: (id, userId) => api.patch(`/patrol/duty/${id}/check-in?userId=${userId}`),
-  checkOut: (id, userId) => api.patch(`/patrol/duty/${id}/check-out?userId=${userId}`),
-  markAbsent: (id, userId) => api.patch(`/patrol/duty/${id}/absent?userId=${userId}`),
-  markLeave: (id, userId) => api.patch(`/patrol/duty/${id}/leave?userId=${userId}`),
-  deleteDutyRoster: (id, userId) => api.delete(`/patrol/duty/${id}?userId=${userId}`),
-}
-
 // ===================== APPROVALS =====================
 export const approvalApi = {
   // Workflows
@@ -655,74 +532,6 @@ export const approvalApi = {
   cancelRequest: (requestId, userId) => api.post(`/approvals/requests/${requestId}/cancel?userId=${userId}`),
 }
 
-// Staff Shifts API
-export const staffShiftApi = {
-  create: (userId, data) => api.post(`/staff-shifts?userId=${userId}`, data),
-  getById: (id, userId) => api.get(`/staff-shifts/${id}?userId=${userId}`),
-  getBySociety: (societyId, userId) => api.get(`/staff-shifts/society/${societyId}?userId=${userId}`),
-  getByDate: (societyId, date, userId) => api.get(`/staff-shifts/society/${societyId}/date?date=${date}&userId=${userId}`),
-  getByStatus: (societyId, status, userId) => api.get(`/staff-shifts/society/${societyId}/status/${status}?userId=${userId}`),
-  getByStaff: (staffUserId, userId) => api.get(`/staff-shifts/staff/${staffUserId}?userId=${userId}`),
-  getByDateRange: (societyId, start, end, userId) => api.get(`/staff-shifts/society/${societyId}/range?start=${start}&end=${end}&userId=${userId}`),
-  checkIn: (id, userId) => api.patch(`/staff-shifts/${id}/check-in?userId=${userId}`),
-  checkOut: (id, userId) => api.patch(`/staff-shifts/${id}/check-out?userId=${userId}`),
-  markAbsent: (id, userId) => api.patch(`/staff-shifts/${id}/absent?userId=${userId}`),
-  getDayCounts: (societyId, date, userId) => api.get(`/staff-shifts/society/${societyId}/day-counts?date=${date}&userId=${userId}`),
-  delete: (id, userId) => api.delete(`/staff-shifts/${id}?userId=${userId}`),
-}
-
-// Common Area Maintenance Schedule API
-export const commonAreaApi = {
-  create: (userId, data) => api.post(`/common-areas?userId=${userId}`, data),
-  update: (id, userId, data) => api.put(`/common-areas/${id}?userId=${userId}`, data),
-  getById: (id, userId) => api.get(`/common-areas/${id}?userId=${userId}`),
-  getBySociety: (societyId, userId) => api.get(`/common-areas/society/${societyId}?userId=${userId}`),
-  getByStatus: (societyId, status, userId) => api.get(`/common-areas/society/${societyId}/status/${status}?userId=${userId}`),
-  getByAreaType: (societyId, areaType, userId) => api.get(`/common-areas/society/${societyId}/area-type/${areaType}?userId=${userId}`),
-  getByMaintenanceType: (societyId, maintenanceType, userId) => api.get(`/common-areas/society/${societyId}/maintenance-type/${maintenanceType}?userId=${userId}`),
-  getOverdue: (societyId, userId) => api.get(`/common-areas/society/${societyId}/overdue?userId=${userId}`),
-  markCompleted: (id, userId) => api.patch(`/common-areas/${id}/complete?userId=${userId}`),
-  pause: (id, userId) => api.patch(`/common-areas/${id}/pause?userId=${userId}`),
-  resume: (id, userId) => api.patch(`/common-areas/${id}/resume?userId=${userId}`),
-  getCounts: (societyId, userId) => api.get(`/common-areas/society/${societyId}/counts?userId=${userId}`),
-  delete: (id, userId) => api.delete(`/common-areas/${id}?userId=${userId}`),
-}
-
-// Facility / Amenity Booking API
-export const facilityBookingApi = {
-  create: (userId, data) => api.post(`/facility-bookings?userId=${userId}`, data),
-  update: (id, userId, data) => api.put(`/facility-bookings/${id}?userId=${userId}`, data),
-  getById: (id, userId) => api.get(`/facility-bookings/${id}?userId=${userId}`),
-  getBySociety: (societyId, userId) => api.get(`/facility-bookings/society/${societyId}?userId=${userId}`),
-  getByStatus: (societyId, status, userId) => api.get(`/facility-bookings/society/${societyId}/status/${status}?userId=${userId}`),
-  getByDate: (societyId, date, userId) => api.get(`/facility-bookings/society/${societyId}/date/${date}?userId=${userId}`),
-  getByFacilityType: (societyId, type, userId) => api.get(`/facility-bookings/society/${societyId}/type/${type}?userId=${userId}`),
-  getByUser: (bookedById, userId) => api.get(`/facility-bookings/user/${bookedById}?userId=${userId}`),
-  getByDateRange: (societyId, startDate, endDate, userId) => api.get(`/facility-bookings/society/${societyId}/range?startDate=${startDate}&endDate=${endDate}&userId=${userId}`),
-  approve: (id, userId, adminNotes) => api.patch(`/facility-bookings/${id}/approve?userId=${userId}`, { adminNotes }),
-  reject: (id, userId, adminNotes) => api.patch(`/facility-bookings/${id}/reject?userId=${userId}`, { adminNotes }),
-  cancel: (id, userId, reason) => api.patch(`/facility-bookings/${id}/cancel?userId=${userId}`, { reason }),
-  getCounts: (societyId, userId) => api.get(`/facility-bookings/society/${societyId}/counts?userId=${userId}`),
-  delete: (id, userId) => api.delete(`/facility-bookings/${id}?userId=${userId}`),
-}
-
-// Renovation NOC API
-export const renovationNocApi = {
-  create: (userId, data) => api.post(`/renovation-nocs?userId=${userId}`, data),
-  update: (id, userId, data) => api.put(`/renovation-nocs/${id}?userId=${userId}`, data),
-  getById: (id, userId) => api.get(`/renovation-nocs/${id}?userId=${userId}`),
-  getBySociety: (societyId, userId) => api.get(`/renovation-nocs/society/${societyId}?userId=${userId}`),
-  getByStatus: (societyId, status, userId) => api.get(`/renovation-nocs/society/${societyId}/status/${status}?userId=${userId}`),
-  getByType: (societyId, type, userId) => api.get(`/renovation-nocs/society/${societyId}/type/${type}?userId=${userId}`),
-  getByUser: (requestedById, userId) => api.get(`/renovation-nocs/user/${requestedById}?userId=${userId}`),
-  approve: (id, userId, adminNotes) => api.patch(`/renovation-nocs/${id}/approve?userId=${userId}`, { adminNotes }),
-  reject: (id, userId, reason) => api.patch(`/renovation-nocs/${id}/reject?userId=${userId}`, { reason }),
-  markInProgress: (id, userId) => api.patch(`/renovation-nocs/${id}/in-progress?userId=${userId}`),
-  markCompleted: (id, userId) => api.patch(`/renovation-nocs/${id}/completed?userId=${userId}`),
-  getCounts: (societyId, userId) => api.get(`/renovation-nocs/society/${societyId}/counts?userId=${userId}`),
-  delete: (id, userId) => api.delete(`/renovation-nocs/${id}?userId=${userId}`),
-}
-
 // Penalty & Fine System API
 export const penaltyApi = {
   create: (userId, data) => api.post(`/penalties?userId=${userId}`, data),
@@ -738,49 +547,6 @@ export const penaltyApi = {
   appeal: (id, userId, notes) => api.patch(`/penalties/${id}/appeal?userId=${userId}`, { notes }),
   getCounts: (societyId, userId) => api.get(`/penalties/society/${societyId}/counts?userId=${userId}`),
   delete: (id, userId) => api.delete(`/penalties/${id}?userId=${userId}`),
-}
-
-// Move-In / Move-Out Tracking API
-export const moveRecordApi = {
-  create: (userId, data) => api.post(`/move-records?userId=${userId}`, data),
-  update: (id, userId, data) => api.put(`/move-records/${id}?userId=${userId}`, data),
-  getById: (id, userId) => api.get(`/move-records/${id}?userId=${userId}`),
-  getBySociety: (societyId, userId) => api.get(`/move-records/society/${societyId}?userId=${userId}`),
-  getByType: (societyId, type, userId) => api.get(`/move-records/society/${societyId}/type/${type}?userId=${userId}`),
-  getByStatus: (societyId, status, userId) => api.get(`/move-records/society/${societyId}/status/${status}?userId=${userId}`),
-  getByDate: (societyId, date, userId) => api.get(`/move-records/society/${societyId}/date/${date}?userId=${userId}`),
-  getByUser: (targetUserId, userId) => api.get(`/move-records/user/${targetUserId}?userId=${userId}`),
-  markInProgress: (id, userId) => api.patch(`/move-records/${id}/in-progress?userId=${userId}`),
-  markCompleted: (id, userId) => api.patch(`/move-records/${id}/completed?userId=${userId}`),
-  markCancelled: (id, userId) => api.patch(`/move-records/${id}/cancelled?userId=${userId}`),
-  getCounts: (societyId, userId) => api.get(`/move-records/society/${societyId}/counts?userId=${userId}`),
-  delete: (id, userId) => api.delete(`/move-records/${id}?userId=${userId}`),
-}
-
-// Pet Registration API
-export const petRegistrationApi = {
-  create: (userId, data) => api.post('/pet-registrations', data, { headers: { 'X-User-Id': userId } }),
-  update: (id, userId, data) => api.put(`/pet-registrations/${id}`, data, { headers: { 'X-User-Id': userId } }),
-  getById: (id, userId) => api.get(`/pet-registrations/${id}`, { headers: { 'X-User-Id': userId } }),
-  getBySociety: (societyId, userId, params = {}) => api.get(`/pet-registrations/society/${societyId}`, { headers: { 'X-User-Id': userId }, params }),
-  approve: (id, userId) => api.patch(`/pet-registrations/${id}/approve`, {}, { headers: { 'X-User-Id': userId } }),
-  reject: (id, userId, reason) => api.patch(`/pet-registrations/${id}/reject`, { reason }, { headers: { 'X-User-Id': userId } }),
-  getCounts: (societyId, userId) => api.get(`/pet-registrations/society/${societyId}/counts`, { headers: { 'X-User-Id': userId } }),
-  delete: (id, userId) => api.delete(`/pet-registrations/${id}`, { headers: { 'X-User-Id': userId } }),
-}
-
-// Classified / Internal Marketplace API
-export const classifiedApi = {
-  create: (userId, data) => api.post('/classifieds', data, { headers: { 'X-User-Id': userId } }),
-  update: (id, userId, data) => api.put(`/classifieds/${id}`, data, { headers: { 'X-User-Id': userId } }),
-  getById: (id, userId) => api.get(`/classifieds/${id}`, { headers: { 'X-User-Id': userId } }),
-  getBySociety: (societyId, userId, params = {}) => api.get(`/classifieds/society/${societyId}`, { headers: { 'X-User-Id': userId }, params }),
-  markSold: (id, userId) => api.patch(`/classifieds/${id}/sold`, {}, { headers: { 'X-User-Id': userId } }),
-  markClosed: (id, userId) => api.patch(`/classifieds/${id}/close`, {}, { headers: { 'X-User-Id': userId } }),
-  flag: (id, userId, reason) => api.patch(`/classifieds/${id}/flag`, { reason }, { headers: { 'X-User-Id': userId } }),
-  unflag: (id, userId) => api.patch(`/classifieds/${id}/unflag`, {}, { headers: { 'X-User-Id': userId } }),
-  getCounts: (societyId, userId) => api.get(`/classifieds/society/${societyId}/counts`, { headers: { 'X-User-Id': userId } }),
-  delete: (id, userId) => api.delete(`/classifieds/${id}`, { headers: { 'X-User-Id': userId } }),
 }
 
 // Society Rules / Bylaws API
