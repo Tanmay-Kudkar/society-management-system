@@ -469,7 +469,7 @@ function MobileAccordion({
         onFocus={() => onPrefetch?.(group.path)}
         onClick={onNavigate}
         className={clsx(
-          "mb-0.5 flex items-center gap-[11px] whitespace-nowrap rounded-[10px] px-3.5 py-[11px] text-sm font-semibold no-underline transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-card)]",
+          "mb-0.5 flex items-center gap-[11px] whitespace-nowrap rounded-[10px] px-3.5 py-3 text-[13.5px] sm:text-sm font-semibold no-underline transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-card)]",
           isActiveGroup
             ? "bg-[var(--accent-primary)] text-white"
             : "text-[var(--text-secondary)] hover:bg-[rgba(47,129,247,0.06)] hover:text-[var(--text-primary)]",
@@ -487,10 +487,10 @@ function MobileAccordion({
       <button
         onClick={onToggle}
         className={clsx(
-          "mb-0.5 flex w-full items-center justify-between rounded-[10px] border-none bg-transparent px-3.5 py-[11px] text-left font-semibold whitespace-nowrap transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-card)]",
-          isActiveGroup
-            ? "bg-[rgba(47,129,247,0.08)] text-[var(--accent-primary)] font-[650]"
-            : "text-[var(--text-secondary)] hover:bg-[rgba(47,129,247,0.06)] hover:text-[var(--text-primary)]",
+          "mb-0.5 flex w-full items-center justify-between rounded-[10px] border-none px-3.5 py-3 text-left text-[13.5px] sm:text-sm font-semibold whitespace-nowrap transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-card)]",
+          isActiveGroup || isOpen
+            ? "bg-[color-mix(in_srgb,var(--accent-primary)_6%,transparent)] text-[var(--accent-primary)] font-[650]"
+            : "bg-transparent text-[var(--text-secondary)] hover:bg-[rgba(47,129,247,0.06)] hover:text-[var(--text-primary)]",
         )}
       >
         <div className="flex min-w-0 flex-1 items-center gap-[11px]">
@@ -520,7 +520,7 @@ function MobileAccordion({
               onClick={onNavigate}
               className={({ isActive }) =>
                 clsx(
-                  "mx-1.5 mb-px flex items-center gap-2.5 whitespace-nowrap rounded-lg px-3.5 py-[9px] pl-11 text-[13.5px] font-medium no-underline transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-card)]",
+                  "mx-1.5 mb-px flex items-center gap-3 whitespace-nowrap rounded-lg py-2.5 pr-3.5 pl-[46px] text-[13px] sm:text-[13.5px] font-medium no-underline transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-card)]",
                   isActive
                     ? "bg-[rgba(47,129,247,0.1)] text-[var(--accent-primary)] font-semibold"
                     : "text-[var(--text-secondary)] hover:bg-[rgba(47,129,247,0.08)] hover:text-[var(--text-primary)]",
@@ -589,10 +589,10 @@ function SidebarGroup({ group, hasRole, isOpen, onToggle, onPrefetch, resolvePat
       <button
         onClick={onToggle}
         className={clsx(
-          "relative flex w-full items-center justify-between whitespace-nowrap rounded-[10px] border-none bg-transparent px-3.5 py-2.5 text-[13.5px] font-semibold transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-secondary)]",
+          "relative mb-0.5 flex w-full items-center justify-between whitespace-nowrap rounded-[10px] border-none px-3.5 py-2.5 text-[13.5px] font-semibold transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-secondary)]",
           isActiveGroup || isOpen
-            ? "text-[var(--accent-primary)] font-[650]"
-            : "text-[var(--text-secondary)] hover:bg-[rgba(47,129,247,0.08)] hover:text-[var(--text-primary)]",
+            ? "bg-[color-mix(in_srgb,var(--accent-primary)_6%,transparent)] text-[var(--accent-primary)] font-[650]"
+            : "bg-transparent text-[var(--text-secondary)] hover:bg-[rgba(47,129,247,0.06)] hover:text-[var(--text-primary)]",
         )}
       >
         <div className="flex min-w-0 flex-1 items-center gap-[11px]">
@@ -620,7 +620,7 @@ function SidebarGroup({ group, hasRole, isOpen, onToggle, onPrefetch, resolvePat
               onFocus={() => onPrefetch?.(item.path)}
               className={({ isActive }) =>
                 clsx(
-                  "mb-px flex items-center gap-2.5 whitespace-nowrap rounded-lg px-3.5 py-2 pl-[22px] text-[13px] font-medium no-underline transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-secondary)]",
+                  "mb-px flex items-center gap-3 whitespace-nowrap rounded-lg py-2 pr-3.5 pl-[44px] text-[13px] font-medium no-underline transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-secondary)]",
                   isActive
                     ? "bg-[rgba(47,129,247,0.1)] text-[var(--accent-primary)] font-semibold"
                     : "text-[var(--text-secondary)] hover:bg-[rgba(47,129,247,0.08)] hover:text-[var(--text-primary)]",
@@ -818,7 +818,7 @@ export default function Layout() {
   return (
     <div className="min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)]">
       {/* Desktop Sidebar */}
-      <aside className="relative hidden before:pointer-events-none before:absolute before:left-0 before:right-0 before:top-0 before:h-[200px] before:bg-[linear-gradient(180deg,rgba(47,129,247,0.03)_0%,transparent_100%)] before:content-[''] lg:fixed lg:inset-y-0 lg:left-0 lg:z-[45] lg:flex lg:w-[260px] lg:flex-col lg:overflow-hidden lg:border-r lg:border-[var(--border-default)] lg:bg-[var(--bg-secondary)]">
+      <aside className="relative hidden before:pointer-events-none before:absolute before:left-0 before:right-0 before:top-0 before:h-[200px] before:bg-[linear-gradient(180deg,rgba(47,129,247,0.03)_0%,transparent_100%)] before:content-[''] lg:fixed lg:inset-y-0 lg:left-0 lg:z-[45] lg:flex lg:w-[272px] lg:flex-col lg:overflow-hidden lg:border-r lg:border-[var(--border-default)] lg:bg-[var(--bg-secondary)]">
         <div className="relative border-b border-[var(--border-default)] px-5 pb-4 pt-5">
           <div className="group flex cursor-pointer items-center gap-3" onClick={() => navigate(resolvePath("/"))}>
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[linear-gradient(135deg,var(--accent-primary)_0%,#1d6ce0_100%)] shadow-[0_4px_16px_rgba(47,129,247,0.3)] transition-all duration-200 group-hover:scale-105 group-hover:shadow-[0_6px_20px_rgba(47,129,247,0.4)]">
@@ -871,7 +871,7 @@ export default function Layout() {
       </aside>
 
       {/* Top Navbar */}
-      <header className="fixed inset-x-0 top-0 z-40 lg:left-[260px]">
+      <header className="fixed inset-x-0 top-0 z-40 lg:left-[272px]">
         <div className="h-16 border-b border-[var(--border-default)] bg-[var(--bg-secondary)] backdrop-blur-[8px]">
           <div className="mx-auto flex h-full max-w-[1800px] items-center justify-between gap-4 px-4 lg:justify-end lg:px-6 [&>*]:min-w-0">
             {/* Logo - visible on mobile only */}
@@ -927,7 +927,7 @@ export default function Layout() {
             {/* Hamburger - Mobile */}
             <button
               onClick={toggleMobileMenu}
-              className="inline-flex items-center justify-center rounded-md border border-[var(--border-default)] bg-transparent p-2 text-[var(--text-secondary)] transition-all duration-150 hover:bg-[rgba(255,255,255,0.06)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-secondary)] lg:hidden"
+              className="inline-flex items-center justify-center rounded-lg border border-[var(--border-default)] bg-transparent p-2.5 text-[var(--text-secondary)] transition-all duration-150 hover:bg-[rgba(255,255,255,0.06)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-secondary)] lg:hidden"
             >
               <div className="relative h-6 w-6">
                 <Menu
@@ -977,21 +977,21 @@ export default function Layout() {
         {/* Drawer */}
         <aside
           className={clsx(
-            "absolute right-0 top-0 flex h-full w-[320px] max-w-[85vw] flex-col bg-[var(--bg-card)] shadow-[-4px_0_24px_rgba(0,0,0,0.3)] transition-transform duration-[250ms]",
+            "absolute right-0 top-0 flex h-full w-[min(92vw,360px)] sm:w-[340px] md:w-[360px] max-w-[92vw] flex-col bg-[var(--bg-card)] shadow-[-8px_0_28px_rgba(0,0,0,0.38)] will-change-transform transition-transform duration-300 motion-reduce:transition-none",
             mobileMenuOpen
               ? "translate-x-0"
               : "translate-x-full",
           )}
         >
           {/* Mobile Header */}
-          <div className="flex h-16 items-center justify-between border-b border-[var(--border-default)] px-4">
+          <div className="flex h-16 shrink-0 items-center justify-between border-b border-[var(--border-default)] px-4 sm:px-5">
             <div className="flex items-center gap-3">
-              <div className="rounded-lg bg-[var(--accent-primary)] p-2 shadow-[0_2px_6px_rgba(47,129,247,0.2)]">
-                <Building2 size={18} className="text-white" />
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[linear-gradient(135deg,var(--accent-primary)_0%,#1d6ce0_100%)] shadow-sm">
+                <Building2 size={16} className="text-white" />
               </div>
               <div className="flex flex-col">
-                <span className="text-lg font-bold text-[var(--text-primary)]">Menu</span>
-                <span className="mt-[-2px] text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--text-secondary)]">Navigation</span>
+                <span className="text-[16px] font-extrabold tracking-tight text-[var(--text-primary)]">SocietyHub</span>
+                <span className="mt-[-2px] text-[9.5px] font-bold uppercase tracking-wider text-[var(--text-secondary)]">Management</span>
               </div>
             </div>
             <button
@@ -1003,7 +1003,7 @@ export default function Layout() {
           </div>
 
           {/* Mobile Navigation */}
-          <nav className="flex-1 overflow-y-auto px-2 pb-40 pt-3">
+          <nav className="flex-1 overflow-y-auto px-2.5 pb-36 pt-3 sm:px-3">
             {menuGroups.map((group) => (
               <MobileAccordion
                 key={group.id}
@@ -1019,33 +1019,34 @@ export default function Layout() {
           </nav>
 
           {/* Mobile User Section */}
-          <div className="absolute bottom-0 left-0 right-0 border-t border-[var(--border-default)] bg-[var(--bg-card)] p-4">
-            <div className="mb-3 flex items-center gap-3 rounded-[10px] border border-[rgba(47,129,247,0.1)] bg-[rgba(47,129,247,0.04)] p-3">
-              <div className="flex h-9 w-9 items-center justify-center rounded-[10px] bg-[linear-gradient(135deg,var(--accent-primary)_0%,#1d6ce0_100%)] shadow-[0_2px_8px_rgba(47,129,247,0.2)]">
-                <span className="font-bold text-white">
-                  {user?.name?.charAt(0)?.toUpperCase() || "U"}
+          <div className="absolute bottom-0 left-0 right-0 border-t border-[var(--border-default)] bg-[var(--bg-card)]/95 p-4 backdrop-blur-sm">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--accent-primary)] font-bold text-white shadow-sm">
+                {user?.name?.charAt(0)?.toUpperCase() || "U"}
+              </div>
+              <div className="flex min-w-0 flex-1 flex-col">
+                <span className="truncate text-sm font-bold text-[var(--text-primary)]">
+                  {user?.name}
+                </span>
+                <span className="truncate text-[11px] font-bold uppercase tracking-wider text-[var(--accent-primary)]">
+                  {user?.role?.replace(/_/g, " ")}
                 </span>
               </div>
-              <div className="min-w-0 flex-1">
-                <p className="m-0 truncate whitespace-nowrap text-[13px] font-bold leading-[1.2] text-[var(--text-primary)]">{user?.name}</p>
-                <p className="m-0 truncate whitespace-nowrap text-[11px] font-bold uppercase tracking-[0.03em] leading-[1.2] text-[var(--accent-primary)]">
-                  {user?.role?.replace(/_/g, " ")}
-                </p>
-              </div>
+              <button
+                onClick={handleLogout}
+                className="flex shrink-0 items-center justify-center rounded-lg border border-[var(--border-default)] bg-transparent p-2.5 text-[var(--text-secondary)] transition-all duration-150 hover:border-red-400/40 hover:bg-red-500/10 hover:text-red-500 active:scale-95 focus-visible:outline-none focus:ring-2 focus:ring-[var(--accent-primary)]"
+                title="Logout"
+                aria-label="Logout"
+              >
+                <LogOut size={20} />
+              </button>
             </div>
-            <button
-              onClick={handleLogout}
-              className="flex w-full items-center justify-center gap-2 rounded-[10px] border-none bg-[linear-gradient(135deg,#ef4444_0%,#dc2626_100%)] px-4 py-3 text-sm font-semibold text-white shadow-[0_2px_8px_rgba(239,68,68,0.25)] transition-all duration-150 hover:-translate-y-px hover:bg-[linear-gradient(135deg,#dc2626_0%,#b91c1c_100%)] hover:shadow-[0_4px_14px_rgba(239,68,68,0.35)] active:translate-y-0 active:shadow-[0_1px_4px_rgba(239,68,68,0.2)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-card)]"
-            >
-              <LogOut size={18} />
-              <span>Logout</span>
-            </button>
           </div>
         </aside>
       </div>
 
       {/* Main content */}
-      <main className="min-h-screen pt-[65px] lg:ml-[260px]">
+      <main className="min-h-screen pt-[65px] lg:ml-[272px]">
         <div className="p-4 md:p-6 lg:px-7 lg:py-6">
           <Outlet />
         </div>

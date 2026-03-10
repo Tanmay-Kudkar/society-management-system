@@ -4,7 +4,7 @@ import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '../../context'
 import { useConfirmDialog } from '../../context'
 import { useToast } from '../../context'
-import { vehicleApi, flatApi } from '../../../../api'
+import { vehicleApi, flatApi, societyApi } from '../../../../api'
 import { Plus, Edit, Trash2, Search, X, Car, Bike, Upload } from 'lucide-react'
 import { FormInput, SmartSelect, BulkImportModal, AsyncButton, InfoTooltip } from '../../components'
 import { HeroSkeleton, StatCardSkeleton, CardGridSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
@@ -54,6 +54,12 @@ export default function Vehicles() {
     enabled: !!effectiveSocietyId,
   })
 
+  const { data: societyDetails = null } = useQuery({
+    queryKey: ['society', effectiveSocietyId],
+    queryFn: () => societyApi.getById(effectiveSocietyId).then((res) => res.data),
+    enabled: !!effectiveSocietyId,
+  })
+
   const createMutation = useMutation({
     mutationFn: (data) => vehicleApi.create(data, user.id),
     onSuccess: () => {
@@ -96,6 +102,28 @@ export default function Vehicles() {
       total: vehicles.length,
     }
   }, [vehicles])
+
+  const parkingCapacityStats = useMemo(() => {
+    const twoWheelerCapacity = societyDetails?.twoWheelerParkingCapacity
+    const fourWheelerCapacity = societyDetails?.fourWheelerParkingCapacity
+
+    const twoWheelerUsed = vehicleStats.twoWheelers
+    const fourWheelerUsed = vehicleStats.fourWheelers
+
+    const twoWheelerRemaining =
+      twoWheelerCapacity == null ? null : Math.max(twoWheelerCapacity - twoWheelerUsed, 0)
+    const fourWheelerRemaining =
+      fourWheelerCapacity == null ? null : Math.max(fourWheelerCapacity - fourWheelerUsed, 0)
+
+    return {
+      twoWheelerCapacity,
+      fourWheelerCapacity,
+      twoWheelerUsed,
+      fourWheelerUsed,
+      twoWheelerRemaining,
+      fourWheelerRemaining,
+    }
+  }, [societyDetails, vehicleStats])
 
   const handleSubmit = (e) => {
     e.preventDefault()
@@ -241,6 +269,40 @@ export default function Vehicles() {
           </div>
         </div>
       </div>
+
+      {effectiveSocietyId && (
+        <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="rounded-xl border border-[var(--border-default)] bg-[var(--bg-card)] p-4 shadow-sm">
+            <div className="mb-2 flex items-center justify-between">
+              <p className="text-sm font-semibold text-[var(--text-secondary)]">Two-Wheeler Parking</p>
+              <span className="rounded-full bg-green-500/15 px-2 py-1 text-xs font-semibold text-green-600">
+                {parkingCapacityStats.twoWheelerUsed}
+                {parkingCapacityStats.twoWheelerCapacity == null ? '' : ` / ${parkingCapacityStats.twoWheelerCapacity}`}
+              </span>
+            </div>
+            <p className="text-xs text-[var(--text-tertiary)]">
+              {parkingCapacityStats.twoWheelerCapacity == null
+                ? 'Capacity not configured'
+                : `${parkingCapacityStats.twoWheelerRemaining} spots remaining`}
+            </p>
+          </div>
+
+          <div className="rounded-xl border border-[var(--border-default)] bg-[var(--bg-card)] p-4 shadow-sm">
+            <div className="mb-2 flex items-center justify-between">
+              <p className="text-sm font-semibold text-[var(--text-secondary)]">Four-Wheeler Parking</p>
+              <span className="rounded-full bg-blue-500/15 px-2 py-1 text-xs font-semibold text-blue-600">
+                {parkingCapacityStats.fourWheelerUsed}
+                {parkingCapacityStats.fourWheelerCapacity == null ? '' : ` / ${parkingCapacityStats.fourWheelerCapacity}`}
+              </span>
+            </div>
+            <p className="text-xs text-[var(--text-tertiary)]">
+              {parkingCapacityStats.fourWheelerCapacity == null
+                ? 'Capacity not configured'
+                : `${parkingCapacityStats.fourWheelerRemaining} spots remaining`}
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Table */}
       <div className="overflow-hidden rounded-xl border border-[var(--border-default)] bg-[var(--bg-card)] shadow-sm">
