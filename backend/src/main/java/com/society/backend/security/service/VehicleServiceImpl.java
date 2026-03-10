@@ -4,6 +4,7 @@ import com.society.backend.security.dto.request.VehicleRequest;
 import com.society.backend.security.dto.response.VehicleResponse;
 import com.society.backend.flat.entity.Flat;
 import com.society.backend.security.entity.Vehicle;
+import com.society.backend.society.entity.Society;
 import com.society.backend.common.exception.ApiException;
 import com.society.backend.flat.repository.FlatRepository;
 import com.society.backend.security.repository.VehicleRepository;
@@ -31,6 +32,8 @@ public class VehicleServiceImpl implements VehicleService {
 
         Flat flat = flatRepository.findById(request.getFlatId())
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Flat not found"));
+
+        enforceParkingCapacity(flat.getSociety(), request.getVehicleType(), null);
 
         Vehicle vehicle = new Vehicle();
         vehicle.setFlat(flat);
@@ -106,11 +109,27 @@ public class VehicleServiceImpl implements VehicleService {
             roleService.enforceSocietyScope(roleService.getUser(userId), vehicle.getSociety().getId());
         }
 
+        Flat targetFlat = vehicle.getFlat();
         if (request.getFlatId() != null) {
-            Flat flat = flatRepository.findById(request.getFlatId())
+            targetFlat = flatRepository.findById(request.getFlatId())
                     .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Flat not found"));
-            vehicle.setFlat(flat);
-            vehicle.setSociety(flat.getSociety());
+        }
+
+        String targetVehicleType = request.getVehicleType() != null ? request.getVehicleType() : vehicle.getVehicleType();
+        boolean typeChanged = targetVehicleType != null
+            && vehicle.getVehicleType() != null
+            && !targetVehicleType.equalsIgnoreCase(vehicle.getVehicleType());
+        boolean societyChanged = vehicle.getSociety() == null
+            || targetFlat.getSociety() == null
+            || !targetFlat.getSociety().getId().equals(vehicle.getSociety().getId());
+
+        if (typeChanged || societyChanged) {
+            enforceParkingCapacity(targetFlat.getSociety(), targetVehicleType, vehicle.getId());
+        }
+
+        if (request.getFlatId() != null) {
+            vehicle.setFlat(targetFlat);
+            vehicle.setSociety(targetFlat.getSociety());
         }
 
         if (request.getVehicleType() != null)
@@ -143,6 +162,38 @@ public class VehicleServiceImpl implements VehicleService {
             roleService.enforceSocietyScope(roleService.getUser(userId), vehicle.getSociety().getId());
         }
         vehicleRepository.deleteById(id);
+    }
+
+    private void enforceParkingCapacity(Society society, String vehicleType, Long excludeVehicleId) {
+        if (society == null || vehicleType == null || vehicleType.isBlank()) {
+            return;
+        }
+
+        Integer configuredCapacity;
+        String normalizedType = vehicleType.trim().toUpperCase();
+        if ("TWO_WHEELER".equals(normalizedType)) {
+            configuredCapacity = society.getTwoWheelerParkingCapacity();
+        } else if ("FOUR_WHEELER".equals(normalizedType)) {
+            configuredCapacity = society.getFourWheelerParkingCapacity();
+        } else {
+            return;
+        }
+
+        // Null capacity means no cap has been configured yet.
+        if (configuredCapacity == null) {
+            return;
+        }
+
+        long inUse = excludeVehicleId == null
+                ? vehicleRepository.countBySocietyIdAndVehicleType(society.getId(), normalizedType)
+                : vehicleRepository.countBySocietyIdAndVehicleTypeAndIdNot(society.getId(), normalizedType,
+                        excludeVehicleId);
+
+        if (inUse >= configuredCapacity) {
+            String label = "TWO_WHEELER".equals(normalizedType) ? "two-wheeler" : "four-wheeler";
+            throw new ApiException(HttpStatus.BAD_REQUEST,
+                    "Parking capacity reached for " + label + " vehicles (" + configuredCapacity + ").");
+        }
     }
 
     private VehicleResponse mapToResponse(Vehicle vehicle) {

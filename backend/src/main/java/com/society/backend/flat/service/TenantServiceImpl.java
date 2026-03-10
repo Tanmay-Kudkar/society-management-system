@@ -133,6 +133,19 @@ public class TenantServiceImpl implements TenantService {
 
     @Override
     @Transactional
+    public TenantResponse activate(Long id, Long userId) {
+        roleService.requireAdminOrCommittee(userId);
+
+        Tenant tenant = tenantRepository.findById(id)
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Tenant not found"));
+
+        tenant.setIsActive(true);
+        Tenant saved = tenantRepository.save(tenant);
+        return mapToResponse(saved);
+    }
+
+    @Override
+    @Transactional
     public TenantResponse deactivate(Long id, Long userId) {
         roleService.requireAdminOrCommittee(userId);
 

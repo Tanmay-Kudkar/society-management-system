@@ -105,6 +105,28 @@ public class BulkVehicleImportService {
                 errors.add("Invalid vehicle type (use TWO_WHEELER or FOUR_WHEELER)");
             }
 
+            Flat flat = null;
+            if (row.getFlatNumber() != null && !row.getFlatNumber().trim().isEmpty()) {
+                flat = flatMap.get(row.getFlatNumber().trim().toUpperCase());
+            }
+
+            if (flat != null && row.getVehicleType() != null && !row.getVehicleType().trim().isEmpty()) {
+                Society society = flat.getSociety();
+                String normalizedType = row.getVehicleType().trim().toUpperCase();
+                if (society != null) {
+                    Integer capacity = "TWO_WHEELER".equals(normalizedType)
+                            ? society.getTwoWheelerParkingCapacity()
+                            : society.getFourWheelerParkingCapacity();
+                    if (capacity != null) {
+                        long inUse = vehicleRepository.countBySocietyIdAndVehicleType(society.getId(), normalizedType);
+                        if (inUse >= capacity) {
+                            String label = "TWO_WHEELER".equals(normalizedType) ? "two-wheeler" : "four-wheeler";
+                            errors.add("Parking capacity reached for " + label + " vehicles (" + capacity + ")");
+                        }
+                    }
+                }
+            }
+
             // Validate vehicle number
             if (row.getVehicleNumber() == null || row.getVehicleNumber().trim().isEmpty()) {
                 errors.add("Vehicle number is required");
@@ -166,9 +188,28 @@ public class BulkVehicleImportService {
             }
             try {
                 Flat flat = flatMap.get(row.getFlatNumber().trim().toUpperCase());
+                String normalizedType = row.getVehicleType().trim().toUpperCase();
+
+                if (flat != null && flat.getSociety() != null) {
+                    Integer capacity = "TWO_WHEELER".equals(normalizedType)
+                        ? flat.getSociety().getTwoWheelerParkingCapacity()
+                        : flat.getSociety().getFourWheelerParkingCapacity();
+                    if (capacity != null) {
+                    long inUse = vehicleRepository.countBySocietyIdAndVehicleType(flat.getSociety().getId(),
+                        normalizedType);
+                    if (inUse >= capacity) {
+                        throw new ApiException(HttpStatus.BAD_REQUEST,
+                            "Parking capacity reached for "
+                                + ("TWO_WHEELER".equals(normalizedType) ? "two-wheeler" : "four-wheeler")
+                                + " vehicles (" + capacity + ").");
+                    }
+                    }
+                }
+
                 Vehicle vehicle = new Vehicle();
                 vehicle.setFlat(flat);
-                vehicle.setVehicleType(row.getVehicleType().trim().toUpperCase());
+                vehicle.setSociety(flat.getSociety());
+                vehicle.setVehicleType(normalizedType);
                 vehicle.setVehicleNumber(row.getVehicleNumber().trim().toUpperCase());
                 vehicle.setBrand(row.getBrand());
                 vehicle.setModel(row.getModel());
