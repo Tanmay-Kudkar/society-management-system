@@ -12,7 +12,7 @@ import {
 } from 'lucide-react'
 import clsx from 'clsx'
 import { validateFlatForm, validateUserForm, parseApiError } from '../../utils'
-import { SmartSelect, FormInput, NumberInput, PhoneInput, FormErrorSummary, AsyncButton } from '../../components'
+import { SmartSelect, FormInput, NumberInput, PhoneInput, FormErrorSummary, AsyncButton, InfoTooltip } from '../../components'
 import { BulkImportModal as SharedBulkImportModal } from '../../components'
 import { HeroSkeleton, TabsSkeleton, FiltersSkeleton, CardGridSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
 import useMinLoadingTime from '../../hooks/useMinLoadingTime'
@@ -781,10 +781,8 @@ export default function UnitManagement() {
           <h1 className="inline-flex items-center gap-2 text-2xl font-bold text-[var(--text-primary)]">
             <Home className="text-[var(--text-secondary)]" />
             Unit Management
+            <InfoTooltip text="Manage units and their assigned users in one place" />
           </h1>
-          <p className="mt-1 text-[var(--text-secondary)]">
-            Manage units and their assigned users in one place
-          </p>
         </div>
         <div className="flex flex-wrap gap-3">
           {canEditUnits && (

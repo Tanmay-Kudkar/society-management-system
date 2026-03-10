@@ -20,7 +20,7 @@ import {
   FileSpreadsheet,
 } from 'lucide-react'
 import clsx from 'clsx'
-import { PermissionDenied } from '../../components'
+import { PermissionDenied, InfoTooltip } from '../../components'
 import { ReportsSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
 import useMinLoadingTime from '../../hooks/useMinLoadingTime'
 
@@ -164,8 +164,10 @@ export default function Reports() {
       {/* Header */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-[var(--text-primary)]">Financial Reports</h1>
-          <p className="mt-1 text-[var(--text-secondary)]">MTD, YTD and custom period financial analysis</p>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-bold text-[var(--text-primary)]">Financial Reports</h1>
+            <InfoTooltip text="MTD, YTD and custom period financial analysis" />
+          </div>
         </div>
         <button
           onClick={handleExport}

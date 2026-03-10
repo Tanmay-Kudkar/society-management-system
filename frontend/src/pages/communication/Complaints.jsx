@@ -5,7 +5,7 @@ import { useAuth } from '../../context'
 import { complaintApi } from '../../../../api'
 import { Plus, Search, X, AlertTriangle, Clock, CheckCircle, XCircle } from 'lucide-react'
 import clsx from 'clsx'
-import { FormInput, SmartSelect, FormTextarea, AsyncButton } from '../../components'
+import { FormInput, SmartSelect, FormTextarea, AsyncButton, InfoTooltip } from '../../components'
 import { PermissionDenied } from '../../components'
 import { HeroSkeleton, SummaryRowSkeleton, FiltersSkeleton, ListSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
 import useMinLoadingTime from '../../hooks/useMinLoadingTime'
@@ -114,8 +114,10 @@ export default function Complaints() {
       {/* Header */}
       <div className="flex flex-col gap-4 mb-6 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-[var(--text-primary)]">Complaints</h1>
-          <p className="mt-1 text-[var(--text-tertiary)]">Manage resident complaints</p>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-bold text-[var(--text-primary)]">Complaints</h1>
+            <InfoTooltip text="Manage resident complaints" />
+          </div>
         </div>
         {canRaiseComplaints() && (
           <button

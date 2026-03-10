@@ -50,6 +50,12 @@ public class Society {
     @Column(name = "total_wings")
     private Integer totalWings = 0;
 
+    @Column(name = "two_wheeler_parking_capacity")
+    private Integer twoWheelerParkingCapacity;
+
+    @Column(name = "four_wheeler_parking_capacity")
+    private Integer fourWheelerParkingCapacity;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 

@@ -42,6 +42,8 @@ const BULK_FIELD_CONFIG = [
   { key: 'totalShops', label: 'Shops', required: true, description: 'Total shop count (0 or more)', sample: '8', aliases: ['shops', 'totalshops', 'total_shops'] },
   { key: 'totalOffices', label: 'Offices', required: true, description: 'Total office count (0 or more)', sample: '5', aliases: ['offices', 'totaloffices', 'total_offices'] },
   { key: 'totalWings', label: 'Wings', required: true, description: 'Total wing count (0 or more)', sample: '3', aliases: ['wings', 'totalwings', 'total_wings'] },
+  { key: 'twoWheelerParkingCapacity', label: '2W Parking', required: false, description: 'Two-wheeler parking spots (optional)', sample: '50', aliases: ['twowheeler', 'two_wheeler', 'twowheelerparkingcapacity', 'two_wheeler_parking_capacity', '2wparkingcapacity', '2w_parking'] },
+  { key: 'fourWheelerParkingCapacity', label: '4W Parking', required: false, description: 'Four-wheeler parking spots (optional)', sample: '30', aliases: ['fourwheeler', 'four_wheeler', 'fourwheelerparkingcapacity', 'four_wheeler_parking_capacity', '4wparkingcapacity', '4w_parking'] },
 ]
 
 const normalizeHeader = (value) => String(value || '').toLowerCase().replace(/[^a-z0-9]/g, '')
@@ -220,6 +222,8 @@ const validateBulkRows = ({ rows, isPlatformOwner, existingAdminEmails, existing
       totalShops: parsedNumbers.totalShops,
       totalOffices: parsedNumbers.totalOffices,
       totalWings: parsedNumbers.totalWings,
+      twoWheelerParkingCapacity: parsedNumbers.twoWheelerParkingCapacity,
+      fourWheelerParkingCapacity: parsedNumbers.fourWheelerParkingCapacity,
     }
 
     return {
@@ -438,6 +442,8 @@ export default function SocietyAdmins() {
           totalShops: row.totalShops,
           totalOffices: row.totalOffices,
           totalWings: row.totalWings,
+          twoWheelerParkingCapacity: row.twoWheelerParkingCapacity || undefined,
+          fourWheelerParkingCapacity: row.fourWheelerParkingCapacity || undefined,
         }
 
         const societyRes = await societyApi.create(societyPayload, user.id)
@@ -766,6 +772,8 @@ export default function SocietyAdmins() {
       totalShops: parseInt(fd.get('totalShops'), 10),
       totalOffices: parseInt(fd.get('totalOffices'), 10),
       totalWings: parseInt(fd.get('totalWings'), 10),
+      twoWheelerParkingCapacity: fd.get('twoWheelerParkingCapacity') ? parseInt(fd.get('twoWheelerParkingCapacity'), 10) || undefined : undefined,
+      fourWheelerParkingCapacity: fd.get('fourWheelerParkingCapacity') ? parseInt(fd.get('fourWheelerParkingCapacity'), 10) || undefined : undefined,
     }
 
     if (!adminData.name || !adminData.email || !adminData.phone) {
@@ -1059,6 +1067,12 @@ export default function SocietyAdmins() {
                       <span className="inline-flex items-center gap-1"><Building2 size={12} /> {society.actualOffices ?? society.totalOffices ?? 0} Offices</span>
                       <span className="inline-flex items-center gap-1"><Layers size={12} /> {society.actualWings ?? society.totalWings ?? 0} Wings</span>
                     </div>
+                    {(society.twoWheelerParkingCapacity != null || society.fourWheelerParkingCapacity != null) && (
+                      <div className="flex flex-wrap gap-3 text-[11.5px] text-[var(--text-secondary)]">
+                        {society.twoWheelerParkingCapacity != null && <span className="inline-flex items-center gap-1">🏍️ {society.twoWheelerParkingCapacity} Two-Wheeler</span>}
+                        {society.fourWheelerParkingCapacity != null && <span className="inline-flex items-center gap-1">🚗 {society.fourWheelerParkingCapacity} Four-Wheeler</span>}
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <div className="p-3 rounded-[12px] bg-[color-mix(in_srgb,var(--bg-secondary)_94%,white_6%)] border border-[color-mix(in_srgb,var(--border-default)_90%,white_10%)] flex items-center gap-2 text-[13px] text-[var(--text-secondary)]">
@@ -1146,6 +1160,14 @@ export default function SocietyAdmins() {
                   <NumberInput label="Shops" name="totalShops" min={0} defaultValue={activeSociety?.totalShops ?? 0} required />
                   <NumberInput label="Offices" name="totalOffices" min={0} defaultValue={activeSociety?.totalOffices ?? 0} required />
                   <NumberInput label="Wings" name="totalWings" min={0} defaultValue={activeSociety?.totalWings ?? 0} required />
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-3">
+                <h4 className="m-0 text-sm font-semibold text-[var(--text-secondary)] flex items-center gap-2 pb-2 border-b border-[var(--border-light)]">🅿️ Parking Capacity <span className="text-xs font-normal text-[var(--text-tertiary)]">(Optional)</span></h4>
+                <div className="grid grid-cols-2 gap-3">
+                  <NumberInput label="Two-Wheeler Spots" name="twoWheelerParkingCapacity" min={0} defaultValue={activeSociety?.twoWheelerParkingCapacity ?? ''} />
+                  <NumberInput label="Four-Wheeler Spots" name="fourWheelerParkingCapacity" min={0} defaultValue={activeSociety?.fourWheelerParkingCapacity ?? ''} />
                 </div>
               </div>
 

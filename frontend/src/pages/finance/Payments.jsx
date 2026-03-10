@@ -5,7 +5,7 @@ import { useAuth } from '../../context'
 import { paymentApi } from '../../../../api'
 import { Search, CreditCard, CheckCircle, XCircle, Clock, Filter } from 'lucide-react'
 import clsx from 'clsx'
-import { PermissionDenied } from '../../components'
+import { PermissionDenied, InfoTooltip } from '../../components'
 import { HeroSkeleton, FinancePageSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
 import useMinLoadingTime from '../../hooks/useMinLoadingTime'
 
@@ -99,8 +99,10 @@ export default function Payments() {
       {/* Header */}
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-[var(--text-primary)]">Online Payments</h1>
-          <p className="mt-1 text-[var(--text-secondary)]">Track all Razorpay transactions</p>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-bold text-[var(--text-primary)]">Online Payments</h1>
+            <InfoTooltip text="Track all Razorpay transactions" />
+          </div>
         </div>
       </div>
 

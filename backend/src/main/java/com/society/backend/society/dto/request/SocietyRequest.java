@@ -56,4 +56,10 @@ public class SocietyRequest {
     @NotNull(message = "Total wings is required")
     @Min(value = 0, message = "Total wings cannot be negative")
     private Integer totalWings;
+
+    @Min(value = 0, message = "Parking capacity cannot be negative")
+    private Integer twoWheelerParkingCapacity;
+
+    @Min(value = 0, message = "Parking capacity cannot be negative")
+    private Integer fourWheelerParkingCapacity;
 }

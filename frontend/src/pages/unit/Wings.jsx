@@ -15,7 +15,7 @@ import {
   Hash,
   Upload
 } from 'lucide-react'
-import { FormInput, SmartSelect, NumberInput, FormErrorSummary, BulkImportModal, AsyncButton } from '../../components'
+import { FormInput, SmartSelect, NumberInput, FormErrorSummary, BulkImportModal, AsyncButton, InfoTooltip } from '../../components'
 import { HeroSkeleton, FiltersSkeleton, CardGridSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
 import useMinLoadingTime from '../../hooks/useMinLoadingTime'
 
@@ -255,8 +255,10 @@ export default function Wings() {
       {/* Header */}
       <div className="mb-6 flex flex-wrap items-start justify-between gap-4 max-md:flex-col max-md:items-start">
         <div>
-          <h1 className="m-0 text-[28px] font-bold text-[var(--text-primary)]">Wings</h1>
-          <p className="mt-1.5 text-sm text-[var(--text-secondary)]">Manage society wings and towers</p>
+          <h1 className="m-0 flex items-center gap-2 text-[28px] font-bold text-[var(--text-primary)]">
+            Wings
+            <InfoTooltip text="Manage society wings and towers" />
+          </h1>
           {currentSociety && effectiveSocietyIdNum && (
             <p className="mt-1.5 text-xs text-[var(--text-tertiary)]">
               Capacity: {currentWingCount}/{maxWings || '∞'} wings
