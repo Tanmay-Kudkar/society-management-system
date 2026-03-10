@@ -20,7 +20,7 @@ import {
   FileSpreadsheet,
 } from 'lucide-react'
 import clsx from 'clsx'
-import { PermissionDenied, InfoTooltip } from '../../components'
+import { PermissionDenied, InfoTooltip, NeonSweepButton } from '../../components'
 import { ReportsSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
 import useMinLoadingTime from '../../hooks/useMinLoadingTime'
 
@@ -169,14 +169,16 @@ export default function Reports() {
             <InfoTooltip text="MTD, YTD and custom period financial analysis" />
           </div>
         </div>
-        <button
+        <NeonSweepButton
+          tone="cyan"
+          size="md"
           onClick={handleExport}
           disabled={!societyId || isExporting}
-          className="inline-flex items-center gap-2 py-[0.55rem] px-4 rounded-xl bg-[#16a34a] text-white font-semibold transition-transform hover:-translate-y-px hover:shadow-[0_10px_18px_rgba(22,163,74,0.25)] disabled:opacity-60 disabled:cursor-not-allowed disabled:shadow-none"
+          className="w-full md:w-auto"
         >
           <FileSpreadsheet size={20} />
           {isExporting ? 'Exporting...' : 'Export to Excel'}
-        </button>
+        </NeonSweepButton>
       </div>
 
       {!invalidUrlSociety && (

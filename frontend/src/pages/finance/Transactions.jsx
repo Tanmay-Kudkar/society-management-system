@@ -6,7 +6,7 @@ import { useToast } from '../../context'
 import { transactionApi, exportApi, downloadBlob, flatApi } from '../../../../api'
 import { Plus, Search, X, TrendingUp, TrendingDown, DollarSign, FileSpreadsheet, Home, Pencil, Trash2 } from 'lucide-react'
 import clsx from 'clsx'
-import { PermissionDenied, AsyncButton, InfoTooltip } from '../../components'
+import { PermissionDenied, InfoTooltip, NeonSweepButton } from '../../components'
 import { HeroSkeleton, FinancePageSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
 import useMinLoadingTime from '../../hooks/useMinLoadingTime'
 
@@ -278,22 +278,26 @@ export default function Transactions() {
           </div>
         </div>
         <div className="flex flex-wrap gap-3">
-          <button
+          <NeonSweepButton
+            tone="cyan"
+            size="md"
             onClick={handleExport}
             disabled={isExporting}
-            className="inline-flex items-center gap-2 py-[0.55rem] px-4 rounded-xl font-semibold text-white bg-[#16a34a] transition-transform hover:-translate-y-px hover:shadow-[0_10px_18px_rgba(22,163,74,0.25)] disabled:opacity-60 disabled:cursor-not-allowed disabled:shadow-none"
+            className="w-full sm:w-auto"
           >
             <FileSpreadsheet size={20} />
             {isExporting ? 'Exporting...' : 'Export'}
-          </button>
+          </NeonSweepButton>
           {canManageTransactions() && (
-            <button
+            <NeonSweepButton
+              tone="violet"
+              size="md"
               onClick={openCreateModal}
-              className="inline-flex items-center gap-2 py-[0.55rem] px-4 rounded-xl font-semibold border border-[var(--border-default)] bg-[var(--bg-card)] text-[var(--text-primary)] transition-transform hover:-translate-y-px hover:shadow-[0_8px_20px_rgba(15,23,42,0.14)] dark:border-[rgba(148,163,184,0.22)] dark:bg-[#f8fafc] dark:text-[#0f172a] dark:hover:bg-white"
+              className="w-full sm:w-auto"
             >
               <Plus size={20} />
               Add Transaction
-            </button>
+            </NeonSweepButton>
           )}
         </div>
       </div>
@@ -747,15 +751,26 @@ export default function Transactions() {
               </div>
 
               <div className="flex gap-3 pt-2">
-                <button type="button" onClick={() => { setShowModal(false); resetFormState() }} className="flex-1 py-[0.65rem] px-4 rounded-xl font-semibold border border-[#cbd5f5] text-[#334155] bg-[var(--bg-tertiary)] transition-transform hover:-translate-y-px">Cancel</button>
-                <AsyncButton
-                  type="submit"
-                  className="flex-1 py-[0.65rem] px-4 rounded-xl font-semibold border border-[var(--border-default)] bg-[var(--bg-card)] text-[var(--text-primary)] transition-transform hover:-translate-y-px hover:shadow-[0_8px_20px_rgba(15,23,42,0.14)] dark:border-[rgba(148,163,184,0.22)] dark:bg-[#f8fafc] dark:text-[#0f172a] dark:hover:bg-white"
-                  isLoading={editingTransaction ? updateMutation.isPending : createMutation.isPending}
-                  loadingText={editingTransaction ? 'Updating...' : 'Creating...'}
+                <NeonSweepButton
+                  type="button"
+                  tone="slate"
+                  size="md"
+                  onClick={() => { setShowModal(false); resetFormState() }}
+                  className="flex-1"
                 >
-                  {editingTransaction ? 'Update' : 'Create'}
-                </AsyncButton>
+                  Cancel
+                </NeonSweepButton>
+                <NeonSweepButton
+                  type="submit"
+                  tone="cyan"
+                  size="md"
+                  className="flex-1"
+                  disabled={editingTransaction ? updateMutation.isPending : createMutation.isPending}
+                >
+                  {(editingTransaction ? updateMutation.isPending : createMutation.isPending)
+                    ? (editingTransaction ? 'Updating...' : 'Creating...')
+                    : (editingTransaction ? 'Update' : 'Create')}
+                </NeonSweepButton>
               </div>
             </form>
           </div>

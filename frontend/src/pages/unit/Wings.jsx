@@ -15,7 +15,7 @@ import {
   Hash,
   Upload
 } from 'lucide-react'
-import { FormInput, SmartSelect, NumberInput, FormErrorSummary, BulkImportModal, AsyncButton, InfoTooltip } from '../../components'
+import { FormInput, SmartSelect, NumberInput, FormErrorSummary, BulkImportModal, InfoTooltip, NeonSweepButton } from '../../components'
 import { HeroSkeleton, FiltersSkeleton, CardGridSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
 import useMinLoadingTime from '../../hooks/useMinLoadingTime'
 
@@ -267,22 +267,26 @@ export default function Wings() {
         </div>
         {canEditWings && (
           <div className="flex flex-wrap gap-2.5 max-md:w-full">
-            <button
+            <NeonSweepButton
+              tone="cyan"
+              size="md"
               onClick={handleBulkImportOpen}
-              className="inline-flex items-center gap-2.5 rounded-xl border border-slate-900/15 bg-slate-900 px-4 py-2.5 text-sm font-semibold text-slate-50 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_20px_rgba(15,23,42,0.16)] dark:border-slate-400/30 dark:bg-slate-950"
+              className="w-full sm:w-auto"
               disabled={!effectiveSocietyIdNum || wingsCapacityReached}
             >
               <Upload size={20} />
               Bulk Import
-            </button>
-            <button
+            </NeonSweepButton>
+            <NeonSweepButton
+              tone="violet"
+              size="md"
               onClick={() => { setEditingWing(null); setFormErrors({}); setShowModal(true) }}
-              className="inline-flex items-center gap-2.5 rounded-xl border border-[var(--border-default)] bg-[var(--bg-card)] px-4 py-2.5 text-sm font-semibold text-[var(--text-primary)] shadow-[0_8px_20px_rgba(15,23,42,0.14)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-[var(--bg-tertiary)] dark:border-slate-400/25 dark:bg-slate-50 dark:text-slate-900 dark:hover:bg-white"
+              className="w-full sm:w-auto"
               disabled={wingsCapacityReached}
             >
               <Plus size={20} />
               Add Wing
-            </button>
+            </NeonSweepButton>
           </div>
         )}
       </div>
@@ -496,21 +500,24 @@ export default function Wings() {
               />
 
               <div className="flex gap-3 pt-2">
-                <button
+                <NeonSweepButton
                   type="button"
+                  tone="slate"
+                  size="md"
                   onClick={() => setShowModal(false)}
-                  className="flex-1 rounded-xl border border-[var(--border-default)] bg-transparent px-3.5 py-2.5 font-semibold text-[var(--text-secondary)] transition-colors hover:bg-[var(--bg-tertiary)]"
+                  className="flex-1"
                 >
                   Cancel
-                </button>
-                <AsyncButton
+                </NeonSweepButton>
+                <NeonSweepButton
                   type="submit"
-                  className="flex-1 rounded-xl border border-[var(--border-default)] bg-[var(--bg-card)] px-3.5 py-2.5 font-semibold text-[var(--text-primary)] transition-all hover:bg-[var(--bg-tertiary)] hover:shadow-[0_8px_20px_rgba(15,23,42,0.14)] dark:border-slate-400/25 dark:bg-slate-50 dark:text-slate-900 dark:hover:bg-white"
-                  isLoading={createMutation.isPending || updateMutation.isPending}
-                  loadingText="Saving..."
+                  tone="cyan"
+                  size="md"
+                  className="flex-1"
+                  disabled={createMutation.isPending || updateMutation.isPending}
                 >
-                  Save
-                </AsyncButton>
+                  {createMutation.isPending || updateMutation.isPending ? 'Saving...' : 'Save'}
+                </NeonSweepButton>
               </div>
             </form>
           </div>

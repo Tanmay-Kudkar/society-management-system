@@ -5,7 +5,7 @@ import { useAuth } from '../../context'
 import { approvalApi } from '../../../../api'
 import { Plus, Search, X, Clock, CheckCircle, XCircle, AlertTriangle, ArrowRight, RotateCcw, ChevronUp, GitBranch } from 'lucide-react'
 import clsx from 'clsx'
-import { FormInput, SmartSelect, FormTextarea, NumberInput, AsyncButton, InfoTooltip } from '../../components'
+import { FormInput, SmartSelect, FormTextarea, NumberInput, AsyncButton, InfoTooltip, NeonSweepButton } from '../../components'
 import { PermissionDenied } from '../../components'
 import { HeroSkeleton, SummaryRowSkeleton, FiltersSkeleton, ListSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
 import useMinLoadingTime from '../../hooks/useMinLoadingTime'
@@ -219,20 +219,24 @@ export default function Approvals() {
         </div>
         <div className="flex gap-2">
           {canManage && activeTab === 'workflows' && (
-            <button
-              className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-[var(--border-default)] bg-[var(--bg-tertiary)] px-4 py-2 text-sm font-medium text-[var(--text-primary)] transition hover:bg-[var(--bg-secondary)] hover:border-[var(--border-strong)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent-primary)]"
+            <NeonSweepButton
+              tone="slate"
+              size="md"
               onClick={() => { setWorkflowSteps([{ stepOrder: 1, approverRole: 'CHAIRMAN', isMandatory: true, autoApproveBelow: '' }]); setShowWorkflowModal(true) }}
+              className="w-full sm:w-auto"
             >
               <Plus size={16} /> New Workflow
-            </button>
+            </NeonSweepButton>
           )}
           {canCreate && activeTab === 'requests' && (
-            <button
-              className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-[var(--color-primary-600)] px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-[var(--color-primary-700)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent-primary)]"
+            <NeonSweepButton
+              tone="violet"
+              size="md"
               onClick={() => setShowRequestModal(true)}
+              className="w-full sm:w-auto"
             >
               <Plus size={16} /> New Request
-            </button>
+            </NeonSweepButton>
           )}
         </div>
       </div>
