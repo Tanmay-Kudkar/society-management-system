@@ -6,7 +6,7 @@ import { useConfirmDialog } from '../../context'
 import { useToast } from '../../context'
 import { contractApi, vendorApi } from '../../../../api'
 import { Plus, Edit, Trash2, Search, X, FileText, AlertTriangle, CheckCircle } from 'lucide-react'
-import { FormInput, SmartSelect, NumberInput, FormTextarea, AsyncButton, InfoTooltip } from '../../components'
+import { FormInput, SmartSelect, NumberInput, FormTextarea, InfoTooltip, NeonSweepButton } from '../../components'
 import { HeroSkeleton, FinancePageSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
 import useMinLoadingTime from '../../hooks/useMinLoadingTime'
 
@@ -139,13 +139,15 @@ export default function Contracts() {
           </div>
         </div>
         {canManageContracts() && (
-          <button
+          <NeonSweepButton
+            tone="violet"
+            size="md"
             onClick={() => { setEditingContract(null); setShowModal(true) }}
-            className="inline-flex items-center gap-2 rounded-[10px] border border-transparent bg-blue-600 px-4 py-2 text-white transition hover:bg-blue-700"
+            className="w-full sm:w-auto"
           >
             <Plus size={20} />
             Add Contract
-          </button>
+          </NeonSweepButton>
         )}
       </div>
 
@@ -338,21 +340,24 @@ export default function Contracts() {
                 rows={3}
               />
               <div className="flex gap-3 pt-4">
-                <button
+                <NeonSweepButton
                   type="button"
+                  tone="slate"
+                  size="md"
                   onClick={() => setShowModal(false)}
-                  className="flex-1 rounded-[10px] border border-[var(--border-light)] bg-[var(--bg-card)] px-4 py-2 font-semibold text-slate-700 transition hover:bg-[var(--bg-tertiary)]"
+                  className="flex-1"
                 >
                   Cancel
-                </button>
-                <AsyncButton
+                </NeonSweepButton>
+                <NeonSweepButton
                   type="submit"
-                  className="flex-1 rounded-[10px] border border-transparent bg-blue-600 px-4 py-2 font-semibold text-white transition hover:bg-blue-700"
-                  isLoading={createMutation.isPending || updateMutation.isPending}
-                  loadingText="Saving..."
+                  tone="cyan"
+                  size="md"
+                  className="flex-1"
+                  disabled={createMutation.isPending || updateMutation.isPending}
                 >
-                  {editingContract ? 'Update' : 'Create'}
-                </AsyncButton>
+                  {createMutation.isPending || updateMutation.isPending ? 'Saving...' : (editingContract ? 'Update' : 'Create')}
+                </NeonSweepButton>
               </div>
             </form>
           </div>

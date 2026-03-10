@@ -5,6 +5,8 @@ import com.society.backend.finance.dto.response.MaintenanceBillResponse;
 import com.society.backend.finance.service.MaintenanceBillService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -85,6 +87,17 @@ public class MaintenanceBillController {
         return ResponseEntity
                 .ok(maintenanceBillService.recordPayment(id, amount, paymentMode, referenceNumber, userId));
     }
+
+        @GetMapping("/{id}/invoice/pdf")
+        public ResponseEntity<byte[]> downloadInvoicePdf(
+            @PathVariable Long id,
+            @RequestParam Long userId) {
+        byte[] pdf = maintenanceBillService.downloadInvoicePdf(id, userId);
+        return ResponseEntity.ok()
+            .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=maintenance-invoice-" + id + ".pdf")
+            .contentType(MediaType.APPLICATION_PDF)
+            .body(pdf);
+        }
 
     @PostMapping("/generate")
     @PreAuthorize("hasAnyRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER')")

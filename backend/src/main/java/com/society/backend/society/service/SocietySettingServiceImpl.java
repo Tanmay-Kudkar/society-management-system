@@ -120,6 +120,26 @@ public class SocietySettingServiceImpl implements SocietySettingService {
             setting.setBillNumberPrefix(request.getBillNumberPrefix().trim());
         if (request.getReceiptNumberPrefix() != null && !request.getReceiptNumberPrefix().isBlank())
             setting.setReceiptNumberPrefix(request.getReceiptNumberPrefix().trim());
+
+        if (request.getAccountHolderName() != null)
+            setting.setAccountHolderName(cleanNullable(request.getAccountHolderName()));
+        if (request.getBankName() != null)
+            setting.setBankName(cleanNullable(request.getBankName()));
+        if (request.getAccountNumber() != null)
+            setting.setAccountNumber(cleanNullable(request.getAccountNumber()));
+        if (request.getIfscCode() != null)
+            setting.setIfscCode(cleanNullable(request.getIfscCode()));
+        if (request.getUpiId() != null)
+            setting.setUpiId(cleanNullable(request.getUpiId()));
+        if (request.getPaymentLink() != null)
+            setting.setPaymentLink(cleanNullable(request.getPaymentLink()));
+        setting.setCommitteeElectionStartDate(request.getCommitteeElectionStartDate());
+        setting.setCommitteeElectionEndDate(request.getCommitteeElectionEndDate());
+    }
+
+    private String cleanNullable(String value) {
+        String trimmed = value == null ? null : value.trim();
+        return (trimmed == null || trimmed.isEmpty()) ? null : trimmed;
     }
 
     private BigDecimal nonNegative(BigDecimal value, String field) {
@@ -160,6 +180,14 @@ public class SocietySettingServiceImpl implements SocietySettingService {
         r.setFinancialYearStartMonth(s.getFinancialYearStartMonth());
         r.setBillNumberPrefix(s.getBillNumberPrefix());
         r.setReceiptNumberPrefix(s.getReceiptNumberPrefix());
+        r.setAccountHolderName(s.getAccountHolderName());
+        r.setBankName(s.getBankName());
+        r.setAccountNumber(s.getAccountNumber());
+        r.setIfscCode(s.getIfscCode());
+        r.setUpiId(s.getUpiId());
+        r.setPaymentLink(s.getPaymentLink());
+        r.setCommitteeElectionStartDate(s.getCommitteeElectionStartDate());
+        r.setCommitteeElectionEndDate(s.getCommitteeElectionEndDate());
         r.setCreatedAt(s.getCreatedAt());
         r.setUpdatedAt(s.getUpdatedAt());
 

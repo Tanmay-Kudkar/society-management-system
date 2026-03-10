@@ -4,6 +4,7 @@ import { penaltyApi } from '../../../../api'
 import { useAuth } from '../../context/AuthContext'
 import { useToast } from '../../context/ToastContext'
 import PageShell from '../../components/PageShell'
+import NeonSweepButton from '../../components/NeonSweepButton'
 import { Ban, Plus, Search, X } from 'lucide-react'
 
 const penaltyTypeOptions = [
@@ -134,7 +135,7 @@ export default function Penalties() {
           <option value="">All Types</option>
           {penaltyTypeOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
         </select>
-        <button className="inline-flex items-center gap-1.5 px-3.5 py-[0.42rem] border-none rounded-lg text-[0.85rem] font-semibold cursor-pointer transition-opacity hover:opacity-85 bg-[var(--primary,#6366f1)] text-white" onClick={() => setShowModal(true)}><Plus size={16} /> Issue Penalty</button>
+        <NeonSweepButton tone="violet" size="md" onClick={() => setShowModal(true)}><Plus size={16} /> Issue Penalty</NeonSweepButton>
       </div>
 
       <div className="flex flex-col gap-3.5">
@@ -198,8 +199,8 @@ export default function Penalties() {
                 <div className="flex flex-col gap-1 col-span-full"><label className="text-[0.82rem] font-semibold text-[var(--text-secondary)]">Admin Notes</label><textarea rows={2} value={form.adminNotes} onChange={e => setForm({ ...form, adminNotes: e.target.value })} className="px-[0.7rem] py-[0.45rem] border border-[var(--border-default)] rounded-lg bg-[var(--bg-card)] text-[var(--text-primary)] text-[0.9rem]" /></div>
               </div>
               <div className="flex justify-end gap-2.5 mt-5 pt-4 border-t border-[var(--border-default)]">
-                <button type="button" className="inline-flex items-center gap-1.5 px-3.5 py-[0.42rem] rounded-lg text-[0.85rem] font-semibold cursor-pointer transition-opacity hover:opacity-85 bg-[var(--card)] text-[var(--text-primary)] border border-[var(--border-default)]" onClick={closeModal}>Cancel</button>
-                <button type="submit" className="inline-flex items-center gap-1.5 px-3.5 py-[0.42rem] border-none rounded-lg text-[0.85rem] font-semibold cursor-pointer transition-opacity hover:opacity-85 bg-[var(--primary,#6366f1)] text-white" disabled={saveMutation.isPending}>{saveMutation.isPending ? 'Saving...' : editingId ? 'Update' : 'Issue'}</button>
+                <NeonSweepButton type="button" tone="slate" size="md" onClick={closeModal}>Cancel</NeonSweepButton>
+                <NeonSweepButton type="submit" tone="violet" size="md" disabled={saveMutation.isPending}>{saveMutation.isPending ? 'Saving...' : editingId ? 'Update' : 'Issue'}</NeonSweepButton>
               </div>
             </form>
           </div>

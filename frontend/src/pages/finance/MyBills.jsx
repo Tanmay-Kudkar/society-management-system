@@ -6,7 +6,7 @@ import { maintenanceBillApi } from '../../../../api'
 import { useRazorpay } from '../../hooks/useRazorpay'
 import { PermissionDenied, InfoTooltip } from '../../components'
 import { HeroSkeleton, SummaryRowSkeleton, ListSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
-import { CreditCard, CheckCircle, Clock, AlertCircle, Wallet, Receipt, Calendar } from 'lucide-react'
+import { CreditCard, CheckCircle, Clock, AlertCircle, Wallet, Receipt, Calendar, Printer } from 'lucide-react'
 import clsx from 'clsx'
 import useMinLoadingTime from '../../hooks/useMinLoadingTime'
 
@@ -16,6 +16,25 @@ const statusConfig = {
   PARTIAL: { label: 'Partial', icon: Clock, className: 'bg-blue-500/15 text-blue-700 dark:bg-blue-500/20 dark:text-blue-300' },
   PAID: { label: 'Paid', icon: CheckCircle, className: 'bg-emerald-500/15 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300' },
   OVERDUE: { label: 'Overdue', icon: AlertCircle, className: 'bg-rose-500/15 text-rose-700 dark:bg-rose-500/20 dark:text-rose-300' },
+}
+
+const toMonthLabel = (billMonth) => {
+  if (!billMonth) return 'Bill'
+  const [year, month] = billMonth.split('-')
+  const date = new Date(Number(year), Number(month) - 1)
+  if (Number.isNaN(date.getTime())) return billMonth
+  return date.toLocaleDateString('en-IN', { month: 'long', year: 'numeric' })
+}
+
+const toFileSafePart = (value) => String(value || '').trim().replace(/[\\/:*?"<>|]+/g, '-').replace(/\s+/g, ' ')
+
+const getInvoiceFileName = (bill) => {
+  const monthLabel = toMonthLabel(bill?.billMonth)
+  const unitLabel = toFileSafePart(bill?.flatNumber || bill?.unitNumber || bill?.flatNo)
+  if (!unitLabel) {
+    return `Maintenance Bill of ${monthLabel}`
+  }
+  return `Maintenance Bill of ${monthLabel} - Unit ${unitLabel}`
 }
 
 export default function MyBills() {
@@ -93,6 +112,25 @@ export default function MyBills() {
         phone: user.phone,
       },
     })
+  }
+
+  const handleDownloadInvoicePdf = async (bill) => {
+    try {
+      const response = await maintenanceBillApi.downloadInvoicePdf(bill.id, user.id)
+      const blob = new Blob([response.data], { type: 'application/pdf' })
+      const objectUrl = window.URL.createObjectURL(blob)
+      const anchor = document.createElement('a')
+      const fileId = getInvoiceFileName(bill)
+      anchor.href = objectUrl
+      anchor.download = `${fileId}.pdf`
+      document.body.appendChild(anchor)
+      anchor.click()
+      document.body.removeChild(anchor)
+      window.URL.revokeObjectURL(objectUrl)
+      toast.success('Invoice downloaded successfully')
+    } catch (error) {
+      toast.error(error?.response?.data?.message || 'Failed to download invoice PDF')
+    }
   }
 
   const formatMonth = (monthStr) => {
@@ -248,16 +286,25 @@ export default function MyBills() {
 
                 {!isPaid && (
                   <div className="border-t border-[var(--border-default)] bg-[var(--bg-tertiary)] px-5 py-4">
-                    <button
-                      onClick={() => handlePayOnline(bill)}
-                      disabled={isPaymentLoading && selectedBill?.id === bill.id}
-                      className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-500 px-4 py-3 text-base font-semibold text-white transition hover:-translate-y-0.5 hover:shadow-[0_8px_20px_rgba(99,102,241,0.35)] disabled:cursor-not-allowed disabled:opacity-60"
-                    >
-                      <Wallet size={18} />
-                      {isPaymentLoading && selectedBill?.id === bill.id 
-                        ? 'Processing...' 
-                        : `Pay ₹${balance.toLocaleString()}`}
-                    </button>
+                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                      <button
+                        onClick={() => handlePayOnline(bill)}
+                        disabled={isPaymentLoading && selectedBill?.id === bill.id}
+                        className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-500 px-4 py-3 text-base font-semibold text-white transition hover:-translate-y-0.5 hover:shadow-[0_8px_20px_rgba(99,102,241,0.35)] disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        <Wallet size={18} />
+                        {isPaymentLoading && selectedBill?.id === bill.id 
+                          ? 'Processing...' 
+                          : `Pay ₹${balance.toLocaleString()}`}
+                      </button>
+                      <button
+                        onClick={() => handleDownloadInvoicePdf(bill)}
+                        className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-[var(--border-default)] bg-[var(--bg-card)] px-4 py-3 text-base font-semibold text-[var(--text-primary)] transition hover:-translate-y-0.5"
+                      >
+                        <Printer size={18} />
+                        Download PDF
+                      </button>
+                    </div>
                   </div>
                 )}
 
@@ -271,6 +318,18 @@ export default function MyBills() {
                         year: 'numeric'
                       })}
                     </span>
+                  </div>
+                )}
+
+                {isPaid && (
+                  <div className="border-t border-[var(--border-default)] bg-[var(--bg-tertiary)] px-5 py-4">
+                    <button
+                      onClick={() => handleDownloadInvoicePdf(bill)}
+                      className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-[var(--border-default)] bg-[var(--bg-card)] px-4 py-3 text-base font-semibold text-[var(--text-primary)] transition hover:-translate-y-0.5"
+                    >
+                      <Printer size={18} />
+                      Download PDF
+                    </button>
                   </div>
                 )}
               </div>

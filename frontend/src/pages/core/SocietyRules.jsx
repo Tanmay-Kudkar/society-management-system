@@ -4,6 +4,7 @@ import { societyRuleApi } from "../../../../api";
 import { useAuth } from "../../context/AuthContext";
 import { useToast } from "../../context/ToastContext";
 import PageShell from "../../components/PageShell";
+import NeonSweepButton from "../../components/NeonSweepButton";
 import {
   BookOpen,
   Plus,
@@ -238,9 +239,9 @@ export default function SocietyRules() {
             </option>
           ))}
         </select>
-        <button className="inline-flex items-center gap-[0.35rem] py-[0.42rem] px-[0.9rem] border-none rounded-lg text-[0.85rem] font-semibold cursor-pointer transition-opacity hover:opacity-85 bg-[var(--primary,#6366f1)] text-white" onClick={openCreate}>
+        <NeonSweepButton tone="violet" size="md" onClick={openCreate}>
           <Plus size={16} /> Add Rule
-        </button>
+        </NeonSweepButton>
       </div>
 
       {/* List */}
@@ -283,48 +284,30 @@ export default function SocietyRules() {
               )}
             </div>
             <div className="flex flex-wrap gap-[0.45rem] mt-[0.6rem]">
-              <button
-                className="inline-flex items-center gap-[0.35rem] py-[0.42rem] px-[0.9rem] border-none rounded-lg text-[0.85rem] font-semibold cursor-pointer transition-opacity hover:opacity-85 bg-[#06b6d4] text-white"
-                onClick={() => setViewRule(r)}
-              >
+              <NeonSweepButton tone="slate" size="sm" onClick={() => setViewRule(r)}>
                 <Eye size={14} /> View
-              </button>
+              </NeonSweepButton>
               {r.status === "DRAFT" && (
                 <>
-                  <button
-                    className="inline-flex items-center gap-[0.35rem] py-[0.42rem] px-[0.9rem] border-none rounded-lg text-[0.85rem] font-semibold cursor-pointer transition-opacity hover:opacity-85 bg-[var(--success,#22c55e)] text-white"
-                    onClick={() => publishMut.mutate(r.id)}
-                  >
+                  <NeonSweepButton tone="cyan" size="sm" onClick={() => publishMut.mutate(r.id)}>
                     <Send size={14} /> Publish
-                  </button>
-                  <button
-                    className="inline-flex items-center gap-[0.35rem] py-[0.42rem] px-[0.9rem] border-none rounded-lg text-[0.85rem] font-semibold cursor-pointer transition-opacity hover:opacity-85 bg-[var(--primary,#6366f1)] text-white"
-                    onClick={() => approveMut.mutate(r.id)}
-                  >
+                  </NeonSweepButton>
+                  <NeonSweepButton tone="cyan" size="sm" onClick={() => approveMut.mutate(r.id)}>
                     <Check size={14} /> Approve
-                  </button>
+                  </NeonSweepButton>
                 </>
               )}
               {(r.status === "PUBLISHED" || r.status === "APPROVED") && (
-                <button
-                  className="inline-flex items-center gap-[0.35rem] py-[0.42rem] px-[0.9rem] border-none rounded-lg text-[0.85rem] font-semibold cursor-pointer transition-opacity hover:opacity-85 bg-[var(--text-secondary)] text-white"
-                  onClick={() => archiveMut.mutate(r.id)}
-                >
+                <NeonSweepButton tone="slate" size="sm" onClick={() => archiveMut.mutate(r.id)}>
                   <Archive size={14} /> Archive
-                </button>
+                </NeonSweepButton>
               )}
-              <button
-                className="inline-flex items-center gap-[0.35rem] py-[0.42rem] px-[0.9rem] rounded-lg text-[0.85rem] font-semibold cursor-pointer transition-opacity hover:opacity-85 bg-[var(--card)] text-[var(--text-primary)] border border-[var(--border-default)]"
-                onClick={() => openEdit(r)}
-              >
+              <NeonSweepButton tone="slate" size="sm" onClick={() => openEdit(r)}>
                 <Edit2 size={14} /> Edit
-              </button>
-              <button
-                className="inline-flex items-center gap-[0.35rem] py-[0.42rem] px-[0.9rem] rounded-lg text-[0.85rem] font-semibold cursor-pointer transition-opacity hover:opacity-85 bg-transparent text-[var(--error,#ef4444)] border border-[var(--error,#ef4444)]"
-                onClick={() => deleteMut.mutate(r.id)}
-              >
+              </NeonSweepButton>
+              <NeonSweepButton tone="danger" size="sm" onClick={() => deleteMut.mutate(r.id)}>
                 <Trash2 size={14} />
-              </button>
+              </NeonSweepButton>
             </div>
           </div>
         ))}
@@ -498,16 +481,12 @@ export default function SocietyRules() {
                 </div>
               </div>
               <div className="flex justify-end gap-[0.65rem] mt-5 pt-4 border-t border-[var(--border-default)]">
-                <button
-                  type="button"
-                  className="inline-flex items-center gap-[0.35rem] py-[0.42rem] px-[0.9rem] rounded-lg text-[0.85rem] font-semibold cursor-pointer transition-opacity hover:opacity-85 bg-[var(--card)] text-[var(--text-primary)] border border-[var(--border-default)]"
-                  onClick={() => setShowModal(false)}
-                >
+                <NeonSweepButton type="button" tone="slate" size="md" onClick={() => setShowModal(false)}>
                   Cancel
-                </button>
-                <button type="submit" className="inline-flex items-center gap-[0.35rem] py-[0.42rem] px-[0.9rem] border-none rounded-lg text-[0.85rem] font-semibold cursor-pointer transition-opacity hover:opacity-85 bg-[var(--primary,#6366f1)] text-white">
+                </NeonSweepButton>
+                <NeonSweepButton type="submit" tone="cyan" size="md">
                   {editing ? "Update" : "Create"}
-                </button>
+                </NeonSweepButton>
               </div>
             </form>
           </div>

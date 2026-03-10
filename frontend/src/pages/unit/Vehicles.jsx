@@ -6,7 +6,7 @@ import { useConfirmDialog } from '../../context'
 import { useToast } from '../../context'
 import { vehicleApi, flatApi, societyApi } from '../../../../api'
 import { Plus, Edit, Trash2, Search, X, Car, Bike, Upload } from 'lucide-react'
-import { FormInput, SmartSelect, BulkImportModal, AsyncButton, InfoTooltip } from '../../components'
+import { FormInput, SmartSelect, BulkImportModal, InfoTooltip, NeonSweepButton } from '../../components'
 import { HeroSkeleton, StatCardSkeleton, CardGridSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
 import useMinLoadingTime from '../../hooks/useMinLoadingTime'
 
@@ -186,20 +186,24 @@ export default function Vehicles() {
         </div>
         {canEditVehicles && (
           <div className="flex gap-2">
-            <button
+            <NeonSweepButton
+              tone="cyan"
+              size="md"
               onClick={() => setShowBulkImport(true)}
-              className="inline-flex items-center gap-2 rounded-lg border border-slate-900/15 bg-slate-900 px-4 py-2 font-medium text-slate-50 transition hover:shadow-[0_8px_20px_rgba(15,23,42,0.16)] dark:border-slate-400/25 dark:bg-slate-950"
+              className="w-full sm:w-auto"
             >
               <Upload size={20} />
               Bulk Import
-            </button>
-            <button
+            </NeonSweepButton>
+            <NeonSweepButton
+              tone="violet"
+              size="md"
               onClick={() => { setEditingVehicle(null); setShowModal(true) }}
-              className="inline-flex items-center gap-2 rounded-lg border border-[var(--border-default)] bg-[var(--bg-card)] px-4 py-2 font-medium text-[var(--text-primary)] transition hover:bg-[color-mix(in_srgb,var(--bg-tertiary)_70%,var(--bg-card))] hover:shadow-[0_8px_20px_rgba(15,23,42,0.14)] dark:border-slate-400/25 dark:bg-slate-50 dark:text-slate-900 dark:hover:bg-white"
+              className="w-full sm:w-auto"
             >
               <Plus size={20} />
               Add Vehicle
-            </button>
+            </NeonSweepButton>
           </div>
         )}
       </div>
@@ -497,21 +501,24 @@ export default function Vehicles() {
               />
 
               <div className="flex justify-end gap-3 pt-2">
-                <button
+                <NeonSweepButton
                   type="button"
+                  tone="slate"
+                  size="md"
                   onClick={() => { setShowModal(false); setEditingVehicle(null) }}
-                  className="rounded-lg bg-[var(--bg-tertiary)] px-4 py-2 text-[var(--text-secondary)] transition hover:bg-[var(--bg-secondary)]"
+                  className="w-full sm:w-auto"
                 >
                   Cancel
-                </button>
-                <AsyncButton
+                </NeonSweepButton>
+                <NeonSweepButton
                   type="submit"
-                  className="rounded-lg border border-[var(--border-default)] bg-[var(--bg-card)] px-4 py-2 text-[var(--text-primary)] transition hover:bg-[color-mix(in_srgb,var(--bg-tertiary)_70%,var(--bg-card))] hover:shadow-[0_8px_20px_rgba(15,23,42,0.14)] dark:border-slate-400/25 dark:bg-slate-50 dark:text-slate-900 dark:hover:bg-white"
-                  isLoading={createMutation.isPending || updateMutation.isPending}
-                  loadingText="Saving..."
+                  tone="cyan"
+                  size="md"
+                  disabled={createMutation.isPending || updateMutation.isPending}
+                  className="w-full sm:w-auto"
                 >
-                  Save
-                </AsyncButton>
+                  {createMutation.isPending || updateMutation.isPending ? 'Saving...' : 'Save'}
+                </NeonSweepButton>
               </div>
             </form>
           </div>
