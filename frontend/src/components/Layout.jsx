@@ -34,17 +34,8 @@ import {
   Shield,
   Siren,
   SlidersHorizontal,
-  Wrench,
-  ClipboardList,
-  Package,
-  CalendarClock,
-  UserCog,
-  CalendarRange,
-  HardHat,
   ArrowLeftRight,
   Ban,
-  PawPrint,
-  Store,
   BookOpen,
 } from "lucide-react";
 import clsx from "clsx";
@@ -71,7 +62,6 @@ const routePrefetchMap = {
   "/my-bills": () => import("../pages/finance/MyBills"),
   "/transactions": () => import("../pages/finance/Transactions"),
   "/notices": () => import("../pages/communication/Notices"),
-  "/banners": () => import("../pages/communication/Banners"),
   "/tickets": () => import("../pages/communication/Tickets"),
   "/complaints": () => import("../pages/communication/Complaints"),
   "/approvals": () => import("../pages/communication/Approvals"),
@@ -79,19 +69,7 @@ const routePrefetchMap = {
     import("../pages/communication/EmergencyContacts"),
   "/documents": () => import("../pages/communication/Documents"),
   "/visitors": () => import("../pages/security/Visitors"),
-  "/domestic-staff": () => import("../pages/security/DomesticStaff"),
-  "/safety": () => import("../pages/security/Safety"),
-  "/guard-patrol": () => import("../pages/security/GuardPatrol"),
-  "/work-orders": () => import("../pages/core/WorkOrders"),
-  "/assets": () => import("../pages/core/Assets"),
-  "/common-areas": () => import("../pages/core/CommonAreas"),
-  "/staff-shifts": () => import("../pages/core/StaffShifts"),
-  "/facility-booking": () => import("../pages/core/FacilityBooking"),
-  "/renovation-nocs": () => import("../pages/core/RenovationNocs"),
-  "/move-tracking": () => import("../pages/core/MoveTracking"),
   "/penalties": () => import("../pages/core/Penalties"),
-  "/pet-registrations": () => import("../pages/core/PetRegistrations"),
-  "/classifieds": () => import("../pages/core/Classifieds"),
   "/society-rules": () => import("../pages/core/SocietyRules"),
 };
 
@@ -276,6 +254,12 @@ const standardMenuGroups = [
         label: "Reports",
         roles: ["SOCIETY_ADMIN", "CHAIRMAN", "SECRETARY", "TREASURER"],
       },
+      {
+        path: "/penalties",
+        icon: Ban,
+        label: "Penalties",
+        roles: ["SOCIETY_ADMIN", "CHAIRMAN", "SECRETARY", "TREASURER"],
+      },
     ],
   },
   {
@@ -284,12 +268,6 @@ const standardMenuGroups = [
     icon: Megaphone,
     items: [
       { path: "/notices", icon: Megaphone, label: "Notices" },
-      {
-        path: "/banners",
-        icon: Image,
-        label: "Banners",
-        roles: ["SOCIETY_ADMIN", "CHAIRMAN", "SECRETARY", "MANAGER"],
-      },
       { path: "/tickets", icon: Ticket, label: "Tickets" },
       { path: "/complaints", icon: MessageSquare, label: "Complaints" },
       {
@@ -314,6 +292,7 @@ const standardMenuGroups = [
     items: [
       { path: "/emergency-contacts", icon: Phone, label: "Emergency Contacts" },
       { path: "/documents", icon: FileCheck, label: "Documents" },
+      { path: "/society-rules", icon: BookOpen, label: "Rules & Bylaws" },
     ],
   },
   {
@@ -322,31 +301,6 @@ const standardMenuGroups = [
     icon: Shield,
     items: [
       { path: "/visitors", icon: UserCheck, label: "Visitors" },
-      { path: "/domestic-staff", icon: Users, label: "Domestic Staff" },
-      { path: "/safety", icon: Siren, label: "Safety & SOS" },
-      { path: "/guard-patrol", icon: Shield, label: "Guard Patrol" },
-    ],
-  },
-  {
-    id: "maintenance",
-    label: "Maintenance",
-    icon: Wrench,
-    items: [
-      { path: "/work-orders", icon: ClipboardList, label: "Work Orders" },
-      { path: "/assets", icon: Package, label: "Assets & Inventory" },
-      { path: "/common-areas", icon: CalendarClock, label: "Common Areas" },
-      { path: "/staff-shifts", icon: UserCog, label: "Staff Shifts" },
-      {
-        path: "/facility-booking",
-        icon: CalendarRange,
-        label: "Facility Booking",
-      },
-      { path: "/renovation-nocs", icon: HardHat, label: "Renovation NOC" },
-      { path: "/move-tracking", icon: ArrowLeftRight, label: "Move In/Out" },
-      { path: "/penalties", icon: Ban, label: "Penalties" },
-      { path: "/pet-registrations", icon: PawPrint, label: "Pet Registry" },
-      { path: "/classifieds", icon: Store, label: "Classifieds" },
-      { path: "/society-rules", icon: BookOpen, label: "Rules & Bylaws" },
     ],
   },
   {

@@ -3,7 +3,6 @@ package com.society.backend.vendor.service;
 import com.society.backend.vendor.dto.request.VendorRequest;
 import com.society.backend.vendor.dto.response.VendorResponse;
 import com.society.backend.user.entity.Role;
-import com.society.backend.security.entity.SecurityLog;
 import com.society.backend.society.entity.Society;
 import com.society.backend.user.entity.User;
 import com.society.backend.vendor.entity.Vendor;
@@ -11,7 +10,6 @@ import com.society.backend.common.exception.ApiException;
 import com.society.backend.society.repository.SocietyRepository;
 import com.society.backend.vendor.repository.VendorBillRepository;
 import com.society.backend.vendor.repository.VendorRepository;
-import com.society.backend.security.service.SecurityLogService;
 import com.society.backend.common.service.ReferenceCleanupService;
 import com.society.backend.common.service.RoleService;
 import lombok.RequiredArgsConstructor;
@@ -33,7 +31,6 @@ public class VendorServiceImpl implements VendorService {
     private final VendorBillRepository vendorBillRepository;
     private final SocietyRepository societyRepository;
     private final RoleService roleService;
-    private final SecurityLogService securityLogService;
     private final ReferenceCleanupService referenceCleanupService;
 
     /**
@@ -94,18 +91,6 @@ public class VendorServiceImpl implements VendorService {
 
         Vendor saved = vendorRepository.save(vendor);
 
-        // Create audit log entry for vendor creation
-        try {
-            SecurityLog auditLog = new SecurityLog();
-            auditLog.setSocietyId(society.getId());
-            auditLog.setType("SYSTEM");
-            auditLog.setEvent(String.format("Vendor '%s' created by %s (%s). Status: %s",
-                    saved.getName(), creator.getName(), creator.getRole(), saved.getApprovalStatus()));
-            auditLog.setStatus("APPROVED".equals(saved.getApprovalStatus()) ? "Approved" : "Info");
-            securityLogService.createLog(auditLog);
-        } catch (Exception e) {
-            log.warn("Failed to create audit log for vendor creation: {}", e.getMessage());
-        }
 
         return mapToResponse(saved);
     }
