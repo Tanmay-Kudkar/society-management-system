@@ -4,6 +4,7 @@ import com.razorpay.RazorpayClient;
 import com.razorpay.RazorpayException;
 import lombok.Getter;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -11,10 +12,10 @@ import org.springframework.context.annotation.Configuration;
 public class RazorpayConfig {
 
     @Getter
-    @Value("${razorpay.key.id}")
+    @Value("${razorpay.key.id:}")
     private String keyId;
 
-    @Value("${razorpay.key.secret}")
+    @Value("${razorpay.key.secret:}")
     private String keySecret;
 
     @Getter
@@ -27,6 +28,7 @@ public class RazorpayConfig {
     }
 
     @Bean
+    @ConditionalOnExpression("'${razorpay.key.id:}' != '' and '${razorpay.key.secret:}' != ''")
     public RazorpayClient razorpayClient() throws RazorpayException {
         return new RazorpayClient(keyId, keySecret);
     }
