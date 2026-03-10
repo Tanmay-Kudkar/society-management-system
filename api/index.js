@@ -365,6 +365,7 @@ export const tenantApi = {
   getActive: () => api.get('/tenants/active'),
   create: (data, userId) => api.post(`/tenants?userId=${userId}`, data),
   update: (id, data, userId) => api.put(`/tenants/${id}?userId=${userId}`, data),
+  activate: (id, userId) => api.patch(`/tenants/${id}/activate?userId=${userId}`),
   deactivate: (id, userId) => api.patch(`/tenants/${id}/deactivate?userId=${userId}`),
   delete: (id, userId, force = true) => api.delete(`/tenants/${id}?userId=${userId}${force ? '&force=true' : ''}`),
   validateBulkImport: (file, societyId) => {

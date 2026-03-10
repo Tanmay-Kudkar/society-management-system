@@ -20,6 +20,8 @@ public interface TenantService {
 
     TenantResponse update(Long id, TenantRequest request, Long userId);
 
+    TenantResponse activate(Long id, Long userId);
+
     TenantResponse deactivate(Long id, Long userId);
 
     void delete(Long id, Long userId);

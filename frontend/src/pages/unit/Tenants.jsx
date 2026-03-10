@@ -55,7 +55,8 @@ export default function Tenants() {
   const createMutation = useMutation({
     mutationFn: (data) => tenantApi.create(data, user.id),
     onSuccess: () => {
-      queryClient.invalidateQueries(['tenants'])
+      queryClient.invalidateQueries({ queryKey: ['tenants'] })
+      queryClient.invalidateQueries({ queryKey: ['flats', effectiveSocietyId] })
       setShowModal(false)
     },
   })
@@ -63,7 +64,8 @@ export default function Tenants() {
   const updateMutation = useMutation({
     mutationFn: ({ id, data }) => tenantApi.update(id, data, user.id),
     onSuccess: () => {
-      queryClient.invalidateQueries(['tenants'])
+      queryClient.invalidateQueries({ queryKey: ['tenants'] })
+      queryClient.invalidateQueries({ queryKey: ['flats', effectiveSocietyId] })
       setShowModal(false)
       setEditingTenant(null)
     },
@@ -71,7 +73,10 @@ export default function Tenants() {
 
   const deleteMutation = useMutation({
     mutationFn: (id) => tenantApi.delete(id, user.id),
-    onSuccess: () => queryClient.invalidateQueries(['tenants']),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tenants'] })
+      queryClient.invalidateQueries({ queryKey: ['flats', effectiveSocietyId] })
+    },
     onError: (error) => {
       toast.error(error.response?.data?.message || 'Failed to delete tenant')
     },
@@ -79,7 +84,18 @@ export default function Tenants() {
 
   const deactivateMutation = useMutation({
     mutationFn: (id) => tenantApi.deactivate(id, user.id),
-    onSuccess: () => queryClient.invalidateQueries(['tenants']),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tenants'] })
+      queryClient.invalidateQueries({ queryKey: ['flats', effectiveSocietyId] })
+    },
+  })
+
+  const activateMutation = useMutation({
+    mutationFn: (id) => tenantApi.activate(id, user.id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tenants'] })
+      queryClient.invalidateQueries({ queryKey: ['flats', effectiveSocietyId] })
+    },
   })
 
   const filteredTenants = useMemo(() => {
@@ -280,32 +296,42 @@ export default function Tenants() {
                           >
                             <Edit size={18} />
                           </button>
-                          {tenant.isActive && (
-                            <button
-                              onClick={async () => {
-                                const confirmed = await confirmDialog({
-                                  title: 'Deactivate Tenant',
-                                  message: 'Are you sure you want to deactivate this tenant?',
-                                  confirmText: 'Deactivate',
-                                  tone: 'warning',
-                                  details: [
-                                    { label: 'Tenant', value: tenant.name || '-' },
-                                    { label: 'Unit', value: tenant.flatNumber || '-' },
-                                    { label: 'Rent', value: `₹${tenant.rentAmount?.toLocaleString() || 0}/mo` },
-                                    { label: 'Ends', value: formatDate(tenant.agreementEndDate) || '-' },
-                                  ],
-                                  caution: 'Tenant record will be marked inactive.',
-                                })
-                                if (confirmed) {
+                          <button
+                            onClick={async () => {
+                              const isActive = !!tenant.isActive
+                              const confirmed = await confirmDialog({
+                                title: isActive ? 'Deactivate Tenant' : 'Activate Tenant',
+                                message: isActive
+                                  ? 'Are you sure you want to deactivate this tenant?'
+                                  : 'Are you sure you want to activate this tenant?',
+                                confirmText: isActive ? 'Deactivate' : 'Activate',
+                                tone: isActive ? 'warning' : 'success',
+                                details: [
+                                  { label: 'Tenant', value: tenant.name || '-' },
+                                  { label: 'Unit', value: tenant.flatNumber || '-' },
+                                  { label: 'Rent', value: `₹${tenant.rentAmount?.toLocaleString() || 0}/mo` },
+                                  { label: 'Ends', value: formatDate(tenant.agreementEndDate) || '-' },
+                                ],
+                                caution: isActive
+                                  ? 'Tenant record will be marked inactive.'
+                                  : 'Tenant record will be marked active.',
+                              })
+                              if (confirmed) {
+                                if (isActive) {
                                   deactivateMutation.mutate(tenant.id)
+                                } else {
+                                  activateMutation.mutate(tenant.id)
                                 }
-                              }}
-                              className="p-[0.45rem] rounded-[0.65rem] text-[var(--text-tertiary)] transition-colors hover:text-[#ea580c] hover:bg-[rgba(249,115,22,0.12)]"
-                              title="Deactivate"
-                            >
-                              <User size={18} />
-                            </button>
-                          )}
+                              }
+                            }}
+                            className={tenant.isActive
+                              ? 'p-[0.45rem] rounded-[0.65rem] text-[var(--text-tertiary)] transition-colors hover:text-[#ea580c] hover:bg-[rgba(249,115,22,0.12)]'
+                              : 'p-[0.45rem] rounded-[0.65rem] text-[var(--text-tertiary)] transition-colors hover:text-[#16a34a] hover:bg-[rgba(34,197,94,0.14)]'
+                            }
+                            title={tenant.isActive ? 'Deactivate' : 'Activate'}
+                          >
+                            <User size={18} />
+                          </button>
                           <button
                             onClick={async () => {
                               const confirmed = await confirmDialog({

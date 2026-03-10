@@ -12,6 +12,8 @@ import com.society.backend.society.entity.SocietySetting;
 import com.society.backend.common.exception.ApiException;
 import com.society.backend.flat.repository.FlatRepository;
 import com.society.backend.finance.repository.MaintenanceBillRepository;
+import com.society.backend.security.entity.Vehicle;
+import com.society.backend.security.repository.VehicleRepository;
 import com.society.backend.society.repository.SocietySettingRepository;
 import com.society.backend.common.service.RoleService;
 import com.society.backend.finance.service.TransactionService;
@@ -27,6 +29,7 @@ import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -41,6 +44,7 @@ public class MaintenanceBillServiceImpl implements MaintenanceBillService {
     private final MaintenanceBillRepository maintenanceBillRepository;
     private final FlatRepository flatRepository;
     private final SocietySettingRepository societySettingRepository;
+    private final VehicleRepository vehicleRepository;
     private final RoleService roleService;
     private final TransactionService transactionService;
 
@@ -442,6 +446,7 @@ public class MaintenanceBillServiceImpl implements MaintenanceBillService {
         addItem(items, "INSURANCE", "Insurance", setting.getInsuranceCharge(), BigDecimal.ONE, false);
         addItem(items, "CLUB_HOUSE", "Club house", setting.getClubHouseCharge(), BigDecimal.ONE, true);
         addItem(items, "PROPERTY_TAX", "Property tax share", setting.getPropertyTaxShare(), BigDecimal.ONE, false);
+        addParkingUsageItems(items, flat, setting);
 
         BigDecimal taxableBase = items.stream()
                 .filter(item -> Boolean.TRUE.equals(item.getIsTaxable()))
@@ -475,6 +480,66 @@ public class MaintenanceBillServiceImpl implements MaintenanceBillService {
         item.setIsTaxable(taxable);
         item.setDisplayOrder(items.size());
         items.add(item);
+    }
+
+    private void addParkingUsageItems(List<BillLineItem> items, Flat flat, SocietySetting setting) {
+        if (flat == null || flat.getId() == null || setting == null) {
+            return;
+        }
+
+        List<Vehicle> unitVehicles = vehicleRepository.findByFlatId(flat.getId());
+        if (unitVehicles.isEmpty()) {
+            return;
+        }
+
+        long twoWheelerCount = unitVehicles.stream()
+                .filter(vehicle -> "TWO_WHEELER".equalsIgnoreCase(vehicle.getVehicleType()))
+                .filter(vehicle -> hasParkingUsage(vehicle.getParkingSlot()))
+                .count();
+        addItem(items, "PARKING_TWO_WHEELER", "Parking (two-wheeler)", setting.getParkingChargeTwoWheeler(),
+                BigDecimal.valueOf(twoWheelerCount), true);
+
+        long fourWheelerOpenCount = unitVehicles.stream()
+                .filter(vehicle -> "FOUR_WHEELER".equalsIgnoreCase(vehicle.getVehicleType()))
+                .filter(vehicle -> hasParkingUsage(vehicle.getParkingSlot()))
+                .filter(vehicle -> resolveParkingCategory(vehicle.getParkingSlot()).equals("OPEN"))
+                .count();
+        addItem(items, "PARKING_OPEN", "Parking (open)", setting.getParkingChargeOpen(),
+                BigDecimal.valueOf(fourWheelerOpenCount), true);
+
+        long fourWheelerCoveredCount = unitVehicles.stream()
+                .filter(vehicle -> "FOUR_WHEELER".equalsIgnoreCase(vehicle.getVehicleType()))
+                .filter(vehicle -> hasParkingUsage(vehicle.getParkingSlot()))
+                .filter(vehicle -> resolveParkingCategory(vehicle.getParkingSlot()).equals("COVERED"))
+                .count();
+        addItem(items, "PARKING_COVERED", "Parking (covered)", setting.getParkingChargeCovered(),
+                BigDecimal.valueOf(fourWheelerCoveredCount), true);
+
+        long fourWheelerStiltCount = unitVehicles.stream()
+                .filter(vehicle -> "FOUR_WHEELER".equalsIgnoreCase(vehicle.getVehicleType()))
+                .filter(vehicle -> hasParkingUsage(vehicle.getParkingSlot()))
+                .filter(vehicle -> resolveParkingCategory(vehicle.getParkingSlot()).equals("STILT"))
+                .count();
+        addItem(items, "PARKING_STILT", "Parking (stilt)", setting.getParkingChargeStilt(),
+                BigDecimal.valueOf(fourWheelerStiltCount), true);
+    }
+
+    private boolean hasParkingUsage(String parkingSlot) {
+        return parkingSlot != null && !parkingSlot.trim().isEmpty();
+    }
+
+    private String resolveParkingCategory(String parkingSlot) {
+        if (parkingSlot == null || parkingSlot.isBlank()) {
+            return "OPEN";
+        }
+        String normalized = parkingSlot.toLowerCase(Locale.ROOT);
+        if (normalized.contains("stilt")) {
+            return "STILT";
+        }
+        if (normalized.contains("cover")) {
+            return "COVERED";
+        }
+        return "OPEN";
     }
 
     private SocietySetting getSocietySetting(Long societyId) {
