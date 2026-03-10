@@ -9,22 +9,30 @@ import java.util.Optional;
 
 @Repository
 public interface PaymentRepository extends JpaRepository<Payment, Long> {
+
+    Optional<Payment> findByIdAndDeletedAtIsNull(Long id);
     
     Optional<Payment> findByRazorpayOrderId(String razorpayOrderId);
+
+    Optional<Payment> findByRazorpayOrderIdAndDeletedAtIsNull(String razorpayOrderId);
     
     Optional<Payment> findByRazorpayPaymentId(String razorpayPaymentId);
+
+    Optional<Payment> findByRazorpayPaymentIdAndDeletedAtIsNull(String razorpayPaymentId);
     
-    List<Payment> findByMaintenanceBillId(Long maintenanceBillId);
+    List<Payment> findByMaintenanceBillIdAndDeletedAtIsNull(Long maintenanceBillId);
     
-    List<Payment> findByUserId(Long userId);
+    List<Payment> findByUserIdAndDeletedAtIsNull(Long userId);
     
-    List<Payment> findBySocietyId(Long societyId);
+    List<Payment> findBySocietyIdAndDeletedAtIsNull(Long societyId);
     
-    List<Payment> findByStatus(String status);
+    List<Payment> findByStatusAndDeletedAtIsNull(String status);
     
-    List<Payment> findBySocietyIdAndStatus(Long societyId, String status);
+    List<Payment> findBySocietyIdAndStatusAndDeletedAtIsNull(Long societyId, String status);
     
-    List<Payment> findByUserIdOrderByCreatedAtDesc(Long userId);
+    List<Payment> findByUserIdAndDeletedAtIsNullOrderByCreatedAtDesc(Long userId);
     
-    List<Payment> findBySocietyIdOrderByCreatedAtDesc(Long societyId);
+    List<Payment> findBySocietyIdAndDeletedAtIsNullOrderByCreatedAtDesc(Long societyId);
+
+    List<Payment> findBySocietyIdAndDeletedAtIsNotNullOrderByDeletedAtDesc(Long societyId);
 }

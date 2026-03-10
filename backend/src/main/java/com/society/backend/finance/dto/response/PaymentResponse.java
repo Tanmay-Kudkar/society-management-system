@@ -31,6 +31,9 @@ public class PaymentResponse {
     private String societyName;
     private LocalDateTime createdAt;
     private LocalDateTime paidAt;
+    private LocalDateTime deletedAt;
+    private LocalDateTime undoExpiresAt;
+    private Boolean undoAvailable;
     private String errorCode;
     private String errorDescription;
 }

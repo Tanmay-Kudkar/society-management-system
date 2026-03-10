@@ -227,7 +227,7 @@ export default function Tenants() {
       {/* Table */}
       <div className="rounded-2xl bg-[var(--bg-card)] border border-[var(--border-light)] shadow-[0_12px_24px_rgba(15,23,42,0.08)] overflow-hidden">
         {(
-          <div className="overflow-x-auto">
+          <div className="hidden lg:block overflow-x-auto">
             <table className="w-full border-collapse min-w-[860px]">
               <thead className="bg-[var(--bg-tertiary)] border-b border-[var(--border-light)]">
                 <tr>
@@ -377,6 +377,123 @@ export default function Tenants() {
             </table>
           </div>
         )}
+
+        <div className="lg:hidden divide-y divide-[var(--border-light)]">
+          {filteredTenants.length === 0 ? (
+            <div className="p-8 text-center text-sm text-[var(--text-tertiary)]">No tenants found</div>
+          ) : (
+            filteredTenants.map((tenant) => (
+              <div key={tenant.id} className="p-3 sm:p-4">
+                <div className="mb-2 flex items-start justify-between gap-2 sm:gap-3">
+                  <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+                    <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center bg-[rgba(147,51,234,0.15)]">
+                      <span className="text-[#7c3aed] font-semibold">{tenant.name?.charAt(0)?.toUpperCase() || 'T'}</span>
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-[13px] sm:text-sm font-semibold text-[var(--text-primary)] break-words">{tenant.name}</p>
+                      <p className="text-[11px] sm:text-xs text-[var(--text-secondary)] break-words">{getFlatDisplay(tenant.flatId)}</p>
+                    </div>
+                  </div>
+                  <span className={tenant.isActive
+                    ? 'inline-flex py-0.5 px-2 sm:py-1 sm:px-[0.65rem] rounded-full text-[11px] sm:text-xs font-semibold bg-[#dcfce7] text-[#166534]'
+                    : 'inline-flex py-0.5 px-2 sm:py-1 sm:px-[0.65rem] rounded-full text-[11px] sm:text-xs font-semibold bg-[rgba(255,255,255,0.1)] text-[var(--text-secondary)]'
+                  }>
+                    {tenant.isActive ? 'Active' : 'Inactive'}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-1.5 sm:gap-2 text-[11px] sm:text-xs">
+                  <p className="text-[var(--text-secondary)]">Phone</p>
+                  <p className="text-right text-[var(--text-primary)]">{tenant.phone || 'N/A'}</p>
+                  <p className="text-[var(--text-secondary)]">Email</p>
+                  <p className="text-right text-[var(--text-primary)] break-all">{tenant.email || 'N/A'}</p>
+                  <p className="text-[var(--text-secondary)]">Agreement</p>
+                  <p className="text-right text-[var(--text-primary)] break-words">
+                    {formatDate(tenant.agreementStartDate)} to {formatDate(tenant.agreementEndDate)}
+                  </p>
+                  <p className="text-[var(--text-secondary)]">Rent</p>
+                  <p className="text-right font-semibold text-[var(--text-primary)]">₹{tenant.rentAmount?.toLocaleString() || 0}/mo</p>
+                </div>
+
+                <div className="mt-2.5 sm:mt-3 flex justify-end gap-1.5 sm:gap-2">
+                  {canEditTenants ? (
+                    <>
+                      <button
+                        onClick={() => { setEditingTenant(tenant); setShowModal(true) }}
+                        className="p-[0.45rem] rounded-[0.65rem] text-[var(--text-tertiary)] transition-colors hover:text-[#2563eb] hover:bg-[rgba(37,99,235,0.12)]"
+                        title="Edit"
+                      >
+                        <Edit size={18} />
+                      </button>
+                      <button
+                        onClick={async () => {
+                          const isActive = !!tenant.isActive
+                          const confirmed = await confirmDialog({
+                            title: isActive ? 'Deactivate Tenant' : 'Activate Tenant',
+                            message: isActive
+                              ? 'Are you sure you want to deactivate this tenant?'
+                              : 'Are you sure you want to activate this tenant?',
+                            confirmText: isActive ? 'Deactivate' : 'Activate',
+                            tone: isActive ? 'warning' : 'success',
+                            details: [
+                              { label: 'Tenant', value: tenant.name || '-' },
+                              { label: 'Unit', value: tenant.flatNumber || '-' },
+                              { label: 'Rent', value: `₹${tenant.rentAmount?.toLocaleString() || 0}/mo` },
+                              { label: 'Ends', value: formatDate(tenant.agreementEndDate) || '-' },
+                            ],
+                            caution: isActive
+                              ? 'Tenant record will be marked inactive.'
+                              : 'Tenant record will be marked active.',
+                          })
+                          if (confirmed) {
+                            if (isActive) {
+                              deactivateMutation.mutate(tenant.id)
+                            } else {
+                              activateMutation.mutate(tenant.id)
+                            }
+                          }
+                        }}
+                        className={tenant.isActive
+                          ? 'p-[0.45rem] rounded-[0.65rem] text-[var(--text-tertiary)] transition-colors hover:text-[#ea580c] hover:bg-[rgba(249,115,22,0.12)]'
+                          : 'p-[0.45rem] rounded-[0.65rem] text-[var(--text-tertiary)] transition-colors hover:text-[#16a34a] hover:bg-[rgba(34,197,94,0.14)]'
+                        }
+                        title={tenant.isActive ? 'Deactivate' : 'Activate'}
+                      >
+                        <User size={18} />
+                      </button>
+                      <button
+                        onClick={async () => {
+                          const confirmed = await confirmDialog({
+                            title: 'Delete Tenant',
+                            message: 'Are you sure you want to delete this tenant? This action cannot be undone.',
+                            confirmText: 'Delete',
+                            tone: 'danger',
+                            details: [
+                              { label: 'Tenant', value: tenant.name || '-' },
+                              { label: 'Unit', value: tenant.flatNumber || '-' },
+                              { label: 'Phone', value: tenant.phone || '-' },
+                              { label: 'Email', value: tenant.email || '-' },
+                            ],
+                            caution: 'This action permanently removes tenant data.',
+                          })
+                          if (confirmed) {
+                            deleteMutation.mutate(tenant.id)
+                          }
+                        }}
+                        className="p-[0.45rem] rounded-[0.65rem] text-[var(--text-tertiary)] transition-colors hover:text-[#dc2626] hover:bg-[rgba(239,68,68,0.12)]"
+                        title="Delete"
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    </>
+                  ) : (
+                    <span className="text-xs text-[var(--text-tertiary)]">Read only</span>
+                  )}
+                </div>
+              </div>
+            ))
+          )}
+        </div>
       </div>
 
       {/* Modal */}

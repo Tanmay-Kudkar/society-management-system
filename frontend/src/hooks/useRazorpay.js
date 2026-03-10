@@ -46,6 +46,10 @@ export function useRazorpay({ onSuccess, onError, onDismiss } = {}) {
       paymentApi.handleFailure(paymentId, errorCode, errorDescription),
   })
 
+  const handleCancelMutation = useMutation({
+    mutationFn: ({ paymentId, reason }) => paymentApi.handleCancel(paymentId, reason),
+  })
+
   const initiatePayment = useCallback(async ({
     amount,
     maintenanceBillId,
@@ -105,9 +109,18 @@ export function useRazorpay({ onSuccess, onError, onDismiss } = {}) {
           }
         },
         modal: {
-          ondismiss: function () {
+          ondismiss: async function () {
+            try {
+              await handleCancelMutation.mutateAsync({
+                paymentId: orderData.paymentId,
+                reason: 'Checkout closed by user',
+              })
+              queryClient.invalidateQueries(['payments'])
+            } catch (cancelError) {
+              console.error('Failed to record payment cancellation:', cancelError)
+            }
             setIsLoading(false)
-            onDismiss?.()
+            onDismiss?.(orderData.paymentId)
           },
           escape: true,
           confirm_close: true,
@@ -145,7 +158,7 @@ export function useRazorpay({ onSuccess, onError, onDismiss } = {}) {
       setError(errorMessage)
       onError?.(err)
     }
-  }, [createOrderMutation, verifyPaymentMutation, handleFailureMutation, onSuccess, onError, onDismiss])
+  }, [createOrderMutation, verifyPaymentMutation, handleFailureMutation, handleCancelMutation, onSuccess, onError, onDismiss, queryClient])
 
   return {
     initiatePayment,

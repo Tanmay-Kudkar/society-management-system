@@ -255,6 +255,25 @@ export default function Transactions() {
     }
   }
 
+  const confirmAndDeleteTransaction = async (transaction) => {
+    const confirmed = await confirmDialog({
+      title: 'Delete Transaction',
+      message: 'Are you sure you want to delete this transaction? This action cannot be undone.',
+      confirmText: 'Delete',
+      tone: 'danger',
+      details: [
+        { label: 'Type', value: transaction.transactionType },
+        { label: 'Category', value: transaction.category },
+        { label: 'Amount', value: `₹${transaction.amount?.toLocaleString()}` },
+        { label: 'Date', value: transaction.transactionDate ? new Date(transaction.transactionDate).toLocaleDateString() : '-' },
+      ],
+      caution: 'This will permanently remove this transaction record.',
+    })
+    if (confirmed) {
+      deleteMutation.mutate(transaction.id)
+    }
+  }
+
   const showSkeleton = useMinLoadingTime(isLoading || isError)
 
   if (showSkeleton) {
@@ -387,7 +406,7 @@ export default function Transactions() {
 
       {/* Table */}
       <div className="rounded-2xl bg-[var(--bg-card)] border border-[var(--border-light)] shadow-[0_12px_24px_rgba(15,23,42,0.08)] overflow-hidden">
-          <div className="overflow-x-auto">
+          <div className="hidden lg:block overflow-x-auto">
             <table className="w-full border-collapse min-w-[900px]">
               <thead className="bg-[var(--bg-tertiary)] border-b border-[var(--border-light)]">
                 <tr>
@@ -450,20 +469,7 @@ export default function Transactions() {
                         </button>
                         <button
                           onClick={async () => {
-                            const confirmed = await confirmDialog({
-                              title: 'Delete Transaction',
-                              message: 'Are you sure you want to delete this transaction? This action cannot be undone.',
-                              confirmText: 'Delete',
-                              tone: 'danger',
-                              details: [
-                                { label: 'Type', value: t.transactionType },
-                                { label: 'Category', value: t.category },
-                                { label: 'Amount', value: `₹${t.amount?.toLocaleString()}` },
-                                { label: 'Date', value: t.transactionDate ? new Date(t.transactionDate).toLocaleDateString() : '-' },
-                              ],
-                              caution: 'This will permanently remove this transaction record.',
-                            })
-                            if (confirmed) deleteMutation.mutate(t.id)
+                            await confirmAndDeleteTransaction(t)
                           }}
                           className="inline-flex items-center justify-center p-1.5 rounded-lg bg-transparent border-none text-[var(--text-tertiary)] hover:text-[#dc2626] transition-colors"
                           title="Delete"
@@ -476,6 +482,68 @@ export default function Transactions() {
                 ))}
               </tbody>
             </table>
+          </div>
+
+          <div className="lg:hidden divide-y divide-[var(--border-light)]">
+            {filteredTransactions.length === 0 ? (
+              <div className="p-8 text-center text-sm text-[var(--text-tertiary)]">No transactions found</div>
+            ) : (
+              filteredTransactions.map((t) => (
+                <div key={t.id} className="p-3 sm:p-4">
+                  <div className="mb-2 flex items-start justify-between gap-2 sm:gap-3">
+                    <div>
+                      <p className="text-[13px] sm:text-sm font-semibold text-[var(--text-primary)] break-words">{t.category}</p>
+                      <p className="text-[11px] sm:text-xs text-[var(--text-tertiary)]">{t.transactionDate ? new Date(t.transactionDate).toLocaleDateString() : '-'}</p>
+                    </div>
+                    <p className={clsx('text-[13px] sm:text-sm font-semibold whitespace-nowrap', t.transactionType === 'INCOME' ? 'text-[#16a34a]' : 'text-[#dc2626]')}>
+                      {t.transactionType === 'INCOME' ? '+' : '-'}₹{t.amount?.toLocaleString()}
+                    </p>
+                  </div>
+
+                  <div className="mb-2.5 sm:mb-3 flex flex-wrap items-center gap-1.5 sm:gap-2">
+                    <span className={clsx(
+                      'inline-flex items-center gap-[0.35rem] py-0.5 px-2 sm:py-1 sm:px-3 rounded-full text-[11px] sm:text-xs font-semibold',
+                      t.transactionType === 'INCOME' ? 'bg-[#dcfce7] text-[#166534]' : 'bg-[#fee2e2] text-[#991b1b]'
+                    )}>
+                      {t.transactionType === 'INCOME' ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
+                      {t.transactionType}
+                    </span>
+                    <span className="inline-flex items-center py-0.5 px-2 sm:py-1 sm:px-[0.65rem] rounded-full text-[11px] sm:text-xs font-semibold text-[var(--text-secondary)] bg-[rgba(255,255,255,0.1)]">
+                      {paymentModes.find(m => m.value === t.paymentMode)?.label || t.paymentMode}
+                    </span>
+                    {t.flatNumber ? (
+                      <span className="inline-flex items-center gap-[0.35rem] py-0.5 px-2 sm:py-1 sm:px-[0.6rem] rounded-full text-[11px] sm:text-xs font-semibold text-[#1d4ed8] bg-[rgba(37,99,235,0.12)]">
+                        <Home size={10} />
+                        {t.flatNumber}
+                      </span>
+                    ) : null}
+                  </div>
+
+                  <p className="text-[11px] sm:text-xs text-[var(--text-secondary)] break-words">{t.description || '-'}</p>
+
+                  {canManageTransactions() && (
+                    <div className="mt-2.5 sm:mt-3 flex justify-end gap-1">
+                      <button
+                        onClick={() => openEditModal(t)}
+                        className="inline-flex items-center justify-center p-1.5 rounded-lg bg-transparent border-none text-[var(--text-tertiary)] hover:text-[#2563eb] transition-colors"
+                        title="Edit"
+                      >
+                        <Pencil size={16} />
+                      </button>
+                      <button
+                        onClick={async () => {
+                          await confirmAndDeleteTransaction(t)
+                        }}
+                        className="inline-flex items-center justify-center p-1.5 rounded-lg bg-transparent border-none text-[var(--text-tertiary)] hover:text-[#dc2626] transition-colors"
+                        title="Delete"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ))
+            )}
           </div>
       </div>
 

@@ -1,9 +1,9 @@
 import { useState, useMemo } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useSearchParams } from 'react-router-dom'
-import { useAuth } from '../../context'
+import { useAuth, useConfirmDialog, useToast } from '../../context'
 import { paymentApi } from '../../../../api'
-import { Search, CreditCard, CheckCircle, XCircle, Clock, Filter } from 'lucide-react'
+import { Search, CreditCard, CheckCircle, XCircle, Clock, Trash2, RotateCcw, AlertTriangle } from 'lucide-react'
 import clsx from 'clsx'
 import { PermissionDenied, InfoTooltip } from '../../components'
 import { HeroSkeleton, FinancePageSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
@@ -11,14 +11,21 @@ import useMinLoadingTime from '../../hooks/useMinLoadingTime'
 
 const statusConfig = {
   CREATED: { label: 'Pending', icon: Clock, className: 'bg-amber-500/15 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300' },
+  PENDING: { label: 'Pending', icon: Clock, className: 'bg-amber-500/15 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300' },
   AUTHORIZED: { label: 'Authorized', icon: CheckCircle, className: 'bg-blue-500/15 text-blue-700 dark:bg-blue-500/20 dark:text-blue-300' },
   CAPTURED: { label: 'Success', icon: CheckCircle, className: 'bg-emerald-500/15 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300' },
   FAILED: { label: 'Failed', icon: XCircle, className: 'bg-rose-500/15 text-rose-700 dark:bg-rose-500/20 dark:text-rose-300' },
+  CANCELLED: { label: 'Cancelled', icon: XCircle, className: 'bg-slate-500/15 text-slate-700 dark:bg-slate-500/20 dark:text-slate-300' },
   REFUNDED: { label: 'Refunded', icon: CreditCard, className: 'bg-slate-500/15 text-slate-700 dark:bg-slate-500/20 dark:text-slate-300' },
 }
 
+const isPendingStatus = (status) => ['CREATED', 'AUTHORIZED', 'PENDING'].includes(status)
+
 export default function Payments() {
   const { user, canManageMaintenanceBills } = useAuth()
+  const queryClient = useQueryClient()
+  const confirmDialog = useConfirmDialog()
+  const toast = useToast()
   const [searchParams] = useSearchParams()
   const [searchTerm, setSearchTerm] = useState('')
   const [filterStatus, setFilterStatus] = useState('')
@@ -48,6 +55,59 @@ export default function Payments() {
     enabled: !!user,
   })
 
+  const { data: deletedPayments = [] } = useQuery({
+    queryKey: ['payments-deleted', effectiveSocietyId],
+    queryFn: async () => {
+      if (!effectiveSocietyId) return []
+      const res = await paymentApi.getDeletedBySociety(effectiveSocietyId)
+      return res.data
+    },
+    enabled: !!effectiveSocietyId,
+    refetchInterval: 30000,
+  })
+
+  const deletePaymentMutation = useMutation({
+    mutationFn: (paymentId) => paymentApi.delete(paymentId, user.id),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['payments'])
+      queryClient.invalidateQueries(['payments-deleted'])
+      toast.warning('Payment moved to Recently Deleted. You can undo for 30 minutes.')
+    },
+    onError: (error) => {
+      toast.error(error?.response?.data?.message || 'Failed to delete payment record')
+    },
+  })
+
+  const undoDeleteMutation = useMutation({
+    mutationFn: (paymentId) => paymentApi.undoDelete(paymentId),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['payments'])
+      queryClient.invalidateQueries(['payments-deleted'])
+      toast.success('Payment restore successful')
+    },
+    onError: (error) => {
+      toast.error(error?.response?.data?.message || 'Failed to restore payment')
+    },
+  })
+
+  const handleDeletePayment = async (payment) => {
+    const paymentLabel = payment.razorpayPaymentId || payment.razorpayOrderId || `#${payment.id}`
+    const confirmed = await confirmDialog({
+      title: 'Delete Payment Record',
+      message: `Delete payment ${paymentLabel}? It will be hidden from reports immediately.`,
+      confirmText: 'Delete',
+      cancelText: 'Cancel',
+      tone: 'danger',
+      caution: 'You can undo only within 30 minutes from deletion.',
+    })
+
+    if (!confirmed) {
+      return
+    }
+
+    deletePaymentMutation.mutate(payment.id)
+  }
+
   // Filter payments
   const filteredPayments = useMemo(() => {
     return payments.filter(p => {
@@ -56,7 +116,7 @@ export default function Payments() {
         p.razorpayOrderId?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         p.userName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         p.receiptNumber?.toLowerCase().includes(searchTerm.toLowerCase())
-      const matchesStatus = !filterStatus || p.status === filterStatus
+      const matchesStatus = !filterStatus || (filterStatus === 'PENDING' ? isPendingStatus(p.status) : p.status === filterStatus)
       return matchesSearch && matchesStatus
     })
   }, [payments, searchTerm, filterStatus])
@@ -80,6 +140,15 @@ export default function Payments() {
       hour: '2-digit',
       minute: '2-digit',
     })
+  }
+
+  const getUndoTimeLeft = (undoExpiresAt) => {
+    if (!undoExpiresAt) return 'Expired'
+    const msLeft = new Date(undoExpiresAt).getTime() - Date.now()
+    if (msLeft <= 0) return 'Expired'
+    const minutes = Math.floor(msLeft / 60000)
+    const seconds = Math.floor((msLeft % 60000) / 1000)
+    return `${minutes}m ${String(seconds).padStart(2, '0')}s left`
   }
 
   const showSkeleton = useMinLoadingTime(isLoading || isError)
@@ -146,12 +215,41 @@ export default function Payments() {
           >
             <option value="">All Status</option>
             <option value="CAPTURED">Success</option>
-            <option value="CREATED">Pending</option>
+            <option value="PENDING">Pending</option>
             <option value="FAILED">Failed</option>
+            <option value="CANCELLED">Cancelled</option>
             <option value="REFUNDED">Refunded</option>
           </select>
         </div>
       </div>
+
+      {deletedPayments.length > 0 && (
+        <div className="mb-6 rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4">
+          <div className="mb-3 flex items-center gap-2">
+            <AlertTriangle size={16} className="text-amber-500" />
+            <h2 className="text-sm font-semibold text-[var(--text-primary)]">Recently Deleted Payments</h2>
+          </div>
+          <div className="space-y-2">
+            {deletedPayments.map((payment) => (
+              <div key={payment.id} className="flex flex-col gap-2 rounded-lg border border-[var(--border-default)] bg-[var(--bg-card)] p-3 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p className="text-sm font-semibold text-[var(--text-primary)]">{payment.razorpayPaymentId || payment.razorpayOrderId || `#${payment.id}`}</p>
+                  <p className="text-xs text-[var(--text-secondary)]">{payment.userName || '-'} | ₹{payment.amount?.toLocaleString()} | {getUndoTimeLeft(payment.undoExpiresAt)}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => undoDeleteMutation.mutate(payment.id)}
+                  disabled={undoDeleteMutation.isPending || !payment.undoAvailable}
+                  className="inline-flex items-center justify-center gap-1 rounded-lg border border-emerald-500/40 px-2.5 py-1.5 text-xs font-semibold text-emerald-500 transition hover:bg-emerald-500/10 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <RotateCcw size={13} />
+                  Undo Delete
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Table */}
       <div className="overflow-hidden rounded-2xl border border-[var(--border-default)] bg-[var(--bg-card)]">
@@ -161,63 +259,123 @@ export default function Payments() {
             <p className="text-sm">No payments found</p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse">
-              <thead className="bg-[var(--bg-tertiary)]">
-                <tr>
-                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.05em] text-[var(--text-secondary)]">Payment ID</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.05em] text-[var(--text-secondary)]">User</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.05em] text-[var(--text-secondary)]">Amount</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.05em] text-[var(--text-secondary)]">Method</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.05em] text-[var(--text-secondary)]">Status</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.05em] text-[var(--text-secondary)]">Date</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredPayments.map((payment) => {
-                  const status = statusConfig[payment.status] || statusConfig.CREATED
-                  const StatusIcon = status.icon
-                  return (
-                    <tr key={payment.id} className="border-b border-[var(--border-default)] transition hover:bg-[var(--bg-tertiary)]">
-                      <td className="px-4 py-3 text-sm text-[var(--text-primary)]">
-                        <div className="flex flex-col gap-0.5">
-                          <span className="text-[0.85rem] font-medium">
-                            {payment.razorpayPaymentId || payment.razorpayOrderId || `#${payment.id}`}
+          <>
+            <div className="hidden lg:block overflow-x-auto">
+              <table className="w-full border-collapse">
+                <thead className="bg-[var(--bg-tertiary)]">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.05em] text-[var(--text-secondary)]">Payment ID</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.05em] text-[var(--text-secondary)]">User</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.05em] text-[var(--text-secondary)]">Amount</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.05em] text-[var(--text-secondary)]">Method</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.05em] text-[var(--text-secondary)]">Status</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.05em] text-[var(--text-secondary)]">Date</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.05em] text-[var(--text-secondary)]">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredPayments.map((payment) => {
+                    const status = statusConfig[payment.status] || statusConfig.CREATED
+                    const StatusIcon = status.icon
+                    return (
+                      <tr key={payment.id} className="border-b border-[var(--border-default)] transition hover:bg-[var(--bg-tertiary)]">
+                        <td className="px-4 py-3 text-sm text-[var(--text-primary)]">
+                          <div className="flex flex-col gap-0.5">
+                            <span className="text-[0.85rem] font-medium">
+                              {payment.razorpayPaymentId || payment.razorpayOrderId || `#${payment.id}`}
+                            </span>
+                            <span className="text-xs text-[var(--text-secondary)]">
+                              {payment.receiptNumber}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 text-sm text-[var(--text-primary)]">
+                          <div className="flex flex-col gap-0.5">
+                            <span className="font-medium">{payment.userName || '-'}</span>
+                            {payment.societyName && (
+                              <span className="text-xs text-[var(--text-secondary)]">{payment.societyName}</span>
+                            )}
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 text-sm font-semibold text-[var(--text-primary)]">
+                          ₹{payment.amount?.toLocaleString()}
+                        </td>
+                        <td className="px-4 py-3 text-xs font-medium text-[var(--text-secondary)]">
+                          {payment.paymentMethod?.toUpperCase() || '-'}
+                        </td>
+                        <td className="px-4 py-3 text-sm text-[var(--text-primary)]">
+                          <span className={clsx('inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold', status.className)}>
+                            <StatusIcon size={14} />
+                            {status.label}
                           </span>
-                          <span className="text-xs text-[var(--text-secondary)]">
-                            {payment.receiptNumber}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3 text-sm text-[var(--text-primary)]">
-                        <div className="flex flex-col gap-0.5">
-                          <span className="font-medium">{payment.userName || '-'}</span>
-                          {payment.societyName && (
-                            <span className="text-xs text-[var(--text-secondary)]">{payment.societyName}</span>
-                          )}
-                        </div>
-                      </td>
-                      <td className="px-4 py-3 text-sm font-semibold text-[var(--text-primary)]">
-                        ₹{payment.amount?.toLocaleString()}
-                      </td>
-                      <td className="px-4 py-3 text-xs font-medium text-[var(--text-secondary)]">
-                        {payment.paymentMethod?.toUpperCase() || '-'}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-[var(--text-primary)]">
-                        <span className={clsx('inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold', status.className)}>
-                          <StatusIcon size={14} />
-                          {status.label}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-[0.8rem] text-[var(--text-secondary)]">
-                        {formatDate(payment.paidAt || payment.createdAt)}
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          </div>
+                        </td>
+                        <td className="px-4 py-3 text-[0.8rem] text-[var(--text-secondary)]">
+                          {formatDate(payment.paidAt || payment.createdAt)}
+                        </td>
+                        <td className="px-4 py-3 text-sm text-[var(--text-primary)]">
+                          <button
+                            type="button"
+                            onClick={() => handleDeletePayment(payment)}
+                            disabled={deletePaymentMutation.isPending}
+                            className="inline-flex items-center gap-1 rounded-lg border border-rose-500/40 px-2.5 py-1.5 text-xs font-semibold text-rose-600 transition hover:bg-rose-500/10 disabled:cursor-not-allowed disabled:opacity-50"
+                            title="Delete payment record"
+                          >
+                            <Trash2 size={13} />
+                            Delete
+                          </button>
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="lg:hidden divide-y divide-[var(--border-default)]">
+              {filteredPayments.map((payment) => {
+                const status = statusConfig[payment.status] || statusConfig.CREATED
+                const StatusIcon = status.icon
+                return (
+                  <div key={payment.id} className="p-3 sm:p-4">
+                    <div className="mb-2 flex items-start justify-between gap-2 sm:gap-3">
+                      <div>
+                        <p className="text-[13px] sm:text-sm font-semibold text-[var(--text-primary)] leading-tight break-all">
+                          {payment.razorpayPaymentId || payment.razorpayOrderId || `#${payment.id}`}
+                        </p>
+                        <p className="text-[11px] sm:text-xs text-[var(--text-secondary)] break-all">{payment.receiptNumber || '-'}</p>
+                      </div>
+                      <span className={clsx('inline-flex items-center gap-1 rounded-full px-2 py-0.5 sm:px-2.5 sm:py-1 text-[11px] sm:text-xs font-semibold', status.className)}>
+                        <StatusIcon size={13} />
+                        {status.label}
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-1.5 sm:gap-2 text-[11px] sm:text-xs">
+                      <p className="text-[var(--text-secondary)]">User</p>
+                      <p className="text-right font-medium text-[var(--text-primary)] break-words">{payment.userName || '-'}</p>
+                      <p className="text-[var(--text-secondary)]">Amount</p>
+                      <p className="text-right font-semibold text-[var(--text-primary)]">₹{payment.amount?.toLocaleString()}</p>
+                      <p className="text-[var(--text-secondary)]">Method</p>
+                      <p className="text-right text-[var(--text-primary)]">{payment.paymentMethod?.toUpperCase() || '-'}</p>
+                      <p className="text-[var(--text-secondary)]">Date</p>
+                      <p className="text-right text-[var(--text-primary)]">{formatDate(payment.paidAt || payment.createdAt)}</p>
+                    </div>
+                    <div className="mt-2.5 sm:mt-3 flex justify-end">
+                      <button
+                        type="button"
+                        onClick={() => handleDeletePayment(payment)}
+                        disabled={deletePaymentMutation.isPending}
+                        className="inline-flex items-center gap-1 rounded-lg border border-rose-500/40 px-2 py-1 sm:px-2.5 sm:py-1.5 text-[11px] sm:text-xs font-semibold text-rose-600 transition hover:bg-rose-500/10 disabled:cursor-not-allowed disabled:opacity-50"
+                        title="Delete payment record"
+                      >
+                        <Trash2 size={13} />
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </>
         )}
       </div>
     </div>
