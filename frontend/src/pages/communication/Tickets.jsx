@@ -5,7 +5,7 @@ import { useToast } from '../../context'
 import { ticketApi, userApi, exportApi, downloadBlob } from '../../../../api'
 import { Plus, Search, X, Ticket, MessageSquare, User, Edit, AlertTriangle, Clock, FileSpreadsheet } from 'lucide-react'
 import clsx from 'clsx'
-import { AsyncButton } from '../../components'
+import { AsyncButton, InfoTooltip } from '../../components'
 import { HeroSkeleton, SummaryRowSkeleton, FiltersSkeleton, ListSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
 import useMinLoadingTime from '../../hooks/useMinLoadingTime'
 
@@ -154,8 +154,10 @@ export default function Tickets() {
       {/* Header */}
       <div className="flex flex-col gap-4 mb-6 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-[var(--text-primary)]">Tickets</h1>
-          <p className="mt-1 text-[var(--text-secondary)]">Manage support tickets and requests</p>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-bold text-[var(--text-primary)]">Tickets</h1>
+            <InfoTooltip text="Manage support tickets and requests" />
+          </div>
         </div>
         <div className="flex flex-wrap gap-3">
           <button

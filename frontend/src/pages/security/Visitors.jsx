@@ -5,7 +5,7 @@ import { useAuth } from '../../context'
 import { visitorApi } from '../../../../api'
 import { Plus, Search, X, UserX, Clock, LogIn, LogOut, AlertTriangle } from 'lucide-react'
 import clsx from 'clsx'
-import { FormInput, SmartSelect, FormTextarea, AsyncButton } from '../../components'
+import { FormInput, SmartSelect, FormTextarea, AsyncButton, InfoTooltip } from '../../components'
 import { PermissionDenied } from '../../components'
 import { HeroSkeleton, SummaryRowSkeleton, FiltersSkeleton, ListSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
 import useMinLoadingTime from '../../hooks/useMinLoadingTime'
@@ -160,8 +160,10 @@ export default function Visitors() {
     <div>
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-[var(--text-primary)]">Visitor Management</h1>
-          <p className="mt-1 text-[var(--text-tertiary)]">Track and manage visitors</p>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-bold text-[var(--text-primary)]">Visitor Management</h1>
+            <InfoTooltip text="Track and manage visitors" />
+          </div>
         </div>
         <button
           onClick={() => setShowModal(true)}

@@ -26,6 +26,9 @@ public class SocietyResponse {
     private Integer totalOffices;
     private Integer totalWings;
 
+    private Integer twoWheelerParkingCapacity;
+    private Integer fourWheelerParkingCapacity;
+
     // Actual counts (calculated from database)
     private Long actualFlats;
     private Long actualShops;

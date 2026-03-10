@@ -7,7 +7,7 @@ import { useToast } from '../../context'
 import { vendorApi, societyApi } from '../../../../api'
 import { Plus, Edit, Trash2, Search, X, Truck, Phone, Mail, Eye, Building2, Landmark, FileText, User, MapPin, Upload } from 'lucide-react'
 import clsx from 'clsx'
-import { FormInput, PhoneInput, SmartSelect, FormTextarea, AsyncButton } from '../../components'
+import { FormInput, PhoneInput, SmartSelect, FormTextarea, AsyncButton, InfoTooltip } from '../../components'
 import { PermissionDenied } from '../../components'
 import { BulkImportModal } from '../../components'
 import { HeroSkeleton, FiltersSkeleton, CardGridSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
@@ -201,8 +201,10 @@ export default function Vendors() {
       {/* Header */}
       <div className="flex flex-col gap-4 mb-6 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-[var(--text-primary)]">Vendors</h1>
-          <p className="mt-1 text-[var(--text-tertiary)]">Manage service providers and contractors</p>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-bold text-[var(--text-primary)]">Vendors</h1>
+            <InfoTooltip text="Manage service providers and contractors" />
+          </div>
         </div>
         {canManageVendors() && (
           <div className="flex gap-2 flex-wrap">
