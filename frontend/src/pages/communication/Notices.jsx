@@ -101,7 +101,7 @@ export default function Notices() {
     e.preventDefault()
     const formData = new FormData(e.target)
     const data = {
-      societyId: user.societyId,
+      societyId: effectiveSocietyId,
       title: formData.get('title'),
       content: formData.get('content'),
       priority: formData.get('priority'),

@@ -85,6 +85,7 @@ export const FormInput = ({
             error && !focused && inputWarn,
             focused && !error && inputFocus,
             disabled && inputDisabled,
+            type === "date" && "[color-scheme:light] dark:[color-scheme:dark] cursor-pointer",
           )}
           {...props}
         />

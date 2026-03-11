@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '../../context'
 import { useToast } from '../../context'
 import { emergencyContactApi } from '../../../../api'
@@ -25,6 +26,7 @@ export default function EmergencyContacts() {
   const { user, isCommitteeLevel, canManageEmergencyContacts } = useAuth()
   const toast = useToast()
   const queryClient = useQueryClient()
+  const [searchParams] = useSearchParams()
   const [showModal, setShowModal] = useState(false)
   const [showBulkImport, setShowBulkImport] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
@@ -35,6 +37,10 @@ export default function EmergencyContacts() {
 
   // Check if current user is MASTER_ADMIN
   const isPlatformLevel = user?.role === 'MASTER_ADMIN'
+
+  // Get society filter from URL (for MASTER_ADMIN viewing specific society)
+  const societyIdFromUrl = searchParams.get('society')
+  const effectiveSocietyId = isPlatformLevel && societyIdFromUrl ? parseInt(societyIdFromUrl) : user?.societyId
   
   // Check if user can delete a specific contact
   const canDelete = (contact) => {
@@ -122,7 +128,7 @@ export default function EmergencyContacts() {
     e.preventDefault()
     const formData = new FormData(e.target)
     const data = {
-      societyId: user.societyId,
+      societyId: effectiveSocietyId,
       name: formData.get('name'),
       phone: formData.get('phone'),
       alternatePhone: formData.get('alternatePhone') || null,

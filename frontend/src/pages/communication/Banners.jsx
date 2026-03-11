@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '../../context'
 import { useConfirmDialog } from '../../context'
 import { useToast } from '../../context'
@@ -15,6 +16,7 @@ export default function Banners() {
   const confirmDialog = useConfirmDialog()
   const toast = useToast()
   const queryClient = useQueryClient()
+  const [searchParams] = useSearchParams()
   const [showModal, setShowModal] = useState(false)
   const [editingBanner, setEditingBanner] = useState(null)
   const [searchTerm, setSearchTerm] = useState('')
@@ -22,6 +24,10 @@ export default function Banners() {
 
   // Check if current user is MASTER_ADMIN
   const isPlatformLevel = user?.role === 'MASTER_ADMIN'
+
+  // Get society filter from URL (for MASTER_ADMIN viewing specific society)
+  const societyIdFromUrl = searchParams.get('society')
+  const effectiveSocietyId = isPlatformLevel && societyIdFromUrl ? parseInt(societyIdFromUrl) : user?.societyId
 
   const { data: banners = [], isLoading, isError } = useQuery({
     queryKey: ['banners'],
@@ -95,13 +101,14 @@ export default function Banners() {
     e.preventDefault()
     const formData = new FormData(e.target)
     const data = {
-      societyId: user.societyId,
+      societyId: effectiveSocietyId,
       title: formData.get('title'),
       imageUrl: formData.get('imageUrl'),
       redirectUrl: formData.get('redirectUrl') || null,
       startDate: formData.get('startDate'),
       endDate: formData.get('endDate'),
       displayOrder: parseInt(formData.get('displayOrder')) || 1,
+      isActive: formData.get('isActive') === 'true',
     }
     if (editingBanner) {
       updateMutation.mutate({ id: editingBanner.id, data })

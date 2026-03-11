@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '../../context'
 import { useToast } from '../../context'
 import { ticketApi, userApi, exportApi, downloadBlob } from '../../../../api'
@@ -36,6 +37,7 @@ export default function Tickets() {
   const { user, canCreateTickets, canManageTickets } = useAuth()
   const toast = useToast()
   const queryClient = useQueryClient()
+  const [searchParams] = useSearchParams()
   const [showModal, setShowModal] = useState(false)
   const [showAssignModal, setShowAssignModal] = useState(false)
   const [selectedTicket, setSelectedTicket] = useState(null)
@@ -46,6 +48,10 @@ export default function Tickets() {
 
   // Check if current user is MASTER_ADMIN
   const isPlatformLevel = user?.role === 'MASTER_ADMIN'
+
+  // Get society filter from URL (for MASTER_ADMIN viewing specific society)
+  const societyIdFromUrl = searchParams.get('society')
+  const effectiveSocietyId = isPlatformLevel && societyIdFromUrl ? parseInt(societyIdFromUrl) : user?.societyId
 
   const { data: tickets = [], isLoading, isError } = useQuery({
     queryKey: ['tickets'],
@@ -98,7 +104,7 @@ export default function Tickets() {
     e.preventDefault()
     const formData = new FormData(e.target)
     createMutation.mutate({
-      societyId: user.societyId,
+      societyId: effectiveSocietyId,
       title: formData.get('title'),
       description: formData.get('description'),
       type: formData.get('type'),
@@ -116,7 +122,7 @@ export default function Tickets() {
   }
 
   const handleExport = async () => {
-    if (!user.societyId && !isPlatformLevel) {
+    if (!effectiveSocietyId && !isPlatformLevel) {
       toast.error('Unable to export: No society assigned to your account')
       return
     }
@@ -124,7 +130,7 @@ export default function Tickets() {
     setIsExporting(true)
     try {
       // Use societyId if available, otherwise export all for master admin
-      const response = await exportApi.tickets(user.societyId || null, filterStatus || null)
+      const response = await exportApi.tickets(effectiveSocietyId || null, filterStatus || null)
       downloadBlob(response.data, `tickets_${new Date().toISOString().split('T')[0]}.xlsx`)
       toast.success('Tickets exported successfully')
     } catch (error) {

@@ -77,7 +77,7 @@ export default function Complaints() {
     e.preventDefault()
     const formData = new FormData(e.target)
     createMutation.mutate({
-      societyId: user.societyId,
+      societyId: effectiveSocietyId,
       subject: formData.get('subject'),
       description: formData.get('description'),
       category: formData.get('category'),
