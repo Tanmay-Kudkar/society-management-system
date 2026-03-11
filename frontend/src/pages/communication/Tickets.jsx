@@ -6,7 +6,7 @@ import { useToast } from '../../context'
 import { ticketApi, userApi, exportApi, downloadBlob } from '../../../../api'
 import { Plus, Search, X, Ticket, MessageSquare, User, Edit, AlertTriangle, Clock, FileSpreadsheet } from 'lucide-react'
 import clsx from 'clsx'
-import { InfoTooltip, NeonSweepButton } from '../../components'
+import { AsyncButton } from '../../components'
 import { HeroSkeleton, SummaryRowSkeleton, FiltersSkeleton, ListSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
 import useMinLoadingTime from '../../hooks/useMinLoadingTime'
 
@@ -37,6 +37,7 @@ export default function Tickets() {
   const { user, canCreateTickets, canManageTickets } = useAuth()
   const toast = useToast()
   const queryClient = useQueryClient()
+  const [searchParams] = useSearchParams()
   const [showModal, setShowModal] = useState(false)
   const [showAssignModal, setShowAssignModal] = useState(false)
   const [selectedTicket, setSelectedTicket] = useState(null)
@@ -44,12 +45,13 @@ export default function Tickets() {
   const [filterStatus, setFilterStatus] = useState('')
   const [showOverdueOnly, setShowOverdueOnly] = useState(false)
   const [isExporting, setIsExporting] = useState(false)
-  const [searchParams] = useSearchParams()
 
   // Check if current user is MASTER_ADMIN
   const isPlatformLevel = user?.role === 'MASTER_ADMIN'
+
+  // Get society filter from URL (for MASTER_ADMIN viewing specific society)
   const societyIdFromUrl = searchParams.get('society')
-  const effectiveSocietyId = isPlatformLevel && societyIdFromUrl ? Number(societyIdFromUrl) : user?.societyId
+  const effectiveSocietyId = isPlatformLevel && societyIdFromUrl ? parseInt(societyIdFromUrl) : user?.societyId
 
   const { data: tickets = [], isLoading, isError } = useQuery({
     queryKey: ['tickets'],
@@ -101,14 +103,8 @@ export default function Tickets() {
   const handleSubmit = (e) => {
     e.preventDefault()
     const formData = new FormData(e.target)
-
-    if (!effectiveSocietyId) {
-      toast.error('Society is required. Select a society first.')
-      return
-    }
-
     createMutation.mutate({
-      societyId: Number(effectiveSocietyId),
+      societyId: effectiveSocietyId,
       title: formData.get('title'),
       description: formData.get('description'),
       type: formData.get('type'),
@@ -126,7 +122,7 @@ export default function Tickets() {
   }
 
   const handleExport = async () => {
-    if (!user.societyId && !isPlatformLevel) {
+    if (!effectiveSocietyId && !isPlatformLevel) {
       toast.error('Unable to export: No society assigned to your account')
       return
     }
@@ -134,7 +130,7 @@ export default function Tickets() {
     setIsExporting(true)
     try {
       // Use societyId if available, otherwise export all for master admin
-      const response = await exportApi.tickets(user.societyId || null, filterStatus || null)
+      const response = await exportApi.tickets(effectiveSocietyId || null, filterStatus || null)
       downloadBlob(response.data, `tickets_${new Date().toISOString().split('T')[0]}.xlsx`)
       toast.success('Tickets exported successfully')
     } catch (error) {
@@ -164,32 +160,26 @@ export default function Tickets() {
       {/* Header */}
       <div className="flex flex-col gap-4 mb-6 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold text-[var(--text-primary)]">Tickets</h1>
-            <InfoTooltip text="Manage support tickets and requests" />
-          </div>
+          <h1 className="text-2xl font-bold text-[var(--text-primary)]">Tickets</h1>
+          <p className="mt-1 text-[var(--text-secondary)]">Manage support tickets and requests</p>
         </div>
         <div className="flex flex-wrap gap-3">
-          <NeonSweepButton
-            tone="cyan"
-            size="md"
+          <button
             onClick={handleExport}
             disabled={isExporting}
-            className="w-full sm:w-auto"
+            className="inline-flex items-center gap-2 px-4 py-[0.55rem] rounded-xl font-semibold text-white bg-green-600 transition-transform hover:-translate-y-px hover:shadow-[0_10px_18px_rgba(22,163,74,0.25)] disabled:opacity-60 disabled:cursor-not-allowed disabled:shadow-none"
           >
             <FileSpreadsheet size={20} />
             {isExporting ? 'Exporting...' : 'Export'}
-          </NeonSweepButton>
+          </button>
           {canCreateTickets() && (
-            <NeonSweepButton
-              tone="violet"
-              size="md"
+            <button
               onClick={() => setShowModal(true)}
-              className="w-full sm:w-auto"
+              className="inline-flex items-center gap-2 px-4 py-[0.55rem] rounded-xl font-semibold border border-[var(--border-default)] bg-[var(--bg-card)] text-[var(--text-primary)] transition-transform hover:-translate-y-px hover:shadow-[0_8px_20px_rgba(15,23,42,0.14)] hover:bg-[color-mix(in_srgb,var(--bg-tertiary)_70%,var(--bg-card))] dark:border-[rgba(148,163,184,0.22)] dark:bg-[#f8fafc] dark:text-[#0f172a] dark:hover:bg-white"
             >
               <Plus size={20} />
               Create Ticket
-            </NeonSweepButton>
+            </button>
           )}
         </div>
       </div>
@@ -242,15 +232,16 @@ export default function Tickets() {
             <option value="RESOLVED">Resolved</option>
             <option value="CLOSED">Closed</option>
           </select>
-          <NeonSweepButton
+          <button
             onClick={() => setShowOverdueOnly(!showOverdueOnly)}
-            tone={showOverdueOnly ? 'danger' : 'slate'}
-            size="md"
-            className="w-full sm:w-auto"
+            className={clsx(
+              'inline-flex items-center gap-2 px-4 py-[0.55rem] rounded-xl font-semibold transition-all hover:-translate-y-px',
+              showOverdueOnly ? 'bg-red-600 text-white shadow-[0_10px_18px_rgba(220,38,38,0.25)]' : 'bg-white/10 text-[var(--text-secondary)]'
+            )}
           >
             <AlertTriangle size={18} />
             {showOverdueOnly ? 'Showing Overdue' : 'Show Overdue'}
-          </NeonSweepButton>
+          </button>
         </div>
       </div>
 
@@ -412,8 +403,8 @@ export default function Tickets() {
                 </div>
               </div>
               <div className="flex gap-3 pt-2">
-                <NeonSweepButton type="button" tone="slate" size="md" onClick={() => setShowModal(false)} className="flex-1">Cancel</NeonSweepButton>
-                <NeonSweepButton type="submit" tone="cyan" size="md" className="flex-1" disabled={createMutation.isPending}>{createMutation.isPending ? 'Creating...' : 'Create'}</NeonSweepButton>
+                <button type="button" onClick={() => setShowModal(false)} className="flex-1 py-[0.65rem] px-4 rounded-xl font-semibold border border-[#cbd5f5] text-slate-700 bg-[var(--bg-tertiary)] transition-transform hover:-translate-y-px">Cancel</button>
+                <AsyncButton type="submit" className="flex-1 py-[0.65rem] px-4 rounded-xl font-semibold border border-[var(--border-default)] bg-[var(--bg-card)] text-[var(--text-primary)] transition-all hover:-translate-y-px hover:bg-[color-mix(in_srgb,var(--bg-tertiary)_70%,var(--bg-card))] hover:shadow-[0_8px_20px_rgba(15,23,42,0.14)] dark:border-[rgba(148,163,184,0.22)] dark:bg-[#f8fafc] dark:text-[#0f172a] dark:hover:bg-white" isLoading={createMutation.isPending} loadingText="Creating...">Create</AsyncButton>
               </div>
             </form>
           </div>
@@ -443,8 +434,8 @@ export default function Tickets() {
                 </select>
               </div>
               <div className="flex gap-3 pt-2">
-                <NeonSweepButton type="button" tone="slate" size="md" onClick={() => setShowAssignModal(false)} className="flex-1">Cancel</NeonSweepButton>
-                <NeonSweepButton type="submit" tone="cyan" size="md" className="flex-1" disabled={assignMutation.isPending}>{assignMutation.isPending ? 'Assigning...' : 'Assign'}</NeonSweepButton>
+                <button type="button" onClick={() => setShowAssignModal(false)} className="flex-1 py-[0.65rem] px-4 rounded-xl font-semibold border border-[#cbd5f5] text-slate-700 bg-[var(--bg-tertiary)] transition-transform hover:-translate-y-px">Cancel</button>
+                <AsyncButton type="submit" className="flex-1 py-[0.65rem] px-4 rounded-xl font-semibold border border-[var(--border-default)] bg-[var(--bg-card)] text-[var(--text-primary)] transition-all hover:-translate-y-px hover:bg-[color-mix(in_srgb,var(--bg-tertiary)_70%,var(--bg-card))] hover:shadow-[0_8px_20px_rgba(15,23,42,0.14)] dark:border-[rgba(148,163,184,0.22)] dark:bg-[#f8fafc] dark:text-[#0f172a] dark:hover:bg-white" isLoading={assignMutation.isPending} loadingText="Assigning...">Assign</AsyncButton>
               </div>
             </form>
           </div>
