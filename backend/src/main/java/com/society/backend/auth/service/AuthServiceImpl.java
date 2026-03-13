@@ -3,6 +3,7 @@ package com.society.backend.auth.service;
 import java.time.LocalDateTime;
 import java.util.Set;
 import java.util.UUID;
+import java.util.Optional;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -14,8 +15,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 
 import com.society.backend.auth.dto.request.LoginRequest;
+import com.society.backend.auth.dto.request.LogoutRequest;
 import com.society.backend.auth.dto.response.LoginResponse;
 import com.society.backend.auth.dto.request.RegisterRequest;
 import com.society.backend.user.dto.response.UserResponse;
@@ -52,6 +55,9 @@ public class AuthServiceImpl implements AuthService {
     private final EmailService emailService;
     private final SocietyRepository societyRepository;
     private final LoginAuditRepository loginAuditRepository;
+
+    @Value("${auth.society-admin.proximity-threshold-meters:300}")
+    private double societyAdminProximityThresholdMeters;
 
     // Portal → allowed roles mapping
     private static final Set<Role> ADMIN_ROLES = Set.of(
@@ -156,14 +162,21 @@ public class AuthServiceImpl implements AuthService {
         // Get flatId if user has a flat assigned
         Long flatId = user.getFlat() != null ? user.getFlat().getId() : null;
 
-        // Record login audit (with proximity data when available)
-        try {
-            String ip = extractIpAddress(httpRequest);
-            String ua = httpRequest.getHeader("User-Agent");
-            loginAuditRepository.save(new LoginAudit(user, LoginAudit.Action.LOGIN, ip, ua,
-                    request.getLatitude(), request.getLongitude()));
-        } catch (Exception e) {
-            logger.warn("Failed to record login audit for user {}: {}", user.getId(), e.getMessage());
+        // Record login audit only for SOCIETY_ADMIN sessions.
+        if (isSocietyAdminRole(user.getRole())) {
+            try {
+                String ip = extractIpAddress(httpRequest);
+                String ua = httpRequest.getHeader("User-Agent");
+                loginAuditRepository.save(buildAuditEntry(
+                        user,
+                        LoginAudit.Action.LOGIN,
+                        ip,
+                        ua,
+                        request.getLatitude(),
+                        request.getLongitude()));
+            } catch (Exception e) {
+                logger.warn("Failed to record login audit for user {}: {}", user.getId(), e.getMessage());
+            }
         }
 
         return new LoginResponse(
@@ -178,21 +191,97 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public void recordLogout(String token, HttpServletRequest httpRequest) {
+    public void recordLogout(String token, HttpServletRequest httpRequest, LogoutRequest logoutRequest) {
         if (token == null || !jwtUtils.validateToken(token)) {
             return; // Nothing to audit if token is invalid
         }
         try {
             String email = jwtUtils.getEmailFromToken(token);
             User user = userRepository.findByEmail(email).orElse(null);
-            if (user != null) {
+            if (user != null && isSocietyAdminRole(user.getRole())) {
                 String ip = extractIpAddress(httpRequest);
                 String ua = httpRequest.getHeader("User-Agent");
-                loginAuditRepository.save(new LoginAudit(user, LoginAudit.Action.LOGOUT, ip, ua));
+                Double latitude = logoutRequest != null ? logoutRequest.getLatitude() : null;
+                Double longitude = logoutRequest != null ? logoutRequest.getLongitude() : null;
+                loginAuditRepository.save(buildAuditEntry(
+                        user,
+                        LoginAudit.Action.LOGOUT,
+                        ip,
+                        ua,
+                        latitude,
+                        longitude));
             }
         } catch (Exception e) {
             logger.warn("Failed to record logout audit: {}", e.getMessage());
         }
+    }
+
+    private LoginAudit buildAuditEntry(User user,
+                                       LoginAudit.Action action,
+                                       String ip,
+                                       String userAgent,
+                                       Double latitude,
+                                       Double longitude) {
+        if (!isSocietyAdminRole(user.getRole()) || latitude == null || longitude == null) {
+            return new LoginAudit(user, action, ip, userAgent, latitude, longitude);
+        }
+
+        Optional<LoginAudit> previousLogin = loginAuditRepository
+                .findTopByUserIdAndActionAndLatitudeIsNotNullAndLongitudeIsNotNullOrderByTimestampDesc(
+                        user.getId(),
+                        LoginAudit.Action.LOGIN);
+
+        if (previousLogin.isEmpty()) {
+            return new LoginAudit(
+                    user,
+                    action,
+                    ip,
+                    userAgent,
+                    latitude,
+                    longitude,
+                    null,
+                    null,
+                    societyAdminProximityThresholdMeters);
+        }
+
+        LoginAudit anchor = previousLogin.get();
+        double distanceMeters = haversineMeters(
+                latitude,
+                longitude,
+                anchor.getLatitude(),
+                anchor.getLongitude());
+
+        boolean isNearby = distanceMeters <= societyAdminProximityThresholdMeters;
+        return new LoginAudit(
+                user,
+                action,
+                ip,
+                userAgent,
+                latitude,
+                longitude,
+                isNearby,
+                distanceMeters,
+                societyAdminProximityThresholdMeters);
+    }
+
+    private boolean isSocietyAdminRole(Role role) {
+        return role == Role.SOCIETY_ADMIN;
+    }
+
+    private double haversineMeters(double latitude1, double longitude1, double latitude2, double longitude2) {
+        final double earthRadiusMeters = 6371000.0;
+
+        double latDistance = Math.toRadians(latitude2 - latitude1);
+        double lonDistance = Math.toRadians(longitude2 - longitude1);
+
+        double a = Math.sin(latDistance / 2) * Math.sin(latDistance / 2)
+                + Math.cos(Math.toRadians(latitude1))
+                * Math.cos(Math.toRadians(latitude2))
+                * Math.sin(lonDistance / 2)
+                * Math.sin(lonDistance / 2);
+
+        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return earthRadiusMeters * c;
     }
 
     @Override

@@ -40,6 +40,29 @@ export const AuthProvider = ({ children }) => {
   })
   const authChecked = useRef(false)
 
+  const getCurrentLocation = useCallback(() => {
+    if (!navigator.geolocation) {
+      return Promise.resolve(null)
+    }
+
+    return new Promise((resolve) => {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          resolve({
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+          })
+        },
+        () => resolve(null),
+        {
+          enableHighAccuracy: true,
+          timeout: 6000,
+          maximumAge: 120000,
+        },
+      )
+    })
+  }, [])
+
   useEffect(() => {
     // Prevent multiple auth checks
     if (authChecked.current) return
@@ -79,9 +102,9 @@ export const AuthProvider = ({ children }) => {
     checkAuth()
   }, [])
 
-  const login = useCallback(async (email, password, { portalType, rememberMe } = {}) => {
+  const login = useCallback(async (email, password, { portalType, rememberMe, latitude, longitude } = {}) => {
     try {
-      const response = await authApi.login({ email, password, portalType, rememberMe })
+      const response = await authApi.login({ email, password, portalType, rememberMe, latitude, longitude })
       const { token, id, name, email: userEmail, role, accountType, societyId, flatId } = response.data
       
       const userData = { id, name, email: userEmail, role, accountType, societyId, flatId }
@@ -99,13 +122,15 @@ export const AuthProvider = ({ children }) => {
     }
   }, [])
 
-  const logout = useCallback(() => {
+  const logout = useCallback(async () => {
+    const location = await getCurrentLocation()
+
     setUser(null)
     queryClient.clear()
     localStorage.removeItem('token')
     localStorage.removeItem('user')
-    authApi.logout().catch(() => {})
-  }, [queryClient])
+    authApi.logout(location || undefined).catch(() => {})
+  }, [getCurrentLocation, queryClient])
 
   const hasRole = useCallback((...roles) => {
     if (!user) return false
