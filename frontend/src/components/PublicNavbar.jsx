@@ -50,11 +50,11 @@ export default function PublicNavbar({
 
   return (
     <header className={clsx(
-      'fixed left-0 right-0 top-0 z-[120] px-4 pt-4 pb-4 sm:pt-6 transition duration-500 ease-out',
+      'fixed left-0 right-0 top-0 z-[120] px-3 pb-3 pt-3 sm:px-4 sm:pb-4 sm:pt-6 transition duration-500 ease-out',
       loaded ? 'translate-y-0 opacity-100' : '-translate-y-8 opacity-0',
     )}>
       <nav className={clsx(
-        'mx-auto flex w-full items-center justify-between gap-3 rounded-full border border-white/60 bg-white/70 px-4 py-2.5 shadow-[0_8px_24px_rgba(0,0,0,0.06)] backdrop-blur-md transition-colors dark:border-slate-700/60 dark:bg-slate-900/80 dark:shadow-[0_8px_24px_rgba(0,0,0,0.4)]',
+        'mx-auto flex w-full items-center justify-between gap-3 rounded-2xl border border-white/60 bg-white/70 px-3 py-2 sm:rounded-full sm:px-4 sm:py-2.5 shadow-[0_8px_24px_rgba(0,0,0,0.06)] backdrop-blur-md transition-colors dark:border-slate-700/60 dark:bg-slate-900/80 dark:shadow-[0_8px_24px_rgba(0,0,0,0.4)]',
         maxWidthClass
       )}>
         {onBrandClick ? (
@@ -63,7 +63,7 @@ export default function PublicNavbar({
                 <Building2 size={17} />
               </div>
               <div className="flex flex-col items-start">
-                <span className="text-[1.68rem] font-extrabold leading-none tracking-[-0.02em] text-slate-900 dark:text-white">SocietyHub</span>
+                <span className="text-[1.15rem] sm:text-[1.35rem] lg:text-[1.68rem] font-extrabold leading-none tracking-[-0.02em] text-slate-900 dark:text-white">SocietyHub</span>
                 {brandSubtitle && <span className="mt-px text-[0.56rem] font-semibold uppercase tracking-[0.16em] text-[var(--text-tertiary)]">Management System</span>}
               </div>
             </button>
@@ -73,7 +73,7 @@ export default function PublicNavbar({
                 <Building2 size={17} />
               </div>
               <div className="flex flex-col items-start">
-                <span className="text-[1.68rem] font-extrabold leading-none tracking-[-0.02em] text-slate-900 dark:text-white">SocietyHub</span>
+                <span className="text-[1.15rem] sm:text-[1.35rem] lg:text-[1.68rem] font-extrabold leading-none tracking-[-0.02em] text-slate-900 dark:text-white">SocietyHub</span>
                 {brandSubtitle && <span className="mt-px text-[0.56rem] font-semibold uppercase tracking-[0.16em] text-[var(--text-tertiary)]">Management System</span>}
               </div>
             </Link>

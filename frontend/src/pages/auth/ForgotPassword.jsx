@@ -27,9 +27,9 @@ export default function ForgotPassword() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[var(--bg-primary)] px-4 py-12">
+    <div className="flex min-h-screen items-center justify-center bg-[var(--bg-primary)] px-3 py-8 sm:px-4 sm:py-12">
       <div className="w-full max-w-md">
-        <div className="mb-8 text-center">
+        <div className="mb-6 text-center sm:mb-8">
           <Link to="/" className="inline-flex items-center gap-3 no-underline">
             <div className="rounded-xl p-3" style={{ background: 'linear-gradient(to bottom right, var(--accent-primary), var(--accent-secondary))' }}>
               <Building2 className="h-7 w-7 text-white" />
@@ -38,7 +38,7 @@ export default function ForgotPassword() {
           </Link>
         </div>
 
-        <div className="rounded-3xl border border-[var(--border-default)] bg-[var(--bg-card)] p-8 shadow-xl">
+        <div className="rounded-3xl border border-[var(--border-default)] bg-[var(--bg-card)] p-5 shadow-xl sm:p-8">
           {!sent ? (
             <>
               <div className="mb-6 text-center">
@@ -48,7 +48,7 @@ export default function ForgotPassword() {
                 >
                   <Mail className="h-7 w-7" style={{ color: 'var(--accent-primary)' }} />
                 </div>
-                <h2 className="mb-2 text-3xl font-extrabold text-[var(--text-primary)]">Forgot Password?</h2>
+                <h2 className="mb-2 text-2xl font-extrabold text-[var(--text-primary)] sm:text-3xl">Forgot Password?</h2>
                 <p className="text-sm text-[var(--text-secondary)]">Enter your email address and we'll send you a link to reset your password.</p>
               </div>
 
