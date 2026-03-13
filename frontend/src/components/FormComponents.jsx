@@ -58,7 +58,7 @@ export const FormInput = ({
   const [focused, setFocused] = useState(false);
 
   const inputBase =
-    "w-full rounded-lg border border-[var(--border-default)] bg-[var(--bg-card)] py-2.5 px-3 text-sm text-[var(--text-primary)] outline-none transition placeholder:text-[var(--text-tertiary)]";
+    "w-full rounded-lg border border-[var(--border-default)] bg-[var(--bg-card)] py-2.5 px-3 text-sm text-[var(--text-primary)] outline-none transition placeholder:text-[var(--placeholder-color)]";
   const inputFocus = "border-blue-500 shadow-[0_0_0_2px_rgba(59,130,246,0.12)]";
   const inputWarn = "border-amber-500 shadow-[0_0_0_2px_rgba(245,158,11,0.12)]";
   const inputDisabled = "opacity-60 cursor-not-allowed";
@@ -395,7 +395,7 @@ export const FormTextarea = ({
   const [focused, setFocused] = useState(false);
 
   const inputBase =
-    "w-full rounded-lg border border-[var(--border-default)] bg-[var(--bg-card)] py-2.5 px-3 text-sm text-[var(--text-primary)] outline-none transition placeholder:text-[var(--text-tertiary)] resize-y min-h-[96px]";
+    "w-full rounded-lg border border-[var(--border-default)] bg-[var(--bg-card)] py-2.5 px-3 text-sm text-[var(--text-primary)] outline-none transition placeholder:text-[var(--placeholder-color)] resize-y min-h-[96px]";
   const inputFocus = "border-blue-500 ring-2 ring-blue-500/20";
   const inputWarn = "border-amber-500 ring-2 ring-amber-500/20";
   const inputDisabled = "opacity-60 cursor-not-allowed";
@@ -455,7 +455,7 @@ export const NumberInput = ({
   const [focused, setFocused] = useState(false);
 
   const inputBase =
-    "w-full rounded-lg border border-[var(--border-default)] bg-[var(--bg-card)] py-2.5 px-3 text-sm text-[var(--text-primary)] outline-none transition placeholder:text-[var(--text-tertiary)]";
+    "w-full rounded-lg border border-[var(--border-default)] bg-[var(--bg-card)] py-2.5 px-3 text-sm text-[var(--text-primary)] outline-none transition placeholder:text-[var(--placeholder-color)]";
   const inputFocus = "border-blue-500 ring-2 ring-blue-500/20";
   const inputWarn = "border-amber-500 ring-2 ring-amber-500/20";
   const inputDisabled = "opacity-60 cursor-not-allowed";
@@ -537,7 +537,7 @@ export const PincodeInput = ({
       onChange={handleChange}
       error={error || localError}
       required={required}
-      placeholder="400001"
+      placeholder="e.g. 400001"
       maxLength={6}
       inputMode="numeric"
       className={className}
