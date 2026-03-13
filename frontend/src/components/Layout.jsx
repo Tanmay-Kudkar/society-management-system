@@ -469,14 +469,14 @@ function MobileAccordion({
         onFocus={() => onPrefetch?.(group.path)}
         onClick={onNavigate}
         className={clsx(
-          "mb-0.5 flex items-center gap-[11px] whitespace-nowrap rounded-[10px] px-3.5 py-3 text-[13.5px] sm:text-sm font-semibold no-underline transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-card)]",
+          "mb-0.5 flex items-center gap-[11px] rounded-[10px] px-3.5 py-3 text-[13.5px] sm:text-sm font-semibold no-underline transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-card)]",
           isActiveGroup
             ? "bg-[var(--accent-primary)] text-white"
             : "text-[var(--text-secondary)] hover:bg-[rgba(47,129,247,0.06)] hover:text-[var(--text-primary)]",
         )}
       >
         <group.icon size={20} />
-        <span>{group.label}</span>
+        <span className="min-w-0 break-words">{group.label}</span>
       </NavLink>
     );
   }
@@ -487,7 +487,7 @@ function MobileAccordion({
       <button
         onClick={onToggle}
         className={clsx(
-          "mb-0.5 flex w-full items-center justify-between rounded-[10px] border-none px-3.5 py-3 text-left text-[13.5px] sm:text-sm font-semibold whitespace-nowrap transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-card)]",
+          "mb-0.5 flex w-full items-center justify-between rounded-[10px] border-none px-3.5 py-3 text-left text-[13.5px] sm:text-sm font-semibold transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-card)]",
           isActiveGroup || isOpen
             ? "bg-[color-mix(in_srgb,var(--accent-primary)_6%,transparent)] text-[var(--accent-primary)] font-[650]"
             : "bg-transparent text-[var(--text-secondary)] hover:bg-[rgba(47,129,247,0.06)] hover:text-[var(--text-primary)]",
@@ -520,7 +520,7 @@ function MobileAccordion({
               onClick={onNavigate}
               className={({ isActive }) =>
                 clsx(
-                  "mx-1.5 mb-px flex items-center gap-3 whitespace-nowrap rounded-lg py-2.5 pr-3.5 pl-[46px] text-[13px] sm:text-[13.5px] font-medium no-underline transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-card)]",
+                  "mx-1.5 mb-px flex items-center gap-3 rounded-lg py-2.5 pr-3.5 pl-[46px] text-[13px] sm:text-[13.5px] font-medium no-underline transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-card)]",
                   isActive
                     ? "bg-[rgba(47,129,247,0.1)] text-[var(--accent-primary)] font-semibold"
                     : "text-[var(--text-secondary)] hover:bg-[rgba(47,129,247,0.08)] hover:text-[var(--text-primary)]",
@@ -528,7 +528,7 @@ function MobileAccordion({
               }
             >
               <item.icon size={18} />
-              <span>{item.label}</span>
+              <span className="min-w-0 break-words">{item.label}</span>
             </NavLink>
           ))}
         </div>
@@ -872,7 +872,7 @@ export default function Layout() {
 
       {/* Top Navbar */}
       <header className="fixed inset-x-0 top-0 z-40 lg:left-[272px]">
-        <div className="h-16 border-b border-[var(--border-default)] bg-[var(--bg-secondary)] backdrop-blur-[8px]">
+        <div className="h-14 border-b border-[var(--border-default)] bg-[var(--bg-secondary)] backdrop-blur-[8px] sm:h-16">
           <div className="mx-auto flex h-full max-w-[1800px] items-center justify-between gap-4 px-4 lg:justify-end lg:px-6 [&>*]:min-w-0">
             {/* Logo - visible on mobile only */}
             <div className="group flex cursor-pointer items-center gap-3 text-decoration-none lg:hidden" onClick={() => navigate(resolvePath("/dashboard"))}>
@@ -977,7 +977,7 @@ export default function Layout() {
         {/* Drawer */}
         <aside
           className={clsx(
-            "absolute right-0 top-0 flex h-full w-[min(92vw,360px)] sm:w-[340px] md:w-[360px] max-w-[92vw] flex-col bg-[var(--bg-card)] shadow-[-8px_0_28px_rgba(0,0,0,0.38)] will-change-transform transition-transform duration-300 motion-reduce:transition-none",
+            "absolute right-0 top-0 flex h-full w-[min(94vw,360px)] sm:w-[340px] md:w-[360px] max-w-[94vw] flex-col bg-[var(--bg-card)] shadow-[-8px_0_28px_rgba(0,0,0,0.38)] will-change-transform transition-transform duration-300 motion-reduce:transition-none",
             mobileMenuOpen
               ? "translate-x-0"
               : "translate-x-full",
@@ -1046,8 +1046,8 @@ export default function Layout() {
       </div>
 
       {/* Main content */}
-      <main className="min-h-screen pt-[65px] lg:ml-[272px]">
-        <div className="p-4 md:p-6 lg:px-7 lg:py-6">
+      <main className="min-h-screen pt-[57px] sm:pt-[65px] lg:ml-[272px]">
+        <div className="p-3 sm:p-4 md:p-6 lg:px-7 lg:py-6">
           <Outlet />
         </div>
       </main>

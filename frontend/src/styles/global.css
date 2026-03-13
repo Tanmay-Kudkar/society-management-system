@@ -217,6 +217,7 @@
   }
 
   html {
+    width: 100%;
     min-height: 100%;
     overflow-x: hidden;
     overflow-y: scroll;
@@ -227,6 +228,8 @@
   }
 
   body {
+    width: 100%;
+    max-width: 100vw;
     min-height: 100%;
     overflow-x: clip;
     font-family: var(--font-sans);
@@ -256,6 +259,22 @@
   #root {
     min-height: 100%;
     width: 100%;
+    max-width: 100%;
+  }
+
+  img,
+  video,
+  canvas,
+  svg {
+    max-width: 100%;
+    height: auto;
+  }
+
+  input,
+  select,
+  textarea,
+  button {
+    max-width: 100%;
   }
 
   .sr-only {
@@ -336,6 +355,18 @@ button {
   :root {
     --text-base: 0.92rem;
     --text-md: 0.97rem;
+    --spacing-lg: 1.05rem;
+    --spacing-xl: 1.45rem;
+  }
+}
+
+@media (pointer: coarse) {
+  button,
+  input,
+  select,
+  textarea,
+  a[role="button"] {
+    min-height: 44px;
   }
 }
 

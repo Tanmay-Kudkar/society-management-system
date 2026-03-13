@@ -37,7 +37,7 @@ export default function PublicFooter() {
   return (
     <footer
       id="contact"
-      className="scroll-mt-28 border-t border-[#e2e8f0] bg-[#f6f9fc] px-6 py-16 text-[#0f172a] transition-colors duration-300 dark:border-slate-800/80 dark:bg-[#0b1120] dark:text-white"
+      className="scroll-mt-28 border-t border-[#e2e8f0] bg-[#f6f9fc] px-4 py-14 text-[#0f172a] transition-colors duration-300 sm:px-6 sm:py-16 dark:border-slate-800/80 dark:bg-[#0b1120] dark:text-white"
     >
       <div className="mx-auto max-w-[1200px]">
         <div className="mb-12 grid items-start gap-x-8 gap-y-12 lg:grid-cols-[1.4fr_0.9fr_1.3fr_1.1fr_1.1fr] md:grid-cols-3 sm:grid-cols-2">
@@ -138,7 +138,7 @@ export default function PublicFooter() {
               <li>
                 <a
                   href="mailto:assist@societyhub.com"
-                  className="group inline-flex items-center gap-2 text-[0.95rem] font-bold text-[#475569] no-underline transition-colors hover:text-[#0f172a] dark:text-slate-300 dark:hover:text-white"
+                  className="group inline-flex items-center gap-2 break-all text-[0.95rem] font-bold text-[#475569] no-underline transition-colors hover:text-[#0f172a] dark:text-slate-300 dark:hover:text-white"
                 >
                   <Mail size={18} className="stroke-[2.5] text-[#334155] transition-colors group-hover:text-[#0f172a] dark:text-slate-400 dark:group-hover:text-white" />
                   assist@societyhub.com
@@ -147,7 +147,7 @@ export default function PublicFooter() {
               <li>
                 <a
                   href="tel:+919119300000"
-                  className="group inline-flex items-center gap-2 text-[0.95rem] font-bold text-[#475569] no-underline transition-colors hover:text-[#0f172a] dark:text-slate-300 dark:hover:text-white"
+                  className="group inline-flex items-center gap-2 break-all text-[0.95rem] font-bold text-[#475569] no-underline transition-colors hover:text-[#0f172a] dark:text-slate-300 dark:hover:text-white"
                 >
                   <Phone size={18} className="stroke-[2.5] text-[#334155] transition-colors group-hover:text-[#0f172a] dark:text-slate-400 dark:group-hover:text-white" />
                   +91 91193 00000
