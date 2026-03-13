@@ -594,3 +594,35 @@ CREATE TABLE IF NOT EXISTS society_rules (
     updated_at      TIMESTAMP DEFAULT NOW()
 );
 
+-- ————————————————————————————————————————————————————————————————
+-- 47. EMPLOYEES (HR Records)
+-- ————————————————————————————————————————————————————————————————
+CREATE TABLE IF NOT EXISTS employees (
+    id                          BIGSERIAL PRIMARY KEY,
+    user_id                     BIGINT NOT NULL UNIQUE REFERENCES users(id),
+    society_id                  BIGINT NOT NULL REFERENCES societies(id),
+    employee_code               VARCHAR(30),
+    department                  VARCHAR(50) NOT NULL,
+    designation                 VARCHAR(100) NOT NULL,
+    joining_date                DATE,
+    termination_date            DATE,
+    employment_type             VARCHAR(30) DEFAULT 'FULL_TIME',
+    shift_timing                VARCHAR(100),
+    monthly_salary              NUMERIC(12,2) DEFAULT 0,
+    salary_account_number       VARCHAR(30),
+    salary_ifsc                 VARCHAR(20),
+    salary_bank_name            VARCHAR(100),
+    id_proof_type               VARCHAR(30),
+    id_proof_number             VARCHAR(50),
+    id_proof_document_url       VARCHAR(500),
+    photo_url                   VARCHAR(500),
+    emergency_contact_name      VARCHAR(100),
+    emergency_contact_phone     VARCHAR(20),
+    address                     TEXT,
+    advance_balance             NUMERIC(12,2) DEFAULT 0,
+    is_active                   BOOLEAN NOT NULL DEFAULT TRUE,
+    notes                       TEXT,
+    created_at                  TIMESTAMP DEFAULT NOW(),
+    updated_at                  TIMESTAMP DEFAULT NOW()
+);
+
