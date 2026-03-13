@@ -1051,7 +1051,7 @@ export default function SocietyAdmins() {
                 {society ? (
                   <div
                     className="p-3 rounded-[12px] bg-[color-mix(in_srgb,var(--bg-secondary)_94%,white_6%)] border border-[color-mix(in_srgb,var(--border-default)_90%,white_10%)] cursor-pointer transition-[border-color,background-color,box-shadow] duration-200 ease-out flex flex-col gap-[6px] hover:bg-[color-mix(in_srgb,var(--bg-secondary)_88%,var(--accent-primary)_12%)] hover:border-[rgba(59,130,246,0.3)] hover:shadow-[0_8px_18px_rgba(30,64,175,0.14)]"
-                    onClick={() => navigate(`/?society=${encodeURIComponent(society.id)}`)}
+                    onClick={() => navigate(`/dashboard?society=${encodeURIComponent(society.id)}`)}
                   >
                     <div className="flex items-center gap-2 text-sm font-semibold text-[var(--text-primary)]">
                       <Building2 size={16} />

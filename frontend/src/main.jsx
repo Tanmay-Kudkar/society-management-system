@@ -6,6 +6,31 @@ import App from './App.jsx'
 import 'leaflet/dist/leaflet.css'
 import './styles/global.css'
 
+function enablePerformanceModeWhenNeeded() {
+  if (typeof window === 'undefined') return
+
+  const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches
+  const reducedData = window.matchMedia?.('(prefers-reduced-data: reduce)')?.matches
+  const coarsePointer = window.matchMedia?.('(pointer: coarse)')?.matches
+  const smallScreen = window.innerWidth <= 768
+  const deviceMemory = navigator.deviceMemory || 0
+  const cpuCores = navigator.hardwareConcurrency || 0
+
+  const lowSpecDevice =
+    (deviceMemory > 0 && deviceMemory <= 4) ||
+    (cpuCores > 0 && cpuCores <= 4)
+
+  const shouldEnablePerfMode =
+    Boolean(reducedMotion || reducedData || lowSpecDevice || (coarsePointer && smallScreen))
+
+  if (shouldEnablePerfMode) {
+    document.documentElement.classList.add('perf-lite')
+    document.body.classList.add('perf-lite')
+  }
+}
+
+enablePerformanceModeWhenNeeded()
+
 const queryClient = new QueryClient({
   mutationCache: new MutationCache({
     onError: (error, _variables, _context, mutation) => {

@@ -36,4 +36,14 @@ public class PaymentResponse {
     private Boolean undoAvailable;
     private String errorCode;
     private String errorDescription;
+    private String refundId;
+    private String refundStatus;
+    private BigDecimal refundAmount;
+    private LocalDateTime refundInitiatedAt;
+    private LocalDateTime refundProcessedAt;
+    private String refundFailureReason;
+    private String settlementStatus;
+    private String settlementId;
+    private String settlementUtr;
+    private LocalDateTime settledAt;
 }
