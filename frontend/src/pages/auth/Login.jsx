@@ -320,7 +320,7 @@ export default function Login() {
                       className="min-w-0 flex-1 border-none bg-transparent px-3 py-3 text-base text-[var(--text-primary)] outline-none focus:outline-none focus-visible:outline-none placeholder:text-[var(--text-tertiary)]"
                       placeholder="you@example.com"
                       required
-                      autoComplete="email"
+                      autoComplete="off"
                       aria-invalid={Boolean(fieldErrors.email)}
                     />
                   </div>
@@ -348,7 +348,7 @@ export default function Login() {
                       className="min-w-0 flex-1 border-none bg-transparent px-3 py-3 text-base text-[var(--text-primary)] outline-none focus:outline-none focus-visible:outline-none placeholder:text-[var(--text-tertiary)] [&::-ms-reveal]:hidden [&::-webkit-contacts-auto-fill-button]:hidden"
                       placeholder="Enter password"
                       required
-                      autoComplete="current-password"
+                      autoComplete="off"
                       aria-invalid={Boolean(fieldErrors.password)}
                     />
                     <button type="button" onClick={() => setShowPassword(!showPassword)} className="mr-1.5 shrink-0 rounded-lg p-2 text-[var(--text-tertiary)] transition-colors duration-200 hover:text-[var(--text-secondary)]" aria-label={showPassword ? 'Hide password' : 'Show password'}>
