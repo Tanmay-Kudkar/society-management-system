@@ -128,7 +128,7 @@ export default function Login() {
     setIsLoaded(true)
     const savedEmail = localStorage.getItem('rememberedEmail')
     const savedRememberMe = localStorage.getItem('rememberMe') === 'true'
-    
+
     if (savedEmail && savedRememberMe) {
       setEmail(savedEmail)
       setRememberMe(true)
