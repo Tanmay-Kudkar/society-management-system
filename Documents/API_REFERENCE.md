@@ -24,6 +24,19 @@ Base URL: `http://localhost:8080`
 - `GET /transactions/society/{societyId}`
 - `GET /maintenance-bills`
 - `GET /api/reports/dashboard/{societyId}`
+- `POST /api/payments/create-order`
+- `POST /api/payments/verify`
+- `POST /api/payments/failure`
+- `POST /api/payments/cancel`
+- `POST /api/payments/{id}/request-refund?userId={userId}`
+- `POST /api/payments/webhook` (public; verified via `X-Razorpay-Signature`)
+- `GET /api/payments/webhook-events?limit=50` (MASTER_ADMIN only)
+
+### Razorpay Webhook Notes
+- Configure endpoint URL as `/api/payments/webhook`.
+- Set webhook secret in backend env: `RAZORPAY_WEBHOOK_SECRET`.
+- Recommended subscribed events: `payment.captured`, `payment.authorized`, `payment.failed`, `payment.refunded`, `refund.created`, `refund.processed`, `refund.failed`, `settlement.processed`, `settlement.failed`, `order.paid`.
+- Duplicate retries are deduplicated when `X-Razorpay-Event-Id` is present.
 
 ## Vendors and Contracts
 - `GET /vendors`

@@ -63,6 +63,18 @@ public class PaymentController {
     }
 
     /**
+     * Request refund for a captured payment via Razorpay.
+     */
+    @PostMapping("/{id}/request-refund")
+    public ResponseEntity<PaymentResponse> requestRefund(
+            @PathVariable Long id,
+            @RequestParam Long userId,
+            @Valid @RequestBody(required = false) RefundRequest request) {
+        PaymentResponse response = paymentService.requestRefund(id, userId, request);
+        return ResponseEntity.ok(response);
+    }
+
+    /**
      * Get payment by ID
      */
     @GetMapping("/{id}")
@@ -138,7 +150,18 @@ public class PaymentController {
     @PreAuthorize("permitAll()")
     public ResponseEntity<Map<String, String>> handleWebhook(
             @RequestBody String payload,
-            @RequestHeader("X-Razorpay-Signature") String signature) {
-        return ResponseEntity.ok(paymentService.handleWebhook(payload, signature));
+            @RequestHeader("X-Razorpay-Signature") String signature,
+            @RequestHeader(value = "X-Razorpay-Event-Id", required = false) String eventId) {
+        return ResponseEntity.ok(paymentService.handleWebhook(payload, signature, eventId));
+    }
+
+    /**
+     * Master-admin audit endpoint for recent Razorpay webhook events.
+     */
+    @GetMapping("/webhook-events")
+    @PreAuthorize("hasRole('MASTER_ADMIN')")
+    public ResponseEntity<List<PaymentWebhookEventResponse>> getRecentWebhookEvents(
+            @RequestParam(defaultValue = "50") int limit) {
+        return ResponseEntity.ok(paymentService.getRecentWebhookEvents(limit));
     }
 }

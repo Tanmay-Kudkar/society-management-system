@@ -46,7 +46,7 @@ export default function OverviewSection({
                     className="cursor-pointer rounded-2xl border border-[var(--border-default)] bg-[var(--bg-secondary)] px-4 py-3 transition-colors hover:border-[var(--border-strong)]"
                     onClick={() => {
                       const society = societies.find((entry) => entry.name === item.name);
-                      if (society) navigate(`/?society=${society.id}`);
+                      if (society) navigate(`/dashboard?society=${society.id}`);
                     }}
                   >
                     <div className="flex items-center justify-between">
