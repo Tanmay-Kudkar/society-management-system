@@ -559,6 +559,20 @@ export const societyRuleApi = {
   delete: (id, userId) => api.delete(`/society-rules/${id}`, { headers: { 'X-User-Id': userId } }),
 }
 
+// Employee API
+export const employeeApi = {
+  create: (data, userId) => api.post(`/employees?userId=${userId}`, data),
+  update: (id, data, userId) => api.put(`/employees/${id}?userId=${userId}`, data),
+  getById: (id, userId) => api.get(`/employees/${id}?userId=${userId}`),
+  getByUserId: (targetUserId, userId) => api.get(`/employees/user/${targetUserId}?userId=${userId}`),
+  getBySociety: (societyId, userId, params = {}) => api.get(`/employees/society/${societyId}?userId=${userId}`, { params }),
+  getCounts: (societyId, userId) => api.get(`/employees/society/${societyId}/counts?userId=${userId}`),
+  deactivate: (id, userId) => api.patch(`/employees/${id}/deactivate?userId=${userId}`),
+  delete: (id, userId) => api.delete(`/employees/${id}?userId=${userId}`),
+  recordAdvance: (id, amount, userId) => api.patch(`/employees/${id}/advance/record?amount=${amount}&userId=${userId}`),
+  deductAdvance: (id, amount, userId) => api.patch(`/employees/${id}/advance/deduct?amount=${amount}&userId=${userId}`),
+}
+
 // Helper function to download blob as file
 export const downloadBlob = (blob, filename) => {
   const url = window.URL.createObjectURL(blob);
