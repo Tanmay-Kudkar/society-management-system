@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { Building2, Shield, Users, CreditCard, Bell, ArrowRight, CheckCircle, ChevronDown, Car, Phone, MessageSquare, Key, Sun, Moon, Menu, X, Twitter, Linkedin, Monitor, Sparkles, Mail, Link2, Youtube } from 'lucide-react'
+import { Building2, Shield, Users, CreditCard, Bell, ArrowRight, CheckCircle, ChevronDown, Car, Phone, MessageSquare, Key, Menu, X, Twitter, Linkedin, Monitor, Sparkles, Mail, Link2, Youtube } from 'lucide-react'
 import { useTheme } from '../../context'
 import { enquiryApi } from '../../../../api'
 import clsx from 'clsx'
+import { motion } from 'framer-motion'
 
 /* Scroll-reveal hook */
 function useScrollReveal() {
@@ -22,12 +23,9 @@ function useScrollReveal() {
 export default function Welcome() {
   const navigate = useNavigate()
   const location = useLocation()
-  const { isDark, theme, setTheme, resetToSystemTheme, isManual } = useTheme()
+  const { isDark, setTheme } = useTheme()
   const [isLoaded, setIsLoaded] = useState(false)
-  const [scrolled, setScrolled] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const [themeMenuOpen, setThemeMenuOpen] = useState(false)
-  const themeMenuRef = useRef(null)
 
   const [enrollName, setEnrollName] = useState('')
   const [enrollPhone, setEnrollPhone] = useState('')
@@ -37,18 +35,7 @@ export default function Welcome() {
   const [enrollSubmitted, setEnrollSubmitted] = useState(false)
 
   useEffect(() => {
-    const handler = (e) => {
-      if (themeMenuRef.current && !themeMenuRef.current.contains(e.target)) setThemeMenuOpen(false)
-    }
-    document.addEventListener('mousedown', handler)
-    return () => document.removeEventListener('mousedown', handler)
-  }, [])
-
-  useEffect(() => {
     setIsLoaded(true)
-    const handleScroll = () => setScrolled(window.scrollY > 50)
-    window.addEventListener('scroll', handleScroll)
-    return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
   useEffect(() => {
@@ -129,242 +116,229 @@ export default function Welcome() {
     <div className="min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)] overflow-x-hidden">
       {/* Nav */}
       <nav className={clsx(
-        'welcome-anim fixed top-0 left-0 right-0 z-[100] py-3 px-4 flex flex-col items-stretch backdrop-blur-[8px] transition-all duration-200 border-b border-transparent',
-        isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2',
-        scrolled ? 'border-b-[var(--border-default)] shadow-[var(--shadow-sm)]' : '',
-        mobileMenuOpen ? 'bg-[var(--bg-primary)] backdrop-blur-none' : ''
-      )} style={{ background: mobileMenuOpen ? 'var(--bg-primary)' : scrolled ? 'color-mix(in srgb, var(--bg-primary) 92%, transparent)' : 'color-mix(in srgb, var(--bg-primary) 88%, transparent)' }}>
-        <div className="max-w-[1200px] mx-auto w-full flex items-center justify-between gap-6 border border-[var(--border-default)] rounded-xl py-[0.55rem] px-3 shadow-[var(--shadow-sm)]" style={{ background: 'color-mix(in srgb, var(--bg-secondary) 88%, transparent)' }}>
-          <button className="flex items-center gap-[0.625rem] cursor-pointer bg-transparent border-none text-inherit p-0 transition-opacity hover:opacity-[0.85] group" onClick={() => scrollTo('hero')}>
-            <div className="w-8 h-8 rounded-[var(--radius-md)] bg-[var(--accent-primary)] flex items-center justify-center text-white transition-transform duration-300 group-hover:scale-[1.08] group-hover:-rotate-3">
-              <Building2 size={18} />
+        'fixed top-0 left-0 right-0 z-[100] px-4 pt-5 transition-all duration-300',
+        isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2'
+      )}>
+        <div className="mx-auto w-full max-w-[1240px] rounded-full bg-white/95 shadow-[0_16px_38px_rgba(2,6,23,0.14)] ring-1 ring-slate-200 backdrop-blur-sm px-4 py-2.5">
+          <div className="flex items-center justify-between gap-3">
+            <button className="flex items-center gap-2.5 bg-transparent border-none text-inherit p-0 cursor-pointer" onClick={() => scrollTo('hero')}>
+              <div className="h-8 w-8 rounded-lg bg-blue-600 text-white flex items-center justify-center shadow-[0_8px_18px_rgba(37,99,235,0.35)]">
+                <Building2 size={17} />
+              </div>
+              <span className="text-[1.75rem] leading-none font-extrabold tracking-[-0.02em] text-slate-900">SocietyHub</span>
+            </button>
+
+            <div className="hidden lg:flex items-center gap-1">
+              <button onClick={() => navigate('/about')} className="px-3 py-1.5 text-sm font-semibold text-slate-700 rounded-md hover:bg-slate-100 transition-colors">About Us</button>
+              <button onClick={() => scrollTo('features')} className="px-3 py-1.5 text-sm font-semibold text-slate-700 rounded-md hover:bg-slate-100 transition-colors">Features</button>
+              <button onClick={() => navigate('/pricing')} className="px-3 py-1.5 text-sm font-semibold text-slate-700 rounded-md hover:bg-slate-100 transition-colors">Pricing</button>
+              <button onClick={() => navigate('/contact')} className="px-3 py-1.5 text-sm font-semibold text-slate-700 rounded-md hover:bg-slate-100 transition-colors">Contact</button>
             </div>
-            <span className="text-[1.35rem] font-extrabold text-[var(--text-primary)] tracking-[-0.02em]">SocietyHub</span>
-          </button>
 
-          <div className="flex gap-1 max-md:hidden">
-            <button onClick={() => navigate('/about')} className="text-sm font-semibold text-[var(--text-secondary)] bg-transparent border-none cursor-pointer py-[0.375rem] px-3 rounded-[var(--radius-md)] transition-colors relative hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)]">About Us</button>
-            <button onClick={() => scrollTo('features')} className="text-sm font-semibold text-[var(--text-secondary)] bg-transparent border-none cursor-pointer py-[0.375rem] px-3 rounded-[var(--radius-md)] transition-colors relative hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)]">Features</button>
-            <button onClick={() => navigate('/pricing')} className="text-sm font-semibold text-[var(--text-secondary)] bg-transparent border-none cursor-pointer py-[0.375rem] px-3 rounded-[var(--radius-md)] transition-colors relative hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)]">Pricing</button>
-            <button onClick={() => navigate('/contact')} className="text-sm font-semibold text-[var(--text-secondary)] bg-transparent border-none cursor-pointer py-[0.375rem] px-3 rounded-[var(--radius-md)] transition-colors relative hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)]">Contact</button>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <a className="hidden min-[900px]:inline-flex items-center text-sm font-bold text-[var(--text-secondary)] no-underline py-[0.375rem] px-2 rounded-[var(--radius-md)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)]" href="tel:+919119300000" aria-label="Call SocietyHub">
-              +91 91193 00000
-            </a>
-
-            {/* Theme dropdown */}
-            <div className="relative" ref={themeMenuRef}>
-              <button onClick={() => setThemeMenuOpen(!themeMenuOpen)} className="w-[34px] h-[34px] rounded-[var(--radius-md)] bg-[var(--bg-tertiary)] border border-[var(--border-default)] text-[var(--text-secondary)] flex items-center justify-center cursor-pointer transition-colors hover:text-[var(--text-primary)] hover:border-[var(--border-muted)]" aria-label="Theme">
-                {!isManual ? <Monitor size={16} /> : isDark ? <Moon size={16} /> : <Sun size={16} />}
+            <div className="hidden md:flex items-center gap-2">
+              <a className="hidden xl:inline-flex px-2 py-1 text-sm font-semibold text-slate-700 no-underline" href="tel:+919119300000" aria-label="Call SocietyHub">+91 91193 00000</a>
+              <button
+                onClick={() => setTheme(isDark ? 'light' : 'dark')}
+                className="h-9 w-9 inline-flex items-center justify-center rounded-lg border border-slate-300 text-slate-600 bg-white hover:bg-slate-50 transition-colors"
+                aria-label="Toggle dark mode"
+              >
+                <Monitor size={16} />
               </button>
-              {themeMenuOpen && (
-                <div className="absolute top-[calc(100%+6px)] right-0 bg-[var(--bg-secondary)] border border-[var(--border-default)] rounded-[var(--radius-lg)] p-[0.375rem] min-w-[140px] shadow-[var(--shadow-lg)] z-50 origin-top-right" style={{ animation: 'welcomeDropIn 0.2s cubic-bezier(0.16, 1, 0.3, 1)' }}>
-                  {[
-                    { label: 'System', icon: Monitor, active: !isManual, action: () => { resetToSystemTheme(); setThemeMenuOpen(false) } },
-                    { label: 'Light', icon: Sun, active: isManual && theme === 'light', action: () => { setTheme('light'); setThemeMenuOpen(false) } },
-                    { label: 'Dark', icon: Moon, active: isManual && theme === 'dark', action: () => { setTheme('dark'); setThemeMenuOpen(false) } },
-                  ].map((opt) => (
-                    <button key={opt.label} onClick={opt.action} className={clsx(
-                      'flex items-center gap-2 w-full py-2 px-[0.625rem] text-[0.8125rem] bg-transparent border-none rounded-[var(--radius-sm)] cursor-pointer transition-colors',
-                      opt.active ? 'text-[var(--accent-primary)]' : 'text-[var(--text-secondary)] hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-primary)]'
-                    )} style={opt.active ? { background: 'color-mix(in srgb, var(--accent-primary) 10%, transparent)' } : undefined}>
-                      <opt.icon size={14} />
-                      <span>{opt.label}</span>
-                      {opt.active && <CheckCircle size={14} className="ml-auto" />}
-                    </button>
-                  ))}
-                </div>
-              )}
+              <button onClick={() => navigate('/login')} className="h-9 px-4 text-[13px] font-semibold rounded-lg border border-slate-300 text-slate-700 bg-transparent hover:bg-slate-50 transition-colors">Society Login</button>
+              <button onClick={() => navigate('/login')} className="h-9 px-4 text-[13px] font-semibold rounded-lg border border-slate-300 text-slate-700 bg-transparent hover:bg-slate-50 transition-colors">Admin Portal</button>
+              <button onClick={() => scrollTo('enroll')} className="h-9 px-4 text-[13px] font-semibold rounded-full border-none text-white bg-blue-600 inline-flex items-center gap-1.5 shadow-[0_10px_22px_rgba(37,99,235,0.35)] hover:bg-blue-500 transition-colors">
+                Enroll your society
+                <ArrowRight size={13} />
+              </button>
             </div>
 
-            <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="hidden max-md:flex w-[34px] h-[34px] items-center justify-center bg-transparent border border-[var(--border-default)] rounded-[var(--radius-md)] text-[var(--text-secondary)] cursor-pointer transition-all hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] active:scale-[0.92]">
-              {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
-            </button>
-
-            <button onClick={() => navigate('/login')} className="flex items-center gap-[0.375rem] py-2 px-4 text-[0.8125rem] font-semibold text-[var(--text-primary)] bg-transparent border border-[var(--border-default)] rounded-[var(--radius-md)] cursor-pointer transition-all duration-200 max-md:hidden hover:bg-[var(--bg-tertiary)] hover:border-[color-mix(in_srgb,var(--text-secondary)_60%,transparent)] hover:text-[var(--text-primary)] hover:-translate-y-0.5 hover:shadow-[0_4px_14px_color-mix(in_srgb,#000_20%,transparent)] active:translate-y-0 active:scale-[0.97]">
-              Society Login
-            </button>
-            <button onClick={() => navigate('/login')} className="flex items-center gap-[0.375rem] py-2 px-4 text-[0.8125rem] font-semibold text-[var(--text-primary)] bg-transparent border border-[var(--border-default)] rounded-[var(--radius-md)] cursor-pointer transition-all duration-200 max-md:hidden hover:bg-[var(--bg-tertiary)] hover:border-[color-mix(in_srgb,var(--text-secondary)_60%,transparent)] hover:text-[var(--text-primary)] hover:-translate-y-0.5 hover:shadow-[0_4px_14px_color-mix(in_srgb,#000_20%,transparent)] active:translate-y-0 active:scale-[0.97]">
-              Admin Portal
-            </button>
-            <button onClick={() => scrollTo('enroll')} className="flex items-center gap-[0.375rem] py-2 px-4 text-[0.8125rem] font-semibold text-white bg-[var(--accent-primary)] border-none rounded-[var(--radius-md)] cursor-pointer transition-all duration-200 max-md:hidden hover:bg-[var(--accent-hover)] hover:-translate-y-0.5 hover:shadow-[0_6px_20px_color-mix(in_srgb,var(--accent-primary)_50%,transparent)] active:translate-y-0 active:scale-[0.97] active:shadow-[0_2px_8px_color-mix(in_srgb,var(--accent-primary)_35%,transparent)]">
-              Enroll your society
-              <ArrowRight size={14} />
+            <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="md:hidden h-9 w-9 inline-flex items-center justify-center rounded-lg border border-slate-300 text-slate-700 bg-white">
+              {mobileMenuOpen ? <X size={18} /> : <Menu size={18} />}
             </button>
           </div>
         </div>
 
         {/* Mobile menu */}
         {mobileMenuOpen && (
-          <div className="welcome-anim flex flex-col gap-1 py-3 px-4 pb-4" style={{ animation: 'welcomeMobileSlide 0.25s cubic-bezier(0.16, 1, 0.3, 1)' }}>
+          <div className="mt-2 mx-auto w-full max-w-[1240px] rounded-2xl bg-white/95 shadow-[0_16px_38px_rgba(2,6,23,0.14)] ring-1 ring-slate-200 p-3 flex flex-col gap-2">
             {[
               { label: 'About Us', action: () => { navigate('/about'); setMobileMenuOpen(false) } },
               { label: 'Features', action: () => { scrollTo('features'); setMobileMenuOpen(false) } },
               { label: 'Pricing', action: () => { navigate('/pricing'); setMobileMenuOpen(false) } },
               { label: 'Contact', action: () => { navigate('/contact'); setMobileMenuOpen(false) } },
             ].map((item, i) => (
-              <button key={item.label} onClick={item.action} className="welcome-anim text-sm font-medium text-[var(--text-secondary)] bg-transparent border-none text-left py-[0.625rem] px-3 rounded-[var(--radius-md)] cursor-pointer transition-all hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] hover:pl-4 active:scale-[0.98]" style={{ opacity: 0, animation: `welcomeMenuItemIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) ${0.04 * (i + 1)}s forwards` }}>
+              <button key={item.label} onClick={item.action} className="text-sm font-semibold text-slate-700 bg-transparent border-none text-left py-2.5 px-3 rounded-lg cursor-pointer transition-colors hover:bg-slate-100">
                 {item.label}
               </button>
             ))}
 
-            <button onClick={() => { navigate('/login'); setMobileMenuOpen(false) }} className="welcome-anim mt-2 py-[0.625rem] px-4 text-sm font-semibold text-[var(--accent-primary)] bg-transparent border-[1.5px] border-[var(--accent-primary)] rounded-[var(--radius-md)] cursor-pointer transition-all hover:-translate-y-px" style={{ opacity: 0, animation: 'welcomeMenuItemIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) 0.2s forwards' }}>
+            <button onClick={() => { navigate('/login'); setMobileMenuOpen(false) }} className="mt-1 py-2.5 px-4 text-sm font-semibold text-slate-700 bg-transparent border border-slate-300 rounded-lg cursor-pointer">
               Society Login
             </button>
-            <button onClick={() => { navigate('/login'); setMobileMenuOpen(false) }} className="welcome-anim py-[0.625rem] px-4 text-sm font-semibold text-white bg-[var(--accent-primary)] border-none rounded-[var(--radius-md)] cursor-pointer transition-all hover:bg-[var(--accent-hover)] hover:-translate-y-px active:translate-y-0 active:scale-[0.98]" style={{ opacity: 0, animation: 'welcomeMenuItemIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) 0.25s forwards' }}>
+            <button onClick={() => { navigate('/login'); setMobileMenuOpen(false) }} className="py-2.5 px-4 text-sm font-semibold text-slate-700 bg-transparent border border-slate-300 rounded-lg cursor-pointer">
               Admin Portal
+            </button>
+            <button onClick={() => { scrollTo('enroll'); setMobileMenuOpen(false) }} className="py-2.5 px-4 text-sm font-semibold text-white bg-blue-600 border-none rounded-full cursor-pointer inline-flex items-center justify-center gap-1.5 shadow-[0_10px_22px_rgba(37,99,235,0.35)]">
+              Enroll your society
+              <ArrowRight size={13} />
             </button>
           </div>
         )}
       </nav>
 
       {/* Hero */}
-      <section id="hero" className="min-h-screen flex items-center justify-center pt-28 px-6 pb-16 relative overflow-hidden before:content-[''] before:absolute before:-top-[30%] before:left-1/2 before:-translate-x-1/2 before:w-[800px] before:h-[800px] before:rounded-full before:pointer-events-none" style={{ '--tw-before-bg': 'radial-gradient(circle, color-mix(in srgb, var(--accent-primary) 8%, transparent) 0%, transparent 70%)' }}>
-        <div className="max-w-[1200px] text-left relative z-[1]" style={{ position: 'relative' }}>
-          <div className="grid grid-cols-[1.2fr_0.8fr] max-[980px]:grid-cols-1 gap-8 items-center">
-            <div className="min-w-0">
-              <div className={clsx(
-                'welcome-anim inline-flex items-center gap-2 py-[0.375rem] px-[0.875rem] text-xs font-medium text-[var(--text-secondary)] bg-[var(--bg-secondary)] border border-[var(--border-default)] rounded-full mb-6 transition-all duration-500',
-                isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'
-              )} style={{ transitionDelay: '0.1s' }}>
-                <span className="welcome-anim w-[6px] h-[6px] rounded-full bg-[#3fb950]" style={{ animation: 'heroPulse 2s ease-in-out infinite' }} />
-                Trusted by housing communities across India
+      <section id="hero" className="relative min-h-screen pt-36 pb-20 px-6 overflow-hidden bg-[#0B0F19]">
+        <div className="pointer-events-none absolute inset-0">
+          <div className="absolute -top-36 -left-24 h-[380px] w-[380px] rounded-full bg-[#2563eb]/24 blur-3xl animate-mesh-slow" />
+          <div className="absolute top-[20%] -right-20 h-[360px] w-[360px] rounded-full bg-[#4f46e5]/22 blur-3xl animate-mesh-slow [animation-delay:200ms]" />
+          <div
+            className="absolute inset-0 opacity-10"
+            style={{
+              backgroundImage: 'linear-gradient(rgba(148,163,184,0.24) 1px, transparent 1px), linear-gradient(90deg, rgba(148,163,184,0.24) 1px, transparent 1px)',
+              backgroundSize: '34px 34px',
+            }}
+          />
+        </div>
+
+        <div className="relative z-10 max-w-[1100px] mx-auto text-center">
+          <div className={clsx(
+            'inline-flex items-center gap-2.5 py-2 px-4 rounded-full border border-slate-700/70 bg-slate-800/50 backdrop-blur-sm text-xs sm:text-sm font-semibold text-slate-300 transition-all',
+            isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'
+          )}>
+            <span className="relative flex h-2.5 w-2.5">
+              <span className="absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-60 animate-ping" />
+              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-blue-500" />
+            </span>
+            Trusted by housing communities across India
+          </div>
+
+          <h1 className={clsx(
+            'mt-7 text-[clamp(2.6rem,7.2vw,4.5rem)] font-extrabold leading-[1.02] tracking-tight text-white',
+            isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'
+          )}>
+            Visitor, Society and Accounting
+            <br />
+            <span className="text-blue-500" style={{ textShadow: '0 0 24px rgba(59,130,246,0.45)' }}>Management System</span>
+          </h1>
+
+          <p className={clsx(
+            'mt-6 mx-auto max-w-2xl text-[1.05rem] leading-8 text-slate-400',
+            isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'
+          )}>
+            A complete platform to manage residents, visitor entries, billing, complaints, notices, and daily operations — built for modern housing societies.
+          </p>
+
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1], delay: 0.12 }}
+            className="mt-10"
+          >
+            {enrollSubmitted ? (
+              <div className="mx-auto max-w-[520px] grid gap-3 p-8 rounded-t-[20px] rounded-b-xl text-center border border-slate-700/70 bg-[#111827]/85 backdrop-blur-md shadow-[0_22px_55px_rgba(15,23,42,0.45)]">
+                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-emerald-500/15">
+                  <CheckCircle size={28} className="text-emerald-500" />
+                </div>
+                <div>
+                  <p className="text-base font-extrabold text-white">Enquiry Received</p>
+                  <p className="mt-1 text-sm text-slate-300">We'll reach out to <span className="font-bold text-white">+91 {enrollPhone}</span> within 24 hours.</p>
+                </div>
+                <button
+                  onClick={() => { setEnrollSubmitted(false); setEnrollName(''); setEnrollPhone(''); setEnrollReason('') }}
+                  className="mx-auto text-xs font-semibold text-[var(--accent-primary)] bg-transparent border-none cursor-pointer underline underline-offset-2 hover:opacity-75"
+                >
+                  Submit another enquiry
+                </button>
               </div>
+            ) : (
+              <form onSubmit={handleEnrollSubmit} id="enroll" className="mx-auto max-w-[520px] p-10 rounded-t-[20px] rounded-b-xl border border-slate-700/70 bg-[#111827]/86 backdrop-blur-md shadow-[0_26px_65px_rgba(15,23,42,0.45)] text-left">
+                <div className="mb-5">
+                  <div className="inline-flex items-center gap-2 text-white font-bold text-base">
+                    <Building2 size={16} className="text-blue-400" />
+                    Enroll Your Society
+                  </div>
+                  <p className="mt-1 text-sm text-slate-400">Fill in your details — we'll reach out within 24 hours</p>
+                </div>
+                <div className="grid gap-5">
+                  <label className="relative block">
+                    <input
+                      value={enrollName}
+                      onChange={(e) => setEnrollName(e.target.value)}
+                      placeholder=" "
+                      autoComplete="name"
+                      className="peer w-full h-[50px] px-4 pt-5 rounded-[10px] border border-slate-700 bg-[#0f172a] text-white text-sm font-semibold transition-all duration-200 hover:border-[#60a5fa] focus:outline-none focus:border-[#3b82f6] focus:ring-4 focus:ring-[#60a5fa]/25"
+                    />
+                    <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-sm font-semibold text-slate-400 transition-all duration-200 peer-focus:top-3 peer-focus:text-[11px] peer-focus:text-[#60a5fa] peer-[:not(:placeholder-shown)]:top-3 peer-[:not(:placeholder-shown)]:text-[11px]">
+                      Name
+                    </span>
+                  </label>
 
-              <h1 className={clsx(
-                'welcome-anim text-[clamp(2.5rem,6vw,4rem)] font-extrabold leading-[1.1] tracking-[-0.03em] text-[var(--text-primary)] mb-5 transition-all duration-500',
-                isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
-              )} style={{ transitionDelay: '0.2s' }}>
-                Visitor, Society and Accounting<br />
-                <span className="bg-gradient-to-br from-[var(--accent-primary)] via-[#58a6ff] to-[#79c0ff] bg-clip-text text-transparent">Management System</span>
-              </h1>
-
-              <p className={clsx(
-                'welcome-anim text-lg leading-[1.65] text-[var(--text-secondary)] max-w-[560px] mb-6 transition-all duration-500',
-                isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'
-              )} style={{ transitionDelay: '0.3s' }}>
-                A complete platform to manage residents, bills, complaints, notices, and daily operations —
-                built for modern housing societies.
-              </p>
-
-              <div className={clsx(
-                'welcome-anim mb-5 transition-all duration-500',
-                isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'
-              )} style={{ transitionDelay: '0.35s' }}>
-                {enrollSubmitted ? (
-                  <div className="grid gap-3 p-[0.875rem] rounded-xl border border-[var(--border-default)] shadow-[var(--shadow-sm)] text-center" style={{ background: 'color-mix(in srgb, var(--bg-secondary) 88%, transparent)' }}>
-                    <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full" style={{ background: 'color-mix(in srgb, #22c55e 15%, transparent)' }}>
-                      <CheckCircle size={28} className="text-emerald-500" />
+                  <div className="grid grid-cols-[88px_1fr] gap-2.5">
+                    <div className="h-[50px] rounded-[10px] border border-slate-700 bg-[#0f172a] text-white text-sm font-bold flex items-center justify-center">
+                      +91
                     </div>
-                    <div>
-                      <p className="font-extrabold text-[var(--text-primary)] text-base">Enquiry Received!</p>
-                      <p className="text-sm text-[var(--text-secondary)] mt-1">We'll reach out to <span className="font-bold text-[var(--text-primary)]">+91 {enrollPhone}</span> within 24 hours.</p>
-                    </div>
-                    <button
-                      onClick={() => { setEnrollSubmitted(false); setEnrollName(''); setEnrollPhone(''); setEnrollReason('') }}
-                      className="mx-auto text-xs font-semibold text-[var(--accent-primary)] bg-transparent border-none cursor-pointer underline underline-offset-2 hover:opacity-70"
+                    <label className="relative block">
+                      <input
+                        value={enrollPhone}
+                        onChange={(e) => setEnrollPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                        placeholder=" "
+                        type="tel"
+                        inputMode="tel"
+                        maxLength={10}
+                        autoComplete="tel"
+                        className="peer w-full h-[50px] px-4 pt-5 rounded-[10px] border border-slate-700 bg-[#0f172a] text-white text-sm font-semibold transition-all duration-200 hover:border-[#60a5fa] focus:outline-none focus:border-[#3b82f6] focus:ring-4 focus:ring-[#60a5fa]/25"
+                      />
+                      <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-sm font-semibold text-slate-400 transition-all duration-200 peer-focus:top-3 peer-focus:text-[11px] peer-focus:text-[#60a5fa] peer-[:not(:placeholder-shown)]:top-3 peer-[:not(:placeholder-shown)]:text-[11px]">
+                        Phone number
+                      </span>
+                    </label>
+                  </div>
+
+                  <div className="relative">
+                    <select
+                      value={enrollReason}
+                      onChange={(e) => setEnrollReason(e.target.value)}
+                      className="w-full h-[50px] px-4 rounded-[10px] border border-slate-700 bg-[#0f172a] text-white text-sm font-semibold appearance-none transition-all duration-200 hover:border-[#60a5fa] focus:outline-none focus:border-[#3b82f6] focus:ring-4 focus:ring-[#60a5fa]/25"
                     >
-                      Submit another enquiry
-                    </button>
+                      <option value="">Select Reason</option>
+                      <option value="DEMO">Request a demo</option>
+                      <option value="ONBOARDING">New society onboarding</option>
+                      <option value="PRICING">Pricing enquiry</option>
+                    </select>
+                    <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-slate-400">▾</span>
                   </div>
-                ) : (
-                  <form onSubmit={handleEnrollSubmit}>
-                    <div className="grid grid-cols-2 max-[680px]:grid-cols-1 gap-3 p-[0.875rem] rounded-xl border border-[var(--border-default)] shadow-[var(--shadow-sm)]" style={{ background: 'color-mix(in srgb, var(--bg-secondary) 88%, transparent)' }}>
-                      <label className="flex flex-col gap-[0.35rem] min-w-0">
-                        <span className="text-xs font-bold text-[var(--text-secondary)]">Name</span>
-                        <input
-                          value={enrollName}
-                          onChange={(e) => setEnrollName(e.target.value)}
-                          className="h-[42px] py-[0.55rem] px-[0.8rem] rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--bg-primary)] text-[var(--text-primary)] text-[0.95rem] font-semibold focus:outline-2 focus:outline-[color-mix(in_srgb,var(--accent-primary)_50%,transparent)] focus:outline-offset-2"
-                          placeholder="Your name"
-                          autoComplete="name"
-                        />
-                      </label>
 
-                      <label className="flex flex-col gap-[0.35rem] min-w-0">
-                        <span className="text-xs font-bold text-[var(--text-secondary)]">Phone</span>
-                        <div className="flex items-stretch gap-2">
-                          <span className="inline-flex items-center px-3 rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--bg-tertiary)] text-[var(--text-secondary)] font-extrabold">+91</span>
-                          <input
-                            value={enrollPhone}
-                            onChange={(e) => setEnrollPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
-                            className="flex-1 h-[42px] py-[0.55rem] px-[0.8rem] rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--bg-primary)] text-[var(--text-primary)] text-[0.95rem] font-semibold focus:outline-2 focus:outline-[color-mix(in_srgb,var(--accent-primary)_50%,transparent)] focus:outline-offset-2"
-                            placeholder="Enter phone number"
-                            type="tel"
-                            inputMode="tel"
-                            maxLength={10}
-                            autoComplete="tel"
-                          />
-                        </div>
-                      </label>
-
-                      <label className="flex flex-col gap-[0.35rem] min-w-0">
-                        <span className="text-xs font-bold text-[var(--text-secondary)]">Select Reason</span>
-                        <select
-                          value={enrollReason}
-                          onChange={(e) => setEnrollReason(e.target.value)}
-                          className="h-[42px] py-[0.55rem] px-[0.8rem] rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--bg-primary)] text-[var(--text-primary)] text-[0.95rem] font-semibold appearance-none focus:outline-2 focus:outline-[color-mix(in_srgb,var(--accent-primary)_50%,transparent)] focus:outline-offset-2"
-                        >
-                          <option value="">Select reason</option>
-                          <option value="DEMO">Request a demo</option>
-                          <option value="ONBOARDING">New society onboarding</option>
-                          <option value="PRICING">Pricing enquiry</option>
-                        </select>
-                      </label>
-
-                      <button type="submit" disabled={enrollSubmitting} className="self-end h-[42px] inline-flex items-center justify-center gap-2 px-4 rounded-[var(--radius-md)] border-none cursor-pointer bg-[var(--accent-primary)] text-white font-extrabold text-[0.95rem] transition-all hover:bg-[var(--accent-hover)] hover:-translate-y-[2px] active:translate-y-0 active:shadow-none disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:translate-y-0" style={{ boxShadow: 'none' }}>
-                        {enrollSubmitting ? 'Submitting…' : 'Enroll your society'}
-                        {!enrollSubmitting && <ArrowRight size={16} />}
-                      </button>
-                    </div>
-
-                    {enrollError && <p className="mt-2 text-sm font-bold" style={{ color: 'var(--danger-600, var(--text-secondary))' }}>{enrollError}</p>}
-                  </form>
-                )}
-              </div>
-
-              <div className={clsx(
-                'welcome-anim flex flex-wrap justify-start gap-3 transition-all duration-500',
-                isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'
-              )} style={{ transitionDelay: '0.4s' }}>
-                <button onClick={() => navigate('/login')} className="inline-flex items-center gap-2 py-3 px-6 text-[0.9375rem] font-semibold text-[var(--text-primary)] bg-[var(--bg-secondary)] border border-[var(--border-strong)] rounded-[var(--radius-md)] cursor-pointer transition-all hover:bg-[var(--bg-tertiary)] hover:border-[var(--border-muted)]">
-                  Society Login
-                  <Key size={16} />
-                </button>
-                <button onClick={() => scrollTo('features')} className="inline-flex items-center gap-2 py-3 px-6 text-[0.9375rem] font-semibold text-[var(--text-primary)] bg-[var(--bg-secondary)] border border-[var(--border-strong)] rounded-[var(--radius-md)] cursor-pointer transition-all hover:bg-[var(--bg-tertiary)] hover:border-[var(--border-muted)]">
-                  Explore Features
-                  <ChevronDown size={16} />
-                </button>
-              </div>
-            </div>
-
-            <div className="flex justify-center" aria-hidden="true">
-              <div className="w-[min(420px,100%)] rounded-2xl border border-[var(--border-default)] shadow-[var(--shadow-md)] p-4" style={{ background: 'color-mix(in srgb, var(--bg-secondary) 90%, transparent)' }}>
-                <div className="flex gap-2 justify-between">
-                  <div className="inline-flex items-center gap-2 py-[0.55rem] px-3 rounded-full border border-[var(--border-default)] bg-[var(--bg-primary)] text-[var(--text-secondary)] font-extrabold text-[0.85rem]">
-                    <Shield size={18} />
-                    Secure
-                  </div>
-                  <div className="inline-flex items-center gap-2 py-[0.55rem] px-3 rounded-full border border-[var(--border-default)] bg-[var(--bg-primary)] text-[var(--text-secondary)] font-extrabold text-[0.85rem]">
-                    <Users size={18} />
-                    Residents
-                  </div>
+                  <button
+                    type="submit"
+                    disabled={enrollSubmitting}
+                    className="group relative h-[52px] w-full overflow-hidden rounded-xl border-none text-white text-base font-bold tracking-[0.01em] transition-all duration-200 hover:-translate-y-0.5 disabled:opacity-60 disabled:cursor-not-allowed"
+                    style={{ background: 'linear-gradient(135deg,#2563eb,#60a5fa)', boxShadow: '0 16px 36px rgba(37,99,235,0.36)' }}
+                  >
+                    <span className="relative z-10 inline-flex items-center justify-center gap-2">
+                      {enrollSubmitting ? 'Submitting...' : 'Enroll your society'}
+                      {!enrollSubmitting && <ArrowRight size={16} />}
+                    </span>
+                    <span className="pointer-events-none absolute inset-y-0 left-0 w-1/3 -translate-x-[160%] skew-x-[-24deg] bg-gradient-to-r from-white/0 via-white/55 to-white/0 transition-transform duration-700 group-hover:translate-x-[380%]" />
+                  </button>
                 </div>
-                <div className="my-[0.85rem] h-[220px] rounded-xl border border-dashed border-[var(--border-default)]" style={{ background: 'color-mix(in srgb, var(--accent-primary) 6%, var(--bg-primary))' }} />
-                <div className="flex gap-2 justify-between">
-                  <div className="inline-flex items-center gap-2 py-[0.55rem] px-3 rounded-full border border-[var(--border-default)] bg-[var(--bg-primary)] text-[var(--text-secondary)] font-extrabold text-[0.85rem]">
-                    <CreditCard size={18} />
-                    Payments
-                  </div>
-                  <div className="inline-flex items-center gap-2 py-[0.55rem] px-3 rounded-full border border-[var(--border-default)] bg-[var(--bg-primary)] text-[var(--text-secondary)] font-extrabold text-[0.85rem]">
-                    <Bell size={18} />
-                    Notices
-                  </div>
-                </div>
-              </div>
-            </div>
+
+                {enrollError && <p className="mt-3 text-sm font-semibold text-center text-red-400">{enrollError}</p>}
+              </form>
+            )}
+          </motion.div>
+
+          <div className={clsx(
+            'welcome-anim mt-7 flex flex-wrap justify-center gap-3 transition-all duration-500',
+            isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'
+          )} style={{ transitionDelay: '0.4s' }}>
+            <button onClick={() => navigate('/login')} className="inline-flex items-center gap-2 py-3 px-6 text-[0.9375rem] font-semibold text-slate-100 bg-slate-900/45 border border-slate-700 rounded-[var(--radius-md)] cursor-pointer transition-all hover:bg-slate-800/70 hover:border-slate-500">
+              Society Login
+              <Key size={16} />
+            </button>
+            <button onClick={() => scrollTo('features')} className="inline-flex items-center gap-2 py-3 px-6 text-[0.9375rem] font-semibold text-slate-100 bg-slate-900/45 border border-slate-700 rounded-[var(--radius-md)] cursor-pointer transition-all hover:bg-slate-800/70 hover:border-slate-500">
+              Explore Features
+              <ChevronDown size={16} />
+            </button>
           </div>
         </div>
       </section>
