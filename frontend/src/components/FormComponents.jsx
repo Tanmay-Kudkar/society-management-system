@@ -1259,7 +1259,7 @@ export const StateCitySelector = ({
               selectBase,
               cityError && selectWarn,
               (!selectedState || (selectedState === "OTHER" && !customState)) &&
-                selectDisabled,
+              selectDisabled,
             )}
           >
             <option value="">
