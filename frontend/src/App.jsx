@@ -9,13 +9,7 @@ import {
 
 import { Layout, HeroSkeleton, StatCardSkeleton } from "./components";
 
-const lazyWithMinDelay = (importer, delay = 320) =>
-  lazy(() =>
-    Promise.all([
-      importer(),
-      new Promise((resolve) => setTimeout(resolve, delay)),
-    ]).then(([module]) => module),
-  );
+const lazyWithMinDelay = (importer) => lazy(importer);
 
 const Welcome = lazyWithMinDelay(() => import("./pages/auth/Welcome"));
 const Login = lazyWithMinDelay(() => import("./pages/auth/Login"));
@@ -125,6 +119,31 @@ const ScrollToTop = () => {
   return null;
 };
 
+const RoutePerfManager = () => {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    const root = document.documentElement;
+    const body = document.body;
+
+    root.classList.add("route-transitioning");
+    body.classList.add("route-transitioning");
+
+    const timerId = window.setTimeout(() => {
+      root.classList.remove("route-transitioning");
+      body.classList.remove("route-transitioning");
+    }, 450);
+
+    return () => {
+      window.clearTimeout(timerId);
+      root.classList.remove("route-transitioning");
+      body.classList.remove("route-transitioning");
+    };
+  }, [pathname]);
+
+  return null;
+};
+
 const PAGE_TITLES = {
   "/": "Welcome",
   "/login": "Sign In",
@@ -187,6 +206,19 @@ function App() {
   const { user } = useAuth();
   const didPrefetchRef = useRef(false);
 
+  const isLowEndClient = () => {
+    if (typeof window === "undefined") return false;
+    const reducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
+    const reducedData = window.matchMedia?.("(prefers-reduced-data: reduce)")?.matches;
+    const deviceMemory = navigator.deviceMemory || 0;
+    const cpuCores = navigator.hardwareConcurrency || 0;
+    return (
+      Boolean(reducedMotion || reducedData) ||
+      (deviceMemory > 0 && deviceMemory <= 4) ||
+      (cpuCores > 0 && cpuCores <= 4)
+    );
+  };
+
   useEffect(() => {
     if (!user || didPrefetchRef.current) {
       return;
@@ -222,7 +254,8 @@ function App() {
     }
 
     const runPrefetch = () => {
-      importers.slice(0, 8).forEach((loadPage) => {
+      const prefetchBudget = isLowEndClient() ? 3 : 8;
+      importers.slice(0, prefetchBudget).forEach((loadPage) => {
         loadPage().catch(() => null);
       });
     };
@@ -231,9 +264,9 @@ function App() {
     let timeoutId;
 
     if (typeof window !== "undefined" && "requestIdleCallback" in window) {
-      idleId = window.requestIdleCallback(runPrefetch, { timeout: 1500 });
+      idleId = window.requestIdleCallback(runPrefetch, { timeout: isLowEndClient() ? 2800 : 1500 });
     } else {
-      timeoutId = window.setTimeout(runPrefetch, 350);
+      timeoutId = window.setTimeout(runPrefetch, isLowEndClient() ? 900 : 350);
     }
 
     didPrefetchRef.current = true;
@@ -264,6 +297,7 @@ function App() {
       <ConfirmDialogProvider>
         <ToastProvider>
           <ScrollToTop />
+          <RoutePerfManager />
           <DynamicTitle />
           <Suspense fallback={routeFallback}>
             <Routes>

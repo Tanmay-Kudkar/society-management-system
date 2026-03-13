@@ -123,7 +123,7 @@ export default function Welcome() {
         showAuthButtons={false}
         maxWidthClass="max-w-[1240px]"
         linksBreakpoint="lg"
-        themeDesktopOnly={true}
+        themeDesktopOnly={false}
       />
 
       {/* Hero */}
@@ -400,7 +400,7 @@ export default function Welcome() {
       {/* Features */}
       <section
         id="features"
-        className="relative scroll-mt-28 py-28 px-6 overflow-hidden"
+        className="cv-auto relative scroll-mt-28 py-28 px-6 overflow-hidden"
         ref={featRef}
         style={{
           background:
@@ -489,7 +489,7 @@ export default function Welcome() {
       {/* Stats */}
       <section
         id="stats"
-        className="relative scroll-mt-28 px-6 py-28"
+        className="cv-auto relative scroll-mt-28 px-6 py-28"
         ref={statsRef}
       >
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,color-mix(in_srgb,var(--accent-primary)_4%,transparent)_0%,transparent_70%)] opacity-60 pointer-events-none" />
@@ -563,7 +563,7 @@ export default function Welcome() {
       </section>
 
       {/* CTA */}
-      <section className="relative px-6 py-24" ref={ctaRef}>
+      <section className="cv-auto relative px-6 py-24" ref={ctaRef}>
         <div className="mx-auto max-w-[1100px]">
           <div
             className={clsx(

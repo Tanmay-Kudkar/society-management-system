@@ -1,22 +1,23 @@
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Check, Star, Zap, Building2, ArrowRight } from 'lucide-react'
+import { Check, Star, Zap, Building2, ArrowRight, ShieldCheck } from 'lucide-react'
 import PageShell from '../../components/PageShell'
 
 export default function Pricing() {
   const navigate = useNavigate()
+  const [isAnnual, setIsAnnual] = useState(true)
 
   const plans = [
     {
       name: 'Starter',
       price: 'Free',
-      period: '',
-      description: 'For small communities starting digital operations',
+      period: 'forever',
+      description: 'Perfect for small communities starting digital operations.',
       icon: Building2,
-      color: 'var(--color-success)',
       features: [
         'Up to 100 units',
-        'Role-based login (Member, Tenant, Employee)',
-        'Notices & basic communication',
+        'Role-based logic (Members/Tenants)',
+        'Basic Notices & Communication',
         'Complaint & ticket management',
         'Maintenance bill tracking',
         'Email support',
@@ -26,19 +27,17 @@ export default function Pricing() {
     },
     {
       name: 'Professional',
-      price: '₹2,999',
+      price: isAnnual ? '₹2,399' : '₹2,999',
       period: '/month',
-      description: 'For growing societies needing end-to-end automation',
+      description: 'End-to-end automation for growing & standard societies.',
       icon: Zap,
-      color: 'var(--accent-primary)',
       features: [
         'Up to 1000 units',
         'Complete billing & transaction tracking',
         'Vendor bills, contracts & reminders',
-        'Wings, flats, tenants & vehicles modules',
+        'Wings, flats, tenant & vehicle modules',
         'Reports dashboard (MTD/YTD/custom)',
-        'Bulk import/export (users & units)',
-        'Emergency contacts & document templates',
+        'Emergency contacts & templates',
         'Priority email & chat support',
       ],
       cta: 'Start Free Trial',
@@ -47,19 +46,17 @@ export default function Pricing() {
     {
       name: 'Enterprise',
       price: 'Custom',
-      period: '',
-      description: 'For large organizations, federations, and multi-society operations',
+      period: 'billing',
+      description: 'For large federations, and multi-society operations.',
       icon: Star,
-      color: 'var(--color-warning)',
       features: [
         'Unlimited societies and units',
         'Organization + society hierarchy controls',
-        'Advanced security logging & audit visibility',
-        'Dedicated onboarding and data migration help',
-        'Custom integrations and workflow extensions',
-        'Account manager + implementation support',
+        'Advanced security & audit logging',
+        'Dedicated onboarding & migration data',
+        'Custom workflow integrations',
+        'Dedicated Account implementation',
         'SLA-backed priority support',
-        'Custom rollout for web + mobile app users',
       ],
       cta: 'Contact Sales',
       popular: false,
@@ -69,66 +66,102 @@ export default function Pricing() {
   return (
     <PageShell>
       {/* Hero */}
-      <section className="px-4 py-16 sm:px-6 sm:py-[5.25rem]">
+      <section className="relative px-4 pb-12 pt-20 sm:px-6 sm:pb-16 sm:pt-28 lg:px-8">
+        {/* Glow Effects */}
+        <div className="absolute inset-x-0 -top-40 -z-10 transform-gpu overflow-hidden blur-3xl sm:-top-80" aria-hidden="true">
+          <div className="relative left-[calc(50%-11rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 rotate-[30deg] bg-gradient-to-tr from-[#ff80b5] to-[#9089fc] opacity-20 dark:from-[#3b82f6] dark:to-[#1d4ed8] dark:opacity-30 sm:left-[calc(50%-30rem)] sm:w-[72.1875rem]" style={{ clipPath: 'polygon(74.1% 44.1%, 100% 61.6%, 97.5% 26.9%, 85.5% 0.1%, 80.7% 2%, 72.5% 32.5%, 60.2% 62.4%, 52.4% 68.1%, 47.5% 58.3%, 45.2% 34.5%, 27.5% 76.7%, 0.1% 64.9%, 17.9% 100%, 27.6% 76.8%, 76.1% 97.7%, 74.1% 44.1%)' }} />
+        </div>
         <div className="mx-auto max-w-4xl text-center">
-          <span className="animate-fade-in-up mb-6 inline-flex items-center gap-2 rounded-full border border-[color-mix(in_srgb,var(--accent-primary)_20%,transparent)] bg-[color-mix(in_srgb,var(--accent-primary)_8%,var(--bg-primary))] px-4 py-2 text-sm font-semibold text-[var(--accent-primary)]">
+          <span className="animate-fade-in-up mx-auto mb-8 inline-flex items-center gap-2 rounded-full border border-blue-200/50 bg-blue-50/50 px-4 py-2 text-[0.85rem] font-bold text-blue-600 backdrop-blur-md dark:border-blue-500/20 dark:bg-blue-500/10 dark:text-blue-400">
             <Zap className="h-4 w-4" />
             <span>Transparent Pricing</span>
           </span>
-          <h1 className="animate-fade-in-up mb-6 text-[clamp(2.25rem,4vw,3.75rem)] font-black leading-[1.05] text-[var(--text-primary)]" style={{ animationDelay: '100ms' }}>
-            Simple Plans,{' '}
-            <span className="bg-clip-text text-transparent" style={{ backgroundImage: 'linear-gradient(135deg,var(--accent-primary),var(--accent-secondary))' }}>Powerful Features</span>
+          <h1 className="animate-fade-in-up mb-6 text-4xl font-black leading-[1.1] tracking-tight text-slate-900 dark:text-white sm:text-5xl lg:text-6xl" style={{ animationDelay: '100ms' }}>
+            Simple plans for <br className="hidden sm:block" />
+            <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent dark:from-blue-400 dark:to-indigo-400">smart societies</span>
           </h1>
-          <p className="animate-fade-in-up mx-auto max-w-[42rem] text-[1.15rem] text-[color-mix(in_srgb,var(--text-primary)_68%,var(--text-secondary))]" style={{ animationDelay: '200ms' }}>
-            Choose the plan that fits your society. No hidden fees, cancel anytime.
+          <p className="animate-fade-in-up mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-slate-600 dark:text-slate-400" style={{ animationDelay: '200ms' }}>
+            Choose the perfect plan that fits your residential community. No hidden fees.
           </p>
+
+          {/* Billing Toggle */}
+          <div className="animate-fade-in-up mt-10 flex justify-center" style={{ animationDelay: '300ms' }}>
+            <div className="relative flex items-center rounded-full border border-slate-200 bg-white p-1 shadow-sm dark:border-slate-800 dark:bg-slate-900/50">
+              <button
+                onClick={() => setIsAnnual(false)}
+                className={`relative w-32 rounded-full py-2.5 text-sm font-bold transition-all duration-200 ${!isAnnual ? 'text-white' : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'}`}
+              >
+                {!isAnnual && <div className="absolute inset-0 rounded-full bg-slate-900 shadow-sm transition-all dark:bg-slate-700" />}
+                <span className="relative z-10">Monthly</span>
+              </button>
+              <button
+                onClick={() => setIsAnnual(true)}
+                className={`relative w-40 rounded-full py-2.5 text-sm font-bold transition-all duration-200 ${isAnnual ? 'text-white' : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'}`}
+              >
+                {isAnnual && <div className="absolute inset-0 rounded-full bg-blue-600 shadow-sm transition-all dark:bg-blue-600" />}
+                <span className="relative z-10 flex items-center justify-center gap-1.5:">
+                  Annually <span className={isAnnual ? 'text-blue-100' : 'text-blue-600 dark:text-blue-400'}>-20%</span>
+                </span>
+              </button>
+            </div>
+          </div>
         </div>
       </section>
 
-      {/* Pricing Cards */}
-      <section className="px-4 pb-12 sm:px-6 sm:pb-10">
-        <div className="mx-auto max-w-6xl">
-          <div className="grid grid-cols-1 items-stretch gap-6 md:grid-cols-3">
+      {/* Pricing Cards Grid */}
+      <section className="relative z-10 px-4 pb-16 sm:px-6 sm:pb-24 lg:px-8">
+        <div className="mx-auto max-w-7xl">
+          {/* md:grid-cols-2 puts the 3rd item centered on tablet. lg:grid-cols-3 fixes row structure on desktop */}
+          <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3 lg:items-center">
             {plans.map((plan, i) => (
               <div
                 key={i}
-                className={`animate-fade-in-up relative flex flex-col rounded-2xl border p-8 shadow-sm transition hover:-translate-y-1 hover:shadow-lg ${
+                className={`animate-fade-in-up relative flex h-full flex-col rounded-[2rem] p-8 transition-all duration-300 hover:-translate-y-2 ${
                   plan.popular
-                    ? 'border-[var(--accent-primary)] bg-[color-mix(in_srgb,var(--bg-card)_92%,var(--bg-secondary))] shadow-[0_0_0_1px_var(--accent-primary),var(--shadow-md)] hover:shadow-[0_0_0_1px_var(--accent-primary),var(--shadow-xl)]'
-                    : 'border-[var(--border-default)] bg-[color-mix(in_srgb,var(--bg-card)_92%,var(--bg-secondary))] hover:border-[var(--border-strong)]'
-                }`}
+                    ? 'border-2 border-blue-500 bg-white/95 shadow-[0_20px_40px_-15px_rgba(59,130,246,0.3)] backdrop-blur-2xl dark:border-blue-500/80 dark:bg-slate-900/90 lg:scale-105 lg:shadow-[0_30px_60px_-15px_rgba(59,130,246,0.4)] z-20'
+                    : 'border border-slate-200 bg-white/60 shadow-lg backdrop-blur-xl hover:border-slate-300 hover:shadow-xl dark:border-slate-800 dark:bg-slate-800/40 dark:hover:border-slate-700 z-10'
+                } ${i === 2 ? 'md:col-span-2 md:mx-auto md:w-[calc(50%-1rem)] lg:col-span-1 lg:w-full' : ''}`}
                 style={{ animationDelay: `${i * 120}ms` }}
               >
-                {plan.popular && <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-[linear-gradient(135deg,var(--accent-primary),var(--accent-secondary))] px-4 py-1 text-xs font-bold tracking-[0.02em] text-white">Most Popular</div>}
-                <div className="mb-6">
-                  <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl" style={{ background: `color-mix(in srgb, ${plan.color} 12%, transparent)` }}>
-                    <plan.icon style={{ color: plan.color }} className="h-6 w-6" />
+                {plan.popular && (
+                  <div className="absolute -top-4 left-0 right-0 mx-auto w-max rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-1 text-[0.7rem] font-black uppercase tracking-widest text-white shadow-lg shadow-blue-500/30">
+                    Most Popular
                   </div>
-                  <h3 className="mb-1.5 text-xl font-extrabold text-[var(--text-primary)]">{plan.name}</h3>
-                  <p className="text-sm leading-6 text-[color-mix(in_srgb,var(--text-primary)_64%,var(--text-secondary))]">{plan.description}</p>
+                )}
+                <div className="mb-8">
+                  <div className={`mb-6 flex h-14 w-14 items-center justify-center rounded-2xl ${plan.popular ? 'bg-blue-100 text-blue-600 dark:bg-blue-900/50 dark:text-blue-400' : 'bg-slate-100 text-slate-600 dark:bg-slate-800/80 dark:text-slate-300'}`}>
+                    <plan.icon className="h-7 w-7" />
+                  </div>
+                  <h3 className="mb-2 text-2xl font-black tracking-tight text-slate-900 dark:text-white">{plan.name}</h3>
+                  <p className="min-h-[2.5rem] text-[0.95rem] leading-relaxed text-slate-600 dark:text-slate-400">{plan.description}</p>
                 </div>
-                <div className="mb-6 flex items-baseline gap-1 border-b border-[var(--border-light)] pb-6">
-                  <span className="text-[2.5rem] font-black tracking-[-0.02em] text-[var(--text-primary)]">{plan.price}</span>
-                  {plan.period && <span className="text-sm text-[var(--text-secondary)]">{plan.period}</span>}
+                
+                <div className="mb-8 flex items-end gap-1.5 border-b border-slate-100 pb-8 dark:border-slate-800/80">
+                  <span className="text-4xl font-black tracking-tight text-slate-900 dark:text-white xl:text-5xl">{plan.price}</span>
+                  {plan.period && <span className="mb-1 text-[0.95rem] font-bold text-slate-500 dark:text-slate-400">{plan.period}</span>}
                 </div>
-                <ul className="mb-8 flex flex-1 list-none flex-col gap-3 p-0">
+                
+                <ul className="mb-10 flex flex-1 list-none flex-col gap-4 p-0">
                   {plan.features.map((feature, j) => (
-                    <li key={j} className="flex items-start gap-2.5 text-sm leading-6 text-[var(--text-secondary)]">
-                      <Check className="mt-0.5 h-4 w-4 shrink-0" style={{ color: plan.color }} />
-                      <span>{feature}</span>
+                    <li key={j} className="flex items-start gap-3 text-[0.95rem] leading-snug text-slate-700 dark:text-slate-300">
+                      <div className={`mt-0.5 shrink-0 rounded-full p-1 ${plan.popular ? 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400' : 'bg-slate-100 text-slate-500 dark:bg-slate-800/60 dark:text-slate-400'}`}>
+                        <Check className="h-3.5 w-3.5 stroke-[3]" />
+                      </div>
+                      <span className="font-medium text-slate-600 dark:text-slate-300">{feature}</span>
                     </li>
                   ))}
                 </ul>
+                
                 <button
                   onClick={() => navigate(plan.name === 'Enterprise' ? '/contact' : '/login')}
-                  className={`group flex w-full items-center justify-center gap-2 rounded-lg border px-6 py-3 text-sm font-semibold transition hover:-translate-y-0.5 ${
+                  className={`group mt-auto flex w-full items-center justify-center gap-2 rounded-xl px-6 py-4 text-[0.95rem] font-bold transition-all duration-200 ${
                     plan.popular
-                      ? 'border-[var(--accent-primary)] bg-[linear-gradient(135deg,var(--accent-primary),var(--accent-600))] text-white hover:bg-[linear-gradient(135deg,var(--accent-secondary),var(--accent-primary))] hover:border-[var(--accent-secondary)]'
-                      : 'border-[var(--border-default)] bg-[var(--bg-primary)] text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)]'
+                      ? 'bg-blue-600 text-white shadow-md hover:bg-blue-700 hover:shadow-xl hover:shadow-blue-500/20'
+                      : 'border-2 border-slate-200 bg-transparent text-slate-700 hover:border-slate-300 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:border-slate-600 dark:hover:bg-slate-800'
                   }`}
                 >
                   {plan.cta}
-                  <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+                  <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
                 </button>
               </div>
             ))}
@@ -136,20 +169,37 @@ export default function Pricing() {
         </div>
       </section>
 
+      {/* Feature Promise Banner */}
+      <section className="px-4 pb-20 sm:px-6">
+        <div className="mx-auto max-w-7xl rounded-3xl bg-slate-900 px-6 py-10 shadow-2xl dark:bg-slate-800/50 sm:px-12 sm:py-12 lg:flex lg:items-center lg:justify-between">
+          <div className="lg:w-0 lg:flex-1">
+            <h2 className="text-2xl font-black tracking-tight text-white sm:text-3xl">Ready for a smart society?</h2>
+            <p className="mt-3 max-w-3xl text-lg text-slate-300">Start your free trial today. Cancel anytime. All standard features are unlocked for 14 days.</p>
+          </div>
+          <div className="mt-8 flex flex-shrink-0 items-center justify-center gap-1 lg:mt-0 lg:ml-8">
+             <div className="flex items-center gap-2 rounded-full border border-slate-700 bg-slate-800/50 px-5 py-2.5 text-sm font-bold text-slate-200">
+               <ShieldCheck className="h-5 w-5 text-emerald-400" /> Fully Secured & Encrypted
+             </div>
+          </div>
+        </div>
+      </section>
+
       {/* FAQ */}
-      <section className="px-4 pb-20 pt-6 sm:px-6 sm:pb-[4.5rem] sm:pt-8">
+      <section className="px-4 pb-24 sm:px-6 lg:pb-32">
         <div className="mx-auto max-w-4xl text-center">
-          <h2 className="animate-fade-in-up mb-8 text-3xl font-extrabold text-[var(--text-primary)]">Frequently Asked Questions</h2>
-          <div className="grid grid-cols-1 gap-4 text-left md:grid-cols-2">
+          <h2 className="animate-fade-in-up mb-12 text-3xl font-black tracking-tight text-slate-900 dark:text-white sm:text-4xl">
+            Frequently Asked Questions
+          </h2>
+          <div className="grid grid-cols-1 gap-6 text-left md:grid-cols-2">
             {[
               { q: 'Can I switch plans later?', a: 'Yes, you can upgrade or downgrade at any time. Changes take effect immediately with prorated billing.' },
               { q: 'Is there a free trial?', a: 'Professional plan comes with a 14-day free trial. No credit card required.' },
               { q: 'What payment methods do you accept?', a: 'We accept UPI, credit/debit cards, net banking, and bank transfers for annual plans.' },
               { q: 'Do you offer discounts for annual billing?', a: 'Yes, annual billing saves you 20% compared to monthly billing.' },
             ].map((faq, i) => (
-              <div key={i} className="animate-fade-in-up rounded-xl border border-[var(--border-default)] bg-[color-mix(in_srgb,var(--bg-card)_92%,var(--bg-secondary))] p-6 transition hover:border-[var(--border-strong)]" style={{ animationDelay: `${i * 80}ms` }}>
-                <h4 className="mb-2 text-[0.9375rem] font-bold text-[var(--text-primary)]">{faq.q}</h4>
-                <p className="text-sm leading-7 text-[var(--text-secondary)]">{faq.a}</p>
+              <div key={i} className="animate-fade-in-up group rounded-3xl border border-slate-200 bg-white p-8 transition-all hover:border-blue-200 hover:shadow-lg hover:shadow-blue-500/5 dark:border-slate-800 dark:bg-slate-900/50 dark:hover:border-blue-500/30 dark:hover:shadow-blue-500/10" style={{ animationDelay: `${i * 80}ms` }}>
+                <h4 className="mb-3 text-[1.05rem] font-bold text-slate-900 transition-colors group-hover:text-blue-600 dark:text-white dark:group-hover:text-blue-400">{faq.q}</h4>
+                <p className="text-[0.95rem] leading-relaxed text-slate-600 dark:text-slate-400">{faq.a}</p>
               </div>
             ))}
           </div>
