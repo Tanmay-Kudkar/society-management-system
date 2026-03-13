@@ -12,6 +12,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import jakarta.persistence.EntityManager;
+
 import com.society.backend.user.dto.response.BulkCreateUsersResponse;
 import com.society.backend.user.dto.request.UserRequest;
 import com.society.backend.user.dto.response.UserResponse;
@@ -45,12 +47,14 @@ public class UserServiceImpl implements UserService {
     private final FlatRepository flatRepository;
     private final ReferenceCleanupService referenceCleanupService;
     private final PasswordResetTokenRepository passwordResetTokenRepository;
+    private final EntityManager entityManager;
 
     public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder,
             ComplaintRepository complaintRepository, TicketRepository ticketRepository,
             SocietyRepository societyRepository, FlatRepository flatRepository,
             ReferenceCleanupService referenceCleanupService,
-            PasswordResetTokenRepository passwordResetTokenRepository) {
+            PasswordResetTokenRepository passwordResetTokenRepository,
+            EntityManager entityManager) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.complaintRepository = complaintRepository;
@@ -59,6 +63,7 @@ public class UserServiceImpl implements UserService {
         this.flatRepository = flatRepository;
         this.referenceCleanupService = referenceCleanupService;
         this.passwordResetTokenRepository = passwordResetTokenRepository;
+        this.entityManager = entityManager;
     }
 
     @Override
@@ -521,9 +526,20 @@ public class UserServiceImpl implements UserService {
 
         if (force) {
             referenceCleanupService.clearReferences("owner_user_id", id, false, Set.of("users"));
-            referenceCleanupService.clearReferences("assigned_to_id", id, false, Set.of("users"));
-            referenceCleanupService.clearReferences("raised_by_id", id, true, Set.of("users"));
+            // Column names must match the actual DB columns in the tickets table
+            referenceCleanupService.clearReferences("assigned_to", id, false, Set.of("users"));
+            referenceCleanupService.clearReferences("raised_by", id, true, Set.of("users"));
         }
+
+        // ReferenceCleanupService uses raw JDBC which bypasses Hibernate's cache.
+        // Flush pending JPA changes, then clear the persistence context so Hibernate
+        // re-reads the now-cleaned DB state and doesn't hold stale User references.
+        entityManager.flush();
+        entityManager.clear();
+
+        // Re-fetch the user after clearing the persistence context
+        user = userRepository.findById(id)
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "User not found after cleanup"));
 
         // Clear flat ownership if this user owned a flat
         if (user.getFlat() != null) {
