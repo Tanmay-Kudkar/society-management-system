@@ -187,12 +187,12 @@ export default function Login() {
   }
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center bg-[color-mix(in_srgb,var(--bg-primary)_92%,#0f172a_8%)] px-4 py-8 sm:px-7">
+    <div className="relative flex min-h-screen items-center justify-center bg-[color-mix(in_srgb,var(--bg-primary)_92%,#0f172a_8%)] px-3 py-5 sm:px-5 sm:py-7 lg:px-7 lg:py-8">
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,color-mix(in_srgb,var(--accent-primary)_2%,var(--bg-primary))_0%,var(--bg-primary)_50%)]" />
 
       <div className={`relative z-[1] w-full max-w-[1320px] transition-all duration-300 ${isLoaded ? 'translate-y-0 opacity-100' : 'translate-y-2.5 opacity-0'}`}>
-        <div className="grid overflow-hidden rounded-2xl border border-[color-mix(in_srgb,var(--border-default)_85%,#334155_15%)] bg-[color-mix(in_srgb,var(--bg-secondary)_95%,#0f172a_5%)] shadow-[0_25px_50px_-12px_color-mix(in_srgb,#000_25%,transparent)] lg:grid-cols-[minmax(460px,1.2fr)_minmax(460px,560px)]">
-          <aside className="flex flex-col gap-6 border-r border-[color-mix(in_srgb,var(--border-default)_90%,#334155_10%)] bg-[color-mix(in_srgb,var(--bg-secondary)_50%,var(--bg-tertiary)_50%)] p-8">
+        <div className="grid overflow-hidden rounded-2xl border border-[color-mix(in_srgb,var(--border-default)_85%,#334155_15%)] bg-[color-mix(in_srgb,var(--bg-secondary)_95%,#0f172a_5%)] shadow-[0_25px_50px_-12px_color-mix(in_srgb,#000_25%,transparent)] lg:grid-cols-[minmax(0,1fr)_minmax(0,560px)]">
+          <aside className="hidden lg:flex flex-col gap-6 border-r border-[color-mix(in_srgb,var(--border-default)_90%,#334155_10%)] bg-[color-mix(in_srgb,var(--bg-secondary)_50%,var(--bg-tertiary)_50%)] p-8">
             <Link to="/" className="mb-6 inline-flex items-center gap-3 no-underline">
               <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-[color-mix(in_srgb,var(--accent-primary)_55%,var(--border-default))] bg-[color-mix(in_srgb,var(--accent-primary)_90%,#1e40af_10%)] text-white">
                 <Building2 size={24} />
@@ -227,8 +227,8 @@ export default function Login() {
             </div>
           </aside>
 
-          <section className="relative flex flex-col bg-transparent p-8">
-            <div className="absolute right-2 top-2 z-10 rounded-xl border border-[color-mix(in_srgb,var(--border-light)_90%,#334155_10%)] bg-[color-mix(in_srgb,var(--bg-primary)_86%,#111827_14%)] p-1 md:right-3 md:top-3">
+          <section className="relative flex flex-col bg-transparent p-4 sm:p-6 lg:p-8">
+            <div className="absolute right-2 top-2 z-10 rounded-xl border border-[color-mix(in_srgb,var(--border-light)_90%,#334155_10%)] bg-[color-mix(in_srgb,var(--bg-primary)_86%,#111827_14%)] p-1 sm:right-3 sm:top-3">
               <div className="flex items-center gap-1">
                 {[
                   { key: 'system', icon: Monitor, label: 'System', active: !isManual, action: resetToSystemTheme },
@@ -247,8 +247,8 @@ export default function Login() {
                 ))}
               </div>
             </div>
-            <div className="flex h-full flex-col justify-start pt-14 md:pt-16">
-              <div className="mb-7">
+            <div className="mx-auto flex h-full w-full max-w-[560px] flex-col justify-start pt-14 sm:pt-16">
+              <div className="mb-6 sm:mb-7">
                 <h1 className="mb-2 text-[clamp(1.95rem,2.2vw,2.2rem)] font-extrabold leading-none tracking-[-0.02em] text-[color-mix(in_srgb,var(--text-primary)_92%,#e2e8f0_8%)]">Sign in</h1>
                 <p className="pt-3 text-sm text-[color-mix(in_srgb,var(--text-secondary)_88%,#94a3b8_12%)]">Access your society management dashboard</p>
               </div>
@@ -392,7 +392,7 @@ export default function Login() {
                   </div>
                 </div>
 
-                <button type="submit" disabled={loading} className="mt-1 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-[10px] bg-[color-mix(in_srgb,var(--accent-primary)_86%,#1e40af_14%)] px-4 py-3 text-base font-semibold text-white transition-colors duration-200 hover:bg-[color-mix(in_srgb,var(--accent-secondary)_82%,#1e40af_18%)] disabled:cursor-not-allowed disabled:opacity-60">
+                <button type="submit" disabled={loading} className="mt-1 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-[10px] bg-[color-mix(in_srgb,var(--accent-primary)_86%,#1e40af_14%)] px-4 py-3 text-[0.98rem] sm:text-base font-semibold text-white transition-colors duration-200 hover:bg-[color-mix(in_srgb,var(--accent-secondary)_82%,#1e40af_18%)] disabled:cursor-not-allowed disabled:opacity-60">
                   {loading ? <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/35 border-t-white" /> : <>
                     Secure Login
                     <ArrowRight size={16} />
@@ -409,8 +409,8 @@ export default function Login() {
             </div>
 
             {isLocationPanelOpen && (
-              <div className="animate-fadeIn fixed inset-0 z-50 flex items-center justify-center bg-black/45 px-4">
-                <div className="animate-scale-in w-full max-w-[560px] rounded-xl border border-[color-mix(in_srgb,var(--border-default)_80%,#334155_20%)] bg-[var(--bg-secondary)] p-4 shadow-2xl">
+              <div className="animate-fadeIn fixed inset-0 z-50 flex items-end justify-center bg-black/45 px-3 py-3 sm:items-center sm:px-4">
+                <div className="animate-scale-in w-full max-w-[560px] rounded-xl border border-[color-mix(in_srgb,var(--border-default)_80%,#334155_20%)] bg-[var(--bg-secondary)] p-3.5 sm:p-4 shadow-2xl">
                   <div className="mb-3 flex items-center justify-between">
                     <div>
                       <h3 className="text-sm font-bold text-[var(--text-primary)]">Adjust Login Location</h3>
@@ -432,7 +432,7 @@ export default function Login() {
                       center={[location.latitude, location.longitude]}
                       zoom={16}
                       scrollWheelZoom
-                      style={{ height: '260px', width: '100%' }}
+                      style={{ height: '220px', width: '100%' }}
                     >
                       <LocationPicker
                         location={location}

@@ -116,16 +116,16 @@ export default function Welcome() {
     <div className="min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)] overflow-x-hidden">
       {/* Nav */}
       <nav className={clsx(
-        'fixed top-0 left-0 right-0 z-[100] px-4 pt-5 transition-all duration-300',
+        'fixed top-0 left-0 right-0 z-[100] px-3 pt-3 sm:px-4 sm:pt-5 transition-all duration-300',
         isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2'
       )}>
-        <div className="mx-auto w-full max-w-[1240px] rounded-full bg-white/95 shadow-[0_16px_38px_rgba(2,6,23,0.14)] ring-1 ring-slate-200 backdrop-blur-sm px-4 py-2.5">
+        <div className="mx-auto w-full max-w-[1240px] rounded-2xl sm:rounded-full bg-white/95 shadow-[0_16px_38px_rgba(2,6,23,0.14)] ring-1 ring-slate-200 backdrop-blur-sm px-3 py-2 sm:px-4 sm:py-2.5">
           <div className="flex items-center justify-between gap-3">
             <button className="flex items-center gap-2.5 bg-transparent border-none text-inherit p-0 cursor-pointer" onClick={() => scrollTo('hero')}>
               <div className="h-8 w-8 rounded-lg bg-blue-600 text-white flex items-center justify-center shadow-[0_8px_18px_rgba(37,99,235,0.35)]">
                 <Building2 size={17} />
               </div>
-              <span className="text-[1.75rem] leading-none font-extrabold tracking-[-0.02em] text-slate-900">SocietyHub</span>
+              <span className="text-[1.15rem] sm:text-[1.35rem] lg:text-[1.75rem] leading-none font-extrabold tracking-[-0.02em] text-slate-900">SocietyHub</span>
             </button>
 
             <div className="hidden lg:flex items-center gap-1">
@@ -152,7 +152,7 @@ export default function Welcome() {
               </button>
             </div>
 
-            <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="md:hidden h-9 w-9 inline-flex items-center justify-center rounded-lg border border-slate-300 text-slate-700 bg-white">
+            <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="md:hidden h-11 w-11 inline-flex items-center justify-center rounded-lg border border-slate-300 text-slate-700 bg-white">
               {mobileMenuOpen ? <X size={18} /> : <Menu size={18} />}
             </button>
           </div>
@@ -160,7 +160,7 @@ export default function Welcome() {
 
         {/* Mobile menu */}
         {mobileMenuOpen && (
-          <div className="mt-2 mx-auto w-full max-w-[1240px] rounded-2xl bg-white/95 shadow-[0_16px_38px_rgba(2,6,23,0.14)] ring-1 ring-slate-200 p-3 flex flex-col gap-2">
+          <div className="mt-2 mx-auto w-full max-w-[1240px] max-h-[calc(100vh-88px)] overflow-y-auto rounded-2xl bg-white/95 shadow-[0_16px_38px_rgba(2,6,23,0.14)] ring-1 ring-slate-200 p-3 flex flex-col gap-2">
             {[
               { label: 'About Us', action: () => { navigate('/about'); setMobileMenuOpen(false) } },
               { label: 'Features', action: () => { scrollTo('features'); setMobileMenuOpen(false) } },
@@ -172,13 +172,13 @@ export default function Welcome() {
               </button>
             ))}
 
-            <button onClick={() => { navigate('/login'); setMobileMenuOpen(false) }} className="mt-1 py-2.5 px-4 text-sm font-semibold text-slate-700 bg-transparent border border-slate-300 rounded-lg cursor-pointer">
+            <button onClick={() => { navigate('/login'); setMobileMenuOpen(false) }} className="mt-1 min-h-11 py-2.5 px-4 text-sm font-semibold text-slate-700 bg-transparent border border-slate-300 rounded-lg cursor-pointer">
               Society Login
             </button>
-            <button onClick={() => { navigate('/login'); setMobileMenuOpen(false) }} className="py-2.5 px-4 text-sm font-semibold text-slate-700 bg-transparent border border-slate-300 rounded-lg cursor-pointer">
+            <button onClick={() => { navigate('/login'); setMobileMenuOpen(false) }} className="min-h-11 py-2.5 px-4 text-sm font-semibold text-slate-700 bg-transparent border border-slate-300 rounded-lg cursor-pointer">
               Admin Portal
             </button>
-            <button onClick={() => { scrollTo('enroll'); setMobileMenuOpen(false) }} className="py-2.5 px-4 text-sm font-semibold text-white bg-blue-600 border-none rounded-full cursor-pointer inline-flex items-center justify-center gap-1.5 shadow-[0_10px_22px_rgba(37,99,235,0.35)]">
+            <button onClick={() => { scrollTo('enroll'); setMobileMenuOpen(false) }} className="min-h-11 py-2.5 px-4 text-sm font-semibold text-white bg-blue-600 border-none rounded-full cursor-pointer inline-flex items-center justify-center gap-1.5 shadow-[0_10px_22px_rgba(37,99,235,0.35)]">
               Enroll your society
               <ArrowRight size={13} />
             </button>
@@ -187,7 +187,7 @@ export default function Welcome() {
       </nav>
 
       {/* Hero */}
-      <section id="hero" className="relative min-h-screen pt-36 pb-20 px-6 overflow-hidden bg-[#0B0F19]">
+      <section id="hero" className="relative min-h-screen pt-28 pb-14 px-4 sm:pt-36 sm:pb-20 sm:px-6 overflow-hidden bg-[#0B0F19]">
         <div className="pointer-events-none absolute inset-0">
           <div className="absolute -top-36 -left-24 h-[380px] w-[380px] rounded-full bg-[#2563eb]/24 blur-3xl animate-mesh-slow" />
           <div className="absolute top-[20%] -right-20 h-[360px] w-[360px] rounded-full bg-[#4f46e5]/22 blur-3xl animate-mesh-slow [animation-delay:200ms]" />
@@ -213,7 +213,7 @@ export default function Welcome() {
           </div>
 
           <h1 className={clsx(
-            'mt-7 text-[clamp(2.6rem,7.2vw,4.5rem)] font-extrabold leading-[1.02] tracking-tight text-white',
+            'mt-6 sm:mt-7 text-[clamp(2rem,8.4vw,4.5rem)] font-extrabold leading-[1.05] tracking-tight text-white',
             isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'
           )}>
             Visitor, Society and Accounting
@@ -222,7 +222,7 @@ export default function Welcome() {
           </h1>
 
           <p className={clsx(
-            'mt-6 mx-auto max-w-2xl text-[1.05rem] leading-8 text-slate-400',
+            'mt-5 sm:mt-6 mx-auto max-w-2xl text-[0.98rem] sm:text-[1.05rem] leading-7 sm:leading-8 text-slate-400',
             isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'
           )}>
             A complete platform to manage residents, visitor entries, billing, complaints, notices, and daily operations — built for modern housing societies.
@@ -251,7 +251,7 @@ export default function Welcome() {
                 </button>
               </div>
             ) : (
-              <form onSubmit={handleEnrollSubmit} id="enroll" className="mx-auto max-w-[520px] p-10 rounded-t-[20px] rounded-b-xl border border-slate-700/70 bg-[#111827]/86 backdrop-blur-md shadow-[0_26px_65px_rgba(15,23,42,0.45)] text-left">
+              <form onSubmit={handleEnrollSubmit} id="enroll" className="mx-auto max-w-[520px] p-5 sm:p-8 lg:p-10 rounded-t-[20px] rounded-b-xl border border-slate-700/70 bg-[#111827]/86 backdrop-blur-md shadow-[0_26px_65px_rgba(15,23,42,0.45)] text-left">
                 <div className="mb-5">
                   <div className="inline-flex items-center gap-2 text-white font-bold text-base">
                     <Building2 size={16} className="text-blue-400" />
@@ -273,7 +273,7 @@ export default function Welcome() {
                     </span>
                   </label>
 
-                  <div className="grid grid-cols-[88px_1fr] gap-2.5">
+                  <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-[88px_1fr]">
                     <div className="h-[50px] rounded-[10px] border border-slate-700 bg-[#0f172a] text-white text-sm font-bold flex items-center justify-center">
                       +91
                     </div>
@@ -331,11 +331,11 @@ export default function Welcome() {
             'welcome-anim mt-7 flex flex-wrap justify-center gap-3 transition-all duration-500',
             isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'
           )} style={{ transitionDelay: '0.4s' }}>
-            <button onClick={() => navigate('/login')} className="inline-flex items-center gap-2 py-3 px-6 text-[0.9375rem] font-semibold text-slate-100 bg-slate-900/45 border border-slate-700 rounded-[var(--radius-md)] cursor-pointer transition-all hover:bg-slate-800/70 hover:border-slate-500">
+            <button onClick={() => navigate('/login')} className="inline-flex w-full sm:w-auto items-center justify-center gap-2 py-3 px-6 text-[0.9375rem] font-semibold text-slate-100 bg-slate-900/45 border border-slate-700 rounded-[var(--radius-md)] cursor-pointer transition-all hover:bg-slate-800/70 hover:border-slate-500">
               Society Login
               <Key size={16} />
             </button>
-            <button onClick={() => scrollTo('features')} className="inline-flex items-center gap-2 py-3 px-6 text-[0.9375rem] font-semibold text-slate-100 bg-slate-900/45 border border-slate-700 rounded-[var(--radius-md)] cursor-pointer transition-all hover:bg-slate-800/70 hover:border-slate-500">
+            <button onClick={() => scrollTo('features')} className="inline-flex w-full sm:w-auto items-center justify-center gap-2 py-3 px-6 text-[0.9375rem] font-semibold text-slate-100 bg-slate-900/45 border border-slate-700 rounded-[var(--radius-md)] cursor-pointer transition-all hover:bg-slate-800/70 hover:border-slate-500">
               Explore Features
               <ChevronDown size={16} />
             </button>
@@ -344,7 +344,7 @@ export default function Welcome() {
       </section>
 
       {/* Features */}
-      <section id="features" className="py-24 px-6" ref={featRef} style={{ background: 'color-mix(in srgb, var(--accent-primary) 3%, var(--bg-primary))' }}>
+      <section id="features" className="py-16 px-4 sm:py-24 sm:px-6" ref={featRef} style={{ background: 'color-mix(in srgb, var(--accent-primary) 3%, var(--bg-primary))' }}>
         <div className="max-w-[1100px] mx-auto">
           <div className={clsx(
             'text-center mb-14 transition-all duration-[600ms] ease-[cubic-bezier(0.16,1,0.3,1)]',
@@ -355,7 +355,7 @@ export default function Welcome() {
             <p className="text-base text-[var(--text-secondary)] max-w-[500px] mx-auto">A complete suite of tools designed for housing society management</p>
           </div>
 
-          <div className="grid grid-cols-[repeat(auto-fill,minmax(240px,1fr))] gap-5">
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-4 sm:gap-5">
             {features.map((f, i) => (
               <div
                 key={i}
@@ -393,14 +393,14 @@ export default function Welcome() {
       </section>
 
       {/* Stats */}
-      <section id="stats" className="py-16 px-6" ref={statsRef}>
+      <section id="stats" className="py-14 px-4 sm:py-16 sm:px-6" ref={statsRef}>
         <div className="max-w-[1100px] mx-auto">
           <div className={clsx(
-            'bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl p-10 text-center relative overflow-hidden light:shadow-[var(--shadow-xs)] transition-all duration-[600ms] ease-[cubic-bezier(0.16,1,0.3,1)] after:content-[\'\'] after:absolute after:bottom-0 after:left-1/2 after:-translate-x-1/2 after:w-[40%] after:h-px after:bg-gradient-to-r after:from-transparent after:via-[var(--accent-primary)] after:to-transparent',
+            'bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl p-5 sm:p-10 text-center relative overflow-hidden light:shadow-[var(--shadow-xs)] transition-all duration-[600ms] ease-[cubic-bezier(0.16,1,0.3,1)] after:content-[\'\'] after:absolute after:bottom-0 after:left-1/2 after:-translate-x-1/2 after:w-[40%] after:h-px after:bg-gradient-to-r after:from-transparent after:via-[var(--accent-primary)] after:to-transparent',
             statsVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'
           )}>
-            <h3 className="text-2xl font-bold text-[var(--text-primary)] mb-[0.375rem]">Platform Statistics</h3>
-            <p className="text-sm text-[var(--text-secondary)] mb-10">Real-time numbers that speak for themselves</p>
+            <h3 className="text-xl sm:text-2xl font-bold text-[var(--text-primary)] mb-[0.375rem]">Platform Statistics</h3>
+            <p className="text-sm text-[var(--text-secondary)] mb-7 sm:mb-10">Real-time numbers that speak for themselves</p>
             <div className="grid grid-cols-4 max-sm:grid-cols-2 gap-6">
               {stats.map((s, i) => (
                 <div
@@ -411,7 +411,7 @@ export default function Welcome() {
                   )}
                   style={{ transitionDelay: statsVisible ? `${200 + i * 120}ms` : '0ms' }}
                 >
-                  <span className="text-4xl font-extrabold tracking-[-0.02em] tabular-nums bg-gradient-to-br from-[var(--accent-primary)] to-[#58a6ff] bg-clip-text text-transparent">{s.value}</span>
+                  <span className="text-3xl sm:text-4xl font-extrabold tracking-[-0.02em] tabular-nums bg-gradient-to-br from-[var(--accent-primary)] to-[#58a6ff] bg-clip-text text-transparent">{s.value}</span>
                   <span className="text-[0.8125rem] text-[var(--text-secondary)] font-medium">{s.label}</span>
                 </div>
               ))}
@@ -421,20 +421,20 @@ export default function Welcome() {
       </section>
 
       {/* CTA */}
-      <section className="py-24 px-6 bg-[var(--bg-primary)]" ref={ctaRef}>
+      <section className="py-16 px-4 sm:py-24 sm:px-6 bg-[var(--bg-primary)]" ref={ctaRef}>
         <div className="max-w-[1100px] mx-auto">
           <div className={clsx(
-            'bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl py-14 px-8 text-center relative overflow-hidden light:shadow-[var(--shadow-xs)] transition-all duration-[600ms] ease-[cubic-bezier(0.16,1,0.3,1)] before:content-[\'\'] before:absolute before:top-0 before:left-1/2 before:-translate-x-1/2 before:w-[60%] before:h-px before:bg-gradient-to-r before:from-transparent before:via-[var(--accent-primary)] before:to-transparent',
+            'bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl py-10 px-5 sm:py-14 sm:px-8 text-center relative overflow-hidden light:shadow-[var(--shadow-xs)] transition-all duration-[600ms] ease-[cubic-bezier(0.16,1,0.3,1)] before:content-[\'\'] before:absolute before:top-0 before:left-1/2 before:-translate-x-1/2 before:w-[60%] before:h-px before:bg-gradient-to-r before:from-transparent before:via-[var(--accent-primary)] before:to-transparent',
             ctaVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'
           )}>
             <h2 className="text-[clamp(1.5rem,3.5vw,2rem)] font-extrabold text-[var(--text-primary)] mb-3">Ready to Transform Your Society?</h2>
             <p className="text-base text-[var(--text-secondary)] max-w-[460px] mx-auto mb-8">Join thousands of societies already streamlining their operations</p>
             <div className="flex flex-wrap justify-center gap-3">
-              <button onClick={() => navigate('/login')} className="inline-flex items-center gap-2 py-[0.875rem] px-8 text-base font-semibold text-white bg-[var(--accent-primary)] border-none rounded-[var(--radius-md)] cursor-pointer transition-all hover:bg-[var(--accent-hover)] hover:-translate-y-[2px] active:translate-y-0">
+              <button onClick={() => navigate('/login')} className="inline-flex w-full sm:w-auto items-center justify-center gap-2 py-[0.875rem] px-8 text-base font-semibold text-white bg-[var(--accent-primary)] border-none rounded-[var(--radius-md)] cursor-pointer transition-all hover:bg-[var(--accent-hover)] hover:-translate-y-[2px] active:translate-y-0">
                 Start Now — It's Free
                 <ArrowRight size={16} />
               </button>
-              <button onClick={() => navigate('/contact')} className="inline-flex items-center gap-2 py-3 px-6 text-[0.9375rem] font-semibold text-[var(--text-primary)] bg-transparent border border-[var(--border-default)] rounded-[var(--radius-md)] cursor-pointer transition-all hover:bg-[var(--bg-tertiary)] hover:border-[var(--border-muted)]">
+              <button onClick={() => navigate('/contact')} className="inline-flex w-full sm:w-auto items-center justify-center gap-2 py-3 px-6 text-[0.9375rem] font-semibold text-[var(--text-primary)] bg-transparent border border-[var(--border-default)] rounded-[var(--radius-md)] cursor-pointer transition-all hover:bg-[var(--bg-tertiary)] hover:border-[var(--border-muted)]">
                 Contact Sales
               </button>
             </div>
@@ -443,7 +443,7 @@ export default function Welcome() {
       </section>
 
       {/* Footer */}
-      <footer id="contact" className="pt-[3.25rem] px-6 pb-4" style={{ borderTop: '1px solid color-mix(in srgb, var(--border-strong) 70%, transparent)', background: 'color-mix(in srgb, var(--bg-primary) 72%, var(--bg-overlay) 28%)' }}>
+      <footer id="contact" className="pt-[3.25rem] px-4 sm:px-6 pb-4" style={{ borderTop: '1px solid color-mix(in srgb, var(--border-strong) 70%, transparent)', background: 'color-mix(in srgb, var(--bg-primary) 72%, var(--bg-overlay) 28%)' }}>
         <div className="max-w-[1100px] mx-auto">
           <div className="grid grid-cols-[1.35fr_1fr_1.1fr_0.9fr_1fr] max-md:grid-cols-2 max-[480px]:grid-cols-1 gap-8 items-start mb-10">
             <div className="flex flex-col gap-4">

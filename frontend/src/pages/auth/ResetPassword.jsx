@@ -64,9 +64,9 @@ export default function ResetPassword() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[var(--bg-primary)] px-4 py-12">
+    <div className="flex min-h-screen items-center justify-center bg-[var(--bg-primary)] px-3 py-8 sm:px-4 sm:py-12">
       <div className="w-full max-w-md">
-        <div className="mb-8 text-center">
+        <div className="mb-6 sm:mb-8 text-center">
           <Link to="/" className="inline-flex items-center gap-3 no-underline">
             <div className="rounded-xl p-3" style={{ background: 'linear-gradient(to bottom right, var(--accent-primary), var(--accent-secondary))' }}>
               <Building2 className="h-7 w-7 text-white" />
@@ -75,7 +75,7 @@ export default function ResetPassword() {
           </Link>
         </div>
 
-        <div className="rounded-3xl border border-[var(--border-default)] bg-[var(--bg-card)] p-8 shadow-xl">
+        <div className="rounded-3xl border border-[var(--border-default)] bg-[var(--bg-card)] p-5 sm:p-8 shadow-xl">
           {!success ? (
             <>
               <div className="mb-6 text-center">
@@ -85,7 +85,7 @@ export default function ResetPassword() {
                 >
                   <ShieldCheck className="h-7 w-7" style={{ color: 'var(--accent-primary)' }} />
                 </div>
-                <h2 className="mb-2 text-3xl font-extrabold text-[var(--text-primary)]">Reset Password</h2>
+                <h2 className="mb-2 text-2xl sm:text-3xl font-extrabold text-[var(--text-primary)]">Reset Password</h2>
                 <p className="text-sm text-[var(--text-secondary)]">Create a strong password for your account.</p>
               </div>
 
