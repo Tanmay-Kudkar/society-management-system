@@ -50,6 +50,15 @@ public class LoginAudit {
     @Column
     private Double longitude;
 
+    @Column(name = "is_nearby")
+    private Boolean isNearby;
+
+    @Column(name = "distance_meters")
+    private Double distanceMeters;
+
+    @Column(name = "proximity_threshold_meters")
+    private Double proximityThresholdMeters;
+
     public LoginAudit(User user, Action action, String ipAddress, String userAgent) {
         this.user = user;
         this.action = action;
@@ -63,5 +72,14 @@ public class LoginAudit {
         this(user, action, ipAddress, userAgent);
         this.latitude = latitude;
         this.longitude = longitude;
+    }
+
+    public LoginAudit(User user, Action action, String ipAddress, String userAgent,
+                      Double latitude, Double longitude, Boolean isNearby,
+                      Double distanceMeters, Double proximityThresholdMeters) {
+        this(user, action, ipAddress, userAgent, latitude, longitude);
+        this.isNearby = isNearby;
+        this.distanceMeters = distanceMeters;
+        this.proximityThresholdMeters = proximityThresholdMeters;
     }
 }
