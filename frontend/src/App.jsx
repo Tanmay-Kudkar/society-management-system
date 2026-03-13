@@ -90,7 +90,6 @@ const Privacy = lazyWithMinDelay(() => import("./pages/footer/Privacy"));
 const Terms = lazyWithMinDelay(() => import("./pages/footer/Terms"));
 const Contact = lazyWithMinDelay(() => import("./pages/footer/Contact"));
 const Pricing = lazyWithMinDelay(() => import("./pages/footer/Pricing"));
-const Blog = lazyWithMinDelay(() => import("./pages/footer/Blog"));
 const Demo = lazyWithMinDelay(() => import("./pages/footer/Demo"));
 const Help = lazyWithMinDelay(() => import("./pages/footer/Help"));
 
@@ -136,7 +135,6 @@ const PAGE_TITLES = {
   "/terms": "Terms of Service",
   "/contact": "Contact",
   "/pricing": "Pricing",
-  "/blog": "Blog",
   "/demo": "Demo",
   "/help": "Help",
   "/dashboard": "Dashboard",
@@ -280,7 +278,6 @@ function App() {
               <Route path="/terms" element={<Terms />} />
               <Route path="/contact" element={<Contact />} />
               <Route path="/pricing" element={<Pricing />} />
-              <Route path="/blog" element={<Blog />} />
               <Route path="/demo" element={<Demo />} />
               <Route path="/help" element={<Help />} />
 

@@ -621,6 +621,40 @@ table th {
   animation: sun-spin 10s linear infinite;
 }
 
+/* Shared sweep hover for public landing-page buttons */
+.landing-page button:not(.no-sweep) {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  transition: transform 220ms ease, box-shadow 220ms ease, filter 220ms ease;
+}
+
+.landing-page button:not(.no-sweep)::after {
+  content: '';
+  position: absolute;
+  top: -18%;
+  bottom: -18%;
+  left: -30%;
+  width: 34%;
+  transform: translateX(-180%) skewX(-24deg);
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.42), rgba(255, 255, 255, 0));
+  opacity: 0.72;
+  pointer-events: none;
+  transition: transform 700ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.landing-page button:not(.no-sweep):hover::after {
+  transform: translateX(470%) skewX(-24deg);
+}
+
+.landing-page button:hover {
+  transform: none !important;
+}
+
+.landing-page button:not(.no-sweep):disabled {
+  transform: none;
+}
+
 /* Compatibility aliases used in dashboard markup */
 .animate-bounce-custom {
   animation: bounce 1s infinite;
@@ -645,5 +679,14 @@ table th {
     animation: none !important;
     opacity: 1 !important;
     transform: none !important;
+  }
+
+  .landing-page button:not(.no-sweep),
+  .landing-page button:not(.no-sweep)::after {
+    transition: none !important;
+  }
+
+  .landing-page button:not(.no-sweep)::after {
+    display: none !important;
   }
 }
