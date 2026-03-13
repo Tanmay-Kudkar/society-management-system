@@ -57,6 +57,7 @@
   --text-tertiary: #c8d2de;
   --text-muted: #a9b5c3;
   --text-inverse: #000000;
+  --placeholder-color: #6b7f96;
 
   --border-light: #1a1a1a;
   --border-default: #222222;
@@ -140,6 +141,7 @@
   --text-tertiary: #1e293b;
   --text-muted: #334155;
   --text-inverse: #ffffff;
+  --placeholder-color: #94a3b8;
 
   --border-light: #aebed2;
   --border-default: #98abc4;

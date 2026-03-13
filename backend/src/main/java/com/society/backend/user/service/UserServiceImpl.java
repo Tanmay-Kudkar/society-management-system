@@ -66,6 +66,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
     public UserResponse createUser(UserRequest request) {
         log.info("Creating user with email: {}, role: {}", request.getEmail(), request.getRole());
 
@@ -131,10 +132,10 @@ public class UserServiceImpl implements UserService {
                     .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Society not found"));
             user.setSociety(society);
 
-            // If this is a Society Admin, also update the society's telephone
+            // If this is a Society Admin, update the society's telephone after user is saved
+            // to avoid TransientObjectException (user must be persisted first)
             if (targetRole == Role.SOCIETY_ADMIN) {
                 society.setTelephone(request.getPhone());
-                societyRepository.save(society);
             }
         }
         // If creator is not top-level admin but has a society, inherit it
@@ -357,6 +358,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
     public UserResponse updateUser(Long id, UserRequest request) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "User not found"));
@@ -419,9 +421,9 @@ public class UserServiceImpl implements UserService {
         user.setPhone(request.getPhone());
 
         // Update society telephone if this is a SOCIETY_ADMIN
+        // With @Transactional, dirty-checking will auto-persist the change at commit
         if (user.getRole() == Role.SOCIETY_ADMIN && user.getSociety() != null) {
             user.getSociety().setTelephone(request.getPhone());
-            societyRepository.save(user.getSociety());
         }
 
         // Role change is only allowed if not self-update and if permitted
