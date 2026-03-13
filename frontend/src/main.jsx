@@ -1,8 +1,9 @@
 import { createRoot } from 'react-dom/client'
-import { HashRouter } from 'react-router-dom'
+import { BrowserRouter } from 'react-router-dom'
 import { QueryClient, QueryClientProvider, MutationCache } from '@tanstack/react-query'
 import { AuthProvider, SettingsProvider } from './context'
 import App from './App.jsx'
+import 'leaflet/dist/leaflet.css'
 import './styles/global.css'
 
 const queryClient = new QueryClient({
@@ -40,12 +41,12 @@ const queryClient = new QueryClient({
 
 createRoot(document.getElementById('root')).render(
     <QueryClientProvider client={queryClient}>
-      <HashRouter>
+      <BrowserRouter>
         <AuthProvider>
           <SettingsProvider>
             <App />
           </SettingsProvider>
         </AuthProvider>
-      </HashRouter>
+      </BrowserRouter>
     </QueryClientProvider>,
 )

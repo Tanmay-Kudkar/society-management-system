@@ -7,6 +7,7 @@ import com.society.backend.auth.service.AuthService;
 import com.society.backend.common.security.JwtUtils;
 import com.society.backend.auth.entity.LoginAudit;
 import com.society.backend.auth.repository.LoginAuditRepository;
+import com.society.backend.user.entity.Role;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -72,10 +73,11 @@ public class AuthController {
     @PostMapping("/logout")
     public ResponseEntity<Void> logout(
             @CookieValue(name = "jwt", required = false) String token,
+            @RequestBody(required = false) LogoutRequest logoutRequest,
             HttpServletRequest httpRequest,
             HttpServletResponse response) {
         // Record logout audit before clearing the cookie
-        authService.recordLogout(token, httpRequest);
+        authService.recordLogout(token, httpRequest, logoutRequest);
 
         // Clear the JWT cookie
         Cookie jwtCookie = new Cookie("jwt", null);
@@ -130,12 +132,12 @@ public class AuthController {
     @GetMapping("/login-audit/user/{userId}")
     @PreAuthorize("hasAuthority('MASTER_ADMIN')")
     public ResponseEntity<java.util.List<LoginAudit>> getLoginAuditByUser(@PathVariable Long userId) {
-        return ResponseEntity.ok(loginAuditRepository.findByUserIdOrderByTimestampDesc(userId));
+        return ResponseEntity.ok(loginAuditRepository.findByUserIdAndUserRoleOrderByTimestampDesc(userId, Role.SOCIETY_ADMIN));
     }
 
     @GetMapping("/login-audit/society/{societyId}")
     @PreAuthorize("hasAuthority('MASTER_ADMIN')")
     public ResponseEntity<java.util.List<LoginAudit>> getLoginAuditBySociety(@PathVariable Long societyId) {
-        return ResponseEntity.ok(loginAuditRepository.findByUser_Society_IdOrderByTimestampDesc(societyId));
+        return ResponseEntity.ok(loginAuditRepository.findByUser_Society_IdAndUserRoleOrderByTimestampDesc(societyId, Role.SOCIETY_ADMIN));
     }
 }
