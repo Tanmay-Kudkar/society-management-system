@@ -129,7 +129,7 @@ export default function Welcome() {
       {/* Hero */}
       <section
         id="hero"
-        className="relative scroll-mt-28 overflow-hidden px-6 pb-20 pt-24 transition-colors duration-300 md:pt-28"
+        className="relative scroll-mt-28 overflow-hidden px-4 pb-14 pt-20 transition-colors duration-300 sm:px-6 sm:pb-20 sm:pt-24 md:pt-28"
         style={{
           background:
             "radial-gradient(circle at 8% 10%, color-mix(in srgb, var(--accent-primary) 18%, transparent), transparent 45%), radial-gradient(circle at 88% 20%, color-mix(in srgb, #0ea5e9 16%, transparent), transparent 40%), var(--bg-primary)",
@@ -150,7 +150,7 @@ export default function Welcome() {
           />
         </div>
 
-        <div className="relative z-10 mx-auto grid w-full max-w-[1240px] items-center gap-12 lg:grid-cols-[1.1fr_0.9fr]">
+        <div className="relative z-10 mx-auto grid w-full max-w-[1240px] items-center gap-8 sm:gap-12 lg:grid-cols-[1.1fr_0.9fr]">
           <div>
             <div
               className={clsx(
@@ -169,7 +169,7 @@ export default function Welcome() {
 
             <h1
               className={clsx(
-                "mt-6 text-[clamp(2.5rem,5.5vw,4.5rem)] font-[950] leading-[1.05] tracking-tight text-[var(--text-primary)] transition-all duration-500",
+                "mt-6 text-[clamp(2rem,6.8vw,4.5rem)] font-[950] leading-[1.05] tracking-tight text-[var(--text-primary)] transition-all duration-500",
                 isLoaded
                   ? "translate-y-0 opacity-100"
                   : "translate-y-3 opacity-0",
@@ -184,7 +184,7 @@ export default function Welcome() {
 
             <p
               className={clsx(
-                "mt-6 max-w-xl text-[1.15rem] leading-relaxed font-medium text-[var(--text-secondary)] transition-all duration-500",
+                "mt-6 max-w-xl text-[1rem] leading-relaxed font-medium text-[var(--text-secondary)] transition-all duration-500 sm:text-[1.15rem]",
                 isLoaded
                   ? "translate-y-0 opacity-100"
                   : "translate-y-3 opacity-0",
@@ -206,7 +206,7 @@ export default function Welcome() {
             >
               <button
                 onClick={() => scrollTo("enroll")}
-                className="group relative flex h-14 items-center justify-center gap-2 overflow-hidden rounded-2xl bg-[var(--accent-primary)] px-8 text-[1.05rem] font-bold text-white transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_16px_32px_color-mix(in_srgb,var(--accent-primary)_40%,transparent)] active:scale-95"
+                className="group relative flex h-14 w-full sm:w-auto items-center justify-center gap-2 overflow-hidden rounded-2xl bg-[var(--accent-primary)] px-8 text-[1.05rem] font-bold text-white transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_16px_32px_color-mix(in_srgb,var(--accent-primary)_40%,transparent)] active:scale-95"
               >
                 <span className="relative z-10 flex items-center gap-2">
                   Enroll your society
@@ -217,7 +217,7 @@ export default function Welcome() {
 
               <button
                 onClick={() => navigate("/login")}
-                className="flex h-14 items-center justify-center gap-2 rounded-2xl border-2 border-[color-mix(in_srgb,var(--accent-primary)_20%,transparent)] bg-[color-mix(in_srgb,var(--bg-card)_85%,transparent)] px-8 text-[1.05rem] font-bold text-[var(--text-primary)] backdrop-blur-sm transition-all duration-300 hover:-translate-y-1 hover:border-[var(--accent-primary)] hover:bg-[color-mix(in_srgb,var(--accent-primary)_5%,transparent)] active:scale-95"
+                className="flex h-14 w-full sm:w-auto items-center justify-center gap-2 rounded-2xl border-2 border-[color-mix(in_srgb,var(--accent-primary)_20%,transparent)] bg-[color-mix(in_srgb,var(--bg-card)_85%,transparent)] px-8 text-[1.05rem] font-bold text-[var(--text-primary)] backdrop-blur-sm transition-all duration-300 hover:-translate-y-1 hover:border-[var(--accent-primary)] hover:bg-[color-mix(in_srgb,var(--accent-primary)_5%,transparent)] active:scale-95"
               >
                 Society Login
                 <Key className="h-5 w-5 text-[var(--text-secondary)]" />
@@ -324,7 +324,7 @@ export default function Welcome() {
                     <label className="text-[0.85rem] font-bold text-[var(--text-primary)]">
                       Phone Number
                     </label>
-                    <div className="grid grid-cols-[90px_1fr] gap-3">
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-[90px_1fr]">
                       <div className="flex h-14 items-center justify-center rounded-2xl border-2 border-[color-mix(in_srgb,var(--border-default)_60%,transparent)] bg-[color-mix(in_srgb,var(--bg-primary)_80%,transparent)] text-[1rem] font-bold text-[var(--text-primary)]">
                         +91
                       </div>
@@ -400,7 +400,7 @@ export default function Welcome() {
       {/* Features */}
       <section
         id="features"
-        className="cv-auto relative scroll-mt-28 py-28 px-6 overflow-hidden"
+        className="cv-auto relative scroll-mt-28 overflow-hidden px-4 py-16 sm:px-6 sm:py-28"
         ref={featRef}
         style={{
           background:
@@ -489,7 +489,7 @@ export default function Welcome() {
       {/* Stats */}
       <section
         id="stats"
-        className="cv-auto relative scroll-mt-28 px-6 py-28"
+        className="cv-auto relative scroll-mt-28 px-4 py-16 sm:px-6 sm:py-28"
         ref={statsRef}
       >
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,color-mix(in_srgb,var(--accent-primary)_4%,transparent)_0%,transparent_70%)] opacity-60 pointer-events-none" />

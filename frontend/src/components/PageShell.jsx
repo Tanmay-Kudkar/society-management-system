@@ -47,9 +47,9 @@ export default function PageShell({
                   >
                     <Info size={16} className="cursor-pointer text-[var(--text-tertiary)] hover:text-[var(--accent-primary)] transition-colors" aria-label={subtitle} />
                     {subtitleTooltip && (
-                      <div className="absolute left-1/2 top-full z-50 mt-2 -translate-x-1/2 whitespace-nowrap rounded-lg border border-[var(--border-default)] bg-[var(--bg-elevated,var(--bg-card))] px-3 py-2 text-xs font-normal text-[var(--text-secondary)] shadow-lg">
+                      <div className="absolute left-0 right-auto top-full z-50 mt-2 w-[min(85vw,260px)] rounded-lg border border-[var(--border-default)] bg-[var(--bg-elevated,var(--bg-card))] px-3 py-2 text-xs font-normal text-[var(--text-secondary)] shadow-lg sm:left-1/2 sm:right-auto sm:w-max sm:max-w-[320px] sm:-translate-x-1/2">
                         <div className="absolute -top-1 left-1/2 h-2 w-2 -translate-x-1/2 rotate-45 border-l border-t border-[var(--border-default)] bg-[var(--bg-elevated,var(--bg-card))]" />
-                        {subtitle}
+                        <p className="m-0 whitespace-normal break-words leading-relaxed">{subtitle}</p>
                       </div>
                     )}
                   </div>
@@ -83,7 +83,7 @@ export default function PageShell({
         linksBreakpoint="lg"
         themeDesktopOnly={false}
       />
-      <main className="public-shell-main mx-auto w-full max-w-[1120px] flex-1 px-4 py-8 sm:px-6">{children}</main>
+      <main className="public-shell-main mx-auto w-full max-w-[1120px] flex-1 px-3 py-6 sm:px-4 sm:py-8 md:px-6">{children}</main>
       <PublicFooter />
     </div>
   )

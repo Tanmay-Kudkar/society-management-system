@@ -158,11 +158,11 @@ export default function Login() {
   }
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center bg-[color-mix(in_srgb,var(--bg-primary)_92%,#0f172a_8%)] px-4 py-8 sm:px-7">
+    <div className="relative flex min-h-screen items-center justify-center bg-[color-mix(in_srgb,var(--bg-primary)_92%,#0f172a_8%)] px-3 py-5 sm:px-5 sm:py-7 lg:px-7 lg:py-8">
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,color-mix(in_srgb,var(--accent-primary)_2%,var(--bg-primary))_0%,var(--bg-primary)_50%)]" />
 
       <div className={`relative z-[1] w-full max-w-[1320px] transition-all duration-300 ${isLoaded ? 'translate-y-0 opacity-100' : 'translate-y-2.5 opacity-0'}`}>
-        <div className="grid overflow-hidden rounded-2xl border border-[color-mix(in_srgb,var(--border-default)_85%,#334155_15%)] bg-[color-mix(in_srgb,var(--bg-secondary)_95%,#0f172a_5%)] shadow-[0_25px_50px_-12px_color-mix(in_srgb,#000_25%,transparent)] lg:grid-cols-[minmax(460px,1.2fr)_minmax(460px,560px)]">
+        <div className="grid overflow-hidden rounded-2xl border border-[color-mix(in_srgb,var(--border-default)_85%,#334155_15%)] bg-[color-mix(in_srgb,var(--bg-secondary)_95%,#0f172a_5%)] shadow-[0_25px_50px_-12px_color-mix(in_srgb,#000_25%,transparent)] lg:grid-cols-[minmax(0,1fr)_minmax(0,560px)]">
           <aside className="hidden lg:flex lg:flex-col lg:gap-6 lg:border-r lg:border-[color-mix(in_srgb,var(--border-default)_90%,#334155_10%)] lg:bg-[color-mix(in_srgb,var(--bg-secondary)_50%,var(--bg-tertiary)_50%)] lg:p-8">
             <Link to="/" className="mb-6 inline-flex items-center gap-3 no-underline">
               <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-[color-mix(in_srgb,var(--accent-primary)_55%,var(--border-default))] bg-[color-mix(in_srgb,var(--accent-primary)_90%,#1e40af_10%)] text-white">
@@ -380,8 +380,8 @@ export default function Login() {
             </div>
 
             {isLocationPanelOpen && (
-              <div className="animate-fadeIn fixed inset-0 z-50 flex items-center justify-center bg-black/45 px-4">
-                <div className="animate-scale-in w-full max-w-[560px] rounded-xl border border-[color-mix(in_srgb,var(--border-default)_80%,#334155_20%)] bg-[var(--bg-secondary)] p-4 shadow-2xl">
+              <div className="animate-fadeIn fixed inset-0 z-50 flex items-end justify-center bg-black/45 px-3 py-3 sm:items-center sm:px-4">
+                <div className="animate-scale-in w-full max-w-[560px] rounded-xl border border-[color-mix(in_srgb,var(--border-default)_80%,#334155_20%)] bg-[var(--bg-secondary)] p-3.5 shadow-2xl sm:p-4">
                   <div className="mb-3 flex items-center justify-between">
                     <div>
                       <h3 className="text-sm font-bold text-[var(--text-primary)]">Adjust Login Location</h3>
