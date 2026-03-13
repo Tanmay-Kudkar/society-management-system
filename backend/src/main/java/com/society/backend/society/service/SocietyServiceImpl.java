@@ -12,6 +12,7 @@ import com.society.backend.society.repository.SocietyRepository;
 import com.society.backend.user.repository.UserRepository;
 import com.society.backend.common.service.ReferenceCleanupService;
 import com.society.backend.common.service.RoleService;
+import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -33,6 +34,7 @@ public class SocietyServiceImpl implements SocietyService {
     private final UserRepository userRepository;
     private final ReferenceCleanupService referenceCleanupService;
     private final RoleService roleService;
+    private final EntityManager entityManager;
 
     @Override
     public SocietyResponse create(SocietyRequest request) {
@@ -140,6 +142,12 @@ public class SocietyServiceImpl implements SocietyService {
             }
 
             referenceCleanupService.clearReferences("society_id", id, true, Set.of("societies"));
+
+            // ReferenceCleanupService uses raw JDBC which bypasses Hibernate's cache.
+            // Flush pending JPA changes, then clear the persistence context so Hibernate
+            // re-reads the now-cleaned DB state and doesn't hold stale Society references.
+            entityManager.flush();
+            entityManager.clear();
         }
 
         societyRepository.deleteById(id);
