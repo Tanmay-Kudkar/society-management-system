@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import clsx from 'clsx'
 import { Building2, Github, Twitter, Linkedin, Info } from 'lucide-react'
 import { useState } from 'react'
+import PublicNavbar from './PublicNavbar'
 import PublicFooter from './PublicFooter'
 
 /**
@@ -70,7 +71,19 @@ export default function PageShell({
 
   return (
     <div className="landing-page flex min-h-screen flex-col bg-[var(--bg-primary)] text-[var(--text-primary)] transition-colors duration-300">
-      <main className="mx-auto w-full max-w-[1120px] flex-1 px-4 py-8 sm:px-6">{children}</main>
+      <PublicNavbar
+        navItems={[
+          { label: 'About Us', to: '/about' },
+          { label: 'Features', to: '/#features' },
+          { label: 'Pricing', to: '/pricing' },
+          { label: 'Contact', to: '/contact' },
+        ]}
+        showAuthButtons={false}
+        maxWidthClass="max-w-[1240px]"
+        linksBreakpoint="lg"
+        themeDesktopOnly={false}
+      />
+      <main className="public-shell-main mx-auto w-full max-w-[1120px] flex-1 px-4 py-8 sm:px-6">{children}</main>
       <PublicFooter />
     </div>
   )

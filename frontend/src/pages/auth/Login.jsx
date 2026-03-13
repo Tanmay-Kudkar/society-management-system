@@ -1,6 +1,5 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, Suspense, lazy } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import { MapContainer, TileLayer, Circle, CircleMarker, useMapEvents } from 'react-leaflet'
 import { useAuth } from '../../context'
 import { useTheme } from '../../context'
 import {
@@ -9,39 +8,11 @@ import {
   Shield, Briefcase, FileText, Users, MapPin, X
 } from 'lucide-react'
 
+const LocationPickerMap = lazy(() => import('../../components/LocationPickerMap'))
+
 const DEFAULT_LOCATION = {
   latitude: 19.076,
   longitude: 72.8777,
-}
-
-function LocationPicker({ location, onPick }) {
-  useMapEvents({
-    click: (event) => {
-      onPick({
-        latitude: event.latlng.lat,
-        longitude: event.latlng.lng,
-      })
-    },
-  })
-
-  return (
-    <>
-      <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-      />
-      <Circle
-        center={[location.latitude, location.longitude]}
-        radius={300}
-        pathOptions={{ color: '#0ea5e9', fillColor: '#38bdf8', fillOpacity: 0.2 }}
-      />
-      <CircleMarker
-        center={[location.latitude, location.longitude]}
-        radius={8}
-        pathOptions={{ color: '#f97316', fillColor: '#fb923c', fillOpacity: 0.95 }}
-      />
-    </>
-  )
 }
 
 export default function Login() {
@@ -192,7 +163,7 @@ export default function Login() {
 
       <div className={`relative z-[1] w-full max-w-[1320px] transition-all duration-300 ${isLoaded ? 'translate-y-0 opacity-100' : 'translate-y-2.5 opacity-0'}`}>
         <div className="grid overflow-hidden rounded-2xl border border-[color-mix(in_srgb,var(--border-default)_85%,#334155_15%)] bg-[color-mix(in_srgb,var(--bg-secondary)_95%,#0f172a_5%)] shadow-[0_25px_50px_-12px_color-mix(in_srgb,#000_25%,transparent)] lg:grid-cols-[minmax(460px,1.2fr)_minmax(460px,560px)]">
-          <aside className="flex flex-col gap-6 border-r border-[color-mix(in_srgb,var(--border-default)_90%,#334155_10%)] bg-[color-mix(in_srgb,var(--bg-secondary)_50%,var(--bg-tertiary)_50%)] p-8">
+          <aside className="hidden lg:flex lg:flex-col lg:gap-6 lg:border-r lg:border-[color-mix(in_srgb,var(--border-default)_90%,#334155_10%)] lg:bg-[color-mix(in_srgb,var(--bg-secondary)_50%,var(--bg-tertiary)_50%)] lg:p-8">
             <Link to="/" className="mb-6 inline-flex items-center gap-3 no-underline">
               <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-[color-mix(in_srgb,var(--accent-primary)_55%,var(--border-default))] bg-[color-mix(in_srgb,var(--accent-primary)_90%,#1e40af_10%)] text-white">
                 <Building2 size={24} />
@@ -227,8 +198,8 @@ export default function Login() {
             </div>
           </aside>
 
-          <section className="relative flex flex-col bg-transparent p-8">
-            <div className="absolute right-2 top-2 z-10 rounded-xl border border-[color-mix(in_srgb,var(--border-light)_90%,#334155_10%)] bg-[color-mix(in_srgb,var(--bg-primary)_86%,#111827_14%)] p-1 md:right-3 md:top-3">
+          <section className="relative flex flex-col bg-transparent p-5 sm:p-7 lg:p-8">
+            <div className="absolute right-2 top-2 z-10 rounded-xl border border-[color-mix(in_srgb,var(--border-light)_90%,#334155_10%)] bg-[color-mix(in_srgb,var(--bg-primary)_86%,#111827_14%)] p-1 sm:right-3 sm:top-3">
               <div className="flex items-center gap-1">
                 {[
                   { key: 'system', icon: Monitor, label: 'System', active: !isManual, action: resetToSystemTheme },
@@ -247,7 +218,7 @@ export default function Login() {
                 ))}
               </div>
             </div>
-            <div className="flex h-full flex-col justify-start pt-14 md:pt-16">
+            <div className="flex h-full flex-col justify-start pt-14 sm:pt-16">
               <div className="mb-7">
                 <h1 className="mb-2 text-[clamp(1.95rem,2.2vw,2.2rem)] font-extrabold leading-none tracking-[-0.02em] text-[color-mix(in_srgb,var(--text-primary)_92%,#e2e8f0_8%)]">Sign in</h1>
                 <p className="pt-3 text-sm text-[color-mix(in_srgb,var(--text-secondary)_88%,#94a3b8_12%)]">Access your society management dashboard</p>
@@ -427,21 +398,21 @@ export default function Login() {
                   </div>
 
                   <div className="overflow-hidden rounded-lg border border-[color-mix(in_srgb,var(--border-default)_72%,#334155_28%)]">
-                    <MapContainer
-                      key={`${location.latitude}-${location.longitude}`}
-                      center={[location.latitude, location.longitude]}
-                      zoom={16}
-                      scrollWheelZoom
-                      style={{ height: '260px', width: '100%' }}
+                    <Suspense
+                      fallback={
+                        <div className="flex h-[260px] items-center justify-center text-sm font-medium text-[var(--text-secondary)]">
+                          Loading map...
+                        </div>
+                      }
                     >
-                      <LocationPicker
+                      <LocationPickerMap
                         location={location}
                         onPick={(coords) => {
                           setLocation(coords)
                           setLocationStatus('Location pin updated manually. This location will be used for login audit.')
                         }}
                       />
-                    </MapContainer>
+                    </Suspense>
                   </div>
 
                   <div className="mt-3 flex items-center justify-between gap-3">

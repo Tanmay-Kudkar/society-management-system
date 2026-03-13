@@ -690,3 +690,102 @@ table th {
     display: none !important;
   }
 }
+
+/* ============================================
+         Runtime performance safeguards
+   ============================================ */
+
+/* Auto-enabled by main.jsx on low-end/mobile/reduced-data environments */
+.perf-lite *,
+.perf-lite *::before,
+.perf-lite *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+}
+
+.perf-lite [class*="animate-"] {
+  animation: none !important;
+}
+
+.perf-lite [class*="backdrop-blur"],
+.perf-lite [class*="blur-"] {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  filter: none !important;
+}
+
+.perf-lite [class*="transition-all"] {
+  transition-property: color, background-color, border-color, opacity, transform !important;
+  transition-duration: 120ms !important;
+}
+
+.perf-lite [class*="shadow-"] {
+  box-shadow: none !important;
+}
+
+.perf-lite .landing-page button:not(.no-sweep)::after {
+  display: none !important;
+}
+
+/* ============================================
+      Always-on rendering optimizations
+   ============================================ */
+
+/* Skip paint/layout work for offscreen public sections while preserving visuals. */
+.public-shell-main > section {
+  content-visibility: auto;
+  contain: layout paint style;
+  contain-intrinsic-size: 1px 760px;
+}
+
+/* Keep the first section eager so above-the-fold content remains immediate. */
+.public-shell-main > section:first-child {
+  content-visibility: visible;
+  contain: none;
+}
+
+/* Reusable utility for heavy standalone pages not wrapped by PageShell. */
+.cv-auto {
+  content-visibility: auto;
+  contain: layout paint style;
+  contain-intrinsic-size: 1px 820px;
+}
+
+/* Keep animation compositing on the GPU path where possible. */
+.animate-fade-in-up,
+.animate-slide-up,
+.animate-slide-in-right,
+.animate-slide-in-left,
+.animate-scale-in {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+/* During route transitions, prioritize first viewport rendering over decorative motion. */
+.route-transitioning .public-shell-main > section:not(:first-child) [class*="animate-"],
+.route-transitioning .cv-auto [class*="animate-"] {
+  animation: none !important;
+}
+
+.route-transitioning [class*="transition-all"][class*="duration-700"],
+.route-transitioning [class*="transition-all"][class*="duration-[800ms]"],
+.route-transitioning [class*="transition-all"][class*="duration-500"] {
+  transition-duration: 180ms !important;
+}
+
+/* Guard rails for coarse-pointer devices even without perf-lite. */
+@media (pointer: coarse) and (max-width: 900px) {
+  [class*="backdrop-blur-2xl"],
+  [class*="backdrop-blur-xl"],
+  [class*="blur-3xl"],
+  [class*="blur-2xl"] {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+    filter: none !important;
+  }
+
+  [class*="transition-all"][class*="duration-700"],
+  [class*="transition-all"][class*="duration-[800ms]"] {
+    transition-duration: 180ms !important;
+  }
+}

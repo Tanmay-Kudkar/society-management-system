@@ -1,7 +1,7 @@
 import { Link, useLocation } from 'react-router-dom'
 import { useEffect, useRef, useState } from 'react'
 import clsx from 'clsx'
-import { Building2, Sun, Moon, Monitor, CheckCircle, Menu, X, ChevronDown } from 'lucide-react'
+import { Building2, Sun, Moon, Monitor, Check, Menu, X, ChevronDown } from 'lucide-react'
 import { useTheme } from '../context/ThemeContext'
 
 const breakpointClassMap = {
@@ -27,24 +27,34 @@ export default function PublicNavbar({
 
   useEffect(() => {
     const handleOutside = (event) => {
-      if (themeMenuRef.current && !themeMenuRef.current.contains(event.target)) {
+      const path = event.composedPath ? event.composedPath() : []
+      const clickedInside = themeMenuRef.current && (path.includes(themeMenuRef.current) || themeMenuRef.current.contains(event.target))
+      if (!clickedInside) {
         setThemeMenuOpen(false)
       }
     }
-    document.addEventListener('mousedown', handleOutside)
-    return () => document.removeEventListener('mousedown', handleOutside)
+    document.addEventListener('pointerdown', handleOutside)
+    return () => document.removeEventListener('pointerdown', handleOutside)
   }, [])
 
   const linksClass = breakpointClassMap[linksBreakpoint] || breakpointClassMap.md
   const rightClass = themeDesktopOnly ? 'hidden md:flex items-center gap-2' : 'flex items-center gap-2 sm:gap-3'
+  const activeThemeLabel = !isManual ? 'System' : theme === 'dark' ? 'Dark' : 'Light'
+
+  const applyThemeChoice = (action) => (event) => {
+    event.preventDefault()
+    event.stopPropagation()
+    action()
+    setThemeMenuOpen(false)
+  }
 
   return (
     <header className={clsx(
-      'fixed left-0 right-0 top-0 z-[120] px-4 pt-4 pb-4 sm:pt-6 transition-all duration-700 ease-out',
+      'fixed left-0 right-0 top-0 z-[120] px-4 pt-4 pb-4 sm:pt-6 transition duration-500 ease-out',
       loaded ? 'translate-y-0 opacity-100' : '-translate-y-8 opacity-0',
     )}>
       <nav className={clsx(
-        'mx-auto flex w-full items-center justify-between gap-3 rounded-full border border-white/60 bg-white/70 px-4 py-2.5 shadow-[0_8px_32px_rgba(0,0,0,0.06)] backdrop-blur-2xl transition-all dark:border-slate-700/60 dark:bg-slate-900/80 dark:shadow-[0_8px_32px_rgba(0,0,0,0.4)]',
+        'mx-auto flex w-full items-center justify-between gap-3 rounded-full border border-white/60 bg-white/70 px-4 py-2.5 shadow-[0_8px_24px_rgba(0,0,0,0.06)] backdrop-blur-md transition-colors dark:border-slate-700/60 dark:bg-slate-900/80 dark:shadow-[0_8px_24px_rgba(0,0,0,0.4)]',
         maxWidthClass
       )}>
         {onBrandClick ? (
@@ -108,42 +118,63 @@ export default function PublicNavbar({
                 onClick={() => setThemeMenuOpen((prev) => !prev)}
                 className="no-sweep inline-flex h-10 items-center justify-center gap-1.5 rounded-full border border-[color-mix(in_srgb,var(--accent-primary)_18%,var(--border-default))] bg-[color-mix(in_srgb,var(--bg-primary)_85%,transparent)] px-3 text-gray-800 transition-colors hover:bg-[color-mix(in_srgb,var(--accent-primary)_14%,transparent)] dark:text-slate-300 dark:hover:bg-slate-800"
                 aria-label="Theme options"
+                aria-expanded={themeMenuOpen}
+                type="button"
               >
                 {!isManual ? <Monitor size={16} /> : isDark ? <Moon size={16} /> : <Sun size={16} />}
+                <span className="hidden text-xs font-semibold text-[var(--text-secondary)] lg:inline">{activeThemeLabel}</span>
                 <ChevronDown size={14} />
               </button>
 
               {themeMenuOpen && (
-                <div className="absolute right-0 top-[calc(100%+8px)] z-50 w-[164px] rounded-xl border border-[color-mix(in_srgb,var(--accent-primary)_22%,var(--border-default))] bg-white p-1.5 shadow-lg dark:border-slate-700 dark:bg-slate-900">
+                <div className="absolute right-0 top-[calc(100%+8px)] z-50 w-[212px] rounded-xl border border-[color-mix(in_srgb,var(--accent-primary)_22%,var(--border-default))] bg-white p-1.5 shadow-lg dark:border-slate-700 dark:bg-slate-900">
                   <button
-                    onClick={() => { resetToSystemTheme(); setThemeMenuOpen(false) }}
+                    onPointerDown={applyThemeChoice(() => resetToSystemTheme())}
                     className={clsx(
-                      'no-sweep inline-flex w-full items-center justify-between rounded-lg px-2.5 py-2 text-left text-sm transition-colors',
+                      'no-sweep inline-flex w-full touch-manipulation items-center justify-between rounded-lg px-2.5 py-2 text-left text-sm transition-colors',
                       !isManual ? 'bg-slate-100 text-slate-900 dark:bg-slate-800 dark:text-white' : 'text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800',
                     )}
+                    type="button"
                   >
-                    <span className="inline-flex items-center gap-2"><Monitor size={14} />System</span>
-                    {!isManual && <CheckCircle size={14} />}
+                    <span className="inline-flex items-center gap-2.5">
+                      <span className="inline-flex h-6 w-6 items-center justify-center rounded-md bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                        <Monitor size={14} />
+                      </span>
+                      <span className="font-semibold">System Default</span>
+                    </span>
+                    {!isManual && <Check size={14} className="text-[var(--accent-primary)]" />}
                   </button>
                   <button
-                    onClick={() => { setTheme('light'); setThemeMenuOpen(false) }}
+                    onPointerDown={applyThemeChoice(() => setTheme('light'))}
                     className={clsx(
-                      'no-sweep inline-flex w-full items-center justify-between rounded-lg px-2.5 py-2 text-left text-sm transition-colors',
+                      'no-sweep inline-flex w-full touch-manipulation items-center justify-between rounded-lg px-2.5 py-2 text-left text-sm transition-colors',
                       isManual && theme === 'light' ? 'bg-slate-100 text-slate-900 dark:bg-slate-800 dark:text-white' : 'text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800',
                     )}
+                    type="button"
                   >
-                    <span className="inline-flex items-center gap-2"><Sun size={14} />Light</span>
-                    {isManual && theme === 'light' && <CheckCircle size={14} />}
+                    <span className="inline-flex items-center gap-2.5">
+                      <span className="inline-flex h-6 w-6 items-center justify-center rounded-md bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                        <Sun size={14} />
+                      </span>
+                      <span className="font-semibold">Light Mode</span>
+                    </span>
+                    {isManual && theme === 'light' && <Check size={14} className="text-[var(--accent-primary)]" />}
                   </button>
                   <button
-                    onClick={() => { setTheme('dark'); setThemeMenuOpen(false) }}
+                    onPointerDown={applyThemeChoice(() => setTheme('dark'))}
                     className={clsx(
-                      'no-sweep inline-flex w-full items-center justify-between rounded-lg px-2.5 py-2 text-left text-sm transition-colors',
+                      'no-sweep inline-flex w-full touch-manipulation items-center justify-between rounded-lg px-2.5 py-2 text-left text-sm transition-colors',
                       isManual && theme === 'dark' ? 'bg-slate-100 text-slate-900 dark:bg-slate-800 dark:text-white' : 'text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800',
                     )}
+                    type="button"
                   >
-                    <span className="inline-flex items-center gap-2"><Moon size={14} />Dark</span>
-                    {isManual && theme === 'dark' && <CheckCircle size={14} />}
+                    <span className="inline-flex items-center gap-2.5">
+                      <span className="inline-flex h-6 w-6 items-center justify-center rounded-md bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                        <Moon size={14} />
+                      </span>
+                      <span className="font-semibold">Dark Mode</span>
+                    </span>
+                    {isManual && theme === 'dark' && <Check size={14} className="text-[var(--accent-primary)]" />}
                   </button>
                 </div>
               )}
