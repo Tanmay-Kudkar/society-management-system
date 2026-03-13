@@ -27,7 +27,8 @@ public class DataInitializer implements CommandLineRunner {
     public void run(String... args) {
         // Create Master Admin if not exists
         // This is the ONLY hardcoded user - all others are created through dashboard
-        if (userRepository.findByEmail("master@society.com").isEmpty()) {
+        var existing = userRepository.findByEmail("master@society.com");
+        if (existing.isEmpty()) {
             User masterAdmin = new User();
             masterAdmin.setName("Master Admin");
             masterAdmin.setEmail("master@society.com");
@@ -44,7 +45,21 @@ public class DataInitializer implements CommandLineRunner {
             logger.warn("   ⚠️  Please change this password after first login!");
             logger.info("═══════════════════════════════════════════════════════════════");
         } else {
-            logger.info("✓ Master Admin already exists");
+            // Reset password to default on every startup to fix corrupted credentials
+            User masterAdmin = existing.get();
+            if (!passwordEncoder.matches("master", masterAdmin.getPassword())) {
+                masterAdmin.setPassword(passwordEncoder.encode("master"));
+                masterAdmin.setIsActive(true);
+                userRepository.save(masterAdmin);
+                logger.info("═══════════════════════════════════════════════════════════════");
+                logger.warn("🔄 Master Admin password was reset to default!");
+                logger.info("   Email: master@society.com");
+                logger.info("   Password: master");
+                logger.warn("   ⚠️  Please change this password after first login!");
+                logger.info("═══════════════════════════════════════════════════════════════");
+            } else {
+                logger.info("✓ Master Admin already exists");
+            }
         }
     }
 }
