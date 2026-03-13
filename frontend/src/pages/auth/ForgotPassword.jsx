@@ -30,7 +30,7 @@ export default function ForgotPassword() {
     <div className="flex min-h-screen items-center justify-center bg-[var(--bg-primary)] px-4 py-12">
       <div className="w-full max-w-md">
         <div className="mb-8 text-center">
-          <Link to="/welcome" className="inline-flex items-center gap-3 no-underline">
+          <Link to="/" className="inline-flex items-center gap-3 no-underline">
             <div className="rounded-xl p-3" style={{ background: 'linear-gradient(to bottom right, var(--accent-primary), var(--accent-secondary))' }}>
               <Building2 className="h-7 w-7 text-white" />
             </div>

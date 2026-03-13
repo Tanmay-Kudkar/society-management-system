@@ -113,7 +113,7 @@ export default function PageShell({
         )}
       >
         <div className="mx-auto flex max-w-[1120px] items-center justify-between gap-4 rounded-2xl border border-[var(--border-default)] bg-[color-mix(in_srgb,var(--bg-secondary)_86%,transparent)] px-3.5 py-2.5 shadow-sm sm:px-6 sm:py-4">
-          <Link to="/welcome" className="flex items-center gap-2.5 no-underline">
+          <Link to="/" className="flex items-center gap-2.5 no-underline">
             <div className="rounded-md bg-[var(--accent-primary)] p-2 transition-transform duration-200 hover:scale-[1.04]">
               <Building2 className="h-5 w-5 text-white" />
             </div>
@@ -235,7 +235,7 @@ export default function PageShell({
         <div className="mx-auto max-w-[1120px] px-4 py-10 sm:px-6">
           <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
             <div className="lg:col-span-1">
-              <Link to="/welcome" className="inline-flex items-center gap-2 no-underline">
+              <Link to="/" className="inline-flex items-center gap-2 no-underline">
                 <div className="rounded-md bg-[var(--accent-primary)] p-2 transition-transform duration-200 hover:scale-[1.04]">
                   <Building2 className="h-4 w-4 text-white" />
                 </div>
@@ -262,7 +262,7 @@ export default function PageShell({
 
             {[
               { title: 'Product', links: [
-                { label: 'Features', to: '/welcome#features' },
+                { label: 'Features', to: '/#features' },
                 { label: 'Pricing', to: '/pricing' },
                 { label: 'Demo', to: '/demo' },
               ]},

@@ -107,7 +107,7 @@ const ProtectedRoute = ({ children }) => {
   }
 
   if (!user) {
-    return <Navigate to="/welcome" replace />;
+    return <Navigate to="/" replace />;
   }
 
   return children;
@@ -127,7 +127,7 @@ const ScrollToTop = () => {
 };
 
 const PAGE_TITLES = {
-  "/welcome": "Welcome",
+  "/": "Welcome",
   "/login": "Sign In",
   "/forgot-password": "Forgot Password",
   "/reset-password": "Reset Password",
@@ -139,7 +139,7 @@ const PAGE_TITLES = {
   "/blog": "Blog",
   "/demo": "Demo",
   "/help": "Help",
-  "/": "Dashboard",
+  "/dashboard": "Dashboard",
   "/users": "Users",
   "/society-admins": "Society Admins",
   "/wings": "Wings",
@@ -269,7 +269,8 @@ function App() {
           <DynamicTitle />
           <Suspense fallback={routeFallback}>
             <Routes>
-              <Route path="/welcome" element={<Welcome />} />
+              <Route path="/" element={<Welcome />} />
+              <Route path="/welcome" element={<Navigate to="/" replace />} />
               <Route path="/login" element={<Login />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/reset-password" element={<ResetPassword />} />
@@ -291,7 +292,7 @@ function App() {
                   </ProtectedRoute>
                 }
               >
-                <Route index element={<Dashboard />} />
+                <Route path="dashboard" element={<Dashboard />} />
                 <Route path="users" element={<Users />} />
                 <Route
                   path="societies"
@@ -338,7 +339,7 @@ function App() {
                 <Route path="settings" element={<Settings />} />
               </Route>
 
-              <Route path="*" element={<Navigate to="/welcome" replace />} />
+              <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </Suspense>
         </ToastProvider>
