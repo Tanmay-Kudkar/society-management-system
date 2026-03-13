@@ -29,6 +29,8 @@ export default function Payments() {
   const [searchParams] = useSearchParams()
   const [searchTerm, setSearchTerm] = useState('')
   const [filterStatus, setFilterStatus] = useState('')
+  const [refundFilter, setRefundFilter] = useState('ALL')
+  const [settlementFilter, setSettlementFilter] = useState('ALL')
 
   // Permission check - same as maintenance bills
   if (!canManageMaintenanceBills()) {
@@ -90,6 +92,17 @@ export default function Payments() {
     },
   })
 
+  const refundRequestMutation = useMutation({
+    mutationFn: ({ paymentId, amount, reason }) => paymentApi.requestRefund(paymentId, user.id, { amount, reason }),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['payments'])
+      toast.success('Refund request sent to Razorpay')
+    },
+    onError: (error) => {
+      toast.error(error?.response?.data?.message || 'Failed to request refund')
+    },
+  })
+
   const handleDeletePayment = async (payment) => {
     const paymentLabel = payment.razorpayPaymentId || payment.razorpayOrderId || `#${payment.id}`
     const confirmed = await confirmDialog({
@@ -108,6 +121,28 @@ export default function Payments() {
     deletePaymentMutation.mutate(payment.id)
   }
 
+  const handleRequestRefund = async (payment) => {
+    const paymentLabel = payment.razorpayPaymentId || payment.razorpayOrderId || `#${payment.id}`
+    const confirmed = await confirmDialog({
+      title: 'Request Refund',
+      message: `Request full refund for payment ${paymentLabel}?`,
+      confirmText: 'Request Refund',
+      cancelText: 'Cancel',
+      tone: 'warning',
+      caution: 'This will create a refund request in Razorpay for this payment.',
+    })
+
+    if (!confirmed) {
+      return
+    }
+
+    refundRequestMutation.mutate({
+      paymentId: payment.id,
+      amount: payment.amount,
+      reason: 'Refund requested from SocietyHub',
+    })
+  }
+
   // Filter payments
   const filteredPayments = useMemo(() => {
     return payments.filter(p => {
@@ -117,9 +152,11 @@ export default function Payments() {
         p.userName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         p.receiptNumber?.toLowerCase().includes(searchTerm.toLowerCase())
       const matchesStatus = !filterStatus || (filterStatus === 'PENDING' ? isPendingStatus(p.status) : p.status === filterStatus)
-      return matchesSearch && matchesStatus
+      const matchesRefund = refundFilter === 'ALL' || (p.refundStatus || 'NONE') === refundFilter
+      const matchesSettlement = settlementFilter === 'ALL' || (p.settlementStatus || 'NONE') === settlementFilter
+      return matchesSearch && matchesStatus && matchesRefund && matchesSettlement
     })
-  }, [payments, searchTerm, filterStatus])
+  }, [payments, searchTerm, filterStatus, refundFilter, settlementFilter])
 
   // Calculate summary stats
   const stats = useMemo(() => ({
@@ -140,6 +177,23 @@ export default function Payments() {
       hour: '2-digit',
       minute: '2-digit',
     })
+  }
+
+  const getLifecycleSummary = (payment) => {
+    const parts = []
+    if (payment.refundStatus) {
+      const refundText = payment.refundId
+        ? `Refund: ${payment.refundStatus} (${payment.refundId})`
+        : `Refund: ${payment.refundStatus}`
+      parts.push(refundText)
+    }
+    if (payment.settlementStatus) {
+      const settlementText = payment.settlementUtr
+        ? `Settlement: ${payment.settlementStatus} (UTR ${payment.settlementUtr})`
+        : `Settlement: ${payment.settlementStatus}`
+      parts.push(settlementText)
+    }
+    return parts
   }
 
   const getUndoTimeLeft = (undoExpiresAt) => {
@@ -221,6 +275,42 @@ export default function Payments() {
             <option value="REFUNDED">Refunded</option>
           </select>
         </div>
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          <span className="text-xs font-semibold text-[var(--text-secondary)]">Refund</span>
+          {['ALL', 'NONE', 'INITIATED', 'PROCESSED', 'FAILED'].map((value) => (
+            <button
+              key={value}
+              type="button"
+              onClick={() => setRefundFilter(value)}
+              className={clsx(
+                'rounded-full border px-3 py-1 text-xs font-semibold transition',
+                refundFilter === value
+                  ? 'border-blue-500 bg-blue-500/10 text-blue-600'
+                  : 'border-[var(--border-default)] text-[var(--text-secondary)] hover:border-[var(--border-strong)] hover:text-[var(--text-primary)]'
+              )}
+            >
+              {value}
+            </button>
+          ))}
+        </div>
+        <div className="mt-2 flex flex-wrap items-center gap-2">
+          <span className="text-xs font-semibold text-[var(--text-secondary)]">Settlement</span>
+          {['ALL', 'NONE', 'PENDING', 'PROCESSED', 'FAILED'].map((value) => (
+            <button
+              key={value}
+              type="button"
+              onClick={() => setSettlementFilter(value)}
+              className={clsx(
+                'rounded-full border px-3 py-1 text-xs font-semibold transition',
+                settlementFilter === value
+                  ? 'border-blue-500 bg-blue-500/10 text-blue-600'
+                  : 'border-[var(--border-default)] text-[var(--text-secondary)] hover:border-[var(--border-strong)] hover:text-[var(--text-primary)]'
+              )}
+            >
+              {value}
+            </button>
+          ))}
+        </div>
       </div>
 
       {deletedPayments.length > 0 && (
@@ -269,6 +359,8 @@ export default function Payments() {
                     <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.05em] text-[var(--text-secondary)]">Amount</th>
                     <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.05em] text-[var(--text-secondary)]">Method</th>
                     <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.05em] text-[var(--text-secondary)]">Status</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.05em] text-[var(--text-secondary)]">Refund</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.05em] text-[var(--text-secondary)]">Settlement</th>
                     <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.05em] text-[var(--text-secondary)]">Date</th>
                     <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.05em] text-[var(--text-secondary)]">Actions</th>
                   </tr>
@@ -287,6 +379,11 @@ export default function Payments() {
                             <span className="text-xs text-[var(--text-secondary)]">
                               {payment.receiptNumber}
                             </span>
+                            {getLifecycleSummary(payment).map((line) => (
+                              <span key={line} className="text-[11px] text-[var(--text-secondary)]">
+                                {line}
+                              </span>
+                            ))}
                           </div>
                         </td>
                         <td className="px-4 py-3 text-sm text-[var(--text-primary)]">
@@ -309,20 +406,37 @@ export default function Payments() {
                             {status.label}
                           </span>
                         </td>
+                        <td className="px-4 py-3 text-xs font-semibold text-[var(--text-primary)]">
+                          {payment.refundStatus || 'NONE'}
+                        </td>
+                        <td className="px-4 py-3 text-xs font-semibold text-[var(--text-primary)]">
+                          {payment.settlementStatus || 'NONE'}
+                        </td>
                         <td className="px-4 py-3 text-[0.8rem] text-[var(--text-secondary)]">
                           {formatDate(payment.paidAt || payment.createdAt)}
                         </td>
                         <td className="px-4 py-3 text-sm text-[var(--text-primary)]">
-                          <button
-                            type="button"
-                            onClick={() => handleDeletePayment(payment)}
-                            disabled={deletePaymentMutation.isPending}
-                            className="inline-flex items-center gap-1 rounded-lg border border-rose-500/40 px-2.5 py-1.5 text-xs font-semibold text-rose-600 transition hover:bg-rose-500/10 disabled:cursor-not-allowed disabled:opacity-50"
-                            title="Delete payment record"
-                          >
-                            <Trash2 size={13} />
-                            Delete
-                          </button>
+                          <div className="flex flex-wrap items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => handleRequestRefund(payment)}
+                              disabled={refundRequestMutation.isPending || payment.status !== 'CAPTURED' || !!payment.refundStatus}
+                              className="inline-flex items-center gap-1 rounded-lg border border-amber-500/40 px-2.5 py-1.5 text-xs font-semibold text-amber-600 transition hover:bg-amber-500/10 disabled:cursor-not-allowed disabled:opacity-50"
+                              title="Request refund from Razorpay"
+                            >
+                              Refund
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleDeletePayment(payment)}
+                              disabled={deletePaymentMutation.isPending}
+                              className="inline-flex items-center gap-1 rounded-lg border border-rose-500/40 px-2.5 py-1.5 text-xs font-semibold text-rose-600 transition hover:bg-rose-500/10 disabled:cursor-not-allowed disabled:opacity-50"
+                              title="Delete payment record"
+                            >
+                              <Trash2 size={13} />
+                              Delete
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     )
@@ -343,6 +457,9 @@ export default function Payments() {
                           {payment.razorpayPaymentId || payment.razorpayOrderId || `#${payment.id}`}
                         </p>
                         <p className="text-[11px] sm:text-xs text-[var(--text-secondary)] break-all">{payment.receiptNumber || '-'}</p>
+                        {getLifecycleSummary(payment).map((line) => (
+                          <p key={line} className="text-[11px] sm:text-xs text-[var(--text-secondary)] break-all">{line}</p>
+                        ))}
                       </div>
                       <span className={clsx('inline-flex items-center gap-1 rounded-full px-2 py-0.5 sm:px-2.5 sm:py-1 text-[11px] sm:text-xs font-semibold', status.className)}>
                         <StatusIcon size={13} />
@@ -358,18 +475,33 @@ export default function Payments() {
                       <p className="text-right text-[var(--text-primary)]">{payment.paymentMethod?.toUpperCase() || '-'}</p>
                       <p className="text-[var(--text-secondary)]">Date</p>
                       <p className="text-right text-[var(--text-primary)]">{formatDate(payment.paidAt || payment.createdAt)}</p>
+                      <p className="text-[var(--text-secondary)]">Refund</p>
+                      <p className="text-right text-[var(--text-primary)]">{payment.refundStatus || 'NONE'}</p>
+                      <p className="text-[var(--text-secondary)]">Settlement</p>
+                      <p className="text-right text-[var(--text-primary)]">{payment.settlementStatus || 'NONE'}</p>
                     </div>
                     <div className="mt-2.5 sm:mt-3 flex justify-end">
-                      <button
-                        type="button"
-                        onClick={() => handleDeletePayment(payment)}
-                        disabled={deletePaymentMutation.isPending}
-                        className="inline-flex items-center gap-1 rounded-lg border border-rose-500/40 px-2 py-1 sm:px-2.5 sm:py-1.5 text-[11px] sm:text-xs font-semibold text-rose-600 transition hover:bg-rose-500/10 disabled:cursor-not-allowed disabled:opacity-50"
-                        title="Delete payment record"
-                      >
-                        <Trash2 size={13} />
-                        Delete
-                      </button>
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => handleRequestRefund(payment)}
+                          disabled={refundRequestMutation.isPending || payment.status !== 'CAPTURED' || !!payment.refundStatus}
+                          className="inline-flex items-center gap-1 rounded-lg border border-amber-500/40 px-2 py-1 sm:px-2.5 sm:py-1.5 text-[11px] sm:text-xs font-semibold text-amber-600 transition hover:bg-amber-500/10 disabled:cursor-not-allowed disabled:opacity-50"
+                          title="Request refund from Razorpay"
+                        >
+                          Refund
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDeletePayment(payment)}
+                          disabled={deletePaymentMutation.isPending}
+                          className="inline-flex items-center gap-1 rounded-lg border border-rose-500/40 px-2 py-1 sm:px-2.5 sm:py-1.5 text-[11px] sm:text-xs font-semibold text-rose-600 transition hover:bg-rose-500/10 disabled:cursor-not-allowed disabled:opacity-50"
+                          title="Delete payment record"
+                        >
+                          <Trash2 size={13} />
+                          Delete
+                        </button>
+                      </div>
                     </div>
                   </div>
                 )

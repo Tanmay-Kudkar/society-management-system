@@ -182,7 +182,7 @@ const DynamicTitle = () => {
 const SocietyRouteRedirect = () => {
   const { id } = useParams();
   const scopedId = encodeURIComponent(id || "");
-  return <Navigate to={`/?society=${scopedId}`} replace />;
+  return <Navigate to={`/dashboard?society=${scopedId}`} replace />;
 };
 
 function App() {
@@ -339,7 +339,10 @@ function App() {
                 <Route path="settings" element={<Settings />} />
               </Route>
 
-              <Route path="*" element={<Navigate to="/" replace />} />
+              <Route
+                path="*"
+                element={<Navigate to={user ? "/dashboard" : "/"} replace />}
+              />
             </Routes>
           </Suspense>
         </ToastProvider>

@@ -69,6 +69,36 @@ public class Payment {
     @Column(name = "error_description")
     private String errorDescription;
 
+    @Column(name = "refund_id")
+    private String refundId;
+
+    @Column(name = "refund_status")
+    private String refundStatus;
+
+    @Column(name = "refund_amount", precision = 12, scale = 2)
+    private BigDecimal refundAmount;
+
+    @Column(name = "refund_initiated_at")
+    private LocalDateTime refundInitiatedAt;
+
+    @Column(name = "refund_processed_at")
+    private LocalDateTime refundProcessedAt;
+
+    @Column(name = "refund_failure_reason")
+    private String refundFailureReason;
+
+    @Column(name = "settlement_status")
+    private String settlementStatus;
+
+    @Column(name = "settlement_id")
+    private String settlementId;
+
+    @Column(name = "settlement_utr")
+    private String settlementUtr;
+
+    @Column(name = "settled_at")
+    private LocalDateTime settledAt;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 

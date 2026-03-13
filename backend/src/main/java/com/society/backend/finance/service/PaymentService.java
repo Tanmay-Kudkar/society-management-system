@@ -9,12 +9,16 @@ import com.society.backend.finance.dto.request.*;
 import com.society.backend.finance.dto.response.*;
 import com.society.backend.common.exception.ApiException;
 import com.society.backend.common.exception.ResourceNotFoundException;
+import com.society.backend.finance.entity.PaymentWebhookEvent;
 import com.society.backend.finance.repository.MaintenanceBillRepository;
 import com.society.backend.finance.repository.PaymentRepository;
+import com.society.backend.finance.repository.PaymentWebhookEventRepository;
 import com.society.backend.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.json.JSONObject;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -30,6 +34,7 @@ import java.util.stream.Collectors;
 
 import com.society.backend.finance.entity.MaintenanceBill;
 import com.society.backend.finance.entity.Payment;
+import com.society.backend.user.entity.Role;
 import com.society.backend.user.entity.User;
 @Service
 @RequiredArgsConstructor
@@ -41,6 +46,7 @@ public class PaymentService {
     private final Optional<RazorpayClient> razorpayClient;
     private final RazorpayConfig razorpayConfig;
     private final PaymentRepository paymentRepository;
+    private final PaymentWebhookEventRepository paymentWebhookEventRepository;
     private final UserRepository userRepository;
     private final MaintenanceBillRepository maintenanceBillRepository;
     private final MaintenanceBillService maintenanceBillService;
@@ -206,7 +212,74 @@ public class PaymentService {
     }
 
     @Transactional
-    public Map<String, String> handleWebhook(String payload, String signature) {
+    public PaymentResponse requestRefund(Long paymentId, Long requesterUserId, RefundRequest request) {
+        RazorpayClient client = requireRazorpayClient();
+
+        Payment payment = paymentRepository.findByIdAndDeletedAtIsNull(paymentId)
+                .orElseThrow(() -> new ResourceNotFoundException("Payment not found"));
+
+        User requester = userRepository.findById(requesterUserId)
+                .orElseThrow(() -> new ResourceNotFoundException("Requester user not found"));
+
+        validateRefundRequester(requester, payment);
+
+        if (!"CAPTURED".equals(payment.getStatus()) && !"REFUNDED".equals(payment.getStatus())) {
+            throw new ApiException(HttpStatus.BAD_REQUEST,
+                    "Refund can only be requested for captured/refunded payments");
+        }
+
+        if (!StringUtils.hasText(payment.getRazorpayPaymentId())) {
+            throw new ApiException(HttpStatus.BAD_REQUEST,
+                    "Razorpay payment id missing; cannot request refund");
+        }
+
+        BigDecimal refundAmount = request != null && request.getAmount() != null
+                ? request.getAmount()
+                : payment.getAmount();
+
+        if (refundAmount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Refund amount must be greater than 0");
+        }
+
+        if (refundAmount.compareTo(payment.getAmount()) > 0) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Refund amount cannot exceed paid amount");
+        }
+
+        try {
+            JSONObject refundRequest = new JSONObject();
+            refundRequest.put("amount", refundAmount.multiply(BigDecimal.valueOf(100)).longValue());
+
+            String reason = request != null ? request.getReason() : null;
+            if (StringUtils.hasText(reason)) {
+                JSONObject notes = new JSONObject();
+                notes.put("reason", reason);
+                notes.put("requested_by", requester.getId().toString());
+                refundRequest.put("notes", notes);
+            }
+
+            com.razorpay.Refund refund = client.payments.refund(payment.getRazorpayPaymentId(), refundRequest);
+
+            String refundStatus = readRazorpayValue(refund, "status", "created").toUpperCase();
+            payment.setRefundId(readRazorpayValue(refund, "id", payment.getRefundId()));
+            payment.setRefundAmount(refundAmount);
+            payment.setRefundStatus(mapRefundStatus(refundStatus));
+            payment.setRefundInitiatedAt(LocalDateTime.now());
+            payment.setRefundFailureReason(null);
+
+            if ("PROCESSED".equals(payment.getRefundStatus())) {
+                payment.setStatus("REFUNDED");
+                payment.setRefundProcessedAt(LocalDateTime.now());
+            }
+
+            return mapToResponse(paymentRepository.save(payment));
+
+        } catch (RazorpayException e) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Refund request failed: " + e.getMessage());
+        }
+    }
+
+    @Transactional
+    public Map<String, String> handleWebhook(String payload, String signature, String eventId) {
         if (!StringUtils.hasText(razorpayConfig.getWebhookSecret())) {
             throw new ApiException(HttpStatus.BAD_REQUEST,
                     "Razorpay webhook secret is not configured. Set RAZORPAY_WEBHOOK_SECRET.");
@@ -226,19 +299,87 @@ public class PaymentService {
         String event = eventObject.optString("event", "");
         JSONObject eventPayload = eventObject.optJSONObject("payload");
 
-        switch (event) {
-            case "payment.captured" -> handlePaymentCapturedWebhook(eventPayload);
-            case "payment.authorized" -> handlePaymentAuthorizedWebhook(eventPayload);
-            case "payment.failed" -> handlePaymentFailedWebhook(eventPayload);
-            case "payment.refunded" -> handlePaymentRefundedWebhook(eventPayload);
-            case "order.paid" -> handleOrderPaidWebhook(eventPayload);
-            default -> {
-                log.debug("Unhandled Razorpay webhook event: {}", event);
-                return Map.of("status", "ignored", "event", event);
-            }
+        PaymentWebhookEvent trackedEvent = null;
+
+        if (StringUtils.hasText(eventId)) {
+            trackedEvent = registerWebhookEventIfFirst(eventId, event);
         }
 
-        return Map.of("status", "processed", "event", event);
+        if (StringUtils.hasText(eventId) && trackedEvent == null) {
+            log.info("Ignoring duplicate Razorpay webhook eventId={} event={}", eventId, event);
+            return Map.of("status", "duplicate", "event", event, "eventId", eventId);
+        }
+
+        try {
+            switch (event) {
+                case "payment.captured" -> handlePaymentCapturedWebhook(eventPayload);
+                case "payment.authorized" -> handlePaymentAuthorizedWebhook(eventPayload);
+                case "payment.failed" -> handlePaymentFailedWebhook(eventPayload);
+                case "payment.refunded" -> handlePaymentRefundedWebhook(eventPayload);
+                case "refund.created" -> handleRefundCreatedWebhook(eventPayload);
+                case "refund.processed" -> handleRefundProcessedWebhook(eventPayload);
+                case "refund.failed" -> handleRefundFailedWebhook(eventPayload);
+                case "settlement.processed" -> handleSettlementProcessedWebhook(eventPayload);
+                case "settlement.failed" -> handleSettlementFailedWebhook(eventPayload);
+                case "order.paid" -> handleOrderPaidWebhook(eventPayload);
+                default -> {
+                    markWebhookEvent(trackedEvent, "IGNORED", "Unhandled event type");
+                    log.debug("Unhandled Razorpay webhook event: {}", event);
+                    return StringUtils.hasText(eventId)
+                            ? Map.of("status", "ignored", "event", event, "eventId", eventId)
+                            : Map.of("status", "ignored", "event", event);
+                }
+            }
+        } catch (Exception processingException) {
+            markWebhookEvent(trackedEvent, "FAILED", processingException.getMessage());
+            throw processingException;
+        }
+
+        markWebhookEvent(trackedEvent, "PROCESSED", "Processed successfully");
+
+        return StringUtils.hasText(eventId)
+                ? Map.of("status", "processed", "event", event, "eventId", eventId)
+                : Map.of("status", "processed", "event", event);
+    }
+
+    private PaymentWebhookEvent registerWebhookEventIfFirst(String eventId, String eventType) {
+        try {
+            PaymentWebhookEvent event = new PaymentWebhookEvent();
+            event.setEventId(eventId);
+            event.setEventType(eventType);
+            return paymentWebhookEventRepository.save(event);
+        } catch (DataIntegrityViolationException duplicateEvent) {
+            return null;
+        }
+    }
+
+    private void markWebhookEvent(PaymentWebhookEvent event, String status, String details) {
+        if (event == null) {
+            return;
+        }
+        event.setProcessingStatus(status);
+        event.setProcessingDetails(details);
+        paymentWebhookEventRepository.save(event);
+    }
+
+    @Transactional(readOnly = true)
+    public List<PaymentWebhookEventResponse> getRecentWebhookEvents(int limit) {
+        int safeLimit = Math.max(1, Math.min(limit, 200));
+        return paymentWebhookEventRepository.findAllByOrderByReceivedAtDesc(PageRequest.of(0, safeLimit))
+                .stream()
+                .map(this::mapWebhookEventToResponse)
+                .collect(Collectors.toList());
+    }
+
+    private PaymentWebhookEventResponse mapWebhookEventToResponse(PaymentWebhookEvent event) {
+        return PaymentWebhookEventResponse.builder()
+                .id(event.getId())
+                .eventId(event.getEventId())
+                .eventType(event.getEventType())
+                .processingStatus(event.getProcessingStatus())
+                .processingDetails(event.getProcessingDetails())
+                .receivedAt(event.getReceivedAt())
+                .build();
     }
 
     @Transactional
@@ -409,6 +550,9 @@ public class PaymentService {
 
         payment.setStatus("CAPTURED");
         payment.setPaidAt(LocalDateTime.now());
+            if (!StringUtils.hasText(payment.getSettlementStatus())) {
+                payment.setSettlementStatus("PENDING");
+            }
         Payment saved = paymentRepository.save(payment);
         applyMaintenanceBillPaymentIfNeeded(saved, payment.getRazorpayPaymentId());
     }
@@ -432,7 +576,173 @@ public class PaymentService {
         payment.setStatus("REFUNDED");
         payment.setRazorpayPaymentId(paymentEntity.optString("id", payment.getRazorpayPaymentId()));
         payment.setPaymentMethod(paymentEntity.optString("method", payment.getPaymentMethod()));
+        payment.setRefundStatus("PROCESSED");
+        payment.setRefundProcessedAt(LocalDateTime.now());
         paymentRepository.save(payment);
+    }
+
+    private void handleRefundCreatedWebhook(JSONObject payload) {
+        Payment payment = findPaymentFromRefundPayload(payload);
+        JSONObject refundEntity = getRefundEntity(payload);
+        if (payment == null || refundEntity == null) {
+            return;
+        }
+
+        payment.setRefundId(refundEntity.optString("id", payment.getRefundId()));
+        payment.setRefundStatus("INITIATED");
+        payment.setRefundAmount(readAmountInRupees(refundEntity, "amount", payment.getRefundAmount()));
+        payment.setRefundInitiatedAt(readEpochDateTime(refundEntity, "created_at", LocalDateTime.now()));
+        paymentRepository.save(payment);
+    }
+
+    private void handleRefundProcessedWebhook(JSONObject payload) {
+        Payment payment = findPaymentFromRefundPayload(payload);
+        JSONObject refundEntity = getRefundEntity(payload);
+        if (payment == null || refundEntity == null) {
+            return;
+        }
+
+        payment.setRefundId(refundEntity.optString("id", payment.getRefundId()));
+        payment.setRefundStatus("PROCESSED");
+        payment.setRefundAmount(readAmountInRupees(refundEntity, "amount", payment.getRefundAmount()));
+        payment.setRefundProcessedAt(readEpochDateTime(refundEntity, "processed_at", LocalDateTime.now()));
+        payment.setStatus("REFUNDED");
+        paymentRepository.save(payment);
+    }
+
+    private void handleRefundFailedWebhook(JSONObject payload) {
+        Payment payment = findPaymentFromRefundPayload(payload);
+        JSONObject refundEntity = getRefundEntity(payload);
+        if (payment == null || refundEntity == null) {
+            return;
+        }
+
+        payment.setRefundId(refundEntity.optString("id", payment.getRefundId()));
+        payment.setRefundStatus("FAILED");
+        payment.setRefundFailureReason(refundEntity.optString("error_description",
+                refundEntity.optString("status_description", "Refund failed")));
+        paymentRepository.save(payment);
+    }
+
+    private void handleSettlementProcessedWebhook(JSONObject payload) {
+        Payment payment = findPaymentFromSettlementPayload(payload);
+        JSONObject settlementEntity = getSettlementEntity(payload);
+        if (payment == null || settlementEntity == null) {
+            return;
+        }
+
+        payment.setSettlementStatus("PROCESSED");
+        payment.setSettlementId(settlementEntity.optString("id", payment.getSettlementId()));
+        payment.setSettlementUtr(settlementEntity.optString("utr", payment.getSettlementUtr()));
+        payment.setSettledAt(readEpochDateTime(settlementEntity, "created_at", LocalDateTime.now()));
+        paymentRepository.save(payment);
+    }
+
+    private void handleSettlementFailedWebhook(JSONObject payload) {
+        Payment payment = findPaymentFromSettlementPayload(payload);
+        JSONObject settlementEntity = getSettlementEntity(payload);
+        if (payment == null || settlementEntity == null) {
+            return;
+        }
+
+        payment.setSettlementStatus("FAILED");
+        payment.setSettlementId(settlementEntity.optString("id", payment.getSettlementId()));
+        paymentRepository.save(payment);
+    }
+
+    private JSONObject getRefundEntity(JSONObject payload) {
+        if (payload == null) {
+            return null;
+        }
+        return payload.optJSONObject("refund") != null
+                ? payload.getJSONObject("refund").optJSONObject("entity")
+                : null;
+    }
+
+    private JSONObject getSettlementEntity(JSONObject payload) {
+        if (payload == null) {
+            return null;
+        }
+        return payload.optJSONObject("settlement") != null
+                ? payload.getJSONObject("settlement").optJSONObject("entity")
+                : null;
+    }
+
+    private Payment findPaymentFromRefundPayload(JSONObject payload) {
+        JSONObject refundEntity = getRefundEntity(payload);
+        if (refundEntity == null) {
+            return null;
+        }
+
+        String paymentId = refundEntity.optString("payment_id", "");
+        if (StringUtils.hasText(paymentId)) {
+            Payment byPaymentId = paymentRepository.findByRazorpayPaymentId(paymentId).orElse(null);
+            if (byPaymentId != null) {
+                return byPaymentId;
+            }
+        }
+
+        String orderId = refundEntity.optString("order_id", "");
+        if (StringUtils.hasText(orderId)) {
+            return paymentRepository.findByRazorpayOrderId(orderId).orElse(null);
+        }
+
+        return null;
+    }
+
+    private Payment findPaymentFromSettlementPayload(JSONObject payload) {
+        if (payload == null) {
+            return null;
+        }
+
+        JSONObject paymentEntity = payload.optJSONObject("payment") != null
+                ? payload.getJSONObject("payment").optJSONObject("entity")
+                : null;
+        if (paymentEntity != null) {
+            return findPaymentFromRazorpayPayment(paymentEntity);
+        }
+
+        JSONObject settlementEntity = getSettlementEntity(payload);
+        if (settlementEntity == null) {
+            return null;
+        }
+
+        String paymentId = settlementEntity.optString("payment_id", "");
+        if (StringUtils.hasText(paymentId)) {
+            Payment byPaymentId = paymentRepository.findByRazorpayPaymentId(paymentId).orElse(null);
+            if (byPaymentId != null) {
+                return byPaymentId;
+            }
+        }
+
+        String orderId = settlementEntity.optString("order_id", "");
+        if (StringUtils.hasText(orderId)) {
+            return paymentRepository.findByRazorpayOrderId(orderId).orElse(null);
+        }
+
+        return null;
+    }
+
+    private BigDecimal readAmountInRupees(JSONObject entity, String field, BigDecimal fallback) {
+        if (entity == null || !entity.has(field)) {
+            return fallback;
+        }
+        long amountInPaise = entity.optLong(field, -1L);
+        if (amountInPaise < 0) {
+            return fallback;
+        }
+        return BigDecimal.valueOf(amountInPaise, 2);
+    }
+
+    private LocalDateTime readEpochDateTime(JSONObject entity, String field, LocalDateTime fallback) {
+        if (entity == null || !entity.has(field)) {
+            return fallback;
+        }
+        long seconds = entity.optLong(field, -1L);
+        if (seconds <= 0) {
+            return fallback;
+        }
+        return LocalDateTime.ofEpochSecond(seconds, 0, java.time.ZoneOffset.UTC);
     }
 
     private void upsertCapturedStatusFromRazorpayPayment(JSONObject paymentEntity) {
@@ -445,8 +755,52 @@ public class PaymentService {
         payment.setRazorpayPaymentId(paymentEntity.optString("id", payment.getRazorpayPaymentId()));
         payment.setPaymentMethod(paymentEntity.optString("method", payment.getPaymentMethod()));
         payment.setPaidAt(LocalDateTime.now());
+        if (!StringUtils.hasText(payment.getSettlementStatus())) {
+            payment.setSettlementStatus("PENDING");
+        }
         Payment saved = paymentRepository.save(payment);
         applyMaintenanceBillPaymentIfNeeded(saved, saved.getRazorpayPaymentId());
+    }
+
+    private void validateRefundRequester(User requester, Payment payment) {
+        boolean elevated = requester.getRole() == Role.MASTER_ADMIN
+                || requester.getRole() == Role.SOCIETY_ADMIN
+                || requester.getRole() == Role.CHAIRMAN
+                || requester.getRole() == Role.SECRETARY
+                || requester.getRole() == Role.TREASURER;
+
+        boolean isOwner = payment.getUser() != null && payment.getUser().getId().equals(requester.getId());
+
+        if (!elevated && !isOwner) {
+            throw new ApiException(HttpStatus.FORBIDDEN, "You are not allowed to request refund for this payment");
+        }
+
+        if (requester.getRole() != Role.MASTER_ADMIN && payment.getSociety() != null && requester.getSociety() != null) {
+            if (!payment.getSociety().getId().equals(requester.getSociety().getId())) {
+                throw new ApiException(HttpStatus.FORBIDDEN, "Payment belongs to another society");
+            }
+        }
+    }
+
+    private String mapRefundStatus(String razorpayStatus) {
+        return switch (razorpayStatus) {
+            case "PROCESSED" -> "PROCESSED";
+            case "FAILED" -> "FAILED";
+            default -> "INITIATED";
+        };
+    }
+
+    private String readRazorpayValue(com.razorpay.Entity entity, String key, String fallback) {
+        try {
+            Object value = entity.get(key);
+            if (value == null) {
+                return fallback;
+            }
+            String text = String.valueOf(value);
+            return StringUtils.hasText(text) ? text : fallback;
+        } catch (Exception ignored) {
+            return fallback;
+        }
     }
 
     private Payment findPaymentFromRazorpayPayment(JSONObject paymentEntity) {
@@ -510,6 +864,16 @@ public class PaymentService {
                 .undoAvailable(undoAvailable)
                 .errorCode(payment.getErrorCode())
                 .errorDescription(payment.getErrorDescription())
+                .refundId(payment.getRefundId())
+                .refundStatus(payment.getRefundStatus())
+                .refundAmount(payment.getRefundAmount())
+                .refundInitiatedAt(payment.getRefundInitiatedAt())
+                .refundProcessedAt(payment.getRefundProcessedAt())
+                .refundFailureReason(payment.getRefundFailureReason())
+                .settlementStatus(payment.getSettlementStatus())
+                .settlementId(payment.getSettlementId())
+                .settlementUtr(payment.getSettlementUtr())
+                .settledAt(payment.getSettledAt())
                 .build();
     }
 }

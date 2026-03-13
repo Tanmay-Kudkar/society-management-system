@@ -442,6 +442,10 @@ export const paymentApi = {
   // Mark payment as cancelled when checkout is dismissed
   handleCancel: (paymentId, reason) =>
     api.post(`/api/payments/cancel?paymentId=${paymentId}&reason=${encodeURIComponent(reason || '')}`),
+
+  // Request refund from Razorpay
+  requestRefund: (id, userId, data = {}) =>
+    api.post(`/api/payments/${id}/request-refund?userId=${userId}`, data),
   
   // Get payment by ID
   getById: (id) => api.get(`/api/payments/${id}`),

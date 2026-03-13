@@ -43,7 +43,7 @@ import clsx from "clsx";
 const prefetchedRouteSet = new Set();
 
 const routePrefetchMap = {
-  "/": () => import("../pages/core/dashboard"),
+  "/dashboard": () => import("../pages/core/dashboard"),
   "/settings": () => import("../pages/core/Settings"),
   "/reports": () => import("../pages/core/Reports"),
   "/users": () => import("../pages/users/Users"),
@@ -97,7 +97,7 @@ const platformOwnerMenu = [
     id: "dashboard",
     label: "Dashboard",
     icon: LayoutDashboard,
-    path: "/",
+    path: "/dashboard",
   },
   {
     id: "society-admins",
@@ -119,7 +119,7 @@ const standardMenuGroups = [
     id: "dashboard",
     label: "Dashboard",
     icon: LayoutDashboard,
-    path: "/",
+    path: "/dashboard",
   },
   {
     id: "my-bills",
@@ -820,7 +820,7 @@ export default function Layout() {
       {/* Desktop Sidebar */}
       <aside className="relative hidden before:pointer-events-none before:absolute before:left-0 before:right-0 before:top-0 before:h-[200px] before:bg-[linear-gradient(180deg,rgba(47,129,247,0.03)_0%,transparent_100%)] before:content-[''] lg:fixed lg:inset-y-0 lg:left-0 lg:z-[45] lg:flex lg:w-[272px] lg:flex-col lg:overflow-hidden lg:border-r lg:border-[var(--border-default)] lg:bg-[var(--bg-secondary)]">
         <div className="relative border-b border-[var(--border-default)] px-5 pb-4 pt-5">
-          <div className="group flex cursor-pointer items-center gap-3" onClick={() => navigate(resolvePath("/"))}>
+          <div className="group flex cursor-pointer items-center gap-3" onClick={() => navigate(resolvePath("/dashboard"))}>
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[linear-gradient(135deg,var(--accent-primary)_0%,#1d6ce0_100%)] shadow-[0_4px_16px_rgba(47,129,247,0.3)] transition-all duration-200 group-hover:scale-105 group-hover:shadow-[0_6px_20px_rgba(47,129,247,0.4)]">
               <Building2 size={20} className="text-white" />
             </div>
@@ -838,7 +838,7 @@ export default function Layout() {
           {isMasterSocietyMode && (
             <button
               type="button"
-              onClick={() => navigate("/")}
+              onClick={() => navigate("/dashboard")}
               className="mb-2 flex w-full items-center gap-2 rounded-lg border border-[var(--border-default)] bg-[var(--bg-tertiary)] px-3 py-2 text-xs font-semibold uppercase tracking-[0.05em] text-[var(--text-secondary)] transition hover:border-[var(--border-strong)] hover:text-[var(--text-primary)]"
             >
               <ArrowLeftRight size={14} />
@@ -875,7 +875,7 @@ export default function Layout() {
         <div className="h-16 border-b border-[var(--border-default)] bg-[var(--bg-secondary)] backdrop-blur-[8px]">
           <div className="mx-auto flex h-full max-w-[1800px] items-center justify-between gap-4 px-4 lg:justify-end lg:px-6 [&>*]:min-w-0">
             {/* Logo - visible on mobile only */}
-            <div className="group flex cursor-pointer items-center gap-3 text-decoration-none lg:hidden" onClick={() => navigate(resolvePath("/"))}>
+            <div className="group flex cursor-pointer items-center gap-3 text-decoration-none lg:hidden" onClick={() => navigate(resolvePath("/dashboard"))}>
               <div className="rounded-lg bg-[var(--accent-primary)] p-2 shadow-[0_2px_6px_rgba(47,129,247,0.2)] transition-transform duration-200 group-hover:scale-[1.04]">
                 <Building2 size={22} className="text-white" />
               </div>
