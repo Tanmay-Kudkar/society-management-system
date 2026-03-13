@@ -77,7 +77,7 @@ public class PaymentController {
     /**
      * Get payment by ID
      */
-    @GetMapping("/{id}")
+    @GetMapping("/{id:\\d+}")
     public ResponseEntity<PaymentResponse> getPaymentById(@PathVariable Long id) {
         return ResponseEntity.ok(paymentService.getPaymentById(id));
     }
@@ -141,6 +141,18 @@ public class PaymentController {
     @PreAuthorize("hasAnyRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER')")
     public ResponseEntity<PaymentResponse> undoDeletePayment(@PathVariable Long id) {
         return ResponseEntity.ok(paymentService.undoDeletePayment(id));
+    }
+
+    /**
+     * Razorpay webhook handler (for async payment notifications)
+     */
+    @GetMapping("/webhook")
+    @PreAuthorize("permitAll()")
+    public ResponseEntity<Map<String, String>> webhookInfo() {
+        return ResponseEntity.ok(Map.of(
+                "status", "ok",
+                "message", "Webhook endpoint is active. Use POST with Razorpay signature headers."
+        ));
     }
 
     /**
