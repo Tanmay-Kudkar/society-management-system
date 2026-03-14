@@ -107,6 +107,33 @@ export function formatNumber(value) {
 
 // ── Date / Time Formatting ────────────────────────────────────────────
 
+const INDIA_TIME_ZONE = 'Asia/Kolkata'
+
+/**
+ * Parse backend datetime safely.
+ * Zone-less timestamps are treated as UTC to avoid Render UTC drift on clients.
+ * @param {string|Date} value
+ * @returns {Date|null}
+ */
+export function parseServerDateTime(value) {
+  if (!value) return null
+  if (value instanceof Date) return isNaN(value.getTime()) ? null : value
+
+  const text = String(value).trim()
+  if (!text) return null
+
+  // Keep LocalDate values stable across clients.
+  if (/^\d{4}-\d{2}-\d{2}$/.test(text)) {
+    const dateOnly = new Date(`${text}T00:00:00Z`)
+    return isNaN(dateOnly.getTime()) ? null : dateOnly
+  }
+
+  const hasTimezone = /([zZ]|[+-]\d{2}:\d{2})$/.test(text)
+  const normalized = hasTimezone ? text : `${text}Z`
+  const parsed = new Date(normalized)
+  return isNaN(parsed.getTime()) ? null : parsed
+}
+
 /**
  * Format a date string or Date object to a readable format.
  * @param {string|Date} date
@@ -115,13 +142,13 @@ export function formatNumber(value) {
  */
 export function formatDate(date, style = 'medium') {
   if (!date) return '-'
-  const d = typeof date === 'string' ? new Date(date) : date
-  if (isNaN(d.getTime())) return '-'
+  const d = parseServerDateTime(date)
+  if (!d) return '-'
 
   const options = {
-    short: { day: '2-digit', month: '2-digit', year: 'numeric' },
-    medium: { day: 'numeric', month: 'short', year: 'numeric' },
-    long: { day: 'numeric', month: 'long', year: 'numeric' },
+    short: { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: INDIA_TIME_ZONE },
+    medium: { day: 'numeric', month: 'short', year: 'numeric', timeZone: INDIA_TIME_ZONE },
+    long: { day: 'numeric', month: 'long', year: 'numeric', timeZone: INDIA_TIME_ZONE },
   }
 
   return d.toLocaleDateString('en-IN', options[style] || options.medium)
@@ -134,14 +161,15 @@ export function formatDate(date, style = 'medium') {
  */
 export function formatDateTime(date) {
   if (!date) return '-'
-  const d = typeof date === 'string' ? new Date(date) : date
-  if (isNaN(d.getTime())) return '-'
+  const d = parseServerDateTime(date)
+  if (!d) return '-'
   return d.toLocaleDateString('en-IN', {
     day: 'numeric',
     month: 'short',
     year: 'numeric',
     hour: '2-digit',
     minute: '2-digit',
+    timeZone: INDIA_TIME_ZONE,
   })
 }
 
@@ -152,8 +180,8 @@ export function formatDateTime(date) {
  */
 export function timeAgo(date) {
   if (!date) return '-'
-  const d = typeof date === 'string' ? new Date(date) : date
-  if (isNaN(d.getTime())) return '-'
+  const d = parseServerDateTime(date)
+  if (!d) return '-'
 
   const seconds = Math.floor((Date.now() - d.getTime()) / 1000)
   if (seconds < 60) return 'Just now'

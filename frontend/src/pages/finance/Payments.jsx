@@ -21,6 +21,20 @@ const statusConfig = {
 
 const isPendingStatus = (status) => ['CREATED', 'AUTHORIZED', 'PENDING'].includes(status)
 
+// Backend currently returns zone-less date-time strings.
+// On Render those values are UTC, so treat missing-zone timestamps as UTC before formatting.
+const parseServerDateTime = (value) => {
+  if (!value) return null
+  if (value instanceof Date) return Number.isNaN(value.getTime()) ? null : value
+  const text = String(value).trim()
+  if (!text) return null
+
+  const hasTimezone = /([zZ]|[+-]\d{2}:\d{2})$/.test(text)
+  const normalized = hasTimezone ? text : `${text}Z`
+  const parsed = new Date(normalized)
+  return Number.isNaN(parsed.getTime()) ? null : parsed
+}
+
 export default function Payments() {
   const { user, canManageMaintenanceBills } = useAuth()
   const queryClient = useQueryClient()
@@ -169,8 +183,10 @@ export default function Payments() {
   }), [payments])
 
   const formatDate = (dateString) => {
-    if (!dateString) return '-'
-    return new Date(dateString).toLocaleString('en-IN', {
+    const parsed = parseServerDateTime(dateString)
+    if (!parsed) return '-'
+    return parsed.toLocaleString('en-IN', {
+      timeZone: 'Asia/Kolkata',
       day: '2-digit',
       month: 'short',
       year: 'numeric',
@@ -197,8 +213,9 @@ export default function Payments() {
   }
 
   const getUndoTimeLeft = (undoExpiresAt) => {
-    if (!undoExpiresAt) return 'Expired'
-    const msLeft = new Date(undoExpiresAt).getTime() - Date.now()
+    const expiry = parseServerDateTime(undoExpiresAt)
+    if (!expiry) return 'Expired'
+    const msLeft = expiry.getTime() - Date.now()
     if (msLeft <= 0) return 'Expired'
     const minutes = Math.floor(msLeft / 60000)
     const seconds = Math.floor((msLeft % 60000) / 1000)

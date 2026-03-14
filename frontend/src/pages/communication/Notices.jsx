@@ -10,6 +10,7 @@ import clsx from 'clsx'
 import { FormInput, SmartSelect, FormTextarea, InfoTooltip, NeonSweepButton } from '../../components'
 import { HeroSkeleton, FiltersSkeleton, CardGridSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
 import useMinLoadingTime from '../../hooks/useMinLoadingTime'
+import { formatDate } from '../../utils/formatUtils'
 
 const priorityClasses = {
   LOW: 'inline-flex items-center rounded-full bg-[var(--bg-tertiary)] px-2 py-0.5 text-xs font-semibold text-[var(--text-secondary)]',
@@ -201,12 +202,12 @@ export default function Notices() {
               
               <div className="flex items-center justify-between border-t border-[var(--border-light)] pt-3 text-xs text-[var(--text-tertiary)]">
                 {isPlatformLevel && <span>{notice.societyName || 'All Societies'}</span>}
-                <span>{notice.createdAt && new Date(notice.createdAt).toLocaleDateString()}</span>
+                <span>{formatDate(notice.createdAt)}</span>
               </div>
               
               {notice.expiryDate && (
                 <p className="mt-2 text-xs text-orange-600">
-                  Expires: {new Date(notice.expiryDate).toLocaleDateString()}
+                  Expires: {formatDate(notice.expiryDate)}
                 </p>
               )}
             </div>

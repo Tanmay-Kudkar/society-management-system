@@ -50,6 +50,9 @@ public class Society {
     @Column(name = "total_wings")
     private Integer totalWings = 0;
 
+    @Column(name = "has_wings")
+    private Boolean hasWings = true;
+
     @Column(name = "two_wheeler_parking_capacity")
     private Integer twoWheelerParkingCapacity;
 
@@ -62,5 +65,8 @@ public class Society {
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
+        if (hasWings == null) {
+            hasWings = true;
+        }
     }
 }

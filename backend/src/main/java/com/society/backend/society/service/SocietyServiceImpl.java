@@ -84,6 +84,18 @@ public class SocietyServiceImpl implements SocietyService {
 
         Society society = societyRepository.findById(id)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Society not found"));
+
+        boolean hasWings = request.getHasWings() != null
+                ? request.getHasWings()
+                : (request.getTotalWings() != null && request.getTotalWings() > 0);
+        if (!hasWings) {
+            long linkedWings = wingRepository.countBySocietyId(id);
+            if (linkedWings > 0) {
+                throw new ApiException(HttpStatus.CONFLICT,
+                        "Cannot disable wings for this society while wing records exist. Delete wings first.");
+            }
+        }
+
         mapRequestToEntity(request, society);
         Society saved = societyRepository.save(society);
         return toResponse(saved);
@@ -134,6 +146,10 @@ public class SocietyServiceImpl implements SocietyService {
     }
 
     private void mapRequestToEntity(SocietyRequest request, Society society) {
+        boolean hasWings = request.getHasWings() != null
+                ? request.getHasWings()
+                : (request.getTotalWings() != null && request.getTotalWings() > 0);
+
         society.setName(request.getName());
         society.setAddress(request.getAddress());
         society.setCity(request.getCity());
@@ -145,7 +161,8 @@ public class SocietyServiceImpl implements SocietyService {
         society.setTotalFlats(request.getTotalFlats() != null ? request.getTotalFlats() : 0);
         society.setTotalShops(request.getTotalShops() != null ? request.getTotalShops() : 0);
         society.setTotalOffices(request.getTotalOffices() != null ? request.getTotalOffices() : 0);
-        society.setTotalWings(request.getTotalWings() != null ? request.getTotalWings() : 0);
+        society.setHasWings(hasWings);
+        society.setTotalWings(hasWings ? (request.getTotalWings() != null ? request.getTotalWings() : 0) : 0);
         society.setTwoWheelerParkingCapacity(request.getTwoWheelerParkingCapacity());
         society.setFourWheelerParkingCapacity(request.getFourWheelerParkingCapacity());
     }
@@ -167,6 +184,7 @@ public class SocietyServiceImpl implements SocietyService {
         response.setTotalShops(society.getTotalShops());
         response.setTotalOffices(society.getTotalOffices());
         response.setTotalWings(society.getTotalWings());
+        response.setHasWings(society.getHasWings() != null ? society.getHasWings() : true);
         response.setTwoWheelerParkingCapacity(society.getTwoWheelerParkingCapacity());
         response.setFourWheelerParkingCapacity(society.getFourWheelerParkingCapacity());
 

@@ -555,38 +555,40 @@ export default function Users() {
       </div>
 
       {/* Role Permissions Info */}
-      <div className="mb-6 rounded-2xl border border-[color-mix(in_srgb,var(--accent-primary)_20%,var(--border-light))] bg-[color-mix(in_srgb,var(--accent-primary)_8%,var(--bg-tertiary))] p-4">
-        <div className="flex items-start gap-3">
-          <Shield className="text-[var(--accent-primary)]" size={20} />
-          <div>
-            <h3 className="m-0 text-sm font-semibold text-[var(--text-primary)]">Your Permissions ({user?.role?.replace('_', ' ')})</h3>
-            <p className="mt-1.5 text-[13px] text-[var(--text-secondary)]">
-              Access scope is based on your current role and society assignment.
-            </p>
-            <div className="mt-2.5 flex flex-wrap gap-2.5 text-xs">
-              {creatableRoles.length > 0 && (
-                <div>
-                  <span className="font-semibold text-[var(--accent-primary)]">Can create:</span>{' '}
-                  <span className="text-[var(--text-primary)]">
-                    {creatableRoles.map(r => r.replace('_', ' ')).join(', ')}
-                  </span>
-                </div>
-              )}
-              {updatableRoles.length > 0 && creatableRoles.length > 0 && (
-                <span className="text-[var(--text-tertiary)]">|</span>
-              )}
-              {updatableRoles.length > 0 && (
-                <div>
-                  <span className="font-semibold text-[var(--accent-primary)]">Can edit/delete:</span>{' '}
-                  <span className="text-[var(--text-primary)]">
-                    {updatableRoles.map(r => r.replace('_', ' ')).join(', ')}
-                  </span>
-                </div>
-              )}
+      {!['MASTER_ADMIN', 'SOCIETY_ADMIN'].includes(user?.role) && (
+        <div className="mb-6 rounded-2xl border border-[color-mix(in_srgb,var(--accent-primary)_20%,var(--border-light))] bg-[color-mix(in_srgb,var(--accent-primary)_8%,var(--bg-tertiary))] p-4">
+          <div className="flex items-start gap-3">
+            <Shield className="text-[var(--accent-primary)]" size={20} />
+            <div>
+              <h3 className="m-0 text-sm font-semibold text-[var(--text-primary)]">Your Permissions ({user?.role?.replace('_', ' ')})</h3>
+              <p className="mt-1.5 text-[13px] text-[var(--text-secondary)]">
+                Access scope is based on your current role and society assignment.
+              </p>
+              <div className="mt-2.5 flex flex-wrap gap-2.5 text-xs">
+                {creatableRoles.length > 0 && (
+                  <div>
+                    <span className="font-semibold text-[var(--accent-primary)]">Can create:</span>{' '}
+                    <span className="text-[var(--text-primary)]">
+                      {creatableRoles.map(r => r.replace('_', ' ')).join(', ')}
+                    </span>
+                  </div>
+                )}
+                {updatableRoles.length > 0 && creatableRoles.length > 0 && (
+                  <span className="text-[var(--text-tertiary)]">|</span>
+                )}
+                {updatableRoles.length > 0 && (
+                  <div>
+                    <span className="font-semibold text-[var(--accent-primary)]">Can edit/delete:</span>{' '}
+                    <span className="text-[var(--text-primary)]">
+                      {updatableRoles.map(r => r.replace('_', ' ')).join(', ')}
+                    </span>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Filters */}
       <div className="mb-6 rounded-2xl border border-[var(--border-light)] bg-[var(--bg-card)] p-4 shadow-sm">

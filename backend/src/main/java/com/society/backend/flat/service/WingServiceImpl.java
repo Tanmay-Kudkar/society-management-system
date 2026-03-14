@@ -79,6 +79,11 @@ public class WingServiceImpl implements WingService {
 
         roleService.enforceSocietyScope(roleService.getCurrentUser(), society.getId());
 
+        if (Boolean.FALSE.equals(society.getHasWings())) {
+            throw new ApiException(HttpStatus.BAD_REQUEST,
+                    "This society is configured as a single-tower setup and does not use wings.");
+        }
+
         Integer totalWings = society.getTotalWings();
         if (totalWings != null && totalWings > 0) {
             long currentWingCount = wingRepository.countBySocietyId(society.getId());
@@ -112,6 +117,11 @@ public class WingServiceImpl implements WingService {
         Society society = societyRepository.findById(request.getSocietyId())
             .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Society not found"));
         roleService.enforceSocietyScope(roleService.getCurrentUser(), society.getId());
+
+        if (Boolean.FALSE.equals(society.getHasWings())) {
+            throw new ApiException(HttpStatus.BAD_REQUEST,
+                    "This society is configured as a single-tower setup and does not use wings.");
+        }
 
         if (!society.getId().equals(wing.getSociety().getId())) {
             Integer totalWings = society.getTotalWings();
