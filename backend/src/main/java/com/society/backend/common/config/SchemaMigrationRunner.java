@@ -19,6 +19,22 @@ public class SchemaMigrationRunner {
     private final JdbcTemplate jdbcTemplate;
 
     @Bean
+    public ApplicationRunner ensureSocietyHasWingsColumn() {
+        return args -> {
+            try {
+                jdbcTemplate.execute(
+                        "ALTER TABLE societies ADD COLUMN IF NOT EXISTS has_wings BOOLEAN DEFAULT TRUE");
+                jdbcTemplate.execute(
+                        "UPDATE societies SET has_wings = CASE WHEN total_wings > 0 THEN TRUE ELSE FALSE END WHERE has_wings IS NULL");
+                jdbcTemplate.execute("ALTER TABLE societies ALTER COLUMN has_wings SET DEFAULT TRUE");
+                log.info("societies.has_wings column verified/updated");
+            } catch (Exception ex) {
+                log.warn("Failed to add/update societies.has_wings column: {}", ex.getMessage());
+            }
+        };
+    }
+
+    @Bean
     public ApplicationRunner repairUserRoleConstraint() {
         return args -> {
             try {

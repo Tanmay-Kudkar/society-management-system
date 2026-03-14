@@ -10,6 +10,7 @@ import { PermissionDenied } from '../../components'
 import { HeroSkeleton, SummaryRowSkeleton, FiltersSkeleton, ListSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
 import useMinLoadingTime from '../../hooks/useMinLoadingTime'
 import { useToast } from '../../context'
+import { formatDate } from '../../utils/formatUtils'
 
 const statusColors = {
   PENDING: 'bg-amber-100 text-amber-700',
@@ -228,7 +229,7 @@ export default function Complaints() {
                       <div className="flex gap-4 mt-2 text-xs text-[var(--text-tertiary)]">
                         {isPlatformLevel && <span className="whitespace-nowrap">{complaint.societyName}</span>}
                         <span className="whitespace-nowrap">By: {complaint.raisedByName || 'N/A'}</span>
-                        <span className="whitespace-nowrap">{complaint.createdAt && new Date(complaint.createdAt).toLocaleDateString()}</span>
+                        <span className="whitespace-nowrap">{formatDate(complaint.createdAt)}</span>
                       </div>
                     </div>
                   </div>

@@ -36,7 +36,6 @@ const SocietyAdmins = lazyWithMinDelay(
 const UnitManagement = lazyWithMinDelay(
   () => import("./pages/unit/UnitManagement"),
 );
-const Wings = lazyWithMinDelay(() => import("./pages/unit/Wings"));
 const Tenants = lazyWithMinDelay(() => import("./pages/unit/Tenants"));
 const Vehicles = lazyWithMinDelay(() => import("./pages/unit/Vehicles"));
 
@@ -134,7 +133,6 @@ const PAGE_TITLES = {
   "/dashboard": "Dashboard",
   "/users": "Users",
   "/society-admins": "Society Admins",
-  "/wings": "Wings",
   "/unit-management": "Unit & User Management",
   "/tenants": "Tenants",
   "/vehicles": "Vehicles",
@@ -175,6 +173,11 @@ const SocietyRouteRedirect = () => {
   const { id } = useParams();
   const scopedId = encodeURIComponent(id || "");
   return <Navigate to={`/dashboard?society=${scopedId}`} replace />;
+};
+
+const LegacyWingsRedirect = () => {
+  const { search } = useLocation();
+  return <Navigate to={`/unit-management${search || ""}`} replace />;
 };
 
 function App() {
@@ -300,7 +303,7 @@ function App() {
                 />
                 <Route path="society-admins" element={<SocietyAdmins />} />
                 <Route path="societies/:id" element={<SocietyRouteRedirect />} />
-                <Route path="wings" element={<Wings />} />
+                <Route path="wings" element={<LegacyWingsRedirect />} />
                 <Route
                   path="flats"
                   element={<Navigate to="/unit-management" replace />}

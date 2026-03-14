@@ -176,6 +176,10 @@ public class FlatServiceImpl implements FlatService {
 
         // Handle wing assignment
         if (request.getWingId() != null) {
+            if (Boolean.FALSE.equals(society.getHasWings())) {
+                throw new ApiException(HttpStatus.BAD_REQUEST,
+                        "Wing cannot be assigned because this society is configured as single-tower without wings.");
+            }
             Wing wing = wingRepository.findById(request.getWingId())
                     .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Wing not found"));
             flat.setWing(wing);

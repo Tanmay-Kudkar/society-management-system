@@ -9,6 +9,7 @@ import clsx from 'clsx'
 import { InfoTooltip, NeonSweepButton } from '../../components'
 import { HeroSkeleton, SummaryRowSkeleton, FiltersSkeleton, ListSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
 import useMinLoadingTime from '../../hooks/useMinLoadingTime'
+import { formatDate } from '../../utils/formatUtils'
 
 const statusClasses = {
   OPEN: 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800',
@@ -310,7 +311,7 @@ export default function Tickets() {
                       {isPlatformLevel && <span className="inline-flex items-center gap-1.5">{ticket.societyName}</span>}
                       <span className="inline-flex items-center gap-1.5">
                         <Clock size={12} />
-                        {ticket.createdAt && new Date(ticket.createdAt).toLocaleDateString()}
+                        {formatDate(ticket.createdAt)}
                       </span>
                       {ticket.pendingDays > 0 && (
                         <span className={clsx("inline-flex items-center gap-1.5", ticket.isOverdue && "text-red-600 font-semibold")}> 

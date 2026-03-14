@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef } from 'react'
+import { useState, useMemo, useRef, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '../../context'
@@ -54,7 +54,7 @@ const formatRoleLabel = (role) => {
 }
 
 export default function UnitManagement() {
-  const { user, isCommitteeLevel } = useAuth()
+  const { user, isCommitteeLevel, canManageWings } = useAuth()
   const { showToast } = useToast()
   const confirmDialog = useConfirmDialog()
   const queryClient = useQueryClient()
@@ -73,6 +73,7 @@ export default function UnitManagement() {
 
   // PO/OO are supervisory - they can view but not directly edit units/users within a society
   const canEditUnits = isCommitteeLevel() && !isPlatformLevel
+  const canCreateWingsInline = canManageWings()
 
   // Active tab derived from URL
   const activeTab = tabFromUrl === 'users' ? 'users' : 'units'
@@ -268,6 +269,14 @@ export default function UnitManagement() {
     onSuccess: () => queryClient.invalidateQueries(['flats']),
     onError: (err) => {
       setApiError(parseApiError(err))
+    },
+  })
+
+  const createWingMutation = useMutation({
+    mutationFn: (payload) => wingApi.create(payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['wings'])
+      queryClient.invalidateQueries(['society', effectiveSocietyId])
     },
   })
 
@@ -527,7 +536,7 @@ export default function UnitManagement() {
   // ─── End User Management Tab ──────────────────────────────────────────
 
   // Handle unit form submission
-  const handleUnitSubmit = (e) => {
+  const handleUnitSubmit = async (e) => {
     e.preventDefault()
     const formData = new FormData(e.target)
     
@@ -540,9 +549,53 @@ export default function UnitManagement() {
     const floorRaw = formData.get('floor')
     const areaRaw = formData.get('area')
 
+    let resolvedWingId = formData.get('wingId') ? parseInt(formData.get('wingId')) : null
+
+    const inlineWingName = formData.get('createWingName')?.trim()
+    const inlineWingFloorsRaw = formData.get('createWingFloors')
+    if (inlineWingName) {
+      if (!canCreateWingsInline) {
+        setApiError('You do not have permission to create wings.')
+        return
+      }
+
+      if (currentSociety?.hasWings === false) {
+        setUnitFormErrors({ capacity: 'This society is configured as single-tower and does not use wings.' })
+        return
+      }
+
+      const maxWings = currentSociety?.totalWings || 0
+      const hasWingLimit = maxWings > 0
+      const currentWingCount = wings.length
+      if (hasWingLimit && currentWingCount >= maxWings) {
+        setUnitFormErrors({
+          capacity: `Cannot create more wings. Society capacity reached: ${currentWingCount}/${maxWings}`,
+        })
+        return
+      }
+
+      const inlineWingFloors = parseInt(inlineWingFloorsRaw, 10)
+      if (!Number.isInteger(inlineWingFloors) || inlineWingFloors < 1) {
+        setUnitFormErrors({ createWingFloors: 'Wing floors must be at least 1' })
+        return
+      }
+
+      try {
+        const wingRes = await createWingMutation.mutateAsync({
+          societyId,
+          name: inlineWingName,
+          totalFloors: inlineWingFloors,
+        })
+        resolvedWingId = wingRes?.data?.id || null
+      } catch (error) {
+        setApiError(parseApiError(error))
+        return
+      }
+    }
+
     const data = {
       societyId,
-      wingId: formData.get('wingId') ? parseInt(formData.get('wingId')) : null,
+      wingId: resolvedWingId,
       flatNumber: formData.get('flatNumber'),
       unitType: unitType,
       flatType: formData.get('flatType'),
@@ -773,7 +826,7 @@ export default function UnitManagement() {
           </h1>
         </div>
         <div className="w-full sm:w-auto flex flex-wrap gap-3">
-          {canEditUnits && (
+          {canEditUnits && activeTab === 'units' && (
             <>
               <NeonSweepButton
                 tone="cyan"
@@ -1293,34 +1346,36 @@ export default function UnitManagement() {
       {activeTab === 'users' && (
       <>
         {/* Role Permissions Info */}
-        <div className="mb-6 p-4 rounded-[14px] border shadow-[var(--shadow-sm)] dark:border-[rgba(59,130,246,0.38)]" style={{ borderColor: 'color-mix(in srgb, var(--color-primary-200) 55%, var(--border-default))', background: 'linear-gradient(135deg, color-mix(in srgb, var(--color-primary-100) 35%, var(--bg-card)) 0%, color-mix(in srgb, var(--bg-tertiary) 88%, transparent) 100%)' }}>
-          <div className="flex items-start gap-3">
-            <Shield className="w-5 h-5 mt-0.5 text-[var(--text-secondary)]" />
-            <div className="flex-1">
-              <h3 className="font-medium text-[var(--text-primary)]">Your Permissions ({user?.role?.replace('_', ' ')})</h3>
-              <p className="text-sm text-[var(--text-secondary)] mt-1">
-                Access scope is based on your current role and selected society.
-              </p>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {creatableRoles.length > 0 && (
-                  <div className="text-xs text-[var(--text-secondary)]">
-                    <span className="font-semibold text-[var(--text-primary)]">Can create:</span>{' '}
-                    <span>{creatableRoles.map(r => r.replace('_', ' ')).join(', ')}</span>
-                  </div>
-                )}
-                {updatableRoles.length > 0 && creatableRoles.length > 0 && (
-                  <span className="text-[var(--text-tertiary)]">|</span>
-                )}
-                {updatableRoles.length > 0 && (
-                  <div className="text-xs text-[var(--text-secondary)]">
-                    <span className="font-semibold text-[var(--text-primary)]">Can edit/delete:</span>{' '}
-                    <span>{updatableRoles.map(r => r.replace('_', ' ')).join(', ')}</span>
-                  </div>
-                )}
+        {!['MASTER_ADMIN', 'SOCIETY_ADMIN'].includes(user?.role) && (
+          <div className="mb-6 p-4 rounded-[14px] border shadow-[var(--shadow-sm)] dark:border-[rgba(59,130,246,0.38)]" style={{ borderColor: 'color-mix(in srgb, var(--color-primary-200) 55%, var(--border-default))', background: 'linear-gradient(135deg, color-mix(in srgb, var(--color-primary-100) 35%, var(--bg-card)) 0%, color-mix(in srgb, var(--bg-tertiary) 88%, transparent) 100%)' }}>
+            <div className="flex items-start gap-3">
+              <Shield className="w-5 h-5 mt-0.5 text-[var(--text-secondary)]" />
+              <div className="flex-1">
+                <h3 className="font-medium text-[var(--text-primary)]">Your Permissions ({user?.role?.replace('_', ' ')})</h3>
+                <p className="text-sm text-[var(--text-secondary)] mt-1">
+                  Access scope is based on your current role and selected society.
+                </p>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {creatableRoles.length > 0 && (
+                    <div className="text-xs text-[var(--text-secondary)]">
+                      <span className="font-semibold text-[var(--text-primary)]">Can create:</span>{' '}
+                      <span>{creatableRoles.map(r => r.replace('_', ' ')).join(', ')}</span>
+                    </div>
+                  )}
+                  {updatableRoles.length > 0 && creatableRoles.length > 0 && (
+                    <span className="text-[var(--text-tertiary)]">|</span>
+                  )}
+                  {updatableRoles.length > 0 && (
+                    <div className="text-xs text-[var(--text-secondary)]">
+                      <span className="font-semibold text-[var(--text-primary)]">Can edit/delete:</span>{' '}
+                      <span>{updatableRoles.map(r => r.replace('_', ' ')).join(', ')}</span>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        )}
 
         {/* User Error Alert */}
         {userError && !showStandaloneUserModal && (
@@ -1725,6 +1780,8 @@ export default function UnitManagement() {
           unit={editingUnit}
           societies={societies}
           wings={wings}
+          hasWingsEnabled={currentSociety?.hasWings !== false}
+          canCreateWingsInline={canCreateWingsInline}
           isPlatformLevel={isPlatformLevel}
           userSocietyId={effectiveSocietyId}
           errors={unitFormErrors}
@@ -1736,7 +1793,7 @@ export default function UnitManagement() {
             setUnitFormErrors({})
             setApiError('')
           }}
-          isLoading={createUnitMutation.isPending || updateUnitMutation.isPending}
+          isLoading={createUnitMutation.isPending || updateUnitMutation.isPending || createWingMutation.isPending}
         />
       )}
 
@@ -1844,9 +1901,22 @@ function StatCard({ label, value, icon: Icon, color }) {
 }
 
 // Unit Form Modal
-function UnitFormModal({ unit, societies, wings, isPlatformLevel, userSocietyId, errors, apiError, onSubmit, onClose, isLoading }) {
+function UnitFormModal({ unit, societies, wings, hasWingsEnabled, canCreateWingsInline, isPlatformLevel, userSocietyId, errors, apiError, onSubmit, onClose, isLoading }) {
+  const totalWizardSteps = 3
+  const wizardStepLabels = ['Basics', 'Wing & Location', 'Review']
+  const [wizardStep, setWizardStep] = useState(unit ? 3 : 1)
+  const [wizardError, setWizardError] = useState('')
+  const [transitionDirection, setTransitionDirection] = useState('forward')
+  const stepBodyRef = useRef(null)
   const [selectedUnitType, setSelectedUnitType] = useState(unit?.unitType || 'FLAT')
   const [selectedWingId, setSelectedWingId] = useState(unit?.wingId ? String(unit.wingId) : '')
+  const [showInlineWingCreate, setShowInlineWingCreate] = useState(false)
+  const [selectedSocietyId, setSelectedSocietyId] = useState(unit?.societyId ? String(unit.societyId) : String(userSocietyId || ''))
+  const [unitNumber, setUnitNumber] = useState(unit?.flatNumber || '')
+  const [floorValue, setFloorValue] = useState(unit?.floor ?? 0)
+  const [areaValue, setAreaValue] = useState(unit?.area ?? '')
+  const [newWingName, setNewWingName] = useState('')
+  const [newWingFloors, setNewWingFloors] = useState(1)
   const getDefaultFlatType = (unitType) => {
     if (unitType === 'FLAT') return '2BHK'
     if (unitType === 'SHOP') return 'RETAIL'
@@ -1854,6 +1924,22 @@ function UnitFormModal({ unit, societies, wings, isPlatformLevel, userSocietyId,
     return ''
   }
   const [selectedFlatType, setSelectedFlatType] = useState(unit?.flatType || getDefaultFlatType(selectedUnitType))
+
+  useEffect(() => {
+    if (!stepBodyRef.current) return
+
+    const startX = transitionDirection === 'forward' ? 18 : -18
+    stepBodyRef.current.animate(
+      [
+        { opacity: 0, transform: `translateX(${startX}px) scale(0.985)` },
+        { opacity: 1, transform: 'translateX(0) scale(1)' },
+      ],
+      {
+        duration: 220,
+        easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
+      }
+    )
+  }, [wizardStep, transitionDirection])
 
   const handleUnitTypeChange = (e) => {
     const newType = e.target.value
@@ -1864,6 +1950,71 @@ function UnitFormModal({ unit, societies, wings, isPlatformLevel, userSocietyId,
   // Get max floor from selected wing
   const selectedWing = wings.find(w => w.id === parseInt(selectedWingId))
   const maxFloor = selectedWing?.totalFloors || 100
+
+  const validateWizardStep = (step) => {
+    if (step === 1) {
+      if (isPlatformLevel && !selectedSocietyId) {
+        setWizardError('Please select a society before continuing.')
+        return false
+      }
+      if (!unitNumber?.trim()) {
+        setWizardError('Unit number is required.')
+        return false
+      }
+      if (!selectedFlatType) {
+        setWizardError('Configuration is required.')
+        return false
+      }
+    }
+
+    if (step === 2) {
+      if (floorValue === '' || floorValue === null || Number.isNaN(Number(floorValue))) {
+        setWizardError('Please enter a valid floor value.')
+        return false
+      }
+      if (Number(floorValue) < 0) {
+        setWizardError('Floor must be 0 or greater.')
+        return false
+      }
+      if (Number(floorValue) > maxFloor) {
+        setWizardError(`Floor cannot exceed ${maxFloor} for selected wing.`)
+        return false
+      }
+      if (areaValue === '' || areaValue === null || Number.isNaN(Number(areaValue))) {
+        setWizardError('Please enter a valid area.')
+        return false
+      }
+      if (Number(areaValue) <= 0) {
+        setWizardError('Area must be greater than 0.')
+        return false
+      }
+
+      if (showInlineWingCreate && newWingName.trim()) {
+        if (!newWingFloors || Number(newWingFloors) < 1) {
+          setWizardError('New wing floors must be at least 1.')
+          return false
+        }
+      }
+    }
+
+    setWizardError('')
+    return true
+  }
+
+  const handleNext = () => {
+    if (!validateWizardStep(wizardStep)) return
+    setTransitionDirection('forward')
+    setWizardStep((prev) => Math.min(prev + 1, totalWizardSteps))
+  }
+
+  const handleBack = () => {
+    setWizardError('')
+    setTransitionDirection('backward')
+    setWizardStep((prev) => Math.max(prev - 1, 1))
+  }
+
+  const progressPercent = ((wizardStep - 1) / (totalWizardSteps - 1)) * 100
+  const currentStepLabel = wizardStepLabels[wizardStep - 1]
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[rgba(15,23,42,0.6)]">
@@ -1876,160 +2027,248 @@ function UnitFormModal({ unit, societies, wings, isPlatformLevel, userSocietyId,
         </div>
 
         {apiError && <div className="px-5 pt-3"><FormErrorSummary message={apiError} /></div>}
+        {wizardError && <div className="px-5 pt-3"><FormErrorSummary message={wizardError} /></div>}
         {errors.capacity && <div className="px-5 pt-3"><FormErrorSummary message={errors.capacity} /></div>}
 
         <form onSubmit={onSubmit} className="p-5 flex flex-col gap-4">
-          {/* Society (MASTER_ADMIN only) */}
-          {isPlatformLevel ? (
-            <SmartSelect
-              label="Society"
-              name="societyId"
-              defaultValue={unit?.societyId}
-              required
-              icon={Building2}
-              placeholder="Select Society"
-              options={societies.map(s => ({ value: s.id, label: s.name }))}
-              error={errors.societyId}
-            />
-          ) : (
-            <input type="hidden" name="societyId" value={userSocietyId || ''} />
+          {/* Hidden payload fields preserved across wizard steps */}
+          <input type="hidden" name="societyId" value={isPlatformLevel ? selectedSocietyId : (userSocietyId || '')} />
+          <input type="hidden" name="unitType" value={selectedUnitType} />
+          <input type="hidden" name="wingId" value={selectedWingId} />
+          <input type="hidden" name="createWingName" value={newWingName} />
+          <input type="hidden" name="createWingFloors" value={newWingFloors} />
+          <input type="hidden" name="flatNumber" value={unitNumber} />
+          <input type="hidden" name="flatType" value={selectedFlatType} />
+          <input type="hidden" name="floor" value={floorValue} />
+          <input type="hidden" name="area" value={areaValue} />
+
+          <div className="mb-1 space-y-1.5">
+            <div className="flex items-center justify-between text-[0.72rem] font-semibold uppercase tracking-[0.06em] text-[var(--text-tertiary)]">
+              <span>Step {wizardStep} of {totalWizardSteps}</span>
+              <span>{currentStepLabel}</span>
+            </div>
+            <div className="h-1.5 rounded-full bg-[color-mix(in_srgb,var(--bg-tertiary)_88%,transparent)]">
+              <div
+                className="h-full rounded-full"
+                style={{
+                  width: `${progressPercent}%`,
+                  background: 'linear-gradient(90deg, color-mix(in srgb, var(--color-primary-400) 88%, #3b82f6) 0%, color-mix(in srgb, var(--color-primary-600) 90%, #1d4ed8) 100%)',
+                  transition: 'width 220ms cubic-bezier(0.22, 1, 0.36, 1)',
+                }}
+              />
+            </div>
+          </div>
+
+          <div ref={stepBodyRef}>
+          {wizardStep === 1 && (
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              {isPlatformLevel && (
+                <SmartSelect
+                  label="Society"
+                  value={selectedSocietyId}
+                  onChange={(e) => setSelectedSocietyId(e.target.value)}
+                  required
+                  icon={Building2}
+                  placeholder="Select Society"
+                  options={societies.map(s => ({ value: s.id, label: s.name }))}
+                  error={errors.societyId}
+                />
+              )}
+
+              <SmartSelect
+                label="Unit Type"
+                value={selectedUnitType}
+                onChange={handleUnitTypeChange}
+                icon={Home}
+                required
+                error={errors.unitType}
+                options={[
+                  { value: 'FLAT', label: '🏠 Flat' },
+                  { value: 'SHOP', label: '🏪 Shop' },
+                  { value: 'OFFICE', label: '🏢 Office' },
+                ]}
+              />
+
+              <FormInput
+                label="Unit Number"
+                value={unitNumber}
+                onChange={(e) => setUnitNumber(e.target.value)}
+                required
+                placeholder={
+                  selectedUnitType === 'SHOP'
+                    ? 'e.g., S-101'
+                    : selectedUnitType === 'OFFICE'
+                      ? 'e.g., O-201'
+                      : 'e.g., A-101'
+                }
+                pattern="[A-Za-z0-9][A-Za-z0-9\-\/]*"
+                maxLength="20"
+                error={errors.flatNumber}
+              />
+
+              <SmartSelect
+                label={selectedUnitType === 'FLAT' ? 'Configuration' : selectedUnitType === 'SHOP' ? 'Shop Type' : 'Office Type'}
+                value={selectedFlatType}
+                onChange={(e) => setSelectedFlatType(e.target.value)}
+                required
+                error={errors.flatType}
+                options={[
+                  ...(selectedUnitType === 'FLAT' ? [
+                    { value: '1RK', label: '1 RK' },
+                    { value: '1BHK', label: '1 BHK' },
+                    { value: '2BHK', label: '2 BHK' },
+                    { value: '3BHK', label: '3 BHK' },
+                    { value: '4BHK', label: '4 BHK' },
+                    { value: '5BHK', label: '5 BHK' },
+                    { value: 'PENTHOUSE', label: 'Penthouse' },
+                    { value: 'DUPLEX', label: 'Duplex' },
+                    { value: 'STUDIO', label: 'Studio' },
+                  ] : selectedUnitType === 'SHOP' ? [
+                    { value: 'RETAIL', label: 'Retail Shop' },
+                    { value: 'SHOWROOM', label: 'Showroom' },
+                    { value: 'KIOSK', label: 'Kiosk' },
+                    { value: 'FOOD', label: 'Food Court' },
+                    { value: 'PHARMACY', label: 'Pharmacy' },
+                    { value: 'SALON', label: 'Salon/Spa' },
+                    { value: 'SMALL', label: 'Small Shop' },
+                    { value: 'MEDIUM', label: 'Medium Shop' },
+                    { value: 'LARGE', label: 'Large Shop' },
+                  ] : [
+                    { value: 'STANDARD', label: 'Standard Office' },
+                    { value: 'CABIN', label: 'Cabin' },
+                    { value: 'CUBICLE', label: 'Cubicle' },
+                    { value: 'SHARED', label: 'Shared Space' },
+                    { value: 'COWORKING', label: 'Co-working' },
+                    { value: 'EXECUTIVE', label: 'Executive Office' },
+                    { value: 'SMALL', label: 'Small Office' },
+                    { value: 'MEDIUM', label: 'Medium Office' },
+                    { value: 'LARGE', label: 'Large Office' },
+                  ]),
+                  { value: 'OTHER', label: 'Other' },
+                ]}
+              />
+            </div>
           )}
 
-          {/* Unit Type and Wing */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <SmartSelect
-              label="Unit Type"
-              name="unitType"
-              value={selectedUnitType}
-              onChange={handleUnitTypeChange}
-              icon={Home}
-              required
-              error={errors.unitType}
-              options={[
-                { value: 'FLAT', label: '🏠 Flat' },
-                { value: 'SHOP', label: '🏪 Shop' },
-                { value: 'OFFICE', label: '🏢 Office' },
-              ]}
-            />
-            <SmartSelect
-              label={`Wing (Optional)${selectedWingId && selectedWing?.totalFloors ? ` (Max Floor: ${selectedWing.totalFloors})` : ''}`}
-              name="wingId"
-              value={selectedWingId}
-              onChange={(e) => setSelectedWingId(e.target.value)}
-              placeholder="No Wing"
-              options={wings.map(w => ({ value: w.id, label: `${w.name}${w.totalFloors ? ` (${w.totalFloors} floors)` : ''}` }))}
-            />
+          {wizardStep === 2 && (
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              {hasWingsEnabled ? (
+                <div className="space-y-3 sm:col-span-2">
+                  <SmartSelect
+                    label={`Wing (Optional)${selectedWingId && selectedWing?.totalFloors ? ` (Max Floor: ${selectedWing.totalFloors})` : ''}`}
+                    value={selectedWingId}
+                    onChange={(e) => setSelectedWingId(e.target.value)}
+                    placeholder="No Wing"
+                    options={wings.map(w => ({ value: w.id, label: `${w.name}${w.totalFloors ? ` (${w.totalFloors} floors)` : ''}` }))}
+                  />
+                  {canCreateWingsInline && (
+                    <div className="rounded-xl border border-[var(--border-default)] bg-[var(--bg-tertiary)] p-3">
+                      <button
+                        type="button"
+                        onClick={() => setShowInlineWingCreate((prev) => !prev)}
+                        className="text-xs font-semibold text-[var(--accent-primary)]"
+                      >
+                        {showInlineWingCreate ? 'Hide new wing form' : 'Create new wing inline'}
+                      </button>
+                      {showInlineWingCreate && (
+                        <div className="mt-2 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                          <FormInput
+                            label="New Wing Name"
+                            value={newWingName}
+                            onChange={(e) => setNewWingName(e.target.value)}
+                            placeholder="e.g., C Wing"
+                            maxLength={50}
+                            error={errors.createWingName}
+                          />
+                          <NumberInput
+                            label="New Wing Floors"
+                            value={newWingFloors}
+                            onChange={(e) => setNewWingFloors(e.target.value)}
+                            min={1}
+                            max={200}
+                            error={errors.createWingFloors}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="sm:col-span-2 rounded-xl border border-[var(--border-default)] bg-[var(--bg-tertiary)] px-3 py-2.5 text-sm text-[var(--text-secondary)]">
+                  This society uses single-tower mode. Units are created without wing mapping.
+                </div>
+              )}
+
+              <NumberInput
+                label={`Floor${selectedWingId && selectedWing?.totalFloors ? ` (0 to ${selectedWing.totalFloors})` : ''}`}
+                value={floorValue}
+                onChange={(e) => setFloorValue(e.target.value)}
+                required
+                min={0}
+                max={maxFloor}
+                error={errors.floor}
+                icon={Layers}
+              />
+              <NumberInput
+                label="Area (sq.ft)"
+                value={areaValue}
+                onChange={(e) => setAreaValue(e.target.value)}
+                min={0}
+                max={100000}
+                step={0.01}
+                placeholder={selectedUnitType === 'SHOP' ? 'e.g., 500' : selectedUnitType === 'OFFICE' ? 'e.g., 800' : 'e.g., 1200'}
+                required
+                error={errors.area}
+              />
+            </div>
+          )}
+
+          {wizardStep === 3 && (
+            <div className="space-y-3">
+              <div className="rounded-xl border border-[var(--border-light)] bg-[var(--bg-tertiary)] p-3">
+                <div className="flex items-center justify-between mb-1">
+                  <p className="text-xs font-semibold uppercase tracking-[0.04em] text-[var(--text-tertiary)]">Summary</p>
+                  <div className="relative flex items-center justify-center w-5 h-5">
+                    <div className="absolute inset-0 rounded-full bg-[var(--color-primary-500)] dark:bg-[var(--color-primary-400)] opacity-30 animate-ping" style={{ animationDuration: '2s' }}></div>
+                    <CheckCircle size={16} className="text-[var(--color-primary-500)] dark:text-[var(--color-primary-400)] relative z-10" />
+                  </div>
+                </div>
+                <div className="mt-2 grid grid-cols-2 gap-2 text-sm text-[var(--text-primary)]">
+                  <p><span className="text-[var(--text-tertiary)]">Unit:</span> {unitNumber || '-'}</p>
+                  <p><span className="text-[var(--text-tertiary)]">Type:</span> {selectedUnitType}</p>
+                  <p><span className="text-[var(--text-tertiary)]">Config:</span> {selectedFlatType || '-'}</p>
+                  <p><span className="text-[var(--text-tertiary)]">Floor:</span> {floorValue}</p>
+                  <p><span className="text-[var(--text-tertiary)]">Area:</span> {areaValue} sq.ft</p>
+                  <p><span className="text-[var(--text-tertiary)]">Wing:</span> {newWingName?.trim() ? `${newWingName} (new)` : (selectedWing?.name || 'No Wing')}</p>
+                </div>
+              </div>
+              <p className="text-xs text-[var(--text-tertiary)]">
+                Review details and create the unit. User assignment can be done right after creation.
+              </p>
+            </div>
+          )}
           </div>
 
-          {/* Flat Number and Type */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <FormInput
-              label="Unit Number"
-              name="flatNumber"
-              defaultValue={unit?.flatNumber}
-              required
-              placeholder={
-                selectedUnitType === 'SHOP' 
-                  ? 'e.g., S-101' 
-                  : selectedUnitType === 'OFFICE' 
-                  ? 'e.g., O-201' 
-                  : 'e.g., A-101'
-              }
-              pattern="[A-Za-z0-9][A-Za-z0-9\-\/]*"
-              maxLength="20"
-              error={errors.flatNumber}
-            />
-            <SmartSelect
-              label={selectedUnitType === 'FLAT' ? 'Configuration' : selectedUnitType === 'SHOP' ? 'Shop Type' : 'Office Type'}
-              name="flatType"
-              value={selectedFlatType}
-              onChange={(e) => setSelectedFlatType(e.target.value)}
-              required
-              error={errors.flatType}
-              options={[
-                ...(selectedUnitType === 'FLAT' ? [
-                  { value: '1RK', label: '1 RK' },
-                  { value: '1BHK', label: '1 BHK' },
-                  { value: '2BHK', label: '2 BHK' },
-                  { value: '3BHK', label: '3 BHK' },
-                  { value: '4BHK', label: '4 BHK' },
-                  { value: '5BHK', label: '5 BHK' },
-                  { value: 'PENTHOUSE', label: 'Penthouse' },
-                  { value: 'DUPLEX', label: 'Duplex' },
-                  { value: 'STUDIO', label: 'Studio' },
-                ] : selectedUnitType === 'SHOP' ? [
-                  { value: 'RETAIL', label: 'Retail Shop' },
-                  { value: 'SHOWROOM', label: 'Showroom' },
-                  { value: 'KIOSK', label: 'Kiosk' },
-                  { value: 'FOOD', label: 'Food Court' },
-                  { value: 'PHARMACY', label: 'Pharmacy' },
-                  { value: 'SALON', label: 'Salon/Spa' },
-                  { value: 'SMALL', label: 'Small Shop' },
-                  { value: 'MEDIUM', label: 'Medium Shop' },
-                  { value: 'LARGE', label: 'Large Shop' },
-                ] : [
-                  { value: 'STANDARD', label: 'Standard Office' },
-                  { value: 'CABIN', label: 'Cabin' },
-                  { value: 'CUBICLE', label: 'Cubicle' },
-                  { value: 'SHARED', label: 'Shared Space' },
-                  { value: 'COWORKING', label: 'Co-working' },
-                  { value: 'EXECUTIVE', label: 'Executive Office' },
-                  { value: 'SMALL', label: 'Small Office' },
-                  { value: 'MEDIUM', label: 'Medium Office' },
-                  { value: 'LARGE', label: 'Large Office' },
-                ]),
-                { value: 'OTHER', label: 'Other' },
-              ]}
-            />
-          </div>
-
-          {/* Floor and Area */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <NumberInput
-              label={`Floor${selectedWingId && selectedWing?.totalFloors ? ` (0 to ${selectedWing.totalFloors})` : ''}`}
-              name="floor"
-              defaultValue={unit?.floor || 0}
-              required
-              min={0}
-              max={maxFloor}
-              error={errors.floor}
-              icon={Layers}
-            />
-            <NumberInput
-              label="Area (sq.ft)"
-              name="area"
-              defaultValue={unit?.area || ''}
-              min={0}
-              max={100000}
-              step={0.01}
-              placeholder={selectedUnitType === 'SHOP' ? 'e.g., 500' : selectedUnitType === 'OFFICE' ? 'e.g., 800' : 'e.g., 1200'}
-              required
-              error={errors.area}
-            />
-          </div>
-
-          {/* Note: Owner/user will be added via the 'Add User' button after creating the unit */}
-
-          {/* Submit Button */}
           <div className="flex gap-3 pt-3 border-t border-[var(--border-light)]">
-            <NeonSweepButton
-              type="button"
-              tone="slate"
-              size="md"
-              onClick={onClose}
-              className="flex-1"
-            >
+            <NeonSweepButton type="button" tone="slate" size="md" onClick={onClose} className="flex-1">
               Cancel
             </NeonSweepButton>
-            <NeonSweepButton
-              type="submit"
-              tone="cyan"
-              size="md"
-              className="flex-1"
-              disabled={isLoading}
-            >
-              {isLoading ? 'Saving...' : (unit ? 'Update Unit' : 'Create Unit')}
-            </NeonSweepButton>
+
+            {wizardStep > 1 && (
+              <NeonSweepButton type="button" tone="slate" size="md" onClick={handleBack} className="flex-1">
+                Back
+              </NeonSweepButton>
+            )}
+
+            {wizardStep < totalWizardSteps ? (
+              <NeonSweepButton type="button" tone="violet" size="md" onClick={handleNext} className="flex-1">
+                Next
+              </NeonSweepButton>
+            ) : (
+              <NeonSweepButton type="submit" tone="cyan" size="md" className="flex-1" disabled={isLoading}>
+                {isLoading ? 'Saving...' : (unit ? 'Update Unit' : 'Create Unit')}
+              </NeonSweepButton>
+            )}
           </div>
         </form>
       </div>

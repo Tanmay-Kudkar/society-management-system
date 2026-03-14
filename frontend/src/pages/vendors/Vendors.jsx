@@ -12,6 +12,7 @@ import { PermissionDenied } from '../../components'
 import { BulkImportModal } from '../../components'
 import { HeroSkeleton, FiltersSkeleton, CardGridSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
 import useMinLoadingTime from '../../hooks/useMinLoadingTime'
+import { formatDate } from '../../utils/formatUtils'
 
 const approvalBadgeClass = {
   APPROVED: 'bg-green-600',
@@ -763,7 +764,7 @@ export default function Vendors() {
                     <div>
                       <p className="text-xs text-[var(--text-tertiary)] mb-1">Created At</p>
                       <p className="text-sm font-semibold text-[var(--text-primary)]">
-                        {viewingVendor.createdAt ? new Date(viewingVendor.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A'}
+                        {viewingVendor.createdAt ? formatDate(viewingVendor.createdAt) : 'N/A'}
                       </p>
                     </div>
                     

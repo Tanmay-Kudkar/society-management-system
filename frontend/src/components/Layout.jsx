@@ -29,7 +29,6 @@ import {
   X,
   ChevronDown,
   BarChart3,
-  Layers,
   Wallet,
   Shield,
   Siren,
@@ -50,7 +49,6 @@ const routePrefetchMap = {
   "/roles-permissions": () => import("../pages/users/RolesPermissions"),
   "/society-admins": () => import("../pages/society/SocietyAdmins"),
   "/unit-management": () => import("../pages/unit/UnitManagement"),
-  "/wings": () => import("../pages/unit/Wings"),
   "/tenants": () => import("../pages/unit/Tenants"),
   "/vehicles": () => import("../pages/unit/Vehicles"),
   "/vendors": () => import("../pages/vendors/Vendors"),
@@ -145,12 +143,6 @@ const standardMenuGroups = [
           "COMMITTEE",
           "MANAGER",
         ],
-      },
-      {
-        path: "/wings",
-        icon: Layers,
-        label: "Wings",
-        roles: ["SOCIETY_ADMIN", "CHAIRMAN", "SECRETARY", "MANAGER"],
       },
       {
         path: "/tenants",

@@ -9,6 +9,7 @@ import clsx from 'clsx'
 import { PermissionDenied, InfoTooltip, NeonSweepButton } from '../../components'
 import { HeroSkeleton, FinancePageSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
 import useMinLoadingTime from '../../hooks/useMinLoadingTime'
+import { formatDate } from '../../utils/formatUtils'
 
 export default function Transactions() {
   const { user, canManageTransactions } = useAuth()
@@ -265,7 +266,7 @@ export default function Transactions() {
         { label: 'Type', value: transaction.transactionType },
         { label: 'Category', value: transaction.category },
         { label: 'Amount', value: `₹${transaction.amount?.toLocaleString()}` },
-        { label: 'Date', value: transaction.transactionDate ? new Date(transaction.transactionDate).toLocaleDateString() : '-' },
+        { label: 'Date', value: formatDate(transaction.transactionDate) },
       ],
       caution: 'This will permanently remove this transaction record.',
     })
@@ -426,7 +427,7 @@ export default function Transactions() {
                 {filteredTransactions.map((t) => (
                   <tr key={t.id} className="transition-colors hover:bg-[var(--bg-tertiary)]">
                     <td className="py-[0.85rem] px-6 text-[0.9rem] text-[var(--text-tertiary)]">
-                      {t.transactionDate && new Date(t.transactionDate).toLocaleDateString()}
+                      {formatDate(t.transactionDate)}
                     </td>
                     <td className="py-[0.85rem] px-6 text-[0.9rem] text-[var(--text-primary)]">
                       <span className={clsx(
@@ -493,7 +494,7 @@ export default function Transactions() {
                   <div className="mb-2 flex items-start justify-between gap-2 sm:gap-3">
                     <div>
                       <p className="text-[13px] sm:text-sm font-semibold text-[var(--text-primary)] break-words">{t.category}</p>
-                      <p className="text-[11px] sm:text-xs text-[var(--text-tertiary)]">{t.transactionDate ? new Date(t.transactionDate).toLocaleDateString() : '-'}</p>
+                      <p className="text-[11px] sm:text-xs text-[var(--text-tertiary)]">{formatDate(t.transactionDate)}</p>
                     </div>
                     <p className={clsx('text-[13px] sm:text-sm font-semibold whitespace-nowrap', t.transactionType === 'INCOME' ? 'text-[#16a34a]' : 'text-[#dc2626]')}>
                       {t.transactionType === 'INCOME' ? '+' : '-'}₹{t.amount?.toLocaleString()}

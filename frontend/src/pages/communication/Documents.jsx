@@ -9,6 +9,7 @@ import clsx from 'clsx'
 import { InfoTooltip, NeonSweepButton } from '../../components'
 import { HeroSkeleton, DocumentsSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
 import useMinLoadingTime from '../../hooks/useMinLoadingTime'
+import { formatDate } from '../../utils/formatUtils'
 
 const templateTypeClasses = {
   NOC: 'inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-xs font-semibold text-blue-700',
@@ -217,7 +218,7 @@ export default function Documents() {
             <p className="mb-3 line-clamp-2 text-sm text-[var(--text-secondary)]">{doc.content?.substring(0, 100)}...</p>
 
             <div className="mb-3 text-xs text-[var(--text-tertiary)]">
-              <p>Updated: {doc.updatedAt && new Date(doc.updatedAt).toLocaleDateString()}</p>
+              <p>Updated: {formatDate(doc.updatedAt)}</p>
             </div>
 
             {canManageDocuments() && (

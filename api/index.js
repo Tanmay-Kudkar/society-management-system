@@ -132,31 +132,8 @@ export const flatApi = {
 
 // Wing API
 export const wingApi = {
-  getAll: () => api.get('/api/wings'),
-  getById: (id) => api.get(`/api/wings/${id}`),
   getBySociety: (societyId) => api.get(`/api/wings/society/${societyId}`),
   create: (data) => api.post('/api/wings', data),
-  update: (id, data) => api.put(`/api/wings/${id}`, data),
-  delete: (id, force = true) => api.delete(`/api/wings/${id}${force ? '?force=true' : ''}`),
-  validateBulkImport: (file, societyId) => {
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('societyId', societyId);
-    return api.post('/api/wings/bulk-import/validate', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
-  },
-  processBulkImport: (file, societyId) => {
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('societyId', societyId);
-    return api.post('/api/wings/bulk-import', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
-  },
-  downloadImportTemplate: () => api.get('/api/wings/bulk-import/template', {
-    responseType: 'blob',
-  }),
 }
 
 // Vendor API

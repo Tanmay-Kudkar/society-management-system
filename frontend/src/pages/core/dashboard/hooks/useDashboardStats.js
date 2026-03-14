@@ -16,6 +16,7 @@ import {
   UserCheck,
 } from "lucide-react";
 import { formatCurrency } from "../utils/dashboardUtils";
+import { formatDate, formatDateTime } from "../../../../utils/formatUtils";
 
 export default function useDashboardStats(input) {
   const {
@@ -447,7 +448,7 @@ export default function useDashboardStats(input) {
 
   const noticeItems = notices.slice(0, 5).map((notice) => ({
     title: notice.title || notice.content,
-    meta: notice.createdAt ? new Date(notice.createdAt).toLocaleDateString() : "Recently posted",
+    meta: notice.createdAt ? formatDate(notice.createdAt) : "Recently posted",
     badge: "Notice",
     badgeTone: "info",
   }));
@@ -459,7 +460,7 @@ export default function useDashboardStats(input) {
     status: "Info",
   }]).slice(0, 6).map((log) => ({
     title: log.event,
-    meta: new Date(log.createdAt).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }),
+    meta: formatDateTime(log.createdAt),
     badge: log.status || log.type,
     badgeTone: String(log.type || "").toUpperCase() === "ALERT"
       ? "danger"
@@ -472,7 +473,7 @@ export default function useDashboardStats(input) {
 
   const pendingBillItems = pendingBillsCount.slice(0, 5).map((bill) => ({
     title: bill.billMonth || "Maintenance",
-    meta: bill.dueDate ? `Due ${new Date(bill.dueDate).toLocaleDateString()}` : "Due date unavailable",
+    meta: bill.dueDate ? `Due ${formatDate(bill.dueDate)}` : "Due date unavailable",
     badge: bill.amount ? `Rs ${bill.amount.toLocaleString()}` : "Pending",
     badgeTone: overdueBills.some((entry) => entry.id === bill.id) ? "danger" : "warning",
   }));

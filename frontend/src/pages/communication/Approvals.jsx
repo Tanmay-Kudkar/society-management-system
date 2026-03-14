@@ -9,6 +9,7 @@ import { FormInput, SmartSelect, FormTextarea, NumberInput, AsyncButton, InfoToo
 import { PermissionDenied } from '../../components'
 import { HeroSkeleton, SummaryRowSkeleton, FiltersSkeleton, ListSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
 import useMinLoadingTime from '../../hooks/useMinLoadingTime'
+import { formatDate, formatDateTime } from '../../utils/formatUtils'
 
 const statusColors = {
   PENDING: 'bg-amber-100 text-amber-800 dark:bg-amber-500/20 dark:text-amber-300',
@@ -356,7 +357,7 @@ export default function Approvals() {
                     {req.amount && <span>Amount: ₹{Number(req.amount).toLocaleString('en-IN')}</span>}
                     <span>Step: {req.currentStep}/{req.totalSteps}</span>
                     {req.workflowName && <span>Workflow: {req.workflowName}</span>}
-                    <span>{new Date(req.createdAt).toLocaleDateString()}</span>
+                    <span>{formatDate(req.createdAt)}</span>
                   </div>
                   {/* Progress bar */}
                   <div className="mt-2.5 h-1.5 w-full overflow-hidden rounded bg-[var(--bg-tertiary)]">
@@ -397,7 +398,7 @@ export default function Approvals() {
                         </span>
                         <span>Step {action.stepOrder} — {action.actedByName}</span>
                         {action.comments && <span className="italic text-[var(--text-secondary)]">{action.comments}</span>}
-                        <span className="ml-auto text-xs">{new Date(action.createdAt).toLocaleString()}</span>
+                        <span className="ml-auto text-xs">{formatDateTime(action.createdAt)}</span>
                       </div>
                     ))}
                   </div>
