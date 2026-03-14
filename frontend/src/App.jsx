@@ -7,7 +7,7 @@ import {
   ConfirmDialogProvider,
 } from "./context";
 
-import { Layout, HeroSkeleton, StatCardSkeleton } from "./components";
+import { Layout } from "./components";
 
 const lazyWithMinDelay = (importer) => lazy(importer);
 
@@ -114,31 +114,6 @@ const ScrollToTop = () => {
     window.scrollTo(0, 0);
     document.documentElement.scrollTop = 0;
     document.body.scrollTop = 0;
-  }, [pathname]);
-
-  return null;
-};
-
-const RoutePerfManager = () => {
-  const { pathname } = useLocation();
-
-  useEffect(() => {
-    const root = document.documentElement;
-    const body = document.body;
-
-    root.classList.add("route-transitioning");
-    body.classList.add("route-transitioning");
-
-    const timerId = window.setTimeout(() => {
-      root.classList.remove("route-transitioning");
-      body.classList.remove("route-transitioning");
-    }, 450);
-
-    return () => {
-      window.clearTimeout(timerId);
-      root.classList.remove("route-transitioning");
-      body.classList.remove("route-transitioning");
-    };
   }, [pathname]);
 
   return null;
@@ -285,19 +260,13 @@ function App() {
     };
   }, [user]);
 
-  const routeFallback = (
-    <div className="px-6 py-6">
-      <HeroSkeleton statCount={0} />
-      <StatCardSkeleton count={4} />
-    </div>
-  );
+  const routeFallback = null;
 
   return (
     <ThemeProvider>
       <ConfirmDialogProvider>
         <ToastProvider>
           <ScrollToTop />
-          <RoutePerfManager />
           <DynamicTitle />
           <Suspense fallback={routeFallback}>
             <Routes>

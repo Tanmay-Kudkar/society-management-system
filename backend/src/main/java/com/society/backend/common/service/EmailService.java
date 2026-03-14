@@ -92,35 +92,39 @@ public class EmailService {
                           <meta charset="UTF-8">
                           <meta name="viewport" content="width=device-width, initial-scale=1.0">
                         </head>
-                        <body style="margin:0; padding:0; background-color:#f8fafc; font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;">
-                          <table role="presentation" width="100%%" cellspacing="0" cellpadding="0" style="max-width:560px; margin:40px auto; background:#ffffff; border-radius:16px; overflow:hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.06);">
+                        <body style="margin:0; padding:0; background:#eef3fb; font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif; color:#0f172a;">
+                          <table role="presentation" width="100%%" cellspacing="0" cellpadding="0" style="max-width:620px; margin:30px auto; background:#ffffff; border-radius:20px; overflow:hidden; border:1px solid #d5e2f5; box-shadow:0 18px 45px rgba(15,23,42,0.12);">
                             <tr>
-                              <td style="background: linear-gradient(135deg, #f97316, #ef4444); padding:32px 40px; text-align:center;">
-                                <h1 style="color:#ffffff; margin:0; font-size:24px; font-weight:700;">\uD83C\uDFE2 %s</h1>
-                                <p style="color:rgba(255,255,255,0.85); margin:8px 0 0; font-size:14px;">Password Reset</p>
+                              <td style="padding:34px 36px; background:linear-gradient(135deg,#1f6feb 0%%,#2f81f7 50%%,#58a6ff 100%%); text-align:center;">
+                                <div style="display:inline-block; background:rgba(255,255,255,0.18); border:1px solid rgba(255,255,255,0.28); border-radius:999px; padding:6px 14px; color:#ffffff; font-size:12px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase;">Security Notification</div>
+                                <h1 style="margin:16px 0 6px; color:#ffffff; font-size:28px; line-height:1.2; font-weight:800;">%s</h1>
+                                <p style="margin:0; color:rgba(255,255,255,0.9); font-size:14px;">Password reset request</p>
                               </td>
                             </tr>
                             <tr>
-                              <td style="padding:40px;">
-                                <p style="margin:0; font-size:16px; color:#1e293b; line-height:1.6;">Hi <strong>%s</strong>,</p>
-                                <p style="margin:16px 0 0; font-size:15px; color:#475569; line-height:1.7;">We received a request to reset your password. Click the button below to create a new password:</p>
-                                <table role="presentation" cellspacing="0" cellpadding="0" style="margin:28px auto;">
+                              <td style="padding:34px 36px;">
+                                <p style="margin:0; font-size:16px; color:#0f172a; line-height:1.6;">Hello <strong>%s</strong>,</p>
+                                <p style="margin:16px 0 0; font-size:15px; color:#334155; line-height:1.75;">We received a request to reset your password. Click the button below to create a new password for your account.</p>
+
+                                <table role="presentation" cellspacing="0" cellpadding="0" style="margin:28px auto 0;">
                                   <tr>
-                                    <td style="border-radius:12px; background:linear-gradient(135deg, #f97316, #ef4444);">
-                                      <a href="%s" target="_blank" style="display:inline-block; padding:14px 36px; color:#ffffff; text-decoration:none; font-size:15px; font-weight:600;">Reset Password</a>
+                                    <td style="border-radius:12px; background:linear-gradient(135deg,#1f6feb,#2f81f7); box-shadow:0 12px 24px rgba(31,111,235,0.3);">
+                                      <a href="%s" target="_blank" style="display:inline-block; padding:14px 36px; color:#ffffff; text-decoration:none; font-size:15px; font-weight:700; letter-spacing:0.01em;">Reset Password</a>
                                     </td>
                                   </tr>
                                 </table>
-                                <p style="margin:24px 0 0; font-size:13px; color:#94a3b8; line-height:1.6;">This link will expire in <strong>30 minutes</strong>. If you didn't request a password reset, you can safely ignore this email.</p>
-                                <div style="margin:24px 0 0; padding:16px; background:#f1f5f9; border-radius:8px;">
-                                  <p style="margin:0; font-size:12px; color:#64748b;">If the button doesn't work, copy and paste this link:</p>
-                                  <p style="margin:8px 0 0; font-size:12px; color:#3b82f6; word-break:break-all;">%s</p>
+
+                                <div style="margin:28px 0 0; border:1px solid #dbe7f9; background:#f7faff; border-radius:12px; padding:14px 16px;">
+                                  <p style="margin:0; font-size:12px; color:#64748b; line-height:1.6;">If the button does not work, copy and paste this URL into your browser:</p>
+                                  <p style="margin:8px 0 0; font-size:12px; color:#1f6feb; word-break:break-all;">%s</p>
                                 </div>
+
+                                <p style="margin:20px 0 0; font-size:13px; color:#64748b; line-height:1.7;">This link expires in <strong>30 minutes</strong>. If you did not request this, you can safely ignore this email and your password will remain unchanged.</p>
                               </td>
                             </tr>
                             <tr>
-                              <td style="padding:24px 40px; background:#f8fafc; border-top:1px solid #e2e8f0; text-align:center;">
-                                <p style="margin:0; font-size:12px; color:#94a3b8;">&copy; 2025 %s. All rights reserved.</p>
+                              <td style="padding:18px 36px 26px; background:#f8fbff; border-top:1px solid #e2ebf8; text-align:center;">
+                                <p style="margin:0; font-size:12px; color:#94a3b8; line-height:1.6;">This is an automated message from %s. Please do not reply to this email.</p>
                               </td>
                             </tr>
                           </table>

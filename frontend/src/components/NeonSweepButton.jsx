@@ -47,7 +47,7 @@ export default function NeonSweepButton({
     >
       <span
         className={clsx(
-          'pointer-events-none absolute inset-y-0 left-[-24%] w-[148%] -skew-x-[35deg] -translate-x-[118%] transition-transform duration-1000 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:translate-x-0',
+          'pointer-events-none absolute inset-y-0 left-[-24%] w-[148%] -skew-x-[35deg] -translate-x-[118%] transition-transform duration-[1150ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:translate-x-0',
           toneConfig.sweep,
         )}
       />

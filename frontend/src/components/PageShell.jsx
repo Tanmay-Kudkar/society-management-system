@@ -1,7 +1,7 @@
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import clsx from 'clsx'
 import { Building2, Github, Twitter, Linkedin, Info } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import PublicNavbar from './PublicNavbar'
 import PublicFooter from './PublicFooter'
 
@@ -20,6 +20,17 @@ export default function PageShell({
   className,
 }) {
   const [subtitleTooltip, setSubtitleTooltip] = useState(false)
+  const [isPageReady, setIsPageReady] = useState(false)
+  const { pathname } = useLocation()
+
+  useEffect(() => {
+    setIsPageReady(false)
+    const frameId = window.setTimeout(() => {
+      setIsPageReady(true)
+    }, 90)
+
+    return () => window.clearTimeout(frameId)
+  }, [pathname])
 
   const isAdminMode = title !== undefined || subtitle !== undefined || Icon !== undefined || actions !== undefined || loading !== undefined
 
@@ -74,7 +85,7 @@ export default function PageShell({
       <PublicNavbar
         navItems={[
           { label: 'About Us', to: '/about' },
-          { label: 'Features', to: '/#features' },
+          { label: 'Demo', to: '/demo' },
           { label: 'Pricing', to: '/pricing' },
           { label: 'Contact', to: '/contact' },
         ]}
@@ -83,7 +94,14 @@ export default function PageShell({
         linksBreakpoint="lg"
         themeDesktopOnly={false}
       />
-      <main className="public-shell-main mx-auto w-full max-w-[1120px] flex-1 px-3 py-6 sm:px-4 sm:py-8 md:px-6">{children}</main>
+      <main
+        className={clsx(
+          'public-shell-main mx-auto w-full max-w-[1120px] flex-1 px-3 py-6 transition-all duration-700 ease-out motion-reduce:transition-none sm:px-4 sm:py-8 md:px-6',
+          isPageReady ? 'translate-y-0 opacity-100' : 'translate-y-3 opacity-0',
+        )}
+      >
+        {children}
+      </main>
       <PublicFooter />
     </div>
   )

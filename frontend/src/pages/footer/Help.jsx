@@ -1,6 +1,8 @@
 import { useNavigate } from 'react-router-dom'
 import { HelpCircle, Book, MessageCircle, Mail, Phone, ArrowRight, Search, ChevronRight } from 'lucide-react'
 import PageShell from '../../components/PageShell'
+import PublicSweepButton from '../../components/PublicSweepButton'
+import PublicOutlineButton from '../../components/PublicOutlineButton'
 import clsx from 'clsx'
 
 export default function Help() {
@@ -116,9 +118,9 @@ export default function Help() {
                   
                   <ul className="relative z-10 flex list-none flex-col gap-3 border-t border-[color-mix(in_srgb,var(--border-light)_60%,transparent)] pt-5">
                     {cat.articles.map((article, j) => (
-                      <li key={j} className="group/item flex cursor-pointer items-center gap-3 text-[0.95rem] font-medium text-[color-mix(in_srgb,var(--text-secondary)_95%,transparent)] transition-all hover:text-[var(--accent-primary)]">
+                      <li key={j} className="group/item flex cursor-pointer items-center gap-3 text-[0.95rem] font-medium text-[color-mix(in_srgb,var(--text-secondary)_95%,transparent)] transition-all hover:text-[var(--accent-primary)] hover:translate-x-1">
                         <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[color-mix(in_srgb,var(--accent-primary)_10%,transparent)] transition-colors group-hover/item:bg-[color-mix(in_srgb,var(--accent-primary)_20%,transparent)]">
-                          <ChevronRight className="h-3.5 w-3.5 text-[var(--text-tertiary)] transition-colors duration-300 group-hover/item:translate-x-0.5 group-hover/item:text-[var(--accent-primary)]" />
+                          <ChevronRight className="h-3.5 w-3.5 text-[var(--text-tertiary)] transition-colors duration-300 group-hover/item:text-[var(--accent-primary)]" />
                         </div>
                         <span>{article}</span>
                       </li>
@@ -168,16 +170,13 @@ export default function Help() {
                 <p className="mx-auto mb-10 max-w-[32rem] text-[1.1rem] font-medium leading-relaxed text-[var(--text-secondary)]">Our technical support team is available around the clock to assist you with onboarding, data migration, and troubleshooting.</p>
                 
                 <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
-                  <button onClick={() => navigate('/contact')} className="group relative flex h-[3.25rem] items-center justify-center gap-2 overflow-hidden rounded-[1.1rem] bg-[var(--accent-primary)] px-8 text-[1rem] font-bold text-white transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_16px_32px_color-mix(in_srgb,var(--accent-primary)_40%,transparent)]">
-                    <span className="relative z-10 flex items-center gap-2">
-                      Contact Support
-                      <ArrowRight className="h-[1.1rem] w-[1.1rem] transition-transform duration-300 group-hover:translate-x-1" />
-                    </span>
-                    <div className="absolute inset-0 -translate-x-full bg-[linear-gradient(90deg,transparent,rgba(255,255,255,0.2),transparent)] transition-transform duration-500 group-hover:translate-x-full" />
-                  </button>
-                  <a href="mailto:support@societyhub.com" className="flex h-[3.25rem] items-center justify-center gap-2 rounded-[1.1rem] border-2 border-[color-mix(in_srgb,var(--accent-primary)_20%,transparent)] bg-[color-mix(in_srgb,var(--bg-card)_85%,transparent)] px-8 text-[1rem] font-bold text-[var(--text-primary)] backdrop-blur-sm no-underline transition-all duration-300 hover:-translate-y-1 hover:border-[var(--accent-primary)] hover:bg-[color-mix(in_srgb,var(--accent-primary)_5%,transparent)] shadow-sm">
+                  <PublicSweepButton onClick={() => navigate('/contact')} className="flex h-[3.25rem] items-center justify-center gap-2 rounded-[1.1rem] bg-[var(--accent-primary)] px-8 text-[1rem] font-bold text-white transition-all duration-300">
+                    Contact Support
+                    <ArrowRight className="h-[1.1rem] w-[1.1rem] opacity-90 transition-opacity duration-300 group-hover:opacity-100" />
+                  </PublicSweepButton>
+                  <PublicOutlineButton as="a" href="mailto:support@societyhub.com" className="flex h-[3.25rem] items-center justify-center px-8 text-[1rem] font-bold rounded-[1.1rem] no-underline">
                     Email Support
-                  </a>
+                  </PublicOutlineButton>
                 </div>
               </div>
             </div>

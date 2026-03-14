@@ -6,6 +6,20 @@ import App from './App.jsx'
 import 'leaflet/dist/leaflet.css'
 import './styles/global.css'
 
+function applyInitialThemeClass() {
+  if (typeof window === 'undefined') return
+
+  const storedTheme = localStorage.getItem('theme')
+  const legacyTheme = localStorage.getItem('societyhub-theme')
+  const mode = storedTheme || legacyTheme || 'system'
+  const prefersDark = window.matchMedia?.('(prefers-color-scheme: dark)')?.matches
+  const resolvedTheme = mode === 'system' ? (prefersDark ? 'dark' : 'light') : mode
+
+  const root = document.documentElement
+  root.classList.remove('dark', 'light')
+  root.classList.add(resolvedTheme === 'dark' ? 'dark' : 'light')
+}
+
 function enablePerformanceModeWhenNeeded() {
   if (typeof window === 'undefined') return
 
@@ -30,6 +44,7 @@ function enablePerformanceModeWhenNeeded() {
 }
 
 enablePerformanceModeWhenNeeded()
+applyInitialThemeClass()
 
 const queryClient = new QueryClient({
   mutationCache: new MutationCache({

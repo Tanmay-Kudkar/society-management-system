@@ -2,10 +2,12 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Check, Star, Zap, Building2, ArrowRight, ShieldCheck } from 'lucide-react'
 import PageShell from '../../components/PageShell'
+import PublicSweepButton from '../../components/PublicSweepButton'
 
 export default function Pricing() {
   const navigate = useNavigate()
   const [isAnnual, setIsAnnual] = useState(true)
+  const [selectedPlan, setSelectedPlan] = useState('Professional')
 
   const plans = [
     {
@@ -67,10 +69,6 @@ export default function Pricing() {
     <PageShell>
       {/* Hero */}
       <section className="relative px-4 pb-12 pt-20 sm:px-6 sm:pb-16 sm:pt-28 lg:px-8">
-        {/* Glow Effects */}
-        <div className="absolute inset-x-0 -top-40 -z-10 transform-gpu overflow-hidden blur-3xl sm:-top-80" aria-hidden="true">
-          <div className="relative left-[calc(50%-11rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 rotate-[30deg] bg-gradient-to-tr from-[#ff80b5] to-[#9089fc] opacity-20 dark:from-[#3b82f6] dark:to-[#1d4ed8] dark:opacity-30 sm:left-[calc(50%-30rem)] sm:w-[72.1875rem]" style={{ clipPath: 'polygon(74.1% 44.1%, 100% 61.6%, 97.5% 26.9%, 85.5% 0.1%, 80.7% 2%, 72.5% 32.5%, 60.2% 62.4%, 52.4% 68.1%, 47.5% 58.3%, 45.2% 34.5%, 27.5% 76.7%, 0.1% 64.9%, 17.9% 100%, 27.6% 76.8%, 76.1% 97.7%, 74.1% 44.1%)' }} />
-        </div>
         <div className="mx-auto max-w-4xl text-center">
           <span className="animate-fade-in-up mx-auto mb-8 inline-flex items-center gap-2 rounded-full border border-blue-200/50 bg-blue-50/50 px-4 py-2 text-[0.85rem] font-bold text-blue-600 backdrop-blur-md dark:border-blue-500/20 dark:bg-blue-500/10 dark:text-blue-400">
             <Zap className="h-4 w-4" />
@@ -109,23 +107,36 @@ export default function Pricing() {
       </section>
 
       {/* Pricing Cards Grid */}
-      <section className="relative z-10 px-4 pb-16 sm:px-6 sm:pb-24 lg:px-8">
+      <section className="relative z-10 px-4 pb-16 pt-6 sm:px-6 sm:pb-24 sm:pt-8 lg:px-8">
         <div className="mx-auto max-w-7xl">
           {/* md:grid-cols-2 puts the 3rd item centered on tablet. lg:grid-cols-3 fixes row structure on desktop */}
           <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3 lg:items-center">
-            {plans.map((plan, i) => (
-              <div
-                key={i}
-                className={`animate-fade-in-up relative flex h-full flex-col rounded-[2rem] p-8 transition-all duration-300 hover:-translate-y-2 ${
-                  plan.popular
-                    ? 'border-2 border-blue-500 bg-white/95 shadow-[0_20px_40px_-15px_rgba(59,130,246,0.3)] backdrop-blur-2xl dark:border-blue-500/80 dark:bg-slate-900/90 lg:scale-105 lg:shadow-[0_30px_60px_-15px_rgba(59,130,246,0.4)] z-20'
-                    : 'border border-slate-200 bg-white/60 shadow-lg backdrop-blur-xl hover:border-slate-300 hover:shadow-xl dark:border-slate-800 dark:bg-slate-800/40 dark:hover:border-slate-700 z-10'
-                } ${i === 2 ? 'md:col-span-2 md:mx-auto md:w-[calc(50%-1rem)] lg:col-span-1 lg:w-full' : ''}`}
-                style={{ animationDelay: `${i * 120}ms` }}
-              >
+            {plans.map((plan, i) => {
+              const isSelected = selectedPlan === plan.name
+
+              return (
+                <div
+                  key={i}
+                  onClick={() => setSelectedPlan(plan.name)}
+                  className={`animate-fade-in-up relative flex h-full cursor-pointer flex-col rounded-[2rem] p-8 transition-all duration-300 hover:-translate-y-2 ${
+                    plan.popular
+                      ? 'border-2 border-blue-500 bg-white/95 shadow-[0_20px_40px_-15px_rgba(59,130,246,0.3)] backdrop-blur-2xl dark:border-blue-500/80 dark:bg-slate-900/90 lg:scale-105 lg:shadow-[0_30px_60px_-15px_rgba(59,130,246,0.4)] z-20'
+                      : 'border-2 border-slate-300 bg-white/60 shadow-lg backdrop-blur-xl hover:border-slate-400 hover:shadow-xl dark:border-slate-600 dark:bg-slate-800/40 dark:hover:border-slate-500 z-10'
+                  } ${
+                    isSelected
+                      ? 'ring-2 ring-blue-500/80 ring-offset-2 ring-offset-[var(--bg-primary)]'
+                      : ''
+                  } ${i === 2 ? 'md:col-span-2 md:mx-auto md:w-[calc(50%-1rem)] lg:col-span-1 lg:w-full' : ''}`}
+                  style={{ animationDelay: `${i * 120}ms` }}
+                >
                 {plan.popular && (
                   <div className="absolute -top-4 left-0 right-0 mx-auto w-max rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-1 text-[0.7rem] font-black uppercase tracking-widest text-white shadow-lg shadow-blue-500/30">
                     Most Popular
+                  </div>
+                )}
+                {isSelected && (
+                  <div className="absolute right-4 top-4 rounded-full border border-blue-300/70 bg-blue-50 px-2.5 py-1 text-[0.65rem] font-bold uppercase tracking-wider text-blue-700 dark:border-blue-500/40 dark:bg-blue-500/15 dark:text-blue-300">
+                    Selected
                   </div>
                 )}
                 <div className="mb-8">
@@ -152,34 +163,34 @@ export default function Pricing() {
                   ))}
                 </ul>
                 
-                <button
+                <PublicSweepButton
                   onClick={() => navigate(plan.name === 'Enterprise' ? '/contact' : '/login')}
-                  className={`group mt-auto flex w-full items-center justify-center gap-2 rounded-xl px-6 py-4 text-[0.95rem] font-bold transition-all duration-200 ${
-                    plan.popular
-                      ? 'bg-blue-600 text-white shadow-md hover:bg-blue-700 hover:shadow-xl hover:shadow-blue-500/20'
-                      : 'border-2 border-slate-200 bg-transparent text-slate-700 hover:border-slate-300 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:border-slate-600 dark:hover:bg-slate-800'
-                  }`}
+                  className="mt-auto flex w-full items-center justify-center gap-2 rounded-2xl bg-blue-600 px-6 py-4 text-[0.95rem] font-bold text-white shadow-md transition-all duration-200 hover:bg-blue-700"
                 >
                   {plan.cta}
-                  <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-                </button>
+                  <ArrowRight className="h-4 w-4 opacity-90 transition-opacity duration-300 group-hover:opacity-100" />
+                </PublicSweepButton>
               </div>
-            ))}
+              )
+            })}
           </div>
         </div>
       </section>
 
       {/* Feature Promise Banner */}
       <section className="px-4 pb-20 sm:px-6">
-        <div className="mx-auto max-w-7xl rounded-3xl bg-slate-900 px-6 py-10 shadow-2xl dark:bg-slate-800/50 sm:px-12 sm:py-12 lg:flex lg:items-center lg:justify-between">
-          <div className="lg:w-0 lg:flex-1">
-            <h2 className="text-2xl font-black tracking-tight text-white sm:text-3xl">Ready for a smart society?</h2>
-            <p className="mt-3 max-w-3xl text-lg text-slate-300">Start your free trial today. Cancel anytime. All standard features are unlocked for 14 days.</p>
+        <div className="relative isolate mx-auto max-w-7xl overflow-hidden rounded-3xl border border-slate-300 bg-gradient-to-br from-white via-slate-50 to-blue-50/40 px-6 py-10 shadow-[0_18px_45px_-18px_rgba(15,23,42,0.35)] ring-1 ring-slate-200/80 dark:border-slate-700 dark:ring-slate-700/50 dark:bg-gradient-to-br dark:from-slate-900/80 dark:via-slate-900/65 dark:to-slate-800/70 sm:px-12 sm:py-12 lg:flex lg:items-center lg:justify-between">
+          <div className="pointer-events-none absolute -right-16 -top-16 h-44 w-44 rounded-full bg-blue-400/10 blur-3xl dark:bg-blue-500/15" />
+
+          <div className="relative lg:w-0 lg:flex-1">
+            <h2 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white sm:text-3xl">Ready for a smart society?</h2>
+            <p className="mt-3 max-w-3xl text-lg leading-relaxed text-slate-600 dark:text-slate-300">Start your free trial today. Cancel anytime. All standard features are unlocked for 14 days.</p>
           </div>
-          <div className="mt-8 flex flex-shrink-0 items-center justify-center gap-1 lg:mt-0 lg:ml-8">
-             <div className="flex items-center gap-2 rounded-full border border-slate-700 bg-slate-800/50 px-5 py-2.5 text-sm font-bold text-slate-200">
-               <ShieldCheck className="h-5 w-5 text-emerald-400" /> Fully Secured & Encrypted
-             </div>
+
+          <div className="relative mt-8 flex flex-shrink-0 items-center justify-center gap-1 lg:mt-0 lg:ml-8">
+            <div className="flex items-center gap-2 rounded-full border border-blue-300 bg-white/85 px-5 py-2.5 text-sm font-bold text-slate-700 shadow-sm ring-1 ring-blue-100/90 backdrop-blur-sm dark:border-slate-600 dark:ring-slate-700/60 dark:bg-slate-800/70 dark:text-slate-200">
+              <ShieldCheck className="h-5 w-5 text-emerald-500" /> Fully Secured & Encrypted
+            </div>
           </div>
         </div>
       </section>

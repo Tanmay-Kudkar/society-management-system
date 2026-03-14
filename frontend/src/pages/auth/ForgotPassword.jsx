@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom'
 import { useTheme } from '../../context'
 import { authApi } from '../../../../api'
 import { Building2, Mail, ArrowLeft, CheckCircle, AlertCircle, Send } from 'lucide-react'
+import PublicSweepButton from '../../components/PublicSweepButton'
+import PublicOutlineButton from '../../components/PublicOutlineButton'
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState('')
@@ -27,8 +29,13 @@ export default function ForgotPassword() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[var(--bg-primary)] px-3 py-8 sm:px-4 sm:py-12">
-      <div className="w-full max-w-md">
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[var(--bg-primary)] px-3 py-8 sm:px-4 sm:py-12">
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute left-[-8rem] top-[-8rem] h-72 w-72 rounded-full bg-[color-mix(in_srgb,var(--accent-primary)_12%,transparent)] blur-3xl" />
+        <div className="absolute bottom-[-10rem] right-[-10rem] h-80 w-80 rounded-full bg-[color-mix(in_srgb,var(--accent-secondary)_12%,transparent)] blur-3xl" />
+      </div>
+
+      <div className="relative z-10 w-full max-w-md">
         <div className="mb-6 text-center sm:mb-8">
           <Link to="/" className="inline-flex items-center gap-3 no-underline">
             <div className="rounded-xl p-3" style={{ background: 'linear-gradient(to bottom right, var(--accent-primary), var(--accent-secondary))' }}>
@@ -38,7 +45,7 @@ export default function ForgotPassword() {
           </Link>
         </div>
 
-        <div className="rounded-3xl border border-[var(--border-default)] bg-[var(--bg-card)] p-5 shadow-xl sm:p-8">
+        <div className="rounded-3xl border border-[color-mix(in_srgb,var(--accent-primary)_30%,var(--border-default))] bg-[color-mix(in_srgb,var(--bg-card)_92%,transparent)] p-5 shadow-[0_24px_64px_-18px_color-mix(in_srgb,var(--accent-primary)_22%,transparent)] backdrop-blur-xl sm:p-8">
           {!sent ? (
             <>
               <div className="mb-6 text-center">
@@ -49,7 +56,7 @@ export default function ForgotPassword() {
                   <Mail className="h-7 w-7" style={{ color: 'var(--accent-primary)' }} />
                 </div>
                 <h2 className="mb-2 text-2xl font-extrabold text-[var(--text-primary)] sm:text-3xl">Forgot Password?</h2>
-                <p className="text-sm text-[var(--text-secondary)]">Enter your email address and we'll send you a link to reset your password.</p>
+                <p className="text-sm leading-relaxed text-[var(--text-secondary)]">Enter your account email and we will send a secure reset link that expires in 30 minutes.</p>
               </div>
 
               {error && (
@@ -76,10 +83,10 @@ export default function ForgotPassword() {
                   </div>
                 </div>
 
-                <button
+                <PublicSweepButton
                   type="submit"
                   disabled={loading}
-                  className="relative mt-1 w-full overflow-hidden rounded-2xl px-6 py-3 font-bold text-white transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="mt-1 w-full rounded-2xl px-6 py-3 font-bold text-white transition disabled:cursor-not-allowed disabled:opacity-60"
                   style={{
                     background: 'linear-gradient(to right, var(--accent-primary), var(--accent-secondary))',
                     boxShadow: '0 8px 24px -4px color-mix(in srgb, var(--accent-primary) 40%, transparent)',
@@ -96,7 +103,7 @@ export default function ForgotPassword() {
                       Sending...
                     </span>
                   )}
-                </button>
+                </PublicSweepButton>
               </form>
             </>
           ) : (
@@ -112,9 +119,9 @@ export default function ForgotPassword() {
                 If an account exists for <strong>{email}</strong>, you'll receive a password reset link shortly.
               </p>
               <p className="mb-5 text-xs text-[var(--text-tertiary)]">Didn't receive the email? Check your spam folder or try again in a few minutes.</p>
-              <button onClick={() => { setSent(false); setEmail('') }} className="rounded-xl border border-[var(--border-default)] bg-[var(--bg-primary)] px-4 py-2 text-sm font-semibold text-[var(--text-primary)] transition hover:bg-[var(--bg-tertiary)]">
+              <PublicOutlineButton onClick={() => { setSent(false); setEmail('') }} className="rounded-xl px-4 py-2 text-sm font-semibold">
                 Try Another Email
-              </button>
+              </PublicOutlineButton>
             </div>
           )}
 

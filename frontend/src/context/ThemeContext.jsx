@@ -1,6 +1,15 @@
 import { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react'
 
 const ThemeContext = createContext()
+const THEME_STORAGE_KEY = 'theme'
+const LEGACY_THEME_STORAGE_KEY = 'societyhub-theme'
+
+const getSystemTheme = () => {
+  if (typeof window !== 'undefined' && window.matchMedia) {
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+  }
+  return 'dark'
+}
 
 export function useTheme() {
   return useContext(ThemeContext)
@@ -8,18 +17,26 @@ export function useTheme() {
 
 export function ThemeProvider({ children }) {
   const [isManual, setIsManual] = useState(() => {
-    return localStorage.getItem('societyhub-theme') !== null
+    const savedTheme = localStorage.getItem(THEME_STORAGE_KEY)
+    if (savedTheme === 'dark' || savedTheme === 'light') return true
+    if (savedTheme === 'system') return false
+
+    const legacyTheme = localStorage.getItem(LEGACY_THEME_STORAGE_KEY)
+    return legacyTheme === 'dark' || legacyTheme === 'light'
   })
 
   const [theme, setThemeState] = useState(() => {
-    const savedTheme = localStorage.getItem('societyhub-theme')
-    if (savedTheme) return savedTheme
-    
-    if (typeof window !== 'undefined' && window.matchMedia) {
-      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+    const savedTheme = localStorage.getItem(THEME_STORAGE_KEY)
+    if (savedTheme === 'dark' || savedTheme === 'light') return savedTheme
+    if (savedTheme === 'system') return getSystemTheme()
+
+    const legacyTheme = localStorage.getItem(LEGACY_THEME_STORAGE_KEY)
+    if (legacyTheme === 'dark' || legacyTheme === 'light') {
+      localStorage.setItem(THEME_STORAGE_KEY, legacyTheme)
+      return legacyTheme
     }
-    
-    return 'dark'
+
+    return getSystemTheme()
   })
 
   // Listen for system theme changes
@@ -58,20 +75,30 @@ export function ThemeProvider({ children }) {
     const newTheme = theme === 'dark' ? 'light' : 'dark'
     setThemeState(newTheme)
     setIsManual(true)
-    localStorage.setItem('societyhub-theme', newTheme)
+    localStorage.setItem(THEME_STORAGE_KEY, newTheme)
+    localStorage.removeItem(LEGACY_THEME_STORAGE_KEY)
   }, [theme])
 
   const setTheme = useCallback((newTheme) => {
+    if (newTheme === 'system') {
+      localStorage.setItem(THEME_STORAGE_KEY, 'system')
+      localStorage.removeItem(LEGACY_THEME_STORAGE_KEY)
+      setIsManual(false)
+      setThemeState(getSystemTheme())
+      return
+    }
+
     setThemeState(newTheme)
     setIsManual(true)
-    localStorage.setItem('societyhub-theme', newTheme)
+    localStorage.setItem(THEME_STORAGE_KEY, newTheme)
+    localStorage.removeItem(LEGACY_THEME_STORAGE_KEY)
   }, [])
 
   const resetToSystemTheme = useCallback(() => {
-    localStorage.removeItem('societyhub-theme')
+    localStorage.setItem(THEME_STORAGE_KEY, 'system')
+    localStorage.removeItem(LEGACY_THEME_STORAGE_KEY)
     setIsManual(false)
-    const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
-    setThemeState(systemTheme)
+    setThemeState(getSystemTheme())
   }, [])
 
   const value = useMemo(() => ({
