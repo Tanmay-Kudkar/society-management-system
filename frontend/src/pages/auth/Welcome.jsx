@@ -160,7 +160,7 @@ export default function Welcome() {
           <div>
             <div
               className={clsx(
-                "inline-flex items-center gap-2.5 rounded-full border border-[color-mix(in_srgb,var(--accent-primary)_30%,transparent)] bg-[color-mix(in_srgb,var(--accent-primary)_5%,transparent)] px-4 py-2 text-xs font-bold uppercase tracking-widest text-[var(--accent-primary)] shadow-sm backdrop-blur-sm transition-all duration-500 sm:text-xs",
+                "inline-flex items-center gap-2.5 rounded-full border border-[color-mix(in_srgb,var(--accent-primary)_30%,transparent)] bg-[color-mix(in_srgb,var(--accent-primary)_5%,transparent)] px-4 py-2 text-xs font-bold uppercase tracking-widest text-[var(--accent-primary)] shadow-sm backdrop-blur-sm transition-[transform,opacity] duration-500 sm:text-xs",
                 showHeroLeft
                   ? "translate-y-0 opacity-100"
                   : "translate-y-3 opacity-0",
@@ -175,7 +175,7 @@ export default function Welcome() {
 
             <h1
               className={clsx(
-                "mt-8 text-[clamp(2rem,6.8vw,4.5rem)] font-[950] leading-[1.08] tracking-tight text-[var(--text-primary)] transition-all duration-500 sm:mt-7 sm:leading-[1.05]",
+                "mt-8 text-[clamp(2rem,6.8vw,4.5rem)] font-[950] leading-[1.08] tracking-tight text-[var(--text-primary)] transition-[transform,opacity] duration-500 sm:mt-7 sm:leading-[1.05]",
                 showHeroLeft
                   ? "translate-y-0 opacity-100"
                   : "translate-y-3 opacity-0",
@@ -190,7 +190,7 @@ export default function Welcome() {
 
             <p
               className={clsx(
-                "mt-7 max-w-xl text-[1rem] leading-relaxed font-medium text-[var(--text-secondary)] transition-all duration-500 sm:mt-8 sm:text-[1.15rem]",
+                "mt-7 max-w-xl text-[1rem] leading-relaxed font-medium text-[var(--text-secondary)] transition-[transform,opacity] duration-500 sm:mt-8 sm:text-[1.15rem]",
                 showHeroLeft
                   ? "translate-y-0 opacity-100"
                   : "translate-y-3 opacity-0",
@@ -245,7 +245,7 @@ export default function Welcome() {
 
           <div
             className={clsx(
-              "w-full perspective-1000 transition-all duration-500",
+              "w-full perspective-1000 transition-[transform,opacity] duration-500",
               showHeroRight
                 ? "translate-y-0 opacity-100"
                 : "translate-y-8 opacity-0",
@@ -291,8 +291,8 @@ export default function Welcome() {
 
                 <div className="relative z-10 mb-8 sm:mb-10">
                   <div className="inline-flex items-center gap-2 rounded-xl bg-[color-mix(in_srgb,var(--accent-primary)_10%,transparent)] px-3 py-1.5 text-[0.85rem] font-bold text-[var(--accent-primary)]">
-                    <Building2 size={16} />
-                    Enroll Society
+                    <Building2 size={16} className="shrink-0" />
+                    <span className="leading-none tracking-tight">Enroll Society</span>
                   </div>
                   <p className="mt-4 text-[0.95rem] sm:text-[1rem] font-medium leading-relaxed text-[var(--text-secondary)]">
                     Fill in your details and our growth team will contact you
