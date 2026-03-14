@@ -248,7 +248,7 @@ export default function Login() {
                 ))}
               </div>
             </div>
-            <div className="flex h-full flex-col justify-start pt-12 sm:pt-16">
+            <div className="flex h-full flex-col justify-start pt-14 sm:pt-16">
               <div className="mb-7">
                 <h1 className="mb-2 text-[clamp(1.95rem,2.2vw,2.2rem)] font-extrabold leading-none tracking-[-0.02em] text-[color-mix(in_srgb,var(--text-primary)_92%,#e2e8f0_8%)]">Sign in</h1>
                 <p className="pt-3 text-sm text-[color-mix(in_srgb,var(--text-secondary)_88%,#94a3b8_12%)]">Access your society management dashboard</p>
@@ -266,7 +266,7 @@ export default function Login() {
                 <div className="flex flex-col gap-2">
                   <label className="text-sm font-semibold text-[color-mix(in_srgb,var(--text-primary)_88%,#e2e8f0_12%)]">Email address</label>
                   <div className={`flex min-h-[2.95rem] items-center rounded-[10px] border bg-[color-mix(in_srgb,var(--bg-primary)_92%,#111827_8%)] transition-[border-color,box-shadow,background-color] duration-300 ease-out ${fieldErrors.email ? 'border-red-500 shadow-[0_0_0_1px_color-mix(in_srgb,#ef4444_35%,transparent)]' : 'border-[color-mix(in_srgb,var(--border-default)_82%,#334155_18%)] focus-within:border-[color-mix(in_srgb,var(--accent-primary)_76%,#1e40af_24%)] focus-within:bg-[color-mix(in_srgb,var(--bg-primary)_80%,var(--accent-primary)_20%)] focus-within:shadow-[0_0_0_3px_color-mix(in_srgb,var(--accent-primary)_20%,transparent)]'}`}>
-                    <Mail size={16} className="ml-3 text-[var(--text-tertiary)]" />
+                    <Mail size={16} className="ml-3 shrink-0 text-[var(--text-tertiary)]" />
                     <input
                       type="email"
                       value={email}
@@ -294,7 +294,7 @@ export default function Login() {
                     <Link to="/forgot-password" className="text-xs text-[color-mix(in_srgb,var(--text-secondary)_80%,var(--accent-primary)_20%)] no-underline transition-colors duration-200 hover:text-[var(--accent-primary)]">Forgot password?</Link>
                   </div>
                   <div className={`flex min-h-[2.95rem] items-center rounded-[10px] border bg-[color-mix(in_srgb,var(--bg-primary)_92%,#111827_8%)] transition-[border-color,box-shadow,background-color] duration-300 ease-out ${fieldErrors.password ? 'border-red-500 shadow-[0_0_0_1px_color-mix(in_srgb,#ef4444_35%,transparent)]' : 'border-[color-mix(in_srgb,var(--border-default)_82%,#334155_18%)] focus-within:border-[color-mix(in_srgb,var(--accent-primary)_76%,#1e40af_24%)] focus-within:bg-[color-mix(in_srgb,var(--bg-primary)_80%,var(--accent-primary)_20%)] focus-within:shadow-[0_0_0_3px_color-mix(in_srgb,var(--accent-primary)_20%,transparent)]'}`}>
-                    <Lock size={16} className="ml-3 text-[var(--text-tertiary)]" />
+                    <Lock size={16} className="ml-3 shrink-0 text-[var(--text-tertiary)]" />
                     <input
                       type={showPassword ? 'text' : 'password'}
                       value={password}
@@ -306,13 +306,13 @@ export default function Login() {
                           return rest
                         })
                       }}
-                      className="min-w-0 flex-1 border-none bg-transparent px-3 py-3 text-base text-[var(--text-primary)] outline-none focus:outline-none focus-visible:outline-none placeholder:text-[var(--text-tertiary)]"
+                      className="min-w-0 flex-1 border-none bg-transparent px-3 py-3 text-base text-[var(--text-primary)] outline-none focus:outline-none focus-visible:outline-none placeholder:text-[var(--text-tertiary)] [&::-ms-reveal]:hidden [&::-webkit-contacts-auto-fill-button]:hidden"
                       placeholder="Enter password"
                       required
                       autoComplete="current-password"
                       aria-invalid={Boolean(fieldErrors.password)}
                     />
-                    <button type="button" onClick={() => setShowPassword(!showPassword)} className="mr-1 rounded-lg p-2 text-[var(--text-tertiary)] transition-colors duration-200 hover:text-[var(--text-secondary)]" aria-label={showPassword ? 'Hide password' : 'Show password'}>
+                    <button type="button" onClick={() => setShowPassword(!showPassword)} className="mr-1.5 shrink-0 rounded-lg p-2 text-[var(--text-tertiary)] transition-colors duration-200 hover:text-[var(--text-secondary)]" aria-label={showPassword ? 'Hide password' : 'Show password'}>
                       {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                     </button>
                   </div>
@@ -332,12 +332,12 @@ export default function Login() {
 
                 <div className="rounded-[10px] border border-[color-mix(in_srgb,var(--border-default)_78%,#334155_22%)] bg-[color-mix(in_srgb,var(--bg-primary)_90%,#0f172a_10%)] p-3.5 transition-colors duration-300 hover:border-[color-mix(in_srgb,var(--accent-primary)_40%,var(--border-default))]">
                   <div className="flex flex-col gap-2.5">
-                    <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center justify-between gap-2 sm:gap-3">
                       <p className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.04em] text-[color-mix(in_srgb,var(--text-secondary)_75%,#94a3b8_25%)]">
-                        <MapPin size={12} />
-                        OSM Proximity Monitor
+                        <MapPin size={12} className="shrink-0" />
+                        <span className="truncate">OSM Proximity Monitor</span>
                       </p>
-                      <span className="rounded-full bg-[color-mix(in_srgb,var(--bg-primary)_80%,transparent)] px-2 py-0.5 text-[10px] font-medium text-[var(--text-tertiary)]">
+                      <span className="shrink-0 rounded-full bg-[color-mix(in_srgb,var(--bg-primary)_80%,transparent)] px-2 py-0.5 text-[10px] font-medium text-[var(--text-tertiary)]">
                         Session Pin
                       </span>
                     </div>
