@@ -159,13 +159,13 @@ export default function Login() {
   }
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center bg-[color-mix(in_srgb,var(--bg-primary)_92%,#0f172a_8%)] px-3 py-5 sm:px-5 sm:py-7 lg:px-7 lg:py-8">
+    <div className="relative flex min-h-screen items-center justify-center bg-[color-mix(in_srgb,var(--bg-primary)_92%,#0f172a_8%)] px-2.5 py-4 sm:px-5 sm:py-7 lg:px-7 lg:py-8">
       <div
         className={`pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,color-mix(in_srgb,var(--accent-primary)_2%,var(--bg-primary))_0%,var(--bg-primary)_50%)] transition-opacity duration-700 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
       />
 
       <div className={`relative z-[1] w-full max-w-[1320px] transition-all duration-700 ease-out ${isLoaded ? 'translate-y-0 scale-100 opacity-100' : 'translate-y-4 scale-[0.985] opacity-0'}`}>
-        <div className={`grid overflow-hidden rounded-2xl border border-[color-mix(in_srgb,var(--border-default)_85%,#334155_15%)] bg-[color-mix(in_srgb,var(--bg-secondary)_95%,#0f172a_5%)] shadow-[0_25px_50px_-12px_color-mix(in_srgb,#000_25%,transparent)] transition-all duration-700 ease-out lg:grid-cols-[minmax(0,1fr)_minmax(0,560px)] ${isLoaded ? 'opacity-100' : 'opacity-0'}`}>
+        <div className={`grid overflow-hidden rounded-xl border border-[color-mix(in_srgb,var(--border-default)_85%,#334155_15%)] bg-[color-mix(in_srgb,var(--bg-secondary)_95%,#0f172a_5%)] shadow-[0_25px_50px_-12px_color-mix(in_srgb,#000_25%,transparent)] transition-all duration-700 ease-out sm:rounded-2xl lg:grid-cols-[minmax(0,1fr)_minmax(0,560px)] ${isLoaded ? 'opacity-100' : 'opacity-0'}`}>
           <aside className="hidden lg:flex lg:flex-col lg:gap-6 lg:border-r lg:border-[color-mix(in_srgb,var(--border-default)_90%,#334155_10%)] lg:bg-[color-mix(in_srgb,var(--bg-secondary)_50%,var(--bg-tertiary)_50%)] lg:p-8">
             <Link to="/" className="mb-6 inline-flex items-center gap-3 no-underline">
               <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-[color-mix(in_srgb,var(--accent-primary)_55%,var(--border-default))] bg-[color-mix(in_srgb,var(--accent-primary)_90%,#1e40af_10%)] text-white">
@@ -218,10 +218,10 @@ export default function Login() {
             </div>
           </aside>
 
-          <section className={`relative flex flex-col bg-transparent p-5 transition-all duration-700 ease-out sm:p-7 lg:p-8 ${isLoaded ? 'translate-y-0 opacity-100' : 'translate-y-3 opacity-0'}`} style={{ transitionDelay: '90ms' }}>
+          <section className={`relative flex flex-col bg-transparent p-4 transition-all duration-700 ease-out sm:p-7 lg:p-8 ${isLoaded ? 'translate-y-0 opacity-100' : 'translate-y-3 opacity-0'}`} style={{ transitionDelay: '90ms' }}>
             <Link
               to="/"
-              className="absolute left-2 top-2 z-10 inline-flex min-h-9 items-center gap-1.5 rounded-xl border border-[color-mix(in_srgb,var(--border-light)_90%,#334155_10%)] bg-[color-mix(in_srgb,var(--bg-primary)_86%,#111827_14%)] px-2.5 py-1.5 text-xs font-semibold text-[var(--text-secondary)] no-underline transition-colors duration-200 hover:text-[var(--text-primary)] lg:hidden"
+              className="absolute left-2 top-2 z-10 inline-flex min-h-9 items-center gap-1.5 rounded-xl border border-[color-mix(in_srgb,var(--border-light)_90%,#334155_10%)] bg-[color-mix(in_srgb,var(--bg-primary)_86%,#111827_14%)] px-2.5 py-1.5 text-xs font-semibold text-[var(--text-secondary)] no-underline transition-colors duration-200 hover:text-[var(--text-primary)] sm:left-3 sm:top-3 lg:hidden"
               aria-label="Back to welcome page"
             >
               <ArrowLeft size={14} />
@@ -238,16 +238,17 @@ export default function Login() {
                   <button
                     key={opt.key}
                     onClick={opt.action}
-                    className={`inline-flex min-h-9 items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold transition-colors duration-200 ${opt.active ? 'bg-[var(--accent-primary)] text-white' : 'text-[var(--text-secondary)] hover:bg-[color-mix(in_srgb,var(--bg-tertiary)_76%,transparent)]'}`}
+                    className={`inline-flex min-h-8 items-center gap-1 rounded-lg px-2 py-1.5 text-[11px] font-semibold transition-colors duration-200 sm:min-h-9 sm:gap-1.5 sm:px-2.5 sm:text-xs ${opt.active ? 'bg-[var(--accent-primary)] text-white' : 'text-[var(--text-secondary)] hover:bg-[color-mix(in_srgb,var(--bg-tertiary)_76%,transparent)]'}`}
                     title={opt.label}
+                    aria-label={`Switch theme: ${opt.label}`}
                   >
                     <opt.icon size={15} />
-                    <span>{opt.label}</span>
+                    <span className="hidden sm:inline">{opt.label}</span>
                   </button>
                 ))}
               </div>
             </div>
-            <div className="flex h-full flex-col justify-start pt-14 sm:pt-16">
+            <div className="flex h-full flex-col justify-start pt-12 sm:pt-16">
               <div className="mb-7">
                 <h1 className="mb-2 text-[clamp(1.95rem,2.2vw,2.2rem)] font-extrabold leading-none tracking-[-0.02em] text-[color-mix(in_srgb,var(--text-primary)_92%,#e2e8f0_8%)]">Sign in</h1>
                 <p className="pt-3 text-sm text-[color-mix(in_srgb,var(--text-secondary)_88%,#94a3b8_12%)]">Access your society management dashboard</p>
@@ -261,7 +262,7 @@ export default function Login() {
                 </div>
               )}
 
-              <form onSubmit={handleSubmit} className={`flex flex-col gap-5 ${shake ? 'login-form-shake' : ''}`}>
+              <form onSubmit={handleSubmit} className={`flex flex-col gap-4 sm:gap-5 ${shake ? 'login-form-shake' : ''}`}>
                 <div className="flex flex-col gap-2">
                   <label className="text-sm font-semibold text-[color-mix(in_srgb,var(--text-primary)_88%,#e2e8f0_12%)]">Email address</label>
                   <div className={`flex min-h-[2.95rem] items-center rounded-[10px] border bg-[color-mix(in_srgb,var(--bg-primary)_92%,#111827_8%)] transition-[border-color,box-shadow,background-color] duration-300 ease-out ${fieldErrors.email ? 'border-red-500 shadow-[0_0_0_1px_color-mix(in_srgb,#ef4444_35%,transparent)]' : 'border-[color-mix(in_srgb,var(--border-default)_82%,#334155_18%)] focus-within:border-[color-mix(in_srgb,var(--accent-primary)_76%,#1e40af_24%)] focus-within:bg-[color-mix(in_srgb,var(--bg-primary)_80%,var(--accent-primary)_20%)] focus-within:shadow-[0_0_0_3px_color-mix(in_srgb,var(--accent-primary)_20%,transparent)]'}`}>
