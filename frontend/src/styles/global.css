@@ -351,6 +351,14 @@ button {
   font-weight: 600;
 }
 
+/* Contact page form uses border-only focus style (no outer outline ring). */
+.contact-form-no-ring input:focus-visible,
+.contact-form-no-ring select:focus-visible,
+.contact-form-no-ring textarea:focus-visible {
+  outline: none;
+  outline-offset: 0;
+}
+
 @media (max-width: 640px) {
   :root {
     --text-base: 0.92rem;
@@ -792,8 +800,8 @@ table th {
   backface-visibility: hidden;
 }
 
-/* During route transitions, prioritize first viewport rendering over decorative motion. */
-.route-transitioning .public-shell-main > section:not(:first-child) [class*="animate-"],
+/* During route transitions, prioritize immediate stable rendering over decorative motion. */
+.route-transitioning .public-shell-main > section [class*="animate-"],
 .route-transitioning .cv-auto [class*="animate-"] {
   animation: none !important;
 }

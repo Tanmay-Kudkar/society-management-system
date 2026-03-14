@@ -9,6 +9,7 @@ import {
   CheckCircle,
 } from "lucide-react";
 import PageShell from "../../components/PageShell";
+import PublicSweepButton from "../../components/PublicSweepButton";
 import clsx from "clsx";
 
 export default function Contact() {
@@ -44,14 +45,14 @@ export default function Contact() {
     {
       icon: Phone,
       title: "Call Us",
-      value: "+91 1800-XXX-XXXX",
+      value: "+91 1800-745-8456",
       description: "Mon-Sat, 9AM-6PM IST",
     },
     {
       icon: MapPin,
       title: "Visit Us",
       value: "Mumbai, India",
-      description: "By appointment only",
+      description: "By Appointment only",
     },
     {
       icon: Clock,
@@ -65,19 +66,6 @@ export default function Contact() {
     <PageShell>
       {/* Hero */}
       <section className="relative px-4 pb-12 pt-20 sm:px-6 sm:pb-16 sm:pt-28 lg:px-8">
-        {/* Glow Effects */}
-        <div
-          className="absolute inset-x-0 -top-40 -z-10 transform-gpu overflow-hidden blur-3xl sm:-top-80"
-          aria-hidden="true"
-        >
-          <div
-            className="relative left-[calc(50%-11rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 rotate-[30deg] bg-gradient-to-tr from-[#ff80b5] to-[#9089fc] opacity-20 dark:from-[#3b82f6] dark:to-[#1d4ed8] dark:opacity-30 sm:left-[calc(50%-30rem)] sm:w-[72.1875rem]"
-            style={{
-              clipPath:
-                "polygon(74.1% 44.1%, 100% 61.6%, 97.5% 26.9%, 85.5% 0.1%, 80.7% 2%, 72.5% 32.5%, 60.2% 62.4%, 52.4% 68.1%, 47.5% 58.3%, 45.2% 34.5%, 27.5% 76.7%, 0.1% 64.9%, 17.9% 100%, 27.6% 76.8%, 76.1% 97.7%, 74.1% 44.1%)",
-            }}
-          />
-        </div>
 
         <div className="mx-auto max-w-4xl text-center">
           <span className="animate-fade-in-up mx-auto mb-8 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-5 py-2.5 text-[0.85rem] font-bold text-blue-600 shadow-sm dark:border-slate-800 dark:bg-slate-900/80 dark:text-blue-400">
@@ -138,7 +126,7 @@ export default function Contact() {
       <section className="relative z-10 px-4 pb-20 pt-8 sm:px-6 sm:pb-28">
         <div className="mx-auto max-w-3xl">
           <div
-            className="animate-fade-in-up overflow-hidden rounded-3xl border border-slate-200 bg-white p-8 shadow-xl shadow-slate-200/40 dark:border-slate-800 dark:bg-slate-900/80 dark:shadow-none sm:p-12"
+            className="animate-fade-in-up overflow-hidden rounded-3xl border-2 border-slate-300 bg-white p-8 shadow-xl shadow-slate-200/40 dark:border-slate-800 dark:bg-slate-900/80 dark:shadow-none sm:p-12"
             style={{ animationDelay: "300ms" }}
           >
             <h2 className="mb-8 text-center text-3xl font-black tracking-tight text-slate-900 dark:text-white">
@@ -170,7 +158,7 @@ export default function Contact() {
               <form
                 key="form"
                 onSubmit={handleSubmit}
-                className="animate-fade-in-up flex flex-col gap-6"
+                className="contact-form-no-ring animate-fade-in-up flex flex-col gap-6"
               >
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                   {[
@@ -178,13 +166,13 @@ export default function Contact() {
                       label: "Your Name",
                       key: "name",
                       type: "text",
-                      placeholder: "John Doe",
+                      placeholder: "Rohit Mehra",
                     },
                     {
                       label: "Email Address",
                       key: "email",
                       type: "email",
-                      placeholder: "john@example.com",
+                      placeholder: "rohitmehra@gmail.com",
                     },
                   ].map((field) => (
                     <div key={field.key}>
@@ -201,7 +189,7 @@ export default function Contact() {
                             [field.key]: e.target.value,
                           })
                         }
-                        className="w-full rounded-xl border border-slate-300 bg-slate-50/50 px-4 py-3 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10 dark:border-slate-700 dark:bg-slate-800/80 focus:dark:bg-slate-900 dark:text-white"
+                        className="w-full rounded-xl border-2 border-slate-300 bg-slate-50/50 px-4 py-3 text-slate-900 outline-none transition-[border-color,box-shadow,background-color] duration-300 ease-out placeholder:text-slate-400 focus:border-blue-600 focus:bg-white focus:ring-0 dark:border-slate-700 dark:bg-slate-800/80 focus:dark:bg-slate-900 dark:text-white"
                         placeholder={field.placeholder}
                       />
                     </div>
@@ -219,8 +207,8 @@ export default function Contact() {
                     onChange={(e) =>
                       setFormData({ ...formData, subject: e.target.value })
                     }
-                    className="w-full rounded-xl border border-slate-300 bg-slate-50/50 px-4 py-3 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10 dark:border-slate-700 dark:bg-slate-800/80 focus:dark:bg-slate-900 dark:text-white"
-                    placeholder="How can we help?"
+                    className="w-full rounded-xl border-2 border-slate-300 bg-slate-50/50 px-4 py-3 text-slate-900 outline-none transition-[border-color,box-shadow,background-color] duration-300 ease-out placeholder:text-slate-400 focus:border-blue-600 focus:bg-white focus:ring-0 dark:border-slate-700 dark:bg-slate-800/80 focus:dark:bg-slate-900 dark:text-white"
+                    placeholder="How can we help you?"
                   />
                 </div>
 
@@ -235,15 +223,16 @@ export default function Contact() {
                     onChange={(e) =>
                       setFormData({ ...formData, message: e.target.value })
                     }
-                    className="w-full resize-none rounded-xl border border-slate-300 bg-slate-50/50 px-4 py-3 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10 dark:border-slate-700 dark:bg-slate-800/80 focus:dark:bg-slate-900 dark:text-white"
-                    placeholder="Tell us more about your inquiry..."
+                    className="w-full resize-none rounded-xl border-2 border-slate-300 bg-slate-50/50 px-4 py-3 text-slate-900 outline-none transition-[border-color,box-shadow,background-color] duration-300 ease-out placeholder:text-slate-400 focus:border-blue-600 focus:bg-white focus:ring-0 dark:border-slate-700 dark:bg-slate-800/80 focus:dark:bg-slate-900 dark:text-white"
+                    placeholder="Tell us more about your Inquiry..."
                   />
                 </div>
 
-                <button
+                <PublicSweepButton
                   type="submit"
                   disabled={sending}
-                  className="group relative mt-2 inline-flex w-full items-center justify-center gap-2 overflow-hidden rounded-xl bg-blue-600 px-6 py-4 font-bold text-white shadow-md transition hover:bg-blue-700 hover:shadow-lg hover:shadow-blue-500/20 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-70 dark:bg-blue-600"
+                  className="mt-2 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-6 py-4 font-bold text-white shadow-md transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-70 dark:bg-blue-600"
+                  sweepClassName="bg-[linear-gradient(90deg,transparent,rgba(255,255,255,0.28),transparent)]"
                 >
                   {sending ? (
                     <>
@@ -252,12 +241,11 @@ export default function Contact() {
                     </>
                   ) : (
                     <>
-                      <Send className="h-5 w-5 transition group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+                      <Send className="h-5 w-5 opacity-90 transition-opacity duration-300 group-hover:opacity-100" />
                       Send Message
                     </>
                   )}
-                  <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
-                </button>
+                </PublicSweepButton>
               </form>
             )}
           </div>

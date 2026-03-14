@@ -5,6 +5,8 @@ import { enquiryApi } from '../../../../api'
 import clsx from 'clsx'
 import PublicNavbar from '../../components/PublicNavbar'
 import PublicFooter from '../../components/PublicFooter'
+import PublicSweepButton from '../../components/PublicSweepButton'
+import PublicOutlineButton from '../../components/PublicOutlineButton'
 
 import googlePlayBtn from '../../assets/icons/Get-it-on-Google-Play.svg'
 import appStoreBtn from '../../assets/icons/Download-on-app-store.svg'
@@ -31,6 +33,8 @@ export default function Welcome() {
   const navigate = useNavigate()
   const location = useLocation()
   const [isLoaded, setIsLoaded] = useState(false)
+  const [showHeroLeft, setShowHeroLeft] = useState(false)
+  const [showHeroRight, setShowHeroRight] = useState(false)
 
   const [enrollName, setEnrollName] = useState('')
   const [enrollPhone, setEnrollPhone] = useState('')
@@ -41,6 +45,14 @@ export default function Welcome() {
 
   useEffect(() => {
     setIsLoaded(true)
+
+    const leftTimer = setTimeout(() => setShowHeroLeft(true), 100)
+    const rightTimer = setTimeout(() => setShowHeroRight(true), 220)
+
+    return () => {
+      clearTimeout(leftTimer)
+      clearTimeout(rightTimer)
+    }
   }, [])
 
   useEffect(() => {
@@ -116,7 +128,7 @@ export default function Welcome() {
         onBrandClick={() => scrollTo("hero")}
         navItems={[
           { label: "About Us", to: "/about" },
-          { label: "Features", onClick: () => scrollTo("features") },
+          { label: "Demo", to: "/demo" },
           { label: "Pricing", to: "/pricing" },
           { label: "Contact", to: "/contact" },
         ]}
@@ -129,15 +141,9 @@ export default function Welcome() {
       {/* Hero */}
       <section
         id="hero"
-        className="relative scroll-mt-28 overflow-hidden px-4 pb-14 pt-20 transition-colors duration-300 sm:px-6 sm:pb-20 sm:pt-24 md:pt-28"
-        style={{
-          background:
-            "radial-gradient(circle at 8% 10%, color-mix(in srgb, var(--accent-primary) 18%, transparent), transparent 45%), radial-gradient(circle at 88% 20%, color-mix(in srgb, #0ea5e9 16%, transparent), transparent 40%), var(--bg-primary)",
-        }}
+        className="relative scroll-mt-28 overflow-hidden bg-[var(--bg-primary)] px-4 pb-14 pt-[6.5rem] transition-colors duration-300 sm:px-6 sm:pb-20 sm:pt-[7.5rem] md:pt-[8.5rem]"
       >
         <div className="pointer-events-none absolute inset-0">
-          <div className="absolute -top-28 left-[-10%] h-[360px] w-[360px] rounded-full bg-blue-500/15 blur-3xl" />
-          <div className="absolute right-[-8%] top-[12%] h-[320px] w-[320px] rounded-full bg-cyan-400/10 blur-3xl" />
           <div
             className="absolute inset-0 opacity-20"
             style={{
@@ -155,7 +161,7 @@ export default function Welcome() {
             <div
               className={clsx(
                 "inline-flex items-center gap-2.5 rounded-full border border-[color-mix(in_srgb,var(--accent-primary)_30%,transparent)] bg-[color-mix(in_srgb,var(--accent-primary)_5%,transparent)] px-4 py-2 text-xs font-bold uppercase tracking-widest text-[var(--accent-primary)] shadow-sm backdrop-blur-sm transition-all duration-500 sm:text-xs",
-                isLoaded
+                showHeroLeft
                   ? "translate-y-0 opacity-100"
                   : "translate-y-3 opacity-0",
               )}
@@ -169,8 +175,8 @@ export default function Welcome() {
 
             <h1
               className={clsx(
-                "mt-6 text-[clamp(2rem,6.8vw,4.5rem)] font-[950] leading-[1.05] tracking-tight text-[var(--text-primary)] transition-all duration-500",
-                isLoaded
+                "mt-8 text-[clamp(2rem,6.8vw,4.5rem)] font-[950] leading-[1.08] tracking-tight text-[var(--text-primary)] transition-all duration-500 sm:mt-7 sm:leading-[1.05]",
+                showHeroLeft
                   ? "translate-y-0 opacity-100"
                   : "translate-y-3 opacity-0",
               )}
@@ -184,8 +190,8 @@ export default function Welcome() {
 
             <p
               className={clsx(
-                "mt-6 max-w-xl text-[1rem] leading-relaxed font-medium text-[var(--text-secondary)] transition-all duration-500 sm:text-[1.15rem]",
-                isLoaded
+                "mt-7 max-w-xl text-[1rem] leading-relaxed font-medium text-[var(--text-secondary)] transition-all duration-500 sm:mt-8 sm:text-[1.15rem]",
+                showHeroLeft
                   ? "translate-y-0 opacity-100"
                   : "translate-y-3 opacity-0",
               )}
@@ -195,36 +201,25 @@ export default function Welcome() {
               and residents.
             </p>
 
-            <div
-              className={clsx(
-                "mt-8 flex flex-wrap gap-4 transition-all duration-500",
-                isLoaded
-                  ? "translate-y-0 opacity-100"
-                  : "translate-y-3 opacity-0",
-              )}
-              style={{ transitionDelay: "120ms" }}
-            >
-              <button
+            <div className="mt-9 flex flex-col gap-4 transition-all duration-500 sm:mt-10 sm:flex-row">
+              <PublicSweepButton
                 onClick={() => scrollTo("enroll")}
-                className="group relative flex h-14 w-full sm:w-auto items-center justify-center gap-2 overflow-hidden rounded-2xl bg-[var(--accent-primary)] px-8 text-[1.05rem] font-bold text-white transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_16px_32px_color-mix(in_srgb,var(--accent-primary)_40%,transparent)] active:scale-95"
+                className="flex h-14 w-full sm:w-auto items-center justify-center gap-2 rounded-2xl bg-[var(--accent-primary)] px-8 text-[0.95rem] sm:text-[1.05rem] font-bold text-white transition-all duration-300 active:scale-95"
               >
-                <span className="relative z-10 flex items-center gap-2">
-                  Enroll your society
-                  <ArrowRight className="h-5 w-5 transition-transform duration-300 group-hover:translate-x-1" />
-                </span>
-                <div className="absolute inset-0 -translate-x-full bg-[linear-gradient(90deg,transparent,rgba(255,255,255,0.2),transparent)] transition-transform duration-500 group-hover:translate-x-full" />
-              </button>
+                Enroll your society
+                <ArrowRight className="h-5 w-5 opacity-90 transition-opacity duration-300 group-hover:opacity-100" />
+              </PublicSweepButton>
 
-              <button
+              <PublicOutlineButton
                 onClick={() => navigate("/login")}
-                className="flex h-14 w-full sm:w-auto items-center justify-center gap-2 rounded-2xl border-2 border-[color-mix(in_srgb,var(--accent-primary)_20%,transparent)] bg-[color-mix(in_srgb,var(--bg-card)_85%,transparent)] px-8 text-[1.05rem] font-bold text-[var(--text-primary)] backdrop-blur-sm transition-all duration-300 hover:-translate-y-1 hover:border-[var(--accent-primary)] hover:bg-[color-mix(in_srgb,var(--accent-primary)_5%,transparent)] active:scale-95"
+                className="flex h-14 w-full sm:w-auto items-center justify-center gap-2 px-8 text-[0.95rem] sm:text-[1.05rem] font-bold active:scale-95 rounded-2xl"
               >
                 Society Login
                 <Key className="h-5 w-5 text-[var(--text-secondary)]" />
-              </button>
+              </PublicOutlineButton>
             </div>
 
-            <div className="mt-10 grid gap-4 sm:grid-cols-3">
+            <div className="mt-10 grid gap-3 sm:grid-cols-3">
               {[
                 { title: "Fast Onboarding", value: "48 hrs avg go-live" },
                 {
@@ -235,12 +230,12 @@ export default function Welcome() {
               ].map((item) => (
                 <div
                   key={item.title}
-                  className="rounded-[1.25rem] border border-[color-mix(in_srgb,var(--border-default)_60%,transparent)] bg-[color-mix(in_srgb,var(--bg-card)_60%,transparent)] p-4 shadow-sm backdrop-blur-md"
+                  className="rounded-[1.25rem] border border-[color-mix(in_srgb,var(--border-default)_60%,transparent)] bg-[color-mix(in_srgb,var(--bg-card)_60%,transparent)] p-5 shadow-sm backdrop-blur-md transition-all hover:border-[var(--accent-primary)] hover:shadow-md"
                 >
-                  <p className="text-[0.7rem] font-[800] uppercase tracking-[0.1em] text-[var(--text-muted)]">
+                  <p className="text-[0.65rem] font-[800] uppercase tracking-[0.1em] text-[var(--text-muted)] mb-1">
                     {item.title}
                   </p>
-                  <p className="mt-1 text-[0.9rem] font-bold text-[var(--text-primary)]">
+                  <p className="text-[0.95rem] font-bold text-[var(--text-primary)]">
                     {item.value}
                   </p>
                 </div>
@@ -250,15 +245,14 @@ export default function Welcome() {
 
           <div
             className={clsx(
-              "w-full perspective-1000 transition-all duration-700",
-              isLoaded
+              "w-full perspective-1000 transition-all duration-500",
+              showHeroRight
                 ? "translate-y-0 opacity-100"
                 : "translate-y-8 opacity-0",
             )}
-            style={{ transitionDelay: "200ms" }}
           >
             {enrollSubmitted ? (
-              <div className="group relative overflow-hidden rounded-[2.5rem] border border-emerald-500/20 bg-[linear-gradient(160deg,color-mix(in_srgb,#10b981_10%,var(--bg-card))_0%,color-mix(in_srgb,var(--bg-card)_95%,transparent)_100%)] p-10 text-center shadow-[0_24px_64px_-12px_rgba(16,185,129,0.15)] backdrop-blur-xl transition-all hover:shadow-[0_32px_80px_-12px_rgba(16,185,129,0.25)] border-[color-mix(in_srgb,var(--border-default)_40%,transparent)]">
+              <div className="group relative overflow-hidden rounded-[2.5rem] border border-[color-mix(in_srgb,var(--border-default)_40%,transparent)] bg-[linear-gradient(160deg,color-mix(in_srgb,#10b981_10%,var(--bg-card))_0%,color-mix(in_srgb,var(--bg-card)_95%,transparent)_100%)] p-10 text-center shadow-[0_24px_64px_-12px_rgba(16,185,129,0.15)] backdrop-blur-xl transition-all hover:shadow-[0_32px_80px_-12px_rgba(16,185,129,0.25)]">
                 <div className="absolute -right-20 -top-20 h-48 w-48 rounded-full bg-emerald-500/10 blur-3xl" />
                 <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-[1.5rem] bg-gradient-to-br from-emerald-400 to-emerald-600 shadow-[0_12px_24px_rgba(16,185,129,0.3)]">
                   <CheckCircle size={36} className="text-white" />
@@ -291,22 +285,22 @@ export default function Welcome() {
               <form
                 onSubmit={handleEnrollSubmit}
                 id="enroll"
-                className="relative overflow-hidden rounded-[2.5rem] border border-[color-mix(in_srgb,var(--accent-primary)_20%,var(--border-default))] bg-[linear-gradient(160deg,color-mix(in_srgb,var(--bg-card)_90%,var(--accent-primary)_10%)_0%,color-mix(in_srgb,var(--bg-card)_95%,transparent)_100%)] p-8 shadow-[0_24px_64px_-12px_color-mix(in_srgb,var(--accent-primary)_15%,transparent)] backdrop-blur-xl sm:p-10"
+                className="relative overflow-hidden rounded-[2rem] sm:rounded-[2.5rem] border border-[color-mix(in_srgb,var(--accent-primary)_20%,var(--border-default))] bg-[linear-gradient(160deg,color-mix(in_srgb,var(--bg-card)_90%,var(--accent-primary)_10%)_0%,color-mix(in_srgb,var(--bg-card)_95%,transparent)_100%)] p-6 sm:p-10 shadow-[0_24px_64px_-12px_color-mix(in_srgb,var(--accent-primary)_15%,transparent)] backdrop-blur-xl"
               >
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_0%,color-mix(in_srgb,var(--accent-primary)_8%,transparent)_0%,transparent_50%)] pointer-events-none" />
 
-                <div className="relative z-10 mb-8">
+                <div className="relative z-10 mb-8 sm:mb-10">
                   <div className="inline-flex items-center gap-2 rounded-xl bg-[color-mix(in_srgb,var(--accent-primary)_10%,transparent)] px-3 py-1.5 text-[0.85rem] font-bold text-[var(--accent-primary)]">
                     <Building2 size={16} />
                     Enroll Society
                   </div>
-                  <p className="mt-4 text-[1rem] font-medium leading-relaxed text-[var(--text-secondary)]">
+                  <p className="mt-4 text-[0.95rem] sm:text-[1rem] font-medium leading-relaxed text-[var(--text-secondary)]">
                     Fill in your details and our growth team will contact you
                     within 24 hours.
                   </p>
                 </div>
 
-                <div className="relative z-10 grid gap-5">
+                <div className="relative z-10 grid gap-5 sm:gap-6">
                   <div className="grid gap-2">
                     <label className="text-[0.85rem] font-bold text-[var(--text-primary)]">
                       Full Name
@@ -316,7 +310,7 @@ export default function Welcome() {
                       onChange={(e) => setEnrollName(e.target.value)}
                       placeholder="e.g. Rahul Sharma"
                       autoComplete="name"
-                      className="peer h-14 w-full rounded-2xl border-2 border-[color-mix(in_srgb,var(--border-default)_60%,transparent)] bg-[var(--bg-primary)] px-5 text-[1rem] font-medium text-[var(--text-primary)] placeholder:text-[var(--text-muted)] transition-all focus:border-[var(--accent-primary)] focus:outline-none focus:ring-4 focus:ring-[color-mix(in_srgb,var(--accent-primary)_15%,transparent)]"
+                      className="peer h-14 w-full rounded-2xl border-2 border-[color-mix(in_srgb,var(--border-default)_60%,transparent)] bg-[var(--bg-primary)] px-5 text-[1rem] font-medium text-[var(--text-primary)] placeholder:text-[var(--text-muted)] transition-[border-color,box-shadow,background-color] duration-300 ease-out focus:border-[var(--accent-primary)] focus:outline-none focus:ring-4 focus:ring-[color-mix(in_srgb,var(--accent-primary)_15%,transparent)]"
                     />
                   </div>
 
@@ -324,8 +318,8 @@ export default function Welcome() {
                     <label className="text-[0.85rem] font-bold text-[var(--text-primary)]">
                       Phone Number
                     </label>
-                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-[90px_1fr]">
-                      <div className="flex h-14 items-center justify-center rounded-2xl border-2 border-[color-mix(in_srgb,var(--border-default)_60%,transparent)] bg-[color-mix(in_srgb,var(--bg-primary)_80%,transparent)] text-[1rem] font-bold text-[var(--text-primary)]">
+                      <div className="flex flex-row gap-3 sm:items-center">
+                        <div className="flex h-14 w-[75px] sm:w-[90px] items-center justify-center rounded-2xl border-2 border-[color-mix(in_srgb,var(--border-default)_60%,transparent)] bg-[color-mix(in_srgb,var(--bg-primary)_80%,transparent)] text-[1rem] font-bold text-[var(--text-primary)] shrink-0">
                         +91
                       </div>
                       <input
@@ -340,7 +334,7 @@ export default function Welcome() {
                         inputMode="tel"
                         maxLength={10}
                         autoComplete="tel"
-                        className="peer h-14 w-full rounded-2xl border-2 border-[color-mix(in_srgb,var(--border-default)_60%,transparent)] bg-[var(--bg-primary)] px-5 text-[1rem] font-medium text-[var(--text-primary)] placeholder:text-[var(--text-muted)] transition-all focus:border-[var(--accent-primary)] focus:outline-none focus:ring-4 focus:ring-[color-mix(in_srgb,var(--accent-primary)_15%,transparent)]"
+                        className="peer h-14 w-full rounded-2xl border-2 border-[color-mix(in_srgb,var(--border-default)_60%,transparent)] bg-[var(--bg-primary)] px-5 text-[1rem] font-medium text-[var(--text-primary)] placeholder:text-[var(--text-muted)] transition-[border-color,box-shadow,background-color] duration-300 ease-out focus:border-[var(--accent-primary)] focus:outline-none focus:ring-4 focus:ring-[color-mix(in_srgb,var(--accent-primary)_15%,transparent)]"
                       />
                     </div>
                   </div>
@@ -353,7 +347,7 @@ export default function Welcome() {
                       <select
                         value={enrollReason}
                         onChange={(e) => setEnrollReason(e.target.value)}
-                        className="peer h-14 w-full appearance-none rounded-2xl border-2 border-[color-mix(in_srgb,var(--border-default)_60%,transparent)] bg-[var(--bg-primary)] px-5 text-[1rem] font-medium text-[var(--text-primary)] transition-all focus:border-[var(--accent-primary)] focus:outline-none focus:ring-4 focus:ring-[color-mix(in_srgb,var(--accent-primary)_15%,transparent)]"
+                        className="peer h-14 w-full appearance-none rounded-2xl border-2 border-[color-mix(in_srgb,var(--border-default)_60%,transparent)] bg-[var(--bg-primary)] px-5 text-[1rem] font-medium text-[var(--text-primary)] transition-[border-color,box-shadow,background-color] duration-300 ease-out focus:border-[var(--accent-primary)] focus:outline-none focus:ring-4 focus:ring-[color-mix(in_srgb,var(--accent-primary)_15%,transparent)]"
                       >
                         <option value="">Select reason</option>
                         <option value="DEMO">Request a demo</option>
@@ -369,21 +363,18 @@ export default function Welcome() {
                     </div>
                   </div>
 
-                  <button
+                  <PublicSweepButton
                     type="submit"
                     disabled={enrollSubmitting}
-                    className="group relative mt-2 flex h-14 w-full items-center justify-center gap-2 overflow-hidden rounded-2xl bg-[var(--accent-primary)] text-[1.1rem] font-bold text-white transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_16px_32px_color-mix(in_srgb,var(--accent-primary)_40%,transparent)] disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0"
+                    className="mt-2 flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-[var(--accent-primary)] text-[1.1rem] font-bold text-white transition-all duration-300 disabled:cursor-not-allowed disabled:opacity-60"
                   >
-                    <span className="relative z-10 flex items-center gap-2">
-                      {enrollSubmitting
-                        ? "Submitting..."
-                        : "Complete Enrollment"}
-                      {!enrollSubmitting && (
-                        <ArrowRight className="h-5 w-5 transition-transform duration-300 group-hover:translate-x-1" />
-                      )}
-                    </span>
-                    <div className="absolute inset-0 -translate-x-full bg-[linear-gradient(90deg,transparent,rgba(255,255,255,0.2),transparent)] transition-transform duration-500 group-hover:translate-x-full" />
-                  </button>
+                    {enrollSubmitting
+                      ? "Submitting..."
+                      : "Complete Enrollment"}
+                    {!enrollSubmitting && (
+                      <ArrowRight className="h-5 w-5 opacity-90 transition-opacity duration-300 group-hover:opacity-100" />
+                    )}
+                  </PublicSweepButton>
                 </div>
 
                 {enrollError && (
@@ -397,6 +388,7 @@ export default function Welcome() {
         </div>
       </section>
 
+      <>
       {/* Features */}
       <section
         id="features"
@@ -567,77 +559,72 @@ export default function Welcome() {
         <div className="mx-auto max-w-[1100px]">
           <div
             className={clsx(
-              "group relative overflow-hidden rounded-[2.5rem] border border-[color-mix(in_srgb,var(--accent-primary)_40%,var(--border-default))] bg-[linear-gradient(160deg,var(--accent-primary)_0%,#1e3a8a_100%)] px-8 py-16 text-center shadow-[0_40px_80px_-20px_color-mix(in_srgb,var(--accent-primary)_40%,transparent)] transition-all duration-700",
+              "group relative overflow-hidden rounded-[2.2rem] border border-[color-mix(in_srgb,#3b82f6_20%,transparent)] bg-[linear-gradient(135deg,#e0f2fe_0%,#dbeafe_50%,#eff6ff_100%)] px-8 py-14 text-center shadow-[0_36px_80px_-26px_rgba(59,130,246,0.15)] transition-all duration-700 sm:px-10 sm:py-16 dark:border-[color-mix(in_srgb,#60a5fa_40%,#1e3a8a)] dark:bg-[linear-gradient(150deg,#0f172a_0%,#102a56_55%,#0b1b34_100%)] dark:shadow-[0_36px_80px_-26px_rgba(30,64,175,0.45)]",
               ctaVisible ? "opacity-100 scale-100" : "opacity-0 scale-[0.96]",
             )}
           >
-            {/* Animated background patterns */}
+            {/* Atmospheric background */}
             <div
-              className="absolute inset-0 opacity-20"
+              className="absolute inset-0 opacity-[0.4] dark:opacity-10"
               style={{
                 backgroundImage:
-                  "radial-gradient(circle at 2px 2px, white 1px, transparent 0)",
+                  "radial-gradient(circle at 2px 2px, rgba(59,130,246,0.15) 1px, transparent 0)",
                 backgroundSize: "24px 24px",
               }}
             />
-            <div className="absolute -right-20 -top-20 h-80 w-80 rounded-full bg-white/10 blur-3xl transition-transform duration-[1.5s] group-hover:scale-150" />
-            <div className="absolute -bottom-20 -left-20 h-80 w-80 rounded-full bg-[#3b82f6]/20 blur-3xl transition-transform duration-[1.5s] group-hover:scale-150" />
+            {/* Top Right Corner Circle */}
+            <div className="pointer-events-none absolute -right-[150px] -top-[150px] h-[350px] w-[350px] rounded-full bg-blue-400/20 dark:bg-blue-500/20 mix-blend-multiply dark:mix-blend-screen transition-transform duration-[1.2s] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.4]" />
+            {/* Bottom Left Corner Circle */}
+            <div className="pointer-events-none absolute -bottom-[150px] -left-[150px] h-[350px] w-[350px] rounded-full bg-sky-400/25 dark:bg-cyan-500/20 mix-blend-multiply dark:mix-blend-screen transition-transform duration-[1.2s] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.4]" />
+
+            <div className="absolute inset-x-0 bottom-0 h-36 bg-[linear-gradient(to_top,rgba(255,255,255,0.4),transparent)] dark:bg-[linear-gradient(to_top,rgba(2,6,23,0.45),transparent)]" />
 
             <div className="relative z-10">
-              <div className="mb-8 inline-flex h-20 w-20 items-center justify-center rounded-[1.75rem] bg-white/10 shadow-2xl backdrop-blur-md transition-transform duration-500 group-hover:rotate-12 group-hover:scale-110">
-                <Sparkles className="h-10 w-10 text-white" />
+              <div className="mx-auto mb-7 flex h-16 w-16 shrink-0 items-center justify-center rounded-[1.2rem] bg-[#facc15] shadow-[0_14px_30px_rgba(250,204,21,0.35)] transition-transform duration-500 will-change-transform group-hover:-translate-y-1 group-hover:scale-105">
+                <Building2 className="h-8 w-8 text-[#0f172a]" />
               </div>
 
-              <h2 className="mb-4 text-[clamp(2.2rem,5vw,3.25rem)] font-[950] leading-[1.05] tracking-tight text-white">
-                The Future of Society <br className="hidden sm:block" />{" "}
-                Management Starts Here
+              <h2 className="mb-4 text-[clamp(1.8rem,6vw,3.15rem)] font-[950] leading-[1.1] sm:leading-[1.06] tracking-tight text-slate-900 dark:text-white">
+                Ready to <span className="text-[#3b82f6]">Transform</span> Your Society?
               </h2>
 
-              <p className="mx-auto mb-12 max-w-[540px] text-[1.25rem] font-medium leading-relaxed text-blue-50">
-                Experience the most advanced dashboard for modern communities.
-                Ready to upgrade your living experience?
+              <p className="mx-auto mb-10 max-w-[640px] text-[1rem] sm:text-[1.15rem] font-medium leading-relaxed text-slate-600 dark:text-slate-200 px-2 sm:px-0">
+                Join 500+ forward-thinking communities already using SocietyHub to simplify their daily operations.
               </p>
 
-              <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
-                <button
+              <div className="flex flex-col items-center justify-center gap-4 sm:flex-row px-2">
+                <PublicSweepButton
                   onClick={() => navigate("/login")}
-                  className="group relative flex h-16 items-center justify-center gap-2 overflow-hidden rounded-2xl bg-white px-10 text-[1.15rem] font-[800] text-blue-600 transition-all duration-300 hover:scale-[1.03] hover:shadow-[0_20px_40px_rgba(255,255,255,0.25)] active:scale-95"
+                  className="flex h-14 w-full sm:w-auto items-center justify-center gap-2 rounded-xl bg-[#3b82f6] px-9 text-[1rem] sm:text-[1.05rem] font-[800] text-white transition-all duration-300 hover:bg-[#2563eb] active:scale-95 shadow-[0_10px_25px_-5px_rgba(59,130,246,0.4)]"
+                  sweepClassName="bg-[linear-gradient(90deg,transparent,rgba(255,255,255,0.25),transparent)]"
                 >
-                  <span className="relative z-10 flex items-center gap-2">
-                    Start Today for Free
-                    <ArrowRight className="h-5 w-5 transition-transform duration-300 group-hover:translate-x-1.5" />
-                  </span>
-                  <div className="absolute inset-0 -translate-x-full bg-[linear-gradient(90deg,transparent,rgba(37,99,235,0.05),transparent)] transition-transform duration-500 group-hover:translate-x-full" />
-                </button>
+                  Get Started Now
+                  <ArrowRight className="h-5 w-5 opacity-90 transition-opacity duration-300 group-hover:opacity-100" />
+                </PublicSweepButton>
 
-                <button
-                  onClick={() => navigate("/contact")}
-                  className="flex h-16 items-center justify-center rounded-2xl border-2 border-white/30 bg-white/5 px-10 text-[1.15rem] font-[800] text-white backdrop-blur-sm transition-all duration-300 hover:border-white hover:bg-white/10 active:scale-95"
+                <PublicOutlineButton
+                  onClick={() => navigate("/pricing")}
+                  className="flex h-14 w-full sm:w-auto items-center justify-center rounded-xl border border-blue-200 bg-blue-50/50 px-9 text-[1rem] sm:text-[1.05rem] font-[800] text-blue-700 backdrop-blur-sm transition-all duration-300 hover:border-blue-300 hover:bg-blue-100/50 active:scale-95 dark:border-white/20 dark:bg-white/5 dark:text-white dark:hover:border-white/30 dark:hover:bg-white/10"
+                  sweepClassName="bg-[linear-gradient(90deg,transparent,rgba(255,255,255,0.3),transparent)]"
                 >
-                  Schedule Demo
-                </button>
+                  View Pricing
+                </PublicOutlineButton>
               </div>
 
-              <div className="mt-12 flex items-center justify-center gap-8 border-t border-white/10 pt-8 text-blue-100/60">
-                <div className="text-center">
-                  <div className="text-xl font-black text-white">10min</div>
-                  <div className="text-[0.7rem] font-bold uppercase tracking-[0.2em]">
-                    Setup Time
-                  </div>
+              <div className="mt-12 sm:mt-16 flex flex-col sm:flex-row items-center justify-center gap-y-10 sm:gap-x-12 border-t border-blue-200/50 pt-10 dark:border-white/10">
+                <div className="flex flex-col items-center min-w-[120px]">
+                  <span className="text-[2.2rem] sm:text-[2.6rem] font-[950] tracking-tighter text-slate-900 leading-none dark:text-white">14-Day</span>
+                  <span className="mt-2 text-[0.7rem] font-black uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500">Free Trial</span>
                 </div>
-                <div className="h-8 w-px bg-white/10" />
-                <div className="text-center">
-                  <div className="text-xl font-black text-white">50k+</div>
-                  <div className="text-[0.7rem] font-bold uppercase tracking-[0.2em]">
-                    Users Active
-                  </div>
+                <div className="hidden h-10 w-px bg-blue-200/50 dark:bg-white/10 sm:block" />
+                <div className="flex flex-col items-center min-w-[120px]">
+                  <span className="text-[2.2rem] sm:text-[2.6rem] font-[950] tracking-tighter text-slate-900 leading-none dark:text-white">24/7</span>
+                  <span className="mt-2 text-[0.7rem] font-black uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500">Expert Support</span>
                 </div>
-                <div className="h-8 w-px bg-white/10" />
-                <div className="text-center">
-                  <div className="text-xl font-black text-white">99%</div>
-                  <div className="text-[0.7rem] font-bold uppercase tracking-[0.2em]">
-                    Renewal Rate
-                  </div>
+                <div className="hidden h-10 w-px bg-blue-200/50 dark:bg-white/10 sm:block" />
+                <div className="flex flex-col items-center min-w-[120px]">
+                  <span className="text-[2.2rem] sm:text-[2.6rem] font-[950] tracking-tighter text-slate-900 leading-none dark:text-white">99.9%</span>
+                  <span className="mt-2 text-[0.7rem] font-black uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500">Uptime</span>
                 </div>
               </div>
             </div>
@@ -645,6 +632,7 @@ export default function Welcome() {
         </div>
       </section>
       <PublicFooter />
+      </>
     </div>
   );
 }

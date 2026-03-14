@@ -4,9 +4,10 @@ import { useAuth } from '../../context'
 import { useTheme } from '../../context'
 import {
   Building2, Mail, Lock, AlertCircle, Eye, EyeOff,
-  Sun, Moon, Monitor, ArrowRight,
-  Shield, Briefcase, FileText, Users, MapPin, X
+  Sun, Moon, Monitor, ArrowRight, ArrowLeft,
+  Shield, Briefcase, FileText, Users, MapPin, X, Bell
 } from 'lucide-react'
+import PublicSweepButton from '../../components/PublicSweepButton'
 
 const LocationPickerMap = lazy(() => import('../../components/LocationPickerMap'))
 
@@ -159,10 +160,12 @@ export default function Login() {
 
   return (
     <div className="relative flex min-h-screen items-center justify-center bg-[color-mix(in_srgb,var(--bg-primary)_92%,#0f172a_8%)] px-3 py-5 sm:px-5 sm:py-7 lg:px-7 lg:py-8">
-      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,color-mix(in_srgb,var(--accent-primary)_2%,var(--bg-primary))_0%,var(--bg-primary)_50%)]" />
+      <div
+        className={`pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,color-mix(in_srgb,var(--accent-primary)_2%,var(--bg-primary))_0%,var(--bg-primary)_50%)] transition-opacity duration-700 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
+      />
 
-      <div className={`relative z-[1] w-full max-w-[1320px] transition-all duration-300 ${isLoaded ? 'translate-y-0 opacity-100' : 'translate-y-2.5 opacity-0'}`}>
-        <div className="grid overflow-hidden rounded-2xl border border-[color-mix(in_srgb,var(--border-default)_85%,#334155_15%)] bg-[color-mix(in_srgb,var(--bg-secondary)_95%,#0f172a_5%)] shadow-[0_25px_50px_-12px_color-mix(in_srgb,#000_25%,transparent)] lg:grid-cols-[minmax(0,1fr)_minmax(0,560px)]">
+      <div className={`relative z-[1] w-full max-w-[1320px] transition-all duration-700 ease-out ${isLoaded ? 'translate-y-0 scale-100 opacity-100' : 'translate-y-4 scale-[0.985] opacity-0'}`}>
+        <div className={`grid overflow-hidden rounded-2xl border border-[color-mix(in_srgb,var(--border-default)_85%,#334155_15%)] bg-[color-mix(in_srgb,var(--bg-secondary)_95%,#0f172a_5%)] shadow-[0_25px_50px_-12px_color-mix(in_srgb,#000_25%,transparent)] transition-all duration-700 ease-out lg:grid-cols-[minmax(0,1fr)_minmax(0,560px)] ${isLoaded ? 'opacity-100' : 'opacity-0'}`}>
           <aside className="hidden lg:flex lg:flex-col lg:gap-6 lg:border-r lg:border-[color-mix(in_srgb,var(--border-default)_90%,#334155_10%)] lg:bg-[color-mix(in_srgb,var(--bg-secondary)_50%,var(--bg-tertiary)_50%)] lg:p-8">
             <Link to="/" className="mb-6 inline-flex items-center gap-3 no-underline">
               <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-[color-mix(in_srgb,var(--accent-primary)_55%,var(--border-default))] bg-[color-mix(in_srgb,var(--accent-primary)_90%,#1e40af_10%)] text-white">
@@ -183,22 +186,48 @@ export default function Login() {
               </p>
             </div>
 
-            <div className="grid gap-3 rounded-xl border border-[color-mix(in_srgb,var(--border-light)_90%,#334155_10%)] bg-[color-mix(in_srgb,var(--bg-primary)_90%,#111827_10%)] p-4">
+            <div className="flex flex-col gap-5 rounded-2xl border border-[color-mix(in_srgb,var(--border-light)_90%,#334155_10%)] bg-[color-mix(in_srgb,var(--bg-primary)_90%,#111827_10%)] p-6 lg:p-7">
               {[
                 { icon: Users, text: 'Member & Committee Management' },
-                { icon: Briefcase, text: 'Maintenance & Billing Control' },
-                { icon: FileText, text: 'Complaint & Notice Tracking' },
+                { icon: Briefcase, text: 'Maintenance & Billing Control' },     
+                { icon: FileText, text: 'Complaint & Notice Tracking' },        
                 { icon: Shield, text: 'Secure Role-Based Access Control' },
+                { icon: Bell, text: 'Automated Reminders & Notifications' },     
               ].map((item, idx) => (
-                <div className="flex items-start gap-3 text-[0.95rem] leading-[1.45] text-[var(--text-primary)]" key={idx}>
-                  <item.icon size={16} className="mt-0.5 shrink-0 text-[color-mix(in_srgb,var(--accent-primary)_82%,#1e40af_18%)]" />
-                  <span>{item.text}</span>
+                <div className="flex items-center gap-4 text-[1.05rem] leading-relaxed text-[var(--text-primary)]" key={idx}>
+                  <item.icon size={20} className="shrink-0 text-[color-mix(in_srgb,var(--accent-primary)_82%,#1e40af_18%)]" />
+                  <span className="font-medium">{item.text}</span>
                 </div>
               ))}
             </div>
+
+            <div className="mt-auto flex flex-col gap-4 rounded-xl border border-[color-mix(in_srgb,var(--accent-primary)_15%,transparent)] bg-[color-mix(in_srgb,var(--accent-primary)_3%,transparent)] p-5 pt-4">
+              <div className="flex items-center justify-between border-b border-[color-mix(in_srgb,var(--border-light)_50%,transparent)] pb-3">
+                 <div className="flex items-center gap-2 text-sm font-bold text-[color-mix(in_srgb,var(--text-primary)_90%,#e2e8f0_10%)]">
+                    <Shield size={16} className="text-[var(--accent-primary)]" />
+                    Enterprise Security
+                 </div>
+                 <span className="flex items-center gap-1.5 rounded-full bg-[color-mix(in_srgb,var(--color-success)_15%,transparent)] px-2 py-0.5 text-[0.65rem] font-bold uppercase tracking-wider text-[var(--color-success)]">
+                    <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-success)] animate-pulse" />
+                    Protected
+                 </span>
+              </div>
+              <p className="text-[0.85rem] leading-[1.6] text-[color-mix(in_srgb,var(--text-secondary)_80%,#94a3b8_20%)]">
+                Your society data is protected with 256-bit encryption. All administrative workflows, financial transactions, and user access attempts are actively monitored for compliance.
+              </p>
+            </div>
           </aside>
 
-          <section className="relative flex flex-col bg-transparent p-5 sm:p-7 lg:p-8">
+          <section className={`relative flex flex-col bg-transparent p-5 transition-all duration-700 ease-out sm:p-7 lg:p-8 ${isLoaded ? 'translate-y-0 opacity-100' : 'translate-y-3 opacity-0'}`} style={{ transitionDelay: '90ms' }}>
+            <Link
+              to="/"
+              className="absolute left-2 top-2 z-10 inline-flex min-h-9 items-center gap-1.5 rounded-xl border border-[color-mix(in_srgb,var(--border-light)_90%,#334155_10%)] bg-[color-mix(in_srgb,var(--bg-primary)_86%,#111827_14%)] px-2.5 py-1.5 text-xs font-semibold text-[var(--text-secondary)] no-underline transition-colors duration-200 hover:text-[var(--text-primary)] lg:hidden"
+              aria-label="Back to welcome page"
+            >
+              <ArrowLeft size={14} />
+              <span>Back</span>
+            </Link>
+
             <div className="absolute right-2 top-2 z-10 rounded-xl border border-[color-mix(in_srgb,var(--border-light)_90%,#334155_10%)] bg-[color-mix(in_srgb,var(--bg-primary)_86%,#111827_14%)] p-1 sm:right-3 sm:top-3">
               <div className="flex items-center gap-1">
                 {[
@@ -235,7 +264,7 @@ export default function Login() {
               <form onSubmit={handleSubmit} className={`flex flex-col gap-5 ${shake ? 'login-form-shake' : ''}`}>
                 <div className="flex flex-col gap-2">
                   <label className="text-sm font-semibold text-[color-mix(in_srgb,var(--text-primary)_88%,#e2e8f0_12%)]">Email address</label>
-                  <div className={`flex min-h-[2.95rem] items-center rounded-[10px] border bg-[color-mix(in_srgb,var(--bg-primary)_92%,#111827_8%)] transition ${fieldErrors.email ? 'border-red-500 shadow-[0_0_0_1px_color-mix(in_srgb,#ef4444_35%,transparent)]' : 'border-[color-mix(in_srgb,var(--border-default)_82%,#334155_18%)] focus-within:border-[color-mix(in_srgb,var(--accent-primary)_76%,#1e40af_24%)] focus-within:bg-[color-mix(in_srgb,var(--bg-primary)_80%,var(--accent-primary)_20%)] focus-within:shadow-[0_0_0_3px_color-mix(in_srgb,var(--accent-primary)_20%,transparent)]'}`}>
+                  <div className={`flex min-h-[2.95rem] items-center rounded-[10px] border bg-[color-mix(in_srgb,var(--bg-primary)_92%,#111827_8%)] transition-[border-color,box-shadow,background-color] duration-300 ease-out ${fieldErrors.email ? 'border-red-500 shadow-[0_0_0_1px_color-mix(in_srgb,#ef4444_35%,transparent)]' : 'border-[color-mix(in_srgb,var(--border-default)_82%,#334155_18%)] focus-within:border-[color-mix(in_srgb,var(--accent-primary)_76%,#1e40af_24%)] focus-within:bg-[color-mix(in_srgb,var(--bg-primary)_80%,var(--accent-primary)_20%)] focus-within:shadow-[0_0_0_3px_color-mix(in_srgb,var(--accent-primary)_20%,transparent)]'}`}>
                     <Mail size={16} className="ml-3 text-[var(--text-tertiary)]" />
                     <input
                       type="email"
@@ -263,7 +292,7 @@ export default function Login() {
                     <label className="text-sm font-semibold text-[color-mix(in_srgb,var(--text-primary)_88%,#e2e8f0_12%)]">Password</label>
                     <Link to="/forgot-password" className="text-xs text-[color-mix(in_srgb,var(--text-secondary)_80%,var(--accent-primary)_20%)] no-underline transition-colors duration-200 hover:text-[var(--accent-primary)]">Forgot password?</Link>
                   </div>
-                  <div className={`flex min-h-[2.95rem] items-center rounded-[10px] border bg-[color-mix(in_srgb,var(--bg-primary)_92%,#111827_8%)] transition ${fieldErrors.password ? 'border-red-500 shadow-[0_0_0_1px_color-mix(in_srgb,#ef4444_35%,transparent)]' : 'border-[color-mix(in_srgb,var(--border-default)_82%,#334155_18%)] focus-within:border-[color-mix(in_srgb,var(--accent-primary)_76%,#1e40af_24%)] focus-within:bg-[color-mix(in_srgb,var(--bg-primary)_80%,var(--accent-primary)_20%)] focus-within:shadow-[0_0_0_3px_color-mix(in_srgb,var(--accent-primary)_20%,transparent)]'}`}>
+                  <div className={`flex min-h-[2.95rem] items-center rounded-[10px] border bg-[color-mix(in_srgb,var(--bg-primary)_92%,#111827_8%)] transition-[border-color,box-shadow,background-color] duration-300 ease-out ${fieldErrors.password ? 'border-red-500 shadow-[0_0_0_1px_color-mix(in_srgb,#ef4444_35%,transparent)]' : 'border-[color-mix(in_srgb,var(--border-default)_82%,#334155_18%)] focus-within:border-[color-mix(in_srgb,var(--accent-primary)_76%,#1e40af_24%)] focus-within:bg-[color-mix(in_srgb,var(--bg-primary)_80%,var(--accent-primary)_20%)] focus-within:shadow-[0_0_0_3px_color-mix(in_srgb,var(--accent-primary)_20%,transparent)]'}`}>
                     <Lock size={16} className="ml-3 text-[var(--text-tertiary)]" />
                     <input
                       type={showPassword ? 'text' : 'password'}
@@ -363,12 +392,12 @@ export default function Login() {
                   </div>
                 </div>
 
-                <button type="submit" disabled={loading} className="mt-1 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-[10px] bg-[color-mix(in_srgb,var(--accent-primary)_86%,#1e40af_14%)] px-4 py-3 text-base font-semibold text-white transition-colors duration-200 hover:bg-[color-mix(in_srgb,var(--accent-secondary)_82%,#1e40af_18%)] disabled:cursor-not-allowed disabled:opacity-60">
+                <PublicSweepButton type="submit" disabled={loading} className="mt-1 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-[10px] bg-[color-mix(in_srgb,var(--accent-primary)_86%,#1e40af_14%)] px-4 py-3 text-base font-semibold text-white transition-colors duration-200 hover:bg-[color-mix(in_srgb,var(--accent-secondary)_82%,#1e40af_18%)] disabled:cursor-not-allowed disabled:opacity-60">
                   {loading ? <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/35 border-t-white" /> : <>
                     Secure Login
                     <ArrowRight size={16} />
                   </>}
-                </button>
+                </PublicSweepButton>
 
                 <p className="text-center text-xs text-[var(--text-tertiary)]">Authorized users only. Activity may be monitored.</p>
               </form>

@@ -1,7 +1,6 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Building2, Mail, Phone } from 'lucide-react';
-import clsx from 'clsx'; // even if not strictly needed, nice to have
 
 import googlePlayBtn from '../assets/icons/Get-it-on-Google-Play.svg';
 import appStoreBtn from '../assets/icons/Download-on-app-store.svg';
@@ -37,11 +36,11 @@ export default function PublicFooter() {
   return (
     <footer
       id="contact"
-      className="scroll-mt-28 border-t border-[#e2e8f0] bg-[#f6f9fc] px-4 py-14 text-[#0f172a] transition-colors duration-300 sm:px-6 sm:py-16 dark:border-slate-800/80 dark:bg-[#0b1120] dark:text-white"
+      className="scroll-mt-28 border-t border-[#e2e8f0] bg-[#f6f9fc] px-4 py-10 text-[#0f172a] transition-colors duration-300 sm:px-6 sm:py-14 dark:border-slate-800/80 dark:bg-[#0b1120] dark:text-white"
     >
       <div className="mx-auto max-w-[1200px]">
-        <div className="mb-12 grid items-start gap-x-8 gap-y-12 lg:grid-cols-[1.4fr_0.9fr_1.3fr_1.1fr_1.1fr] md:grid-cols-3 sm:grid-cols-2">
-          <div className="flex flex-col gap-4">
+        <div className="mb-10 grid items-start gap-x-6 gap-y-9 min-[540px]:grid-cols-2 md:grid-cols-3 lg:mb-12 lg:gap-x-8 lg:gap-y-12 lg:grid-cols-[1.4fr_0.9fr_1.3fr_1.1fr_1.1fr]">
+          <div className="flex flex-col gap-3 sm:gap-4 min-[540px]:col-span-2 md:col-span-3 lg:col-span-1">
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[8px] bg-[#1d4ed8] text-white">
                 <Building2 size={22} className="stroke-[2.5]" />
@@ -55,7 +54,7 @@ export default function PublicFooter() {
                 </span>
               </div>
             </div>
-            <p className="max-w-[280px] text-[0.95rem] font-medium leading-[1.65] text-[#334155] dark:text-slate-300">
+            <p className="max-w-[360px] text-[0.92rem] font-medium leading-[1.6] text-[#334155] dark:text-slate-300 sm:text-[0.95rem]">
               SocietyHub is aimed at making life in your residential society
               easy and secure. Manage visitor access, domestic help and
               services, and much more.
@@ -111,16 +110,16 @@ export default function PublicFooter() {
               ],
             },
           ].map((g, i) => (
-            <div key={i} className="flex min-w-0 flex-col gap-4">
-              <h4 className="text-[0.8rem] font-[900] tracking-[0.05em] text-[#0f172a] dark:text-white">
+            <div key={i} className="flex min-w-0 flex-col gap-3 sm:gap-4">
+              <h4 className="text-[0.74rem] font-[900] tracking-[0.08em] text-[#0f172a] dark:text-white sm:text-[0.8rem]">
                 {g.title}
               </h4>
-              <ul className="m-0 flex list-none flex-col gap-3 p-0">
+              <ul className="m-0 flex list-none flex-col gap-2.5 p-0 sm:gap-3">
                 {g.links.map((l, j) => (
                   <li key={j}>
                     <button
                       onClick={l.action}
-                      className="no-sweep border-none bg-transparent p-0 text-left text-[0.95rem] font-bold text-[#475569] no-underline transition-colors hover:text-[#0f172a] hover:underline hover:underline-offset-2 dark:text-slate-300 dark:hover:text-white"
+                      className="no-sweep border-none bg-transparent p-0 text-left text-[0.9rem] font-bold leading-snug text-[#475569] no-underline transition-colors hover:text-[#0f172a] hover:underline hover:underline-offset-2 dark:text-slate-300 dark:hover:text-white sm:text-[0.95rem]"
                     >
                       {l.label}
                     </button>
@@ -130,34 +129,34 @@ export default function PublicFooter() {
             </div>
           ))}
 
-          <div className="flex min-w-0 flex-col gap-4">
-            <h4 className="text-[0.8rem] font-[900] tracking-[0.05em] text-[#0f172a] dark:text-white">
+          <div className="flex min-w-0 shrink-0 flex-col gap-3 sm:gap-4">
+            <h4 className="text-[0.74rem] font-[900] tracking-[0.08em] text-[#0f172a] dark:text-white sm:text-[0.8rem]">
               CONTACT US
             </h4>
-            <ul className="m-0 flex list-none flex-col gap-4 p-0">
+            <ul className="m-0 flex list-none flex-col gap-3 p-0 sm:gap-4">
               <li>
                 <a
                   href="mailto:assist@societyhub.com"
-                  className="group inline-flex items-center gap-2 break-all text-[0.95rem] font-bold text-[#475569] no-underline transition-colors hover:text-[#0f172a] dark:text-slate-300 dark:hover:text-white"
+                  className="group inline-flex items-center gap-2 text-[0.9rem] font-bold text-[#475569] no-underline transition-colors hover:text-[#0f172a] dark:text-slate-300 dark:hover:text-white sm:text-[0.95rem]"
                 >
-                  <Mail size={18} className="stroke-[2.5] text-[#334155] transition-colors group-hover:text-[#0f172a] dark:text-slate-400 dark:group-hover:text-white" />
-                  assist@societyhub.com
+                  <Mail size={19} className="shrink-0 stroke-[2.5] text-[#334155] transition-colors group-hover:text-[#0f172a] dark:text-slate-400 dark:group-hover:text-white" />
+                  <span className="whitespace-nowrap">assist@societyhub.com</span>
                 </a>
               </li>
               <li>
                 <a
                   href="tel:+919119300000"
-                  className="group inline-flex items-center gap-2 break-all text-[0.95rem] font-bold text-[#475569] no-underline transition-colors hover:text-[#0f172a] dark:text-slate-300 dark:hover:text-white"
+                  className="group inline-flex items-center gap-2 whitespace-nowrap text-[0.9rem] font-bold text-[#475569] no-underline transition-colors hover:text-[#0f172a] dark:text-slate-300 dark:hover:text-white sm:text-[0.95rem]"
                 >
-                  <Phone size={18} className="stroke-[2.5] text-[#334155] transition-colors group-hover:text-[#0f172a] dark:text-slate-400 dark:group-hover:text-white" />
+                  <Phone size={19} className="stroke-[2.5] text-[#334155] transition-colors group-hover:text-[#0f172a] dark:text-slate-400 dark:group-hover:text-white" />
                   +91 91193 00000
                 </a>
               </li>
             </ul>
           </div>
 
-          <div className="flex min-w-0 flex-col gap-4">
-            <h4 className="text-[0.8rem] font-[900] tracking-[0.05em] text-[#0f172a] dark:text-white">
+          <div className="flex min-w-0 flex-col gap-3 sm:gap-4">
+            <h4 className="text-[0.74rem] font-[900] tracking-[0.08em] text-[#0f172a] dark:text-white sm:text-[0.8rem]">
               GET THE MOBILE APP
             </h4>
             <div className="flex flex-col gap-3">
@@ -176,7 +175,7 @@ export default function PublicFooter() {
                 />
               </a>
             </div>
-            <div className="mt-4 flex gap-2.5">
+            <div className="mt-3 flex flex-wrap gap-2.5 sm:mt-4">
               {footerSocialLinks.map((item, i) => (
                 <a
                   key={i}
@@ -193,8 +192,8 @@ export default function PublicFooter() {
           </div>
         </div>
 
-        <div className="border-t border-[#cbd5e1] pt-6 text-left dark:border-slate-800/80">
-          <p className="text-[0.85rem] font-bold text-[#64748b] dark:text-slate-500">
+        <div className="border-t border-[#cbd5e1] pt-5 text-center sm:pt-6 sm:text-left dark:border-slate-800/80">
+          <p className="text-[0.78rem] font-bold text-[#64748b] dark:text-slate-500 sm:text-[0.85rem]">
             &copy; SocietyHub Technologies Pvt. Ltd. – All Rights Reserved.
           </p>
         </div>

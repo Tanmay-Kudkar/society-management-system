@@ -15,6 +15,7 @@ import {
   Bug,
 } from "lucide-react";
 import PageShell from "../../components/PageShell";
+import PublicSweepButton from "../../components/PublicSweepButton";
 
 export default function About() {
   const navigate = useNavigate();
@@ -68,8 +69,9 @@ export default function About() {
   return (
     <PageShell>
       {/* Hero */}
-      <section className="px-4 py-16 sm:py-20">
-        <div className="mx-auto max-w-4xl text-center">
+      <section className="relative overflow-hidden px-4 py-16 sm:py-20">
+
+        <div className="relative z-10 mx-auto max-w-4xl text-center">
           <div className="animate-fade-in-up mb-6 inline-flex items-center gap-2 rounded-full border border-[color-mix(in_srgb,var(--accent-primary)_20%,transparent)] bg-[color-mix(in_srgb,var(--accent-primary)_8%,var(--bg-primary))] px-4 py-2">
             <Target
               className="h-4 w-4"
@@ -245,13 +247,23 @@ export default function About() {
       <section className="px-4 pb-20 pt-10 sm:pb-24 sm:pt-14">
         <div className="mx-auto max-w-5xl text-center">
           <div className="group relative overflow-hidden rounded-[2.5rem] border border-[color-mix(in_srgb,var(--accent-primary)_35%,var(--border-default))] bg-[linear-gradient(180deg,color-mix(in_srgb,var(--accent-primary)_24%,var(--bg-card))_0%,color-mix(in_srgb,var(--bg-card)_96%,transparent)_100%)] px-10 py-16 shadow-[0_32px_64px_-16px_color-mix(in_srgb,var(--accent-primary)_18%,transparent)] transition-all duration-500 hover:shadow-[0_48px_80px_-20px_color-mix(in_srgb,var(--accent-primary)_24%,transparent)]">
-            {/* Background elements */}
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_24%_20%,color-mix(in_srgb,var(--accent-primary)_45%,transparent)_0%,transparent_42%),radial-gradient(circle_at_78%_78%,color-mix(in_srgb,var(--accent-secondary)_38%,transparent)_0%,transparent_48%)] opacity-40 transition-opacity duration-500 group-hover:opacity-60" />
-            <div className="absolute -right-24 -top-24 h-64 w-64 rounded-full bg-[color-mix(in_srgb,var(--accent-primary)_15%,transparent)] blur-3xl transition-transform duration-700 group-hover:scale-125" />
-            <div className="absolute -bottom-24 -left-24 h-64 w-64 rounded-full bg-[color-mix(in_srgb,var(--accent-secondary)_15%,transparent)] blur-3xl transition-transform duration-700 group-hover:scale-125" />
+            {/* Atmospheric background */}
+            <div
+              className="absolute inset-0 opacity-[0.4] dark:opacity-10"
+              style={{
+                backgroundImage:
+                  "radial-gradient(circle at 2px 2px, rgba(59,130,246,0.15) 1px, transparent 0)",
+                backgroundSize: "24px 24px",
+              }}
+            />
+            {/* Top Right Corner Circle */}
+            <div className="pointer-events-none absolute -right-[150px] -top-[150px] h-[350px] w-[350px] rounded-full bg-blue-400/20 dark:bg-blue-500/20 mix-blend-multiply dark:mix-blend-screen transition-transform duration-[1.2s] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.4]" />
+            {/* Bottom Left Corner Circle */}
+            <div className="pointer-events-none absolute -bottom-[150px] -left-[150px] h-[350px] w-[350px] rounded-full bg-sky-400/25 dark:bg-cyan-500/20 mix-blend-multiply dark:mix-blend-screen transition-transform duration-[1.2s] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.4]" />
+
 
             <div className="relative z-[1]">
-              <div className="mb-8 inline-flex h-20 w-20 items-center justify-center rounded-3xl bg-[linear-gradient(135deg,#facc15_0%,#eab308_100%)] shadow-[0_12px_24px_rgba(234,179,8,0.35)] transition-transform duration-500 group-hover:rotate-12 group-hover:scale-110">
+              <div className="mx-auto mb-8 flex h-20 w-20 shrink-0 items-center justify-center rounded-3xl bg-[linear-gradient(135deg,#facc15_0%,#eab308_100%)] shadow-[0_12px_24px_rgba(234,179,8,0.35)] transition-transform duration-500 will-change-transform group-hover:scale-110">
                 <Award className="h-10 w-10 text-white" />
               </div>
 
@@ -274,16 +286,13 @@ export default function About() {
               </p>
 
               <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
-                <button
+                <PublicSweepButton
                   onClick={() => navigate("/login")}
-                  className="group relative flex h-14 items-center justify-center gap-2 overflow-hidden rounded-2xl bg-[var(--accent-primary)] px-10 text-[1.1rem] font-bold text-white transition-all duration-300 hover:scale-[1.02] hover:bg-[var(--accent-secondary)] hover:shadow-[0_12px_24px_color-mix(in_srgb,var(--accent-primary)_40%,transparent)] active:scale-95"
+                  className="flex h-14 items-center justify-center gap-2 rounded-2xl bg-[var(--accent-primary)] px-10 text-[1.1rem] font-bold text-white transition-all duration-300 hover:bg-[var(--accent-secondary)] hover:shadow-[0_12px_24px_color-mix(in_srgb,var(--accent-primary)_40%,transparent)] active:scale-95"
                 >
-                  <span className="relative z-10 flex items-center gap-2">
-                    Get Started Now
-                    <ArrowRight className="h-5 w-5 transition-transform duration-300 group-hover:translate-x-1.5" />
-                  </span>
-                  <div className="absolute inset-0 -translate-x-full bg-[linear-gradient(90deg,transparent,rgba(255,255,255,0.2),transparent)] transition-transform duration-500 group-hover:translate-x-full" />
-                </button>
+                  Get Started Now
+                  <ArrowRight className="h-5 w-5 opacity-90 transition-opacity duration-300 group-hover:opacity-100" />
+                </PublicSweepButton>
 
                 <button
                   onClick={() => navigate("/pricing")}

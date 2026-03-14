@@ -36,12 +36,6 @@ export default function Terms() {
 
   return (
     <PageShell>
-      {/* Hero Background Elements */}
-      <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
-        <div className="absolute -top-[10%] left-[20%] h-[500px] w-[500px] rounded-full bg-[color-mix(in_srgb,var(--accent-primary)_6%,transparent)] blur-[100px]" />
-        <div className="absolute top-[20%] right-[10%] h-[400px] w-[400px] rounded-full bg-[color-mix(in_srgb,var(--accent-secondary)_4%,transparent)] blur-[80px]" />
-      </div>
-
       <div className="relative z-10">
         {/* Hero */}
         <section className="px-4 py-20 sm:py-28">

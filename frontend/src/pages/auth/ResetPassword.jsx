@@ -3,6 +3,7 @@ import { Link, useSearchParams, useNavigate } from 'react-router-dom'
 import { useTheme } from '../../context'
 import { authApi } from '../../../../api'
 import { Building2, Lock, ArrowLeft, CheckCircle, AlertCircle, Eye, EyeOff, ShieldCheck } from 'lucide-react'
+import PublicSweepButton from '../../components/PublicSweepButton'
 
 export default function ResetPassword() {
   const [searchParams] = useSearchParams()
@@ -64,8 +65,13 @@ export default function ResetPassword() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[var(--bg-primary)] px-3 py-8 sm:px-4 sm:py-12">
-      <div className="w-full max-w-md">
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[var(--bg-primary)] px-3 py-8 sm:px-4 sm:py-12">
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute right-[-8rem] top-[-8rem] h-72 w-72 rounded-full bg-[color-mix(in_srgb,var(--accent-primary)_12%,transparent)] blur-3xl" />
+        <div className="absolute bottom-[-10rem] left-[-10rem] h-80 w-80 rounded-full bg-[color-mix(in_srgb,var(--accent-secondary)_12%,transparent)] blur-3xl" />
+      </div>
+
+      <div className="relative z-10 w-full max-w-md">
         <div className="mb-6 text-center sm:mb-8">
           <Link to="/" className="inline-flex items-center gap-3 no-underline">
             <div className="rounded-xl p-3" style={{ background: 'linear-gradient(to bottom right, var(--accent-primary), var(--accent-secondary))' }}>
@@ -75,7 +81,7 @@ export default function ResetPassword() {
           </Link>
         </div>
 
-        <div className="rounded-3xl border border-[var(--border-default)] bg-[var(--bg-card)] p-5 shadow-xl sm:p-8">
+        <div className="rounded-3xl border border-[color-mix(in_srgb,var(--accent-primary)_30%,var(--border-default))] bg-[color-mix(in_srgb,var(--bg-card)_92%,transparent)] p-5 shadow-[0_24px_64px_-18px_color-mix(in_srgb,var(--accent-primary)_22%,transparent)] backdrop-blur-xl sm:p-8">
           {!success ? (
             <>
               <div className="mb-6 text-center">
@@ -86,7 +92,7 @@ export default function ResetPassword() {
                   <ShieldCheck className="h-7 w-7" style={{ color: 'var(--accent-primary)' }} />
                 </div>
                 <h2 className="mb-2 text-2xl font-extrabold text-[var(--text-primary)] sm:text-3xl">Reset Password</h2>
-                <p className="text-sm text-[var(--text-secondary)]">Create a strong password for your account.</p>
+                <p className="text-sm leading-relaxed text-[var(--text-secondary)]">Create a strong password to secure your account access.</p>
               </div>
 
               {error && (
@@ -147,10 +153,10 @@ export default function ResetPassword() {
                   )}
                 </div>
 
-                <button
+                <PublicSweepButton
                   type="submit"
                   disabled={loading || !token}
-                  className="relative mt-1 w-full overflow-hidden rounded-2xl px-6 py-3 font-bold text-white transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="mt-1 w-full rounded-2xl px-6 py-3 font-bold text-white transition disabled:cursor-not-allowed disabled:opacity-60"
                   style={{
                     background: 'linear-gradient(to right, var(--accent-primary), var(--accent-secondary))',
                     boxShadow: '0 8px 24px -4px color-mix(in srgb, var(--accent-primary) 40%, transparent)',
@@ -167,7 +173,7 @@ export default function ResetPassword() {
                       Resetting...
                     </span>
                   )}
-                </button>
+                </PublicSweepButton>
               </form>
             </>
           ) : (

@@ -85,8 +85,8 @@ export default {
           '50%': { transform: 'translate(28px, -20px) scale(1.08)' },
         },
         shimmer: {
-          '0%': { transform: 'translateX(-160%)' },
-          '100%': { transform: 'translateX(220%)' },
+          '0%': { transform: 'translateX(-140%)' },
+          '100%': { transform: 'translateX(160%)' },
         },
         pulseBlue: {
           '0%, 100%': { boxShadow: '0 0 0 0 rgba(37, 99, 235, 0)' },
@@ -95,7 +95,7 @@ export default {
       },
       animation: {
         'mesh-slow': 'mesh 12s ease-in-out infinite',
-        shimmer: 'shimmer 1.4s ease-out forwards',
+        shimmer: 'shimmer 2.6s cubic-bezier(0.22,1,0.36,1) forwards',
         'pulse-blue': 'pulseBlue 1.8s ease-in-out infinite',
       },
     },
