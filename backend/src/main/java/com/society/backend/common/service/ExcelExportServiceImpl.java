@@ -1,6 +1,8 @@
 package com.society.backend.common.service;
 
 import com.society.backend.flat.repository.FlatRepository;
+import com.society.backend.finance.dto.response.FinancialReportResponse;
+import com.society.backend.finance.service.ReportService;
 import com.society.backend.finance.repository.MaintenanceBillRepository;
 import com.society.backend.ticket.repository.TicketRepository;
 import com.society.backend.finance.repository.TransactionRepository;
@@ -36,6 +38,7 @@ public class ExcelExportServiceImpl implements ExcelExportService {
     private final VendorBillRepository vendorBillRepository;
     private final TicketRepository ticketRepository;
     private final FlatRepository flatRepository;
+    private final ReportService reportService;
 
     @Override
     public ByteArrayOutputStream exportTransactions(Long societyId, String startDate, String endDate) {
@@ -631,26 +634,24 @@ public class ExcelExportServiceImpl implements ExcelExportService {
     @Override
     public ByteArrayOutputStream exportFinancialReport(Long societyId, String reportType, String startDate,
             String endDate) {
-        LocalDate start;
-        LocalDate end = LocalDate.now();
-
-        switch (reportType.toUpperCase()) {
-            case "MTD":
-                start = YearMonth.now().atDay(1);
-                break;
+        String normalizedType = reportType != null ? reportType.toUpperCase() : "MTD";
+        FinancialReportResponse report;
+        switch (normalizedType) {
             case "YTD":
-                start = LocalDate.now().withDayOfYear(1);
+                report = reportService.getYTDReport(societyId);
                 break;
             case "CUSTOM":
-                start = LocalDate.parse(startDate);
-                end = LocalDate.parse(endDate);
+                report = reportService.getCustomReport(societyId, LocalDate.parse(startDate), LocalDate.parse(endDate));
                 break;
+            case "COMPARISON":
+                report = reportService.getComparisonReport(societyId, "MONTH");
+                break;
+            case "MTD":
             default:
-                start = YearMonth.now().atDay(1);
+                report = reportService.getMTDReport(societyId);
+                normalizedType = "MTD";
+                break;
         }
-
-        List<Transaction> transactions = transactionRepository.findBySocietyIdAndTransactionDateBetween(societyId,
-                start, end);
 
         try (Workbook workbook = new XSSFWorkbook()) {
             Sheet sheet = workbook.createSheet("Financial Report");
@@ -664,93 +665,187 @@ public class ExcelExportServiceImpl implements ExcelExportService {
             titleStyle.setFont(titleFont);
 
             // Title
-            Row titleRow = sheet.createRow(0);
+            int rowNum = 0;
+            Row titleRow = sheet.createRow(rowNum++);
             Cell titleCell = titleRow.createCell(0);
-            titleCell.setCellValue(reportType.toUpperCase() + " Financial Report (" + start + " to " + end + ")");
+            titleCell.setCellValue(normalizedType + " Financial Report (" + report.getStartDate() + " to " + report.getEndDate() + ")");
             titleCell.setCellStyle(titleStyle);
-            sheet.addMergedRegion(new CellRangeAddress(0, 0, 0, 5));
+            sheet.addMergedRegion(new CellRangeAddress(0, 0, 0, 7));
 
-            // Income Section
-            int rowNum = 3;
-            Row incomeHeader = sheet.createRow(rowNum++);
-            incomeHeader.createCell(0).setCellValue("INCOME");
-            incomeHeader.getCell(0).setCellStyle(headerStyle);
+            Row societyRow = sheet.createRow(rowNum++);
+            societyRow.createCell(0).setCellValue("Society");
+            societyRow.createCell(1).setCellValue(report.getSocietyName() != null ? report.getSocietyName() : "-");
 
-            Row incomeTableHeader = sheet.createRow(rowNum++);
-            incomeTableHeader.createCell(0).setCellValue("Category");
-            incomeTableHeader.createCell(1).setCellValue("Amount");
-            incomeTableHeader.getCell(0).setCellStyle(headerStyle);
-            incomeTableHeader.getCell(1).setCellStyle(headerStyle);
+            rowNum++;
 
-            BigDecimal totalIncome = BigDecimal.ZERO;
-            var incomeByCategory = transactions.stream()
-                    .filter(t -> "INCOME".equals(t.getTransactionType()))
-                    .collect(java.util.stream.Collectors.groupingBy(
-                            Transaction::getCategory,
-                            java.util.stream.Collectors.reducing(BigDecimal.ZERO, Transaction::getAmount,
-                                    BigDecimal::add)));
+            Row summaryHeader = sheet.createRow(rowNum++);
+            summaryHeader.createCell(0).setCellValue("SUMMARY");
+            summaryHeader.getCell(0).setCellStyle(headerStyle);
 
-            for (var entry : incomeByCategory.entrySet()) {
+            String[] summaryLabels = { "Total Income", "Total Expense", "Net Balance", "Cash Balance" };
+            BigDecimal[] summaryValues = {
+                    safeAmount(report.getTotalIncome()),
+                    safeAmount(report.getTotalExpense()),
+                    safeAmount(report.getNetBalance()),
+                    safeAmount(report.getCashBalance())
+            };
+
+            for (int i = 0; i < summaryLabels.length; i++) {
                 Row row = sheet.createRow(rowNum++);
-                row.createCell(0).setCellValue(entry.getKey());
-                Cell amountCell = row.createCell(1);
-                amountCell.setCellValue(entry.getValue().doubleValue());
-                amountCell.setCellStyle(currencyStyle);
-                totalIncome = totalIncome.add(entry.getValue());
+                row.createCell(0).setCellValue(summaryLabels[i]);
+                Cell valueCell = row.createCell(1);
+                valueCell.setCellValue(summaryValues[i].doubleValue());
+                valueCell.setCellStyle(currencyStyle);
             }
 
-            Row totalIncomeRow = sheet.createRow(rowNum++);
-            totalIncomeRow.createCell(0).setCellValue("Total Income");
-            Cell totalIncomeCell = totalIncomeRow.createCell(1);
-            totalIncomeCell.setCellValue(totalIncome.doubleValue());
-            totalIncomeCell.setCellStyle(currencyStyle);
+            if ("COMPARISON".equals(normalizedType)) {
+                Row previousIncome = sheet.createRow(rowNum++);
+                previousIncome.createCell(0).setCellValue("Previous Period Income");
+                Cell previousIncomeValue = previousIncome.createCell(1);
+                previousIncomeValue.setCellValue(safeAmount(report.getPreviousPeriodIncome()).doubleValue());
+                previousIncomeValue.setCellStyle(currencyStyle);
 
-            // Expense Section
-            rowNum += 2;
-            Row expenseHeader = sheet.createRow(rowNum++);
-            expenseHeader.createCell(0).setCellValue("EXPENSE");
-            expenseHeader.getCell(0).setCellStyle(headerStyle);
-
-            Row expenseTableHeader = sheet.createRow(rowNum++);
-            expenseTableHeader.createCell(0).setCellValue("Category");
-            expenseTableHeader.createCell(1).setCellValue("Amount");
-            expenseTableHeader.getCell(0).setCellStyle(headerStyle);
-            expenseTableHeader.getCell(1).setCellStyle(headerStyle);
-
-            BigDecimal totalExpense = BigDecimal.ZERO;
-            var expenseByCategory = transactions.stream()
-                    .filter(t -> "EXPENSE".equals(t.getTransactionType()))
-                    .collect(java.util.stream.Collectors.groupingBy(
-                            Transaction::getCategory,
-                            java.util.stream.Collectors.reducing(BigDecimal.ZERO, Transaction::getAmount,
-                                    BigDecimal::add)));
-
-            for (var entry : expenseByCategory.entrySet()) {
-                Row row = sheet.createRow(rowNum++);
-                row.createCell(0).setCellValue(entry.getKey());
-                Cell amountCell = row.createCell(1);
-                amountCell.setCellValue(entry.getValue().doubleValue());
-                amountCell.setCellStyle(currencyStyle);
-                totalExpense = totalExpense.add(entry.getValue());
+                Row previousExpense = sheet.createRow(rowNum++);
+                previousExpense.createCell(0).setCellValue("Previous Period Expense");
+                Cell previousExpenseValue = previousExpense.createCell(1);
+                previousExpenseValue.setCellValue(safeAmount(report.getPreviousPeriodExpense()).doubleValue());
+                previousExpenseValue.setCellStyle(currencyStyle);
             }
 
-            Row totalExpenseRow = sheet.createRow(rowNum++);
-            totalExpenseRow.createCell(0).setCellValue("Total Expense");
-            Cell totalExpenseCell = totalExpenseRow.createCell(1);
-            totalExpenseCell.setCellValue(totalExpense.doubleValue());
-            totalExpenseCell.setCellStyle(currencyStyle);
-
-            // Net Balance
             rowNum += 2;
-            Row netRow = sheet.createRow(rowNum++);
-            netRow.createCell(0).setCellValue("NET BALANCE");
-            netRow.getCell(0).setCellStyle(headerStyle);
-            Cell netCell = netRow.createCell(1);
-            netCell.setCellValue(totalIncome.subtract(totalExpense).doubleValue());
-            netCell.setCellStyle(currencyStyle);
+            rowNum = writeMapSection(sheet, rowNum, "INCOME BY CATEGORY", report.getIncomeByCategory(), headerStyle, currencyStyle);
+            rowNum = writeMapSection(sheet, rowNum, "EXPENSE BY CATEGORY", report.getExpenseByCategory(), headerStyle, currencyStyle);
+            rowNum = writeMapSection(sheet, rowNum, "INCOME BY PAYMENT MODE", report.getIncomeByPaymentMode(), headerStyle, currencyStyle);
+            rowNum = writeMapSection(sheet, rowNum, "EXPENSE BY PAYMENT MODE", report.getExpenseByPaymentMode(), headerStyle, currencyStyle);
 
-            // Auto-size columns with minimum width
-            autoSizeColumnsWithMinWidth(sheet, 2, 20);
+            if (!"COMPARISON".equals(normalizedType)) {
+                Row billsHeader = sheet.createRow(rowNum++);
+                billsHeader.createCell(0).setCellValue("BILLS SUMMARY");
+                billsHeader.getCell(0).setCellStyle(headerStyle);
+
+                rowNum = writeNumberMetricRow(sheet, rowNum, "Total Bills", report.getTotalBillsGenerated());
+                rowNum = writeNumberMetricRow(sheet, rowNum, "Paid Bills", report.getBillsPaid());
+                rowNum = writeNumberMetricRow(sheet, rowNum, "Pending Bills", report.getBillsPending());
+                rowNum = writeCurrencyMetricRow(sheet, rowNum, "Collected Amount", report.getBillsCollectedAmount(), currencyStyle);
+                rowNum = writeCurrencyMetricRow(sheet, rowNum, "Pending Amount", report.getBillsPendingAmount(), currencyStyle);
+
+                rowNum += 2;
+                Row statsHeader = sheet.createRow(rowNum++);
+                statsHeader.createCell(0).setCellValue("PERIOD STATISTICS");
+                statsHeader.getCell(0).setCellStyle(headerStyle);
+
+                rowNum = writeNumberMetricRow(sheet, rowNum, "Transactions", report.getTransactionCount());
+                rowNum = writeCurrencyMetricRow(sheet, rowNum, "Late Fees Collected", report.getLateFeeCollected(), currencyStyle);
+                rowNum = writeCurrencyMetricRow(sheet, rowNum, "Discounts Given", report.getDiscountGiven(), currencyStyle);
+                rowNum = writeCurrencyMetricRow(sheet, rowNum, "Tax Collected", report.getTaxCollected(), currencyStyle);
+
+                rowNum += 2;
+                Row duesHeader = sheet.createRow(rowNum++);
+                duesHeader.createCell(0).setCellValue("OUTSTANDING DUES");
+                duesHeader.getCell(0).setCellStyle(headerStyle);
+
+                rowNum = writeNumberMetricRow(sheet, rowNum, "Unpaid / Partial Bills", report.getOutstandingDuesCount());
+                rowNum = writeCurrencyMetricRow(sheet, rowNum, "Outstanding Dues Amount", report.getOutstandingDuesAmount(), currencyStyle);
+
+                rowNum += 2;
+                Row upcomingHeader = sheet.createRow(rowNum++);
+                upcomingHeader.createCell(0).setCellValue("UPCOMING PAYMENTS");
+                upcomingHeader.getCell(0).setCellStyle(headerStyle);
+
+                rowNum = writeCurrencyMetricRow(sheet, rowNum, "Upcoming Total", report.getUpcomingExpenses(), currencyStyle);
+
+                if (report.getUpcomingPayments() != null && !report.getUpcomingPayments().isEmpty()) {
+                    Row upcomingTableHeader = sheet.createRow(rowNum++);
+                    String[] headers = { "Description", "Type", "Due Date", "Amount" };
+                    for (int i = 0; i < headers.length; i++) {
+                        Cell cell = upcomingTableHeader.createCell(i);
+                        cell.setCellValue(headers[i]);
+                        cell.setCellStyle(headerStyle);
+                    }
+
+                    for (FinancialReportResponse.UpcomingPayment payment : report.getUpcomingPayments()) {
+                        Row row = sheet.createRow(rowNum++);
+                        row.createCell(0).setCellValue(payment.getDescription() != null ? payment.getDescription() : "-");
+                        row.createCell(1).setCellValue(prettyLabel(payment.getType()));
+                        row.createCell(2).setCellValue(payment.getDueDate() != null ? payment.getDueDate().toString() : "-");
+                        Cell amountCell = row.createCell(3);
+                        amountCell.setCellValue(safeAmount(payment.getAmount()).doubleValue());
+                        amountCell.setCellStyle(currencyStyle);
+                    }
+                } else {
+                    sheet.createRow(rowNum++).createCell(0).setCellValue("No upcoming payments in this period window");
+                }
+            }
+
+            if (report.getMonthlyTrends() != null && !report.getMonthlyTrends().isEmpty()) {
+                rowNum += 2;
+                Row monthlyHeader = sheet.createRow(rowNum++);
+                monthlyHeader.createCell(0).setCellValue("MONTHLY TRENDS");
+                monthlyHeader.getCell(0).setCellStyle(headerStyle);
+
+                Row monthlyTableHeader = sheet.createRow(rowNum++);
+                String[] monthlyHeaders = { "Month", "Income", "Expense", "Balance" };
+                for (int i = 0; i < monthlyHeaders.length; i++) {
+                    Cell cell = monthlyTableHeader.createCell(i);
+                    cell.setCellValue(monthlyHeaders[i]);
+                    cell.setCellStyle(headerStyle);
+                }
+
+                for (FinancialReportResponse.MonthlyTrend trend : report.getMonthlyTrends()) {
+                    Row row = sheet.createRow(rowNum++);
+                    row.createCell(0).setCellValue(trend.getMonth() != null ? trend.getMonth() : "-");
+
+                    Cell incomeCell = row.createCell(1);
+                    incomeCell.setCellValue(safeAmount(trend.getIncome()).doubleValue());
+                    incomeCell.setCellStyle(currencyStyle);
+
+                    Cell expenseCell = row.createCell(2);
+                    expenseCell.setCellValue(safeAmount(trend.getExpense()).doubleValue());
+                    expenseCell.setCellStyle(currencyStyle);
+
+                    Cell balanceCell = row.createCell(3);
+                    balanceCell.setCellValue(safeAmount(trend.getBalance()).doubleValue());
+                    balanceCell.setCellStyle(currencyStyle);
+                }
+            }
+
+            if (report.getDailyTrends() != null && !report.getDailyTrends().isEmpty() && report.getDailyTrends().size() <= 31) {
+                rowNum += 2;
+                Row dailyHeader = sheet.createRow(rowNum++);
+                dailyHeader.createCell(0).setCellValue("DAILY TRENDS");
+                dailyHeader.getCell(0).setCellStyle(headerStyle);
+
+                Row dailyTableHeader = sheet.createRow(rowNum++);
+                String[] dailyHeaders = { "Date", "Income", "Expense", "Net" };
+                for (int i = 0; i < dailyHeaders.length; i++) {
+                    Cell cell = dailyTableHeader.createCell(i);
+                    cell.setCellValue(dailyHeaders[i]);
+                    cell.setCellStyle(headerStyle);
+                }
+
+                for (FinancialReportResponse.DailyTrend trend : report.getDailyTrends()) {
+                    Row row = sheet.createRow(rowNum++);
+                    BigDecimal income = safeAmount(trend.getIncome());
+                    BigDecimal expense = safeAmount(trend.getExpense());
+                    BigDecimal net = income.subtract(expense);
+
+                    row.createCell(0).setCellValue(trend.getDate() != null ? trend.getDate().toString() : "-");
+
+                    Cell incomeCell = row.createCell(1);
+                    incomeCell.setCellValue(income.doubleValue());
+                    incomeCell.setCellStyle(currencyStyle);
+
+                    Cell expenseCell = row.createCell(2);
+                    expenseCell.setCellValue(expense.doubleValue());
+                    expenseCell.setCellStyle(currencyStyle);
+
+                    Cell netCell = row.createCell(3);
+                    netCell.setCellValue(net.doubleValue());
+                    netCell.setCellStyle(currencyStyle);
+                }
+            }
+
+            autoSizeColumnsWithMinWidth(sheet, 8, 14);
 
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
             workbook.write(outputStream);
@@ -758,6 +853,72 @@ public class ExcelExportServiceImpl implements ExcelExportService {
         } catch (IOException e) {
             throw new RuntimeException("Failed to export financial report", e);
         }
+    }
+
+    private int writeMapSection(Sheet sheet, int rowNum, String title, java.util.Map<String, BigDecimal> data,
+            CellStyle headerStyle, CellStyle currencyStyle) {
+        Row sectionHeader = sheet.createRow(rowNum++);
+        sectionHeader.createCell(0).setCellValue(title);
+        sectionHeader.getCell(0).setCellStyle(headerStyle);
+
+        Row tableHeader = sheet.createRow(rowNum++);
+        tableHeader.createCell(0).setCellValue("Label");
+        tableHeader.createCell(1).setCellValue("Amount");
+        tableHeader.getCell(0).setCellStyle(headerStyle);
+        tableHeader.getCell(1).setCellStyle(headerStyle);
+
+        if (data == null || data.isEmpty()) {
+            sheet.createRow(rowNum++).createCell(0).setCellValue("No data");
+            return rowNum + 1;
+        }
+
+        for (java.util.Map.Entry<String, BigDecimal> entry : data.entrySet()) {
+            Row row = sheet.createRow(rowNum++);
+            row.createCell(0).setCellValue(prettyLabel(entry.getKey()));
+            Cell amountCell = row.createCell(1);
+            amountCell.setCellValue(safeAmount(entry.getValue()).doubleValue());
+            amountCell.setCellStyle(currencyStyle);
+        }
+        return rowNum + 1;
+    }
+
+    private int writeNumberMetricRow(Sheet sheet, int rowNum, String label, Integer value) {
+        Row row = sheet.createRow(rowNum++);
+        row.createCell(0).setCellValue(label);
+        row.createCell(1).setCellValue(value != null ? value : 0);
+        return rowNum;
+    }
+
+    private int writeCurrencyMetricRow(Sheet sheet, int rowNum, String label, BigDecimal value, CellStyle currencyStyle) {
+        Row row = sheet.createRow(rowNum++);
+        row.createCell(0).setCellValue(label);
+        Cell valueCell = row.createCell(1);
+        valueCell.setCellValue(safeAmount(value).doubleValue());
+        valueCell.setCellStyle(currencyStyle);
+        return rowNum;
+    }
+
+    private BigDecimal safeAmount(BigDecimal value) {
+        return value != null ? value : BigDecimal.ZERO;
+    }
+
+    private String prettyLabel(String value) {
+        if (value == null || value.isBlank()) {
+            return "OTHER";
+        }
+        String[] words = value.replace('-', '_').split("_");
+        StringBuilder builder = new StringBuilder();
+        for (String word : words) {
+            if (word == null || word.isBlank()) {
+                continue;
+            }
+            if (builder.length() > 0) {
+                builder.append(' ');
+            }
+            String lower = word.toLowerCase();
+            builder.append(Character.toUpperCase(lower.charAt(0))).append(lower.substring(1));
+        }
+        return builder.length() > 0 ? builder.toString() : "OTHER";
     }
 
     private CellStyle createHeaderStyle(Workbook workbook) {

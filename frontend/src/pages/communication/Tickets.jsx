@@ -372,11 +372,12 @@ export default function Tickets() {
             </div>
           ) : filteredTickets.map((ticket) => (
             <div key={ticket.id} className={clsx(
-              'p-5 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-light)] shadow-[0_12px_24px_rgba(15,23,42,0.06)] transition-[border-color,box-shadow] duration-200 hover:shadow-[0_16px_28px_rgba(15,23,42,0.12)]',
+              'relative overflow-hidden p-5 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-light)] shadow-[0_12px_24px_rgba(15,23,42,0.06)]',
               ticket.isOverdue && 'border-red-600/45'
             )}>
+              <div className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-blue-500/80 via-cyan-400/70 to-emerald-400/70" />
               <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-                <div className="flex gap-4 flex-1">
+                <div className="flex items-start gap-3 sm:gap-4 flex-1 min-w-0">
                   <div className="w-11 h-11 rounded-[0.9rem] bg-blue-600/[.12] flex items-center justify-center">
                     <Ticket className="w-5 h-5 text-blue-600" />
                   </div>
@@ -447,37 +448,43 @@ export default function Tickets() {
                   </div>
                 </div>
 
-                <div className="flex flex-col items-end gap-3">
-                  <div className="flex items-center gap-2 flex-wrap justify-end">
+                <div className="flex flex-col gap-3 w-full md:w-auto md:items-end">
+                  <div className="grid grid-cols-1 sm:flex items-stretch sm:items-center gap-2 w-full md:w-auto md:justify-end">
                     {ticket.status === 'OPEN' && (
-                      <button
+                      <NeonSweepButton
                         onClick={() => { setSelectedTicket(ticket); setShowAssignModal(true) }}
-                        className="px-3 py-1.5 text-[0.85rem] rounded-[0.65rem] bg-blue-100 text-blue-700 font-semibold transition-colors duration-200 hover:bg-blue-200"
+                        tone="violet"
+                        size="sm"
+                        className="w-full sm:w-auto justify-center"
                       >
                         Assign
-                      </button>
+                      </NeonSweepButton>
                     )}
                     {canManageTickets() && (
-                      <button
+                      <NeonSweepButton
                         onClick={() => handleReply(ticket)}
-                        className="inline-flex items-center gap-1.5 rounded-[0.65rem] bg-emerald-100 px-3 py-1.5 text-[0.85rem] font-semibold text-emerald-700 transition-colors duration-200 hover:bg-emerald-200"
+                        tone="cyan"
+                        size="sm"
+                        className="w-full sm:w-auto justify-center"
                       >
                         <MessageSquare size={14} />
                         Reply
-                      </button>
+                      </NeonSweepButton>
                     )}
-                    <button
+                    <NeonSweepButton
                       onClick={() => toggleReplies(ticket.id)}
-                      className="inline-flex items-center gap-1.5 rounded-[0.65rem] bg-[var(--bg-tertiary)] px-3 py-1.5 text-[0.85rem] font-semibold text-[var(--text-secondary)] transition-colors duration-200 hover:bg-[color-mix(in_srgb,var(--bg-tertiary)_70%,var(--bg-card))]"
+                      tone="slate"
+                      size="sm"
+                      className="w-full sm:w-auto justify-center"
                     >
                       <MessageSquare size={14} />
                       {openReplies[ticket.id] ? 'Hide Replies' : 'View Replies'}
-                    </button>
+                    </NeonSweepButton>
                     {ticket.status !== 'CLOSED' && (
                       <select
                         value={ticket.status}
                         onChange={(e) => updateStatusMutation.mutate({ id: ticket.id, status: e.target.value })}
-                        className="px-3 py-1.5 text-[0.85rem] rounded-[0.65rem] border border-[var(--border-light)] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-blue-600 focus:ring-[3px] focus:ring-blue-600/20"
+                        className="w-full sm:w-auto min-w-[9rem] px-3 py-2 text-[0.85rem] rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-blue-600 focus:ring-[3px] focus:ring-blue-600/20"
                       >
                         <option value="OPEN">Open</option>
                         <option value="IN_PROGRESS">In Progress</option>
@@ -489,7 +496,7 @@ export default function Tickets() {
                   
                   {/* Progress Slider for staff */}
                   {ticket.status !== 'CLOSED' && ticket.status !== 'RESOLVED' && (
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 w-full md:w-auto justify-between md:justify-end">
                       <input
                         type="range"
                         min="0"
@@ -497,7 +504,7 @@ export default function Tickets() {
                         step="10"
                         value={ticket.progressPercent || 0}
                         onChange={(e) => updateProgressMutation.mutate({ id: ticket.id, progress: parseInt(e.target.value) })}
-                        className="w-24 h-[0.45rem] rounded-full accent-blue-600 cursor-pointer"
+                        className="flex-1 md:flex-none md:w-24 h-[0.45rem] rounded-full accent-blue-600 cursor-pointer"
                       />
                       <span className="w-9 text-right text-xs text-[var(--text-tertiary)] font-semibold">{ticket.progressPercent || 0}%</span>
                     </div>

@@ -124,6 +124,15 @@ export default function useDashboardData() {
     enabled: !!dashboardSocietyId,
   });
 
+  const { data: currentSociety } = useQuery({
+    queryKey: ["dashboard-current-society", dashboardSocietyId],
+    queryFn: () => societyApi.getById(dashboardSocietyId).then((res) => res.data),
+    enabled: !!dashboardSocietyId && !isPlatformLevel,
+    retry: false,
+  });
+
+  const currentSocietyName = currentSociety?.name || null;
+
   const securityLogs = [];
   const { data: weather, locationName } = useWeather();
   const showSkeleton = useMinLoadingTime(societiesLoading || societiesError);
@@ -132,7 +141,7 @@ export default function useDashboardData() {
     user, navigate, role, roleUi, isPlatformOwner, isPlatformLevel, isMemberOrTenant, isSocietyOpsLevel,
     isManagerRole, isEmployeeRole, canSeeFinanceSection, canSeeContractAlerts, canViewFinancials,
     canManageTenants, canManageTickets, canCreateTickets, canManageComplaints, canRaiseComplaints, canManageNotices,
-    isCommitteeLevel, dashboardSocietyId, scopedSocietyId, showSkeleton,
+    isCommitteeLevel, dashboardSocietyId, scopedSocietyId, currentSocietyName, showSkeleton,
     weather, locationName, societies, platformUsers, flats, tenants, vehicles, contracts,
     allTickets, maintenanceBills, complaints, dashboardReport, notices, securityLogs,
   };

@@ -42,6 +42,7 @@ export default function Dashboard() {
     isPlatformOwner,
     isMemberOrTenant,
     isSocietyOpsLevel,
+    currentSocietyName,
     canSeeFinanceSection,
     canSeeContractAlerts,
     showSkeleton,
@@ -104,6 +105,8 @@ export default function Dashboard() {
         getWeatherDesc={getWeatherDesc}
         getWeatherIcon={getWeatherIcon}
         timeGreeting={getTimeGreeting()}
+        currentSocietyName={currentSocietyName}
+        currentSocietyId={dashboardSocietyId}
       />
 
       <PrimaryStatsSection roleUi={roleUi} primaryStats={primaryStats} />
@@ -197,7 +200,6 @@ export default function Dashboard() {
             icon={ShieldCheck}
             items={securityFeedItems}
             emptyText="No building activity has been recorded yet."
-            badgeLabel="Live"
           />
         </div>
       ) : (
@@ -216,7 +218,7 @@ export default function Dashboard() {
 
             <div className="grid gap-5">
               <FeedSection title="Recent notices" icon={Bell} items={noticeItems} emptyText="No recent notices." badgeLabel={`${noticeItems.length} items`} />
-              <FeedSection title="Security feed" icon={ShieldCheck} items={securityFeedItems} emptyText="No security events yet." badgeLabel="Live" />
+              <FeedSection title="Security feed" icon={ShieldCheck} items={securityFeedItems} emptyText="No security events yet." />
             </div>
           </div>
 
