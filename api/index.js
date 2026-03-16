@@ -53,6 +53,10 @@ export const authApi = {
   forgotPassword: (email) => api.post('/auth/forgot-password', { email }),
   resetPassword: (token, newPassword) => api.post('/auth/reset-password', { token, newPassword }),
   changePassword: (currentPassword, newPassword) => api.post('/auth/change-password', { currentPassword, newPassword }),
+  getLoginAuditByUser: (userId) => api.get(`/auth/login-audit/user/${userId}`),
+  getLoginAuditBySociety: (societyId) => api.get(`/auth/login-audit/society/${societyId}`),
+  deleteLoginAudit: (id, deletePair = false) => api.delete(`/auth/login-audit/${id}`, { params: { deletePair } }),
+  updateCurrentLocation: (latitude, longitude) => api.patch('/auth/login-audit/current-location', { latitude, longitude }),
 }
 
 // Society API - requires userId for create/update/delete (MASTER_ADMIN)
