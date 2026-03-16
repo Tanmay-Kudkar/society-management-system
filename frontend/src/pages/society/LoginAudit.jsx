@@ -484,38 +484,38 @@ export default function LoginAudit() {
                           <span>{getAuditReason(audit)}</span>
                         ) : null}
                       </div>
-                      <div className="flex items-center justify-between">
+                      <div className="flex flex-col gap-2">
                         <div className="flex items-center gap-2.5 min-w-0">
                           <div className="inline-flex items-center gap-1.5 shrink-0">
                             {osIconUrl && <img src={osIconUrl} alt={os.name} className="w-3.5 h-3.5 object-contain" />}
                             {browserIconUrl && <img src={browserIconUrl} alt={browser.name} className="w-3.5 h-3.5 object-contain" />}
                           </div>
-                          <span className="text-xs leading-5 text-[var(--text-tertiary)]">{os.name} / {browser.name}</span>
+                          <span className="text-xs leading-5 text-[var(--text-tertiary)] break-words">{os.name} / {browser.name}</span>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <div>
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0 flex-1">
                             {audit.isNearby === true && (
-                              <span className={proximityPill.nearby}>
+                              <span className={clsx(proximityPill.nearby, 'whitespace-normal break-words')}>
                                 <MapPin size={11} />
                                 Nearby
                                 {audit.distanceMeters != null && ` (${Math.round(audit.distanceMeters)}m)`}
                               </span>
                             )}
                             {audit.isNearby === false && (
-                              <span className={proximityPill.notNearby}>
+                              <span className={clsx(proximityPill.notNearby, 'whitespace-normal break-words')}>
                                 <MapPinOff size={11} />
                                 Not Nearby
                                 {audit.distanceMeters != null && ` (${Math.round(audit.distanceMeters)}m)`}
                               </span>
                             )}
                             {audit.isNearby == null && (
-                              <span className={proximityPill.unknown}>{getAuditReason(audit)}</span>
+                              <span className={clsx(proximityPill.unknown, 'whitespace-normal break-words')}>{getAuditReason(audit)}</span>
                             )}
                           </div>
                           <button
                             onClick={() => setPendingDelete(audit)}
                             disabled={deleteMutation.isPending && deleteMutation.variables?.id === audit.id}
-                            className="inline-flex h-7 w-7 items-center justify-center rounded-lg text-[var(--text-tertiary)] hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors disabled:opacity-50"
+                            className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-[var(--text-tertiary)] hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors disabled:opacity-50"
                             title="Delete record"
                           >
                             <Trash2 size={15} className={deleteMutation.isPending && deleteMutation.variables?.id === audit.id ? 'animate-spin' : ''} />
