@@ -138,6 +138,7 @@ export const flatApi = {
 export const wingApi = {
   getBySociety: (societyId) => api.get(`/api/wings/society/${societyId}`),
   create: (data) => api.post('/api/wings', data),
+  syncWithSocietyConfig: (societyId, force = false) => api.post(`/api/wings/society/${societyId}/sync-config?force=${force}`),
 }
 
 // Vendor API

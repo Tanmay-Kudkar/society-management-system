@@ -28,4 +28,13 @@ public class WingController {
     public ResponseEntity<WingResponse> create(@Valid @RequestBody WingRequest request) {
         return ResponseEntity.ok(wingService.create(request));
     }
+
+    @PostMapping("/society/{societyId}/sync-config")
+    @PreAuthorize("hasAnyRole('MASTER_ADMIN', 'SOCIETY_ADMIN')")
+    public ResponseEntity<String> syncWithSocietyConfig(
+            @PathVariable Long societyId,
+            @RequestParam(defaultValue = "false") boolean force) {
+        int removed = wingService.syncWithSocietyConfig(societyId, force);
+        return ResponseEntity.ok("Wing synchronization complete. Removed " + removed + " extra wing(s).");
+    }
 }

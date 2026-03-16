@@ -241,6 +241,7 @@ export const SmartSelect = ({
   required = false,
   disabled = false,
   placeholder = "Select an option",
+  showPlaceholder = true,
   className = "",
   icon: Icon,
   emptyMessage = "No options available",
@@ -327,9 +328,9 @@ export const SmartSelect = ({
           )}
           {...props}
         >
-          <option value="">{placeholder}</option>
+          {showPlaceholder && <option value="">{placeholder}</option>}
           {options.map((opt) => (
-            <option key={opt.value} value={opt.value}>
+            <option key={opt.value} value={opt.value} disabled={!!opt.disabled}>
               {opt.label}
             </option>
           ))}
