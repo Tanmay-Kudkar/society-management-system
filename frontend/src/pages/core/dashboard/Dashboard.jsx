@@ -1,4 +1,4 @@
-import { Bell, Clock, Cloud, CreditCard, DollarSign, ShieldCheck, Sun, Ticket } from "lucide-react";
+import { AlertTriangle, Bell, Clock, Cloud, CreditCard, DollarSign, ShieldCheck, Sun, Ticket } from "lucide-react";
 
 import { DashboardSkeleton, WakeUpBanner } from "../../../components/SkeletonLoaders";
 import MetricPanel from "./components/MetricPanel";
@@ -37,6 +37,7 @@ export default function Dashboard() {
     role,
     roleUi,
     navigate,
+    dashboardSocietyId,
     isPlatformLevel,
     isPlatformOwner,
     isMemberOrTenant,
@@ -50,13 +51,24 @@ export default function Dashboard() {
     societies,
   } = dashboardData;
 
+  const navigateToScoped = (path) => {
+    if (user?.role === 'MASTER_ADMIN' && dashboardSocietyId) {
+      navigate(`${path}?society=${encodeURIComponent(dashboardSocietyId)}`)
+      return
+    }
+    navigate(path)
+  }
+
   const {
     primaryStats,
+    moduleActionCards,
     roleActionItems,
     overviewConfig,
     noticeItems,
+    pendingComplaintItems,
     securityFeedItems,
     pendingBillItems,
+    pendingTicketItems,
     pendingBillsCount,
     memberIssueStats,
     operationsCards,
@@ -96,6 +108,58 @@ export default function Dashboard() {
 
       <PrimaryStatsSection roleUi={roleUi} primaryStats={primaryStats} />
       <RolePrioritySection role={role} roleActionItems={roleActionItems} />
+
+      {moduleActionCards.length > 0 && !isPlatformLevel && (
+        <section className={sectionShellClass}>
+          <SectionHeader
+            icon={Ticket}
+            eyebrow="ACTION HUB"
+            title="Communication workboard"
+            description="Click any tile to open the module and take role-allowed actions."
+          />
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {moduleActionCards.map((item) => (
+              <MetricPanel
+                key={item.key}
+                title={item.title}
+                value={item.value}
+                helper={item.helper}
+                tone={item.tone}
+                onClick={item.onClick}
+              />
+            ))}
+          </div>
+          <div className="mt-5 grid gap-4 xl:grid-cols-3">
+            <FeedSection
+              title="Pending tickets"
+              icon={Ticket}
+              items={pendingTicketItems}
+              emptyText="No pending tickets."
+              badgeLabel={`${pendingTicketItems.length} items`}
+              actionLabel="Open Tickets"
+              onActionClick={moduleActionCards.some((item) => item.key === "module-tickets") ? () => navigateToScoped("/tickets") : undefined}
+            />
+            <FeedSection
+              title="Pending complaints"
+              icon={AlertTriangle}
+              items={pendingComplaintItems}
+              emptyText="No pending complaints."
+              badgeLabel={`${pendingComplaintItems.length} items`}
+              actionLabel={moduleActionCards.some((item) => item.key === "module-complaints") ? "Open Complaints" : undefined}
+              onActionClick={moduleActionCards.some((item) => item.key === "module-complaints") ? () => navigateToScoped("/complaints") : undefined}
+            />
+            <FeedSection
+              title="Recent notices"
+              icon={Bell}
+              items={noticeItems}
+              emptyText="No recent notices."
+              badgeLabel={`${noticeItems.length} items`}
+              actionLabel={moduleActionCards.some((item) => item.key === "module-notices") ? "Open Notices" : undefined}
+              onActionClick={moduleActionCards.some((item) => item.key === "module-notices") ? () => navigateToScoped("/notices") : undefined}
+            />
+          </div>
+        </section>
+      )}
 
       {isMemberOrTenant ? (
         <div className="grid gap-5 xl:grid-cols-[1.1fr_0.9fr]">
@@ -182,6 +246,7 @@ export default function Dashboard() {
               expiringContracts={expiringContracts}
               expiringTenants={expiringTenants}
               pendingTickets={pendingTickets}
+              navigate={navigateToScoped}
             />
           )}
         </>

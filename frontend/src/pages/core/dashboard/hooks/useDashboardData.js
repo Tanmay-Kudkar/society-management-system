@@ -20,7 +20,18 @@ import useWeather from "./useWeather";
 
 export default function useDashboardData() {
   const [searchParams] = useSearchParams();
-  const { user, hasRole, isCommitteeLevel, canViewFinancials, canManageTenants } = useAuth();
+  const {
+    user,
+    hasRole,
+    isCommitteeLevel,
+    canViewFinancials,
+    canManageTenants,
+    canManageTickets,
+    canCreateTickets,
+    canManageComplaints,
+    canRaiseComplaints,
+    canManageNotices,
+  } = useAuth();
   const navigate = useNavigate();
 
   const isPlatformOwner = hasRole("MASTER_ADMIN");
@@ -120,7 +131,8 @@ export default function useDashboardData() {
   return {
     user, navigate, role, roleUi, isPlatformOwner, isPlatformLevel, isMemberOrTenant, isSocietyOpsLevel,
     isManagerRole, isEmployeeRole, canSeeFinanceSection, canSeeContractAlerts, canViewFinancials,
-    canManageTenants, isCommitteeLevel, dashboardSocietyId, scopedSocietyId, showSkeleton,
+    canManageTenants, canManageTickets, canCreateTickets, canManageComplaints, canRaiseComplaints, canManageNotices,
+    isCommitteeLevel, dashboardSocietyId, scopedSocietyId, showSkeleton,
     weather, locationName, societies, platformUsers, flats, tenants, vehicles, contracts,
     allTickets, maintenanceBills, complaints, dashboardReport, notices, securityLogs,
   };

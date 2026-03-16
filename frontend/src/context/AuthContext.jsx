@@ -5,6 +5,35 @@ import { authApi } from '../../../api'
 const AuthContext = createContext(null)
 
 const LOCATION_REFRESH_INTERVAL_MS = 5 * 60 * 1000 // 5 minutes
+const LAST_KNOWN_LOCATION_STORAGE_KEY = 'auth.lastKnownLocation'
+
+const isFiniteCoordinate = (value) => Number.isFinite(value)
+
+const isValidLocation = (location) => (
+  location &&
+  isFiniteCoordinate(location.latitude) &&
+  isFiniteCoordinate(location.longitude)
+)
+
+const readLastKnownLocation = () => {
+  try {
+    const raw = localStorage.getItem(LAST_KNOWN_LOCATION_STORAGE_KEY)
+    if (!raw) return null
+    const parsed = JSON.parse(raw)
+    return isValidLocation(parsed) ? parsed : null
+  } catch {
+    return null
+  }
+}
+
+const persistLastKnownLocation = (location) => {
+  if (!isValidLocation(location)) return
+  try {
+    localStorage.setItem(LAST_KNOWN_LOCATION_STORAGE_KEY, JSON.stringify(location))
+  } catch {
+    // Ignore storage failures (private mode/quota)
+  }
+}
 
 export const useAuth = () => {
   const context = useContext(AuthContext)
@@ -24,7 +53,7 @@ export const AuthProvider = ({ children }) => {
       if (storedUser && storedUser !== 'undefined' && token) {
         return JSON.parse(storedUser)
       }
-    } catch (e) {
+    } catch {
       // Ignore parse errors
     }
     return null
@@ -37,11 +66,14 @@ export const AuthProvider = ({ children }) => {
       if (storedUser && storedUser !== 'undefined' && token) {
         return false // cached user available, render immediately
       }
-    } catch (e) {}
+    } catch {
+      // Ignore parse errors
+    }
     return true // no cached user, must wait for auth check
   })
   const authChecked = useRef(false)
   const locationIntervalRef = useRef(null)
+  const lastKnownLocationRef = useRef(readLastKnownLocation())
 
   const getCurrentLocation = useCallback(() => {
     if (!navigator.geolocation) {
@@ -51,9 +83,15 @@ export const AuthProvider = ({ children }) => {
     return new Promise((resolve) => {
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          resolve({
+          const currentLocation = {
             latitude: position.coords.latitude,
             longitude: position.coords.longitude,
+          }
+          lastKnownLocationRef.current = currentLocation
+          persistLastKnownLocation(currentLocation)
+          resolve({
+            latitude: currentLocation.latitude,
+            longitude: currentLocation.longitude,
           })
         },
         () => resolve(null),
@@ -119,7 +157,7 @@ export const AuthProvider = ({ children }) => {
           localStorage.setItem('user', JSON.stringify(userData))
           // Resume location refresh if SOCIETY_ADMIN is already logged in
           startLocationRefresh(userData.role)
-        } catch (error) {
+        } catch {
           // Cookie/token invalid - use localStorage data if available
         }
       }
@@ -134,6 +172,15 @@ export const AuthProvider = ({ children }) => {
   const login = useCallback(async (email, password, { portalType, rememberMe, latitude, longitude } = {}) => {
     try {
       const response = await authApi.login({ email, password, portalType, rememberMe, latitude, longitude })
+      const providedLocation = {
+        latitude: Number(latitude),
+        longitude: Number(longitude),
+      }
+      if (isValidLocation(providedLocation)) {
+        lastKnownLocationRef.current = providedLocation
+        persistLastKnownLocation(providedLocation)
+      }
+
       const {
         token,
         id,
@@ -186,12 +233,14 @@ export const AuthProvider = ({ children }) => {
 
   const logout = useCallback(async () => {
     const location = await getCurrentLocation()
+    const fallbackLocation = lastKnownLocationRef.current || readLastKnownLocation()
+    const logoutLocation = location || fallbackLocation || undefined
     stopLocationRefresh()
     setUser(null)
     queryClient.clear()
     localStorage.removeItem('token')
     localStorage.removeItem('user')
-    authApi.logout(location || undefined).catch(() => {})
+    authApi.logout(logoutLocation).catch(() => {})
   }, [getCurrentLocation, stopLocationRefresh, queryClient])
 
   const hasRole = useCallback((...roles) => {
@@ -224,14 +273,14 @@ export const AuthProvider = ({ children }) => {
   const isCommitteeLevel = useCallback(() => hasRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'MANAGER'), [hasRole])
   
   const canManageNotices = useCallback(() => hasPermissionRole('SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'MANAGER', 'EMPLOYEE'), [hasPermissionRole])
-  const canManageDocuments = useCallback(() => hasPermissionRole('SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'MANAGER', 'EMPLOYEE'), [hasPermissionRole])
+  const canManageDocuments = useCallback(() => hasPermissionRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'MANAGER', 'EMPLOYEE'), [hasPermissionRole])
   const canViewFinancials = useCallback(() => hasPermissionRole('SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE'), [hasPermissionRole])
   const canManageContracts = useCallback(() => hasPermissionRole('SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY'), [hasPermissionRole])
   const canManageEmergencyContacts = useCallback(() => hasPermissionRole('SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'MANAGER'), [hasPermissionRole])
   const canManageMaintenanceBills = useCallback(() => hasPermissionRole('SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER'), [hasPermissionRole])
   const canManageTenants = useCallback(() => hasPermissionRole('SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'MANAGER', 'MEMBER'), [hasPermissionRole])
-  const canManageTickets = useCallback(() => hasPermissionRole('SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'COMMITTEE', 'MANAGER'), [hasPermissionRole])
-  const canCreateTickets = useCallback(() => hasPermissionRole('SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'MANAGER', 'EMPLOYEE', 'MEMBER', 'TENANT'), [hasPermissionRole])
+  const canManageTickets = useCallback(() => hasPermissionRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'COMMITTEE', 'MANAGER', 'EMPLOYEE'), [hasPermissionRole])
+  const canCreateTickets = useCallback(() => hasPermissionRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'MANAGER', 'EMPLOYEE', 'MEMBER', 'TENANT'), [hasPermissionRole])
   const canManageTransactions = useCallback(() => hasPermissionRole('SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER'), [hasPermissionRole])
   const canManageVendors = useCallback(() => hasPermissionRole('SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'MANAGER'), [hasPermissionRole])
   const canManageVendorBills = useCallback(() => hasPermissionRole('SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER'), [hasPermissionRole])

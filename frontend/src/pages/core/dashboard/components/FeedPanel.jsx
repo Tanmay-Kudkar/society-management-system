@@ -1,8 +1,17 @@
 import clsx from "clsx";
 import { badgeClasses, sectionShellClass } from "../utils/dashboardUtils";
 
-export default function FeedPanel({ title, icon, items, emptyText, badgeLabel }) {
+export default function FeedPanel({ title, icon, items, emptyText, badgeLabel, actionLabel, onActionClick }) {
   const IconComponent = icon;
+
+  const handleItemKeyDown = (event, onClick) => {
+    if (typeof onClick !== "function") return;
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      onClick();
+    }
+  };
+
   return (
     <section className={sectionShellClass}>
       <div className="mb-5 flex items-center justify-between gap-4">
@@ -15,12 +24,33 @@ export default function FeedPanel({ title, icon, items, emptyText, badgeLabel })
             <p className="text-sm text-[var(--text-secondary)]">Latest high-signal updates only.</p>
           </div>
         </div>
-        {badgeLabel && <span className="rounded-full border border-[var(--border-default)] bg-[var(--bg-tertiary)] px-3 py-1 text-xs font-semibold text-[var(--text-secondary)]">{badgeLabel}</span>}
+        <div className="flex items-center gap-2">
+          {badgeLabel && <span className="rounded-full border border-[var(--border-default)] bg-[var(--bg-tertiary)] px-3 py-1 text-xs font-semibold text-[var(--text-secondary)]">{badgeLabel}</span>}
+          {actionLabel && typeof onActionClick === "function" && (
+            <button
+              type="button"
+              onClick={onActionClick}
+              className="rounded-full border border-[var(--border-default)] bg-[var(--bg-card)] px-3 py-1 text-xs font-semibold text-[var(--accent-primary)] transition-colors hover:border-[var(--accent-primary)]"
+            >
+              {actionLabel}
+            </button>
+          )}
+        </div>
       </div>
       {items.length === 0 ? <p className="text-sm text-[var(--text-tertiary)]">{emptyText}</p> : (
         <div className="space-y-3">
           {items.map((item, index) => (
-            <article key={`${item.title}-${index}`} className="rounded-2xl border border-[var(--border-default)] bg-[var(--bg-tertiary)] px-4 py-3">
+            <article
+              key={`${item.title}-${index}`}
+              className={clsx(
+                "rounded-2xl border border-[var(--border-default)] bg-[var(--bg-tertiary)] px-4 py-3",
+                typeof item.onClick === "function" && "cursor-pointer transition-colors hover:border-[var(--accent-primary)]"
+              )}
+              onClick={typeof item.onClick === "function" ? item.onClick : undefined}
+              onKeyDown={(event) => handleItemKeyDown(event, item.onClick)}
+              role={typeof item.onClick === "function" ? "button" : undefined}
+              tabIndex={typeof item.onClick === "function" ? 0 : undefined}
+            >
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <p className="text-sm font-semibold text-[var(--text-primary)]">{item.title}</p>

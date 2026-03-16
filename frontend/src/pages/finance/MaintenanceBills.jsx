@@ -5,7 +5,7 @@ import { useAuth } from '../../context'
 import { maintenanceBillApi } from '../../../../api'
 import { Search, X, CreditCard, CheckCircle, Clock, AlertCircle, Wallet, Printer, Pencil, Trash2, AlertTriangle, Info } from 'lucide-react'
 import clsx from 'clsx'
-import { PermissionDenied, AsyncButton, InfoTooltip, NeonSweepButton } from '../../components'
+import { PermissionDenied, InfoTooltip, NeonSweepButton } from '../../components'
 import { HeroSkeleton, FinancePageSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
 import { useRazorpay } from '../../hooks/useRazorpay'
 import useMinLoadingTime from '../../hooks/useMinLoadingTime'
@@ -46,6 +46,20 @@ const formatBillMonth = (billMonth) => toMonthLabel(billMonth)
 
 const formatMoney = (value) => `₹${toNumber(value).toLocaleString()}`
 
+const getResidentLabel = (bill) => {
+  const label = bill?.ownerName?.trim()
+  return label || 'Resident details unavailable'
+}
+
+const getResidentLabelClass = (label) => {
+  if (!label) return 'text-[var(--text-tertiary)]'
+  const normalized = label.toLowerCase()
+  if (normalized.includes('vacant') || normalized.includes('no tenant')) {
+    return 'text-[#b45309]'
+  }
+  return 'text-[var(--text-tertiary)]'
+}
+
 const statusClasses = {
   PENDING: 'inline-flex items-center py-1 px-3 rounded-full text-xs font-semibold bg-[#fef3c7] text-[#92400e]',
   PARTIAL: 'inline-flex items-center py-1 px-3 rounded-full text-xs font-semibold bg-[#dbeafe] text-[#1e40af]',
@@ -74,7 +88,6 @@ export default function MaintenanceBills() {
   const [downloadingInvoiceId, setDownloadingInvoiceId] = useState(null)
   
   // Bulk generation state
-  const [bulkPropertyType, setBulkPropertyType] = useState('ALL')
   const [bulkBillMonth, setBulkBillMonth] = useState('')
   const [previewCount, setPreviewCount] = useState(null)
   const [isLoadingPreview, setIsLoadingPreview] = useState(false)
@@ -210,14 +223,17 @@ export default function MaintenanceBills() {
   })
 
   const bulkGenerateMutation = useMutation({
-    mutationFn: ({ societyId, billMonth, amount, propertyType }) => 
-      maintenanceBillApi.generateForSociety(societyId, billMonth, amount, user.id, propertyType),
+    mutationFn: ({ societyId, billMonth, amount }) => 
+      maintenanceBillApi.generateForSociety(societyId, billMonth, amount, user.id),
     onSuccess: () => {
       queryClient.invalidateQueries(['maintenanceBills'])
       setShowBulkModal(false)
-      setBulkPropertyType('ALL')
       setBulkBillMonth('')
       setPreviewCount(null)
+      toast.success('Bills generated for eligible units')
+    },
+    onError: (error) => {
+      toast.error(error?.response?.data?.message || 'No new eligible units found for this month')
     },
   })
 
@@ -327,11 +343,10 @@ export default function MaintenanceBills() {
       societyId: effectiveSocietyId,
       billMonth: formData.get('billMonth'),
       amount: toNumber(formData.get('amount')),
-      propertyType: bulkPropertyType !== 'ALL' ? bulkPropertyType : null,
     })
   }
   
-  // Fetch preview count when property type or bill month changes
+  // Fetch preview count for all eligible units for the selected month
   useEffect(() => {
     const fetchPreview = async () => {
       if (!showBulkModal || !effectiveSocietyId || !bulkBillMonth) {
@@ -343,8 +358,7 @@ export default function MaintenanceBills() {
       try {
         const response = await maintenanceBillApi.getGenerationPreview(
           effectiveSocietyId,
-          bulkBillMonth,
-          bulkPropertyType !== 'ALL' ? bulkPropertyType : null
+          bulkBillMonth
         )
         setPreviewCount(response.data)
       } catch (error) {
@@ -356,7 +370,7 @@ export default function MaintenanceBills() {
     }
     
     fetchPreview()
-  }, [showBulkModal, effectiveSocietyId, bulkBillMonth, bulkPropertyType])
+  }, [showBulkModal, effectiveSocietyId, bulkBillMonth])
 
   const handlePayment = (e) => {
     e.preventDefault()
@@ -504,7 +518,7 @@ export default function MaintenanceBills() {
                       </div>
                       <div>
                         <div className="font-semibold text-[var(--text-primary)]">{bill.flatNumber}</div>
-                        <div className="text-xs text-[var(--text-tertiary)]">{bill.ownerName || '-'}</div>
+                        <div className={clsx('text-xs', getResidentLabelClass(getResidentLabel(bill)))}>{getResidentLabel(bill)}</div>
                       </div>
                     </div>
                   </td>
@@ -575,7 +589,7 @@ export default function MaintenanceBills() {
             <div className="mb-3 flex items-start justify-between gap-2">
               <div>
                 <p className="text-base font-bold text-[var(--text-primary)]">{bill.flatNumber}</p>
-                <p className="text-xs text-[var(--text-tertiary)]">{bill.ownerName || '-'}</p>
+                <p className={clsx('text-xs', getResidentLabelClass(getResidentLabel(bill)))}>{getResidentLabel(bill)}</p>
               </div>
               <span className={clsx(statusClasses[bill.status] || statusClasses.PENDING)}>{bill.status}</span>
             </div>
@@ -726,15 +740,12 @@ export default function MaintenanceBills() {
                 />
               </div>
               <div className="flex gap-3 pt-2">
-                <button type="button" onClick={() => setShowEditModal(false)} className="flex-1 rounded-xl border border-[#cbd5f5] bg-[var(--bg-tertiary)] px-4 py-[0.65rem] font-semibold text-[#334155] transition-all hover:-translate-y-px">Cancel</button>
-                <AsyncButton
-                  type="submit"
-                  className="flex-1 rounded-xl border border-[var(--border-default)] bg-[var(--bg-card)] px-4 py-[0.65rem] font-semibold text-[var(--text-primary)] transition-all hover:-translate-y-px hover:bg-[var(--bg-tertiary)]"
-                  isLoading={updateMutation.isPending}
-                  loadingText="Saving..."
-                >
-                  Save Changes
-                </AsyncButton>
+                <NeonSweepButton type="button" tone="slate" size="md" className="flex-1" onClick={() => setShowEditModal(false)}>
+                  Cancel
+                </NeonSweepButton>
+                <NeonSweepButton type="submit" tone="cyan" size="md" className="flex-1" disabled={updateMutation.isPending}>
+                  {updateMutation.isPending ? 'Saving...' : 'Save Changes'}
+                </NeonSweepButton>
               </div>
             </form>
           </div>
@@ -823,7 +834,6 @@ export default function MaintenanceBills() {
               <h3 className="text-[1.1rem] font-semibold text-[var(--text-primary)]">Bulk Generate Bills</h3>
               <button onClick={() => {
                 setShowBulkModal(false)
-                setBulkPropertyType('ALL')
                 setBulkBillMonth('')
                 setPreviewCount(null)
               }} className="rounded-md p-1 text-[var(--text-tertiary)] transition-colors hover:bg-[rgba(148,163,184,0.2)] hover:text-[var(--text-primary)]">
@@ -859,22 +869,6 @@ export default function MaintenanceBills() {
                 Used only when society line-item settings are not configured.
               </p>
               
-              {/* Property Type Filter */}
-              <div className="flex flex-col gap-[0.4rem]">
-                <label className="text-[0.85rem] font-semibold text-[var(--text-secondary)]">Property Type</label>
-                <select
-                  value={bulkPropertyType}
-                  onChange={(e) => setBulkPropertyType(e.target.value)}
-                  className="w-full py-[0.55rem] px-3 rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] text-[var(--text-primary)] transition-all focus:outline-none focus:border-[#2563eb] focus:shadow-[0_0_0_3px_rgba(37,99,235,0.2)]"
-                >
-                  <option value="ALL">All Property Types</option>
-                  <option value="RESIDENTIAL">Residential Only</option>
-                  <option value="COMMERCIAL">Commercial Only</option>
-                  <option value="OFFICE">Office Only</option>
-                  <option value="PARKING">Parking Only</option>
-                </select>
-              </div>
-              
               {/* Preview Count */}
               <div className={clsx(
                 'flex items-center gap-2 p-3 rounded-xl text-[var(--text-secondary)]',
@@ -889,32 +883,38 @@ export default function MaintenanceBills() {
                   <span className="text-[0.85rem]">Calculating...</span>
                 ) : previewCount !== null ? (
                   <span className="text-[0.85rem]">
-                    <strong>{previewCount}</strong> {previewCount === 1 ? 'unit' : 'units'} will receive bills
-                    {bulkPropertyType !== 'ALL' && ` (${bulkPropertyType.toLowerCase()} only)`}
+                    <strong>{previewCount}</strong> eligible {previewCount === 1 ? 'unit' : 'units'} will receive bills
                   </span>
                 ) : bulkBillMonth ? (
-                  <span className="text-[0.85rem]">Select options to see preview count</span>
+                  <span className="text-[0.85rem]">Preview updates automatically for all units</span>
                 ) : (
                   <span className="text-[0.85rem]">Select a bill month to see how many units will be billed</span>
                 )}
               </div>
               
               <div className="flex gap-3 pt-2">
-                <button type="button" onClick={() => {
-                  setShowBulkModal(false)
-                  setBulkPropertyType('ALL')
-                  setBulkBillMonth('')
-                  setPreviewCount(null)
-                }} className="flex-1 py-[0.65rem] px-4 rounded-xl font-semibold border border-[#cbd5f5] text-[#334155] bg-[var(--bg-tertiary)] transition-all hover:-translate-y-px">Cancel</button>
-                <AsyncButton 
-                  type="submit" 
-                  className="flex-1 py-[0.65rem] px-4 rounded-xl font-semibold border border-[var(--border-default)] bg-[var(--bg-card)] text-[var(--text-primary)] transition-all hover:-translate-y-px hover:bg-[var(--bg-tertiary)] hover:shadow-[0_8px_20px_rgba(15,23,42,0.14)] dark:border-[rgba(148,163,184,0.22)] dark:bg-[#f8fafc] dark:text-[#0f172a] dark:hover:bg-white"
-                  isLoading={bulkGenerateMutation.isPending}
-                  loadingText="Generating..."
-                  disabled={previewCount === 0}
+                <NeonSweepButton
+                  type="button"
+                  tone="slate"
+                  size="md"
+                  className="flex-1"
+                  onClick={() => {
+                    setShowBulkModal(false)
+                    setBulkBillMonth('')
+                    setPreviewCount(null)
+                  }}
                 >
-                  Generate
-                </AsyncButton>
+                  Cancel
+                </NeonSweepButton>
+                <NeonSweepButton
+                  type="submit"
+                  tone="cyan"
+                  size="md"
+                  className="flex-1"
+                  disabled={bulkGenerateMutation.isPending || previewCount === 0}
+                >
+                  {bulkGenerateMutation.isPending ? 'Generating...' : 'Generate'}
+                </NeonSweepButton>
               </div>
             </form>
           </div>
@@ -970,15 +970,12 @@ export default function MaintenanceBills() {
                 />
               </div>
               <div className="flex gap-3 pt-2">
-                <button type="button" onClick={() => setShowPaymentModal(false)} className="flex-1 py-[0.65rem] px-4 rounded-xl font-semibold border border-[#cbd5f5] text-[#334155] bg-[var(--bg-tertiary)] transition-all hover:-translate-y-px">Cancel</button>
-                <AsyncButton
-                  type="submit"
-                  className="flex-1 py-[0.65rem] px-4 rounded-xl font-semibold border border-[var(--border-default)] bg-[var(--bg-card)] text-[var(--text-primary)] transition-all hover:-translate-y-px hover:bg-[var(--bg-tertiary)] hover:shadow-[0_8px_20px_rgba(15,23,42,0.14)] dark:border-[rgba(148,163,184,0.22)] dark:bg-[#f8fafc] dark:text-[#0f172a] dark:hover:bg-white"
-                  isLoading={paymentMutation.isPending}
-                  loadingText="Recording..."
-                >
-                  Record Payment
-                </AsyncButton>
+                <NeonSweepButton type="button" tone="slate" size="md" className="flex-1" onClick={() => setShowPaymentModal(false)}>
+                  Cancel
+                </NeonSweepButton>
+                <NeonSweepButton type="submit" tone="cyan" size="md" className="flex-1" disabled={paymentMutation.isPending}>
+                  {paymentMutation.isPending ? 'Recording...' : 'Record Payment'}
+                </NeonSweepButton>
               </div>
             </form>
           </div>
