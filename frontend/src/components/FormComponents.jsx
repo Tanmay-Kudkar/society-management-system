@@ -163,13 +163,13 @@ export const PhoneInput = ({
     localValue.length === 10 && /^[6-9]/.test(localValue) && !localError;
 
   const inputBase =
-    "w-full rounded-lg border py-2.5 px-3 bg-[var(--bg-card)] text-[var(--text-primary)] text-sm outline-none transition border-[var(--border-default)] pr-14";
-  const inputFocus = "border-blue-500 ring-2 ring-blue-500/20";
-  const inputWarn = "border-amber-500 ring-2 ring-amber-500/20";
-  const inputValid = "border-emerald-500 ring-2 ring-emerald-500/20";
+    "w-full rounded-lg border py-2.5 px-3 bg-[var(--bg-card)] text-[var(--text-primary)] text-sm outline-none transition border-[var(--border-default)] pr-14 focus-visible:outline-none focus-visible:outline-offset-0";
+  const inputFocus = "border-blue-500";
+  const inputWarn = "border-amber-500";
+  const inputValid = "border-emerald-500";
   const inputDisabled = "opacity-60 cursor-not-allowed";
   return (
-    <div className={clsx("flex flex-col gap-1.5 min-w-0", className)}>
+    <div className={clsx("contact-form-no-ring flex flex-col gap-1.5 min-w-0", className)}>
       {label && (
         <label
           htmlFor={name}

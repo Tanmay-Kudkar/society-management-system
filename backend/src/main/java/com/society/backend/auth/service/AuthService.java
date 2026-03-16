@@ -22,7 +22,7 @@ public interface AuthService {
 
     void resetPassword(String token, String newPassword);
 
-    void changePassword(Long userId, String currentPassword, String newPassword);
+    void changePassword(Long userId, String currentPassword, String newPassword, String specialKey);
 
     /** Updates the most-recent LOGIN audit's lat/lng for a SOCIETY_ADMIN session. */
     void updateCurrentLocation(Long userId, Double latitude, Double longitude);

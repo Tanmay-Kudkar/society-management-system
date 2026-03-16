@@ -7,6 +7,7 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -38,6 +39,9 @@ import com.society.backend.ticket.entity.Ticket;
 public class UserServiceImpl implements UserService {
 
     private static final Logger log = LoggerFactory.getLogger(UserServiceImpl.class);
+
+    @Value("${security.master-admin.special-key:}")
+    private String masterAdminSpecialKey;
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
@@ -393,6 +397,25 @@ public class UserServiceImpl implements UserService {
         if (!user.getEmail().equals(request.getEmail()) &&
                 userRepository.findByEmail(request.getEmail()).isPresent()) {
             throw new ApiException(HttpStatus.CONFLICT, "Email already exists");
+        }
+
+        if (user.getRole() == Role.MASTER_ADMIN && !user.getEmail().equals(request.getEmail())) {
+            String providedSpecialKey = request.getSpecialKey() != null
+                ? request.getSpecialKey().trim()
+                    : "";
+            String configuredSpecialKey = masterAdminSpecialKey != null
+                ? masterAdminSpecialKey.trim()
+                    : "";
+
+            if (configuredSpecialKey.isEmpty()) {
+                throw new ApiException(
+                        HttpStatus.FORBIDDEN,
+                "Master admin email change is disabled until special key is configured.");
+            }
+
+            if (!configuredSpecialKey.equals(providedSpecialKey)) {
+            throw new ApiException(HttpStatus.FORBIDDEN, "Invalid special key for master admin email change");
+            }
         }
 
         user.setName(request.getName());

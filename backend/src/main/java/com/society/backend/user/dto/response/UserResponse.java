@@ -23,6 +23,10 @@ public class UserResponse {
     private String societyName;
     private Long flatId;
     private String flatNumber;
+    private String currentLoginAt;
+    private String currentLoginUserAgent;
+    private String previousLoginAt;
+    private String previousLoginUserAgent;
 
     // Constructor for basic response (used in auth)
     public UserResponse(Long id, String name, String email, String role) {
