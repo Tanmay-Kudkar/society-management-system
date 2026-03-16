@@ -17,4 +17,6 @@ public interface WingService {
     WingResponse update(Long id, WingRequest request);
 
     void delete(Long id, boolean force);
+
+    int syncWithSocietyConfig(Long societyId, boolean force);
 }

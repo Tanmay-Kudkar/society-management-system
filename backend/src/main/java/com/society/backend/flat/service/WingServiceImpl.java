@@ -18,9 +18,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Set;
+import java.util.Comparator;
 import java.util.stream.Collectors;
 
-import com.society.backend.flat.entity.Flat;
 @Service
 @RequiredArgsConstructor
 public class WingServiceImpl implements WingService {
@@ -54,9 +54,13 @@ public class WingServiceImpl implements WingService {
     }
 
     @Override
+    @Transactional
     public List<WingResponse> getBySociety(Long societyId) {
         roleService.enforceSocietyScope(roleService.getCurrentUser(), societyId);
-        return wingRepository.findBySocietyId(societyId).stream()
+        Society society = societyRepository.findById(societyId)
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Society not found"));
+        ensureConfiguredWingRecordsExist(society);
+        return getConfiguredWingsForSociety(societyId).stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
@@ -94,11 +98,21 @@ public class WingServiceImpl implements WingService {
             }
         }
 
+        int configuredSocietyFloors = society.getTotalFloors() != null ? society.getTotalFloors() : 0;
+        int requestedWingFloors = request.getTotalFloors() != null ? request.getTotalFloors() : configuredSocietyFloors;
+        if (configuredSocietyFloors > 0 && requestedWingFloors > configuredSocietyFloors) {
+            throw new ApiException(HttpStatus.BAD_REQUEST,
+                    "Wing floors cannot exceed society floors: " + configuredSocietyFloors);
+        }
+        if (requestedWingFloors < 1) {
+            requestedWingFloors = configuredSocietyFloors > 0 ? configuredSocietyFloors : 1;
+        }
+
         Wing wing = new Wing();
         wing.setSociety(society);
         wing.setName(request.getName());
         wing.setDescription(request.getDescription());
-        wing.setTotalFloors(request.getTotalFloors());
+        wing.setTotalFloors(requestedWingFloors);
 
         Wing saved = wingRepository.save(wing);
         return mapToResponse(saved);
@@ -135,11 +149,21 @@ public class WingServiceImpl implements WingService {
             }
         }
 
+        int configuredSocietyFloors = society.getTotalFloors() != null ? society.getTotalFloors() : 0;
+        int requestedWingFloors = request.getTotalFloors() != null ? request.getTotalFloors() : configuredSocietyFloors;
+        if (configuredSocietyFloors > 0 && requestedWingFloors > configuredSocietyFloors) {
+            throw new ApiException(HttpStatus.BAD_REQUEST,
+                    "Wing floors cannot exceed society floors: " + configuredSocietyFloors);
+        }
+        if (requestedWingFloors < 1) {
+            requestedWingFloors = configuredSocietyFloors > 0 ? configuredSocietyFloors : 1;
+        }
+
         wing.setSociety(society);
 
         wing.setName(request.getName());
         wing.setDescription(request.getDescription());
-        wing.setTotalFloors(request.getTotalFloors());
+        wing.setTotalFloors(requestedWingFloors);
 
         Wing saved = wingRepository.save(wing);
         return mapToResponse(saved);
@@ -169,6 +193,55 @@ public class WingServiceImpl implements WingService {
         wingRepository.deleteById(id);
     }
 
+    @Override
+    @Transactional
+    public int syncWithSocietyConfig(Long societyId, boolean force) {
+        roleService.enforceSocietyScope(roleService.getCurrentUser(), societyId);
+
+        Society society = societyRepository.findById(societyId)
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Society not found"));
+
+        List<Wing> sortedWings = getSortedWingsForSociety(societyId);
+
+        int societyFloors = society.getTotalFloors() != null ? society.getTotalFloors() : 0;
+        for (Wing wing : sortedWings) {
+            int wingFloors = wing.getTotalFloors() != null ? wing.getTotalFloors() : 0;
+            int normalized = societyFloors > 0
+                    ? Math.min(Math.max(wingFloors, 1), societyFloors)
+                    : Math.max(wingFloors, 1);
+            if (wingFloors != normalized) {
+                wing.setTotalFloors(normalized);
+                wingRepository.save(wing);
+            }
+        }
+
+        int totalWingsLimit = society.getTotalWings() != null ? society.getTotalWings() : 0;
+        if (totalWingsLimit <= 0 || sortedWings.size() <= totalWingsLimit) {
+            return 0;
+        }
+
+        List<Wing> extras = sortedWings.subList(totalWingsLimit, sortedWings.size());
+
+        if (!force) {
+            long extrasWithUnits = extras.stream()
+                    .filter(wing -> flatRepository.countByWingId(wing.getId()) > 0)
+                    .count();
+            if (extrasWithUnits > 0) {
+                throw new ApiException(HttpStatus.CONFLICT,
+                        "Cannot sync wings automatically because extra wings have linked units. Use force sync to unlink and remove extras.");
+            }
+        }
+
+        for (Wing extra : extras) {
+            if (force && flatRepository.countByWingId(extra.getId()) > 0) {
+                referenceCleanupService.clearReferences("wing_id", extra.getId(), false, Set.of("wings"));
+            }
+            wingRepository.deleteById(extra.getId());
+        }
+
+        return extras.size();
+    }
+
     private WingResponse mapToResponse(Wing wing) {
         WingResponse response = new WingResponse();
         response.setId(wing.getId());
@@ -176,7 +249,17 @@ public class WingServiceImpl implements WingService {
         response.setSocietyName(wing.getSociety().getName());
         response.setName(wing.getName());
         response.setDescription(wing.getDescription());
-        response.setTotalFloors(wing.getTotalFloors());
+        int wingFloors = wing.getTotalFloors() != null ? wing.getTotalFloors() : 0;
+        int societyFloors = (wing.getSociety() != null && wing.getSociety().getTotalFloors() != null)
+                ? wing.getSociety().getTotalFloors()
+                : 0;
+        if (societyFloors > 0 && (wingFloors <= 0 || wingFloors > societyFloors)) {
+            wingFloors = societyFloors;
+        }
+        if (wingFloors <= 0) {
+            wingFloors = 1;
+        }
+        response.setTotalFloors(wingFloors);
         response.setCreatedAt(wing.getCreatedAt());
 
         // Get counts by unit type
@@ -186,5 +269,61 @@ public class WingServiceImpl implements WingService {
         response.setOfficeCount(flatRepository.countByWingIdAndUnitType(wingId, "OFFICE"));
 
         return response;
+    }
+
+    private List<Wing> getConfiguredWingsForSociety(Long societyId) {
+        Society society = societyRepository.findById(societyId)
+            .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Society not found"));
+
+        List<Wing> wings = getSortedWingsForSociety(societyId);
+
+        int totalWingsLimit = society.getTotalWings() != null ? society.getTotalWings() : 0;
+        if (totalWingsLimit > 0 && wings.size() > totalWingsLimit) {
+            return wings.subList(0, totalWingsLimit);
+        }
+
+        return wings;
+    }
+
+    private void ensureConfiguredWingRecordsExist(Society society) {
+        if (Boolean.FALSE.equals(society.getHasWings())) {
+            return;
+        }
+
+        int totalWings = society.getTotalWings() != null ? society.getTotalWings() : 0;
+        if (totalWings <= 0) {
+            return;
+        }
+
+        int totalFloors = society.getTotalFloors() != null && society.getTotalFloors() > 0
+                ? society.getTotalFloors()
+                : 1;
+
+        Set<String> existingNames = wingRepository.findBySocietyId(society.getId()).stream()
+                .map(Wing::getName)
+                .filter(name -> name != null && !name.isBlank())
+                .map(name -> name.trim().toUpperCase())
+                .collect(Collectors.toSet());
+
+        for (int i = 0; i < totalWings; i++) {
+            String expectedName = String.valueOf((char) ('A' + i));
+            if (existingNames.contains(expectedName)) {
+                continue;
+            }
+
+            Wing wing = new Wing();
+            wing.setSociety(society);
+            wing.setName(expectedName);
+            wing.setTotalFloors(totalFloors);
+            wingRepository.save(wing);
+        }
+    }
+
+    private List<Wing> getSortedWingsForSociety(Long societyId) {
+        return wingRepository.findBySocietyId(societyId).stream()
+                .sorted(Comparator
+                        .comparing((Wing w) -> String.valueOf(w.getName()), String.CASE_INSENSITIVE_ORDER)
+                        .thenComparing(Wing::getId))
+                .collect(Collectors.toList());
     }
 }

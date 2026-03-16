@@ -25,6 +25,7 @@ public class SocietyResponse {
     private Integer totalShops;
     private Integer totalOffices;
     private Integer totalWings;
+    private Integer totalFloors;
     private Boolean hasWings;
 
     private Integer twoWheelerParkingCapacity;
