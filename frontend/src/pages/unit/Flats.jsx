@@ -27,7 +27,18 @@ export default function Flats() {
   const [selectedUnitType, setSelectedUnitType] = useState('FLAT')
   const [selectedWingId, setSelectedWingId] = useState('')
   const [selectedFlatType, setSelectedFlatType] = useState('')
+  const [modalSocietyId, setModalSocietyId] = useState('')
+  const [wingSyncAttempted, setWingSyncAttempted] = useState(false)
   const [formErrors, setFormErrors] = useState({})
+
+  // Get society filter from URL (for MASTER_ADMIN viewing specific society)
+  const societyIdFromUrl = searchParams.get('society')
+
+  // Check if current user is MASTER_ADMIN or SOCIETY_ADMIN
+  const isPlatformLevel = user?.role === 'MASTER_ADMIN'
+
+  // Determine effective society ID for filtering
+  const effectiveSocietyId = isPlatformLevel && societyIdFromUrl ? parseInt(societyIdFromUrl) : user?.societyId
 
   // Initialize form when editing
   useEffect(() => {
@@ -35,12 +46,14 @@ export default function Flats() {
       setSelectedUnitType(editingFlat.unitType || 'FLAT')
       setSelectedWingId(editingFlat.wingId ? String(editingFlat.wingId) : '')
       setSelectedFlatType(editingFlat.flatType || '')
+      setModalSocietyId(String(editingFlat.societyId || effectiveSocietyId || ''))
     } else {
       setSelectedUnitType('FLAT')
       setSelectedWingId('')
       setSelectedFlatType('')
+      setModalSocietyId(String(effectiveSocietyId || ''))
     }
-  }, [editingFlat])
+  }, [editingFlat, effectiveSocietyId])
 
   // Update flatType default when unitType changes
   useEffect(() => {
@@ -55,15 +68,6 @@ export default function Flats() {
     }
   }, [selectedUnitType, editingFlat])
 
-  // Get society filter from URL (for MASTER_ADMIN viewing specific society)
-  const societyIdFromUrl = searchParams.get('society')
-
-  // Check if current user is MASTER_ADMIN or SOCIETY_ADMIN
-  const isPlatformLevel = user?.role === 'MASTER_ADMIN'
-
-  // Determine effective society ID for filtering
-  const effectiveSocietyId = isPlatformLevel && societyIdFromUrl ? parseInt(societyIdFromUrl) : user?.societyId
-
   const { data: flats = [], isLoading } = useQuery({
     queryKey: ['flats', effectiveSocietyId],
     queryFn: () => flatApi.getBySociety(effectiveSocietyId).then(res => res.data),
@@ -77,14 +81,74 @@ export default function Flats() {
     enabled: isPlatformLevel, // Only fetch if MASTER_ADMIN
   })
 
+  const modalSocietyIdNum = modalSocietyId ? parseInt(modalSocietyId) : null
+  const wingsSocietyId = isPlatformLevel ? modalSocietyIdNum : effectiveSocietyId
+
+  const { data: modalSociety } = useQuery({
+    queryKey: ['society', wingsSocietyId],
+    queryFn: () => societyApi.getById(wingsSocietyId).then((res) => res.data),
+    enabled: !!wingsSocietyId,
+  })
+
   // Fetch wings for the effective society
   const { data: wings = [] } = useQuery({
-    queryKey: ['wings', effectiveSocietyId],
-    queryFn: () => effectiveSocietyId 
-      ? wingApi.getBySociety(effectiveSocietyId).then(res => res.data)
+    queryKey: ['wings', wingsSocietyId],
+    queryFn: () => wingsSocietyId 
+      ? wingApi.getBySociety(wingsSocietyId).then(res => res.data)
       : [],
-    enabled: !!effectiveSocietyId,
+    enabled: !!wingsSocietyId,
   })
+
+  const { mutate: syncWings, isPending: isSyncingWings } = useMutation({
+    mutationFn: (societyId) => wingApi.syncWithSocietyConfig(societyId, false),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['wings'])
+    },
+  })
+
+  const availableWings = useMemo(() => {
+    const seen = new Set()
+    const deduped = wings
+      .filter((wing) => {
+        if (!wing?.id || seen.has(wing.id)) return false
+        seen.add(wing.id)
+        return true
+      })
+      .sort((a, b) => String(a?.name || '').localeCompare(String(b?.name || '')))
+
+    const totalWingsLimit = modalSociety?.totalWings || 0
+    if (totalWingsLimit > 0) {
+      return deduped.slice(0, totalWingsLimit)
+    }
+    return deduped
+  }, [wings, modalSociety?.totalWings])
+
+  const selectedWing = useMemo(
+    () => availableWings.find((wing) => String(wing.id) === String(selectedWingId)),
+    [availableWings, selectedWingId],
+  )
+
+  const maxFloor = useMemo(() => {
+    const societyFloors = modalSociety?.totalFloors || 0
+    const wingFloors = selectedWing?.totalFloors || 0
+    if (societyFloors > 0) {
+      return wingFloors > 0 ? Math.min(societyFloors, wingFloors) : societyFloors
+    }
+    return wingFloors > 0 ? wingFloors : 100
+  }, [modalSociety?.totalFloors, selectedWing?.totalFloors])
+
+  useEffect(() => {
+    setWingSyncAttempted(false)
+  }, [wingsSocietyId])
+
+  useEffect(() => {
+    const expectedWings = modalSociety?.totalWings || 0
+    if (!showModal || !wingsSocietyId || expectedWings <= 0) return
+    if (availableWings.length > 0 || wingSyncAttempted || isSyncingWings) return
+
+    setWingSyncAttempted(true)
+    syncWings(wingsSocietyId)
+  }, [showModal, wingsSocietyId, modalSociety?.totalWings, availableWings.length, wingSyncAttempted, isSyncingWings, syncWings])
 
   const createMutation = useMutation({
     mutationFn: (data) => flatApi.create(data, user.id),
@@ -161,11 +225,8 @@ export default function Flats() {
       errors.floor = 'Floor number is required'
     } else if (floorNum < 0) {
       errors.floor = 'Floor must be 0 or greater'
-    } else if (wingIdValue) {
-      const selectedWing = wings.find(w => w.id === parseInt(wingIdValue))
-      if (selectedWing && selectedWing.totalFloors && floorNum > selectedWing.totalFloors) {
-        errors.floor = `Floor cannot exceed ${selectedWing.totalFloors} (wing's max floor)`
-      }
+    } else if (floorNum > maxFloor) {
+      errors.floor = `Floor cannot exceed ${maxFloor} (configured max)`
     }
 
     // Area validation - must be positive
@@ -245,6 +306,7 @@ export default function Flats() {
       setSelectedUnitType('FLAT')
       setSelectedWingId('')
       setSelectedFlatType('2BHK')
+      setModalSocietyId(String(effectiveSocietyId || ''))
     }
     setShowModal(true)
   }
@@ -427,7 +489,12 @@ export default function Flats() {
                 <SmartSelect
                   label="Society"
                   name="societyId"
-                  defaultValue={editingFlat?.societyId}
+                  value={modalSocietyId}
+                  onChange={(e) => {
+                    setModalSocietyId(e.target.value)
+                    setSelectedWingId('')
+                    setWingSyncAttempted(false)
+                  }}
                   options={societies.map(s => ({ value: s.id, label: s.name }))}
                   required
                   icon={Home}
@@ -453,11 +520,11 @@ export default function Flats() {
                   ]}
                 />
                 <SmartSelect
-                  label={`Wing (Optional) ${selectedWingId && wings.find(w => w.id === parseInt(selectedWingId))?.totalFloors ? `(Max Floor: ${wings.find(w => w.id === parseInt(selectedWingId))?.totalFloors})` : ''}`}
+                  label={`Wing (Optional) ${selectedWingId && selectedWing?.totalFloors ? `(Max Floor: ${Math.min(selectedWing.totalFloors, modalSociety?.totalFloors || selectedWing.totalFloors)})` : ''}`}
                   name="wingId"
                   value={selectedWingId}
                   onChange={(e) => setSelectedWingId(e.target.value)}
-                  options={wings.map(w => ({
+                  options={availableWings.map(w => ({
                     value: w.id,
                     label: `${w.name} ${w.totalFloors ? `(${w.totalFloors} floors)` : ''}`
                   }))}
@@ -506,12 +573,12 @@ export default function Flats() {
               </div>
               <div className="grid gap-4 sm:grid-cols-2">
                 <NumberInput
-                  label={`Floor${selectedWingId && wings.find(w => w.id === parseInt(selectedWingId))?.totalFloors ? ` (0 to ${wings.find(w => w.id === parseInt(selectedWingId))?.totalFloors})` : ''}`}
+                  label={`Floor${selectedWingId ? ` (0 to ${maxFloor})` : ''}`}
                   name="floor"
                   defaultValue={editingFlat?.floor || 0}
                   required
                   min={0}
-                  max={selectedWingId && wings.find(w => w.id === parseInt(selectedWingId))?.totalFloors || 100}
+                  max={maxFloor}
                   error={formErrors.floor}
                 />
                 <NumberInput

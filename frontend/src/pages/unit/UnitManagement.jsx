@@ -1778,8 +1778,10 @@ export default function UnitManagement() {
       {showUnitModal && (
         <UnitFormModal
           unit={editingUnit}
+          flats={flats}
           societies={societies}
           wings={wings}
+          currentSociety={currentSociety}
           hasWingsEnabled={currentSociety?.hasWings !== false}
           canCreateWingsInline={canCreateWingsInline}
           isPlatformLevel={isPlatformLevel}
@@ -1901,7 +1903,7 @@ function StatCard({ label, value, icon: Icon, color }) {
 }
 
 // Unit Form Modal
-function UnitFormModal({ unit, societies, wings, hasWingsEnabled, canCreateWingsInline, isPlatformLevel, userSocietyId, errors, apiError, onSubmit, onClose, isLoading }) {
+function UnitFormModal({ unit, flats, societies, wings, currentSociety, hasWingsEnabled, canCreateWingsInline, isPlatformLevel, userSocietyId, errors, apiError, onSubmit, onClose, isLoading }) {
   const totalWizardSteps = 3
   const wizardStepLabels = ['Basics', 'Wing & Location', 'Review']
   const [wizardStep, setWizardStep] = useState(unit ? 3 : 1)
@@ -1914,9 +1916,46 @@ function UnitFormModal({ unit, societies, wings, hasWingsEnabled, canCreateWings
   const [selectedSocietyId, setSelectedSocietyId] = useState(unit?.societyId ? String(unit.societyId) : String(userSocietyId || ''))
   const [unitNumber, setUnitNumber] = useState(unit?.flatNumber || '')
   const [floorValue, setFloorValue] = useState(unit?.floor ?? 0)
+  const [selectedRoomNo, setSelectedRoomNo] = useState('')
   const [areaValue, setAreaValue] = useState(unit?.area ?? '')
   const [newWingName, setNewWingName] = useState('')
   const [newWingFloors, setNewWingFloors] = useState(1)
+  const [wingSyncAttempted, setWingSyncAttempted] = useState(false)
+  const selectedSocietyIdNumber = selectedSocietyId ? parseInt(selectedSocietyId, 10) : null
+  const modalWingSocietyId = isPlatformLevel ? selectedSocietyIdNumber : userSocietyId
+  const { data: modalWings = [], refetch: refetchModalWings } = useQuery({
+    queryKey: ['unit-modal-wings', modalWingSocietyId],
+    queryFn: () => wingApi.getBySociety(modalWingSocietyId).then((res) => res.data).catch(() => []),
+    enabled: !!modalWingSocietyId && !!hasWingsEnabled,
+  })
+  const selectedSociety = useMemo(() => {
+    if (isPlatformLevel) {
+      return societies.find((society) => String(society.id) === String(selectedSocietyId)) || null
+    }
+    return currentSociety || null
+  }, [isPlatformLevel, societies, selectedSocietyId, currentSociety])
+
+  const availableWings = useMemo(() => {
+    const source = isPlatformLevel ? modalWings : wings
+    const seen = new Set()
+    const deduped = source
+      .filter((wing) => {
+        if (!wing?.id || seen.has(wing.id)) return false
+        seen.add(wing.id)
+        return true
+      })
+      .sort((a, b) => String(a?.name || '').localeCompare(String(b?.name || '')))
+
+    const totalWingsLimit = selectedSociety?.totalWings || 0
+    if (totalWingsLimit > 0) {
+      return deduped.slice(0, totalWingsLimit)
+    }
+    return deduped
+  }, [isPlatformLevel, modalWings, wings, selectedSociety?.totalWings])
+
+  useEffect(() => {
+    setWingSyncAttempted(false)
+  }, [modalWingSocietyId])
   const getDefaultFlatType = (unitType) => {
     if (unitType === 'FLAT') return '2BHK'
     if (unitType === 'SHOP') return 'RETAIL'
@@ -1948,17 +1987,137 @@ function UnitFormModal({ unit, societies, wings, hasWingsEnabled, canCreateWings
   }
 
   // Get max floor from selected wing
-  const selectedWing = wings.find(w => w.id === parseInt(selectedWingId))
-  const maxFloor = selectedWing?.totalFloors || 100
+  const selectedWing = availableWings.find(w => w.id === parseInt(selectedWingId))
+  const societyFloorLimit = selectedSociety?.totalFloors || 0
+  const wingFloorLimit = selectedWing?.totalFloors || 0
+  const maxFloor = societyFloorLimit > 0
+    ? (wingFloorLimit > 0 ? Math.min(societyFloorLimit, wingFloorLimit) : societyFloorLimit)
+    : (wingFloorLimit > 0 ? wingFloorLimit : 100)
+
+  const selectedFloorNumber = Number(floorValue)
+  const wingNamePrefix = selectedWing?.name
+    ? String(selectedWing.name).trim().replace(/\s+/g, '').toUpperCase()
+    : null
+
+  const parseRoomNoFromUnit = (flatNumber, floorNumber) => {
+    const value = String(flatNumber || '')
+    const segmented = value.match(/^[^-]+-(\d+)-(\d{1,3})$/)
+    if (segmented) {
+      const parsedFloor = Number(segmented[1])
+      const parsedRoom = Number(segmented[2])
+      if (Number.isInteger(parsedRoom) && parsedRoom > 0 && (!Number.isInteger(floorNumber) || floorNumber < 0 || parsedFloor === floorNumber)) {
+        return parsedRoom
+      }
+    }
+
+    const legacy = value.match(/^[^-]+-(\d+)$/)
+    if (legacy && Number.isInteger(floorNumber) && floorNumber >= 0) {
+      const numeric = String(legacy[1])
+      // Supports merged format like A-101 where floor and room are concatenated.
+      if (numeric.startsWith(String(floorNumber))) {
+        const suffix = numeric.slice(String(floorNumber).length)
+        const parsed = Number(suffix)
+        if (Number.isInteger(parsed) && parsed > 0) return parsed
+      }
+    }
+
+    return null
+  }
+
+  const getUnitPrefixByType = (unitType) => {
+    if (unitType === 'SHOP') return 'S'
+    if (unitType === 'OFFICE') return 'O'
+    return 'F'
+  }
+
+  const occupiedRoomsOnSelectedFloor = useMemo(() => {
+    if (!Number.isInteger(selectedFloorNumber) || selectedFloorNumber < 0) return new Set()
+
+    const occupied = new Set()
+    flats
+      .filter((item) => {
+        if (!item || item.id === unit?.id) return false
+        if ((item.unitType || 'FLAT') !== selectedUnitType) return false
+        if (Number(item.floor) !== selectedFloorNumber) return false
+
+        if (selectedWingId) {
+          return String(item.wingId || '') === String(selectedWingId)
+        }
+
+        return !item.wingId
+      })
+      .forEach((item) => {
+        const roomNo = parseRoomNoFromUnit(item.flatNumber, selectedFloorNumber)
+        if (Number.isInteger(roomNo) && roomNo > 0) {
+          occupied.add(roomNo)
+        }
+      })
+
+    return occupied
+  }, [flats, unit?.id, selectedUnitType, selectedFloorNumber, selectedWingId])
+
+  const generatedUnitNumber = useMemo(() => {
+    if (!Number.isInteger(selectedFloorNumber) || selectedFloorNumber < 0) return ''
+    const roomNo = Number(selectedRoomNo)
+    if (!Number.isInteger(roomNo) || roomNo < 1) return ''
+
+    const prefix = wingNamePrefix || getUnitPrefixByType(selectedUnitType)
+    return `${prefix}-${selectedFloorNumber}${String(roomNo).padStart(2, '0')}`
+  }, [selectedFloorNumber, selectedRoomNo, wingNamePrefix, selectedUnitType])
+
+  useEffect(() => {
+    if (isPlatformLevel) {
+      setSelectedWingId('')
+      setShowInlineWingCreate(false)
+      setNewWingName('')
+      setNewWingFloors(1)
+    }
+  }, [selectedSocietyId, isPlatformLevel])
+
+  useEffect(() => {
+    if (!hasWingsEnabled) return
+    if (availableWings.length === 0) {
+      setSelectedWingId('')
+      return
+    }
+    const existsInList = availableWings.some((wing) => String(wing.id) === String(selectedWingId))
+    if (!existsInList) {
+      setSelectedWingId(String(availableWings[0].id))
+    }
+  }, [availableWings, selectedWingId, hasWingsEnabled])
+
+  useEffect(() => {
+    if (unit) {
+      const roomNo = parseRoomNoFromUnit(unit.flatNumber, Number(unit.floor))
+      setSelectedRoomNo(roomNo ? String(roomNo) : '')
+    } else {
+      setSelectedRoomNo('')
+    }
+  }, [unit])
+
+  useEffect(() => {
+    if (unit) return
+    setUnitNumber(generatedUnitNumber)
+  }, [generatedUnitNumber, unit])
+
+  useEffect(() => {
+    const expectedWings = selectedSociety?.totalWings || 0
+    if (!modalWingSocietyId || !hasWingsEnabled || expectedWings <= 0) return
+    if (availableWings.length > 0 || wingSyncAttempted) return
+
+    setWingSyncAttempted(true)
+    wingApi
+      .syncWithSocietyConfig(modalWingSocietyId, false)
+      .catch(() => null)
+      .finally(() => {
+        refetchModalWings()
+      })
+  }, [modalWingSocietyId, hasWingsEnabled, selectedSociety?.totalWings, availableWings.length, wingSyncAttempted, refetchModalWings])
 
   const validateWizardStep = (step) => {
     if (step === 1) {
       if (isPlatformLevel && !selectedSocietyId) {
         setWizardError('Please select a society before continuing.')
-        return false
-      }
-      if (!unitNumber?.trim()) {
-        setWizardError('Unit number is required.')
         return false
       }
       if (!selectedFlatType) {
@@ -1978,6 +2137,25 @@ function UnitFormModal({ unit, societies, wings, hasWingsEnabled, canCreateWings
       }
       if (Number(floorValue) > maxFloor) {
         setWizardError(`Floor cannot exceed ${maxFloor} for selected wing.`)
+        return false
+      }
+      if (!unit && !selectedRoomNo) {
+        setWizardError('Please enter room number for this floor.')
+        return false
+      }
+      if (!unit) {
+        const roomNo = Number(selectedRoomNo)
+        if (!Number.isInteger(roomNo) || roomNo < 1) {
+          setWizardError('Room number must be a positive whole number.')
+          return false
+        }
+        if (occupiedRoomsOnSelectedFloor.has(roomNo)) {
+          setWizardError(`Room ${String(roomNo).padStart(2, '0')} on floor ${selectedFloorNumber} is already occupied. Choose another room number.`)
+          return false
+        }
+      }
+      if (!unit && !generatedUnitNumber) {
+        setWizardError('Unable to generate unit number. Check floor and room number.')
         return false
       }
       if (areaValue === '' || areaValue === null || Number.isNaN(Number(areaValue))) {
@@ -2089,22 +2267,10 @@ function UnitFormModal({ unit, societies, wings, hasWingsEnabled, canCreateWings
                 ]}
               />
 
-              <FormInput
-                label="Unit Number"
-                value={unitNumber}
-                onChange={(e) => setUnitNumber(e.target.value)}
-                required
-                placeholder={
-                  selectedUnitType === 'SHOP'
-                    ? 'e.g., S-101'
-                    : selectedUnitType === 'OFFICE'
-                      ? 'e.g., O-201'
-                      : 'e.g., A-101'
-                }
-                pattern="[A-Za-z0-9][A-Za-z0-9\-\/]*"
-                maxLength="20"
-                error={errors.flatNumber}
-              />
+              <div className="rounded-xl border border-[var(--border-default)] bg-[var(--bg-tertiary)] px-3 py-2.5 sm:col-span-2">
+                <p className="text-xs font-semibold uppercase tracking-[0.04em] text-[var(--text-tertiary)]">Generated Unit Number</p>
+                <p className="mt-1 text-sm font-semibold text-[var(--text-primary)]">{unit ? unitNumber : (generatedUnitNumber || 'Will be generated after selecting floor and room')}</p>
+              </div>
 
               <SmartSelect
                 label={selectedUnitType === 'FLAT' ? 'Configuration' : selectedUnitType === 'SHOP' ? 'Shop Type' : 'Office Type'}
@@ -2158,10 +2324,18 @@ function UnitFormModal({ unit, societies, wings, hasWingsEnabled, canCreateWings
                     label={`Wing (Optional)${selectedWingId && selectedWing?.totalFloors ? ` (Max Floor: ${selectedWing.totalFloors})` : ''}`}
                     value={selectedWingId}
                     onChange={(e) => setSelectedWingId(e.target.value)}
-                    placeholder="No Wing"
-                    options={wings.map(w => ({ value: w.id, label: `${w.name}${w.totalFloors ? ` (${w.totalFloors} floors)` : ''}` }))}
+                    placeholder="Select Wing"
+                    showPlaceholder={false}
+                    options={availableWings.map(w => ({ value: w.id, label: `${w.name}${w.totalFloors ? ` (${w.totalFloors} floors)` : ''}` }))}
                   />
-                  {canCreateWingsInline && (
+                  {availableWings.length === 0 && (
+                    <div className="rounded-xl border border-[var(--border-default)] bg-[var(--bg-tertiary)] px-3 py-2.5 text-sm text-[var(--text-secondary)]">
+                      {isPlatformLevel
+                        ? 'No wings found for selected society. Please create wings from wing management first.'
+                        : 'No wings available for this society.'}
+                    </div>
+                  )}
+                  {canCreateWingsInline && !isPlatformLevel && (
                     <div className="rounded-xl border border-[var(--border-default)] bg-[var(--bg-tertiary)] p-3">
                       <button
                         type="button"
@@ -2209,6 +2383,16 @@ function UnitFormModal({ unit, societies, wings, hasWingsEnabled, canCreateWings
                 error={errors.floor}
                 icon={Layers}
               />
+              {!unit && (
+                <FormInput
+                  label="Room Number On This Floor"
+                  value={selectedRoomNo}
+                  onChange={(e) => setSelectedRoomNo(String(e.target.value || '').replace(/\D/g, ''))}
+                  required
+                  placeholder="e.g., 01"
+                  error={!selectedRoomNo ? 'Enter room number' : ''}
+                />
+              )}
               <NumberInput
                 label="Area (sq.ft)"
                 value={areaValue}

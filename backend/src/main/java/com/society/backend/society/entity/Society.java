@@ -50,6 +50,9 @@ public class Society {
     @Column(name = "total_wings")
     private Integer totalWings = 0;
 
+    @Column(name = "total_floors")
+    private Integer totalFloors = 1;
+
     @Column(name = "has_wings")
     private Boolean hasWings = true;
 
@@ -67,6 +70,9 @@ public class Society {
         createdAt = LocalDateTime.now();
         if (hasWings == null) {
             hasWings = true;
+        }
+        if (totalFloors == null || totalFloors < 1) {
+            totalFloors = 1;
         }
     }
 }

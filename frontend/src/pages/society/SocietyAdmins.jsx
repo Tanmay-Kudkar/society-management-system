@@ -42,6 +42,7 @@ const BULK_FIELD_CONFIG = [
   { key: 'totalShops', label: 'Shops', required: true, description: 'Total shop count (0 or more)', sample: '8', aliases: ['shops', 'totalshops', 'total_shops'] },
   { key: 'totalOffices', label: 'Offices', required: true, description: 'Total office count (0 or more)', sample: '5', aliases: ['offices', 'totaloffices', 'total_offices'] },
   { key: 'totalWings', label: 'Wings', required: true, description: 'Total wing count (0 or more)', sample: '3', aliases: ['wings', 'totalwings', 'total_wings'] },
+  { key: 'totalFloors', label: 'Floors', required: true, description: 'Total building floors (minimum 1)', sample: '12', aliases: ['floors', 'totalfloors', 'total_floors'] },
   { key: 'twoWheelerParkingCapacity', label: '2W Parking', required: false, description: 'Two-wheeler parking spots (optional)', sample: '50', aliases: ['twowheeler', 'two_wheeler', 'twowheelerparkingcapacity', 'two_wheeler_parking_capacity', '2wparkingcapacity', '2w_parking'] },
   { key: 'fourWheelerParkingCapacity', label: '4W Parking', required: false, description: 'Four-wheeler parking spots (optional)', sample: '30', aliases: ['fourwheeler', 'four_wheeler', 'fourwheelerparkingcapacity', 'four_wheeler_parking_capacity', '4wparkingcapacity', '4w_parking'] },
 ]
@@ -114,7 +115,7 @@ const validateBulkRows = ({ rows, isPlatformOwner, existingAdminEmails, existing
       'adminName', 'adminEmail', 'adminPassword', 'adminPhone',
       'societyName', 'address', 'state', 'city', 'pincode',
       'registrationNumber', 'societyEmail', 'societyPhone',
-      'totalFlats', 'totalShops', 'totalOffices', 'totalWings',
+      'totalFlats', 'totalShops', 'totalOffices', 'totalWings', 'totalFloors',
     ]
 
     requiredFields.forEach((fieldKey) => {
@@ -154,14 +155,15 @@ const validateBulkRows = ({ rows, isPlatformOwner, existingAdminEmails, existing
       errors.push('Pincode must be exactly 6 digits')
     }
 
-    const numericFields = ['totalFlats', 'totalShops', 'totalOffices', 'totalWings']
+    const numericFields = ['totalFlats', 'totalShops', 'totalOffices', 'totalWings', 'totalFloors']
     const parsedNumbers = {}
     numericFields.forEach((field) => {
       const raw = normalizeText(row[field])
       const parsed = Number(raw)
-      if (!Number.isInteger(parsed) || parsed < 0) {
+      const minAllowed = field === 'totalFloors' ? 1 : 0
+      if (!Number.isInteger(parsed) || parsed < minAllowed) {
         const fieldLabel = BULK_FIELD_CONFIG.find((item) => item.key === field)?.label || field
-        errors.push(`${fieldLabel} must be a whole number greater than or equal to 0`)
+        errors.push(`${fieldLabel} must be a whole number greater than or equal to ${minAllowed}`)
       } else {
         parsedNumbers[field] = parsed
       }
@@ -222,6 +224,7 @@ const validateBulkRows = ({ rows, isPlatformOwner, existingAdminEmails, existing
       totalShops: parsedNumbers.totalShops,
       totalOffices: parsedNumbers.totalOffices,
       totalWings: parsedNumbers.totalWings,
+      totalFloors: parsedNumbers.totalFloors,
       twoWheelerParkingCapacity: parsedNumbers.twoWheelerParkingCapacity,
       fourWheelerParkingCapacity: parsedNumbers.fourWheelerParkingCapacity,
     }
@@ -451,6 +454,7 @@ export default function SocietyAdmins() {
           totalShops: row.totalShops,
           totalOffices: row.totalOffices,
           totalWings: row.totalWings,
+          totalFloors: row.totalFloors,
           hasWings: row.totalWings > 0,
           twoWheelerParkingCapacity: row.twoWheelerParkingCapacity || undefined,
           fourWheelerParkingCapacity: row.fourWheelerParkingCapacity || undefined,
@@ -781,8 +785,9 @@ export default function SocietyAdmins() {
       totalFlats: parseInt(fd.get('totalFlats'), 10),
       totalShops: parseInt(fd.get('totalShops'), 10),
       totalOffices: parseInt(fd.get('totalOffices'), 10),
-        totalWings: hasWingsEnabled ? parseInt(fd.get('totalWings'), 10) : 0,
-        hasWings: hasWingsEnabled,
+      totalWings: hasWingsEnabled ? parseInt(fd.get('totalWings'), 10) : 0,
+      totalFloors: parseInt(fd.get('totalFloors'), 10),
+      hasWings: hasWingsEnabled,
       twoWheelerParkingCapacity: fd.get('twoWheelerParkingCapacity') ? parseInt(fd.get('twoWheelerParkingCapacity'), 10) || undefined : undefined,
       fourWheelerParkingCapacity: fd.get('fourWheelerParkingCapacity') ? parseInt(fd.get('fourWheelerParkingCapacity'), 10) || undefined : undefined,
     }
@@ -819,9 +824,15 @@ export default function SocietyAdmins() {
     if (Number.isNaN(societyData.totalShops)) missingSocietyFields.push('Shops')
     if (Number.isNaN(societyData.totalOffices)) missingSocietyFields.push('Offices')
     if (hasWingsEnabled && Number.isNaN(societyData.totalWings)) missingSocietyFields.push('Wings')
+    if (Number.isNaN(societyData.totalFloors)) missingSocietyFields.push('Floors')
 
     if (missingSocietyFields.length > 0) {
       setFormError(`Please fill required fields: ${missingSocietyFields.join(', ')}`)
+      return
+    }
+
+    if (societyData.totalFloors < 1) {
+      setFormError('Floors must be at least 1')
       return
     }
 
@@ -1178,10 +1189,11 @@ export default function SocietyAdmins() {
                   />
                   Society has multiple wings/towers
                 </label>
-                <div className="grid grid-cols-4 max-md:grid-cols-2 gap-3">
+                <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
                   <NumberInput label="Flats" name="totalFlats" min={0} defaultValue={activeSociety?.totalFlats ?? 0} required />
                   <NumberInput label="Shops" name="totalShops" min={0} defaultValue={activeSociety?.totalShops ?? 0} required />
                   <NumberInput label="Offices" name="totalOffices" min={0} defaultValue={activeSociety?.totalOffices ?? 0} required />
+                  <NumberInput label="Floors" name="totalFloors" min={1} defaultValue={activeSociety?.totalFloors ?? 1} required />
                   <NumberInput
                     label="Wings"
                     name="totalWings"

@@ -23,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.Comparator;
 import java.util.stream.Collectors;
 
 @Service
@@ -43,6 +44,7 @@ public class FlatServiceImpl implements FlatService {
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Society not found"));
 
         roleService.enforceSocietyScope(roleService.getCurrentUser(), society.getId());
+        validateUnitPlacement(request, society, null);
 
         Flat flat = new Flat();
         mapRequestToEntity(request, flat, society);
@@ -103,6 +105,7 @@ public class FlatServiceImpl implements FlatService {
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Society not found"));
 
         roleService.enforceSocietyScope(roleService.getCurrentUser(), society.getId());
+        validateUnitPlacement(request, society, flat);
 
         mapRequestToEntity(request, flat, society);
         Flat saved = flatRepository.save(flat);
@@ -182,9 +185,63 @@ public class FlatServiceImpl implements FlatService {
             }
             Wing wing = wingRepository.findById(request.getWingId())
                     .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Wing not found"));
+            if (wing.getSociety() == null || !society.getId().equals(wing.getSociety().getId())) {
+                throw new ApiException(HttpStatus.BAD_REQUEST,
+                        "Selected wing does not belong to the selected society.");
+            }
             flat.setWing(wing);
         } else {
             flat.setWing(null);
+        }
+    }
+
+    private void validateUnitPlacement(FlatRequest request, Society society, Flat existingFlat) {
+        if (request.getFloor() != null && request.getFloor() < 0) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Floor must be 0 or greater.");
+        }
+
+        int societyFloors = society.getTotalFloors() != null ? society.getTotalFloors() : 0;
+        if (societyFloors > 0 && request.getFloor() != null && request.getFloor() > societyFloors) {
+            throw new ApiException(HttpStatus.BAD_REQUEST,
+                    "Floor cannot exceed society floor limit: " + societyFloors);
+        }
+
+        if (request.getWingId() == null) {
+            return;
+        }
+
+        Wing wing = wingRepository.findById(request.getWingId())
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Wing not found"));
+
+        if (wing.getSociety() == null || !society.getId().equals(wing.getSociety().getId())) {
+            throw new ApiException(HttpStatus.BAD_REQUEST,
+                    "Selected wing does not belong to the selected society.");
+        }
+
+        int configuredWingLimit = society.getTotalWings() != null ? society.getTotalWings() : 0;
+        if (configuredWingLimit > 0) {
+            List<Long> allowedWingIds = wingRepository.findBySocietyId(society.getId()).stream()
+                    .sorted(Comparator
+                            .comparing((Wing item) -> String.valueOf(item.getName()), String.CASE_INSENSITIVE_ORDER)
+                            .thenComparing(Wing::getId))
+                    .limit(configuredWingLimit)
+                    .map(Wing::getId)
+                    .collect(Collectors.toList());
+
+            if (!allowedWingIds.contains(wing.getId())) {
+                throw new ApiException(HttpStatus.BAD_REQUEST,
+                        "Selected wing is outside configured wing limit for this society.");
+            }
+        }
+
+        int wingFloors = wing.getTotalFloors() != null ? wing.getTotalFloors() : 0;
+        int effectiveMaxFloor = societyFloors > 0 && wingFloors > 0
+                ? Math.min(societyFloors, wingFloors)
+                : (societyFloors > 0 ? societyFloors : wingFloors);
+
+        if (effectiveMaxFloor > 0 && request.getFloor() != null && request.getFloor() > effectiveMaxFloor) {
+            throw new ApiException(HttpStatus.BAD_REQUEST,
+                    "Floor cannot exceed selected wing limit: " + effectiveMaxFloor);
         }
     }
 
