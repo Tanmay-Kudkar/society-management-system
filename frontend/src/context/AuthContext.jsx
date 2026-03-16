@@ -4,6 +4,8 @@ import { authApi } from '../../../api'
 
 const AuthContext = createContext(null)
 
+const LOCATION_REFRESH_INTERVAL_MS = 5 * 60 * 1000 // 5 minutes
+
 export const useAuth = () => {
   const context = useContext(AuthContext)
   if (!context) {
@@ -39,6 +41,7 @@ export const AuthProvider = ({ children }) => {
     return true // no cached user, must wait for auth check
   })
   const authChecked = useRef(false)
+  const locationIntervalRef = useRef(null)
 
   const getCurrentLocation = useCallback(() => {
     if (!navigator.geolocation) {
@@ -61,6 +64,25 @@ export const AuthProvider = ({ children }) => {
         },
       )
     })
+  }, [])
+
+  const startLocationRefresh = useCallback((role) => {
+    if (role !== 'SOCIETY_ADMIN') return
+    // Clear any existing interval
+    if (locationIntervalRef.current) clearInterval(locationIntervalRef.current)
+    locationIntervalRef.current = setInterval(async () => {
+      const loc = await getCurrentLocation()
+      if (loc) {
+        authApi.updateCurrentLocation(loc.latitude, loc.longitude).catch(() => {})
+      }
+    }, LOCATION_REFRESH_INTERVAL_MS)
+  }, [getCurrentLocation])
+
+  const stopLocationRefresh = useCallback(() => {
+    if (locationIntervalRef.current) {
+      clearInterval(locationIntervalRef.current)
+      locationIntervalRef.current = null
+    }
   }, [])
 
   useEffect(() => {
@@ -91,6 +113,8 @@ export const AuthProvider = ({ children }) => {
             return isSameUser ? prevUser : userData
           })
           localStorage.setItem('user', JSON.stringify(userData))
+          // Resume location refresh if SOCIETY_ADMIN is already logged in
+          startLocationRefresh(userData.role)
         } catch (error) {
           // Cookie/token invalid - use localStorage data if available
         }
@@ -100,7 +124,8 @@ export const AuthProvider = ({ children }) => {
     }
     
     checkAuth()
-  }, [])
+    return () => stopLocationRefresh()
+  }, [startLocationRefresh, stopLocationRefresh])
 
   const login = useCallback(async (email, password, { portalType, rememberMe, latitude, longitude } = {}) => {
     try {
@@ -112,6 +137,7 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem('token', token)
       localStorage.setItem('user', JSON.stringify(userData))
       setUser(userData)
+      startLocationRefresh(role)
       
       return { success: true }
     } catch (error) {
@@ -120,17 +146,17 @@ export const AuthProvider = ({ children }) => {
         error: error.response?.data?.message || 'Login failed' 
       }
     }
-  }, [])
+  }, [startLocationRefresh])
 
   const logout = useCallback(async () => {
     const location = await getCurrentLocation()
-
+    stopLocationRefresh()
     setUser(null)
     queryClient.clear()
     localStorage.removeItem('token')
     localStorage.removeItem('user')
     authApi.logout(location || undefined).catch(() => {})
-  }, [getCurrentLocation, queryClient])
+  }, [getCurrentLocation, stopLocationRefresh, queryClient])
 
   const hasRole = useCallback((...roles) => {
     if (!user) return false

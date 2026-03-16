@@ -5,7 +5,6 @@ import com.society.backend.auth.dto.response.*;
 import com.society.backend.user.dto.response.UserResponse;
 import com.society.backend.auth.service.AuthService;
 import com.society.backend.common.security.JwtUtils;
-import com.society.backend.auth.entity.LoginAudit;
 import com.society.backend.auth.repository.LoginAuditRepository;
 import com.society.backend.user.entity.Role;
 import jakarta.servlet.http.Cookie;
@@ -17,7 +16,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/auth")
@@ -130,14 +131,62 @@ public class AuthController {
     }
 
     @GetMapping("/login-audit/user/{userId}")
-    @PreAuthorize("hasAuthority('MASTER_ADMIN')")
-    public ResponseEntity<java.util.List<LoginAudit>> getLoginAuditByUser(@PathVariable Long userId) {
-        return ResponseEntity.ok(loginAuditRepository.findByUserIdAndUserRoleOrderByTimestampDesc(userId, Role.SOCIETY_ADMIN));
+    @PreAuthorize("hasRole('MASTER_ADMIN')")
+    public ResponseEntity<List<LoginAuditResponse>> getLoginAuditByUser(@PathVariable Long userId) {
+        List<LoginAuditResponse> result = loginAuditRepository
+                .findByUserIdAndUserRoleOrderByTimestampDesc(userId, Role.SOCIETY_ADMIN)
+                .stream().map(LoginAuditResponse::from).collect(Collectors.toList());
+        return ResponseEntity.ok(result);
     }
 
     @GetMapping("/login-audit/society/{societyId}")
-    @PreAuthorize("hasAuthority('MASTER_ADMIN')")
-    public ResponseEntity<java.util.List<LoginAudit>> getLoginAuditBySociety(@PathVariable Long societyId) {
-        return ResponseEntity.ok(loginAuditRepository.findByUser_Society_IdAndUserRoleOrderByTimestampDesc(societyId, Role.SOCIETY_ADMIN));
+    @PreAuthorize("hasRole('MASTER_ADMIN')")
+    public ResponseEntity<List<LoginAuditResponse>> getLoginAuditBySociety(@PathVariable Long societyId) {
+        List<LoginAuditResponse> result = loginAuditRepository
+                .findByUser_Society_IdAndUserRoleOrderByTimestampDesc(societyId, Role.SOCIETY_ADMIN)
+                .stream().map(LoginAuditResponse::from).collect(Collectors.toList());
+        return ResponseEntity.ok(result);
+    }
+
+    @PatchMapping("/login-audit/current-location")
+    @PreAuthorize("hasRole('SOCIETY_ADMIN')")
+    public ResponseEntity<Void> updateCurrentLocation(
+            @CookieValue(name = "jwt", required = false) String token,
+            @RequestBody UpdateLocationRequest request) {
+        if (token == null || token.isEmpty()) {
+            return ResponseEntity.status(401).build();
+        }
+        Long userId = jwtUtils.getUserIdFromToken(token);
+        authService.updateCurrentLocation(userId, request.getLatitude(), request.getLongitude());
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/login-audit/{id}")
+    @PreAuthorize("hasRole('MASTER_ADMIN')")
+    public ResponseEntity<Void> deleteLoginAudit(
+            @PathVariable Long id,
+            @RequestParam(defaultValue = "false") boolean deletePair) {
+        if (deletePair) {
+            loginAuditRepository.findById(id).ifPresent(audit -> {
+                // Find the paired record: LOGIN→next LOGOUT, LOGOUT→previous LOGIN
+                java.util.Optional<com.society.backend.auth.entity.LoginAudit> pair;
+                if (audit.getAction() == com.society.backend.auth.entity.LoginAudit.Action.LOGIN) {
+                    pair = loginAuditRepository.findTopByUserIdAndActionAndTimestampAfterOrderByTimestampAsc(
+                            audit.getUser().getId(),
+                            com.society.backend.auth.entity.LoginAudit.Action.LOGOUT,
+                            audit.getTimestamp());
+                } else {
+                    pair = loginAuditRepository.findTopByUserIdAndActionAndTimestampBeforeOrderByTimestampDesc(
+                            audit.getUser().getId(),
+                            com.society.backend.auth.entity.LoginAudit.Action.LOGIN,
+                            audit.getTimestamp());
+                }
+                pair.ifPresent(loginAuditRepository::delete);
+                loginAuditRepository.delete(audit);
+            });
+        } else {
+            loginAuditRepository.deleteById(id);
+        }
+        return ResponseEntity.noContent().build();
     }
 }

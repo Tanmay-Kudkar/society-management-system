@@ -29,6 +29,8 @@ export default function Login() {
   const [location, setLocation] = useState(DEFAULT_LOCATION)
   const [locationStatus, setLocationStatus] = useState('Detecting your location for society-admin session monitoring...')
   const [locating, setLocating] = useState(false)
+  const [isManualLocation, setIsManualLocation] = useState(false)
+  const [hasCapturedLocation, setHasCapturedLocation] = useState(false)
   const [isLocationPanelOpen, setIsLocationPanelOpen] = useState(false)
   const [locationName, setLocationName] = useState('Resolving location name...')
   const [isResolvingLocation, setIsResolvingLocation] = useState(false)
@@ -73,7 +75,7 @@ export default function Login() {
 
   const detectLocation = useCallback(() => {
     if (!navigator.geolocation) {
-      setLocationStatus('Geolocation is not supported by this browser. Default map point is being used.')
+      setLocationStatus('Geolocation is not supported by this browser. Use Adjust Map to set location manually.')
       return
     }
 
@@ -84,6 +86,8 @@ export default function Login() {
           latitude: position.coords.latitude,
           longitude: position.coords.longitude,
         })
+        setIsManualLocation(false)
+        setHasCapturedLocation(true)
         setLocationStatus('Location captured. Click map to fine-tune the pin for accurate audit tracking.')
         setLocating(false)
       },
@@ -97,6 +101,27 @@ export default function Login() {
         maximumAge: 120000,
       },
     )
+  }, [])
+
+  const getFreshLocationForSubmit = useCallback(() => {
+    if (!navigator.geolocation) return Promise.resolve(null)
+
+    return new Promise((resolve) => {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          resolve({
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+          })
+        },
+        () => resolve(null),
+        {
+          enableHighAccuracy: true,
+          timeout: 5000,
+          maximumAge: 0,
+        },
+      )
+    })
   }, [])
 
   useEffect(() => {
@@ -135,10 +160,22 @@ export default function Login() {
     }
 
     setLoading(true)
+
+    let submitLocation = (isManualLocation || hasCapturedLocation) ? location : null
+    if (!isManualLocation) {
+      const freshLocation = await getFreshLocationForSubmit()
+      if (freshLocation) {
+        submitLocation = freshLocation
+        setLocation(freshLocation)
+        setHasCapturedLocation(true)
+        setLocationStatus('Live location captured for login audit.')
+      }
+    }
+
     const result = await login(email, password, {
       rememberMe,
-      latitude: location.latitude,
-      longitude: location.longitude,
+      latitude: submitLocation?.latitude,
+      longitude: submitLocation?.longitude,
     })
     if (result.success) {
       if (rememberMe) {
@@ -151,7 +188,9 @@ export default function Login() {
       navigate('/dashboard')
     } else {
       setError(result.error)
-      setFieldErrors({ password: 'Invalid credentials. Please verify and try again.' })
+      if ((result.error || '').toLowerCase().includes('invalid email or password')) {
+        setFieldErrors({ password: 'Invalid credentials. Please verify and try again.' })
+      }
       setShake(true)
       setTimeout(() => setShake(false), 600)
     }
@@ -439,6 +478,8 @@ export default function Login() {
                         location={location}
                         onPick={(coords) => {
                           setLocation(coords)
+                          setIsManualLocation(true)
+                          setHasCapturedLocation(true)
                           setLocationStatus('Location pin updated manually. This location will be used for login audit.')
                         }}
                       />

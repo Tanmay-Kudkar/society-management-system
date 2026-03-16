@@ -36,6 +36,7 @@ import {
   ArrowLeftRight,
   Ban,
   BookOpen,
+  ClipboardList,
 } from "lucide-react";
 import clsx from "clsx";
 
@@ -48,6 +49,7 @@ const routePrefetchMap = {
   "/users": () => import("../pages/users/Users"),
   "/roles-permissions": () => import("../pages/users/RolesPermissions"),
   "/society-admins": () => import("../pages/society/SocietyAdmins"),
+  "/login-audit": () => import("../pages/society/LoginAudit"),
   "/unit-management": () => import("../pages/unit/UnitManagement"),
   "/tenants": () => import("../pages/unit/Tenants"),
   "/vehicles": () => import("../pages/unit/Vehicles"),
@@ -102,6 +104,12 @@ const platformOwnerMenu = [
     label: "Society Admins",
     icon: UserCheck,
     path: "/society-admins",
+  },
+  {
+    id: "login-audit",
+    label: "Login Audit",
+    icon: ClipboardList,
+    path: "/login-audit",
   },
   {
     id: "settings",
