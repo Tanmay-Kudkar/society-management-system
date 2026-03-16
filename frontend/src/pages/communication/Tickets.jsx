@@ -146,7 +146,7 @@ export default function Tickets() {
     }
   }
 
-  const showSkeleton = useMinLoadingTime(isLoading || isError)
+  const showSkeleton = useMinLoadingTime(isLoading)
 
   if (showSkeleton) {
     return (
@@ -156,6 +156,23 @@ export default function Tickets() {
         <SummaryRowSkeleton count={4} />
         <FiltersSkeleton filterCount={2} />
         <ListSkeleton count={5} />
+      </div>
+    )
+  }
+
+  if (isError) {
+    return (
+      <div className="block">
+        <div className="flex flex-col items-center justify-center py-20 text-center">
+          <div className="w-16 h-16 rounded-2xl bg-red-100 dark:bg-red-500/15 flex items-center justify-center mb-4">
+            <AlertTriangle className="w-8 h-8 text-red-600 dark:text-red-400" />
+          </div>
+          <h2 className="text-lg font-semibold text-[var(--text-primary)] mb-1">Failed to load tickets</h2>
+          <p className="text-sm text-[var(--text-tertiary)] mb-4">Something went wrong while fetching tickets.</p>
+          <NeonSweepButton tone="cyan" size="md" onClick={() => queryClient.invalidateQueries(['tickets'])}>
+            Try Again
+          </NeonSweepButton>
+        </div>
       </div>
     )
   }
@@ -257,7 +274,24 @@ export default function Tickets() {
 
       {/* Tickets List */}
         <div className="flex flex-col gap-4">
-          {filteredTickets.map((ticket) => (
+          {filteredTickets.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-16 text-center rounded-2xl bg-[var(--bg-card)] border border-[var(--border-light)]">
+              <div className="w-14 h-14 rounded-2xl bg-blue-100 dark:bg-blue-500/15 flex items-center justify-center mb-4">
+                <Ticket className="w-7 h-7 text-blue-600 dark:text-blue-400" />
+              </div>
+              <h3 className="text-base font-semibold text-[var(--text-primary)] mb-1">No tickets to display</h3>
+              <p className="text-sm text-[var(--text-tertiary)] mb-4">
+                {searchTerm || filterStatus || showOverdueOnly
+                  ? 'No tickets match your current filters. Try adjusting your search.'
+                  : 'There are no tickets yet. Create one to get started.'}
+              </p>
+              {canCreateTickets && !searchTerm && !filterStatus && !showOverdueOnly && (
+                <NeonSweepButton tone="cyan" size="md" onClick={() => setShowModal(true)}>
+                  <Plus size={18} /> Create Ticket
+                </NeonSweepButton>
+              )}
+            </div>
+          ) : filteredTickets.map((ticket) => (
             <div key={ticket.id} className={clsx(
               'p-5 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-light)] shadow-[0_12px_24px_rgba(15,23,42,0.06)] transition-all hover:-translate-y-px hover:shadow-[0_16px_28px_rgba(15,23,42,0.12)]',
               ticket.isOverdue && 'border-red-600/45'
