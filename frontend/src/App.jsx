@@ -32,6 +32,9 @@ const RolesPermissions = lazyWithMinDelay(
 const SocietyAdmins = lazyWithMinDelay(
   () => import("./pages/society/SocietyAdmins"),
 );
+const LoginAudit = lazyWithMinDelay(
+  () => import("./pages/society/LoginAudit"),
+);
 
 const UnitManagement = lazyWithMinDelay(
   () => import("./pages/unit/UnitManagement"),
@@ -133,6 +136,7 @@ const PAGE_TITLES = {
   "/dashboard": "Dashboard",
   "/users": "Users",
   "/society-admins": "Society Admins",
+  "/login-audit": "Login Audit",
   "/unit-management": "Unit & User Management",
   "/tenants": "Tenants",
   "/vehicles": "Vehicles",
@@ -212,6 +216,7 @@ function App() {
     if (role === "MASTER_ADMIN" || role === "MASTER_ADMIN") {
       importers.push(
         () => import("./pages/society/SocietyAdmins"),
+        () => import("./pages/society/LoginAudit"),
         () => import("./pages/users/Users"),
         () => import("./pages/core/Reports"),
       );
@@ -302,6 +307,7 @@ function App() {
                   element={<Navigate to="/society-admins" replace />}
                 />
                 <Route path="society-admins" element={<SocietyAdmins />} />
+                <Route path="login-audit" element={<LoginAudit />} />
                 <Route path="societies/:id" element={<SocietyRouteRedirect />} />
                 <Route path="wings" element={<LegacyWingsRedirect />} />
                 <Route

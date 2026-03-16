@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 
 import com.society.backend.user.entity.User;
 
@@ -59,10 +60,18 @@ public class LoginAudit {
     @Column(name = "proximity_threshold_meters")
     private Double proximityThresholdMeters;
 
+    /**
+     * Always store timestamps in UTC so the frontend can reliably convert to
+     * the user's local timezone (Asia/Kolkata).
+     * — Local dev: JVM may run in IST, but ZoneOffset.UTC ensures we store UTC.
+     * — Deployed (Render, etc.): JVM is already UTC, ZoneOffset.UTC keeps it consistent.
+     * The frontend's parseServerDateTime() treats timezone-less strings as UTC
+     * and formatDateTime() then renders them in Asia/Kolkata (IST).
+     */
     public LoginAudit(User user, Action action, String ipAddress, String userAgent) {
         this.user = user;
         this.action = action;
-        this.timestamp = LocalDateTime.now();
+        this.timestamp = LocalDateTime.now(ZoneOffset.UTC);
         this.ipAddress = ipAddress;
         this.userAgent = userAgent;
     }
