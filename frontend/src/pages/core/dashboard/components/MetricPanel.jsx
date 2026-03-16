@@ -1,9 +1,29 @@
 import clsx from "clsx";
 import { panelClass, toneClasses } from "../utils/dashboardUtils";
 
-export default function MetricPanel({ title, value, helper, icon: Icon, tone = "blue" }) {
+export default function MetricPanel({ title, value, helper, icon: Icon, tone = "blue", onClick }) {
+  const interactive = typeof onClick === "function";
+
+  const onKeyDown = (event) => {
+    if (!interactive) return;
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      onClick();
+    }
+  };
+
   return (
-    <article className={clsx(panelClass, "overflow-hidden")}>
+    <article
+      className={clsx(
+        panelClass,
+        "overflow-hidden",
+        interactive && "cursor-pointer transition hover:border-[var(--accent-primary)] hover:shadow-md"
+      )}
+      onClick={interactive ? onClick : undefined}
+      onKeyDown={onKeyDown}
+      role={interactive ? "button" : undefined}
+      tabIndex={interactive ? 0 : undefined}
+    >
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-[11px] font-black uppercase tracking-[0.16em] text-[var(--text-tertiary)]">{title}</p>

@@ -253,9 +253,9 @@ export default function Vendors() {
       {(
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredVendors.map((vendor) => (
-            <div key={vendor.id} className="bg-[var(--bg-card)] border border-[var(--border-light)] rounded-2xl p-6 shadow-sm transition-all hover:shadow-xl hover:border-blue-300 hover:-translate-y-0.5 group">
+            <div key={vendor.id} className="bg-[var(--bg-card)] border border-[var(--border-light)] rounded-2xl p-6 shadow-sm transition-[border-color,box-shadow] duration-200 hover:shadow-md hover:border-[var(--border-strong)]">
               <div className="flex items-start justify-between mb-4">
-                <div className="p-3 rounded-[14px] bg-gradient-to-br from-orange-50 to-orange-200 transition-transform group-hover:scale-105">
+                <div className="p-3 rounded-[14px] bg-gradient-to-br from-orange-50 to-orange-200">
                   <Truck className="w-7 h-7 text-orange-600" />
                 </div>
                 <div className="flex gap-1">
@@ -319,7 +319,7 @@ export default function Vendors() {
                   </button>
                 </div>
               </div>
-              <h3 className="text-lg font-bold text-[var(--text-primary)] mb-2 transition-colors group-hover:text-blue-600">{vendor.name}</h3>
+              <h3 className="text-lg font-bold text-[var(--text-primary)] mb-2 truncate" title={vendor.name}>{vendor.name}</h3>
               <div className="flex flex-wrap gap-2 mb-3">
                 <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold text-blue-700 bg-gradient-to-r from-blue-50 to-blue-100">
                   {vendor.serviceType}
@@ -340,13 +340,13 @@ export default function Vendors() {
                   </div>
                 )}
                 {vendor.phone && (
-                  <div className="flex items-center gap-2 text-[var(--text-secondary)] transition-colors hover:text-blue-600">
+                  <div className="flex items-center gap-2 text-[var(--text-secondary)]">
                     <Phone size={16} className="flex-shrink-0 text-green-600" />
                     <span>{vendor.phone}</span>
                   </div>
                 )}
                 {vendor.email && (
-                  <div className="flex items-center gap-2 text-[var(--text-secondary)] overflow-hidden transition-colors hover:text-blue-600">
+                  <div className="flex items-center gap-2 text-[var(--text-secondary)] overflow-hidden">
                     <Mail size={16} className="flex-shrink-0 text-blue-600" />
                     <span className="truncate">{vendor.email}</span>
                   </div>
@@ -354,7 +354,7 @@ export default function Vendors() {
               </div>
               <button
                 onClick={() => setViewingVendor(vendor)}
-                className="w-full mt-2 px-4 py-2.5 rounded-xl border-none bg-gradient-to-r from-blue-500 to-blue-600 text-white font-semibold inline-flex items-center justify-center gap-2 shadow-[0_6px_12px_rgba(37,99,235,0.2)] transition-all hover:-translate-y-px hover:shadow-[0_10px_16px_rgba(37,99,235,0.25)]"
+                className="w-full mt-2 px-4 py-2.5 rounded-xl border-none bg-gradient-to-r from-blue-500 to-blue-600 text-white font-semibold inline-flex items-center justify-center gap-2 shadow-[0_6px_12px_rgba(37,99,235,0.2)] transition-[filter,box-shadow] duration-200 hover:brightness-105 hover:shadow-[0_8px_14px_rgba(37,99,235,0.22)]"
               >
                 <Eye size={16} />
                 View Full Details

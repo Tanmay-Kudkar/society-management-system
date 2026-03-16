@@ -276,6 +276,8 @@ export const ticketApi = {
     if (resolution) url += `&resolution=${encodeURIComponent(resolution)}`;
     return api.patch(url);
   },
+  reply: (id, message, userId) => api.patch(`/tickets/${id}/reply?message=${encodeURIComponent(message)}&userId=${userId}`),
+  getReplies: (id) => api.get(`/tickets/${id}/replies`),
   updateProgress: (id, progress, userId) => api.patch(`/tickets/${id}/progress?progress=${progress}&userId=${userId}`),
   assign: (id, assignedToId, userId) => api.patch(`/tickets/${id}/assign?assignedToId=${assignedToId}&userId=${userId}`),
   delete: (id, userId, force = true) => api.delete(`/tickets/${id}?userId=${userId}${force ? '&force=true' : ''}`),

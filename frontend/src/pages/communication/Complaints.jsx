@@ -193,7 +193,7 @@ export default function Complaints() {
           {filteredComplaints.map((complaint) => {
             const StatusIcon = statusIcons[complaint.status] || Clock
             return (
-              <div key={complaint.id} className="bg-[var(--bg-card)] border border-[var(--border-light)] rounded-2xl p-5 shadow-sm transition-all hover:shadow-lg hover:-translate-y-px">
+              <div key={complaint.id} className="bg-[var(--bg-card)] border border-[var(--border-light)] rounded-2xl p-5 shadow-sm transition-[border-color,box-shadow] duration-200 hover:shadow-lg">
                 <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                   <div className="flex gap-4">
                     <div className={clsx('p-3 rounded-xl', 

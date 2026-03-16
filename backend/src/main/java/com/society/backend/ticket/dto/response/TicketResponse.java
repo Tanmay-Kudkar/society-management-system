@@ -9,6 +9,7 @@ import java.time.LocalDateTime;
 @Setter
 public class TicketResponse {
     private Long id;
+    private String ticketNumber;
     private Long societyId;
     private String societyName;
     private Long raisedById;
@@ -21,6 +22,8 @@ public class TicketResponse {
     private String status;
     private String priority;
     private String resolution;
+    private String lastReplyBy;
+    private LocalDateTime lastReplyAt;
     private Integer progressPercent;
     private Integer pendingDays;
     private Boolean isOverdue;

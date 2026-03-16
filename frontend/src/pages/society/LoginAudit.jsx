@@ -350,6 +350,7 @@ export default function LoginAudit() {
                     {filtered.map((audit) => {
                       const os = parseOS(audit.userAgent)
                       const browser = parseBrowser(audit.userAgent)
+                      const auditReason = getAuditReason(audit)
                       const osIconUrl = getIconUrl(osIcons, 'os', os.icon)
                       const browserIconUrl = getIconUrl(browserIcons, 'browsers', browser.icon)
 
@@ -398,31 +399,45 @@ export default function LoginAudit() {
                                 {audit.latitude.toFixed(4)}, {audit.longitude.toFixed(4)}
                               </a>
                             ) : (
-                              <span className="text-xs text-[var(--text-tertiary)]">{getAuditReason(audit)}</span>
+                              <span className="text-xs text-[var(--text-tertiary)]">{auditReason}</span>
                             )}
                           </td>
                           <td className="px-4 py-3.5">
-                            {audit.isNearby === true && (
-                              <span className={clsx(proximityPill.nearby, 'whitespace-nowrap')}>
-                                <MapPin size={12} />
-                                Nearby
-                                {audit.distanceMeters != null && (
-                                  <span className="text-[0.65rem] font-normal ml-0.5">({Math.round(audit.distanceMeters)}m)</span>
-                                )}
-                              </span>
-                            )}
-                            {audit.isNearby === false && (
-                              <span className={clsx(proximityPill.notNearby, 'whitespace-nowrap')}>
-                                <MapPinOff size={12} />
-                                Not Nearby
-                                {audit.distanceMeters != null && (
-                                  <span className="text-[0.65rem] font-normal ml-0.5">({Math.round(audit.distanceMeters)}m)</span>
-                                )}
-                              </span>
-                            )}
-                            {audit.isNearby == null && (
-                              <span className={proximityPill.unknown}>{getAuditReason(audit)}</span>
-                            )}
+                            <div className="flex flex-col gap-1.5">
+                              {audit.isNearby === true && (
+                                <span className={clsx(proximityPill.nearby, 'whitespace-nowrap')}>
+                                  <MapPin size={12} />
+                                  Nearby
+                                  {audit.distanceMeters != null && (
+                                    <span className="text-[0.65rem] font-normal ml-0.5">({Math.round(audit.distanceMeters)}m)</span>
+                                  )}
+                                </span>
+                              )}
+                              {audit.isNearby === false && (
+                                <span className={clsx(proximityPill.notNearby, 'whitespace-nowrap')}>
+                                  <MapPinOff size={12} />
+                                  Not Nearby
+                                  {audit.distanceMeters != null && (
+                                    <span className="text-[0.65rem] font-normal ml-0.5">({Math.round(audit.distanceMeters)}m)</span>
+                                  )}
+                                </span>
+                              )}
+                              {audit.isNearby == null && (
+                                <span className={proximityPill.unknown}>{auditReason}</span>
+                              )}
+                              {audit.proximityReason && audit.isNearby != null && (
+                                <span
+                                  className={clsx(
+                                    'text-xs',
+                                    audit.usedFallbackLocation
+                                      ? 'inline-flex w-fit items-center rounded-full bg-amber-100 px-2 py-0.5 font-medium text-amber-800 dark:bg-amber-500/15 dark:text-amber-200'
+                                      : 'text-[var(--text-tertiary)]',
+                                  )}
+                                >
+                                  {auditReason}
+                                </span>
+                              )}
+                            </div>
                           </td>
                           <td className="px-3 py-3.5 text-right w-14">
                             <button
@@ -446,6 +461,7 @@ export default function LoginAudit() {
                 {filtered.map((audit) => {
                   const os = parseOS(audit.userAgent)
                   const browser = parseBrowser(audit.userAgent)
+                  const auditReason = getAuditReason(audit)
                   const osIconUrl = getIconUrl(osIcons, 'os', os.icon)
                   const browserIconUrl = getIconUrl(browserIcons, 'browsers', browser.icon)
 
@@ -481,7 +497,7 @@ export default function LoginAudit() {
                           </a>
                         )}
                         {audit.latitude == null || audit.longitude == null ? (
-                          <span>{getAuditReason(audit)}</span>
+                          <span>{auditReason}</span>
                         ) : null}
                       </div>
                       <div className="flex flex-col gap-2">
@@ -509,7 +525,19 @@ export default function LoginAudit() {
                               </span>
                             )}
                             {audit.isNearby == null && (
-                              <span className={clsx(proximityPill.unknown, 'whitespace-normal break-words')}>{getAuditReason(audit)}</span>
+                              <span className={clsx(proximityPill.unknown, 'whitespace-normal break-words')}>{auditReason}</span>
+                            )}
+                            {audit.proximityReason && audit.isNearby != null && (
+                              <div
+                                className={clsx(
+                                  'mt-1 text-xs break-words',
+                                  audit.usedFallbackLocation
+                                    ? 'inline-flex w-fit items-center rounded-full bg-amber-100 px-2 py-0.5 font-medium text-amber-800 dark:bg-amber-500/15 dark:text-amber-200'
+                                    : 'text-[var(--text-tertiary)]',
+                                )}
+                              >
+                                {auditReason}
+                              </div>
                             )}
                           </div>
                           <button

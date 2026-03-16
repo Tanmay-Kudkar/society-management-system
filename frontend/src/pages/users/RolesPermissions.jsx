@@ -2,7 +2,7 @@ const roleResponsibilities = [
   {
     role: 'MASTER_ADMIN',
     authority: 'Master Admin',
-    responsibility: 'Manages all societies and platform-level operations',
+    responsibility: 'Manages all societies and platform-level operations, can add new tickets, reply to tickets, open/close/resolve issues, and share draft letters/formats/documents when required',
   },
   {
     role: 'MANAGER',

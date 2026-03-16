@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '../../context'
 import { useToast } from '../../context'
-import { ticketApi, userApi, exportApi, downloadBlob } from '../../../../api'
+import { ticketApi, userApi, societyApi, exportApi, downloadBlob } from '../../../../api'
 import { Plus, Search, X, Ticket, MessageSquare, User, Edit, AlertTriangle, Clock, FileSpreadsheet } from 'lucide-react'
 import clsx from 'clsx'
 import { InfoTooltip, NeonSweepButton } from '../../components'
@@ -34,17 +34,24 @@ const getProgressClass = (progress) => {
   return `${base} bg-gray-400`
 }
 
+const getTicketDisplayNumber = (ticket) => ticket?.ticketNumber || `#${ticket?.id}`
+
 export default function Tickets() {
   const { user, canCreateTickets, canManageTickets } = useAuth()
   const toast = useToast()
   const queryClient = useQueryClient()
   const [showModal, setShowModal] = useState(false)
   const [showAssignModal, setShowAssignModal] = useState(false)
+  const [showReplyModal, setShowReplyModal] = useState(false)
   const [selectedTicket, setSelectedTicket] = useState(null)
+  const [replyMessage, setReplyMessage] = useState('')
   const [searchTerm, setSearchTerm] = useState('')
   const [filterStatus, setFilterStatus] = useState('')
   const [showOverdueOnly, setShowOverdueOnly] = useState(false)
   const [isExporting, setIsExporting] = useState(false)
+  const [openReplies, setOpenReplies] = useState({})
+  const [repliesByTicket, setRepliesByTicket] = useState({})
+  const [loadingReplies, setLoadingReplies] = useState({})
   const [searchParams] = useSearchParams()
 
   // Check if current user is MASTER_ADMIN
@@ -62,6 +69,12 @@ export default function Tickets() {
   const { data: employees = [] } = useQuery({
     queryKey: ['employees'],
     queryFn: () => userApi.getAll().then(res => res.data.filter(u => u.role === 'EMPLOYEE')),
+  })
+
+  const { data: societies = [] } = useQuery({
+    queryKey: ['societies-for-tickets'],
+    queryFn: () => societyApi.getAll().then(res => res.data),
+    enabled: isPlatformLevel,
   })
 
   const createMutation = useMutation({
@@ -91,6 +104,23 @@ export default function Tickets() {
     onSuccess: () => queryClient.invalidateQueries(['tickets']),
   })
 
+  const replyMutation = useMutation({
+    mutationFn: ({ id, message }) => ticketApi.reply(id, message, user.id),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries(['tickets'])
+      fetchReplies(variables.id)
+      toast.success('Reply sent successfully')
+    },
+    onError: (error) => {
+      const apiMessage = error.response?.data?.message || 'Failed to send reply'
+      if (apiMessage === 'You already sent this reply recently.') {
+        toast.warning(apiMessage)
+        return
+      }
+      toast.error(apiMessage)
+    },
+  })
+
   const filteredTickets = useMemo(() => tickets.filter(t => {
     const matchesSearch = t.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          t.type?.toLowerCase().includes(searchTerm.toLowerCase())
@@ -102,14 +132,17 @@ export default function Tickets() {
   const handleSubmit = (e) => {
     e.preventDefault()
     const formData = new FormData(e.target)
+    const selectedSocietyId = isPlatformLevel
+      ? Number(formData.get('societyId'))
+      : Number(effectiveSocietyId)
 
-    if (!effectiveSocietyId) {
+    if (!selectedSocietyId) {
       toast.error('Society is required. Select a society first.')
       return
     }
 
     createMutation.mutate({
-      societyId: Number(effectiveSocietyId),
+      societyId: selectedSocietyId,
       title: formData.get('title'),
       description: formData.get('description'),
       type: formData.get('type'),
@@ -126,16 +159,62 @@ export default function Tickets() {
     })
   }
 
+  const fetchReplies = async (ticketId) => {
+    if (!ticketId) return
+    setLoadingReplies(prev => ({ ...prev, [ticketId]: true }))
+    try {
+      const res = await ticketApi.getReplies(ticketId)
+      setRepliesByTicket(prev => ({ ...prev, [ticketId]: res.data || [] }))
+    } catch (error) {
+      toast.error(error?.response?.data?.message || 'Failed to load replies')
+    } finally {
+      setLoadingReplies(prev => ({ ...prev, [ticketId]: false }))
+    }
+  }
+
+  const toggleReplies = async (ticketId) => {
+    const nextOpen = !openReplies[ticketId]
+    setOpenReplies(prev => ({ ...prev, [ticketId]: nextOpen }))
+    if (nextOpen && !repliesByTicket[ticketId]) {
+      await fetchReplies(ticketId)
+    }
+  }
+
+  const handleReply = (ticket) => {
+    setSelectedTicket(ticket)
+    setReplyMessage('')
+    setShowReplyModal(true)
+  }
+
+  const handleReplySubmit = (e) => {
+    e.preventDefault()
+    const message = replyMessage.trim()
+    if (!selectedTicket || !message) {
+      toast.error('Reply message is required')
+      return
+    }
+    replyMutation.mutate(
+      { id: selectedTicket.id, message },
+      {
+        onSuccess: () => {
+          setShowReplyModal(false)
+          setReplyMessage('')
+        },
+      },
+    )
+  }
+
   const handleExport = async () => {
-    if (!user.societyId && !isPlatformLevel) {
+    if (!effectiveSocietyId && !isPlatformLevel) {
       toast.error('Unable to export: No society assigned to your account')
       return
     }
     
     setIsExporting(true)
     try {
-      // Use societyId if available, otherwise export all for master admin
-      const response = await exportApi.tickets(user.societyId || null, filterStatus || null)
+      const response = isPlatformLevel && !effectiveSocietyId
+        ? await exportApi.allTickets(filterStatus || null)
+        : await exportApi.tickets(effectiveSocietyId, filterStatus || null)
       downloadBlob(response.data, `tickets_${new Date().toISOString().split('T')[0]}.xlsx`)
       toast.success('Tickets exported successfully')
     } catch (error) {
@@ -293,7 +372,7 @@ export default function Tickets() {
             </div>
           ) : filteredTickets.map((ticket) => (
             <div key={ticket.id} className={clsx(
-              'p-5 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-light)] shadow-[0_12px_24px_rgba(15,23,42,0.06)] transition-all hover:-translate-y-px hover:shadow-[0_16px_28px_rgba(15,23,42,0.12)]',
+              'p-5 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-light)] shadow-[0_12px_24px_rgba(15,23,42,0.06)] transition-[border-color,box-shadow] duration-200 hover:shadow-[0_16px_28px_rgba(15,23,42,0.12)]',
               ticket.isOverdue && 'border-red-600/45'
             )}>
               <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
@@ -303,7 +382,7 @@ export default function Tickets() {
                   </div>
                   <div className="flex-1">
                     <div className="flex flex-wrap gap-2 items-center">
-                      <span className="text-[0.8rem] font-mono text-[var(--text-tertiary)]">#{ticket.id}</span>
+                      <span className="text-[0.8rem] font-mono text-[var(--text-tertiary)]">{getTicketDisplayNumber(ticket)}</span>
                       <span className={clsx(statusClasses[ticket.status] || statusClasses.OPEN)}>
                         {ticket.status?.replace('_', ' ')}
                       </span>
@@ -325,6 +404,12 @@ export default function Tickets() {
                     </div>
                     <h3 className="mt-1.5 text-base font-semibold text-[var(--text-primary)]">{ticket.title}</h3>
                     <p className="mt-1.5 text-[0.85rem] text-[var(--text-tertiary)] line-clamp-2">{ticket.description}</p>
+                    {ticket.resolution && (
+                      <p className="mt-1.5 text-[0.8rem] font-semibold text-[var(--text-secondary)]">
+                        Latest reply: {ticket.resolution}
+                        {ticket.lastReplyBy && ` - ${ticket.lastReplyBy}`}
+                      </p>
+                    )}
                     
                     {/* Progress Bar */}
                     <div className="mt-3">
@@ -367,11 +452,27 @@ export default function Tickets() {
                     {ticket.status === 'OPEN' && (
                       <button
                         onClick={() => { setSelectedTicket(ticket); setShowAssignModal(true) }}
-                        className="px-3 py-1.5 text-[0.85rem] rounded-[0.65rem] bg-blue-100 text-blue-700 font-semibold transition-all hover:-translate-y-px hover:bg-blue-200"
+                        className="px-3 py-1.5 text-[0.85rem] rounded-[0.65rem] bg-blue-100 text-blue-700 font-semibold transition-colors duration-200 hover:bg-blue-200"
                       >
                         Assign
                       </button>
                     )}
+                    {canManageTickets() && (
+                      <button
+                        onClick={() => handleReply(ticket)}
+                        className="inline-flex items-center gap-1.5 rounded-[0.65rem] bg-emerald-100 px-3 py-1.5 text-[0.85rem] font-semibold text-emerald-700 transition-colors duration-200 hover:bg-emerald-200"
+                      >
+                        <MessageSquare size={14} />
+                        Reply
+                      </button>
+                    )}
+                    <button
+                      onClick={() => toggleReplies(ticket.id)}
+                      className="inline-flex items-center gap-1.5 rounded-[0.65rem] bg-[var(--bg-tertiary)] px-3 py-1.5 text-[0.85rem] font-semibold text-[var(--text-secondary)] transition-colors duration-200 hover:bg-[color-mix(in_srgb,var(--bg-tertiary)_70%,var(--bg-card))]"
+                    >
+                      <MessageSquare size={14} />
+                      {openReplies[ticket.id] ? 'Hide Replies' : 'View Replies'}
+                    </button>
                     {ticket.status !== 'CLOSED' && (
                       <select
                         value={ticket.status}
@@ -403,6 +504,28 @@ export default function Tickets() {
                   )}
                 </div>
               </div>
+
+              {openReplies[ticket.id] && (
+                <div className="mt-4 rounded-xl border border-[var(--border-light)] bg-[var(--bg-tertiary)]/35 p-3">
+                  <p className="mb-2 text-xs font-bold uppercase tracking-[0.05em] text-[var(--text-tertiary)]">Reply Thread</p>
+                  {loadingReplies[ticket.id] ? (
+                    <p className="text-sm text-[var(--text-tertiary)]">Loading replies...</p>
+                  ) : (repliesByTicket[ticket.id] || []).length === 0 ? (
+                    <p className="text-sm text-[var(--text-tertiary)]">No replies yet.</p>
+                  ) : (
+                    <div className="space-y-2">
+                      {(repliesByTicket[ticket.id] || []).map((reply) => (
+                        <div key={reply.id} className="rounded-lg border border-[var(--border-light)] bg-[var(--bg-card)] px-3 py-2">
+                          <p className="text-[0.86rem] font-semibold text-[var(--text-primary)]">{reply.message}</p>
+                          <p className="mt-1 text-[0.75rem] text-[var(--text-tertiary)]">
+                            {reply.repliedByName || 'Unknown user'} - {formatDate(reply.createdAt)}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           ))}
         </div>
@@ -418,6 +541,22 @@ export default function Tickets() {
               </button>
             </div>
             <form onSubmit={handleSubmit} className="p-5 flex flex-col gap-4">
+              {isPlatformLevel && (
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[0.85rem] font-semibold text-[var(--text-secondary)]">Society</label>
+                  <select
+                    name="societyId"
+                    required
+                    defaultValue={effectiveSocietyId || ''}
+                    className="w-full py-[0.55rem] px-3 rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] text-[var(--text-primary)] transition-all focus:outline-none focus:border-blue-600 focus:ring-[3px] focus:ring-blue-600/20"
+                  >
+                    <option value="" disabled>Select society</option>
+                    {societies.map((society) => (
+                      <option key={society.id} value={society.id}>{society.name}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
               <div className="flex flex-col gap-1.5">
                 <label className="text-[0.85rem] font-semibold text-[var(--text-secondary)]">Title</label>
                 <input type="text" name="title" required className="w-full py-[0.55rem] px-3 rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] text-[var(--text-primary)] transition-all focus:outline-none focus:border-blue-600 focus:ring-[3px] focus:ring-blue-600/20" />
@@ -430,7 +569,6 @@ export default function Tickets() {
                 <div className="flex flex-col gap-1.5">
                   <label className="text-[0.85rem] font-semibold text-[var(--text-secondary)]">Type</label>
                   <select name="type" required className="w-full py-[0.55rem] px-3 rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] text-[var(--text-primary)] transition-all focus:outline-none focus:border-blue-600 focus:ring-[3px] focus:ring-blue-600/20">
-                    <option value="COMPLAINT">Complaint</option>
                     <option value="REQUEST">Request</option>
                     <option value="ISSUE">Issue</option>
                     <option value="TASK">Task</option>
@@ -467,7 +605,7 @@ export default function Tickets() {
             </div>
             <form onSubmit={handleAssign} className="p-5 flex flex-col gap-4">
               <div className="p-3 rounded-xl bg-[var(--bg-tertiary)] text-[var(--text-secondary)]">
-                <p className="text-[0.85rem]">Ticket ID: <span className="font-semibold text-[var(--text-primary)]">#{selectedTicket.id}</span></p>
+                <p className="text-[0.85rem]">Ticket ID: <span className="font-semibold text-[var(--text-primary)]">{getTicketDisplayNumber(selectedTicket)}</span></p>
                 <p className="text-[0.85rem]">{selectedTicket.title}</p>
               </div>
               <div className="flex flex-col gap-1.5">
@@ -480,6 +618,66 @@ export default function Tickets() {
               <div className="flex gap-3 pt-2">
                 <NeonSweepButton type="button" tone="slate" size="md" onClick={() => setShowAssignModal(false)} className="flex-1">Cancel</NeonSweepButton>
                 <NeonSweepButton type="submit" tone="cyan" size="md" className="flex-1" disabled={assignMutation.isPending}>{assignMutation.isPending ? 'Assigning...' : 'Assign'}</NeonSweepButton>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Reply Modal */}
+      {showReplyModal && selectedTicket && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60">
+          <div className="w-full max-w-[40rem] rounded-2xl bg-[var(--bg-card)] border border-[var(--border-light)] shadow-[0_24px_48px_rgba(15,23,42,0.2)]">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--border-light)]">
+              <h3 className="text-lg font-semibold text-[var(--text-primary)]">Reply to Ticket</h3>
+              <button
+                onClick={() => {
+                  setShowReplyModal(false)
+                  setReplyMessage('')
+                }}
+                className="rounded-[0.65rem] p-1 text-[var(--text-tertiary)] transition-colors hover:bg-slate-400/20 hover:text-[var(--text-primary)]"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            <form onSubmit={handleReplySubmit} className="p-5 flex flex-col gap-4">
+              <div className="p-3 rounded-xl bg-[var(--bg-tertiary)] text-[var(--text-secondary)]">
+                <p className="text-[0.85rem]">Ticket ID: <span className="font-semibold text-[var(--text-primary)]">{getTicketDisplayNumber(selectedTicket)}</span></p>
+                <p className="text-[0.85rem]">{selectedTicket.title}</p>
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[0.85rem] font-semibold text-[var(--text-secondary)]">Message</label>
+                <textarea
+                  value={replyMessage}
+                  onChange={(e) => setReplyMessage(e.target.value)}
+                  rows={4}
+                  required
+                  className="w-full py-[0.55rem] px-3 rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] text-[var(--text-primary)] transition-all resize-y focus:outline-none focus:border-blue-600 focus:ring-[3px] focus:ring-blue-600/20"
+                  placeholder="Write your reply..."
+                />
+              </div>
+              <div className="flex gap-3 pt-2">
+                <NeonSweepButton
+                  type="button"
+                  tone="slate"
+                  size="md"
+                  onClick={() => {
+                    setShowReplyModal(false)
+                    setReplyMessage('')
+                  }}
+                  className="flex-1"
+                >
+                  Cancel
+                </NeonSweepButton>
+                <NeonSweepButton
+                  type="submit"
+                  tone="cyan"
+                  size="md"
+                  className="flex-1"
+                  disabled={replyMutation.isPending || !replyMessage.trim()}
+                >
+                  {replyMutation.isPending ? 'Sending...' : 'Send Reply'}
+                </NeonSweepButton>
               </div>
             </form>
           </div>

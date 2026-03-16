@@ -327,12 +327,9 @@ public class MaintenanceBillServiceImpl implements MaintenanceBillService {
         roleService.requireAdminOrCommittee(userId);
         SocietySetting setting = getSocietySetting(societyId);
 
-        List<Flat> flats;
-        if (propertyType != null && !propertyType.isEmpty() && !"ALL".equalsIgnoreCase(propertyType)) {
-            flats = flatRepository.findBySocietyIdAndUnitType(societyId, propertyType);
-        } else {
-            flats = flatRepository.findBySocietyId(societyId);
-        }
+        // Bulk generation always considers all units in society. Property type filter is intentionally ignored.
+        List<Flat> flats = flatRepository.findBySocietyId(societyId);
+        int createdCount = 0;
 
         for (Flat flat : flats) {
             // Skip if bill already exists
@@ -341,6 +338,10 @@ public class MaintenanceBillServiceImpl implements MaintenanceBillService {
             }
             // Skip flats not assigned to a society
             if (flat.getSociety() == null) {
+                continue;
+            }
+            // Skip units that are vacant or have no resident details.
+            if (!isFlatBillable(flat)) {
                 continue;
             }
 
@@ -382,21 +383,26 @@ public class MaintenanceBillServiceImpl implements MaintenanceBillService {
             bill.setStatus("PENDING");
 
             maintenanceBillRepository.save(bill);
+            createdCount++;
+        }
+
+        if (createdCount == 0) {
+            throw new ApiException(HttpStatus.CONFLICT,
+                    "Bills already generated for this month. Only newly assigned eligible units can be generated.");
         }
     }
     
     @Override
     public int getGenerationPreviewCount(Long societyId, String billMonth, String propertyType) {
-        List<Flat> flats;
-        if (propertyType != null && !propertyType.isEmpty() && !"ALL".equalsIgnoreCase(propertyType)) {
-            flats = flatRepository.findBySocietyIdAndUnitType(societyId, propertyType);
-        } else {
-            flats = flatRepository.findBySocietyId(societyId);
-        }
+        // Preview is for all units; property type is intentionally ignored.
+        List<Flat> flats = flatRepository.findBySocietyId(societyId);
         
         // Count only flats that don't already have a bill for this month
         int count = 0;
         for (Flat flat : flats) {
+            if (!isFlatBillable(flat)) {
+                continue;
+            }
             if (!maintenanceBillRepository.findByFlatIdAndBillMonth(flat.getId(), billMonth).isPresent()) {
                 count++;
             }
@@ -965,14 +971,14 @@ public class MaintenanceBillServiceImpl implements MaintenanceBillService {
 
         List<User> users = userRepository.findByFlatId(flat.getId());
         for (User user : users) {
-            if (user != null && Boolean.TRUE.equals(user.getIsActive())
+            if (isUserActive(user)
                     && (user.getRole() == Role.MEMBER || user.getRole() == Role.TENANT)
                     && user.getName() != null && !user.getName().isBlank()) {
                 return user.getName().trim();
             }
         }
         for (User user : users) {
-            if (user != null && Boolean.TRUE.equals(user.getIsActive())
+            if (isUserActive(user)
                     && user.getName() != null && !user.getName().isBlank()) {
                 return user.getName().trim();
             }
@@ -984,7 +990,55 @@ public class MaintenanceBillServiceImpl implements MaintenanceBillService {
                 return tenant.getName().trim();
             }
         }
-        return "-";
+
+        if (!Boolean.TRUE.equals(flat.getIsOccupied())) {
+            return "Vacant (Not occupied)";
+        }
+        if (tenants.isEmpty()) {
+            return "No tenant residing";
+        }
+        return "Resident details unavailable";
+    }
+
+    private boolean isFlatBillable(Flat flat) {
+        if (flat == null || flat.getId() == null || flat.getSociety() == null) {
+            return false;
+        }
+        if (!Boolean.TRUE.equals(flat.getIsOccupied())) {
+            return false;
+        }
+        return hasAnyResident(flat);
+    }
+
+    private boolean hasAnyResident(Flat flat) {
+        if (flat == null || flat.getId() == null) {
+            return false;
+        }
+
+        if (flat.getOwnerName() != null && !flat.getOwnerName().isBlank()) {
+            return true;
+        }
+        if (flat.getOwner() != null && flat.getOwner().getName() != null && !flat.getOwner().getName().isBlank()) {
+            return true;
+        }
+
+        List<User> linkedUsers = userRepository.findByFlatId(flat.getId());
+        for (User user : linkedUsers) {
+            if (!isUserActive(user)) {
+                continue;
+            }
+            // Treat any active user assigned to the unit as resident data for billing eligibility.
+            if (user.getName() != null && !user.getName().isBlank()) {
+                return true;
+            }
+        }
+
+        List<Tenant> activeTenants = tenantRepository.findByFlatIdAndIsActiveTrue(flat.getId());
+        return !activeTenants.isEmpty();
+    }
+
+    private boolean isUserActive(User user) {
+        return user != null && !Boolean.FALSE.equals(user.getIsActive());
     }
 
     private String buildHeaderLine(Society society) {
@@ -1642,7 +1696,7 @@ public class MaintenanceBillServiceImpl implements MaintenanceBillService {
         response.setId(bill.getId());
         response.setFlatId(bill.getFlat().getId());
         response.setFlatNumber(bill.getFlat().getFlatNumber());
-        response.setOwnerName(bill.getFlat().getOwnerName());
+        response.setOwnerName(resolveClientName(bill.getFlat()));
         response.setSocietyId(bill.getFlat().getSociety().getId());
         response.setSocietyName(bill.getFlat().getSociety().getName());
         response.setBillMonth(bill.getBillMonth());

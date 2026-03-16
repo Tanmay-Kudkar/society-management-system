@@ -224,13 +224,37 @@ public class AuthServiceImpl implements AuthService {
                 String ua = httpRequest.getHeader("User-Agent");
                 Double latitude = logoutRequest != null ? logoutRequest.getLatitude() : null;
                 Double longitude = logoutRequest != null ? logoutRequest.getLongitude() : null;
-                loginAuditRepository.save(buildAuditEntry(
+                boolean usedFallbackLocation = false;
+
+                // If GPS is off at logout time, fallback to the latest known login location.
+                if (latitude == null || longitude == null) {
+                    Optional<LoginAudit> latestKnownLoginLocation = loginAuditRepository
+                            .findTopByUserIdAndActionAndLatitudeIsNotNullAndLongitudeIsNotNullOrderByTimestampDesc(
+                                    user.getId(),
+                                    LoginAudit.Action.LOGIN);
+
+                    if (latestKnownLoginLocation.isPresent()) {
+                        LoginAudit knownLocation = latestKnownLoginLocation.get();
+                        if (latitude == null) {
+                            latitude = knownLocation.getLatitude();
+                            usedFallbackLocation = true;
+                        }
+                        if (longitude == null) {
+                            longitude = knownLocation.getLongitude();
+                            usedFallbackLocation = true;
+                        }
+                    }
+                }
+
+                LoginAudit logoutAudit = buildAuditEntry(
                         user,
                         LoginAudit.Action.LOGOUT,
                         ip,
                         ua,
                         latitude,
-                        longitude));
+                        longitude);
+                logoutAudit.setUsedFallbackLocation(usedFallbackLocation);
+                loginAuditRepository.save(logoutAudit);
             }
         } catch (Exception e) {
             logger.warn("Failed to record logout audit: {}", e.getMessage());

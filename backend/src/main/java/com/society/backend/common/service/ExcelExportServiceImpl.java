@@ -491,12 +491,29 @@ public class ExcelExportServiceImpl implements ExcelExportService {
             Row titleRow = sheet.createRow(0);
             Cell titleCell = titleRow.createCell(0);
             titleCell.setCellValue("Tickets Report");
-            sheet.addMergedRegion(new CellRangeAddress(0, 0, 0, 9));
+                sheet.addMergedRegion(new CellRangeAddress(0, 0, 0, 16));
 
             // Headers
             Row headerRow = sheet.createRow(2);
-            String[] headers = { "ID", "Title", "Type", "Priority", "Status", "Progress %", "Pending Days",
-                    "Assigned To", "Created At", "Society" };
+                String[] headers = {
+                    "ID",
+                        "Society",
+                    "Title",
+                    "Type",
+                    "Priority",
+                    "Status",
+                    "Progress %",
+                    "Pending Days",
+                    "Raised By",
+                    "Assigned To",
+                    "Resolution / Latest Reply",
+                    "Last Reply By",
+                    "Last Reply At",
+                    "Overdue",
+                    "Overdue Days",
+                    "Escalation Level",
+                        "Created At"
+                };
             for (int i = 0; i < headers.length; i++) {
                 Cell cell = headerRow.createCell(i);
                 cell.setCellValue(headers[i]);
@@ -508,15 +525,22 @@ public class ExcelExportServiceImpl implements ExcelExportService {
             for (Ticket t : tickets) {
                 Row row = sheet.createRow(rowNum++);
                 row.createCell(0).setCellValue(t.getId());
-                row.createCell(1).setCellValue(t.getTitle());
-                row.createCell(2).setCellValue(t.getType());
-                row.createCell(3).setCellValue(t.getPriority());
-                row.createCell(4).setCellValue(t.getStatus());
-                row.createCell(5).setCellValue(t.getProgressPercent() != null ? t.getProgressPercent() : 0);
-                row.createCell(6).setCellValue(t.getPendingDays());
-                row.createCell(7).setCellValue(t.getAssignedTo() != null ? t.getAssignedTo().getName() : "Unassigned");
-                row.createCell(8).setCellValue(t.getCreatedAt() != null ? t.getCreatedAt().toString() : "");
-                row.createCell(9).setCellValue(t.getSociety().getName());
+                row.createCell(1).setCellValue(t.getSociety() != null ? t.getSociety().getName() : "");
+                row.createCell(2).setCellValue(t.getTitle());
+                row.createCell(3).setCellValue(t.getType());
+                row.createCell(4).setCellValue(t.getPriority());
+                row.createCell(5).setCellValue(t.getStatus());
+                row.createCell(6).setCellValue(t.getProgressPercent() != null ? t.getProgressPercent() : 0);
+                row.createCell(7).setCellValue(t.getPendingDays());
+                row.createCell(8).setCellValue(t.getRaisedBy() != null ? t.getRaisedBy().getName() : "");
+                row.createCell(9).setCellValue(t.getAssignedTo() != null ? t.getAssignedTo().getName() : "Unassigned");
+                row.createCell(10).setCellValue(t.getResolution() != null ? t.getResolution() : "");
+                row.createCell(11).setCellValue(t.getLastReplyBy() != null ? t.getLastReplyBy() : "");
+                row.createCell(12).setCellValue(t.getLastReplyAt() != null ? t.getLastReplyAt().toString() : "");
+                row.createCell(13).setCellValue(Boolean.TRUE.equals(t.getIsOverdue()) ? "Yes" : "No");
+                row.createCell(14).setCellValue(t.getOverdueDays() != null ? t.getOverdueDays() : 0);
+                row.createCell(15).setCellValue(t.getEscalationLevel() != null ? t.getEscalationLevel() : 0);
+                row.createCell(16).setCellValue(t.getCreatedAt() != null ? t.getCreatedAt().toString() : "");
             }
 
             // Summary

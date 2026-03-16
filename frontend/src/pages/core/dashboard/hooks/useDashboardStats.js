@@ -21,7 +21,12 @@ import { formatDate, formatDateTime } from "../../../../utils/formatUtils";
 export default function useDashboardStats(input) {
   const {
     allTickets,
+    canCreateTickets,
+    canManageComplaints,
+    canManageNotices,
     canManageTenants,
+    canManageTickets,
+    canRaiseComplaints,
     canSeeFinanceSection,
     canViewFinancials,
     complaints,
@@ -34,6 +39,7 @@ export default function useDashboardStats(input) {
     isMemberOrTenant,
     isPlatformLevel,
     isSocietyOpsLevel,
+    dashboardSocietyId,
     maintenanceBills,
     navigate,
     notices,
@@ -45,6 +51,16 @@ export default function useDashboardStats(input) {
     vehicles,
     securityLogs,
   } = input;
+
+  const canAccessTickets = canManageTickets() || canCreateTickets();
+  const canAccessComplaints = canManageComplaints() || canRaiseComplaints();
+  const canAccessNotices = canManageNotices();
+
+  const scopedSuffix = user?.role === "MASTER_ADMIN" && dashboardSocietyId
+    ? `?society=${encodeURIComponent(dashboardSocietyId)}`
+    : "";
+
+  const buildScopedRoute = (path) => `${path}${scopedSuffix}`;
 
   const openTickets = allTickets.filter((ticket) => ticket.status === "OPEN" || ticket.status === "IN_PROGRESS");
   const pendingTickets = allTickets.filter((ticket) => ticket.status === "OPEN");
@@ -451,6 +467,23 @@ export default function useDashboardStats(input) {
     meta: notice.createdAt ? formatDate(notice.createdAt) : "Recently posted",
     badge: "Notice",
     badgeTone: "info",
+    onClick: canAccessNotices ? () => navigate(buildScopedRoute("/notices")) : undefined,
+  }));
+
+  const pendingTicketItems = pendingTickets.slice(0, 5).map((ticket) => ({
+    title: ticket.title || `Ticket #${ticket.id}`,
+    meta: ticket.type || "Ticket",
+    badge: ticket.priority || ticket.status || "Open",
+    badgeTone: (ticket.priority === "URGENT" || ticket.priority === "HIGH") ? "danger" : "warning",
+    onClick: canAccessTickets ? () => navigate(buildScopedRoute("/tickets")) : undefined,
+  }));
+
+  const pendingComplaintItems = pendingComplaints.slice(0, 5).map((complaint) => ({
+    title: complaint.title || complaint.subject || `Complaint #${complaint.id}`,
+    meta: complaint.type || "Complaint",
+    badge: complaint.status || "Pending",
+    badgeTone: complaint.status === "IN_PROGRESS" ? "warning" : "danger",
+    onClick: canAccessComplaints ? () => navigate(buildScopedRoute("/complaints")) : undefined,
   }));
 
   const securityFeedItems = (securityLogs.length > 0 ? securityLogs : [{
@@ -573,6 +606,55 @@ export default function useDashboardStats(input) {
     totalBillAmount,
     totalUnits,
     twoWheelerCount,
+  ]);
+
+  const moduleActionCards = useMemo(() => {
+    const cards = [];
+
+    if (canAccessTickets) {
+      cards.push({
+        key: "module-tickets",
+        title: "Tickets",
+        value: openTickets.length,
+        helper: `${pendingTickets.length} pending for action`,
+        tone: "blue",
+        onClick: () => navigate(buildScopedRoute("/tickets")),
+      });
+    }
+
+    if (canAccessComplaints) {
+      cards.push({
+        key: "module-complaints",
+        title: "Complaints",
+        value: pendingComplaints.length,
+        helper: "Resident complaints requiring follow-up",
+        tone: "amber",
+        onClick: () => navigate(buildScopedRoute("/complaints")),
+      });
+    }
+
+    if (canAccessNotices) {
+      cards.push({
+        key: "module-notices",
+        title: "Notices",
+        value: notices.length,
+        helper: notices.length > 0 ? "Latest communication updates" : "No notices posted yet",
+        tone: "violet",
+        onClick: () => navigate(buildScopedRoute("/notices")),
+      });
+    }
+
+    return cards;
+  }, [
+    canAccessComplaints,
+    canAccessNotices,
+    canAccessTickets,
+    scopedSuffix,
+    navigate,
+    notices.length,
+    openTickets.length,
+    pendingComplaints.length,
+    pendingTickets.length,
   ]);
 
   const operationsCards = useMemo(() => {
@@ -880,7 +962,10 @@ export default function useDashboardStats(input) {
     fourWheelerCount,
     memberIssueStats,
     noticeItems,
+    pendingComplaintItems,
+    pendingTicketItems,
     openTickets,
+    moduleActionCards,
     operationsCards,
     overviewConfig,
     overdueBills,

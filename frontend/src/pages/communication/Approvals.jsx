@@ -450,12 +450,13 @@ export default function Approvals() {
                 )}
               </div>
               <div className="flex gap-2 border-t border-[var(--border-light)] pt-3">
-                <button
-                  className="inline-flex items-center justify-center gap-1.5 rounded-md bg-[var(--color-error)] px-2.5 py-1 text-xs font-medium text-white shadow-sm transition hover:bg-red-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent-primary)]"
+                <NeonSweepButton
+                  tone="danger"
+                  size="sm"
                   onClick={() => deleteWorkflowMutation.mutate(wf.id)}
                 >
                   Delete
-                </button>
+                </NeonSweepButton>
               </div>
             </div>
           ))}
@@ -464,29 +465,31 @@ export default function Approvals() {
 
       {/* === CREATE REQUEST MODAL === */}
       {showRequestModal && (
-        <div className="modal-backdrop" onClick={() => setShowRequestModal(false)}>
-          <div className="modal-content" onClick={e => e.stopPropagation()}>
-            <div className="modal-header">
-              <h2>New Approval Request</h2>
-              <button onClick={() => setShowRequestModal(false)}><X size={20} /></button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4" onClick={() => setShowRequestModal(false)}>
+          <div className="w-full max-w-[40rem] rounded-2xl border border-[var(--border-light)] bg-[var(--bg-card)] shadow-[0_24px_48px_rgba(15,23,42,0.2)]" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between border-b border-[var(--border-light)] px-5 py-4">
+              <h2 className="text-lg font-semibold text-[var(--text-primary)]">New Approval Request</h2>
+              <button onClick={() => setShowRequestModal(false)} className="rounded-[0.65rem] p-1 text-[var(--text-tertiary)] transition-colors hover:bg-slate-400/20 hover:text-[var(--text-primary)]"><X size={20} /></button>
             </div>
-            <form onSubmit={handleCreateRequest}>
+            <form onSubmit={handleCreateRequest} className="flex flex-col gap-4 p-5">
               <FormInput name="title" label="Title" required />
               <SmartSelect name="entityType" label="Entity Type" options={ENTITY_TYPES} required />
               <FormInput name="entityId" label="Entity ID" type="number" required />
               <NumberInput name="amount" label="Amount (₹)" />
               <FormTextarea name="description" label="Description" />
-              <div className="modal-actions">
-                <button
+              <div className="flex gap-3 pt-2">
+                <NeonSweepButton
                   type="button"
-                  className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-[var(--border-default)] bg-[var(--bg-tertiary)] px-4 py-2 text-sm font-medium text-[var(--text-primary)] transition hover:bg-[var(--bg-secondary)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent-primary)]"
+                  tone="slate"
+                  size="md"
+                  className="flex-1"
                   onClick={() => setShowRequestModal(false)}
                 >
                   Cancel
-                </button>
-                <AsyncButton type="submit" variant="primary" loading={createRequestMutation.isPending}>
-                  Submit Request
-                </AsyncButton>
+                </NeonSweepButton>
+                <NeonSweepButton type="submit" tone="cyan" size="md" className="flex-1" disabled={createRequestMutation.isPending}>
+                  {createRequestMutation.isPending ? 'Submitting...' : 'Submit Request'}
+                </NeonSweepButton>
               </div>
             </form>
           </div>
@@ -495,13 +498,13 @@ export default function Approvals() {
 
       {/* === CREATE WORKFLOW MODAL === */}
       {showWorkflowModal && (
-        <div className="modal-backdrop" onClick={() => setShowWorkflowModal(false)}>
-          <div className="modal-content max-w-[640px]" onClick={e => e.stopPropagation()}>
-            <div className="modal-header">
-              <h2>New Approval Workflow</h2>
-              <button onClick={() => setShowWorkflowModal(false)}><X size={20} /></button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4" onClick={() => setShowWorkflowModal(false)}>
+          <div className="w-full max-w-[40rem] rounded-2xl border border-[var(--border-light)] bg-[var(--bg-card)] shadow-[0_24px_48px_rgba(15,23,42,0.2)]" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between border-b border-[var(--border-light)] px-5 py-4">
+              <h2 className="text-lg font-semibold text-[var(--text-primary)]">New Approval Workflow</h2>
+              <button onClick={() => setShowWorkflowModal(false)} className="rounded-[0.65rem] p-1 text-[var(--text-tertiary)] transition-colors hover:bg-slate-400/20 hover:text-[var(--text-primary)]"><X size={20} /></button>
             </div>
-            <form onSubmit={handleCreateWorkflow}>
+            <form onSubmit={handleCreateWorkflow} className="flex flex-col gap-4 p-5">
               <FormInput name="name" label="Workflow Name" required />
               <SmartSelect name="entityType" label="Entity Type" options={ENTITY_TYPES} required />
               <FormTextarea name="description" label="Description" />
@@ -540,27 +543,29 @@ export default function Approvals() {
                     )}
                   </div>
                 ))}
-                <AsyncButton
+                <NeonSweepButton
                   type="button"
-                  variant="secondary"
+                  tone="slate"
                   size="sm"
                   onClick={addStep}
                 >
                   <Plus size={14} /> Add Step
-                </AsyncButton>
+                </NeonSweepButton>
               </div>
 
-              <div className="modal-actions">
-                <button
+              <div className="flex gap-3 pt-2">
+                <NeonSweepButton
                   type="button"
-                  className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-[var(--border-default)] bg-[var(--bg-tertiary)] px-4 py-2 text-sm font-medium text-[var(--text-primary)] transition hover:bg-[var(--bg-secondary)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent-primary)]"
+                  tone="slate"
+                  size="md"
+                  className="flex-1"
                   onClick={() => setShowWorkflowModal(false)}
                 >
                   Cancel
-                </button>
-                <AsyncButton type="submit" variant="primary" loading={createWorkflowMutation.isPending}>
-                  Create Workflow
-                </AsyncButton>
+                </NeonSweepButton>
+                <NeonSweepButton type="submit" tone="cyan" size="md" className="flex-1" disabled={createWorkflowMutation.isPending}>
+                  {createWorkflowMutation.isPending ? 'Creating...' : 'Create Workflow'}
+                </NeonSweepButton>
               </div>
             </form>
           </div>
@@ -569,18 +574,18 @@ export default function Approvals() {
 
       {/* === TAKE ACTION MODAL === */}
       {showActionModal && selectedRequest && (
-        <div className="modal-backdrop" onClick={() => setShowActionModal(null)}>
-          <div className="modal-content" onClick={e => e.stopPropagation()}>
-            <div className="modal-header">
-              <h2>Take Action</h2>
-              <button onClick={() => setShowActionModal(null)}><X size={20} /></button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4" onClick={() => setShowActionModal(null)}>
+          <div className="w-full max-w-[40rem] rounded-2xl border border-[var(--border-light)] bg-[var(--bg-card)] shadow-[0_24px_48px_rgba(15,23,42,0.2)]" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between border-b border-[var(--border-light)] px-5 py-4">
+              <h2 className="text-lg font-semibold text-[var(--text-primary)]">Take Action</h2>
+              <button onClick={() => setShowActionModal(null)} className="rounded-[0.65rem] p-1 text-[var(--text-tertiary)] transition-colors hover:bg-slate-400/20 hover:text-[var(--text-primary)]"><X size={20} /></button>
             </div>
-            <div className="mb-4 rounded-xl bg-[var(--bg-tertiary)] p-3">
+            <div className="mx-5 mt-5 mb-4 rounded-xl bg-[var(--bg-tertiary)] p-3">
               <h3 className="mb-1 text-[15px] font-semibold text-[var(--text-primary)]">{selectedRequest.title}</h3>
               <p className="text-[13px] text-[var(--text-tertiary)]">Step {selectedRequest.currentStep} of {selectedRequest.totalSteps}</p>
               {selectedRequest.amount && <p className="text-[13px] text-[var(--text-tertiary)]">Amount: ₹{Number(selectedRequest.amount).toLocaleString('en-IN')}</p>}
             </div>
-            <form onSubmit={handleAction}>
+            <form onSubmit={handleAction} className="flex flex-col gap-4 px-5 pb-5">
               <SmartSelect name="action" label="Action" options={[
                 { value: 'APPROVED', label: '✓ Approve' },
                 { value: 'REJECTED', label: '✗ Reject' },
@@ -588,17 +593,19 @@ export default function Approvals() {
                 { value: 'ESCALATED', label: '↑ Escalate to Next Step' },
               ]} required />
               <FormTextarea name="comments" label="Comments" />
-              <div className="modal-actions">
-                <button
+              <div className="flex gap-3 pt-2">
+                <NeonSweepButton
                   type="button"
-                  className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-[var(--border-default)] bg-[var(--bg-tertiary)] px-4 py-2 text-sm font-medium text-[var(--text-primary)] transition hover:bg-[var(--bg-secondary)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent-primary)]"
+                  tone="slate"
+                  size="md"
+                  className="flex-1"
                   onClick={() => setShowActionModal(null)}
                 >
                   Cancel
-                </button>
-                <AsyncButton type="submit" variant="primary" loading={actionMutation.isPending}>
-                  Submit Action
-                </AsyncButton>
+                </NeonSweepButton>
+                <NeonSweepButton type="submit" tone="cyan" size="md" className="flex-1" disabled={actionMutation.isPending}>
+                  {actionMutation.isPending ? 'Submitting...' : 'Submit Action'}
+                </NeonSweepButton>
               </div>
             </form>
           </div>

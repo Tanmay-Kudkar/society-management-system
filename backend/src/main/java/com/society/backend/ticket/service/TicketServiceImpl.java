@@ -1,13 +1,16 @@
 package com.society.backend.ticket.service;
 
 import com.society.backend.ticket.dto.request.TicketRequest;
+import com.society.backend.ticket.dto.response.TicketReplyResponse;
 import com.society.backend.ticket.dto.response.TicketResponse;
 import com.society.backend.society.entity.Society;
 import com.society.backend.ticket.entity.Ticket;
+import com.society.backend.ticket.entity.TicketReply;
 import com.society.backend.user.entity.User;
 import com.society.backend.common.exception.ApiException;
 import com.society.backend.society.repository.SocietyRepository;
 import com.society.backend.ticket.repository.TicketRepository;
+import com.society.backend.ticket.repository.TicketReplyRepository;
 import com.society.backend.user.repository.UserRepository;
 import com.society.backend.common.service.RoleService;
 import lombok.RequiredArgsConstructor;
@@ -24,7 +27,10 @@ import com.society.backend.user.entity.Role;
 @RequiredArgsConstructor
 public class TicketServiceImpl implements TicketService {
 
+    private static final long DUPLICATE_REPLY_WINDOW_MINUTES = 5L;
+
     private final TicketRepository ticketRepository;
+    private final TicketReplyRepository ticketReplyRepository;
     private final SocietyRepository societyRepository;
     private final UserRepository userRepository;
     private final RoleService roleService;
@@ -190,6 +196,67 @@ public class TicketServiceImpl implements TicketService {
 
     @Override
     @Transactional
+    public TicketResponse addReply(Long id, String message, Long userId) {
+        roleService.requireStaff(userId);
+
+        if (message == null || message.trim().isEmpty()) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Reply message is required");
+        }
+
+        String normalizedMessage = message.trim();
+
+        Ticket ticket = ticketRepository.findById(id)
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Ticket not found"));
+
+        User actor = roleService.getUser(userId);
+        if (ticket.getSociety() != null) {
+            roleService.enforceSocietyScope(actor, ticket.getSociety().getId());
+        }
+
+            LocalDateTime duplicateWindowStart = LocalDateTime.now().minusMinutes(DUPLICATE_REPLY_WINDOW_MINUTES);
+            boolean hasRecentDuplicate = ticketReplyRepository
+                .findByTicketIdAndRepliedByIdAndCreatedAtAfterOrderByCreatedAtDesc(
+                    ticket.getId(),
+                    actor.getId(),
+                    duplicateWindowStart
+                )
+                .stream()
+                .anyMatch(existing -> normalizeReplyText(existing.getMessage()).equals(normalizeReplyText(normalizedMessage)));
+
+            if (hasRecentDuplicate) {
+                throw new ApiException(HttpStatus.CONFLICT, "You already sent this reply recently.");
+            }
+
+            ticket.setResolution(normalizedMessage);
+        ticket.setLastReplyBy(actor.getName());
+        ticket.setLastReplyAt(LocalDateTime.now());
+
+        TicketReply reply = new TicketReply();
+        reply.setTicket(ticket);
+        reply.setRepliedBy(actor);
+            reply.setMessage(normalizedMessage);
+        ticketReplyRepository.save(reply);
+
+        Ticket saved = ticketRepository.save(ticket);
+        return mapToResponse(saved);
+    }
+
+    @Override
+    public List<TicketReplyResponse> getReplies(Long id) {
+        Ticket ticket = ticketRepository.findById(id)
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Ticket not found"));
+
+        if (ticket.getSociety() != null) {
+            roleService.enforceSocietyScope(roleService.getCurrentUser(), ticket.getSociety().getId());
+        }
+
+        return ticketReplyRepository.findByTicketIdOrderByCreatedAtAsc(id).stream()
+                .map(this::mapReplyToResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional
     public TicketResponse assign(Long id, Long assignedToId, Long userId) {
         roleService.requireAdminOrCommittee(userId);
 
@@ -304,6 +371,7 @@ public class TicketServiceImpl implements TicketService {
     private TicketResponse mapToResponse(Ticket ticket) {
         TicketResponse response = new TicketResponse();
         response.setId(ticket.getId());
+        response.setTicketNumber(ticket.getTicketNumber());
         response.setSocietyId(ticket.getSociety().getId());
         response.setSocietyName(ticket.getSociety().getName());
         response.setRaisedById(ticket.getRaisedBy().getId());
@@ -320,6 +388,8 @@ public class TicketServiceImpl implements TicketService {
         response.setStatus(ticket.getStatus());
         response.setPriority(ticket.getPriority());
         response.setResolution(ticket.getResolution());
+        response.setLastReplyBy(ticket.getLastReplyBy());
+        response.setLastReplyAt(ticket.getLastReplyAt());
         response.setProgressPercent(ticket.getProgressPercent() != null ? ticket.getProgressPercent() : 0);
         response.setPendingDays(ticket.getPendingDays());
         
@@ -333,5 +403,20 @@ public class TicketServiceImpl implements TicketService {
         response.setUpdatedAt(ticket.getUpdatedAt());
         response.setResolvedAt(ticket.getResolvedAt());
         return response;
+    }
+
+    private TicketReplyResponse mapReplyToResponse(TicketReply reply) {
+        TicketReplyResponse response = new TicketReplyResponse();
+        response.setId(reply.getId());
+        response.setTicketId(reply.getTicket().getId());
+        response.setRepliedById(reply.getRepliedBy().getId());
+        response.setRepliedByName(reply.getRepliedBy().getName());
+        response.setMessage(reply.getMessage());
+        response.setCreatedAt(reply.getCreatedAt());
+        return response;
+    }
+
+    private String normalizeReplyText(String message) {
+        return message == null ? "" : message.trim().replaceAll("\\s+", " ").toLowerCase();
     }
 }

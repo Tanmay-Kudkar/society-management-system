@@ -60,6 +60,9 @@ public class LoginAudit {
     @Column(name = "proximity_threshold_meters")
     private Double proximityThresholdMeters;
 
+    @Column(name = "used_fallback_location")
+    private Boolean usedFallbackLocation;
+
     /**
      * Always store timestamps in UTC so the frontend can reliably convert to
      * the user's local timezone (Asia/Kolkata).
@@ -74,6 +77,7 @@ public class LoginAudit {
         this.timestamp = LocalDateTime.now(ZoneOffset.UTC);
         this.ipAddress = ipAddress;
         this.userAgent = userAgent;
+        this.usedFallbackLocation = false;
     }
 
     public LoginAudit(User user, Action action, String ipAddress, String userAgent,

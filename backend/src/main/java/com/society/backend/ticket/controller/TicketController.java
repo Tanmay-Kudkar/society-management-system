@@ -1,6 +1,7 @@
 package com.society.backend.ticket.controller;
 
 import com.society.backend.ticket.dto.request.TicketRequest;
+import com.society.backend.ticket.dto.response.TicketReplyResponse;
 import com.society.backend.ticket.dto.response.TicketResponse;
 import com.society.backend.ticket.service.TicketService;
 import jakarta.validation.Valid;
@@ -74,6 +75,20 @@ public class TicketController {
             @RequestParam(required = false) String resolution,
             @RequestParam Long userId) {
         return ResponseEntity.ok(ticketService.updateStatus(id, status, resolution, userId));
+    }
+
+    @PatchMapping("/{id}/reply")
+    @PreAuthorize("hasAnyRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'COMMITTEE', 'MANAGER', 'EMPLOYEE')")
+    public ResponseEntity<TicketResponse> reply(
+            @PathVariable Long id,
+            @RequestParam String message,
+            @RequestParam Long userId) {
+        return ResponseEntity.ok(ticketService.addReply(id, message, userId));
+    }
+
+    @GetMapping("/{id}/replies")
+    public ResponseEntity<List<TicketReplyResponse>> getReplies(@PathVariable Long id) {
+        return ResponseEntity.ok(ticketService.getReplies(id));
     }
 
     @PatchMapping("/{id}/assign")

@@ -101,8 +101,14 @@ export default function Notices() {
   const handleSubmit = (e) => {
     e.preventDefault()
     const formData = new FormData(e.target)
+
+    if (!effectiveSocietyId) {
+      toast.error('Society ID is required')
+      return
+    }
+
     const data = {
-      societyId: user.societyId,
+      societyId: Number(effectiveSocietyId),
       title: formData.get('title'),
       content: formData.get('content'),
       priority: formData.get('priority'),
@@ -169,7 +175,7 @@ export default function Notices() {
       {(
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
           {filteredNotices.map((notice) => (
-            <div key={notice.id} className="rounded-2xl border border-[var(--border-light)] bg-[var(--bg-card)] p-5 shadow-[0_12px_24px_rgba(15,23,42,0.06)] transition hover:-translate-y-0.5 hover:shadow-[0_16px_32px_rgba(15,23,42,0.12)]">
+            <div key={notice.id} className="rounded-2xl border border-[var(--border-light)] bg-[var(--bg-card)] p-5 shadow-[0_12px_24px_rgba(15,23,42,0.06)] transition-[border-color,box-shadow] duration-200 hover:shadow-[0_16px_32px_rgba(15,23,42,0.12)]">
               <div className="mb-3 flex items-start justify-between">
                 <div className="flex items-center gap-2">
                   <div className="rounded-xl bg-blue-500/15 p-2">
