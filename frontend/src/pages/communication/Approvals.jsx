@@ -384,21 +384,29 @@ export default function Approvals() {
                   <div className="mt-4 border-t border-[var(--border-light)] pt-3">
                     <h4 className="mb-2 text-[13px] font-semibold text-[var(--text-secondary)]">History</h4>
                     {req.actions.map(action => (
-                      <div key={action.id} className="flex flex-wrap items-center gap-2.5 py-1.5 text-[13px] text-[var(--text-tertiary)]">
-                        <span
-                          className={clsx(
-                            'rounded-full px-2 py-0.5 text-[11px] font-bold uppercase',
-                            action.action === 'APPROVED' && 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300',
-                            action.action === 'REJECTED' && 'bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-300',
-                            action.action === 'RETURNED' && 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300',
-                            action.action === 'ESCALATED' && 'bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-300'
+                      <div key={action.id} className="flex flex-col gap-1.5 py-1.5 text-[13px] text-[var(--text-tertiary)] sm:flex-row sm:items-start sm:justify-between">
+                        <div className="min-w-0">
+                          <div className="flex flex-wrap items-center gap-2.5">
+                            <span
+                              className={clsx(
+                                'rounded-full px-2 py-0.5 text-[11px] font-bold uppercase',
+                                action.action === 'APPROVED' && 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300',
+                                action.action === 'REJECTED' && 'bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-300',
+                                action.action === 'RETURNED' && 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300',
+                                action.action === 'ESCALATED' && 'bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-300'
+                              )}
+                            >
+                              {action.action}
+                            </span>
+                            <span>Step {action.stepOrder} — {action.actedByName}</span>
+                          </div>
+                          {action.comments?.trim() && (
+                            <p className="mt-1 break-words text-[12px] text-[var(--text-secondary)]">
+                              Comment: {action.comments}
+                            </p>
                           )}
-                        >
-                          {action.action}
-                        </span>
-                        <span>Step {action.stepOrder} — {action.actedByName}</span>
-                        {action.comments && <span className="italic text-[var(--text-secondary)]">{action.comments}</span>}
-                        <span className="ml-auto text-xs">{formatDateTime(action.createdAt)}</span>
+                        </div>
+                        <span className="text-xs sm:whitespace-nowrap">{formatDateTime(action.createdAt)}</span>
                       </div>
                     ))}
                   </div>

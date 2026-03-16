@@ -169,11 +169,12 @@ export default function SocietySettings() {
 
   const previewMath = useMemo(() => {
     const area = Math.max(0, toNumber(previewInput.areaSqft, 0))
-    const occupantCount = Math.max(0, Math.floor(toNumber(previewInput.occupantCount, 0)))
-    const twoWheelerCount = Math.max(0, Math.floor(toNumber(previewInput.twoWheelerCount, 0)))
-    const fourWheelerOpenCount = Math.max(0, Math.floor(toNumber(previewInput.fourWheelerOpenCount, 0)))
-    const fourWheelerCoveredCount = Math.max(0, Math.floor(toNumber(previewInput.fourWheelerCoveredCount, 0)))
-    const fourWheelerStiltCount = Math.max(0, Math.floor(toNumber(previewInput.fourWheelerStiltCount, 0)))
+    const isOccupied = !!previewInput.isOccupied
+    const occupantCount = isOccupied ? Math.max(0, Math.floor(toNumber(previewInput.occupantCount, 0))) : 0
+    const twoWheelerCount = isOccupied ? Math.max(0, Math.floor(toNumber(previewInput.twoWheelerCount, 0))) : 0
+    const fourWheelerOpenCount = isOccupied ? Math.max(0, Math.floor(toNumber(previewInput.fourWheelerOpenCount, 0))) : 0
+    const fourWheelerCoveredCount = isOccupied ? Math.max(0, Math.floor(toNumber(previewInput.fourWheelerCoveredCount, 0))) : 0
+    const fourWheelerStiltCount = isOccupied ? Math.max(0, Math.floor(toNumber(previewInput.fourWheelerStiltCount, 0))) : 0
 
     const lines = [
       {
@@ -268,7 +269,7 @@ export default function SocietySettings() {
       },
     ]
 
-    if (!previewInput.isOccupied) {
+    if (!isOccupied) {
       const maintenanceBase = lines.find((line) => line.key === 'maintenance')?.amount || 0
       const surchargeAmount = maintenanceBase * (toNumber(form.nonOccupancySurchargePct) / 100)
       lines.push({
@@ -678,17 +679,17 @@ export default function SocietySettings() {
 
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <FormInput label="Area (SqFt)" name="preview-area" type="number" min="0" step="0.01" value={previewInput.areaSqft} onChange={handlePreviewChange('areaSqft')} />
-            <FormInput label="Occupant Count" name="preview-occupants" type="number" min="0" step="1" value={previewInput.occupantCount} onChange={handlePreviewChange('occupantCount')} />
-            <FormInput label="Two-Wheeler Count" name="preview-2w" type="number" min="0" step="1" value={previewInput.twoWheelerCount} onChange={handlePreviewChange('twoWheelerCount')} />
+            <FormInput label="Occupant Count" name="preview-occupants" type="number" min="0" step="1" value={previewInput.occupantCount} onChange={handlePreviewChange('occupantCount')} disabled={!previewInput.isOccupied} />
+            <FormInput label="Two-Wheeler Count" name="preview-2w" type="number" min="0" step="1" value={previewInput.twoWheelerCount} onChange={handlePreviewChange('twoWheelerCount')} disabled={!previewInput.isOccupied} />
             <div className="flex items-end pb-2">
               <label className="inline-flex items-center gap-2 text-sm text-[var(--text-secondary)]">
                 <input type="checkbox" checked={previewInput.isOccupied} onChange={handlePreviewChange('isOccupied')} />
                 Unit occupied
               </label>
             </div>
-            <FormInput label="4W Open Count" name="preview-open" type="number" min="0" step="1" value={previewInput.fourWheelerOpenCount} onChange={handlePreviewChange('fourWheelerOpenCount')} />
-            <FormInput label="4W Covered Count" name="preview-covered" type="number" min="0" step="1" value={previewInput.fourWheelerCoveredCount} onChange={handlePreviewChange('fourWheelerCoveredCount')} />
-            <FormInput label="4W Stilt Count" name="preview-stilt" type="number" min="0" step="1" value={previewInput.fourWheelerStiltCount} onChange={handlePreviewChange('fourWheelerStiltCount')} />
+            <FormInput label="4W Open Count" name="preview-open" type="number" min="0" step="1" value={previewInput.fourWheelerOpenCount} onChange={handlePreviewChange('fourWheelerOpenCount')} disabled={!previewInput.isOccupied} />
+            <FormInput label="4W Covered Count" name="preview-covered" type="number" min="0" step="1" value={previewInput.fourWheelerCoveredCount} onChange={handlePreviewChange('fourWheelerCoveredCount')} disabled={!previewInput.isOccupied} />
+            <FormInput label="4W Stilt Count" name="preview-stilt" type="number" min="0" step="1" value={previewInput.fourWheelerStiltCount} onChange={handlePreviewChange('fourWheelerStiltCount')} disabled={!previewInput.isOccupied} />
           </div>
 
           <div className="mt-4 overflow-hidden rounded-lg border border-[var(--border-default)]">

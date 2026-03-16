@@ -193,9 +193,10 @@ export default function Complaints() {
           {filteredComplaints.map((complaint) => {
             const StatusIcon = statusIcons[complaint.status] || Clock
             return (
-              <div key={complaint.id} className="bg-[var(--bg-card)] border border-[var(--border-light)] rounded-2xl p-5 shadow-sm transition-[border-color,box-shadow] duration-200 hover:shadow-lg">
+              <div key={complaint.id} className="relative overflow-hidden bg-[var(--bg-card)] border border-[var(--border-light)] rounded-2xl p-5 shadow-[0_12px_24px_rgba(15,23,42,0.06)]">
+                <div className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-sky-500/75 via-blue-500/70 to-indigo-500/65" />
                 <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-                  <div className="flex gap-4">
+                  <div className="flex items-start gap-3 sm:gap-4 min-w-0 flex-1">
                     <div className={clsx('p-3 rounded-xl', 
                       complaint.status === 'PENDING' && 'bg-yellow-100',
                       complaint.status === 'UNDER_REVIEW' && 'bg-blue-100',
@@ -209,7 +210,7 @@ export default function Complaints() {
                         complaint.status === 'REJECTED' && 'text-red-600'
                       )} />
                     </div>
-                    <div>
+                    <div className="min-w-0">
                       <div className="flex flex-wrap gap-2 items-center">
                         <span className="text-sm font-mono text-[var(--text-tertiary)]">{complaint.complaintNumber}</span>
                         <span className={clsx('px-2 py-0.5 rounded-full text-xs font-semibold', statusColors[complaint.status])}>
@@ -217,8 +218,8 @@ export default function Complaints() {
                         </span>
                         <span className="px-2 py-0.5 rounded-full text-xs text-slate-700 bg-white/10">{complaint.category}</span>
                       </div>
-                      <h3 className="mt-1 font-semibold text-[var(--text-primary)]">{complaint.subject}</h3>
-                      <p className="mt-1 text-sm text-[var(--text-tertiary)] line-clamp-2">{complaint.description}</p>
+                      <h3 className="mt-1 text-base font-semibold text-[var(--text-primary)]">{complaint.subject}</h3>
+                      <p className="mt-1 text-sm text-[var(--text-tertiary)] leading-relaxed line-clamp-2">{complaint.description}</p>
                       
                       {complaint.resolution && (
                         <div className="mt-2 p-2 rounded-[10px] bg-green-100">
@@ -226,7 +227,7 @@ export default function Complaints() {
                         </div>
                       )}
                       
-                      <div className="flex gap-4 mt-2 text-xs text-[var(--text-tertiary)]">
+                      <div className="flex flex-wrap gap-4 mt-3 text-xs text-[var(--text-tertiary)]">
                         {isPlatformLevel && <span className="whitespace-nowrap">{complaint.societyName}</span>}
                         <span className="whitespace-nowrap">By: {complaint.raisedByName || 'N/A'}</span>
                         <span className="whitespace-nowrap">{formatDate(complaint.createdAt)}</span>
@@ -234,12 +235,12 @@ export default function Complaints() {
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2 ml-auto">
+                  <div className="flex items-center gap-2 w-full md:w-auto md:ml-auto">
                     {canManageComplaints() && complaint.status !== 'RESOLVED' && complaint.status !== 'REJECTED' && (
                       <select
                         value={complaint.status}
                         onChange={(e) => handleStatusChange(complaint, e.target.value)}
-                        className="px-3 py-1.5 text-sm rounded-[10px] border border-[#cbd5f5] bg-[var(--bg-card)] text-[var(--text-primary)] focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                        className="w-full md:w-auto min-w-[10rem] px-3 py-2 text-sm rounded-[10px] border border-[#cbd5f5] bg-[var(--bg-card)] text-[var(--text-primary)] focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
                       >
                         <option value="PENDING">Pending</option>
                         <option value="UNDER_REVIEW">Under Review</option>

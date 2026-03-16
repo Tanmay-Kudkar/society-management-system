@@ -175,8 +175,9 @@ export default function Notices() {
       {(
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
           {filteredNotices.map((notice) => (
-            <div key={notice.id} className="rounded-2xl border border-[var(--border-light)] bg-[var(--bg-card)] p-5 shadow-[0_12px_24px_rgba(15,23,42,0.06)] transition-[border-color,box-shadow] duration-200 hover:shadow-[0_16px_32px_rgba(15,23,42,0.12)]">
-              <div className="mb-3 flex items-start justify-between">
+            <div key={notice.id} className="relative overflow-hidden rounded-2xl border border-[var(--border-light)] bg-[var(--bg-card)] p-5 shadow-[0_12px_24px_rgba(15,23,42,0.06)]">
+              <div className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-blue-500/80 via-cyan-400/70 to-violet-500/70" />
+              <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div className="flex items-center gap-2">
                   <div className="rounded-xl bg-blue-500/15 p-2">
                     <Megaphone className="h-4 w-4 text-blue-600" />
@@ -186,19 +187,25 @@ export default function Notices() {
                   </span>
                 </div>
                 {canManageNotices() && (
-                  <div className="flex gap-2">
-                    <button
+                  <div className="grid grid-cols-2 gap-2 w-full sm:w-auto sm:flex">
+                    <NeonSweepButton
                       onClick={() => { setEditingNotice(notice); setShowModal(true) }}
-                      className="rounded-lg p-1.5 text-[var(--text-tertiary)] transition hover:bg-[var(--bg-tertiary)]"
+                      tone="slate"
+                      size="sm"
+                      className="w-full justify-center"
                     >
                       <Edit size={16} />
-                    </button>
-                    <button
+                      Edit
+                    </NeonSweepButton>
+                    <NeonSweepButton
                       onClick={() => confirmAndDeleteNotice(notice)}
-                      className="rounded-lg p-1.5 text-red-500 transition hover:bg-red-500/10"
+                      tone="danger"
+                      size="sm"
+                      className="w-full justify-center"
                     >
                       <Trash2 size={16} />
-                    </button>
+                      Delete
+                    </NeonSweepButton>
                   </div>
                 )}
               </div>
@@ -206,7 +213,7 @@ export default function Notices() {
               <h3 className="mb-2 font-bold text-[var(--text-primary)]">{notice.title}</h3>
               <p className="mb-3 line-clamp-3 text-sm text-[var(--text-secondary)]">{notice.content}</p>
               
-              <div className="flex items-center justify-between border-t border-[var(--border-light)] pt-3 text-xs text-[var(--text-tertiary)]">
+              <div className="flex flex-wrap items-center justify-between gap-2 border-t border-[var(--border-light)] pt-3 text-xs text-[var(--text-tertiary)]">
                 {isPlatformLevel && <span>{notice.societyName || 'All Societies'}</span>}
                 <span>{formatDate(notice.createdAt)}</span>
               </div>
