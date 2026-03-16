@@ -1,4 +1,5 @@
 import clsx from 'clsx'
+import useBackendStatus from '../hooks/useBackendStatus'
 
 /**
  * SkeletonLoaders.jsx
@@ -32,9 +33,10 @@ export const Bone = ({ width, height, style, className = '', variant = '' }) => 
   />
 )
 
-/* ─── Wake-up Banner (shown when backend is cold-starting) ─── */
-export const WakeUpBanner = ({ show = true }) => {
-  if (!show) return null
+/* ─── Wake-up Banner (shown only when backend is cold-starting) ─── */
+export const WakeUpBanner = () => {
+  const isWakingUp = useBackendStatus()
+  if (!isWakingUp) return null
   return (
     <div className="mb-5 flex items-center gap-3 rounded-xl border border-[color-mix(in_srgb,var(--color-info)_25%,var(--border-light))] bg-[linear-gradient(135deg,color-mix(in_srgb,var(--color-info)_14%,var(--bg-card)),color-mix(in_srgb,var(--accent-primary)_10%,var(--bg-card)))] px-5 py-3">
       <span className="animate-pulse text-xl">☕</span>
