@@ -126,7 +126,7 @@ public class AuthController {
             return ResponseEntity.status(401).build();
         }
         Long userId = jwtUtils.getUserIdFromToken(token);
-        authService.changePassword(userId, request.getCurrentPassword(), request.getNewPassword());
+        authService.changePassword(userId, request.getCurrentPassword(), request.getNewPassword(), request.getSpecialKey());
         return ResponseEntity.ok(Map.of("message", "Password changed successfully"));
     }
 

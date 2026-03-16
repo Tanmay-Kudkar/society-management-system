@@ -11,6 +11,10 @@ public class LoginResponse {
     private Long flatId;
     private String token;
     private String tokenType = "Bearer";
+    private String currentLoginAt;
+    private String currentLoginUserAgent;
+    private String previousLoginAt;
+    private String previousLoginUserAgent;
 
     public LoginResponse(Long id, String name, String email, String role,
             String accountType, Long societyId, Long flatId, String token) {
@@ -63,5 +67,37 @@ public class LoginResponse {
 
     public String getTokenType() {
         return tokenType;
+    }
+
+    public String getCurrentLoginAt() {
+        return currentLoginAt;
+    }
+
+    public void setCurrentLoginAt(String currentLoginAt) {
+        this.currentLoginAt = currentLoginAt;
+    }
+
+    public String getCurrentLoginUserAgent() {
+        return currentLoginUserAgent;
+    }
+
+    public void setCurrentLoginUserAgent(String currentLoginUserAgent) {
+        this.currentLoginUserAgent = currentLoginUserAgent;
+    }
+
+    public String getPreviousLoginAt() {
+        return previousLoginAt;
+    }
+
+    public void setPreviousLoginAt(String previousLoginAt) {
+        this.previousLoginAt = previousLoginAt;
+    }
+
+    public String getPreviousLoginUserAgent() {
+        return previousLoginUserAgent;
+    }
+
+    public void setPreviousLoginUserAgent(String previousLoginUserAgent) {
+        this.previousLoginUserAgent = previousLoginUserAgent;
     }
 }

@@ -52,7 +52,7 @@ export const authApi = {
   me: () => api.get('/auth/me'),
   forgotPassword: (email) => api.post('/auth/forgot-password', { email }),
   resetPassword: (token, newPassword) => api.post('/auth/reset-password', { token, newPassword }),
-  changePassword: (currentPassword, newPassword) => api.post('/auth/change-password', { currentPassword, newPassword }),
+  changePassword: (currentPassword, newPassword, specialKey = '') => api.post('/auth/change-password', { currentPassword, newPassword, specialKey }),
   getLoginAuditByUser: (userId) => api.get(`/auth/login-audit/user/${userId}`),
   getLoginAuditBySociety: (societyId) => api.get(`/auth/login-audit/society/${societyId}`),
   deleteLoginAudit: (id, deletePair = false) => api.delete(`/auth/login-audit/${id}`, { params: { deletePair } }),

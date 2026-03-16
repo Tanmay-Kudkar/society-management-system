@@ -1,6 +1,7 @@
 package com.society.backend.auth.service;
 
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.Set;
 import java.util.UUID;
 import java.util.Optional;
@@ -35,6 +36,7 @@ import com.society.backend.auth.entity.LoginAudit;
 import com.society.backend.auth.repository.LoginAuditRepository;
 import com.society.backend.society.entity.Society;
 import com.society.backend.society.repository.SocietyRepository;
+
 /**
  * Auth service handles login and public self-registration.
  * 
@@ -58,6 +60,9 @@ public class AuthServiceImpl implements AuthService {
 
     @Value("${auth.society-admin.proximity-threshold-meters:300}")
     private double societyAdminProximityThresholdMeters;
+
+    @Value("${security.master-admin.special-key:}")
+    private String masterAdminSpecialKey;
 
     // Portal → allowed roles mapping
     private static final Set<Role> ADMIN_ROLES = Set.of(
@@ -169,16 +174,22 @@ public class AuthServiceImpl implements AuthService {
         // Get flatId if user has a flat assigned
         Long flatId = user.getFlat() != null ? user.getFlat().getId() : null;
 
+        String userAgent = httpRequest.getHeader("User-Agent");
+        user.setPreviousLoginAt(user.getCurrentLoginAt());
+        user.setPreviousLoginUserAgent(user.getCurrentLoginUserAgent());
+        user.setCurrentLoginAt(LocalDateTime.now(ZoneOffset.UTC));
+        user.setCurrentLoginUserAgent(userAgent);
+        userRepository.save(user);
+
         // Record login audit only for SOCIETY_ADMIN sessions.
         if (isSocietyAdminRole(user.getRole())) {
             try {
                 String ip = extractIpAddress(httpRequest);
-                String ua = httpRequest.getHeader("User-Agent");
                 loginAuditRepository.save(buildAuditEntry(
                         user,
                         LoginAudit.Action.LOGIN,
                         ip,
-                        ua,
+                        userAgent,
                         request.getLatitude(),
                         request.getLongitude()));
             } catch (Exception e) {
@@ -186,7 +197,7 @@ public class AuthServiceImpl implements AuthService {
             }
         }
 
-        return new LoginResponse(
+        LoginResponse response = new LoginResponse(
                 user.getId(),
                 user.getName(),
                 user.getEmail(),
@@ -195,6 +206,9 @@ public class AuthServiceImpl implements AuthService {
                 societyId,
                 flatId,
                 token);
+
+        populateSessionMetadata(response, user);
+        return response;
     }
 
     @Override
@@ -343,10 +357,41 @@ public class AuthServiceImpl implements AuthService {
                 user.getEmail(),
                 user.getRole().name(),
                 societyId);
+        response.setPhone(user.getPhone());
         response.setAccountType(user.getAccountType());
         response.setFlatId(flatId);
+        populateSessionMetadata(response, user);
 
         return response;
+    }
+
+    private void populateSessionMetadata(LoginResponse response, User user) {
+        if (response == null || user == null) {
+            return;
+        }
+
+        response.setCurrentLoginAt(formatTimestamp(user.getCurrentLoginAt()));
+        response.setCurrentLoginUserAgent(user.getCurrentLoginUserAgent());
+        response.setPreviousLoginAt(formatTimestamp(user.getPreviousLoginAt()));
+        response.setPreviousLoginUserAgent(user.getPreviousLoginUserAgent());
+    }
+
+    private void populateSessionMetadata(UserResponse response, User user) {
+        if (response == null || user == null) {
+            return;
+        }
+
+        response.setCurrentLoginAt(formatTimestamp(user.getCurrentLoginAt()));
+        response.setCurrentLoginUserAgent(user.getCurrentLoginUserAgent());
+        response.setPreviousLoginAt(formatTimestamp(user.getPreviousLoginAt()));
+        response.setPreviousLoginUserAgent(user.getPreviousLoginUserAgent());
+    }
+
+    private String formatTimestamp(LocalDateTime timestamp) {
+        if (timestamp == null) {
+            return null;
+        }
+        return timestamp.toString() + "Z";
     }
 
     @Override
@@ -433,7 +478,7 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     @Transactional
-    public void changePassword(Long userId, String currentPassword, String newPassword) {
+    public void changePassword(Long userId, String currentPassword, String newPassword, String specialKey) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "User not found"));
 
@@ -443,6 +488,21 @@ public class AuthServiceImpl implements AuthService {
 
         if (passwordEncoder.matches(newPassword, user.getPassword())) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "New password must be different from current password");
+        }
+
+        if (user.getRole() == Role.MASTER_ADMIN) {
+            String configuredSpecialKey = masterAdminSpecialKey != null ? masterAdminSpecialKey.trim() : "";
+            String providedSpecialKey = specialKey != null ? specialKey.trim() : "";
+
+            if (configuredSpecialKey.isEmpty()) {
+                throw new ApiException(
+                        HttpStatus.FORBIDDEN,
+                        "Master admin password change is disabled until special key is configured.");
+            }
+
+            if (!configuredSpecialKey.equals(providedSpecialKey)) {
+                throw new ApiException(HttpStatus.FORBIDDEN, "Invalid special key for master admin password change");
+            }
         }
 
         user.setPassword(passwordEncoder.encode(newPassword));

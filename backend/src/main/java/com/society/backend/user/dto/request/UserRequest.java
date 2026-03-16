@@ -27,6 +27,12 @@ public class UserRequest {
     @NotBlank(message = "Role is required")
     private String role;
 
+    /**
+     * Special key required only when changing MASTER_ADMIN email.
+     * Optional for all other update/create flows.
+     */
+    private String specialKey;
+
     @NotBlank(message = "Phone is required")
     @Pattern(regexp = "^(\\+91)?[6-9]\\d{9}$", message = "Invalid phone number format. Use 10-digit mobile number")
     private String phone;

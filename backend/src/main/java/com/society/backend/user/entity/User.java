@@ -69,6 +69,18 @@ public class User {
     @Column(nullable = false)
     private LocalDateTime createdAt;
 
+    @Column(name = "current_login_at")
+    private LocalDateTime currentLoginAt;
+
+    @Column(name = "current_login_user_agent", length = 1024)
+    private String currentLoginUserAgent;
+
+    @Column(name = "previous_login_at")
+    private LocalDateTime previousLoginAt;
+
+    @Column(name = "previous_login_user_agent", length = 1024)
+    private String previousLoginUserAgent;
+
     @PrePersist
     protected void onCreate() {
         if (createdAt == null) {

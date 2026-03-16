@@ -11,7 +11,7 @@ import clsx from 'clsx'
 import Toggle from '../../components/Toggle'
 import { PhoneInput, NeonSweepButton, InfoTooltip } from '../../components'
 import { SettingsSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
-import { getDeviceInfo } from '../../utils'
+import { getDeviceInfo, getHighEntropyOSInfo } from '../../utils'
 
 /* OS icons */
 import windowsIcon from '../../assets/icons/os/windows.svg'
@@ -19,6 +19,7 @@ import macosIcon from '../../assets/icons/os/macos.svg'
 import linuxIcon from '../../assets/icons/os/linux.svg'
 import chromeosIcon from '../../assets/icons/os/chromeos.svg'
 import androidIcon from '../../assets/icons/os/android.svg'
+import iosIcon from '../../assets/icons/os/ios.svg'
 import unknownOsIcon from '../../assets/icons/os/unknown.svg'
 
 /* Browser icons */
@@ -31,10 +32,11 @@ import braveIcon from '../../assets/icons/browsers/brave.svg'
 import vivaldiIcon from '../../assets/icons/browsers/vivaldi.svg'
 import unknownBrowserIcon from '../../assets/icons/browsers/unknown.svg'
 
-const OS_ICONS = { windows: windowsIcon, macos: macosIcon, linux: linuxIcon, chromeos: chromeosIcon, android: androidIcon, unknown: unknownOsIcon }
+const OS_ICONS = { windows: windowsIcon, macos: macosIcon, linux: linuxIcon, chromeos: chromeosIcon, android: androidIcon, ios: iosIcon, unknown: unknownOsIcon }
 const BROWSER_ICONS = { chrome: chromeIcon, firefox: firefoxIcon, safari: safariIcon, edge: edgeIcon, opera: operaIcon, brave: braveIcon, vivaldi: vivaldiIcon, unknown: unknownBrowserIcon }
 
 const PHONE_REGEX = /^(\+91)?[6-9]\d{9}$/
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 const passwordRules = [
   { id: 'length', label: 'At least 6 characters', test: (v) => v.length >= 6 },
@@ -101,7 +103,12 @@ const Alert = ({ type = 'error', children }) => {
   if (!children) return null
   const Icon = type === 'error' ? AlertCircle : CheckCircle2
   return (
-    <div className={clsx('inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium', type === 'error' ? 'border-red-500/30 bg-red-500/10 text-red-300' : 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300')}>
+    <div className={clsx(
+      'animate-fade-in-up inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-semibold transition-all duration-300 ease-out',
+      type === 'error'
+        ? 'border-red-500/60 bg-red-500/15 text-red-700 dark:text-red-200'
+        : 'border-emerald-500/60 bg-emerald-500/15 text-emerald-700 dark:text-emerald-200'
+    )}>
       <Icon size={16} className="shrink-0" />
       <span>{children}</span>
     </div>
@@ -111,6 +118,63 @@ const Alert = ({ type = 'error', children }) => {
 /* ── main component ─────────────────────────────────────── */
 export default function Settings() {
   const { user, logout, updateUser } = useAuth()
+
+  const previousLoginLabel = useMemo(() => {
+    const previousLoginAt = user?.previousLoginAt
+    if (!previousLoginAt) return 'No previous login recorded yet'
+
+    const parsed = new Date(previousLoginAt)
+    if (Number.isNaN(parsed.getTime())) return 'Previous login timestamp unavailable'
+
+    const weekday = parsed.toLocaleDateString('en-US', { weekday: 'long' })
+    const datePart = parsed.toLocaleDateString('en-US', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+    })
+    const timePart = parsed.toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: true,
+    })
+
+    return `${weekday}, ${datePart} • ${timePart}`
+  }, [user?.previousLoginAt])
+
+  const previousLoginDevice = useMemo(() => {
+    if (!user?.previousLoginUserAgent) return null
+    return getDeviceInfo(user.previousLoginUserAgent)
+  }, [user?.previousLoginUserAgent])
+
+  const [currentLoginDevice, setCurrentLoginDevice] = useState(() => getDeviceInfo())
+
+  useEffect(() => {
+    let cancelled = false
+
+    const hydrateOsVersion = async () => {
+      const accurateOs = await getHighEntropyOSInfo()
+      if (!accurateOs || cancelled) {
+        return
+      }
+
+      setCurrentLoginDevice((prev) => ({
+        ...prev,
+        os: {
+          ...prev.os,
+          ...accurateOs,
+        },
+      }))
+    }
+
+    hydrateOsVersion()
+
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  const hasPreviousSession = Boolean(user?.previousLoginAt || user?.previousLoginUserAgent)
 
   const {
     theme, compactSidebar,
@@ -126,7 +190,9 @@ export default function Settings() {
   /* ── Profile ── */
   const [profileData, setProfileData] = useState({
     name: user?.name || '',
+    email: user?.email || '',
     phone: user?.phone || '',
+    specialKey: '',
   })
   const [profileErrors, setProfileErrors] = useState({})
 
@@ -135,6 +201,7 @@ export default function Settings() {
     currentPassword: '',
     newPassword: '',
     confirmPassword: '',
+    specialKey: '',
   })
   const [passwordError, setPasswordError] = useState('')
   const [passwordSaved, setPasswordSaved] = useState(false)
@@ -142,6 +209,7 @@ export default function Settings() {
     current: false,
     new: false,
     confirm: false,
+    specialKey: false,
   })
 
   /* ── Notifications ── */
@@ -186,7 +254,7 @@ export default function Settings() {
 
   useEffect(() => {
     if (user) {
-      setProfileData({ name: user.name || '', phone: user.phone || '' })
+      setProfileData({ name: user.name || '', email: user.email || '', phone: user.phone || '', specialKey: '' })
     }
   }, [user])
 
@@ -219,6 +287,22 @@ export default function Settings() {
       errs.name = 'Name must be under 100 characters'
     }
 
+    const email = profileData.email?.trim()
+    if (!email) {
+      errs.email = 'Email is required'
+    } else if (!EMAIL_REGEX.test(email)) {
+      errs.email = 'Enter a valid email address'
+    }
+
+    const isMasterAdminEmailChange =
+      user?.role === 'MASTER_ADMIN' &&
+      email &&
+      email.toLowerCase() !== (user?.email || '').trim().toLowerCase()
+
+    if (isMasterAdminEmailChange && !profileData.specialKey?.trim()) {
+      errs.specialKey = 'Special key is required to change Master Admin email'
+    }
+
     const phone = profileData.phone?.trim()
     if (phone && !PHONE_REGEX.test(phone)) {
       errs.phone = 'Enter a valid 10-digit Indian mobile number'
@@ -233,15 +317,33 @@ export default function Settings() {
     setSaving(true)
     setError('')
     try {
+      const nextEmail = profileData.email.trim()
+      const emailChanged = nextEmail.toLowerCase() !== (user?.email || '').trim().toLowerCase()
+
       await userApi.update(user.id, {
         name: profileData.name.trim(),
-        email: user.email,
+        email: nextEmail,
         phone: profileData.phone?.trim() || '',
         role: user.role,
+        specialKey: profileData.specialKey?.trim() || '',
       })
-      const updatedUser = { ...user, name: profileData.name.trim(), phone: profileData.phone?.trim() || '' }
+      const updatedUser = {
+        ...user,
+        name: profileData.name.trim(),
+        email: nextEmail,
+        phone: profileData.phone?.trim() || '',
+      }
       localStorage.setItem('user', JSON.stringify(updatedUser))
       if (updateUser) updateUser(updatedUser)
+
+      if (emailChanged) {
+        setSaved(true)
+        setTimeout(() => {
+          logout()
+        }, 900)
+        return
+      }
+
       setSaved(true)
       setTimeout(() => setSaved(false), 3000)
     } catch (err) {
@@ -256,7 +358,6 @@ export default function Settings() {
     const { currentPassword, newPassword, confirmPassword } = passwordData
     if (!currentPassword || !newPassword || !confirmPassword) return false
     if (newPassword !== confirmPassword) return false
-    if (!passwordRules.every(r => r.test(newPassword))) return false
     return true
   }, [passwordData])
 
@@ -271,12 +372,12 @@ export default function Settings() {
       setPasswordError('New password is required')
       return
     }
-    if (!passwordRules.every(r => r.test(passwordData.newPassword))) {
-      setPasswordError('New password does not meet all requirements')
-      return
-    }
     if (passwordData.newPassword !== passwordData.confirmPassword) {
       setPasswordError('New passwords do not match')
+      return
+    }
+    if (user?.role === 'MASTER_ADMIN' && !passwordData.specialKey?.trim()) {
+      setPasswordError('Special key is required for Master Admin password update')
       return
     }
     if (passwordData.currentPassword === passwordData.newPassword) {
@@ -286,8 +387,12 @@ export default function Settings() {
 
     setSaving(true)
     try {
-      await authApi.changePassword(passwordData.currentPassword, passwordData.newPassword)
-      setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' })
+      await authApi.changePassword(
+        passwordData.currentPassword,
+        passwordData.newPassword,
+        user?.role === 'MASTER_ADMIN' ? (passwordData.specialKey?.trim() || '') : ''
+      )
+      setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '', specialKey: '' })
       setShowPasswords({ current: false, new: false, confirm: false })
       setPasswordSaved(true)
       setTimeout(() => setPasswordSaved(false), 3000)
@@ -373,29 +478,50 @@ export default function Settings() {
           {/* ─── PROFILE TAB ─── */}
           {activeTab === 'profile' && (
             <div className="animate-fadeIn flex max-w-full flex-col gap-4">
-              <div className="flex items-center gap-3 rounded-xl border border-[var(--border-light)] bg-[linear-gradient(135deg,color-mix(in_srgb,var(--accent-primary)_8%,var(--bg-tertiary)),var(--bg-tertiary))] p-4">
-                <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(135deg,var(--accent-primary),color-mix(in_srgb,var(--accent-primary)_75%,#7c3aed))] text-2xl font-bold text-white shadow-[0_4px_12px_color-mix(in_srgb,var(--accent-primary)_30%,transparent)]">
-                  {profileData.name?.charAt(0)?.toUpperCase() || user?.name?.charAt(0)?.toUpperCase() || 'A'}
-                </div>
-                <div className="flex min-w-0 flex-col gap-0.5">
-                  <h3 className="m-0 text-[1.55rem] font-extrabold leading-tight text-[var(--text-primary)] md:text-[1.9rem]">{profileData.name || user?.name}</h3>
-                  <p className="m-0 flex items-center gap-1 text-sm font-semibold text-[var(--text-secondary)] md:text-base">
-                    <Mail size={13} />
-                    {user?.email}
-                  </p>
-                  <span className="mt-1 inline-flex w-fit items-center gap-1 rounded-full bg-[color-mix(in_srgb,var(--accent-primary)_12%,transparent)] px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.03em] text-[var(--accent-primary)]">
-                    <BadgeCheck size={12} />
-                    {user?.role?.replace(/_/g, ' ')}
-                  </span>
+              <div className="relative overflow-hidden rounded-2xl border border-[color-mix(in_srgb,var(--border-light)_72%,#3b82f6_28%)] bg-[linear-gradient(135deg,color-mix(in_srgb,var(--accent-primary)_9%,var(--bg-tertiary))_0%,var(--bg-tertiary)_56%,color-mix(in_srgb,var(--accent-primary)_7%,var(--bg-card))_100%)] p-4 shadow-[0_16px_30px_rgba(15,23,42,0.10)] sm:p-5">
+                <div className="pointer-events-none absolute -right-10 -top-10 h-36 w-36 rounded-full bg-[color-mix(in_srgb,var(--accent-primary)_18%,transparent)] blur-2xl" />
+                <div className="pointer-events-none absolute -bottom-12 left-20 h-28 w-28 rounded-full bg-[color-mix(in_srgb,var(--accent-primary)_14%,transparent)] blur-2xl" />
+
+                <div className="relative z-[1] flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex min-w-0 items-center gap-3.5 sm:gap-4">
+                    <div className="relative shrink-0">
+                      <div className="absolute inset-0 rounded-full bg-[color-mix(in_srgb,var(--accent-primary)_35%,transparent)] blur-md" />
+                      <div className="relative flex h-[4.1rem] w-[4.1rem] items-center justify-center rounded-full border border-[color-mix(in_srgb,#ffffff_35%,transparent)] bg-[linear-gradient(140deg,var(--accent-primary),color-mix(in_srgb,var(--accent-primary)_72%,#0ea5e9))] text-[1.7rem] font-extrabold text-white shadow-[0_10px_20px_color-mix(in_srgb,var(--accent-primary)_28%,transparent)] sm:h-[4.5rem] sm:w-[4.5rem]">
+                        {profileData.name?.charAt(0)?.toUpperCase() || user?.name?.charAt(0)?.toUpperCase() || 'A'}
+                      </div>
+                    </div>
+
+                    <div className="min-w-0">
+                      <p className="mb-0.5 text-[0.72rem] font-bold uppercase tracking-[0.07em] text-[var(--text-secondary)]">Account Overview</p>
+                      <h3 className="m-0 truncate text-[1.45rem] font-extrabold leading-tight tracking-[-0.02em] text-[var(--text-primary)] sm:text-[1.85rem]">
+                        {profileData.name || user?.name}
+                      </h3>
+                      <p className="m-0 mt-1 flex items-center gap-1.5 text-sm font-semibold text-[var(--text-secondary)] sm:text-[0.98rem]">
+                        <Mail size={13} />
+                        <span className="truncate">{user?.email}</span>
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-2 sm:min-w-[15rem]">
+                    <span className="inline-flex w-fit items-center gap-1.5 rounded-full border border-[color-mix(in_srgb,var(--accent-primary)_36%,transparent)] bg-[color-mix(in_srgb,var(--accent-primary)_15%,transparent)] px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.04em] text-[var(--accent-primary)]">
+                      <BadgeCheck size={12} />
+                      {user?.role?.replace(/_/g, ' ')}
+                    </span>
+                    <div className="inline-flex w-fit items-center gap-1.5 rounded-full border border-emerald-500/35 bg-emerald-500/12 px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.04em] text-emerald-700 dark:text-emerald-300">
+                      <Shield size={12} />
+                      Verified Session
+                    </div>
+                  </div>
                 </div>
               </div>
 
               {error && <Alert type="error">{error}</Alert>}
               {saved && !error && <Alert type="success">Profile updated successfully!</Alert>}
 
-              <div className="grid grid-cols-1 gap-3 border-t border-[var(--border-light)] pt-3 md:grid-cols-2">
-                <div className="flex flex-col gap-1.5">
-                  <label className="flex items-center gap-1.5 text-sm font-bold text-[var(--text-primary)] md:text-base">
+              <div className="grid grid-cols-1 gap-2.5 border-t border-[var(--border-light)] pt-4 sm:gap-4 md:grid-cols-2">
+                <div className="flex h-full flex-col gap-2 rounded-xl border border-[var(--border-light)] bg-[color-mix(in_srgb,var(--bg-tertiary)_45%,transparent)] p-2.5 sm:p-4">
+                  <label className="flex items-center gap-1.5 text-[0.84rem] font-bold text-[var(--text-primary)] sm:text-sm md:text-base">
                     <User size={14} />
                     Full Name
                   </label>
@@ -406,7 +532,7 @@ export default function Settings() {
                       setProfileData({ ...profileData, name: e.target.value })
                       if (profileErrors.name) setProfileErrors({ ...profileErrors, name: null })
                     }}
-                    className={clsx('min-h-10 w-full rounded-lg border border-[var(--border-light)] bg-[var(--bg-card)] px-3 py-2 text-sm font-semibold text-[var(--text-primary)] transition focus:border-[var(--accent-primary)] focus:outline-none focus:ring-2 focus:ring-[color-mix(in_srgb,var(--accent-primary)_15%,transparent)] md:text-[0.98rem]', profileErrors.name && '!border-red-500 !ring-2 !ring-red-500/15')}
+                    className={clsx('min-h-11 w-full rounded-lg border border-[var(--border-light)] bg-[var(--bg-card)] px-3 py-2.5 text-sm font-semibold text-[var(--text-primary)] transition focus:border-[var(--accent-primary)] focus:outline-none focus:ring-2 focus:ring-[color-mix(in_srgb,var(--accent-primary)_15%,transparent)] md:text-[0.98rem]', profileErrors.name && '!border-red-500 !ring-2 !ring-red-500/15')}
                     placeholder="Enter your full name"
                     maxLength={100}
                   />
@@ -416,31 +542,80 @@ export default function Settings() {
                       {profileErrors.name}
                     </span>
                   )}
-                  <span className="flex items-center gap-1 text-xs font-semibold text-[var(--text-secondary)]">{profileData.name?.length || 0}/100 characters</span>
+                  <span className="mt-auto flex items-center gap-1 text-[11px] font-semibold text-[var(--text-secondary)]">{profileData.name?.length || 0}/100 characters</span>
                 </div>
-                <div className="flex flex-col gap-1.5">
-                  <label className="flex items-center gap-1.5 text-sm font-bold text-[var(--text-primary)] md:text-base">
+                <div className="flex h-full flex-col gap-2 rounded-xl border border-[var(--border-light)] bg-[color-mix(in_srgb,var(--bg-tertiary)_45%,transparent)] p-2.5 sm:p-4">
+                  <label className="flex items-center gap-1.5 text-[0.84rem] font-bold text-[var(--text-primary)] sm:text-sm md:text-base">
                     <Mail size={14} />
                     Email
                   </label>
                   <input
                     type="email"
-                    value={user?.email || ''}
-                    disabled
-                    className="min-h-10 w-full cursor-not-allowed rounded-lg border border-[color-mix(in_srgb,var(--border-light)_85%,var(--text-secondary))] bg-[var(--bg-tertiary)] px-3 py-2 text-sm font-semibold text-[var(--text-secondary)] md:text-[0.98rem]"
+                    value={profileData.email}
+                    onChange={(e) => {
+                      setProfileData({ ...profileData, email: e.target.value })
+                      if (profileErrors.email) setProfileErrors({ ...profileErrors, email: null })
+                    }}
+                    className={clsx(
+                      'min-h-11 w-full rounded-lg border border-[var(--border-light)] bg-[var(--bg-card)] px-3 py-2.5 text-sm font-semibold text-[var(--text-primary)] transition focus:border-[var(--accent-primary)] focus:outline-none focus:ring-2 focus:ring-[color-mix(in_srgb,var(--accent-primary)_15%,transparent)] md:text-[0.98rem]',
+                      profileErrors.email && '!border-red-500 !ring-2 !ring-red-500/15'
+                    )}
                   />
-                  <span className="flex items-center gap-1 text-xs font-semibold text-[var(--text-secondary)]">
-                    <Lock size={11} />
-                    Email cannot be changed
-                  </span>
+                  {profileErrors.email ? (
+                    <span className="flex items-center gap-1 text-xs font-medium text-red-500">
+                      <AlertCircle size={12} />
+                      {profileErrors.email}
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-1 whitespace-nowrap text-xs font-semibold text-[var(--text-secondary)]">
+                      <Lock size={11} className="shrink-0" />
+                      <span className="sm:hidden">Email change signs you out</span>
+                      <span className="hidden sm:inline">Changing email will sign you out for security</span>
+                    </span>
+                  )}
                 </div>
-                <div className="flex flex-col gap-1.5">
-                  <label className="flex items-center gap-1.5 text-sm font-bold text-[var(--text-primary)] md:text-base">
+                {user?.role === 'MASTER_ADMIN' &&
+                  profileData.email?.trim() &&
+                  profileData.email.trim().toLowerCase() !== (user?.email || '').trim().toLowerCase() && (
+                    <div className="animate-fade-in-up flex h-full flex-col gap-2 rounded-xl border border-red-600/90 bg-red-500/22 p-3 transition-all duration-300 ease-out sm:p-4 md:col-span-2">
+                      <label className="flex items-center gap-1.5 text-sm font-extrabold text-red-900 dark:text-red-100 md:text-base">
+                        <Shield size={14} />
+                        Special Key (Master Admin)
+                      </label>
+                      <input
+                        type="password"
+                        value={profileData.specialKey}
+                        onChange={(e) => {
+                          setProfileData({ ...profileData, specialKey: e.target.value })
+                          if (profileErrors.specialKey) setProfileErrors({ ...profileErrors, specialKey: null })
+                        }}
+                        className={clsx(
+                          'min-h-10 w-full rounded-lg border border-red-600/75 bg-[var(--bg-card)] px-3 py-2 text-sm font-semibold text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] transition focus:border-red-700 focus:outline-none focus:ring-2 focus:ring-red-500/25 md:text-[0.98rem]',
+                          profileErrors.specialKey && '!border-red-500 !ring-2 !ring-red-500/15'
+                        )}
+                        placeholder="Enter special key to confirm email change"
+                      />
+                      {profileErrors.specialKey ? (
+                        <span className="flex items-center gap-1 text-xs font-medium text-red-500">
+                          <AlertCircle size={12} />
+                          {profileErrors.specialKey}
+                        </span>
+                      ) : (
+                        <span className="flex items-center gap-1 text-xs font-extrabold text-red-900 dark:text-red-100">
+                          <Shield size={11} />
+                          Required only for Master Admin email changes
+                        </span>
+                      )}
+                    </div>
+                  )}
+                <div className="flex h-full flex-col gap-2 rounded-xl border border-[var(--border-light)] bg-[color-mix(in_srgb,var(--bg-tertiary)_45%,transparent)] p-2.5 sm:p-4">
+                  <label className="flex items-center gap-1.5 text-[0.84rem] font-bold text-[var(--text-primary)] sm:text-sm md:text-base">
                     <Phone size={14} />
                     Phone Number
                   </label>
                   <PhoneInput
                     name="phone"
+                    className="w-full"
                     value={profileData.phone}
                     onChange={(e) => {
                       setProfileData({ ...profileData, phone: e.target.value })
@@ -454,25 +629,9 @@ export default function Settings() {
                     </span>
                   )}
                 </div>
-                <div className="flex flex-col gap-1.5">
-                  <label className="flex items-center gap-1.5 text-sm font-bold text-[var(--text-primary)] md:text-base">
-                    <BadgeCheck size={14} />
-                    Role
-                  </label>
-                  <input
-                    type="text"
-                    value={user?.role?.replace(/_/g, ' ') || ''}
-                    disabled
-                    className="min-h-10 w-full cursor-not-allowed rounded-lg border border-[color-mix(in_srgb,var(--border-light)_85%,var(--text-secondary))] bg-[var(--bg-tertiary)] px-3 py-2 text-sm font-semibold text-[var(--text-secondary)] md:text-[0.98rem]"
-                  />
-                  <span className="flex items-center gap-1 text-xs font-semibold text-[var(--text-secondary)]">
-                    <Lock size={11} />
-                    Role is managed by administrators
-                  </span>
-                </div>
               </div>
 
-              <NeonSweepButton onClick={handleProfileSave} disabled={saving} tone="cyan" size="md" className="self-start">
+              <NeonSweepButton onClick={handleProfileSave} disabled={saving} tone="cyan" size="md" className="mt-1 w-full justify-center self-stretch sm:w-auto sm:self-start">
                 {saved ? <Check size={16} /> : <Save size={16} />}
                 {saving ? 'Saving...' : saved ? 'Saved!' : 'Save Changes'}
               </NeonSweepButton>
@@ -635,69 +794,143 @@ export default function Settings() {
                   )}
                 </div>
 
+                {user?.role === 'MASTER_ADMIN' && (
+                  <div className="flex flex-col gap-1.5">
+                    <label className="flex items-center gap-1.5 text-sm font-bold text-[var(--text-primary)] md:text-base">
+                      <Shield size={14} />
+                      Special Key
+                    </label>
+                    <div className="relative">
+                      <input
+                        type={showPasswords.specialKey ? 'text' : 'password'}
+                        value={passwordData.specialKey}
+                        onChange={(e) => setPasswordData({ ...passwordData, specialKey: e.target.value })}
+                        className="min-h-10 w-full rounded-lg border border-[var(--border-light)] bg-[var(--bg-card)] px-3 py-2 pr-10 text-sm font-semibold text-[var(--text-primary)] transition focus:border-[var(--accent-primary)] focus:outline-none focus:ring-2 focus:ring-[color-mix(in_srgb,var(--accent-primary)_15%,transparent)] md:text-[0.98rem]"
+                        placeholder="Enter special key"
+                      />
+                      <button
+                        type="button"
+                        className="absolute right-2 top-1/2 inline-flex -translate-y-1/2 items-center justify-center rounded p-1 text-[var(--text-tertiary)] transition hover:text-[var(--text-secondary)]"
+                        onClick={() => setShowPasswords(s => ({ ...s, specialKey: !s.specialKey }))}
+                        tabIndex={-1}
+                      >
+                        {showPasswords.specialKey ? <EyeOff size={16} /> : <Eye size={16} />}
+                      </button>
+                    </div>
+                    <span className="text-xs font-semibold text-[var(--text-secondary)]">
+                      Required for Master Admin password update
+                    </span>
+                  </div>
+                )}
+
                 <NeonSweepButton type="submit" disabled={saving || !passwordValid} tone="cyan" size="md" className="self-start">
                   {passwordSaved ? <Check size={16} /> : <Shield size={16} />}
                   {saving ? 'Updating...' : passwordSaved ? 'Updated!' : 'Update Password'}
                 </NeonSweepButton>
               </form>
 
-              {/* Active Sessions */}
-              <div className="flex flex-col gap-3 border-t border-[var(--border-light)] pt-5">
-                <div className="flex flex-col gap-0.5">
-                  <h3 className="text-lg font-bold text-[var(--text-primary)]">Active Sessions</h3>
-                  <p className="text-sm font-semibold text-[var(--text-secondary)]">Manage your active login sessions</p>
+              {/* Session Control */}
+              <div className="border-t border-[var(--border-light)] pt-6">
+                <div className="mb-4 flex flex-col gap-1">
+                  <h3 className="text-[1.04rem] font-extrabold tracking-[-0.01em] text-[var(--text-primary)] sm:text-[1.1rem]">Session Control Center</h3>
+                  <p className="text-[0.84rem] font-medium leading-5 text-[var(--text-secondary)] sm:text-sm">Review this device session and manage account-wide access.</p>
                 </div>
+
                 {(() => {
-                  const { os, browser } = getDeviceInfo()
+                  const os = currentLoginDevice.os
+                  const browser = currentLoginDevice.browser
                   const osIcon = OS_ICONS[os.icon] || OS_ICONS.unknown
                   const browserIcon = BROWSER_ICONS[browser.icon] || BROWSER_ICONS.unknown
+
                   return (
-                    <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[var(--border-light)] bg-[color-mix(in_srgb,var(--bg-tertiary)_86%,var(--bg-card))] px-4 py-3">
-                      <div className="flex min-w-0 flex-1 items-center gap-3">
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[color-mix(in_srgb,var(--accent-primary)_16%,transparent)] text-[var(--accent-primary)]">
-                          <Monitor size={18} />
+                    <div className="grid grid-cols-1 gap-3 sm:gap-4 lg:grid-cols-[1.25fr_1fr]">
+                      <div className="rounded-2xl border border-[color-mix(in_srgb,var(--border-light)_70%,#334155_30%)] bg-[linear-gradient(145deg,color-mix(in_srgb,var(--accent-primary)_8%,var(--bg-card)),var(--bg-card))] p-3.5 shadow-[0_8px_20px_rgba(15,23,42,0.06)] sm:p-5">
+                        <div className="mb-3 flex items-start">
+                          <div className="inline-flex items-center gap-2 rounded-full bg-[color-mix(in_srgb,var(--accent-primary)_14%,transparent)] px-3 py-1.5 text-[0.68rem] font-bold uppercase tracking-[0.05em] text-[var(--accent-primary)]">
+                            <Monitor size={13} />
+                            Current Session
+                          </div>
                         </div>
-                        <div className="flex min-w-0 flex-col gap-1">
-                          <p className="text-base font-bold text-[var(--text-primary)]">Current Session</p>
-                          <div className="flex flex-wrap items-center gap-1.5">
-                            <span className="inline-flex items-center gap-1 text-sm font-semibold text-[var(--text-primary)]">
-                              <img src={osIcon} alt={os.name} className="h-4 w-4 shrink-0 object-contain" />
+
+                        <div className="rounded-xl border border-[var(--border-light)] bg-[color-mix(in_srgb,var(--bg-tertiary)_45%,transparent)] p-3.5 sm:p-4">
+                          <p className="mb-2 text-sm font-extrabold tracking-[0.01em] text-[var(--text-secondary)]">Logged in from</p>
+                          <div className="flex flex-col items-start gap-2.5 text-[0.92rem] font-bold text-[var(--text-primary)] sm:flex-row sm:flex-wrap sm:items-center">
+                            <span className="inline-flex items-center gap-1.5 rounded-md border border-[var(--border-light)] bg-[var(--bg-card)] px-2.5 py-1.5">
+                              <img
+                                src={osIcon}
+                                alt={os.name}
+                                className={clsx('h-4 w-4 shrink-0 object-contain', os.icon === 'ios' && 'dark:invert')}
+                              />
                               {os.name}{os.version ? ` ${os.version}` : ''}
                             </span>
-                            <span className="select-none text-xs text-[var(--text-secondary)]">&bull;</span>
-                            <span className="inline-flex items-center gap-1 text-sm font-semibold text-[var(--text-primary)]">
+                            <span className="hidden text-[var(--text-primary)]/60 sm:inline">by</span>
+                            <span className="inline-flex items-center gap-1.5 rounded-md border border-[var(--border-light)] bg-[var(--bg-card)] px-2.5 py-1.5">
                               <img src={browserIcon} alt={browser.name} className="h-4 w-4 shrink-0 object-contain" />
                               {browser.name}
                             </span>
-                            <span className="select-none text-xs text-[var(--text-secondary)]">&bull;</span>
-                            <span className="inline-flex items-center text-sm font-bold text-emerald-600">Active now</span>
+                          </div>
+                          <div className="mt-4 border-t border-[var(--border-light)]/70 pt-3">
+                            <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2">
+                              <div className="rounded-lg border border-[var(--border-light)] bg-[var(--bg-card)]/70 p-2.5">
+                                <p className="text-[0.68rem] font-bold uppercase tracking-[0.06em] text-[var(--text-tertiary)]">Previous login</p>
+                                <p className="mt-1 text-[0.84rem] font-semibold leading-5 text-[var(--text-primary)]">{previousLoginLabel}</p>
+                              </div>
+                              <div className="rounded-lg border border-[var(--border-light)] bg-[var(--bg-card)]/70 p-2.5">
+                                <p className="text-[0.68rem] font-bold uppercase tracking-[0.06em] text-[var(--text-tertiary)]">Previous device</p>
+                                {hasPreviousSession ? (
+                                  <div className="mt-1.5 flex flex-wrap items-center gap-1.5 text-[0.82rem] font-semibold text-[var(--text-primary)]">
+                                    <span className="inline-flex items-center gap-1 rounded-md border border-[var(--border-light)] bg-[var(--bg-card)] px-2 py-1">
+                                      <img
+                                        src={OS_ICONS[previousLoginDevice?.os?.icon || 'unknown'] || OS_ICONS.unknown}
+                                        alt={previousLoginDevice?.os?.name || 'Previous OS'}
+                                        className={clsx('h-3.5 w-3.5 shrink-0 object-contain', previousLoginDevice?.os?.icon === 'ios' && 'dark:invert')}
+                                      />
+                                      {previousLoginDevice
+                                        ? `${previousLoginDevice.os?.name || 'Previous OS'}${previousLoginDevice.os?.version ? ` ${previousLoginDevice.os.version}` : ''}`
+                                        : 'Previous OS'}
+                                    </span>
+                                    <span className="text-[var(--text-primary)]/60">by</span>
+                                    <span className="inline-flex items-center gap-1 rounded-md border border-[var(--border-light)] bg-[var(--bg-card)] px-2 py-1">
+                                      <img
+                                        src={BROWSER_ICONS[previousLoginDevice?.browser?.icon || 'unknown'] || BROWSER_ICONS.unknown}
+                                        alt={previousLoginDevice?.browser?.name || 'Previous browser'}
+                                        className="h-3.5 w-3.5 shrink-0 object-contain"
+                                      />
+                                      {previousLoginDevice?.browser?.name || 'Previous browser'}
+                                    </span>
+                                  </div>
+                                ) : (
+                                  <p className="mt-1.5 text-[0.82rem] font-semibold leading-5 text-[var(--text-secondary)]">
+                                    First login on this account.
+                                  </p>
+                                )}
+                              </div>
+                            </div>
                           </div>
                         </div>
                       </div>
-                      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/20 px-2.5 py-1 text-xs font-bold text-emerald-600">
-                        <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-600" />
-                        Active
-                      </span>
+
+                      <div className="h-fit self-start rounded-2xl border border-red-500/60 bg-[linear-gradient(145deg,rgba(239,68,68,0.11),rgba(239,68,68,0.05))] p-3.5 shadow-[0_8px_20px_rgba(239,68,68,0.08)] sm:p-5">
+                        <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-red-500/16 px-3 py-1.5 text-[0.68rem] font-bold uppercase tracking-[0.05em] text-red-700 dark:text-red-200">
+                          <AlertCircle size={13} />
+                          Danger Zone
+                        </div>
+                        <p className="mb-4 text-sm font-semibold leading-6 text-[var(--text-primary)]">
+                          Immediately sign out from every active device and force re-authentication.
+                        </p>
+                        <NeonSweepButton
+                          onClick={handleLogoutAll}
+                          tone="danger"
+                          size="md"
+                          className="w-full justify-center border border-red-600/70 bg-red-500/16 text-red-800 hover:bg-red-500/24 dark:text-red-200"
+                        >
+                          <LogOut size={16} />
+                          Logout from all devices
+                        </NeonSweepButton>
+                      </div>
                     </div>
                   )
                 })()}
-              </div>
-
-              {/* Danger Zone */}
-                <div className="flex flex-col gap-3 border-t border-[var(--border-light)] pt-5">
-                  <div className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-red-400/60 bg-red-500/10 px-4 py-3">
-                    <div className="flex items-center gap-2.5">
-                      <AlertCircle size={18} className="shrink-0 text-red-500" />
-                    <div>
-                        <h3 className="text-base font-bold text-red-600">Danger Zone</h3>
-                        <p className="text-sm font-semibold text-[var(--text-secondary)]">This will log you out from all devices and end all sessions</p>
-                    </div>
-                  </div>
-                    <NeonSweepButton onClick={handleLogoutAll} tone="danger" size="md" className="whitespace-nowrap">
-                    <LogOut size={16} />
-                    Logout from all devices
-                  </NeonSweepButton>
-                </div>
               </div>
             </div>
           )}

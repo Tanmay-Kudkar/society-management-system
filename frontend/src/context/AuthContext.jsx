@@ -108,7 +108,11 @@ export const AuthProvider = ({ children }) => {
               prevUser.role === userData.role &&
               prevUser.accountType === userData.accountType &&
               prevUser.societyId === userData.societyId &&
-              prevUser.flatId === userData.flatId
+              prevUser.flatId === userData.flatId &&
+              prevUser.currentLoginAt === userData.currentLoginAt &&
+              prevUser.currentLoginUserAgent === userData.currentLoginUserAgent &&
+              prevUser.previousLoginAt === userData.previousLoginAt &&
+              prevUser.previousLoginUserAgent === userData.previousLoginUserAgent
 
             return isSameUser ? prevUser : userData
           })
@@ -130,9 +134,41 @@ export const AuthProvider = ({ children }) => {
   const login = useCallback(async (email, password, { portalType, rememberMe, latitude, longitude } = {}) => {
     try {
       const response = await authApi.login({ email, password, portalType, rememberMe, latitude, longitude })
-      const { token, id, name, email: userEmail, role, accountType, societyId, flatId } = response.data
-      
-      const userData = { id, name, email: userEmail, role, accountType, societyId, flatId }
+      const {
+        token,
+        id,
+        name,
+        email: userEmail,
+        role,
+        accountType,
+        societyId,
+        flatId,
+        currentLoginAt,
+        currentLoginUserAgent,
+        previousLoginAt,
+        previousLoginUserAgent,
+      } = response.data
+
+      const userData = {
+        id,
+        name,
+        email: userEmail,
+        role,
+        accountType,
+        societyId,
+        flatId,
+        currentLoginAt: currentLoginAt || null,
+        currentLoginUserAgent: currentLoginUserAgent || '',
+        previousLoginAt: previousLoginAt || null,
+        previousLoginUserAgent: previousLoginUserAgent || '',
+      }
+
+      if (currentLoginAt) {
+        localStorage.setItem('currentLoginAt', currentLoginAt)
+      }
+      if (previousLoginAt) {
+        localStorage.setItem('previousLoginAt', previousLoginAt)
+      }
       
       localStorage.setItem('token', token)
       localStorage.setItem('user', JSON.stringify(userData))
