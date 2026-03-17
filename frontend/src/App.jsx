@@ -109,8 +109,14 @@ const ProtectedRoute = ({ children }) => {
   return children;
 };
 
-const RoleRoute = ({ children, allow, message = "You don't have permission to access this page" }) => {
+const RoleRoute = ({
+  children,
+  allow,
+  requireSocietyScope = false,
+  message = "You don't have permission to access this page",
+}) => {
   const { user } = useAuth();
+  const location = useLocation();
 
   if (!user) {
     return <Navigate to="/" replace />;
@@ -119,6 +125,18 @@ const RoleRoute = ({ children, allow, message = "You don't have permission to ac
   const isAllowed = typeof allow === "function" ? allow(user) : true;
   if (!isAllowed) {
     return <PermissionDenied message={message} />;
+  }
+
+  if (requireSocietyScope && user?.role === "MASTER_ADMIN") {
+    const societyParam = new URLSearchParams(location.search).get("society");
+    const parsedSocietyId = Number(societyParam);
+    const hasValidSocietyScope = Number.isInteger(parsedSocietyId) && parsedSocietyId > 0;
+
+    if (!hasValidSocietyScope) {
+      return (
+        <PermissionDenied message="Select a society first (use ?society=<id>) to view society-scoped data" />
+      );
+    }
   }
 
   return children;
@@ -374,6 +392,7 @@ function App() {
                   path="unit-management"
                   element={
                     <RoleRoute
+                      requireSocietyScope
                       allow={(currentUser) => hasAnyRole(currentUser, [
                         "MASTER_ADMIN",
                         "SOCIETY_ADMIN",
@@ -392,6 +411,7 @@ function App() {
                   path="tenants"
                   element={
                     <RoleRoute
+                      requireSocietyScope
                       allow={(currentUser) => hasAnyRole(currentUser, [
                         "MASTER_ADMIN",
                         "SOCIETY_ADMIN",
@@ -411,6 +431,7 @@ function App() {
                   path="vehicles"
                   element={
                     <RoleRoute
+                      requireSocietyScope
                       allow={(currentUser) => hasAnyRole(currentUser, [
                         "MASTER_ADMIN",
                         "SOCIETY_ADMIN",
@@ -430,6 +451,7 @@ function App() {
                   path="vendors"
                   element={
                     <RoleRoute
+                      requireSocietyScope
                       allow={(currentUser) => hasAnyRole(currentUser, [
                         "MASTER_ADMIN",
                         "SOCIETY_ADMIN",
@@ -446,6 +468,7 @@ function App() {
                   path="vendor-bills"
                   element={
                     <RoleRoute
+                      requireSocietyScope
                       allow={(currentUser) => hasAnyRole(currentUser, [
                         "MASTER_ADMIN",
                         "SOCIETY_ADMIN",
@@ -462,6 +485,7 @@ function App() {
                   path="contracts"
                   element={
                     <RoleRoute
+                      requireSocietyScope
                       allow={(currentUser) => hasAnyRole(currentUser, [
                         "MASTER_ADMIN",
                         "SOCIETY_ADMIN",
@@ -477,6 +501,7 @@ function App() {
                   path="maintenance-bills"
                   element={
                     <RoleRoute
+                      requireSocietyScope
                       allow={(currentUser) => hasAnyRole(currentUser, [
                         "MASTER_ADMIN",
                         "SOCIETY_ADMIN",
@@ -493,6 +518,7 @@ function App() {
                   path="society-settings"
                   element={
                     <RoleRoute
+                      requireSocietyScope
                       allow={(currentUser) => hasAnyRole(currentUser, [
                         "MASTER_ADMIN",
                         "SOCIETY_ADMIN",
@@ -524,6 +550,7 @@ function App() {
                   path="transactions"
                   element={
                     <RoleRoute
+                      requireSocietyScope
                       allow={(currentUser) => hasAnyRole(currentUser, [
                         "MASTER_ADMIN",
                         "SOCIETY_ADMIN",
@@ -567,7 +594,14 @@ function App() {
                   element={<EmergencyContacts />}
                 />
                 <Route path="documents" element={<Documents />} />
-                <Route path="visitors" element={<Visitors />} />
+                <Route
+                  path="visitors"
+                  element={
+                    <RoleRoute requireSocietyScope>
+                      <Visitors />
+                    </RoleRoute>
+                  }
+                />
                 <Route path="penalties" element={<Penalties />} />
                 <Route path="society-rules" element={<SocietyRules />} />
                 <Route path="settings" element={<Settings />} />
