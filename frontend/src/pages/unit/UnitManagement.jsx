@@ -12,7 +12,7 @@ import {
 } from 'lucide-react'
 import clsx from 'clsx'
 import { validateFlatForm, validateUserForm, parseApiError } from '../../utils'
-import { SmartSelect, FormInput, NumberInput, PhoneInput, FormErrorSummary, InfoTooltip, NeonSweepButton } from '../../components'
+import { SmartSelect, FormInput, NumberInput, PhoneInput, FormErrorSummary, InfoTooltip, NeonSweepButton, PaginationControls } from '../../components'
 import { BulkImportModal as SharedBulkImportModal } from '../../components'
 import { HeroSkeleton, TabsSkeleton, FiltersSkeleton, CardGridSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
 import useMinLoadingTime from '../../hooks/useMinLoadingTime'
@@ -119,6 +119,10 @@ export default function UnitManagement() {
   const [searchTerm, setSearchTerm] = useState('')
   const filterType = unitTypeFromUrl || ''
   const [viewMode, setViewMode] = useState('units') // 'units' or 'table'
+  const [unitPage, setUnitPage] = useState(1)
+  const [unitPageSize, setUnitPageSize] = useState(12)
+  const [tabUsersPage, setTabUsersPage] = useState(1)
+  const [tabUsersPageSize, setTabUsersPageSize] = useState(10)
   
   // Form states
   const [unitFormErrors, setUnitFormErrors] = useState({})
@@ -235,6 +239,11 @@ export default function UnitManagement() {
       return matchesSearch && matchesType
     })
   }, [flats, searchTerm, filterType, unitUserMap])
+
+  const paginatedUnits = useMemo(() => {
+    const start = (unitPage - 1) * unitPageSize
+    return filteredUnits.slice(start, start + unitPageSize)
+  }, [filteredUnits, unitPage, unitPageSize])
 
   // Unit CRUD mutations
   const createUnitMutation = useMutation({
@@ -434,6 +443,19 @@ export default function UnitManagement() {
       return matchesSearch && matchesRole
     })
   }, [scopedUsers, userSearchTerm, filterRole])
+
+  const paginatedTabUsers = useMemo(() => {
+    const start = (tabUsersPage - 1) * tabUsersPageSize
+    return filteredTabUsers.slice(start, start + tabUsersPageSize)
+  }, [filteredTabUsers, tabUsersPage, tabUsersPageSize])
+
+  useEffect(() => {
+    setUnitPage(1)
+  }, [searchTerm, filterType, activeTab])
+
+  useEffect(() => {
+    setTabUsersPage(1)
+  }, [userSearchTerm, filterRole, filterSociety, activeTab])
 
   const societyOptions = useMemo(() => {
     return societies
@@ -1011,7 +1033,7 @@ export default function UnitManagement() {
       {viewMode === 'units' ? (
         /* Card View */
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredUnits.map((unit) => {
+          {paginatedUnits.map((unit) => {
             const UnitIcon = getUnitIcon(unit.unitType)
             const unitColor = getUnitColor(unit.unitType)
             const assignedUser = unitUserMap[unit.id]?.member
@@ -1206,7 +1228,7 @@ export default function UnitManagement() {
                 </tr>
               </thead>
               <tbody>
-                {filteredUnits.map((unit) => {
+                {paginatedUnits.map((unit) => {
                   const UnitIcon = getUnitIcon(unit.unitType)
                   const assignedUser = unitUserMap[unit.id]?.member
                   const linkedTenant = unitUserMap[unit.id]?.tenant
@@ -1339,6 +1361,17 @@ export default function UnitManagement() {
           </div>
         </div>
       )}
+
+      <PaginationControls
+        totalItems={filteredUnits.length}
+        currentPage={unitPage}
+        pageSize={unitPageSize}
+        onPageChange={setUnitPage}
+        onPageSizeChange={(nextSize) => {
+          setUnitPageSize(nextSize)
+          setUnitPage(1)
+        }}
+      />
       </>
       )}
 
@@ -1456,7 +1489,7 @@ export default function UnitManagement() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredTabUsers.map((u) => {
+                  {paginatedTabUsers.map((u) => {
                     const canEdit = u.id === user?.id || updatableRoles.includes(u.role)
                     const canDelete = u.role !== 'MASTER_ADMIN' && u.id !== user?.id && updatableRoles.includes(u.role)
                     const isSelf = u.id === user?.id
@@ -1696,6 +1729,17 @@ export default function UnitManagement() {
                   <div>
                     <div className="grid grid-cols-3 gap-3 mb-4">
                       <div className="rounded-lg p-3 text-center bg-[rgba(22,163,74,0.10)]">
+
+              <PaginationControls
+                totalItems={filteredTabUsers.length}
+                currentPage={tabUsersPage}
+                pageSize={tabUsersPageSize}
+                onPageChange={setTabUsersPage}
+                onPageSizeChange={(nextSize) => {
+                  setTabUsersPageSize(nextSize)
+                  setTabUsersPage(1)
+                }}
+              />
                         <p className="text-2xl font-bold leading-tight text-[var(--text-primary)]">{bulkImportPreview.validCount || 0}</p>
                         <p className="text-xs text-[var(--text-secondary)]">Valid</p>
                       </div>
