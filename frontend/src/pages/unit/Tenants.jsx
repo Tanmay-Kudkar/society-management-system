@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '../../context'
@@ -6,7 +6,7 @@ import { useConfirmDialog } from '../../context'
 import { useToast } from '../../context'
 import { tenantApi, flatApi, userApi } from '../../../../api'
 import { Plus, Edit, Trash2, Search, X, User, Calendar, Phone, Mail, Upload } from 'lucide-react'
-import { FormInput, PhoneInput, SmartSelect, NumberInput, BulkImportModal, InfoTooltip, NeonSweepButton } from '../../components'
+import { FormInput, PhoneInput, SmartSelect, NumberInput, BulkImportModal, InfoTooltip, NeonSweepButton, PaginationControls } from '../../components'
 import { HeroSkeleton, FiltersSkeleton, TableSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
 import useMinLoadingTime from '../../hooks/useMinLoadingTime'
 
@@ -21,6 +21,8 @@ export default function Tenants() {
   const [editingTenant, setEditingTenant] = useState(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [filterStatus, setFilterStatus] = useState('')
+  const [tenantPage, setTenantPage] = useState(1)
+  const [tenantPageSize, setTenantPageSize] = useState(10)
 
   // Get society filter from URL (for MASTER_ADMIN viewing specific society)
   const societyIdFromUrl = searchParams.get('society')
@@ -109,6 +111,15 @@ export default function Tenants() {
       return matchesSearch && matchesStatus
     })
   }, [tenants, searchTerm, filterStatus])
+
+  const paginatedTenants = useMemo(() => {
+    const start = (tenantPage - 1) * tenantPageSize
+    return filteredTenants.slice(start, start + tenantPageSize)
+  }, [filteredTenants, tenantPage, tenantPageSize])
+
+  useEffect(() => {
+    setTenantPage(1)
+  }, [searchTerm, filterStatus])
 
   const handleSubmit = (e) => {
     e.preventDefault()
@@ -241,7 +252,7 @@ export default function Tenants() {
                 </tr>
               </thead>
               <tbody>
-                {filteredTenants.map((tenant) => (
+                {paginatedTenants.map((tenant) => (
                   <tr key={tenant.id} className="transition-colors hover:bg-[var(--bg-tertiary)]">
                     <td className="py-[0.85rem] px-6 text-[0.9rem] text-[var(--text-primary)]">
                       <div className="flex items-center gap-3">
@@ -382,7 +393,7 @@ export default function Tenants() {
           {filteredTenants.length === 0 ? (
             <div className="p-8 text-center text-sm text-[var(--text-tertiary)]">No tenants found</div>
           ) : (
-            filteredTenants.map((tenant) => (
+            paginatedTenants.map((tenant) => (
               <div key={tenant.id} className="p-3 sm:p-4">
                 <div className="mb-2 flex items-start justify-between gap-2 sm:gap-3">
                   <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
@@ -495,6 +506,17 @@ export default function Tenants() {
           )}
         </div>
       </div>
+
+      <PaginationControls
+        totalItems={filteredTenants.length}
+        currentPage={tenantPage}
+        pageSize={tenantPageSize}
+        onPageChange={setTenantPage}
+        onPageSizeChange={(nextSize) => {
+          setTenantPageSize(nextSize)
+          setTenantPage(1)
+        }}
+      />
 
       {/* Modal */}
       {showModal && canEditTenants && (
