@@ -40,6 +40,7 @@ export default function Vendors() {
     : null
   const isPlatformLevel = user?.role === 'MASTER_ADMIN' && !scopedSocietyId
   const effectiveSocietyId = scopedSocietyId || user?.societyId
+  const canApproveRejectVendors = ['MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY'].includes(user?.role)
 
   const { data: vendors = [], isLoading, isError } = useQuery({
     queryKey: ['vendors', effectiveSocietyId, isPlatformLevel],
@@ -104,6 +105,11 @@ export default function Vendors() {
   ), [vendors, searchTerm])
 
   const handleApprove = async (vendor) => {
+    if (!canApproveRejectVendors) {
+      toast.error('You do not have permission to approve vendors')
+      return
+    }
+
     const confirmed = await confirmDialog({
       title: 'Approve Vendor',
       message: 'Approve this vendor for partnership?',
@@ -124,6 +130,11 @@ export default function Vendors() {
   }
 
   const handleReject = async (vendor) => {
+    if (!canApproveRejectVendors) {
+      toast.error('You do not have permission to reject vendors')
+      return
+    }
+
     const confirmed = await confirmDialog({
       title: 'Reject Vendor',
       message: 'Reject this vendor application?',
@@ -788,7 +799,7 @@ export default function Vendors() {
                     
                     {/* Approval Action Buttons */}
                     <div className="flex gap-2 flex-wrap">
-                      {viewingVendor.approvalStatus !== 'APPROVED' && (
+                      {canApproveRejectVendors && viewingVendor.approvalStatus !== 'APPROVED' && (
                         <button
                           onClick={() => handleApprove(viewingVendor)}
                           className="px-4 py-2 rounded-[10px] text-sm font-bold border-none text-white bg-green-600 hover:bg-green-700 transition-colors"
@@ -796,7 +807,7 @@ export default function Vendors() {
                           ✓ Approve
                         </button>
                       )}
-                      {viewingVendor.approvalStatus !== 'REJECTED' && (
+                      {canApproveRejectVendors && viewingVendor.approvalStatus !== 'REJECTED' && (
                         <button
                           onClick={() => handleReject(viewingVendor)}
                           className="px-4 py-2 rounded-[10px] text-sm font-bold border-none text-white bg-red-600 hover:bg-red-700 transition-colors"
