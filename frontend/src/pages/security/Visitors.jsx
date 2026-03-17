@@ -61,7 +61,9 @@ export default function Visitors() {
 
   const isPlatformLevel = user?.role === 'MASTER_ADMIN'
   const isStaff = ['MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'MANAGER', 'EMPLOYEE'].includes(user?.role)
-  const canGenerateOtp = isMember
+  const isSecurityPersonnel = ['MASTER_ADMIN', 'SOCIETY_ADMIN', 'MANAGER', 'EMPLOYEE'].includes(user?.role)
+  const canCreateVisitorEntries = isSecurityPersonnel
+  const canGenerateOtp = isSecurityPersonnel
   const societyIdFromUrl = searchParams.get('society')
   const effectiveSocietyId = isPlatformLevel && societyIdFromUrl ? societyIdFromUrl : user?.societyId
 
@@ -166,15 +168,44 @@ export default function Visitors() {
             <InfoTooltip text="Track and manage visitors" />
           </div>
         </div>
-        <NeonSweepButton
-          tone="violet"
-          size="md"
-          onClick={() => setShowModal(true)}
-          className="w-full sm:w-auto"
-        >
-          <Plus size={20} />
-          Pre-approve Visitor
-        </NeonSweepButton>
+        {canCreateVisitorEntries && (
+          <NeonSweepButton
+            tone="violet"
+            size="md"
+            onClick={() => setShowModal(true)}
+            className="w-full sm:w-auto"
+          >
+            <Plus size={20} />
+            Pre-approve Visitor
+          </NeonSweepButton>
+        )}
+      </div>
+
+      <div className="rounded-2xl border border-[color-mix(in_srgb,var(--border-default)_86%,#334155_14%)] bg-[color-mix(in_srgb,var(--bg-card)_92%,var(--bg-tertiary)_8%)] p-5 shadow-[0_8px_24px_rgba(15,23,42,0.08)]">
+        <h2 className="text-lg font-bold text-[var(--text-primary)]">4.9 Visitor</h2>
+        <p className="mt-3 text-sm text-[var(--text-secondary)]">
+          Visitors <strong className="text-[var(--text-primary)]">do not access the system directly</strong>.
+        </p>
+        <p className="mt-2 text-sm text-[var(--text-secondary)]">
+          Visitor entries are created by <strong className="text-[var(--text-primary)]">security personnel using dedicated devices</strong>.
+        </p>
+        <h3 className="mt-4 text-base font-semibold text-[var(--text-primary)]">Stored Information</h3>
+        <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-[var(--text-secondary)]">
+          <li>Entry and exit records</li>
+          <li>Flat visited</li>
+          <li>Timestamp of entry</li>
+        </ul>
+        <p className="mt-4 text-sm text-[var(--text-secondary)]">
+          Entries are forwarded to the <strong className="text-[var(--text-primary)]">respective member for approval</strong>.
+        </p>
+        <p className="mt-4 text-sm text-[var(--text-secondary)]">
+          This helps maintain accurate records for:
+        </p>
+        <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-[var(--text-secondary)]">
+          <li>Deliveries</li>
+          <li>Visitors</li>
+          <li>Movement inside the society</li>
+        </ul>
       </div>
 
       <div className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-5">
@@ -330,13 +361,13 @@ export default function Visitors() {
                     </NeonSweepButton>
                   )}
 
-                  {isStaff && visitor.status === 'EXPECTED' && requiresOtp(visitor.visitorType) && !visitor.otpVerifiedAt && (
+                  {isSecurityPersonnel && visitor.status === 'EXPECTED' && requiresOtp(visitor.visitorType) && !visitor.otpVerifiedAt && (
                     <NeonSweepButton onClick={() => handleVerifyOtp(visitor)} tone="violet" size="sm">
                       Verify OTP
                     </NeonSweepButton>
                   )}
 
-                  {isStaff && visitor.status === 'EXPECTED' && (
+                  {isSecurityPersonnel && visitor.status === 'EXPECTED' && (
                     <>
                       {(!requiresOtp(visitor.visitorType) || visitor.otpVerifiedAt) && (
                         <NeonSweepButton onClick={() => checkInMutation.mutate(visitor.id)} tone="cyan" size="sm">Check In</NeonSweepButton>
@@ -345,7 +376,7 @@ export default function Visitors() {
                     </>
                   )}
 
-                  {isStaff && visitor.status === 'CHECKED_IN' && (
+                  {isSecurityPersonnel && visitor.status === 'CHECKED_IN' && (
                     <NeonSweepButton onClick={() => checkOutMutation.mutate(visitor.id)} tone="slate" size="sm">Check Out</NeonSweepButton>
                   )}
                 </div>
