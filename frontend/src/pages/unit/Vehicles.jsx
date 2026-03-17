@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '../../context'
@@ -6,7 +6,7 @@ import { useConfirmDialog } from '../../context'
 import { useToast } from '../../context'
 import { vehicleApi, flatApi, societyApi } from '../../../../api'
 import { Plus, Edit, Trash2, Search, X, Car, Bike, Upload } from 'lucide-react'
-import { FormInput, SmartSelect, BulkImportModal, InfoTooltip, NeonSweepButton } from '../../components'
+import { FormInput, SmartSelect, BulkImportModal, InfoTooltip, NeonSweepButton, PaginationControls } from '../../components'
 import { HeroSkeleton, StatCardSkeleton, CardGridSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
 import useMinLoadingTime from '../../hooks/useMinLoadingTime'
 
@@ -21,6 +21,8 @@ export default function Vehicles() {
   const [editingVehicle, setEditingVehicle] = useState(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [filterType, setFilterType] = useState('')
+  const [vehiclePage, setVehiclePage] = useState(1)
+  const [vehiclePageSize, setVehiclePageSize] = useState(12)
 
   // Get society filter from URL (for MASTER_ADMIN viewing specific society)
   const societyIdFromUrl = searchParams.get('society')
@@ -94,6 +96,15 @@ export default function Vehicles() {
       return matchesSearch && matchesType
     })
   }, [vehicles, searchTerm, filterType])
+
+  const paginatedVehicles = useMemo(() => {
+    const start = (vehiclePage - 1) * vehiclePageSize
+    return filteredVehicles.slice(start, start + vehiclePageSize)
+  }, [filteredVehicles, vehiclePage, vehiclePageSize])
+
+  useEffect(() => {
+    setVehiclePage(1)
+  }, [searchTerm, filterType])
 
   const vehicleStats = useMemo(() => {
     return {
@@ -323,7 +334,7 @@ export default function Vehicles() {
                 </tr>
               </thead>
               <tbody>
-                {filteredVehicles.map((vehicle) => (
+                {paginatedVehicles.map((vehicle) => (
                   <tr key={vehicle.id} className="border-t border-[var(--border-light)] transition hover:bg-[var(--bg-tertiary)]">
                     <td className="whitespace-nowrap px-6 py-4">
                       <div className="flex items-center gap-3">
@@ -414,7 +425,7 @@ export default function Vehicles() {
             {filteredVehicles.length === 0 ? (
               <div className="px-6 py-8 text-center text-sm text-[var(--text-tertiary)]">No vehicles found</div>
             ) : (
-              filteredVehicles.map((vehicle) => (
+              paginatedVehicles.map((vehicle) => (
                 <div key={vehicle.id} className="p-3 sm:p-4">
                   <div className="mb-2 flex items-start justify-between gap-2 sm:gap-3">
                     <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
@@ -486,6 +497,17 @@ export default function Vehicles() {
             )}
           </div>
       </div>
+
+      <PaginationControls
+        totalItems={filteredVehicles.length}
+        currentPage={vehiclePage}
+        pageSize={vehiclePageSize}
+        onPageChange={setVehiclePage}
+        onPageSizeChange={(nextSize) => {
+          setVehiclePageSize(nextSize)
+          setVehiclePage(1)
+        }}
+      />
 
       {/* Modal */}
       {showModal && canEditVehicles && (

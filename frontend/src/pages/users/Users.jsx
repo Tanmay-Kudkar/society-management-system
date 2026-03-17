@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useMemo, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '../../context'
 import { useConfirmDialog } from '../../context'
@@ -9,7 +9,7 @@ import clsx from 'clsx'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { parseApiError, validateUserForm } from '../../utils'
 import * as XLSX from 'xlsx'
-import { FormInput, PhoneInput, SmartSelect, FormErrorSummary } from '../../components'
+import { FormInput, PhoneInput, SmartSelect, FormErrorSummary, PaginationControls } from '../../components'
 import { PermissionDenied } from '../../components'
 import { HeroSkeleton, FiltersSkeleton, TableSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
 import useMinLoadingTime from '../../hooks/useMinLoadingTime'
@@ -65,6 +65,8 @@ export default function Users() {
   const [error, setError] = useState('')
   const [selectedRole, setSelectedRole] = useState('')
   const [showPassword, setShowPassword] = useState(false)
+  const [usersPage, setUsersPage] = useState(1)
+  const [usersPageSize, setUsersPageSize] = useState(12)
   
   // Bulk import state
   const [showBulkImportModal, setShowBulkImportModal] = useState(false)
@@ -368,6 +370,15 @@ export default function Users() {
     return matchesSearch && matchesRole
   })
 
+  const paginatedUsers = useMemo(() => {
+    const start = (usersPage - 1) * usersPageSize
+    return filteredUsers.slice(start, start + usersPageSize)
+  }, [filteredUsers, usersPage, usersPageSize])
+
+  useEffect(() => {
+    setUsersPage(1)
+  }, [searchTerm, filterRole, urlSocietyId, urlRole])
+
   // Get society name for a user
   const getSocietyName = (societyId) => {
     const society = societies.find(s => s.id === societyId)
@@ -639,7 +650,7 @@ export default function Users() {
             </div>
           ) : (
             <div className="grid grid-cols-[repeat(auto-fit,minmax(260px,1fr))] gap-3.5">
-              {filteredUsers.map((u) => {
+              {paginatedUsers.map((u) => {
                 const canEdit = updatableRoles.includes(u.role)
                 const canDelete = u.role !== 'MASTER_ADMIN' && updatableRoles.includes(u.role)
                 const societyName = getSocietyName(u.societyId)
@@ -740,7 +751,7 @@ export default function Users() {
 
           {/* Rows */}
           <div className="flex flex-col gap-1.5">
-            {filteredUsers.map((u) => {
+            {paginatedUsers.map((u) => {
               const canEdit = u.id === user?.id || updatableRoles.includes(u.role)
               const canDelete = u.role !== 'MASTER_ADMIN' && updatableRoles.includes(u.role)
               const isSelf = u.id === user?.id
@@ -821,6 +832,17 @@ export default function Users() {
         )}
       </div>
       )}
+
+      <PaginationControls
+        totalItems={filteredUsers.length}
+        currentPage={usersPage}
+        pageSize={usersPageSize}
+        onPageChange={setUsersPage}
+        onPageSizeChange={(nextSize) => {
+          setUsersPageSize(nextSize)
+          setUsersPage(1)
+        }}
+      />
 
       {/* Modal */}
       {showModal && (
