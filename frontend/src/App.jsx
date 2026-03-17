@@ -8,6 +8,7 @@ import {
 } from "./context";
 
 import { Layout } from "./components";
+import { PermissionDenied } from "./components";
 
 const lazyWithMinDelay = (importer) => lazy(importer);
 
@@ -108,6 +109,21 @@ const ProtectedRoute = ({ children }) => {
   return children;
 };
 
+const RoleRoute = ({ children, allow, message = "You don't have permission to access this page" }) => {
+  const { user } = useAuth();
+
+  if (!user) {
+    return <Navigate to="/" replace />;
+  }
+
+  const isAllowed = typeof allow === "function" ? allow(user) : true;
+  if (!isAllowed) {
+    return <PermissionDenied message={message} />;
+  }
+
+  return children;
+};
+
 const ScrollToTop = () => {
   const { pathname } = useLocation();
 
@@ -183,6 +199,8 @@ const LegacyWingsRedirect = () => {
   const { search } = useLocation();
   return <Navigate to={`/unit-management${search || ""}`} replace />;
 };
+
+const hasAnyRole = (user, roles) => roles.includes(user?.role);
 
 function App() {
   const { user } = useAuth();
@@ -301,34 +319,241 @@ function App() {
                 }
               >
                 <Route path="dashboard" element={<Dashboard />} />
-                <Route path="users" element={<Users />} />
+                <Route
+                  path="users"
+                  element={
+                    <RoleRoute
+                      allow={(currentUser) => hasAnyRole(currentUser, [
+                        "MASTER_ADMIN",
+                        "SOCIETY_ADMIN",
+                        "CHAIRMAN",
+                        "SECRETARY",
+                        "TREASURER",
+                        "COMMITTEE",
+                        "EMPLOYEE",
+                        "MEMBER",
+                      ])}
+                    >
+                      <Users />
+                    </RoleRoute>
+                  }
+                />
                 <Route
                   path="societies"
                   element={<Navigate to="/society-admins" replace />}
                 />
-                <Route path="society-admins" element={<SocietyAdmins />} />
-                <Route path="login-audit" element={<LoginAudit />} />
+                <Route
+                  path="society-admins"
+                  element={
+                    <RoleRoute
+                      allow={(currentUser) => currentUser?.role === "MASTER_ADMIN"}
+                      message="Only Master Admin can access society administration"
+                    >
+                      <SocietyAdmins />
+                    </RoleRoute>
+                  }
+                />
+                <Route
+                  path="login-audit"
+                  element={
+                    <RoleRoute
+                      allow={(currentUser) => currentUser?.role === "MASTER_ADMIN"}
+                      message="Only Master Admin can access login audit"
+                    >
+                      <LoginAudit />
+                    </RoleRoute>
+                  }
+                />
                 <Route path="societies/:id" element={<SocietyRouteRedirect />} />
                 <Route path="wings" element={<LegacyWingsRedirect />} />
                 <Route
                   path="flats"
                   element={<Navigate to="/unit-management" replace />}
                 />
-                <Route path="unit-management" element={<UnitManagement />} />
-                <Route path="tenants" element={<Tenants />} />
-                <Route path="vehicles" element={<Vehicles />} />
-                <Route path="vendors" element={<Vendors />} />
-                <Route path="vendor-bills" element={<VendorBills />} />
-                <Route path="contracts" element={<Contracts />} />
+                <Route
+                  path="unit-management"
+                  element={
+                    <RoleRoute
+                      allow={(currentUser) => hasAnyRole(currentUser, [
+                        "MASTER_ADMIN",
+                        "SOCIETY_ADMIN",
+                        "CHAIRMAN",
+                        "SECRETARY",
+                        "TREASURER",
+                        "COMMITTEE",
+                        "MANAGER",
+                      ])}
+                    >
+                      <UnitManagement />
+                    </RoleRoute>
+                  }
+                />
+                <Route
+                  path="tenants"
+                  element={
+                    <RoleRoute
+                      allow={(currentUser) => hasAnyRole(currentUser, [
+                        "MASTER_ADMIN",
+                        "SOCIETY_ADMIN",
+                        "CHAIRMAN",
+                        "SECRETARY",
+                        "TREASURER",
+                        "COMMITTEE",
+                        "MANAGER",
+                        "MEMBER",
+                      ])}
+                    >
+                      <Tenants />
+                    </RoleRoute>
+                  }
+                />
+                <Route
+                  path="vehicles"
+                  element={
+                    <RoleRoute
+                      allow={(currentUser) => hasAnyRole(currentUser, [
+                        "MASTER_ADMIN",
+                        "SOCIETY_ADMIN",
+                        "CHAIRMAN",
+                        "SECRETARY",
+                        "TREASURER",
+                        "COMMITTEE",
+                        "MANAGER",
+                        "EMPLOYEE",
+                      ])}
+                    >
+                      <Vehicles />
+                    </RoleRoute>
+                  }
+                />
+                <Route
+                  path="vendors"
+                  element={
+                    <RoleRoute
+                      allow={(currentUser) => hasAnyRole(currentUser, [
+                        "MASTER_ADMIN",
+                        "SOCIETY_ADMIN",
+                        "CHAIRMAN",
+                        "SECRETARY",
+                        "MANAGER",
+                      ])}
+                    >
+                      <Vendors />
+                    </RoleRoute>
+                  }
+                />
+                <Route
+                  path="vendor-bills"
+                  element={
+                    <RoleRoute
+                      allow={(currentUser) => hasAnyRole(currentUser, [
+                        "MASTER_ADMIN",
+                        "SOCIETY_ADMIN",
+                        "CHAIRMAN",
+                        "SECRETARY",
+                        "TREASURER",
+                      ])}
+                    >
+                      <VendorBills />
+                    </RoleRoute>
+                  }
+                />
+                <Route
+                  path="contracts"
+                  element={
+                    <RoleRoute
+                      allow={(currentUser) => hasAnyRole(currentUser, [
+                        "MASTER_ADMIN",
+                        "SOCIETY_ADMIN",
+                        "CHAIRMAN",
+                        "SECRETARY",
+                      ])}
+                    >
+                      <Contracts />
+                    </RoleRoute>
+                  }
+                />
                 <Route
                   path="maintenance-bills"
-                  element={<MaintenanceBills />}
+                  element={
+                    <RoleRoute
+                      allow={(currentUser) => hasAnyRole(currentUser, [
+                        "MASTER_ADMIN",
+                        "SOCIETY_ADMIN",
+                        "CHAIRMAN",
+                        "SECRETARY",
+                        "TREASURER",
+                      ])}
+                    >
+                      <MaintenanceBills />
+                    </RoleRoute>
+                  }
                 />
-                <Route path="society-settings" element={<SocietySettings />} />
+                <Route
+                  path="society-settings"
+                  element={
+                    <RoleRoute
+                      allow={(currentUser) => hasAnyRole(currentUser, [
+                        "MASTER_ADMIN",
+                        "SOCIETY_ADMIN",
+                        "CHAIRMAN",
+                        "SECRETARY",
+                        "TREASURER",
+                      ])}
+                    >
+                      <SocietySettings />
+                    </RoleRoute>
+                  }
+                />
                 <Route path="payments" element={<Payments />} />
-                <Route path="my-bills" element={<MyBills />} />
-                <Route path="transactions" element={<Transactions />} />
-                <Route path="reports" element={<Reports />} />
+                <Route
+                  path="my-bills"
+                  element={
+                    <RoleRoute
+                      allow={(currentUser) => hasAnyRole(currentUser, [
+                        "MEMBER",
+                        "TENANT",
+                        "VENDOR",
+                      ])}
+                    >
+                      <MyBills />
+                    </RoleRoute>
+                  }
+                />
+                <Route
+                  path="transactions"
+                  element={
+                    <RoleRoute
+                      allow={(currentUser) => hasAnyRole(currentUser, [
+                        "MASTER_ADMIN",
+                        "SOCIETY_ADMIN",
+                        "CHAIRMAN",
+                        "SECRETARY",
+                        "TREASURER",
+                      ])}
+                    >
+                      <Transactions />
+                    </RoleRoute>
+                  }
+                />
+                <Route
+                  path="reports"
+                  element={
+                    <RoleRoute
+                      allow={(currentUser) => hasAnyRole(currentUser, [
+                        "MASTER_ADMIN",
+                        "SOCIETY_ADMIN",
+                        "CHAIRMAN",
+                        "SECRETARY",
+                        "TREASURER",
+                        "COMMITTEE",
+                        "MANAGER",
+                      ])}
+                    >
+                      <Reports />
+                    </RoleRoute>
+                  }
+                />
                 <Route
                   path="roles-permissions"
                   element={<RolesPermissions />}
