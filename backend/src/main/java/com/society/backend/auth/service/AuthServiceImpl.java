@@ -69,7 +69,7 @@ public class AuthServiceImpl implements AuthService {
             Role.MASTER_ADMIN, Role.SOCIETY_ADMIN);
     private static final Set<Role> MANAGEMENT_ROLES = Set.of(
             Role.CHAIRMAN, Role.SECRETARY, Role.TREASURER,
-            Role.COMMITTEE, Role.MANAGER, Role.EMPLOYEE);
+            Role.COMMITTEE, Role.MANAGER);
     private static final Set<Role> RESIDENT_ROLES = Set.of(
             Role.MEMBER, Role.TENANT);
     // VISITOR_ROLES removed — visitors cannot log in (README §4.9)
@@ -153,6 +153,11 @@ public class AuthServiceImpl implements AuthService {
         if (user.getRole() == Role.VISITOR) {
             throw new ApiException(HttpStatus.FORBIDDEN,
                     "Visitors do not have direct system access. Contact society security.");
+        }
+
+        if (user.getRole() == Role.EMPLOYEE) {
+            throw new ApiException(HttpStatus.FORBIDDEN,
+                "Employees do not have system login access. Staff records are managed by authorized admins.");
         }
 
         // Validate portal type against user role (if provided)

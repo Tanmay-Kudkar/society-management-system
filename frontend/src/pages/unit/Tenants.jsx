@@ -179,10 +179,10 @@ export default function Tenants() {
   return (
     <div>
       {/* Header */}
-      <div className="flex flex-col gap-4 mb-6 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-4 mb-6 sm:flex-row sm:items-center sm:justify-between max-[360px]:mb-4 max-[360px]:gap-2.5">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold text-[var(--text-primary)]">Tenants</h1>
+            <h1 className="text-2xl font-bold text-[var(--text-primary)] max-[360px]:text-[1.45rem]">Tenants</h1>
             <InfoTooltip text="Manage tenant details and agreements" />
           </div>
         </div>
@@ -211,8 +211,8 @@ export default function Tenants() {
       </div>
 
       {/* Filters */}
-      <div className="p-4 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-light)] shadow-[0_10px_22px_rgba(15,23,42,0.08)] mb-6">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+      <div className="p-4 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-light)] shadow-[0_10px_22px_rgba(15,23,42,0.08)] mb-6 max-[360px]:p-3 max-[360px]:mb-4">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center max-[360px]:gap-2.5">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 w-5 h-5 -translate-y-1/2 text-[var(--text-tertiary)]" />
             <input
@@ -391,17 +391,17 @@ export default function Tenants() {
 
         <div className="lg:hidden divide-y divide-[var(--border-light)]">
           {filteredTenants.length === 0 ? (
-            <div className="p-8 text-center text-sm text-[var(--text-tertiary)]">No tenants found</div>
+            <div className="p-8 text-center text-sm text-[var(--text-tertiary)] max-[360px]:p-6 max-[360px]:text-xs">No tenants found</div>
           ) : (
             paginatedTenants.map((tenant) => (
-              <div key={tenant.id} className="p-3 sm:p-4">
+              <div key={tenant.id} className="p-3 sm:p-4 max-[360px]:p-2.5">
                 <div className="mb-2 flex items-start justify-between gap-2 sm:gap-3">
                   <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
                     <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center bg-[rgba(147,51,234,0.15)]">
                       <span className="text-[#7c3aed] font-semibold">{tenant.name?.charAt(0)?.toUpperCase() || 'T'}</span>
                     </div>
                     <div className="min-w-0">
-                      <p className="text-[13px] sm:text-sm font-semibold text-[var(--text-primary)] break-words">{tenant.name}</p>
+                      <p className="text-[13px] sm:text-sm font-semibold text-[var(--text-primary)] break-words max-[360px]:text-xs">{tenant.name}</p>
                       <p className="text-[11px] sm:text-xs text-[var(--text-secondary)] break-words">{getFlatDisplay(tenant.flatId)}</p>
                     </div>
                   </div>

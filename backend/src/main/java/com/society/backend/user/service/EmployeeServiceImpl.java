@@ -1,10 +1,14 @@
 package com.society.backend.user.service;
 
 import com.society.backend.common.exception.ApiException;
+import com.society.backend.common.service.SecureDocumentMetadataService;
 import com.society.backend.common.service.RoleService;
 import com.society.backend.society.entity.Society;
 import com.society.backend.society.repository.SocietyRepository;
+import com.society.backend.user.dto.request.EmployeeIdProofMetadataRequest;
 import com.society.backend.user.dto.request.EmployeeRequest;
+import com.society.backend.user.dto.response.EmployeeIdProofDocumentPayload;
+import com.society.backend.user.dto.response.EmployeeIdProofMetadataResponse;
 import com.society.backend.user.dto.response.EmployeeResponse;
 import com.society.backend.user.entity.Employee;
 import com.society.backend.user.entity.Role;
@@ -18,8 +22,14 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.time.LocalDateTime;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -32,11 +42,12 @@ public class EmployeeServiceImpl implements EmployeeService {
     private final UserRepository userRepository;
     private final SocietyRepository societyRepository;
     private final RoleService roleService;
+    private final SecureDocumentMetadataService secureDocumentMetadataService;
 
     @Override
     @Transactional
     public EmployeeResponse create(EmployeeRequest request, Long requesterId) {
-        roleService.requireAdminOrCommittee(requesterId);
+        roleService.requireEmployeeRecordAccess(requesterId);
         User requester = roleService.getUser(requesterId);
 
         Society society = societyRepository.findById(request.getSocietyId())
@@ -68,7 +79,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     @Override
     @Transactional
     public EmployeeResponse update(Long id, EmployeeRequest request, Long requesterId) {
-        roleService.requireAdminOrCommittee(requesterId);
+        roleService.requireEmployeeRecordAccess(requesterId);
         User requester = roleService.getUser(requesterId);
 
         Employee employee = employeeRepository.findById(id)
@@ -85,7 +96,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     @Override
     @Transactional(readOnly = true)
     public EmployeeResponse getById(Long id, Long requesterId) {
-        roleService.requireMember(requesterId);
+        roleService.requireEmployeeRecordAccess(requesterId);
         User requester = roleService.getUser(requesterId);
 
         Employee employee = employeeRepository.findById(id)
@@ -98,7 +109,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     @Override
     @Transactional(readOnly = true)
     public EmployeeResponse getByUserId(Long userId, Long requesterId) {
-        roleService.requireMember(requesterId);
+        roleService.requireEmployeeRecordAccess(requesterId);
         User requester = roleService.getUser(requesterId);
 
         Employee employee = employeeRepository.findByUserId(userId)
@@ -111,7 +122,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     @Override
     @Transactional(readOnly = true)
     public Page<EmployeeResponse> getBySociety(Long societyId, String department, Boolean isActive, Pageable pageable, Long requesterId) {
-        roleService.requireMember(requesterId);
+        roleService.requireEmployeeRecordAccess(requesterId);
         User requester = roleService.getUser(requesterId);
         roleService.enforceSocietyScope(requester, societyId);
 
@@ -129,7 +140,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     @Override
     @Transactional
     public void delete(Long id, Long requesterId) {
-        roleService.requireAdminOrCommittee(requesterId);
+        roleService.requireEmployeeRecordAccess(requesterId);
         User requester = roleService.getUser(requesterId);
 
         Employee employee = employeeRepository.findById(id)
@@ -143,7 +154,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     @Override
     @Transactional
     public EmployeeResponse deactivate(Long id, Long requesterId) {
-        roleService.requireAdminOrCommittee(requesterId);
+        roleService.requireEmployeeRecordAccess(requesterId);
         User requester = roleService.getUser(requesterId);
 
         Employee employee = employeeRepository.findById(id)
@@ -159,7 +170,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     @Override
     @Transactional
     public EmployeeResponse recordAdvancePayment(Long id, BigDecimal amount, Long requesterId) {
-        roleService.requireAdminOrCommittee(requesterId);
+        roleService.requireEmployeeRecordAccess(requesterId);
         User requester = roleService.getUser(requesterId);
 
         if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
@@ -179,7 +190,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     @Override
     @Transactional
     public EmployeeResponse deductAdvance(Long id, BigDecimal amount, Long requesterId) {
-        roleService.requireAdminOrCommittee(requesterId);
+        roleService.requireEmployeeRecordAccess(requesterId);
         User requester = roleService.getUser(requesterId);
 
         if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
@@ -203,7 +214,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     @Override
     @Transactional(readOnly = true)
     public Map<String, Long> getCounts(Long societyId, Long requesterId) {
-        roleService.requireMember(requesterId);
+        roleService.requireEmployeeRecordAccess(requesterId);
         User requester = roleService.getUser(requesterId);
         roleService.enforceSocietyScope(requester, societyId);
 
@@ -215,6 +226,120 @@ public class EmployeeServiceImpl implements EmployeeService {
         counts.put("housekeeping", employeeRepository.countBySocietyIdAndDepartment(societyId, "HOUSEKEEPING"));
         counts.put("maintenance", employeeRepository.countBySocietyIdAndDepartment(societyId, "MAINTENANCE"));
         return counts;
+    }
+
+    @Override
+    @Transactional
+    public EmployeeIdProofMetadataResponse updateIdProofMetadata(Long id, EmployeeIdProofMetadataRequest request, Long requesterId) {
+        roleService.requireEmployeeRecordAccess(requesterId);
+        User requester = roleService.getUser(requesterId);
+
+        Employee employee = employeeRepository.findById(id)
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Employee record not found"));
+        roleService.enforceSocietyScope(requester, employee.getSociety().getId());
+
+        SecureDocumentMetadataService.EncryptedPayload encryptedPayload = secureDocumentMetadataService.encrypt(request);
+        employee.setIdProofMetadataEncrypted(encryptedPayload.encryptedPayload());
+        employee.setIdProofMetadataVersion(encryptedPayload.version());
+        employee.setIdProofMetadataUpdatedAt(LocalDateTime.now());
+
+        if (request.getDocumentUrl() != null && !request.getDocumentUrl().isBlank()) {
+            employee.setIdProofDocumentUrl(request.getDocumentUrl());
+        }
+
+        employeeRepository.save(employee);
+        return secureDocumentMetadataService.decrypt(employee.getIdProofMetadataEncrypted(), employee.getIdProofMetadataVersion());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public EmployeeIdProofMetadataResponse getIdProofMetadata(Long id, Long requesterId) {
+        roleService.requireEmployeeRecordAccess(requesterId);
+        User requester = roleService.getUser(requesterId);
+
+        Employee employee = employeeRepository.findById(id)
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Employee record not found"));
+        roleService.enforceSocietyScope(requester, employee.getSociety().getId());
+
+        return secureDocumentMetadataService.decrypt(employee.getIdProofMetadataEncrypted(), employee.getIdProofMetadataVersion());
+    }
+
+    @Override
+    @Transactional
+    public EmployeeIdProofMetadataResponse uploadIdProofDocument(Long id, MultipartFile file, String idProofType, String idProofNumber, Long requesterId) {
+        roleService.requireEmployeeRecordAccess(requesterId);
+        User requester = roleService.getUser(requesterId);
+
+        Employee employee = employeeRepository.findById(id)
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Employee record not found"));
+        roleService.enforceSocietyScope(requester, employee.getSociety().getId());
+
+        if (file == null || file.isEmpty()) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "ID proof file is required");
+        }
+
+        try {
+            byte[] content = file.getBytes();
+            String checksum = computeChecksum(content);
+
+            employee.setIdProofDocumentData(content);
+            employee.setIdProofDocumentFileName(file.getOriginalFilename());
+            employee.setIdProofDocumentContentType(file.getContentType());
+            employee.setIdProofDocumentSize(file.getSize());
+            employee.setIdProofDocumentChecksum(checksum);
+
+            if (idProofType != null && !idProofType.isBlank()) {
+                employee.setIdProofType(idProofType.trim());
+            }
+            if (idProofNumber != null && !idProofNumber.isBlank()) {
+                employee.setIdProofNumber(idProofNumber.trim());
+            }
+
+            String generatedObjectKey = "employees/" + employee.getId() + "/id-proof/" +
+                    (file.getOriginalFilename() != null ? file.getOriginalFilename() : "document.bin");
+
+            EmployeeIdProofMetadataRequest metadataRequest = new EmployeeIdProofMetadataRequest();
+            metadataRequest.setStorageProvider("DATABASE");
+            metadataRequest.setBucketName("employees");
+            metadataRequest.setObjectKey(generatedObjectKey);
+            metadataRequest.setFileName(file.getOriginalFilename());
+            metadataRequest.setContentType(file.getContentType());
+            metadataRequest.setChecksum(checksum);
+            metadataRequest.setFileSize(file.getSize());
+            metadataRequest.setDocumentUrl(null);
+
+            SecureDocumentMetadataService.EncryptedPayload encryptedPayload = secureDocumentMetadataService.encrypt(metadataRequest);
+            employee.setIdProofMetadataEncrypted(encryptedPayload.encryptedPayload());
+            employee.setIdProofMetadataVersion(encryptedPayload.version());
+            employee.setIdProofMetadataUpdatedAt(LocalDateTime.now());
+            employee.setIdProofDocumentUrl(null);
+
+            employeeRepository.save(employee);
+            return secureDocumentMetadataService.decrypt(employee.getIdProofMetadataEncrypted(), employee.getIdProofMetadataVersion());
+        } catch (IOException ex) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Unable to read uploaded file");
+        }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public EmployeeIdProofDocumentPayload downloadIdProofDocument(Long id, Long requesterId) {
+        roleService.requireEmployeeRecordAccess(requesterId);
+        User requester = roleService.getUser(requesterId);
+
+        Employee employee = employeeRepository.findById(id)
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Employee record not found"));
+        roleService.enforceSocietyScope(requester, employee.getSociety().getId());
+
+        if (employee.getIdProofDocumentData() == null || employee.getIdProofDocumentData().length == 0) {
+            throw new ApiException(HttpStatus.NOT_FOUND, "No ID proof document attached for this employee");
+        }
+
+        return EmployeeIdProofDocumentPayload.builder()
+                .fileName(employee.getIdProofDocumentFileName())
+                .contentType(employee.getIdProofDocumentContentType())
+                .content(employee.getIdProofDocumentData())
+                .build();
     }
 
     // ─── Helpers ──────────────────────────────────────────────────
@@ -247,6 +372,14 @@ public class EmployeeServiceImpl implements EmployeeService {
     }
 
     private EmployeeResponse toResponse(Employee e) {
+        EmployeeIdProofMetadataResponse metadata;
+        try {
+            metadata = secureDocumentMetadataService
+                    .decrypt(e.getIdProofMetadataEncrypted(), e.getIdProofMetadataVersion());
+        } catch (Exception ex) {
+            metadata = null;
+        }
+
         return EmployeeResponse.builder()
                 .id(e.getId())
                 .userId(e.getUser().getId())
@@ -269,6 +402,10 @@ public class EmployeeServiceImpl implements EmployeeService {
                 .idProofType(e.getIdProofType())
                 .idProofNumber(e.getIdProofNumber())
                 .idProofDocumentUrl(e.getIdProofDocumentUrl())
+                .hasIdProofDocument(e.getIdProofDocumentData() != null && e.getIdProofDocumentData().length > 0)
+                .idProofDocumentFileName(e.getIdProofDocumentFileName())
+                .idProofDocumentSize(e.getIdProofDocumentSize())
+                .idProofMetadata(metadata)
                 .photoUrl(e.getPhotoUrl())
                 .emergencyContactName(e.getEmergencyContactName())
                 .emergencyContactPhone(e.getEmergencyContactPhone())
@@ -279,5 +416,15 @@ public class EmployeeServiceImpl implements EmployeeService {
                 .createdAt(e.getCreatedAt())
                 .updatedAt(e.getUpdatedAt())
                 .build();
+    }
+
+    private String computeChecksum(byte[] content) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hash = digest.digest(content);
+            return Base64.getEncoder().encodeToString(hash);
+        } catch (Exception ex) {
+            return Base64.getEncoder().encodeToString("checksum-unavailable".getBytes(StandardCharsets.UTF_8));
+        }
     }
 }

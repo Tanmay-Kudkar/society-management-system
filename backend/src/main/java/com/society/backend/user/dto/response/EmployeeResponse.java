@@ -40,6 +40,10 @@ public class EmployeeResponse {
     private String idProofType;
     private String idProofNumber;
     private String idProofDocumentUrl;
+    private Boolean hasIdProofDocument;
+    private String idProofDocumentFileName;
+    private Long idProofDocumentSize;
+    private EmployeeIdProofMetadataResponse idProofMetadata;
     private String photoUrl;
 
     // Emergency

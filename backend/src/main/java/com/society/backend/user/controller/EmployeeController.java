@@ -1,17 +1,24 @@
 package com.society.backend.user.controller;
 
 import com.society.backend.user.dto.request.EmployeeRequest;
+import com.society.backend.user.dto.request.EmployeeIdProofMetadataRequest;
+import com.society.backend.user.dto.response.EmployeeIdProofDocumentPayload;
+import com.society.backend.user.dto.response.EmployeeIdProofMetadataResponse;
 import com.society.backend.user.dto.response.EmployeeResponse;
 import com.society.backend.user.service.EmployeeService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
 import java.util.Map;
@@ -25,7 +32,7 @@ public class EmployeeController {
     private final EmployeeService employeeService;
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'MANAGER')")
+    @PreAuthorize("hasAnyRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'MANAGER')")
     public ResponseEntity<EmployeeResponse> create(
             @Valid @RequestBody EmployeeRequest request,
             @RequestParam Long userId) {
@@ -33,7 +40,7 @@ public class EmployeeController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'MANAGER')")
+    @PreAuthorize("hasAnyRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'MANAGER')")
     public ResponseEntity<EmployeeResponse> update(
             @PathVariable Long id,
             @Valid @RequestBody EmployeeRequest request,
@@ -75,7 +82,7 @@ public class EmployeeController {
     }
 
     @PatchMapping("/{id}/deactivate")
-    @PreAuthorize("hasAnyRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'MANAGER')")
+    @PreAuthorize("hasAnyRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'MANAGER')")
     public ResponseEntity<EmployeeResponse> deactivate(
             @PathVariable Long id,
             @RequestParam Long userId) {
@@ -83,7 +90,7 @@ public class EmployeeController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY')")
+    @PreAuthorize("hasAnyRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'MANAGER')")
     public ResponseEntity<Void> delete(
             @PathVariable Long id,
             @RequestParam Long userId) {
@@ -92,7 +99,7 @@ public class EmployeeController {
     }
 
     @PatchMapping("/{id}/advance/record")
-    @PreAuthorize("hasAnyRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER')")
+    @PreAuthorize("hasAnyRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'MANAGER')")
     public ResponseEntity<EmployeeResponse> recordAdvance(
             @PathVariable Long id,
             @RequestParam BigDecimal amount,
@@ -101,11 +108,55 @@ public class EmployeeController {
     }
 
     @PatchMapping("/{id}/advance/deduct")
-    @PreAuthorize("hasAnyRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER')")
+    @PreAuthorize("hasAnyRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'MANAGER')")
     public ResponseEntity<EmployeeResponse> deductAdvance(
             @PathVariable Long id,
             @RequestParam BigDecimal amount,
             @RequestParam Long userId) {
         return ResponseEntity.ok(employeeService.deductAdvance(id, amount, userId));
+    }
+
+    @PutMapping("/{id}/id-proof/metadata")
+    @PreAuthorize("hasAnyRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'MANAGER')")
+    public ResponseEntity<EmployeeIdProofMetadataResponse> updateIdProofMetadata(
+            @PathVariable Long id,
+            @Valid @RequestBody EmployeeIdProofMetadataRequest request,
+            @RequestParam Long userId) {
+        return ResponseEntity.ok(employeeService.updateIdProofMetadata(id, request, userId));
+    }
+
+    @GetMapping("/{id}/id-proof/metadata")
+    @PreAuthorize("hasAnyRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'MANAGER')")
+    public ResponseEntity<EmployeeIdProofMetadataResponse> getIdProofMetadata(
+            @PathVariable Long id,
+            @RequestParam Long userId) {
+        return ResponseEntity.ok(employeeService.getIdProofMetadata(id, userId));
+    }
+
+    @PostMapping(path = "/{id}/id-proof/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasAnyRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'MANAGER')")
+    public ResponseEntity<EmployeeIdProofMetadataResponse> uploadIdProofDocument(
+            @PathVariable Long id,
+            @RequestParam("file") MultipartFile file,
+            @RequestParam(required = false) String idProofType,
+            @RequestParam(required = false) String idProofNumber,
+            @RequestParam Long userId) {
+        return ResponseEntity.ok(employeeService.uploadIdProofDocument(id, file, idProofType, idProofNumber, userId));
+    }
+
+    @GetMapping("/{id}/id-proof/file")
+    @PreAuthorize("hasAnyRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'MANAGER')")
+    public ResponseEntity<ByteArrayResource> downloadIdProofDocument(
+            @PathVariable Long id,
+            @RequestParam Long userId) {
+        EmployeeIdProofDocumentPayload payload = employeeService.downloadIdProofDocument(id, userId);
+        ByteArrayResource resource = new ByteArrayResource(payload.getContent());
+        String safeFileName = payload.getFileName() != null ? payload.getFileName().replaceAll("[\\r\\n\"]", "_") : "id-proof.bin";
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + safeFileName + "\"")
+                .contentType(MediaType.parseMediaType(payload.getContentType() != null ? payload.getContentType() : MediaType.APPLICATION_OCTET_STREAM_VALUE))
+                .contentLength(payload.getContent().length)
+                .body(resource);
     }
 }

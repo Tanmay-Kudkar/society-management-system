@@ -26,6 +26,7 @@ const Settings = lazyWithMinDelay(() => import("./pages/core/Settings"));
 const Reports = lazyWithMinDelay(() => import("./pages/core/Reports"));
 
 const Users = lazyWithMinDelay(() => import("./pages/users/Users"));
+const Employees = lazyWithMinDelay(() => import("./pages/users/Employees"));
 const RolesPermissions = lazyWithMinDelay(
   () => import("./pages/users/RolesPermissions"),
 );
@@ -164,6 +165,7 @@ const PAGE_TITLES = {
   "/help": "Help",
   "/dashboard": "Dashboard",
   "/users": "Users",
+  "/employees": "Employees",
   "/society-admins": "Society Admins",
   "/login-audit": "Login Audit",
   "/unit-management": "Unit & User Management",
@@ -348,6 +350,24 @@ function App() {
                       ])}
                     >
                       <Users />
+                    </RoleRoute>
+                  }
+                />
+                <Route
+                  path="employees"
+                  element={
+                    <RoleRoute
+                      requireSocietyScope
+                      allow={(currentUser) => hasAnyRole(currentUser, [
+                        "MASTER_ADMIN",
+                        "SOCIETY_ADMIN",
+                        "CHAIRMAN",
+                        "SECRETARY",
+                        "TREASURER",
+                        "MANAGER",
+                      ])}
+                    >
+                      <Employees />
                     </RoleRoute>
                   }
                 />

@@ -23,7 +23,7 @@ import com.society.backend.vendor.entity.Vendor;
  * SECRETARY       → Same as CHAIRMAN
  * TREASURER       → Same as CHAIRMAN
  * COMMITTEE       → EMPLOYEE, MEMBER
- * EMPLOYEE        → VISITOR
+ * EMPLOYEE        → None
  * MEMBER          → TENANT
  * VENDOR          → None
  * MANAGER         → None
@@ -83,8 +83,8 @@ public final class RolePermissions {
                 // MANAGER — no user CRUD rights
                 ALLOWED_CREATIONS.put(Role.MANAGER, EnumSet.noneOf(Role.class));
 
-                // EMPLOYEE — creates VISITOR only
-                ALLOWED_CREATIONS.put(Role.EMPLOYEE, EnumSet.of(Role.VISITOR));
+                // EMPLOYEE — no operational user CRUD rights
+                ALLOWED_CREATIONS.put(Role.EMPLOYEE, EnumSet.noneOf(Role.class));
 
                 // MEMBER — creates TENANT only
                 ALLOWED_CREATIONS.put(Role.MEMBER, EnumSet.of(Role.TENANT));
@@ -131,7 +131,7 @@ public final class RolePermissions {
 
                 ALLOWED_UPDATES.put(Role.MANAGER, EnumSet.noneOf(Role.class));
 
-                ALLOWED_UPDATES.put(Role.EMPLOYEE, EnumSet.of(Role.VISITOR));
+                ALLOWED_UPDATES.put(Role.EMPLOYEE, EnumSet.noneOf(Role.class));
 
                 ALLOWED_UPDATES.put(Role.MEMBER, EnumSet.of(Role.TENANT));
 
@@ -185,8 +185,8 @@ public final class RolePermissions {
                 ALLOWED_READS.put(Role.MANAGER, EnumSet.of(
                                 Role.MANAGER, Role.EMPLOYEE, Role.VISITOR));
 
-                // EMPLOYEE — reads visitor
-                ALLOWED_READS.put(Role.EMPLOYEE, EnumSet.of(Role.EMPLOYEE, Role.VISITOR));
+                // EMPLOYEE — no system access
+                ALLOWED_READS.put(Role.EMPLOYEE, EnumSet.of(Role.EMPLOYEE));
 
                 // MEMBER — reads tenant
                 ALLOWED_READS.put(Role.MEMBER, EnumSet.of(Role.MEMBER, Role.TENANT));
