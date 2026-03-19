@@ -312,7 +312,7 @@ export default function Flats() {
     setShowModal(true)
   }
 
-  const handleExport = async (format) => {
+  const handleExport = async () => {
     if (!effectiveSocietyId) {
       toast.error('Society context is required for export')
       return
@@ -320,9 +320,9 @@ export default function Flats() {
 
     setIsExporting(true)
     try {
-      const response = await exportApi.flats(effectiveSocietyId, format)
+      const response = await exportApi.flats(effectiveSocietyId)
       const datePart = new Date().toISOString().split('T')[0]
-      downloadBlob(response.data, `flats_${datePart}.${format}`)
+      downloadBlob(response.data, `flats_${datePart}.xlsx`)
       toast.success('Units exported successfully')
     } catch (error) {
       toast.error(error?.response?.data?.message || 'Failed to export units')
@@ -343,19 +343,9 @@ export default function Flats() {
         </div>
         <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
           <NeonSweepButton
-            tone="cyan"
-            size="md"
-            onClick={() => handleExport('csv')}
-            disabled={isExporting}
-            className="w-full sm:w-auto"
-          >
-            <FileSpreadsheet size={18} />
-            {isExporting ? 'Exporting...' : 'Export CSV'}
-          </NeonSweepButton>
-          <NeonSweepButton
             tone="slate"
             size="md"
-            onClick={() => handleExport('xlsx')}
+            onClick={handleExport}
             disabled={isExporting}
             className="w-full sm:w-auto"
           >

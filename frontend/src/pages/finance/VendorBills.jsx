@@ -125,7 +125,7 @@ export default function VendorBills() {
     })
   }
 
-  const handleExport = async (format) => {
+  const handleExport = async () => {
     if (!effectiveSocietyId) {
       toast.error('Society context is required for export')
       return
@@ -133,9 +133,9 @@ export default function VendorBills() {
 
     setIsExporting(true)
     try {
-      const response = await exportApi.vendorBills(effectiveSocietyId, null, null, format)
+      const response = await exportApi.vendorBills(effectiveSocietyId, null, null)
       const datePart = new Date().toISOString().split('T')[0]
-      downloadBlob(response.data, `vendor_bills_${datePart}.${format}`)
+      downloadBlob(response.data, `vendor_bills_${datePart}.xlsx`)
       toast.success('Vendor bills exported successfully')
     } catch (error) {
       toast.error(error?.response?.data?.message || 'Failed to export vendor bills')
@@ -166,19 +166,9 @@ export default function VendorBills() {
         </div>
         <div className="flex flex-wrap gap-3">
           <NeonSweepButton
-            tone="cyan"
-            size="md"
-            onClick={() => handleExport('csv')}
-            disabled={isExporting}
-            className="w-full sm:w-auto"
-          >
-            <FileSpreadsheet size={20} />
-            {isExporting ? 'Exporting...' : 'Export CSV'}
-          </NeonSweepButton>
-          <NeonSweepButton
             tone="slate"
             size="md"
-            onClick={() => handleExport('xlsx')}
+            onClick={handleExport}
             disabled={isExporting}
             className="w-full sm:w-auto"
           >

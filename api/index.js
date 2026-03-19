@@ -259,7 +259,7 @@ export const noticeApi = {
   markAttendance: (id, userId, data) => api.post(`/notices/${id}/attendance?userId=${userId}`, data || {}),
   getMyAttendance: (id, userId) => api.get(`/notices/${id}/attendance/me?userId=${userId}`),
   getAttendanceByNotice: (id, userId) => api.get(`/notices/${id}/attendance?userId=${userId}`),
-  exportAttendanceCsv: (id, userId, status = 'ALL') => api.get(`/notices/${id}/attendance/export?userId=${userId}&status=${encodeURIComponent(status)}`, { responseType: 'blob' }),
+  exportAttendance: (id, userId, status = 'ALL') => api.get(`/notices/${id}/attendance/export?userId=${userId}&status=${encodeURIComponent(status)}`, { responseType: 'blob' }),
 }
 
 // Ticket API
@@ -473,33 +473,34 @@ export const reportApi = {
 
 // Export API for Excel downloads
 export const exportApi = {
-  transactions: (societyId, startDate, endDate, format = 'csv') => 
-    api.get(`/api/export/transactions/${societyId}?startDate=${startDate}&endDate=${endDate}&format=${format}`, { responseType: 'blob' }),
-  maintenanceBills: (societyId, month, format = 'csv') =>
-      api.get(`/api/export/maintenance-bills/${societyId}${month ? `?month=${month}&format=${format}` : `?format=${format}`}`, { responseType: 'blob' }),
-  vendorBills: (societyId, startDate, endDate, format = 'csv') => {
-      let url = `/api/export/vendor-bills/${societyId}?format=${format}`;
-      if (startDate && endDate) url += `&startDate=${startDate}&endDate=${endDate}`;
+  transactions: (societyId, startDate, endDate) => 
+    api.get(`/api/export/transactions/${societyId}?startDate=${startDate}&endDate=${endDate}`, { responseType: 'blob' }),
+  maintenanceBills: (societyId, month) =>
+      api.get(`/api/export/maintenance-bills/${societyId}${month ? `?month=${month}` : ''}`, { responseType: 'blob' }),
+  vendorBills: (societyId, startDate, endDate) => {
+      const url = startDate && endDate
+        ? `/api/export/vendor-bills/${societyId}?startDate=${startDate}&endDate=${endDate}`
+        : `/api/export/vendor-bills/${societyId}`;
       return api.get(url, { responseType: 'blob' });
     },
-  tickets: (societyId, status, format = 'csv') => 
-    api.get(`/api/export/tickets/${societyId}${status ? `?status=${status}&format=${format}` : `?format=${format}`}`, { responseType: 'blob' }),
-  flats: (societyId, format = 'csv') =>
-      api.get(`/api/export/flats/${societyId}?format=${format}`, { responseType: 'blob' }),
-  paymentsBySociety: (societyId, format = 'csv') =>
-    api.get(`/api/export/payments/${societyId}?format=${format}`, { responseType: 'blob' }),
-  paymentsByUser: (userId, format = 'csv') =>
-    api.get(`/api/export/payments/user/${userId}?format=${format}`, { responseType: 'blob' }),
-  financialReport: (societyId, reportType, startDate, endDate, format = 'csv') => {
-    let url = `/api/export/financial-report/${societyId}?reportType=${reportType}&format=${format}`;
+  tickets: (societyId, status) => 
+    api.get(`/api/export/tickets/${societyId}${status ? `?status=${status}` : ''}`, { responseType: 'blob' }),
+  flats: (societyId) =>
+      api.get(`/api/export/flats/${societyId}`, { responseType: 'blob' }),
+  paymentsBySociety: (societyId) =>
+    api.get(`/api/export/payments/${societyId}`, { responseType: 'blob' }),
+  paymentsByUser: (userId) =>
+    api.get(`/api/export/payments/user/${userId}`, { responseType: 'blob' }),
+  financialReport: (societyId, reportType, startDate, endDate) => {
+    let url = `/api/export/financial-report/${societyId}?reportType=${reportType}`;
     if (startDate) url += `&startDate=${startDate}`;
     if (endDate) url += `&endDate=${endDate}`;
     return api.get(url, { responseType: 'blob' });
   },
-  allTransactions: (startDate, endDate, format = 'csv') => 
-    api.get(`/api/export/all-transactions?startDate=${startDate}&endDate=${endDate}&format=${format}`, { responseType: 'blob' }),
-  allTickets: (status, format = 'csv') => 
-    api.get(`/api/export/all-tickets${status ? `?status=${status}&format=${format}` : `?format=${format}`}`, { responseType: 'blob' }),
+  allTransactions: (startDate, endDate) => 
+    api.get(`/api/export/all-transactions?startDate=${startDate}&endDate=${endDate}`, { responseType: 'blob' }),
+  allTickets: (status) => 
+    api.get(`/api/export/all-tickets${status ? `?status=${status}` : ''}`, { responseType: 'blob' }),
 }
 
 // Visitor API

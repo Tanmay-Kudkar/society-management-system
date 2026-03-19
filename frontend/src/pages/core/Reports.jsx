@@ -133,7 +133,7 @@ export default function Reports() {
     return <PermissionDenied message="You don't have permission to view financial reports" />
   }
 
-  const handleExport = async (format) => {
+  const handleExport = async () => {
     if (!societyId) return
     setIsExporting(true)
     try {
@@ -141,10 +141,9 @@ export default function Reports() {
         societyId, 
         reportType, 
         customStartDate || null, 
-        customEndDate || null,
-        format
+        customEndDate || null
       )
-      const filename = `${reportType.toLowerCase()}_financial_report_${new Date().toISOString().split('T')[0]}.${format}`
+      const filename = `${reportType.toLowerCase()}_financial_report_${new Date().toISOString().split('T')[0]}.xlsx`
       downloadBlob(response.data, filename)
     } catch (error) {
       console.error('Export failed:', error)
@@ -172,19 +171,9 @@ export default function Reports() {
         </div>
         <div className="flex flex-wrap items-center gap-3">
           <NeonSweepButton
-            tone="cyan"
-            size="md"
-            onClick={() => handleExport('csv')}
-            disabled={!societyId || isExporting}
-            className="w-full md:w-auto"
-          >
-            <FileSpreadsheet size={20} />
-            {isExporting ? 'Exporting...' : 'Export CSV'}
-          </NeonSweepButton>
-          <NeonSweepButton
             tone="slate"
             size="md"
-            onClick={() => handleExport('xlsx')}
+            onClick={handleExport}
             disabled={!societyId || isExporting}
             className="w-full md:w-auto"
           >

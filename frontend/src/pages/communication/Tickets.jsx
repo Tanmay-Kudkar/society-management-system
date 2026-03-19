@@ -493,7 +493,7 @@ export default function Tickets() {
     )
   }
 
-  const handleExport = async (format) => {
+  const handleExport = async () => {
     if (!effectiveSocietyId && !isPlatformLevel) {
       toast.error('Unable to export: No society assigned to your account')
       return
@@ -502,9 +502,9 @@ export default function Tickets() {
     setIsExporting(true)
     try {
       const response = isPlatformLevel && !effectiveSocietyId
-        ? await exportApi.allTickets(filterStatus || null, format)
-        : await exportApi.tickets(effectiveSocietyId, filterStatus || null, format)
-      downloadBlob(response.data, `tickets_${new Date().toISOString().split('T')[0]}.${format}`)
+        ? await exportApi.allTickets(filterStatus || null)
+        : await exportApi.tickets(effectiveSocietyId, filterStatus || null)
+      downloadBlob(response.data, `tickets_${new Date().toISOString().split('T')[0]}.xlsx`)
       toast.success('Tickets exported successfully')
     } catch (error) {
       console.error('Export failed:', error)
@@ -557,19 +557,9 @@ export default function Tickets() {
         </div>
         <div className="flex flex-wrap gap-3">
           <NeonSweepButton
-            tone="cyan"
-            size="md"
-            onClick={() => handleExport('csv')}
-            disabled={isExporting}
-            className="w-full sm:w-auto"
-          >
-            <FileSpreadsheet size={20} />
-            {isExporting ? 'Exporting...' : 'Export CSV'}
-          </NeonSweepButton>
-          <NeonSweepButton
             tone="slate"
             size="md"
-            onClick={() => handleExport('xlsx')}
+            onClick={handleExport}
             disabled={isExporting}
             className="w-full sm:w-auto"
           >
