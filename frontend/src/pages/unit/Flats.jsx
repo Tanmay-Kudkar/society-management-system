@@ -4,8 +4,8 @@ import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '../../context'
 import { useConfirmDialog } from '../../context'
 import { useToast } from '../../context'
-import { flatApi, societyApi, wingApi } from '../../../../api'
-import { Plus, Edit, Trash2, Search, X, Home, Store, Briefcase, Layers, AlertCircle } from 'lucide-react'
+import { flatApi, societyApi, wingApi, exportApi, downloadBlob } from '../../../../api'
+import { Plus, Edit, Trash2, Search, X, Home, Store, Briefcase, Layers, AlertCircle, FileSpreadsheet } from 'lucide-react'
 import { FormInput, PhoneInput, SmartSelect, NumberInput, FormErrorSummary, AsyncButton, InfoTooltip } from '../../components'
 import { PermissionDenied } from '../../components'
 
@@ -30,6 +30,8 @@ export default function Flats() {
   const [modalSocietyId, setModalSocietyId] = useState('')
   const [wingSyncAttempted, setWingSyncAttempted] = useState(false)
   const [formErrors, setFormErrors] = useState({})
+  const [exportFormat, setExportFormat] = useState('csv')
+  const [isExporting, setIsExporting] = useState(false)
 
   // Get society filter from URL (for MASTER_ADMIN viewing specific society)
   const societyIdFromUrl = searchParams.get('society')
@@ -311,6 +313,25 @@ export default function Flats() {
     setShowModal(true)
   }
 
+  const handleExport = async () => {
+    if (!effectiveSocietyId) {
+      toast.error('Society context is required for export')
+      return
+    }
+
+    setIsExporting(true)
+    try {
+      const response = await exportApi.flats(effectiveSocietyId, exportFormat)
+      const datePart = new Date().toISOString().split('T')[0]
+      downloadBlob(response.data, `flats_${datePart}.${exportFormat}`)
+      toast.success('Units exported successfully')
+    } catch (error) {
+      toast.error(error?.response?.data?.message || 'Failed to export units')
+    } finally {
+      setIsExporting(false)
+    }
+  }
+
   return (
     <div>
       {/* Header */}
@@ -321,13 +342,32 @@ export default function Flats() {
             <InfoTooltip text="Manage society flats, shops, and offices" />
           </div>
         </div>
-        <button
-          onClick={() => handleOpenModal(null)}
-          className="inline-flex items-center gap-2 py-2 px-4 rounded-xl bg-[#2563eb] text-white font-semibold transition-all hover:bg-[#1d4ed8] hover:-translate-y-px"
-        >
-          <Plus size={20} />
-          Add Unit
-        </button>
+        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+          <select
+            value={exportFormat}
+            onChange={(e) => setExportFormat(e.target.value)}
+            className="w-full rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] px-3 py-2 text-sm text-[var(--text-primary)] outline-none transition focus:border-blue-600 focus:shadow-[0_0_0_3px_rgba(37,99,235,0.2)] sm:w-auto"
+            aria-label="Export format"
+          >
+            <option value="csv">CSV</option>
+            <option value="xlsx">XLSX</option>
+          </select>
+          <button
+            onClick={handleExport}
+            disabled={isExporting}
+            className="inline-flex items-center justify-center gap-2 rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] px-4 py-2 font-semibold text-[var(--text-primary)] transition-all hover:bg-[var(--bg-tertiary)] disabled:cursor-not-allowed disabled:opacity-70"
+          >
+            <FileSpreadsheet size={18} />
+            {isExporting ? 'Exporting...' : `Export ${exportFormat.toUpperCase()}`}
+          </button>
+          <button
+            onClick={() => handleOpenModal(null)}
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#2563eb] px-4 py-2 font-semibold text-white transition-all hover:bg-[#1d4ed8] hover:-translate-y-px"
+          >
+            <Plus size={20} />
+            Add Unit
+          </button>
+        </div>
       </div>
 
       {/* Filters */}
