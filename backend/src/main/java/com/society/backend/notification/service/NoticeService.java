@@ -1,6 +1,8 @@
 package com.society.backend.notification.service;
 
 import com.society.backend.notification.dto.request.NoticeRequest;
+import com.society.backend.notification.dto.request.NoticeAttendanceRequest;
+import com.society.backend.notification.dto.response.NoticeAttendanceResponse;
 import com.society.backend.notification.dto.response.NoticeResponse;
 
 import java.util.List;
@@ -17,4 +19,10 @@ public interface NoticeService {
     void delete(Long id);
 
     List<NoticeResponse> getBySocietyId(Long societyId);
+
+    NoticeAttendanceResponse markAttendance(Long noticeId, Long userId, NoticeAttendanceRequest request);
+
+    NoticeAttendanceResponse getMyAttendance(Long noticeId, Long userId);
+
+    List<NoticeAttendanceResponse> getAttendanceByNotice(Long noticeId, Long userId);
 }

@@ -124,6 +124,25 @@ public class RoleService {
     }
 
     /**
+     * Ticket management roles (committee excluded):
+     * MASTER_ADMIN, SOCIETY_ADMIN, C/S/T, MANAGER, EMPLOYEE.
+     */
+    public void requireTicketManager(Long userId) {
+        checkRole(userId, Role.MASTER_ADMIN, Role.SOCIETY_ADMIN,
+                Role.CHAIRMAN, Role.SECRETARY, Role.TREASURER,
+                Role.MANAGER, Role.EMPLOYEE);
+    }
+
+    /**
+     * Ticket assignment roles: MASTER_ADMIN, SOCIETY_ADMIN, C/S/T, MANAGER.
+     */
+    public void requireTicketAssigner(Long userId) {
+        checkRole(userId, Role.MASTER_ADMIN, Role.SOCIETY_ADMIN,
+                Role.CHAIRMAN, Role.SECRETARY, Role.TREASURER,
+                Role.MANAGER);
+    }
+
+    /**
      * Check if user is any registered member (not VISITOR or VENDOR)
      */
     public void requireMember(Long userId) {
@@ -152,7 +171,25 @@ public class RoleService {
      * Check if user can manage notices
      */
     public void canManageNotices(Long userId) {
-        requireStaff(userId);
+        checkRole(userId, Role.MASTER_ADMIN, Role.SOCIETY_ADMIN,
+                Role.CHAIRMAN, Role.SECRETARY, Role.TREASURER);
+    }
+
+    /**
+     * Record own attendance for meeting notices.
+     */
+    public void canRecordMeetingAttendance(Long userId) {
+        checkRole(userId, Role.MASTER_ADMIN, Role.SOCIETY_ADMIN,
+                Role.CHAIRMAN, Role.SECRETARY, Role.TREASURER,
+                Role.COMMITTEE);
+    }
+
+    /**
+     * View all attendance records for a meeting notice.
+     */
+    public void canViewMeetingAttendance(Long userId) {
+        checkRole(userId, Role.MASTER_ADMIN, Role.SOCIETY_ADMIN,
+                Role.CHAIRMAN, Role.SECRETARY, Role.TREASURER);
     }
 
     /**

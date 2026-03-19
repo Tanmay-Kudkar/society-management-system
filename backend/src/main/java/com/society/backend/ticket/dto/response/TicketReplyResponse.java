@@ -3,8 +3,6 @@ package com.society.backend.ticket.dto.response;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.time.LocalDateTime;
-
 @Getter
 @Setter
 public class TicketReplyResponse {
@@ -13,5 +11,5 @@ public class TicketReplyResponse {
     private Long repliedById;
     private String repliedByName;
     private String message;
-    private LocalDateTime createdAt;
+    private String createdAt;
 }

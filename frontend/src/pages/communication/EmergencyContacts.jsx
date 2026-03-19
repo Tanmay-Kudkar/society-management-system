@@ -5,9 +5,11 @@ import { useToast } from '../../context'
 import { emergencyContactApi } from '../../../../api'
 import { Plus, Search, X, Phone, Edit, Trash2, AlertCircle, CheckCircle, Upload } from 'lucide-react'
 import clsx from 'clsx'
-import { FormInput, PhoneInput, SmartSelect, BulkImportModal, InfoTooltip, NeonSweepButton } from '../../components'
+import { FormInput, PhoneInput, SmartSelect, BulkImportModal, InfoTooltip, NeonSweepButton, AnimatedModal, DEFAULT_ANIMATED_MODAL_DURATION_MS } from '../../components'
 import { HeroSkeleton, GroupedListSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
 import useMinLoadingTime from '../../hooks/useMinLoadingTime'
+
+const MODAL_ANIMATION_MS = DEFAULT_ANIMATED_MODAL_DURATION_MS
 
 const contactTypeClasses = {
   POLICE: 'bg-[#dbeafe] text-[#1d4ed8]',
@@ -78,13 +80,11 @@ export default function EmergencyContacts() {
     onSuccess: () => {
       queryClient.invalidateQueries(['emergencyContacts'])
       toast.success('Emergency contact deleted successfully')
-      setShowDeleteModal(false)
-      setContactToDelete(null)
+      cancelDelete()
     },
     onError: (error) => {
       toast.error(error.response?.data?.message || 'Failed to delete contact')
-      setShowDeleteModal(false)
-      setContactToDelete(null)
+      cancelDelete()
     },
   })
 
@@ -101,7 +101,7 @@ export default function EmergencyContacts() {
 
   const cancelDelete = () => {
     setShowDeleteModal(false)
-    setContactToDelete(null)
+    setTimeout(() => setContactToDelete(null), MODAL_ANIMATION_MS)
   }
 
   const filteredContacts = useMemo(() => {
@@ -115,7 +115,7 @@ export default function EmergencyContacts() {
 
   const closeModal = () => {
     setShowModal(false)
-    setEditingContact(null)
+    setTimeout(() => setEditingContact(null), MODAL_ANIMATION_MS)
   }
 
   const handleSubmit = (e) => {
@@ -300,9 +300,8 @@ export default function EmergencyContacts() {
       )}
 
       {/* Modal */}
-      {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
-          <div className="w-full max-w-[32rem] max-h-[calc(100vh-3rem)] flex flex-col rounded-xl bg-[var(--bg-card)] shadow-[0_8px_24px_rgba(0,0,0,0.12)]">
+      <AnimatedModal open={showModal} onRequestClose={closeModal} closeOnBackdrop>
+        <div className="w-full max-w-[32rem] max-h-[calc(100vh-3rem)] flex flex-col rounded-xl bg-[var(--bg-card)] shadow-[0_8px_24px_rgba(0,0,0,0.12)]">
             <div className="flex items-center justify-between p-4 border-b border-[var(--border-light)]">
               <h3 className="text-lg font-bold text-[var(--text-primary)]">{editingContact ? 'Edit Contact' : 'Add Emergency Contact'}</h3>
               <button onClick={closeModal} className="p-1 rounded-lg text-[var(--text-tertiary)] hover:bg-[var(--bg-tertiary)]">
@@ -379,13 +378,12 @@ export default function EmergencyContacts() {
                 </NeonSweepButton>
               </div>
             </form>
-          </div>
         </div>
-      )}
+      </AnimatedModal>
 
       {/* Delete Confirmation Modal */}
-      {showDeleteModal && contactToDelete && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
+      <AnimatedModal open={showDeleteModal} onRequestClose={cancelDelete} closeOnBackdrop>
+        {contactToDelete && (
           <div className="w-full max-w-[32rem] max-h-[calc(100vh-3rem)] flex flex-col rounded-xl bg-[var(--bg-card)] shadow-[0_8px_24px_rgba(0,0,0,0.12)]">
             <div className="p-6 text-center">
               <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-[#fee2e2] inline-flex items-center justify-center">
@@ -423,8 +421,8 @@ export default function EmergencyContacts() {
               </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </AnimatedModal>
 
       {/* Bulk Import Modal */}
       {showBulkImport && (

@@ -8,6 +8,7 @@ import {
   Shield, Briefcase, FileText, Users, MapPin, X, Bell
 } from 'lucide-react'
 import PublicSweepButton from '../../components/PublicSweepButton'
+import { AnimatedModal } from '../../components'
 
 const LocationPickerMap = lazy(() => import('../../components/LocationPickerMap'))
 
@@ -448,9 +449,13 @@ export default function Login() {
               </p>
             </div>
 
-            {isLocationPanelOpen && (
-              <div className="animate-fadeIn fixed inset-0 z-50 flex items-end justify-center bg-black/45 px-3 py-3 sm:items-center sm:px-4">
-                <div className="animate-scale-in w-full max-w-[560px] rounded-xl border border-[color-mix(in_srgb,var(--border-default)_80%,#334155_20%)] bg-[var(--bg-secondary)] p-3.5 shadow-2xl sm:p-4">
+            <AnimatedModal
+              open={isLocationPanelOpen}
+              onRequestClose={() => setIsLocationPanelOpen(false)}
+              className="w-full max-w-[560px] rounded-xl border border-[color-mix(in_srgb,var(--border-default)_80%,#334155_20%)] bg-[var(--bg-secondary)] p-3.5 shadow-2xl sm:p-4"
+              backdropClassName="bg-black/45"
+              durationMs={220}
+            >
                   <div className="mb-3 flex items-center justify-between">
                     <div>
                       <h3 className="text-sm font-bold text-[var(--text-primary)]">Adjust Login Location</h3>
@@ -505,9 +510,7 @@ export default function Login() {
                       Done
                     </button>
                   </div>
-                </div>
-              </div>
-            )}
+            </AnimatedModal>
           </section>
         </div>
       </div>

@@ -171,9 +171,19 @@ CREATE TABLE IF NOT EXISTS notices (
     title           VARCHAR(255) NOT NULL,
     content         TEXT,
     priority        VARCHAR(255) DEFAULT 'MEDIUM',
+    notice_type     VARCHAR(255) DEFAULT 'GENERAL',
     expiry_date     DATE,
     is_active       BOOLEAN DEFAULT TRUE,
     created_at      TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS notice_attendance (
+    id              BIGSERIAL PRIMARY KEY,
+    notice_id       BIGINT NOT NULL REFERENCES notices(id) ON DELETE CASCADE,
+    user_id         BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    status          VARCHAR(255) NOT NULL DEFAULT 'PRESENT',
+    marked_at       TIMESTAMP NOT NULL DEFAULT NOW(),
+    CONSTRAINT uk_notice_attendance_notice_user UNIQUE (notice_id, user_id)
 );
 
 -- Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
@@ -237,7 +247,9 @@ CREATE TABLE IF NOT EXISTS tickets (
     escalation_level    INT DEFAULT 0,
     created_at          TIMESTAMP NOT NULL DEFAULT NOW(),
     updated_at          TIMESTAMP DEFAULT NOW(),
-    resolved_at         TIMESTAMP
+    resolved_at         TIMESTAMP,
+    close_undo_previous_status VARCHAR(255),
+    close_undo_expires_at TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS ticket_replies (

@@ -33,7 +33,7 @@ public interface TicketService {
 
     TicketResponse updateProgress(Long id, Integer progress, Long userId);
 
-    void delete(Long id, Long userId);
+    void delete(Long id, Long userId, boolean force);
 
     // Overdue tracking methods
     List<TicketResponse> getOverdue();

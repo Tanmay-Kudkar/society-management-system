@@ -3,8 +3,6 @@ package com.society.backend.ticket.dto.response;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.time.LocalDateTime;
-
 @Getter
 @Setter
 public class TicketResponse {
@@ -23,13 +21,15 @@ public class TicketResponse {
     private String priority;
     private String resolution;
     private String lastReplyBy;
-    private LocalDateTime lastReplyAt;
+    private String lastReplyAt;
     private Integer progressPercent;
     private Integer pendingDays;
     private Boolean isOverdue;
     private Integer overdueDays;
     private Integer escalationLevel;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
-    private LocalDateTime resolvedAt;
+    private String createdAt;
+    private String updatedAt;
+    private String resolvedAt;
+    private String closeUndoPreviousStatus;
+    private String closeUndoExpiresAt;
 }

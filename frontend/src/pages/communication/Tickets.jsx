@@ -1,19 +1,20 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '../../context'
 import { useToast } from '../../context'
 import { ticketApi, userApi, societyApi, exportApi, downloadBlob } from '../../../../api'
-import { Plus, Search, X, Ticket, MessageSquare, User, Edit, AlertTriangle, Clock, FileSpreadsheet } from 'lucide-react'
+import { Plus, Search, X, Ticket, MessageSquare, User, Edit, AlertTriangle, Clock, FileSpreadsheet, Trash2 } from 'lucide-react'
 import clsx from 'clsx'
-import { InfoTooltip, NeonSweepButton } from '../../components'
+import { InfoTooltip, NeonSweepButton, AnimatedModal, DEFAULT_ANIMATED_MODAL_DURATION_MS } from '../../components'
 import { HeroSkeleton, SummaryRowSkeleton, FiltersSkeleton, ListSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
 import useMinLoadingTime from '../../hooks/useMinLoadingTime'
-import { formatDate } from '../../utils/formatUtils'
+import { formatDate, parseServerDateTime } from '../../utils/formatUtils'
 
 const statusClasses = {
   OPEN: 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800',
   IN_PROGRESS: 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-800',
+  IN_REVIEW: 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-violet-100 text-violet-800',
   RESOLVED: 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-800',
   CLOSED: 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-white/10 text-[var(--text-secondary)]',
 }
@@ -35,6 +36,64 @@ const getProgressClass = (progress) => {
 }
 
 const getTicketDisplayNumber = (ticket) => ticket?.ticketNumber || `#${ticket?.id}`
+const UNDO_CLOSE_WINDOW_MS = 5 * 60 * 1000
+const MODAL_ANIMATION_MS = DEFAULT_ANIMATED_MODAL_DURATION_MS
+
+const formatTicketDateTimeWithDay = (value) => {
+  const date = parseServerDateTime(value)
+  if (!date) return '-'
+  return date.toLocaleString('en-IN', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true,
+    timeZone: 'Asia/Kolkata',
+  })
+}
+
+const toTitle = (value) => String(value || '')
+  .replace(/[_-]+/g, ' ')
+  .replace(/\s+/g, ' ')
+  .trim()
+  .replace(/\b\w/g, (c) => c.toUpperCase())
+
+const extractForceDeleteImpacts = (error) => {
+  const data = error?.response?.data || {}
+
+  if (Array.isArray(data?.impacts)) {
+    return data.impacts
+      .map((impact) => ({
+        label: toTitle(impact?.label || impact?.name),
+        count: Number(impact?.count),
+      }))
+      .filter((impact) => impact.label && Number.isFinite(impact.count) && impact.count > 0)
+  }
+
+  if (data?.linkedRecords && typeof data.linkedRecords === 'object') {
+    return Object.entries(data.linkedRecords)
+      .map(([key, count]) => ({ label: toTitle(key), count: Number(count) }))
+      .filter((impact) => Number.isFinite(impact.count) && impact.count > 0)
+  }
+
+  const message = String(data?.message || '')
+  const parenthesized = message.match(/\(([^)]+)\)/)?.[1] || ''
+  if (!parenthesized) return []
+
+  return [...parenthesized.matchAll(/(\d+)\s+([a-zA-Z][a-zA-Z\s_-]*)/g)]
+    .map((match) => ({
+      label: toTitle(match[2]),
+      count: Number(match[1]),
+    }))
+    .filter((impact) => Number.isFinite(impact.count) && impact.count > 0)
+}
+
+const isTicketEditable = (ticket) => {
+  const status = ticket?.status?.toUpperCase()
+  return status !== 'CLOSED' && status !== 'IN_REVIEW'
+}
 
 export default function Tickets() {
   const { user, canCreateTickets, canManageTickets } = useAuth()
@@ -43,7 +102,19 @@ export default function Tickets() {
   const [showModal, setShowModal] = useState(false)
   const [showAssignModal, setShowAssignModal] = useState(false)
   const [showReplyModal, setShowReplyModal] = useState(false)
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [showForceDeleteModal, setShowForceDeleteModal] = useState(false)
   const [selectedTicket, setSelectedTicket] = useState(null)
+  const [ticketToEdit, setTicketToEdit] = useState(null)
+  const [ticketToDelete, setTicketToDelete] = useState(null)
+  const [forceDeleteImpacts, setForceDeleteImpacts] = useState([])
+  const [editForm, setEditForm] = useState({
+    title: '',
+    description: '',
+    type: 'REQUEST',
+    priority: 'MEDIUM',
+  })
   const [replyMessage, setReplyMessage] = useState('')
   const [searchTerm, setSearchTerm] = useState('')
   const [filterStatus, setFilterStatus] = useState('')
@@ -52,10 +123,19 @@ export default function Tickets() {
   const [openReplies, setOpenReplies] = useState({})
   const [repliesByTicket, setRepliesByTicket] = useState({})
   const [loadingReplies, setLoadingReplies] = useState({})
+  const [nowTs, setNowTs] = useState(Date.now())
   const [searchParams] = useSearchParams()
+
+  useEffect(() => {
+    const timer = setInterval(() => setNowTs(Date.now()), 1000)
+    return () => clearInterval(timer)
+  }, [])
 
   // Check if current user is MASTER_ADMIN
   const isPlatformLevel = user?.role === 'MASTER_ADMIN'
+  const canDeleteTickets = ['MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY'].includes(user?.role)
+  const canAssignTickets = ['MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'MANAGER'].includes(user?.role)
+  const isCommitteeUser = user?.role === 'COMMITTEE'
   const societyIdFromUrl = searchParams.get('society')
   const effectiveSocietyId = isPlatformLevel && societyIdFromUrl ? Number(societyIdFromUrl) : user?.societyId
 
@@ -77,6 +157,49 @@ export default function Tickets() {
     enabled: isPlatformLevel,
   })
 
+  const closeAssignModal = () => {
+    setShowAssignModal(false)
+    setTimeout(() => setSelectedTicket(null), MODAL_ANIMATION_MS)
+  }
+
+  const closeReplyModal = () => {
+    setShowReplyModal(false)
+    setTimeout(() => {
+      setSelectedTicket(null)
+      setReplyMessage('')
+    }, MODAL_ANIMATION_MS)
+  }
+
+  const closeEditModal = () => {
+    setShowEditModal(false)
+    setTimeout(() => setTicketToEdit(null), MODAL_ANIMATION_MS)
+  }
+
+  const closeDeleteModal = () => {
+    setShowDeleteModal(false)
+    setTimeout(() => {
+      setTicketToDelete(null)
+      setForceDeleteImpacts([])
+    }, MODAL_ANIMATION_MS)
+  }
+
+  const closeForceDeleteModal = () => {
+    setShowForceDeleteModal(false)
+    setTimeout(() => {
+      setTicketToDelete(null)
+      setForceDeleteImpacts([])
+    }, MODAL_ANIMATION_MS)
+  }
+
+  const closeAllDeleteModals = () => {
+    setShowDeleteModal(false)
+    setShowForceDeleteModal(false)
+    setTimeout(() => {
+      setTicketToDelete(null)
+      setForceDeleteImpacts([])
+    }, MODAL_ANIMATION_MS)
+  }
+
   const createMutation = useMutation({
     mutationFn: (data) => ticketApi.create(data, user.id),
     onSuccess: () => {
@@ -87,15 +210,37 @@ export default function Tickets() {
 
   const updateStatusMutation = useMutation({
     mutationFn: ({ id, status }) => ticketApi.updateStatus(id, status, null, user.id),
-    onSuccess: () => queryClient.invalidateQueries(['tickets']),
+    onSuccess: (response, variables) => {
+      queryClient.invalidateQueries(['tickets'])
+      const nextStatus = response?.data?.status
+      if (nextStatus === 'IN_REVIEW' && ['RESOLVED', 'CLOSED'].includes(variables?.status)) {
+        toast.info('Closure request sent for C/S/T/CM approval')
+      } else if (nextStatus === 'CLOSED') {
+        toast.info('Ticket closed. Undo is available for 5 minutes.')
+      }
+    },
+    onError: (error) => {
+      toast.error(error?.response?.data?.message || 'Failed to update ticket status')
+    },
+  })
+
+  const updateTicketMutation = useMutation({
+    mutationFn: ({ id, data }) => ticketApi.update(id, data, user.id),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['tickets'])
+      closeEditModal()
+      toast.success('Ticket updated successfully')
+    },
+    onError: (error) => {
+      toast.error(error?.response?.data?.message || 'Failed to update ticket')
+    },
   })
 
   const assignMutation = useMutation({
     mutationFn: ({ id, employeeId }) => ticketApi.assign(id, employeeId, user.id),
     onSuccess: () => {
       queryClient.invalidateQueries(['tickets'])
-      setShowAssignModal(false)
-      setSelectedTicket(null)
+      closeAssignModal()
     },
   })
 
@@ -121,13 +266,34 @@ export default function Tickets() {
     },
   })
 
-  const filteredTickets = useMemo(() => tickets.filter(t => {
-    const matchesSearch = t.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         t.type?.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesStatus = !filterStatus || t.status === filterStatus
-    const matchesOverdue = !showOverdueOnly || t.isOverdue
-    return matchesSearch && matchesStatus && matchesOverdue
-  }), [tickets, searchTerm, filterStatus, showOverdueOnly])
+  const deleteMutation = useMutation({
+    mutationFn: ({ id, force = false }) => ticketApi.delete(id, user.id, force),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries(['tickets'])
+      closeAllDeleteModals()
+      toast.success(variables?.force ? 'Ticket force-deleted successfully' : 'Ticket deleted successfully')
+    },
+    onError: (error) => {
+      toast.error(error?.response?.data?.message || 'Failed to delete ticket')
+    },
+  })
+
+  const filteredTickets = useMemo(() => {
+    return tickets
+      .filter((t) => {
+        const matchesSearch = t.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          t.type?.toLowerCase().includes(searchTerm.toLowerCase())
+        const matchesStatus = !filterStatus || t.status === filterStatus
+        const matchesOverdue = !showOverdueOnly || t.isOverdue
+        return matchesSearch && matchesStatus && matchesOverdue
+      })
+      .sort((a, b) => {
+        const aTime = parseServerDateTime(a.createdAt)?.getTime() ?? 0
+        const bTime = parseServerDateTime(b.createdAt)?.getTime() ?? 0
+        if (bTime !== aTime) return bTime - aTime
+        return (b.id ?? 0) - (a.id ?? 0)
+      })
+  }, [tickets, searchTerm, filterStatus, showOverdueOnly])
 
   const handleSubmit = (e) => {
     e.preventDefault()
@@ -186,6 +352,119 @@ export default function Tickets() {
     setShowReplyModal(true)
   }
 
+  const openEditModal = (ticket) => {
+    if (!isTicketEditable(ticket)) {
+      toast.warning('This ticket cannot be edited in its current status')
+      return
+    }
+
+    setTicketToEdit(ticket)
+    setEditForm({
+      title: ticket?.title || '',
+      description: ticket?.description || '',
+      type: ticket?.type || 'REQUEST',
+      priority: ticket?.priority || 'MEDIUM',
+    })
+    setShowEditModal(true)
+  }
+
+  const handleEditSubmit = (e) => {
+    e.preventDefault()
+    if (!ticketToEdit?.id) return
+    if (!isTicketEditable(ticketToEdit)) {
+      toast.warning('This ticket cannot be edited in its current status')
+      closeEditModal()
+      return
+    }
+
+    const resolvedSocietyId = Number(ticketToEdit?.societyId || effectiveSocietyId)
+    if (!resolvedSocietyId) {
+      toast.error('Society ID is required')
+      return
+    }
+
+    updateTicketMutation.mutate({
+      id: ticketToEdit.id,
+      data: {
+        societyId: resolvedSocietyId,
+        title: editForm.title,
+        description: editForm.description,
+        type: editForm.type,
+        priority: editForm.priority,
+      },
+    })
+  }
+
+  const getUndoCloseRemainingMs = (ticket) => {
+    if (ticket?.status !== 'CLOSED') return 0
+    const rawExpiry = ticket?.closeUndoExpiresAt
+    if (!rawExpiry) return 0
+
+    const utcParsed = parseServerDateTime(rawExpiry)
+    const utcRemaining = utcParsed ? (utcParsed.getTime() - nowTs) : 0
+    const utcIsPlausible = utcRemaining > 0 && utcRemaining <= (UNDO_CLOSE_WINDOW_MS + 5000)
+
+    if (utcIsPlausible) {
+      return utcRemaining
+    }
+
+    // Backward compatibility for older records stored without timezone semantics.
+    const localParsed = new Date(String(rawExpiry))
+    if (isNaN(localParsed.getTime())) {
+      return 0
+    }
+    const localRemaining = localParsed.getTime() - nowTs
+    return localRemaining > 0 && localRemaining <= (UNDO_CLOSE_WINDOW_MS + 5000)
+      ? localRemaining
+      : 0
+  }
+
+  const formatCountdown = (remainingMs) => {
+    const totalSeconds = Math.floor(remainingMs / 1000)
+    const minutes = Math.floor(totalSeconds / 60)
+    const seconds = totalSeconds % 60
+    return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
+  }
+
+  const openDeleteModal = (ticket) => {
+    setTicketToDelete(ticket)
+    setShowForceDeleteModal(false)
+    setForceDeleteImpacts([])
+    setShowDeleteModal(true)
+  }
+
+  const isForceDeleteEligible = (error) => {
+    const serverMessage = error?.response?.data?.message || ''
+    const normalized = String(serverMessage).toLowerCase()
+    return error?.response?.status === 409
+      && (normalized.includes('use force delete') || normalized.includes('referenced by other records'))
+  }
+
+  const handleDeleteConfirm = async () => {
+    if (!ticketToDelete) return
+
+    try {
+      await deleteMutation.mutateAsync({ id: ticketToDelete.id, force: false })
+    } catch (error) {
+      if (!isForceDeleteEligible(error)) {
+        return
+      }
+
+      setForceDeleteImpacts(extractForceDeleteImpacts(error))
+      setShowDeleteModal(false)
+      setShowForceDeleteModal(true)
+    }
+  }
+
+  const handleForceDeleteConfirm = async () => {
+    if (!ticketToDelete) return
+    try {
+      await deleteMutation.mutateAsync({ id: ticketToDelete.id, force: true })
+    } catch {
+      // Error toast is already handled by mutation onError
+    }
+  }
+
   const handleReplySubmit = (e) => {
     e.preventDefault()
     const message = replyMessage.trim()
@@ -197,8 +476,7 @@ export default function Tickets() {
       { id: selectedTicket.id, message },
       {
         onSuccess: () => {
-          setShowReplyModal(false)
-          setReplyMessage('')
+          closeReplyModal()
         },
       },
     )
@@ -336,6 +614,7 @@ export default function Tickets() {
             <option value="">All Status</option>
             <option value="OPEN">Open</option>
             <option value="IN_PROGRESS">In Progress</option>
+            <option value="IN_REVIEW">In Review</option>
             <option value="RESOLVED">Resolved</option>
             <option value="CLOSED">Closed</option>
           </select>
@@ -370,9 +649,14 @@ export default function Tickets() {
                 </NeonSweepButton>
               )}
             </div>
-          ) : filteredTickets.map((ticket) => (
+          ) : filteredTickets.map((ticket) => {
+            const undoRemainingMs = getUndoCloseRemainingMs(ticket)
+            const showUndoBanner = ticket.status === 'CLOSED' && undoRemainingMs > 0
+            const repliesOpen = Boolean(openReplies[ticket.id])
+
+            return (
             <div key={ticket.id} className={clsx(
-              'relative overflow-hidden p-5 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-light)] shadow-[0_12px_24px_rgba(15,23,42,0.06)]',
+              'relative overflow-hidden p-5 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-light)] shadow-[0_12px_24px_rgba(15,23,42,0.06)] transition-[border-color] duration-300 ease-out',
               ticket.isOverdue && 'border-red-600/45'
             )}>
               <div className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-blue-500/80 via-cyan-400/70 to-emerald-400/70" />
@@ -405,6 +689,12 @@ export default function Tickets() {
                     </div>
                     <h3 className="mt-1.5 text-base font-semibold text-[var(--text-primary)]">{ticket.title}</h3>
                     <p className="mt-1.5 text-[0.85rem] text-[var(--text-tertiary)] line-clamp-2">{ticket.description}</p>
+                    {ticket.status === 'IN_REVIEW' && (
+                      <p className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-violet-100 px-2.5 py-1 text-[0.75rem] font-semibold text-violet-800 transition-all duration-300 ease-out">
+                        <Clock size={12} />
+                        Awaiting C/S/T/CM approval
+                      </p>
+                    )}
                     {ticket.resolution && (
                       <p className="mt-1.5 text-[0.8rem] font-semibold text-[var(--text-secondary)]">
                         Latest reply: {ticket.resolution}
@@ -431,7 +721,7 @@ export default function Tickets() {
                       {isPlatformLevel && <span className="inline-flex items-center gap-1.5">{ticket.societyName}</span>}
                       <span className="inline-flex items-center gap-1.5">
                         <Clock size={12} />
-                        {formatDate(ticket.createdAt)}
+                        {formatTicketDateTimeWithDay(ticket.createdAt)}
                       </span>
                       {ticket.pendingDays > 0 && (
                         <span className={clsx("inline-flex items-center gap-1.5", ticket.isOverdue && "text-red-600 font-semibold")}> 
@@ -449,13 +739,13 @@ export default function Tickets() {
                 </div>
 
                 <div className="flex flex-col gap-3 w-full md:w-auto md:items-end">
-                  <div className="grid grid-cols-1 sm:flex items-stretch sm:items-center gap-2 w-full md:w-auto md:justify-end">
-                    {ticket.status === 'OPEN' && (
+                  <div className="grid grid-cols-2 gap-2 w-full md:w-auto md:flex md:items-center md:justify-end">
+                    {ticket.status === 'OPEN' && canAssignTickets && (
                       <NeonSweepButton
                         onClick={() => { setSelectedTicket(ticket); setShowAssignModal(true) }}
                         tone="violet"
                         size="sm"
-                        className="w-full sm:w-auto justify-center"
+                        className="w-full md:w-auto justify-center"
                       >
                         Assign
                       </NeonSweepButton>
@@ -465,33 +755,78 @@ export default function Tickets() {
                         onClick={() => handleReply(ticket)}
                         tone="cyan"
                         size="sm"
-                        className="w-full sm:w-auto justify-center"
+                        className="w-full md:w-auto justify-center"
                       >
                         <MessageSquare size={14} />
                         Reply
+                      </NeonSweepButton>
+                    )}
+                    {canManageTickets() && (
+                      <NeonSweepButton
+                        onClick={() => openEditModal(ticket)}
+                        tone="slate"
+                        size="sm"
+                        className="w-full md:w-auto justify-center"
+                        disabled={!isTicketEditable(ticket)}
+                      >
+                        <Edit size={14} />
+                        {isTicketEditable(ticket) ? 'Edit' : 'Locked'}
                       </NeonSweepButton>
                     )}
                     <NeonSweepButton
                       onClick={() => toggleReplies(ticket.id)}
                       tone="slate"
                       size="sm"
-                      className="w-full sm:w-auto justify-center"
+                      className="w-full md:w-auto justify-center"
                     >
                       <MessageSquare size={14} />
                       {openReplies[ticket.id] ? 'Hide Replies' : 'View Replies'}
                     </NeonSweepButton>
-                    {ticket.status !== 'CLOSED' && (
-                      <select
-                        value={ticket.status}
-                        onChange={(e) => updateStatusMutation.mutate({ id: ticket.id, status: e.target.value })}
-                        className="w-full sm:w-auto min-w-[9rem] px-3 py-2 text-[0.85rem] rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-blue-600 focus:ring-[3px] focus:ring-blue-600/20"
+                    {canDeleteTickets && (
+                      <NeonSweepButton
+                        onClick={() => openDeleteModal(ticket)}
+                        tone="danger"
+                        size="sm"
+                        className="w-full md:w-auto justify-center"
                       >
-                        <option value="OPEN">Open</option>
-                        <option value="IN_PROGRESS">In Progress</option>
-                        <option value="RESOLVED">Resolved</option>
-                        <option value="CLOSED">Closed</option>
-                      </select>
+                        <Trash2 size={14} />
+                        Delete
+                      </NeonSweepButton>
                     )}
+                    <select
+                      value={ticket.status}
+                      onChange={(e) => updateStatusMutation.mutate({ id: ticket.id, status: e.target.value, previousStatus: ticket.status })}
+                      disabled={!canManageTickets()}
+                      className="col-span-2 w-full md:col-span-1 md:w-auto min-w-[9rem] px-3 py-2 text-[0.85rem] rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-blue-600 focus:ring-[3px] focus:ring-blue-600/20"
+                    >
+                      <option value="OPEN">Open</option>
+                      <option value="IN_PROGRESS">In Progress</option>
+                      <option value="IN_REVIEW">In Review</option>
+                      <option value="RESOLVED">Resolved</option>
+                      <option value="CLOSED">Closed</option>
+                    </select>
+                  </div>
+
+                  <div
+                    className={clsx(
+                      'overflow-hidden transition-all duration-300 ease-out',
+                      showUndoBanner ? 'max-h-20 opacity-100 translate-y-0' : 'max-h-0 opacity-0 -translate-y-1 pointer-events-none'
+                    )}
+                  >
+                    <div className="flex items-center justify-between gap-2 rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-[0.78rem] text-amber-800 dark:text-amber-300">
+                      <span>Undo available for {formatCountdown(undoRemainingMs)}</span>
+                      <NeonSweepButton
+                        tone="slate"
+                        size="sm"
+                        className="!px-3 !py-1"
+                        onClick={() => {
+                          const previousStatus = ticket?.closeUndoPreviousStatus || 'IN_PROGRESS'
+                          updateStatusMutation.mutate({ id: ticket.id, status: previousStatus, previousStatus: 'CLOSED' })
+                        }}
+                      >
+                        Undo Close
+                      </NeonSweepButton>
+                    </div>
                   </div>
                   
                   {/* Progress Slider for staff */}
@@ -504,6 +839,7 @@ export default function Tickets() {
                         step="10"
                         value={ticket.progressPercent || 0}
                         onChange={(e) => updateProgressMutation.mutate({ id: ticket.id, progress: parseInt(e.target.value) })}
+                        disabled={ticket.status === 'IN_REVIEW' || !canManageTickets()}
                         className="flex-1 md:flex-none md:w-24 h-[0.45rem] rounded-full accent-blue-600 cursor-pointer"
                       />
                       <span className="w-9 text-right text-xs text-[var(--text-tertiary)] font-semibold">{ticket.progressPercent || 0}%</span>
@@ -512,35 +848,41 @@ export default function Tickets() {
                 </div>
               </div>
 
-              {openReplies[ticket.id] && (
-                <div className="mt-4 rounded-xl border border-[var(--border-light)] bg-[var(--bg-tertiary)]/35 p-3">
-                  <p className="mb-2 text-xs font-bold uppercase tracking-[0.05em] text-[var(--text-tertiary)]">Reply Thread</p>
-                  {loadingReplies[ticket.id] ? (
-                    <p className="text-sm text-[var(--text-tertiary)]">Loading replies...</p>
-                  ) : (repliesByTicket[ticket.id] || []).length === 0 ? (
-                    <p className="text-sm text-[var(--text-tertiary)]">No replies yet.</p>
-                  ) : (
-                    <div className="space-y-2">
-                      {(repliesByTicket[ticket.id] || []).map((reply) => (
-                        <div key={reply.id} className="rounded-lg border border-[var(--border-light)] bg-[var(--bg-card)] px-3 py-2">
-                          <p className="text-[0.86rem] font-semibold text-[var(--text-primary)]">{reply.message}</p>
-                          <p className="mt-1 text-[0.75rem] text-[var(--text-tertiary)]">
-                            {reply.repliedByName || 'Unknown user'} - {formatDate(reply.createdAt)}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
+              <div
+                className={clsx(
+                  'overflow-hidden transition-all duration-300 ease-out',
+                  repliesOpen ? 'max-h-[32rem] opacity-100 mt-4' : 'max-h-0 opacity-0 mt-0'
+                )}
+              >
+                {repliesOpen && (
+                  <div className="rounded-xl border border-[var(--border-light)] bg-[var(--bg-tertiary)]/35 p-3">
+                    <p className="mb-2 text-xs font-bold uppercase tracking-[0.05em] text-[var(--text-tertiary)]">Reply Thread</p>
+                    {loadingReplies[ticket.id] ? (
+                      <p className="text-sm text-[var(--text-tertiary)]">Loading replies...</p>
+                    ) : (repliesByTicket[ticket.id] || []).length === 0 ? (
+                      <p className="text-sm text-[var(--text-tertiary)]">No replies yet.</p>
+                    ) : (
+                      <div className="space-y-2">
+                        {(repliesByTicket[ticket.id] || []).map((reply) => (
+                          <div key={reply.id} className="rounded-lg border border-[var(--border-light)] bg-[var(--bg-card)] px-3 py-2">
+                            <p className="text-[0.86rem] font-semibold text-[var(--text-primary)]">{reply.message}</p>
+                            <p className="mt-1 text-[0.75rem] text-[var(--text-tertiary)]">
+                              {reply.repliedByName || 'Unknown user'} - {formatDate(reply.createdAt)}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
-          ))}
+          )})}
         </div>
 
       {/* Create Ticket Modal */}
-      {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60">
-          <div className="w-full max-w-[40rem] rounded-2xl bg-[var(--bg-card)] border border-[var(--border-light)] shadow-[0_24px_48px_rgba(15,23,42,0.2)]">
+      <AnimatedModal open={showModal}>
+        <div className="w-full max-w-[40rem] rounded-2xl bg-[var(--bg-card)] border border-[var(--border-light)] shadow-[0_24px_48px_rgba(15,23,42,0.2)]">
             <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--border-light)]">
               <h3 className="text-lg font-semibold text-[var(--text-primary)]">Create Ticket</h3>
               <button onClick={() => setShowModal(false)} className="rounded-[0.65rem] p-1 text-[var(--text-tertiary)] transition-colors hover:bg-slate-400/20 hover:text-[var(--text-primary)]">
@@ -578,7 +920,7 @@ export default function Tickets() {
                   <select name="type" required className="w-full py-[0.55rem] px-3 rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] text-[var(--text-primary)] transition-all focus:outline-none focus:border-blue-600 focus:ring-[3px] focus:ring-blue-600/20">
                     <option value="REQUEST">Request</option>
                     <option value="ISSUE">Issue</option>
-                    <option value="TASK">Task</option>
+                    {!isCommitteeUser && <option value="TASK">Task</option>}
                   </select>
                 </div>
                 <div className="flex flex-col gap-1.5">
@@ -596,17 +938,16 @@ export default function Tickets() {
                 <NeonSweepButton type="submit" tone="cyan" size="md" className="flex-1" disabled={createMutation.isPending}>{createMutation.isPending ? 'Creating...' : 'Create'}</NeonSweepButton>
               </div>
             </form>
-          </div>
         </div>
-      )}
+      </AnimatedModal>
 
       {/* Assign Modal */}
-      {showAssignModal && selectedTicket && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60">
+      <AnimatedModal open={showAssignModal}>
+        {selectedTicket && (
           <div className="w-full max-w-[40rem] rounded-2xl bg-[var(--bg-card)] border border-[var(--border-light)] shadow-[0_24px_48px_rgba(15,23,42,0.2)]">
             <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--border-light)]">
               <h3 className="text-lg font-semibold text-[var(--text-primary)]">Assign Ticket</h3>
-              <button onClick={() => setShowAssignModal(false)} className="rounded-[0.65rem] p-1 text-[var(--text-tertiary)] transition-colors hover:bg-slate-400/20 hover:text-[var(--text-primary)]">
+              <button onClick={closeAssignModal} className="rounded-[0.65rem] p-1 text-[var(--text-tertiary)] transition-colors hover:bg-slate-400/20 hover:text-[var(--text-primary)]">
                 <X size={20} />
               </button>
             </div>
@@ -623,25 +964,22 @@ export default function Tickets() {
                 </select>
               </div>
               <div className="flex gap-3 pt-2">
-                <NeonSweepButton type="button" tone="slate" size="md" onClick={() => setShowAssignModal(false)} className="flex-1">Cancel</NeonSweepButton>
+                <NeonSweepButton type="button" tone="slate" size="md" onClick={closeAssignModal} className="flex-1">Cancel</NeonSweepButton>
                 <NeonSweepButton type="submit" tone="cyan" size="md" className="flex-1" disabled={assignMutation.isPending}>{assignMutation.isPending ? 'Assigning...' : 'Assign'}</NeonSweepButton>
               </div>
             </form>
           </div>
-        </div>
-      )}
+        )}
+      </AnimatedModal>
 
       {/* Reply Modal */}
-      {showReplyModal && selectedTicket && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60">
+      <AnimatedModal open={showReplyModal}>
+        {selectedTicket && (
           <div className="w-full max-w-[40rem] rounded-2xl bg-[var(--bg-card)] border border-[var(--border-light)] shadow-[0_24px_48px_rgba(15,23,42,0.2)]">
             <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--border-light)]">
               <h3 className="text-lg font-semibold text-[var(--text-primary)]">Reply to Ticket</h3>
               <button
-                onClick={() => {
-                  setShowReplyModal(false)
-                  setReplyMessage('')
-                }}
+                onClick={closeReplyModal}
                 className="rounded-[0.65rem] p-1 text-[var(--text-tertiary)] transition-colors hover:bg-slate-400/20 hover:text-[var(--text-primary)]"
               >
                 <X size={20} />
@@ -668,10 +1006,7 @@ export default function Tickets() {
                   type="button"
                   tone="slate"
                   size="md"
-                  onClick={() => {
-                    setShowReplyModal(false)
-                    setReplyMessage('')
-                  }}
+                  onClick={closeReplyModal}
                   className="flex-1"
                 >
                   Cancel
@@ -688,8 +1023,208 @@ export default function Tickets() {
               </div>
             </form>
           </div>
-        </div>
-      )}
+        )}
+      </AnimatedModal>
+
+      {/* Edit Modal */}
+      <AnimatedModal open={showEditModal}>
+        {ticketToEdit && (
+          <div className="w-full max-w-[42rem] rounded-2xl bg-[var(--bg-card)] border border-[var(--border-light)] shadow-[0_24px_48px_rgba(15,23,42,0.2)]">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--border-light)]">
+              <h3 className="text-lg font-semibold text-[var(--text-primary)]">Edit Ticket</h3>
+              <button
+                onClick={closeEditModal}
+                className="rounded-[0.65rem] p-1 text-[var(--text-tertiary)] transition-colors hover:bg-slate-400/20 hover:text-[var(--text-primary)]"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            <form onSubmit={handleEditSubmit} className="p-5 flex flex-col gap-4">
+              <div className="p-3 rounded-xl bg-[var(--bg-tertiary)] text-[var(--text-secondary)]">
+                <p className="text-[0.85rem]">Ticket ID: <span className="font-semibold text-[var(--text-primary)]">{getTicketDisplayNumber(ticketToEdit)}</span></p>
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[0.85rem] font-semibold text-[var(--text-secondary)]">Title</label>
+                <input
+                  type="text"
+                  value={editForm.title}
+                  onChange={(e) => setEditForm((prev) => ({ ...prev, title: e.target.value }))}
+                  required
+                  className="w-full py-[0.55rem] px-3 rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] text-[var(--text-primary)] transition-all focus:outline-none focus:border-blue-600 focus:ring-[3px] focus:ring-blue-600/20"
+                />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[0.85rem] font-semibold text-[var(--text-secondary)]">Description</label>
+                <textarea
+                  rows={4}
+                  value={editForm.description}
+                  onChange={(e) => setEditForm((prev) => ({ ...prev, description: e.target.value }))}
+                  required
+                  className="w-full py-[0.55rem] px-3 rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] text-[var(--text-primary)] transition-all resize-y focus:outline-none focus:border-blue-600 focus:ring-[3px] focus:ring-blue-600/20"
+                />
+              </div>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[0.85rem] font-semibold text-[var(--text-secondary)]">Type</label>
+                  <select
+                    value={editForm.type}
+                    onChange={(e) => setEditForm((prev) => ({ ...prev, type: e.target.value }))}
+                    className="w-full py-[0.55rem] px-3 rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] text-[var(--text-primary)] transition-all focus:outline-none focus:border-blue-600 focus:ring-[3px] focus:ring-blue-600/20"
+                  >
+                    <option value="REQUEST">Request</option>
+                    <option value="ISSUE">Issue</option>
+                    <option value="TASK">Task</option>
+                  </select>
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[0.85rem] font-semibold text-[var(--text-secondary)]">Priority</label>
+                  <select
+                    value={editForm.priority}
+                    onChange={(e) => setEditForm((prev) => ({ ...prev, priority: e.target.value }))}
+                    className="w-full py-[0.55rem] px-3 rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] text-[var(--text-primary)] transition-all focus:outline-none focus:border-blue-600 focus:ring-[3px] focus:ring-blue-600/20"
+                  >
+                    <option value="LOW">Low</option>
+                    <option value="MEDIUM">Medium</option>
+                    <option value="HIGH">High</option>
+                    <option value="URGENT">Urgent</option>
+                  </select>
+                </div>
+              </div>
+              <div className="flex flex-col-reverse gap-3 pt-1 sm:flex-row">
+                <NeonSweepButton
+                  type="button"
+                  tone="slate"
+                  size="md"
+                  className="flex-1"
+                  onClick={closeEditModal}
+                  disabled={updateTicketMutation.isPending}
+                >
+                  Cancel
+                </NeonSweepButton>
+                <NeonSweepButton
+                  type="submit"
+                  tone="cyan"
+                  size="md"
+                  className="flex-1"
+                  disabled={updateTicketMutation.isPending || !editForm.title.trim() || !editForm.description.trim()}
+                >
+                  {updateTicketMutation.isPending ? 'Saving...' : 'Save Changes'}
+                </NeonSweepButton>
+              </div>
+            </form>
+          </div>
+        )}
+      </AnimatedModal>
+
+      {/* Delete Modal */}
+      <AnimatedModal open={showDeleteModal}>
+        {ticketToDelete && (
+          <div className="w-full max-w-[30rem] rounded-2xl bg-[var(--bg-card)] border border-[var(--border-light)] shadow-[0_24px_48px_rgba(15,23,42,0.2)]">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--border-light)]">
+              <h3 className="text-lg font-semibold text-[var(--text-primary)]">Delete Ticket</h3>
+              <button
+                onClick={closeDeleteModal}
+                className="rounded-[0.65rem] p-1 text-[var(--text-tertiary)] transition-colors hover:bg-slate-400/20 hover:text-[var(--text-primary)]"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            <div className="p-5 flex flex-col gap-4">
+              <div className="rounded-xl border border-red-600/30 bg-red-500/10 px-3.5 py-3 text-[0.86rem] text-red-700 dark:text-red-300">
+                <p className="font-semibold">Warning</p>
+                <p className="mt-1">This action will permanently delete the ticket and cannot be undone.</p>
+              </div>
+              <div className="rounded-xl bg-[var(--bg-tertiary)] px-3.5 py-3 text-[0.86rem] text-[var(--text-secondary)]">
+                <p>Ticket ID: <span className="font-semibold text-[var(--text-primary)]">{getTicketDisplayNumber(ticketToDelete)}</span></p>
+                <p className="mt-1 text-[var(--text-primary)]">{ticketToDelete.title}</p>
+              </div>
+              <div className="flex gap-3 pt-1">
+                <NeonSweepButton
+                  type="button"
+                  tone="slate"
+                  size="md"
+                  className="flex-1"
+                  onClick={closeDeleteModal}
+                  disabled={deleteMutation.isPending}
+                >
+                  Cancel
+                </NeonSweepButton>
+                <NeonSweepButton
+                  type="button"
+                  tone="danger"
+                  size="md"
+                  className="flex-1"
+                  onClick={handleDeleteConfirm}
+                  disabled={deleteMutation.isPending}
+                >
+                  {deleteMutation.isPending ? 'Deleting...' : 'Delete Ticket'}
+                </NeonSweepButton>
+              </div>
+            </div>
+          </div>
+        )}
+      </AnimatedModal>
+
+      {/* Final Warning Force Delete Modal */}
+      <AnimatedModal open={showForceDeleteModal}>
+        {ticketToDelete && (
+          <div className="w-full max-w-[30rem] rounded-2xl bg-[var(--bg-card)] border border-[var(--border-light)] shadow-[0_24px_48px_rgba(15,23,42,0.2)]">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--border-light)]">
+              <h3 className="text-lg font-semibold text-[var(--text-primary)]">Final Warning: Force Delete Ticket</h3>
+              <button
+                onClick={closeForceDeleteModal}
+                className="rounded-[0.65rem] p-1 text-[var(--text-tertiary)] transition-colors hover:bg-slate-400/20 hover:text-[var(--text-primary)]"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            <div className="p-5 flex flex-col gap-4">
+              <div className="rounded-xl border border-red-600/35 bg-red-500/10 px-3.5 py-3 text-[0.86rem] text-red-700 dark:text-red-300">
+                <p className="font-semibold">Critical warning</p>
+                <p className="mt-1">This ticket has linked records. Force delete will auto-clean related references and cannot be undone.</p>
+              </div>
+              <div className="rounded-xl bg-[var(--bg-tertiary)] px-3.5 py-3 text-[0.86rem] text-[var(--text-secondary)]">
+                <p>Ticket ID: <span className="font-semibold text-[var(--text-primary)]">{getTicketDisplayNumber(ticketToDelete)}</span></p>
+                <p className="mt-1 text-[var(--text-primary)]">{ticketToDelete.title}</p>
+              </div>
+              {forceDeleteImpacts.length > 0 && (
+                <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-3.5 py-3">
+                  <p className="text-[0.82rem] font-semibold text-amber-800 dark:text-amber-300">Linked records that will be auto-cleaned</p>
+                  <div className="mt-2 grid grid-cols-2 gap-2 text-[0.8rem] text-[var(--text-secondary)]">
+                    {forceDeleteImpacts.map((impact) => (
+                      <div key={impact.label} className="rounded-lg bg-[var(--bg-card)] px-2.5 py-1.5">
+                        <span className="font-semibold text-[var(--text-primary)]">{impact.count}</span> {impact.label}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              <div className="flex gap-3 pt-1">
+                <NeonSweepButton
+                  type="button"
+                  tone="slate"
+                  size="md"
+                  className="flex-1"
+                  onClick={closeForceDeleteModal}
+                  disabled={deleteMutation.isPending}
+                >
+                  Cancel
+                </NeonSweepButton>
+                <NeonSweepButton
+                  type="button"
+                  tone="danger"
+                  size="md"
+                  className="flex-1"
+                  onClick={handleForceDeleteConfirm}
+                  disabled={deleteMutation.isPending}
+                >
+                  {deleteMutation.isPending ? 'Force Deleting...' : 'Force Delete'}
+                </NeonSweepButton>
+              </div>
+            </div>
+          </div>
+        )}
+      </AnimatedModal>
     </div>
   )
 }

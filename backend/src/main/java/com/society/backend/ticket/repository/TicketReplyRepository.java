@@ -11,6 +11,10 @@ import java.util.List;
 public interface TicketReplyRepository extends JpaRepository<TicketReply, Long> {
     List<TicketReply> findByTicketIdOrderByCreatedAtAsc(Long ticketId);
 
+    long countByTicketId(Long ticketId);
+
+    void deleteByTicketId(Long ticketId);
+
     List<TicketReply> findByTicketIdAndRepliedByIdAndCreatedAtAfterOrderByCreatedAtDesc(
             Long ticketId,
             Long repliedById,

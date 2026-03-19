@@ -256,6 +256,10 @@ export const noticeApi = {
   create: (data, userId) => api.post(`/notices?userId=${userId}`, data),
   update: (id, data, userId) => api.put(`/notices/${id}?userId=${userId}`, data),
   delete: (id, userId, force = true) => api.delete(`/notices/${id}?userId=${userId}${force ? '&force=true' : ''}`),
+  markAttendance: (id, userId, data) => api.post(`/notices/${id}/attendance?userId=${userId}`, data || {}),
+  getMyAttendance: (id, userId) => api.get(`/notices/${id}/attendance/me?userId=${userId}`),
+  getAttendanceByNotice: (id, userId) => api.get(`/notices/${id}/attendance?userId=${userId}`),
+  exportAttendanceCsv: (id, userId, status = 'ALL') => api.get(`/notices/${id}/attendance/export?userId=${userId}&status=${encodeURIComponent(status)}`, { responseType: 'blob' }),
 }
 
 // Ticket API

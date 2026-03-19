@@ -109,6 +109,23 @@ export function formatNumber(value) {
 
 const INDIA_TIME_ZONE = 'Asia/Kolkata'
 
+const SERVER_NAIVE_DATETIME_MODE = String(import.meta.env.VITE_SERVER_NAIVE_DATETIME_MODE || '').toLowerCase()
+
+function getNaiveDateTimeMode() {
+  if (SERVER_NAIVE_DATETIME_MODE === 'local' || SERVER_NAIVE_DATETIME_MODE === 'utc') {
+    return SERVER_NAIVE_DATETIME_MODE
+  }
+
+  if (typeof window !== 'undefined') {
+    const host = String(window.location.hostname || '').toLowerCase()
+    if (host === 'localhost' || host === '127.0.0.1') {
+      return 'local'
+    }
+  }
+
+  return 'utc'
+}
+
 /**
  * Parse backend datetime safely.
  * Zone-less timestamps are treated as UTC to avoid Render UTC drift on clients.
@@ -129,7 +146,15 @@ export function parseServerDateTime(value) {
   }
 
   const hasTimezone = /([zZ]|[+-]\d{2}:\d{2})$/.test(text)
-  const normalized = hasTimezone ? text : `${text}Z`
+  let normalized = text
+
+  if (!hasTimezone) {
+    // Legacy backend payloads may omit timezone; interpret per runtime mode.
+    normalized = getNaiveDateTimeMode() === 'local' ? text : `${text}Z`
+  }
+
+  // Safari is stricter with ISO separators than Chromium.
+  normalized = normalized.replace(' ', 'T')
   const parsed = new Date(normalized)
   return isNaN(parsed.getTime()) ? null : parsed
 }
