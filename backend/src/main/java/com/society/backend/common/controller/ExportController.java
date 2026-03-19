@@ -219,6 +219,50 @@ public class ExportController {
                                 .contentType(contentType)
                                 .body(outputStream.toByteArray());
         }
+
+        @GetMapping("/payments/{societyId}")
+        public ResponseEntity<byte[]> exportPaymentsBySociety(
+                        @PathVariable Long societyId,
+                        @RequestParam(defaultValue = "csv") String format) {
+
+                String normalizedFormat = format == null ? "CSV" : format.trim().toUpperCase();
+                boolean useExcel = "XLSX".equals(normalizedFormat) || "EXCEL".equals(normalizedFormat);
+                ByteArrayOutputStream outputStream = useExcel
+                                ? excelExportService.exportPayments(societyId, null)
+                                : excelExportService.exportPaymentsCsv(societyId, null);
+
+                String extension = useExcel ? "xlsx" : "csv";
+                MediaType contentType = useExcel
+                                ? MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+                                : new MediaType("text", "csv", java.nio.charset.StandardCharsets.UTF_8);
+                return ResponseEntity.ok()
+                                .header(HttpHeaders.CONTENT_DISPOSITION,
+                                                "attachment; filename=payments_" + LocalDate.now() + "." + extension)
+                                .contentType(contentType)
+                                .body(outputStream.toByteArray());
+        }
+
+        @GetMapping("/payments/user/{userId}")
+        public ResponseEntity<byte[]> exportPaymentsByUser(
+                        @PathVariable Long userId,
+                        @RequestParam(defaultValue = "csv") String format) {
+
+                String normalizedFormat = format == null ? "CSV" : format.trim().toUpperCase();
+                boolean useExcel = "XLSX".equals(normalizedFormat) || "EXCEL".equals(normalizedFormat);
+                ByteArrayOutputStream outputStream = useExcel
+                                ? excelExportService.exportPayments(null, userId)
+                                : excelExportService.exportPaymentsCsv(null, userId);
+
+                String extension = useExcel ? "xlsx" : "csv";
+                MediaType contentType = useExcel
+                                ? MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+                                : new MediaType("text", "csv", java.nio.charset.StandardCharsets.UTF_8);
+                return ResponseEntity.ok()
+                                .header(HttpHeaders.CONTENT_DISPOSITION,
+                                                "attachment; filename=payments_" + LocalDate.now() + "." + extension)
+                                .contentType(contentType)
+                                .body(outputStream.toByteArray());
+        }
 }
 
 

@@ -10,6 +10,7 @@ import { InfoTooltip, NeonSweepButton, AnimatedModal, DEFAULT_ANIMATED_MODAL_DUR
 import { HeroSkeleton, SummaryRowSkeleton, FiltersSkeleton, ListSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
 import useMinLoadingTime from '../../hooks/useMinLoadingTime'
 import { formatDate, parseServerDateTime } from '../../utils/formatUtils'
+import { isActiveTicketStatus, isOpenTicketStatus, isResolvedTicketStatus } from '../../utils/ticketStatusGroups'
 
 const statusClasses = {
   OPEN: 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800',
@@ -120,7 +121,6 @@ export default function Tickets() {
   const [filterStatus, setFilterStatus] = useState('')
   const [showOverdueOnly, setShowOverdueOnly] = useState(false)
   const [isExporting, setIsExporting] = useState(false)
-  const [exportFormat, setExportFormat] = useState('csv')
   const [openReplies, setOpenReplies] = useState({})
   const [repliesByTicket, setRepliesByTicket] = useState({})
   const [loadingReplies, setLoadingReplies] = useState({})
@@ -295,6 +295,16 @@ export default function Tickets() {
         return (b.id ?? 0) - (a.id ?? 0)
       })
   }, [tickets, searchTerm, filterStatus, showOverdueOnly])
+
+  const summary = useMemo(() => {
+    return {
+      active: tickets.filter((ticket) => isActiveTicketStatus(ticket.status)).length,
+      open: tickets.filter((ticket) => isOpenTicketStatus(ticket.status)).length,
+      resolved: tickets.filter((ticket) => isResolvedTicketStatus(ticket.status)).length,
+      overdue: tickets.filter((ticket) => ticket.isOverdue).length,
+      total: tickets.length,
+    }
+  }, [tickets])
 
   const handleSubmit = (e) => {
     e.preventDefault()
@@ -483,7 +493,7 @@ export default function Tickets() {
     )
   }
 
-  const handleExport = async () => {
+  const handleExport = async (format) => {
     if (!effectiveSocietyId && !isPlatformLevel) {
       toast.error('Unable to export: No society assigned to your account')
       return
@@ -492,9 +502,9 @@ export default function Tickets() {
     setIsExporting(true)
     try {
       const response = isPlatformLevel && !effectiveSocietyId
-        ? await exportApi.allTickets(filterStatus || null, exportFormat)
-        : await exportApi.tickets(effectiveSocietyId, filterStatus || null, exportFormat)
-      downloadBlob(response.data, `tickets_${new Date().toISOString().split('T')[0]}.${exportFormat}`)
+        ? await exportApi.allTickets(filterStatus || null, format)
+        : await exportApi.tickets(effectiveSocietyId, filterStatus || null, format)
+      downloadBlob(response.data, `tickets_${new Date().toISOString().split('T')[0]}.${format}`)
       toast.success('Tickets exported successfully')
     } catch (error) {
       console.error('Export failed:', error)
@@ -546,24 +556,25 @@ export default function Tickets() {
           </div>
         </div>
         <div className="flex flex-wrap gap-3">
-          <select
-            value={exportFormat}
-            onChange={(e) => setExportFormat(e.target.value)}
-            className="w-full rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] px-3 py-2 text-sm text-[var(--text-primary)] outline-none transition focus:border-blue-600 focus:shadow-[0_0_0_3px_rgba(37,99,235,0.2)] sm:w-auto"
-            aria-label="Export format"
-          >
-            <option value="csv">CSV</option>
-            <option value="xlsx">XLSX</option>
-          </select>
           <NeonSweepButton
             tone="cyan"
             size="md"
-            onClick={handleExport}
+            onClick={() => handleExport('csv')}
             disabled={isExporting}
             className="w-full sm:w-auto"
           >
             <FileSpreadsheet size={20} />
-            {isExporting ? 'Exporting...' : `Export ${exportFormat.toUpperCase()}`}
+            {isExporting ? 'Exporting...' : 'Export CSV'}
+          </NeonSweepButton>
+          <NeonSweepButton
+            tone="slate"
+            size="md"
+            onClick={() => handleExport('xlsx')}
+            disabled={isExporting}
+            className="w-full sm:w-auto"
+          >
+            <FileSpreadsheet size={20} />
+            {isExporting ? 'Exporting...' : 'Export XLSX'}
           </NeonSweepButton>
           {canCreateTickets() && (
             <NeonSweepButton
@@ -582,24 +593,24 @@ export default function Tickets() {
       {/* Summary Cards */}
       <div className="grid grid-cols-2 gap-4 mb-6 md:grid-cols-5">
         <div className="p-4 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-light)] shadow-[0_10px_22px_rgba(15,23,42,0.08)]">
-          <p className="text-[0.85rem] text-[var(--text-tertiary)]">Open</p>
-          <p className="mt-1 text-2xl font-bold text-yellow-600">{tickets.filter(t => t.status === 'OPEN').length}</p>
+          <p className="text-[0.85rem] text-[var(--text-tertiary)]">Active Queue</p>
+          <p className="mt-1 text-2xl font-bold text-yellow-600">{summary.active}</p>
         </div>
         <div className="p-4 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-light)] shadow-[0_10px_22px_rgba(15,23,42,0.08)]">
-          <p className="text-[0.85rem] text-[var(--text-tertiary)]">In Progress</p>
-          <p className="mt-1 text-2xl font-bold text-blue-600">{tickets.filter(t => t.status === 'IN_PROGRESS').length}</p>
+          <p className="text-[0.85rem] text-[var(--text-tertiary)]">Open</p>
+          <p className="mt-1 text-2xl font-bold text-blue-600">{summary.open}</p>
         </div>
         <div className="p-4 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-light)] shadow-[0_10px_22px_rgba(15,23,42,0.08)]">
           <p className="text-[0.85rem] text-[var(--text-tertiary)]">Resolved</p>
-          <p className="mt-1 text-2xl font-bold text-green-600">{tickets.filter(t => t.status === 'RESOLVED').length}</p>
+          <p className="mt-1 text-2xl font-bold text-green-600">{summary.resolved}</p>
         </div>
         <div className="p-4 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-light)] shadow-[0_10px_22px_rgba(15,23,42,0.08)]">
           <p className="text-[0.85rem] text-[var(--text-tertiary)]">Overdue</p>
-          <p className="mt-1 text-2xl font-bold text-red-600">{tickets.filter(t => t.isOverdue).length}</p>
+          <p className="mt-1 text-2xl font-bold text-red-600">{summary.overdue}</p>
         </div>
         <div className="p-4 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-light)] shadow-[0_10px_22px_rgba(15,23,42,0.08)]">
           <p className="text-[0.85rem] text-[var(--text-tertiary)]">Total</p>
-          <p className="mt-1 text-2xl font-bold text-[var(--text-primary)]">{tickets.length}</p>
+          <p className="mt-1 text-2xl font-bold text-[var(--text-primary)]">{summary.total}</p>
         </div>
       </div>
 

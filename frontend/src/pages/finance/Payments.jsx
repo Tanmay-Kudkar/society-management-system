@@ -2,10 +2,10 @@ import { useState, useMemo } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useSearchParams } from 'react-router-dom'
 import { useAuth, useConfirmDialog, useToast } from '../../context'
-import { paymentApi } from '../../../../api'
-import { Search, CreditCard, CheckCircle, XCircle, Clock, Trash2, RotateCcw, AlertTriangle } from 'lucide-react'
+import { paymentApi, exportApi, downloadBlob } from '../../../../api'
+import { Search, CreditCard, CheckCircle, XCircle, Clock, Trash2, RotateCcw, AlertTriangle, FileSpreadsheet } from 'lucide-react'
 import clsx from 'clsx'
-import { PermissionDenied, InfoTooltip } from '../../components'
+import { PermissionDenied, InfoTooltip, NeonSweepButton } from '../../components'
 import { HeroSkeleton, FinancePageSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
 import useMinLoadingTime from '../../hooks/useMinLoadingTime'
 
@@ -45,6 +45,7 @@ export default function Payments() {
   const [filterStatus, setFilterStatus] = useState('')
   const [refundFilter, setRefundFilter] = useState('ALL')
   const [settlementFilter, setSettlementFilter] = useState('ALL')
+  const [isExporting, setIsExporting] = useState(false)
 
   // Permission check - same as maintenance bills
   if (!canManageMaintenanceBills()) {
@@ -224,6 +225,23 @@ export default function Payments() {
 
   const showSkeleton = useMinLoadingTime(isLoading || isError)
 
+  const handleExport = async (format) => {
+    setIsExporting(true)
+    try {
+      const response = effectiveSocietyId
+        ? await exportApi.paymentsBySociety(effectiveSocietyId, format)
+        : await exportApi.paymentsByUser(user.id, format)
+
+      const datePart = new Date().toISOString().split('T')[0]
+      downloadBlob(response.data, `online_payments_${datePart}.${format}`)
+      toast.success('Payments exported successfully')
+    } catch (error) {
+      toast.error(error?.response?.data?.message || 'Failed to export payments')
+    } finally {
+      setIsExporting(false)
+    }
+  }
+
   if (showSkeleton) {
     return (
       <div>
@@ -243,6 +261,28 @@ export default function Payments() {
             <h1 className="text-2xl font-bold text-[var(--text-primary)]">Online Payments</h1>
             <InfoTooltip text="Track all Razorpay transactions" />
           </div>
+        </div>
+        <div className="flex flex-wrap gap-3">
+          <NeonSweepButton
+            tone="cyan"
+            size="md"
+            onClick={() => handleExport('csv')}
+            disabled={isExporting}
+            className="w-full sm:w-auto"
+          >
+            <FileSpreadsheet size={20} />
+            {isExporting ? 'Exporting...' : 'Export CSV'}
+          </NeonSweepButton>
+          <NeonSweepButton
+            tone="slate"
+            size="md"
+            onClick={() => handleExport('xlsx')}
+            disabled={isExporting}
+            className="w-full sm:w-auto"
+          >
+            <FileSpreadsheet size={20} />
+            {isExporting ? 'Exporting...' : 'Export XLSX'}
+          </NeonSweepButton>
         </div>
       </div>
 
