@@ -4,8 +4,8 @@ import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '../../context'
 import { useConfirmDialog } from '../../context'
 import { useToast } from '../../context'
-import { vendorBillApi, vendorApi } from '../../../../api'
-import { Plus, Edit, Trash2, Search, X, Receipt, CheckCircle, Clock, AlertCircle } from 'lucide-react'
+import { vendorBillApi, vendorApi, exportApi, downloadBlob } from '../../../../api'
+import { Plus, Edit, Trash2, Search, X, Receipt, CheckCircle, Clock, AlertCircle, FileSpreadsheet } from 'lucide-react'
 import clsx from 'clsx'
 import { InfoTooltip, NeonSweepButton } from '../../components'
 import { HeroSkeleton, FinancePageSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
@@ -34,6 +34,8 @@ export default function VendorBills() {
   const [editingBill, setEditingBill] = useState(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [filterStatus, setFilterStatus] = useState('')
+  const [exportFormat, setExportFormat] = useState('csv')
+  const [isExporting, setIsExporting] = useState(false)
 
   const societyIdFromUrl = searchParams.get('society')
   const parsedSocietyIdFromUrl = Number(societyIdFromUrl)
@@ -124,6 +126,25 @@ export default function VendorBills() {
     })
   }
 
+  const handleExport = async () => {
+    if (!effectiveSocietyId) {
+      toast.error('Society context is required for export')
+      return
+    }
+
+    setIsExporting(true)
+    try {
+      const response = await exportApi.vendorBills(effectiveSocietyId, null, null, exportFormat)
+      const datePart = new Date().toISOString().split('T')[0]
+      downloadBlob(response.data, `vendor_bills_${datePart}.${exportFormat}`)
+      toast.success('Vendor bills exported successfully')
+    } catch (error) {
+      toast.error(error?.response?.data?.message || 'Failed to export vendor bills')
+    } finally {
+      setIsExporting(false)
+    }
+  }
+
   const showSkeleton = useMinLoadingTime(isLoading || isError)
 
   if (showSkeleton) return (
@@ -144,17 +165,38 @@ export default function VendorBills() {
             <InfoTooltip text="Track vendor invoices and payments" />
           </div>
         </div>
-        {canManageVendorBills() && (
+        <div className="flex flex-wrap gap-3">
+          <select
+            value={exportFormat}
+            onChange={(e) => setExportFormat(e.target.value)}
+            className="w-full rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] px-3 py-2 text-sm text-[var(--text-primary)] outline-none transition focus:border-blue-600 focus:shadow-[0_0_0_3px_rgba(37,99,235,0.2)] sm:w-auto"
+            aria-label="Export format"
+          >
+            <option value="csv">CSV</option>
+            <option value="xlsx">XLSX</option>
+          </select>
           <NeonSweepButton
-            tone="violet"
+            tone="cyan"
             size="md"
-            onClick={() => { setEditingBill(null); setShowModal(true) }}
+            onClick={handleExport}
+            disabled={isExporting}
             className="w-full sm:w-auto"
           >
-            <Plus size={20} />
-            Add Bill
+            <FileSpreadsheet size={20} />
+            {isExporting ? 'Exporting...' : `Export ${exportFormat.toUpperCase()}`}
           </NeonSweepButton>
-        )}
+          {canManageVendorBills() && (
+            <NeonSweepButton
+              tone="violet"
+              size="md"
+              onClick={() => { setEditingBill(null); setShowModal(true) }}
+              className="w-full sm:w-auto"
+            >
+              <Plus size={20} />
+              Add Bill
+            </NeonSweepButton>
+          )}
+        </div>
       </div>
 
       {/* Filters */}

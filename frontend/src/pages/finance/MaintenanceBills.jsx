@@ -3,8 +3,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '../../context'
 import { useConfirmDialog } from '../../context'
-import { maintenanceBillApi } from '../../../../api'
-import { Search, X, CreditCard, CheckCircle, Clock, AlertCircle, Wallet, Printer, Pencil, Trash2, AlertTriangle, Info } from 'lucide-react'
+import { maintenanceBillApi, exportApi, downloadBlob } from '../../../../api'
+import { Search, X, CreditCard, CheckCircle, Clock, AlertCircle, Wallet, Printer, Pencil, Trash2, AlertTriangle, Info, FileSpreadsheet } from 'lucide-react'
 import clsx from 'clsx'
 import { PermissionDenied, InfoTooltip, NeonSweepButton, AnimatedModal } from '../../components'
 import { HeroSkeleton, FinancePageSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
@@ -89,6 +89,8 @@ export default function MaintenanceBills() {
   const [deleteMonthConfirmText, setDeleteMonthConfirmText] = useState('')
   const [searchTerm, setSearchTerm] = useState('')
   const [filterStatus, setFilterStatus] = useState('')
+  const [exportFormat, setExportFormat] = useState('csv')
+  const [isExporting, setIsExporting] = useState(false)
   const [downloadingInvoiceId, setDownloadingInvoiceId] = useState(null)
   
   // Bulk generation state
@@ -422,6 +424,25 @@ export default function MaintenanceBills() {
     })
   }
 
+  const handleExport = async () => {
+    if (!effectiveSocietyId) {
+      toast.error('Society context is required for export')
+      return
+    }
+
+    setIsExporting(true)
+    try {
+      const response = await exportApi.maintenanceBills(effectiveSocietyId, null, exportFormat)
+      const datePart = new Date().toISOString().split('T')[0]
+      downloadBlob(response.data, `maintenance_bills_${datePart}.${exportFormat}`)
+      toast.success('Maintenance bills exported successfully')
+    } catch (error) {
+      toast.error(error?.response?.data?.message || 'Failed to export maintenance bills')
+    } finally {
+      setIsExporting(false)
+    }
+  }
+
   const showSkeleton = useMinLoadingTime(isLoading || isError)
 
   if (!hasManagePermission) {
@@ -453,6 +474,25 @@ export default function MaintenanceBills() {
           </div>
           {canManageMaintenanceBills() && (
             <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+              <select
+                value={exportFormat}
+                onChange={(e) => setExportFormat(e.target.value)}
+                className="w-full rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] px-3 py-[0.6rem] text-[var(--text-primary)] transition-all focus:border-[#2563eb] focus:outline-none focus:shadow-[0_0_0_3px_rgba(37,99,235,0.2)] sm:w-auto"
+                aria-label="Export format"
+              >
+                <option value="csv">CSV</option>
+                <option value="xlsx">XLSX</option>
+              </select>
+              <NeonSweepButton
+                tone="slate"
+                size="md"
+                onClick={handleExport}
+                disabled={isExporting}
+                className="w-full sm:w-auto"
+              >
+                <FileSpreadsheet size={18} />
+                {isExporting ? 'Exporting...' : `Export ${exportFormat.toUpperCase()}`}
+              </NeonSweepButton>
               <NeonSweepButton
                 tone="cyan"
                 size="md"
