@@ -18,6 +18,7 @@ export default function NoticeRail({ notices }) {
 
   // Duplicate for seamless infinite scroll
   const doubled = [...items, ...items];
+  const tickerDurationSeconds = Math.max(48, Math.min(140, items.length * 12));
 
   return (
     <section
@@ -39,7 +40,11 @@ export default function NoticeRail({ notices }) {
         </div>
 
         {/* Scrolling ticker */}
-        <div className="flex-1 overflow-hidden" aria-live="polite">
+        <div
+          className="flex-1 overflow-hidden"
+          aria-live="polite"
+          style={{ "--ticker-duration": `${tickerDurationSeconds}s` }}
+        >
           <ul className="flex w-max animate-ticker items-center gap-0">
             {doubled.map((item, i) => (
               <li

@@ -486,6 +486,10 @@ export const exportApi = {
     api.get(`/api/export/tickets/${societyId}${status ? `?status=${status}&format=${format}` : `?format=${format}`}`, { responseType: 'blob' }),
   flats: (societyId, format = 'csv') =>
       api.get(`/api/export/flats/${societyId}?format=${format}`, { responseType: 'blob' }),
+  paymentsBySociety: (societyId, format = 'csv') =>
+    api.get(`/api/export/payments/${societyId}?format=${format}`, { responseType: 'blob' }),
+  paymentsByUser: (userId, format = 'csv') =>
+    api.get(`/api/export/payments/user/${userId}?format=${format}`, { responseType: 'blob' }),
   financialReport: (societyId, reportType, startDate, endDate, format = 'csv') => {
     let url = `/api/export/financial-report/${societyId}?reportType=${reportType}&format=${format}`;
     if (startDate) url += `&startDate=${startDate}`;

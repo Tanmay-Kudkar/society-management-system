@@ -6,7 +6,7 @@ import { useConfirmDialog } from '../../context'
 import { useToast } from '../../context'
 import { flatApi, societyApi, wingApi, exportApi, downloadBlob } from '../../../../api'
 import { Plus, Edit, Trash2, Search, X, Home, Store, Briefcase, Layers, AlertCircle, FileSpreadsheet } from 'lucide-react'
-import { FormInput, PhoneInput, SmartSelect, NumberInput, FormErrorSummary, AsyncButton, InfoTooltip } from '../../components'
+import { FormInput, PhoneInput, SmartSelect, NumberInput, FormErrorSummary, AsyncButton, InfoTooltip, NeonSweepButton } from '../../components'
 import { PermissionDenied } from '../../components'
 
 export default function Flats() {
@@ -30,7 +30,6 @@ export default function Flats() {
   const [modalSocietyId, setModalSocietyId] = useState('')
   const [wingSyncAttempted, setWingSyncAttempted] = useState(false)
   const [formErrors, setFormErrors] = useState({})
-  const [exportFormat, setExportFormat] = useState('csv')
   const [isExporting, setIsExporting] = useState(false)
 
   // Get society filter from URL (for MASTER_ADMIN viewing specific society)
@@ -313,7 +312,7 @@ export default function Flats() {
     setShowModal(true)
   }
 
-  const handleExport = async () => {
+  const handleExport = async (format) => {
     if (!effectiveSocietyId) {
       toast.error('Society context is required for export')
       return
@@ -321,9 +320,9 @@ export default function Flats() {
 
     setIsExporting(true)
     try {
-      const response = await exportApi.flats(effectiveSocietyId, exportFormat)
+      const response = await exportApi.flats(effectiveSocietyId, format)
       const datePart = new Date().toISOString().split('T')[0]
-      downloadBlob(response.data, `flats_${datePart}.${exportFormat}`)
+      downloadBlob(response.data, `flats_${datePart}.${format}`)
       toast.success('Units exported successfully')
     } catch (error) {
       toast.error(error?.response?.data?.message || 'Failed to export units')
@@ -343,30 +342,35 @@ export default function Flats() {
           </div>
         </div>
         <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
-          <select
-            value={exportFormat}
-            onChange={(e) => setExportFormat(e.target.value)}
-            className="w-full rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] px-3 py-2 text-sm text-[var(--text-primary)] outline-none transition focus:border-blue-600 focus:shadow-[0_0_0_3px_rgba(37,99,235,0.2)] sm:w-auto"
-            aria-label="Export format"
-          >
-            <option value="csv">CSV</option>
-            <option value="xlsx">XLSX</option>
-          </select>
-          <button
-            onClick={handleExport}
+          <NeonSweepButton
+            tone="cyan"
+            size="md"
+            onClick={() => handleExport('csv')}
             disabled={isExporting}
-            className="inline-flex items-center justify-center gap-2 rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] px-4 py-2 font-semibold text-[var(--text-primary)] transition-all hover:bg-[var(--bg-tertiary)] disabled:cursor-not-allowed disabled:opacity-70"
+            className="w-full sm:w-auto"
           >
             <FileSpreadsheet size={18} />
-            {isExporting ? 'Exporting...' : `Export ${exportFormat.toUpperCase()}`}
-          </button>
-          <button
+            {isExporting ? 'Exporting...' : 'Export CSV'}
+          </NeonSweepButton>
+          <NeonSweepButton
+            tone="slate"
+            size="md"
+            onClick={() => handleExport('xlsx')}
+            disabled={isExporting}
+            className="w-full sm:w-auto"
+          >
+            <FileSpreadsheet size={18} />
+            {isExporting ? 'Exporting...' : 'Export XLSX'}
+          </NeonSweepButton>
+          <NeonSweepButton
+            tone="violet"
+            size="md"
             onClick={() => handleOpenModal(null)}
-            className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#2563eb] px-4 py-2 font-semibold text-white transition-all hover:bg-[#1d4ed8] hover:-translate-y-px"
+            className="w-full sm:w-auto"
           >
             <Plus size={20} />
             Add Unit
-          </button>
+          </NeonSweepButton>
         </div>
       </div>
 

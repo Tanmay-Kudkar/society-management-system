@@ -13,6 +13,7 @@ export default function AnimatedModal({
   lockScroll = true,
   trapFocus = true,
   restoreFocus = true,
+  theme = 'inherit',
   backdropClassName,
   wrapperClassName,
   className,
@@ -130,6 +131,20 @@ export default function AnimatedModal({
 
   const effectiveDuration = reducedMotionRef.current ? 0 : durationMs
 
+  const panelThemeVariables =
+    theme === 'dark'
+      ? {
+          '--bg-card': '#0a0a0a',
+          '--bg-tertiary': '#121212',
+          '--text-primary': '#ffffff',
+          '--text-secondary': '#d1d5db',
+          '--text-tertiary': '#94a3b8',
+          '--border-light': '#252525',
+          '--border-default': '#2c2c2c',
+          '--placeholder-color': '#6b7280',
+        }
+      : undefined
+
   return (
     <div
       className={clsx(
@@ -142,22 +157,29 @@ export default function AnimatedModal({
       role="presentation"
     >
       <div
-        ref={modalRef}
-        tabIndex={-1}
         className={clsx(
-          'mx-auto grid w-full place-items-center transition-all ease-out',
+          'mx-auto flex w-full items-center justify-center transition-all ease-out',
           isVisible ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-2 scale-[0.985]',
-          wrapperClassName,
-          className
+          wrapperClassName
         )}
         style={{ transitionDuration: `${effectiveDuration}ms` }}
-        onClick={(event) => event.stopPropagation()}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby={labelledBy}
-        aria-describedby={describedBy}
       >
-        {children}
+        <div
+          ref={modalRef}
+          tabIndex={-1}
+          className={clsx('w-full', className)}
+          style={{
+            transitionDuration: `${effectiveDuration}ms`,
+            ...panelThemeVariables,
+          }}
+          onClick={(event) => event.stopPropagation()}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby={labelledBy}
+          aria-describedby={describedBy}
+        >
+          {children}
+        </div>
       </div>
     </div>
   )

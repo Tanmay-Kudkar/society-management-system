@@ -17,6 +17,12 @@ import {
 } from "lucide-react";
 import { formatCurrency } from "../utils/dashboardUtils";
 import { formatDate, formatDateTime } from "../../../../utils/formatUtils";
+import {
+  isActiveTicketStatus,
+  isOpenTicketStatus,
+  isResolvedTicketStatus,
+  isWorkflowTicketStatus,
+} from "../../../../utils/ticketStatusGroups";
 
 export default function useDashboardStats(input) {
   const {
@@ -62,8 +68,8 @@ export default function useDashboardStats(input) {
 
   const buildScopedRoute = (path) => `${path}${scopedSuffix}`;
 
-  const openTickets = allTickets.filter((ticket) => ticket.status === "OPEN" || ticket.status === "IN_PROGRESS");
-  const pendingTickets = allTickets.filter((ticket) => ticket.status === "OPEN");
+  const openTickets = allTickets.filter((ticket) => isActiveTicketStatus(ticket.status));
+  const pendingTickets = allTickets.filter((ticket) => isActiveTicketStatus(ticket.status));
   const pendingComplaints = complaints.filter((complaint) => complaint.status === "PENDING" || complaint.status === "IN_PROGRESS");
 
   const expiringContracts = contracts.filter((contract) => {
@@ -145,10 +151,10 @@ export default function useDashboardStats(input) {
 
   const priorityTicketBreakdown = useMemo(() => {
     const rows = [
-      { label: "Urgent", count: allTickets.filter((t) => t.priority === "URGENT" && (t.status === "OPEN" || t.status === "IN_PROGRESS")).length, tone: "rose" },
-      { label: "High", count: allTickets.filter((t) => t.priority === "HIGH" && (t.status === "OPEN" || t.status === "IN_PROGRESS")).length, tone: "amber" },
-      { label: "Medium", count: allTickets.filter((t) => t.priority === "MEDIUM" && (t.status === "OPEN" || t.status === "IN_PROGRESS")).length, tone: "blue" },
-      { label: "Low", count: allTickets.filter((t) => t.priority === "LOW" && (t.status === "OPEN" || t.status === "IN_PROGRESS")).length, tone: "emerald" },
+      { label: "Urgent", count: allTickets.filter((t) => t.priority === "URGENT" && isActiveTicketStatus(t.status)).length, tone: "rose" },
+      { label: "High", count: allTickets.filter((t) => t.priority === "HIGH" && isActiveTicketStatus(t.status)).length, tone: "amber" },
+      { label: "Medium", count: allTickets.filter((t) => t.priority === "MEDIUM" && isActiveTicketStatus(t.status)).length, tone: "blue" },
+      { label: "Low", count: allTickets.filter((t) => t.priority === "LOW" && isActiveTicketStatus(t.status)).length, tone: "emerald" },
     ];
     const total = rows.reduce((sum, row) => sum + row.count, 0);
     return rows
@@ -165,7 +171,7 @@ export default function useDashboardStats(input) {
   const ticketsBySociety = useMemo(() => {
     const map = {};
     allTickets
-      .filter((ticket) => ticket.status === "OPEN" || ticket.status === "IN_PROGRESS")
+      .filter((ticket) => isActiveTicketStatus(ticket.status))
       .forEach((ticket) => {
         const name = ticket.societyName || "Unknown";
         if (!map[name]) map[name] = { name, count: 0, urgent: 0 };
@@ -213,17 +219,17 @@ export default function useDashboardStats(input) {
     const rows = [
       {
         label: "Open",
-        count: allTickets.filter((item) => item.status === "OPEN").length + complaints.filter((item) => item.status === "PENDING").length,
+        count: allTickets.filter((item) => isOpenTicketStatus(item.status)).length + complaints.filter((item) => item.status === "PENDING").length,
         tone: "amber",
       },
       {
         label: "In Progress",
-        count: allTickets.filter((item) => item.status === "IN_PROGRESS").length + complaints.filter((item) => item.status === "IN_PROGRESS").length,
+        count: allTickets.filter((item) => isWorkflowTicketStatus(item.status)).length + complaints.filter((item) => item.status === "IN_PROGRESS").length,
         tone: "blue",
       },
       {
         label: "Resolved",
-        count: allTickets.filter((item) => item.status === "CLOSED" || item.status === "RESOLVED").length + complaints.filter((item) => item.status === "CLOSED" || item.status === "RESOLVED").length,
+        count: allTickets.filter((item) => isResolvedTicketStatus(item.status)).length + complaints.filter((item) => item.status === "CLOSED" || item.status === "RESOLVED").length,
         tone: "emerald",
       },
     ];
@@ -262,7 +268,7 @@ export default function useDashboardStats(input) {
     const myComplaints = complaints.filter((complaint) => complaint.raisedById === user?.id);
     return {
       myTicketsCount: myTickets.length,
-      myOpenTicketsCount: myTickets.filter((ticket) => ticket.status === "OPEN").length,
+      myOpenTicketsCount: myTickets.filter((ticket) => isActiveTicketStatus(ticket.status)).length,
       myComplaintsCount: myComplaints.length,
       myPendingComplaintsCount: myComplaints.filter((complaint) => complaint.status === "PENDING").length,
     };

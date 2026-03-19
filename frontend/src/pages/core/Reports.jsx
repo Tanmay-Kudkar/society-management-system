@@ -75,7 +75,6 @@ export default function Reports() {
   const [customStartDate, setCustomStartDate] = useState('')
   const [customEndDate, setCustomEndDate] = useState('')
   const [isExporting, setIsExporting] = useState(false)
-  const [exportFormat, setExportFormat] = useState('csv')
 
   const isPlatformLevel = user?.role === 'MASTER_ADMIN'
 
@@ -134,7 +133,7 @@ export default function Reports() {
     return <PermissionDenied message="You don't have permission to view financial reports" />
   }
 
-  const handleExport = async () => {
+  const handleExport = async (format) => {
     if (!societyId) return
     setIsExporting(true)
     try {
@@ -143,9 +142,9 @@ export default function Reports() {
         reportType, 
         customStartDate || null, 
         customEndDate || null,
-        exportFormat
+        format
       )
-      const filename = `${reportType.toLowerCase()}_financial_report_${new Date().toISOString().split('T')[0]}.${exportFormat}`
+      const filename = `${reportType.toLowerCase()}_financial_report_${new Date().toISOString().split('T')[0]}.${format}`
       downloadBlob(response.data, filename)
     } catch (error) {
       console.error('Export failed:', error)
@@ -172,24 +171,25 @@ export default function Reports() {
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-3">
-          <select
-            value={exportFormat}
-            onChange={(e) => setExportFormat(e.target.value)}
-            className="w-full rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] px-3 py-2 text-sm text-[var(--text-primary)] outline-none transition focus:border-blue-600 focus:shadow-[0_0_0_3px_rgba(37,99,235,0.2)] md:w-auto"
-            aria-label="Export format"
-          >
-            <option value="csv">CSV</option>
-            <option value="xlsx">XLSX</option>
-          </select>
           <NeonSweepButton
             tone="cyan"
             size="md"
-            onClick={handleExport}
+            onClick={() => handleExport('csv')}
             disabled={!societyId || isExporting}
             className="w-full md:w-auto"
           >
             <FileSpreadsheet size={20} />
-            {isExporting ? 'Exporting...' : `Export to ${exportFormat.toUpperCase()}`}
+            {isExporting ? 'Exporting...' : 'Export CSV'}
+          </NeonSweepButton>
+          <NeonSweepButton
+            tone="slate"
+            size="md"
+            onClick={() => handleExport('xlsx')}
+            disabled={!societyId || isExporting}
+            className="w-full md:w-auto"
+          >
+            <FileSpreadsheet size={20} />
+            {isExporting ? 'Exporting...' : 'Export XLSX'}
           </NeonSweepButton>
         </div>
       </div>

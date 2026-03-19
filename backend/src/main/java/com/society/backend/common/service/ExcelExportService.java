@@ -65,5 +65,15 @@ public interface ExcelExportService {
      * Export financial report to CSV
      */
     ByteArrayOutputStream exportFinancialReportCsv(Long societyId, String reportType, String startDate, String endDate);
+
+    /**
+     * Export online payments to Excel
+     */
+    ByteArrayOutputStream exportPayments(Long societyId, Long userId);
+
+    /**
+     * Export online payments to CSV
+     */
+    ByteArrayOutputStream exportPaymentsCsv(Long societyId, Long userId);
 }
 

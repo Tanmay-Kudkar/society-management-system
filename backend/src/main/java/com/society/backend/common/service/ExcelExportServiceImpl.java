@@ -4,6 +4,7 @@ import com.society.backend.flat.repository.FlatRepository;
 import com.society.backend.finance.dto.response.FinancialReportResponse;
 import com.society.backend.finance.service.ReportService;
 import com.society.backend.finance.repository.MaintenanceBillRepository;
+import com.society.backend.finance.repository.PaymentRepository;
 import com.society.backend.ticket.repository.TicketRepository;
 import com.society.backend.finance.repository.TransactionRepository;
 import com.society.backend.vendor.repository.VendorBillRepository;
@@ -35,6 +36,7 @@ import com.society.backend.vendor.entity.VendorBill;
 public class ExcelExportServiceImpl implements ExcelExportService {
 
     private final TransactionRepository transactionRepository;
+    private final PaymentRepository paymentRepository;
     private final MaintenanceBillRepository maintenanceBillRepository;
     private final VendorBillRepository vendorBillRepository;
     private final TicketRepository ticketRepository;
@@ -1223,7 +1225,7 @@ public class ExcelExportServiceImpl implements ExcelExportService {
 
         StringBuilder csv = new StringBuilder();
         String title = "Maintenance Bills Report" + (month != null ? " - " + month : "");
-        csv.append(csvRow(title, null, null, null, null, null, null, null, null));
+        csv.append(csvFormatRow(title));
         csv.append(csvFormatRow("ID", "Flat", "Society", "Month", "Amount", "Paid Amount", "Due Date", "Status", "Payment Mode"));
 
         BigDecimal totalAmount = BigDecimal.ZERO;
@@ -1349,6 +1351,131 @@ public class ExcelExportServiceImpl implements ExcelExportService {
             return out;
         } catch (IOException e) {
             throw new RuntimeException("Failed to generate CSV", e);
+        }
+    }
+
+    @Override
+    public ByteArrayOutputStream exportPayments(Long societyId, Long userId) {
+        List<Payment> payments;
+        if (societyId != null) {
+            payments = paymentRepository.findBySocietyIdAndDeletedAtIsNullOrderByCreatedAtDesc(societyId);
+        } else if (userId != null) {
+            payments = paymentRepository.findByUserIdAndDeletedAtIsNullOrderByCreatedAtDesc(userId);
+        } else {
+            payments = List.of();
+        }
+
+        try (Workbook workbook = new XSSFWorkbook()) {
+            Sheet sheet = workbook.createSheet("Payments");
+            CellStyle headerStyle = createHeaderStyle(workbook);
+            CellStyle currencyStyle = createCurrencyStyle(workbook);
+
+            Row titleRow = sheet.createRow(0);
+            Cell titleCell = titleRow.createCell(0);
+            titleCell.setCellValue("Online Payments Report");
+            CellStyle titleStyle = workbook.createCellStyle();
+            Font titleFont = workbook.createFont();
+            titleFont.setBold(true);
+            titleFont.setFontHeightInPoints((short) 14);
+            titleStyle.setFont(titleFont);
+            titleCell.setCellStyle(titleStyle);
+            sheet.addMergedRegion(new CellRangeAddress(0, 0, 0, 16));
+
+            Row headerRow = sheet.createRow(2);
+            String[] headers = {
+                    "ID", "Payment ID", "Order ID", "User", "Society", "Amount", "Currency", "Status", "Method",
+                    "Payment Type", "Receipt", "Refund Status", "Refund Amount", "Settlement", "UTR", "Created At", "Paid At"
+            };
+            for (int i = 0; i < headers.length; i++) {
+                Cell cell = headerRow.createCell(i);
+                cell.setCellValue(headers[i]);
+                cell.setCellStyle(headerStyle);
+            }
+
+            int rowNum = 3;
+            for (Payment p : payments) {
+                Row row = sheet.createRow(rowNum++);
+                row.createCell(0).setCellValue(p.getId() != null ? p.getId() : 0L);
+                row.createCell(1).setCellValue(p.getRazorpayPaymentId() != null ? p.getRazorpayPaymentId() : "");
+                row.createCell(2).setCellValue(p.getRazorpayOrderId() != null ? p.getRazorpayOrderId() : "");
+                row.createCell(3).setCellValue(p.getUser() != null && p.getUser().getName() != null ? p.getUser().getName() : "");
+                row.createCell(4).setCellValue(p.getSociety() != null && p.getSociety().getName() != null ? p.getSociety().getName() : "");
+
+                Cell amountCell = row.createCell(5);
+                amountCell.setCellValue(p.getAmount() != null ? p.getAmount().doubleValue() : 0d);
+                amountCell.setCellStyle(currencyStyle);
+
+                row.createCell(6).setCellValue(p.getCurrency() != null ? p.getCurrency() : "");
+                row.createCell(7).setCellValue(p.getStatus() != null ? p.getStatus() : "");
+                row.createCell(8).setCellValue(p.getPaymentMethod() != null ? p.getPaymentMethod() : "");
+                row.createCell(9).setCellValue(p.getPaymentType() != null ? p.getPaymentType() : "");
+                row.createCell(10).setCellValue(p.getReceiptNumber() != null ? p.getReceiptNumber() : "");
+                row.createCell(11).setCellValue(p.getRefundStatus() != null ? p.getRefundStatus() : "NONE");
+
+                Cell refundAmountCell = row.createCell(12);
+                refundAmountCell.setCellValue(p.getRefundAmount() != null ? p.getRefundAmount().doubleValue() : 0d);
+                refundAmountCell.setCellStyle(currencyStyle);
+
+                row.createCell(13).setCellValue(p.getSettlementStatus() != null ? p.getSettlementStatus() : "NONE");
+                row.createCell(14).setCellValue(p.getSettlementUtr() != null ? p.getSettlementUtr() : "");
+                row.createCell(15).setCellValue(p.getCreatedAt() != null ? p.getCreatedAt().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME) : "");
+                row.createCell(16).setCellValue(p.getPaidAt() != null ? p.getPaidAt().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME) : "");
+            }
+
+            autoSizeColumnsWithMinWidth(sheet, 17, 12);
+
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            workbook.write(out);
+            return out;
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to export payments", e);
+        }
+    }
+
+    @Override
+    public ByteArrayOutputStream exportPaymentsCsv(Long societyId, Long userId) {
+        List<Payment> payments;
+        if (societyId != null) {
+            payments = paymentRepository.findBySocietyIdAndDeletedAtIsNullOrderByCreatedAtDesc(societyId);
+        } else if (userId != null) {
+            payments = paymentRepository.findByUserIdAndDeletedAtIsNullOrderByCreatedAtDesc(userId);
+        } else {
+            payments = List.of();
+        }
+
+        StringBuilder csv = new StringBuilder();
+        csv.append(csvFormatRow("Online Payments Report"));
+        csv.append(csvFormatRow("ID", "Payment ID", "Order ID", "User", "Society", "Amount", "Currency", "Status", "Method",
+                "Payment Type", "Receipt", "Refund Status", "Refund Amount", "Settlement", "UTR", "Created At", "Paid At"));
+
+        for (Payment p : payments) {
+            csv.append(csvFormatRow(
+                    p.getId(),
+                    p.getRazorpayPaymentId(),
+                    p.getRazorpayOrderId(),
+                    p.getUser() != null ? p.getUser().getName() : "",
+                    p.getSociety() != null ? p.getSociety().getName() : "",
+                    p.getAmount() != null ? p.getAmount() : BigDecimal.ZERO,
+                    p.getCurrency(),
+                    p.getStatus(),
+                    p.getPaymentMethod(),
+                    p.getPaymentType(),
+                    p.getReceiptNumber(),
+                    p.getRefundStatus() != null ? p.getRefundStatus() : "NONE",
+                    p.getRefundAmount() != null ? p.getRefundAmount() : BigDecimal.ZERO,
+                    p.getSettlementStatus() != null ? p.getSettlementStatus() : "NONE",
+                    p.getSettlementUtr(),
+                    p.getCreatedAt() != null ? p.getCreatedAt().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME) : "",
+                    p.getPaidAt() != null ? p.getPaidAt().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME) : ""
+            ));
+        }
+
+        try {
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            out.write(csv.toString().getBytes(StandardCharsets.UTF_8));
+            return out;
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to export payments as CSV", e);
         }
     }
 

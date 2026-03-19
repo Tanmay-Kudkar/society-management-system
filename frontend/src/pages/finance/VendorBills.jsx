@@ -34,7 +34,6 @@ export default function VendorBills() {
   const [editingBill, setEditingBill] = useState(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [filterStatus, setFilterStatus] = useState('')
-  const [exportFormat, setExportFormat] = useState('csv')
   const [isExporting, setIsExporting] = useState(false)
 
   const societyIdFromUrl = searchParams.get('society')
@@ -126,7 +125,7 @@ export default function VendorBills() {
     })
   }
 
-  const handleExport = async () => {
+  const handleExport = async (format) => {
     if (!effectiveSocietyId) {
       toast.error('Society context is required for export')
       return
@@ -134,9 +133,9 @@ export default function VendorBills() {
 
     setIsExporting(true)
     try {
-      const response = await exportApi.vendorBills(effectiveSocietyId, null, null, exportFormat)
+      const response = await exportApi.vendorBills(effectiveSocietyId, null, null, format)
       const datePart = new Date().toISOString().split('T')[0]
-      downloadBlob(response.data, `vendor_bills_${datePart}.${exportFormat}`)
+      downloadBlob(response.data, `vendor_bills_${datePart}.${format}`)
       toast.success('Vendor bills exported successfully')
     } catch (error) {
       toast.error(error?.response?.data?.message || 'Failed to export vendor bills')
@@ -166,24 +165,25 @@ export default function VendorBills() {
           </div>
         </div>
         <div className="flex flex-wrap gap-3">
-          <select
-            value={exportFormat}
-            onChange={(e) => setExportFormat(e.target.value)}
-            className="w-full rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] px-3 py-2 text-sm text-[var(--text-primary)] outline-none transition focus:border-blue-600 focus:shadow-[0_0_0_3px_rgba(37,99,235,0.2)] sm:w-auto"
-            aria-label="Export format"
-          >
-            <option value="csv">CSV</option>
-            <option value="xlsx">XLSX</option>
-          </select>
           <NeonSweepButton
             tone="cyan"
             size="md"
-            onClick={handleExport}
+            onClick={() => handleExport('csv')}
             disabled={isExporting}
             className="w-full sm:w-auto"
           >
             <FileSpreadsheet size={20} />
-            {isExporting ? 'Exporting...' : `Export ${exportFormat.toUpperCase()}`}
+            {isExporting ? 'Exporting...' : 'Export CSV'}
+          </NeonSweepButton>
+          <NeonSweepButton
+            tone="slate"
+            size="md"
+            onClick={() => handleExport('xlsx')}
+            disabled={isExporting}
+            className="w-full sm:w-auto"
+          >
+            <FileSpreadsheet size={20} />
+            {isExporting ? 'Exporting...' : 'Export XLSX'}
           </NeonSweepButton>
           {canManageVendorBills() && (
             <NeonSweepButton

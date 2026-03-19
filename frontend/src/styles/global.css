@@ -651,7 +651,7 @@ table th {
 }
 
 .animate-ticker {
-  animation: ticker 30s linear infinite;
+  animation: ticker var(--ticker-duration, 72s) linear infinite;
 }
 
 .animate-ticker:hover {
