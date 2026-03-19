@@ -33,6 +33,9 @@ public class Notice {
     @Column
     private String priority = "MEDIUM"; // LOW, MEDIUM, HIGH, URGENT
 
+    @Column(name = "notice_type")
+    private String noticeType = "GENERAL"; // GENERAL, CIRCULAR, MEETING
+
     @Column(name = "expiry_date")
     private LocalDate expiryDate;
 

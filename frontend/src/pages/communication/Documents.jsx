@@ -6,10 +6,12 @@ import { useToast } from '../../context'
 import { documentTemplateApi } from '../../../../api'
 import { Plus, Search, X, FileText, Edit, Trash2 } from 'lucide-react'
 import clsx from 'clsx'
-import { InfoTooltip, NeonSweepButton } from '../../components'
+import { InfoTooltip, NeonSweepButton, AnimatedModal, DEFAULT_ANIMATED_MODAL_DURATION_MS } from '../../components'
 import { HeroSkeleton, DocumentsSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
 import useMinLoadingTime from '../../hooks/useMinLoadingTime'
 import { formatDate } from '../../utils/formatUtils'
+
+const MODAL_ANIMATION_MS = DEFAULT_ANIMATED_MODAL_DURATION_MS
 
 const templateTypeClasses = {
   NOC: 'inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-xs font-semibold text-blue-700',
@@ -76,7 +78,7 @@ export default function Documents() {
 
   const closeModal = () => {
     setShowModal(false)
-    setEditingDocument(null)
+    setTimeout(() => setEditingDocument(null), MODAL_ANIMATION_MS)
   }
 
   const confirmAndDeleteDocument = async (doc) => {
@@ -243,9 +245,8 @@ export default function Documents() {
       </div>
 
       {/* Modal */}
-      {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="max-h-[calc(100vh-3rem)] w-full max-w-3xl overflow-y-auto rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] shadow-[0_8px_24px_rgba(0,0,0,0.12)]">
+      <AnimatedModal open={showModal} onRequestClose={closeModal} closeOnBackdrop>
+        <div className="max-h-[calc(100vh-3rem)] w-full max-w-3xl overflow-y-auto rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] shadow-[0_8px_24px_rgba(0,0,0,0.12)]">
             <div className="sticky top-0 z-[2] flex items-center justify-between border-b border-[var(--border-light)] bg-[var(--bg-card)] p-4">
               <h3 className="text-lg font-bold text-[var(--text-primary)]">{editingDocument ? 'Edit Template' : 'Add Document Template'}</h3>
               <button onClick={closeModal} className="rounded-lg p-1 text-[var(--text-tertiary)] transition hover:bg-[var(--bg-tertiary)]">
@@ -308,9 +309,8 @@ export default function Documents() {
                 </NeonSweepButton>
               </div>
             </form>
-          </div>
         </div>
-      )}
+      </AnimatedModal>
     </div>
   )
 }

@@ -5,11 +5,13 @@ import { useAuth } from '../../context'
 import { approvalApi } from '../../../../api'
 import { Plus, Search, X, Clock, CheckCircle, XCircle, AlertTriangle, ArrowRight, RotateCcw, ChevronUp, GitBranch } from 'lucide-react'
 import clsx from 'clsx'
-import { FormInput, SmartSelect, FormTextarea, NumberInput, AsyncButton, InfoTooltip, NeonSweepButton } from '../../components'
+import { FormInput, SmartSelect, FormTextarea, NumberInput, AsyncButton, InfoTooltip, NeonSweepButton, AnimatedModal, DEFAULT_ANIMATED_MODAL_DURATION_MS } from '../../components'
 import { PermissionDenied } from '../../components'
 import { HeroSkeleton, SummaryRowSkeleton, FiltersSkeleton, ListSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
 import useMinLoadingTime from '../../hooks/useMinLoadingTime'
 import { formatDate, formatDateTime } from '../../utils/formatUtils'
+
+const MODAL_ANIMATION_MS = DEFAULT_ANIMATED_MODAL_DURATION_MS
 
 const statusColors = {
   PENDING: 'bg-amber-100 text-amber-800 dark:bg-amber-500/20 dark:text-amber-300',
@@ -45,6 +47,22 @@ const APPROVER_ROLES = [
   { value: 'MANAGER', label: 'Manager' },
 ]
 
+const ENTITY_TYPE_LABELS = {
+  EXPENSE: 'Expense Approval',
+  RATE_CHANGE: 'Rate Change Approval',
+  VENDOR: 'Vendor Approval',
+  VENDOR_BILL: 'Vendor Bill Approval',
+  MAINTENANCE: 'Maintenance Approval',
+  CUSTOM: 'Custom Approval',
+  TICKET_CREATE: 'Ticket Creation Approval',
+  TICKET_CLOSE: 'Ticket Closure Approval',
+}
+
+const getEntityTypeLabel = (entityType) => {
+  if (!entityType) return 'Unknown Approval'
+  return ENTITY_TYPE_LABELS[entityType] || entityType.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, c => c.toUpperCase())
+}
+
 export default function Approvals() {
   const { user } = useAuth()
   const queryClient = useQueryClient()
@@ -57,7 +75,8 @@ export default function Approvals() {
   const [activeTab, setActiveTab] = useState('requests') // 'requests' | 'workflows'
   const [showRequestModal, setShowRequestModal] = useState(false)
   const [showWorkflowModal, setShowWorkflowModal] = useState(false)
-  const [showActionModal, setShowActionModal] = useState(null) // approval request id
+  const [showActionModal, setShowActionModal] = useState(false)
+  const [actionModalRequestId, setActionModalRequestId] = useState(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [filterStatus, setFilterStatus] = useState('')
   const [workflowSteps, setWorkflowSteps] = useState([{ stepOrder: 1, approverRole: 'CHAIRMAN', isMandatory: true, autoApproveBelow: '' }])
@@ -92,7 +111,7 @@ export default function Approvals() {
 
   const actionMutation = useMutation({
     mutationFn: ({ requestId, data }) => approvalApi.takeAction(requestId, user.id, data),
-    onSuccess: () => { queryClient.invalidateQueries(['approval-requests']); setShowActionModal(null) },
+    onSuccess: () => { queryClient.invalidateQueries(['approval-requests']); closeActionModal() },
   })
 
   const cancelMutation = useMutation({
@@ -164,9 +183,19 @@ export default function Approvals() {
     e.preventDefault()
     const fd = new FormData(e.target)
     actionMutation.mutate({
-      requestId: showActionModal,
+      requestId: actionModalRequestId,
       data: { action: fd.get('action'), comments: fd.get('comments') },
     })
+  }
+
+  const openActionModal = (requestId) => {
+    setActionModalRequestId(requestId)
+    setShowActionModal(true)
+  }
+
+  const closeActionModal = () => {
+    setShowActionModal(false)
+    setTimeout(() => setActionModalRequestId(null), MODAL_ANIMATION_MS)
   }
 
   const addStep = () => {
@@ -206,7 +235,7 @@ export default function Approvals() {
     rejected: requests.filter(r => r.status === 'REJECTED').length,
   }
 
-  const selectedRequest = showActionModal ? requests.find(r => r.id === showActionModal) : null
+  const selectedRequest = actionModalRequestId ? requests.find(r => r.id === actionModalRequestId) : null
 
   return (
     <div>
@@ -348,7 +377,12 @@ export default function Approvals() {
                       <StatusIcon size={12} /> {req.status?.replace('_', ' ')}
                     </span>
                   </div>
-                  <span className="rounded-full bg-[var(--bg-tertiary)] px-2.5 py-0.5 text-xs font-semibold uppercase tracking-[0.5px] text-[var(--text-secondary)]">{req.entityType}</span>
+                  <div className="flex flex-col items-end gap-1">
+                    <span className="rounded-full bg-[var(--bg-tertiary)] px-2.5 py-0.5 text-xs font-semibold text-[var(--text-secondary)]">{getEntityTypeLabel(req.entityType)}</span>
+                    {(req.entityType === 'TICKET_CREATE' || req.entityType === 'TICKET_CLOSE') && (
+                      <span className="rounded-full bg-violet-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.4px] text-violet-800">{req.entityType}</span>
+                    )}
+                  </div>
                 </div>
                 <div className="mb-3">
                   {req.description && <p className="mb-2.5 text-sm leading-relaxed text-[var(--text-secondary)]">{req.description}</p>}
@@ -366,7 +400,7 @@ export default function Approvals() {
                 </div>
                 <div className="flex gap-2 border-t border-[var(--border-light)] pt-3">
                   {canManage && ['PENDING', 'IN_REVIEW'].includes(req.status) && (
-                    <AsyncButton variant="primary" size="sm" onClick={() => setShowActionModal(req.id)}>
+                    <AsyncButton variant="primary" size="sm" onClick={() => openActionModal(req.id)}>
                       Take Action
                     </AsyncButton>
                   )}
@@ -434,7 +468,12 @@ export default function Approvals() {
                     {wf.isActive ? 'Active' : 'Inactive'}
                   </span>
                 </div>
-                <span className="rounded-full bg-[var(--bg-tertiary)] px-2.5 py-0.5 text-xs font-semibold uppercase tracking-[0.5px] text-[var(--text-secondary)]">{wf.entityType}</span>
+                <div className="flex flex-col items-end gap-1">
+                  <span className="rounded-full bg-[var(--bg-tertiary)] px-2.5 py-0.5 text-xs font-semibold text-[var(--text-secondary)]">{getEntityTypeLabel(wf.entityType)}</span>
+                  {(wf.entityType === 'TICKET_CREATE' || wf.entityType === 'TICKET_CLOSE') && (
+                    <span className="rounded-full bg-violet-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.4px] text-violet-800">{wf.entityType}</span>
+                  )}
+                </div>
               </div>
               <div className="mb-3">
                 {wf.description && <p className="mb-2.5 text-sm leading-relaxed text-[var(--text-secondary)]">{wf.description}</p>}
@@ -472,9 +511,8 @@ export default function Approvals() {
       )}
 
       {/* === CREATE REQUEST MODAL === */}
-      {showRequestModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4" onClick={() => setShowRequestModal(false)}>
-          <div className="w-full max-w-[40rem] rounded-2xl border border-[var(--border-light)] bg-[var(--bg-card)] shadow-[0_24px_48px_rgba(15,23,42,0.2)]" onClick={e => e.stopPropagation()}>
+      <AnimatedModal open={showRequestModal} onRequestClose={() => setShowRequestModal(false)} closeOnBackdrop>
+        <div className="w-full max-w-[40rem] rounded-2xl border border-[var(--border-light)] bg-[var(--bg-card)] shadow-[0_24px_48px_rgba(15,23,42,0.2)]">
             <div className="flex items-center justify-between border-b border-[var(--border-light)] px-5 py-4">
               <h2 className="text-lg font-semibold text-[var(--text-primary)]">New Approval Request</h2>
               <button onClick={() => setShowRequestModal(false)} className="rounded-[0.65rem] p-1 text-[var(--text-tertiary)] transition-colors hover:bg-slate-400/20 hover:text-[var(--text-primary)]"><X size={20} /></button>
@@ -500,14 +538,12 @@ export default function Approvals() {
                 </NeonSweepButton>
               </div>
             </form>
-          </div>
         </div>
-      )}
+      </AnimatedModal>
 
       {/* === CREATE WORKFLOW MODAL === */}
-      {showWorkflowModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4" onClick={() => setShowWorkflowModal(false)}>
-          <div className="w-full max-w-[40rem] rounded-2xl border border-[var(--border-light)] bg-[var(--bg-card)] shadow-[0_24px_48px_rgba(15,23,42,0.2)]" onClick={e => e.stopPropagation()}>
+      <AnimatedModal open={showWorkflowModal} onRequestClose={() => setShowWorkflowModal(false)} closeOnBackdrop>
+        <div className="w-full max-w-[40rem] rounded-2xl border border-[var(--border-light)] bg-[var(--bg-card)] shadow-[0_24px_48px_rgba(15,23,42,0.2)]">
             <div className="flex items-center justify-between border-b border-[var(--border-light)] px-5 py-4">
               <h2 className="text-lg font-semibold text-[var(--text-primary)]">New Approval Workflow</h2>
               <button onClick={() => setShowWorkflowModal(false)} className="rounded-[0.65rem] p-1 text-[var(--text-tertiary)] transition-colors hover:bg-slate-400/20 hover:text-[var(--text-primary)]"><X size={20} /></button>
@@ -576,17 +612,16 @@ export default function Approvals() {
                 </NeonSweepButton>
               </div>
             </form>
-          </div>
         </div>
-      )}
+      </AnimatedModal>
 
       {/* === TAKE ACTION MODAL === */}
-      {showActionModal && selectedRequest && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4" onClick={() => setShowActionModal(null)}>
-          <div className="w-full max-w-[40rem] rounded-2xl border border-[var(--border-light)] bg-[var(--bg-card)] shadow-[0_24px_48px_rgba(15,23,42,0.2)]" onClick={e => e.stopPropagation()}>
+      <AnimatedModal open={showActionModal} onRequestClose={closeActionModal} closeOnBackdrop>
+        {selectedRequest && (
+          <div className="w-full max-w-[40rem] rounded-2xl border border-[var(--border-light)] bg-[var(--bg-card)] shadow-[0_24px_48px_rgba(15,23,42,0.2)]">
             <div className="flex items-center justify-between border-b border-[var(--border-light)] px-5 py-4">
               <h2 className="text-lg font-semibold text-[var(--text-primary)]">Take Action</h2>
-              <button onClick={() => setShowActionModal(null)} className="rounded-[0.65rem] p-1 text-[var(--text-tertiary)] transition-colors hover:bg-slate-400/20 hover:text-[var(--text-primary)]"><X size={20} /></button>
+              <button onClick={closeActionModal} className="rounded-[0.65rem] p-1 text-[var(--text-tertiary)] transition-colors hover:bg-slate-400/20 hover:text-[var(--text-primary)]"><X size={20} /></button>
             </div>
             <div className="mx-5 mt-5 mb-4 rounded-xl bg-[var(--bg-tertiary)] p-3">
               <h3 className="mb-1 text-[15px] font-semibold text-[var(--text-primary)]">{selectedRequest.title}</h3>
@@ -607,7 +642,7 @@ export default function Approvals() {
                   tone="slate"
                   size="md"
                   className="flex-1"
-                  onClick={() => setShowActionModal(null)}
+                  onClick={closeActionModal}
                 >
                   Cancel
                 </NeonSweepButton>
@@ -617,8 +652,8 @@ export default function Approvals() {
               </div>
             </form>
           </div>
-        </div>
-      )}
+        )}
+      </AnimatedModal>
     </div>
   )
 }

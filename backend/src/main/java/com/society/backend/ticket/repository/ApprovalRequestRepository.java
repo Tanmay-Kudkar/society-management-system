@@ -14,4 +14,8 @@ public interface ApprovalRequestRepository extends JpaRepository<ApprovalRequest
     List<ApprovalRequest> findByRequestedById(Long userId);
     List<ApprovalRequest> findByEntityTypeAndEntityId(String entityType, Long entityId);
     List<ApprovalRequest> findBySocietyIdAndEntityTypeAndStatus(Long societyId, String entityType, String status);
+
+    long countByEntityTypeAndEntityId(String entityType, Long entityId);
+
+    void deleteByEntityTypeAndEntityId(String entityType, Long entityId);
 }

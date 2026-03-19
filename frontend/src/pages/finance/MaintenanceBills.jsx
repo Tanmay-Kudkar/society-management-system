@@ -2,14 +2,17 @@ import { useState, useMemo, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '../../context'
+import { useConfirmDialog } from '../../context'
 import { maintenanceBillApi } from '../../../../api'
 import { Search, X, CreditCard, CheckCircle, Clock, AlertCircle, Wallet, Printer, Pencil, Trash2, AlertTriangle, Info } from 'lucide-react'
 import clsx from 'clsx'
-import { PermissionDenied, InfoTooltip, NeonSweepButton } from '../../components'
+import { PermissionDenied, InfoTooltip, NeonSweepButton, AnimatedModal } from '../../components'
 import { HeroSkeleton, FinancePageSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
 import { useRazorpay } from '../../hooks/useRazorpay'
 import useMinLoadingTime from '../../hooks/useMinLoadingTime'
 import { useToast } from '../../context'
+
+const MODAL_ANIMATION_DURATION = 220
 
 const toNumber = (value, fallback = 0) => {
   const parsed = Number(value)
@@ -72,6 +75,7 @@ export default function MaintenanceBills() {
   const hasManagePermission = canManageMaintenanceBills()
   const queryClient = useQueryClient()
   const toast = useToast()
+  const confirmDialog = useConfirmDialog()
 
   const [searchParams] = useSearchParams()
   const [showEditModal, setShowEditModal] = useState(false)
@@ -92,13 +96,42 @@ export default function MaintenanceBills() {
   const [previewCount, setPreviewCount] = useState(null)
   const [isLoadingPreview, setIsLoadingPreview] = useState(false)
 
+  function closeEditModal() {
+    setShowEditModal(false)
+    window.setTimeout(() => {
+      setEditingBill(null)
+    }, MODAL_ANIMATION_DURATION)
+  }
+
+  function closeDeleteMonthModal() {
+    setShowDeleteMonthModal(false)
+    window.setTimeout(() => {
+      setDeleteMonth('')
+      setDeleteMonthConfirmText('')
+    }, MODAL_ANIMATION_DURATION)
+  }
+
+  function closeBulkModal() {
+    setShowBulkModal(false)
+    window.setTimeout(() => {
+      setBulkBillMonth('')
+      setPreviewCount(null)
+    }, MODAL_ANIMATION_DURATION)
+  }
+
+  function closePaymentModal() {
+    setShowPaymentModal(false)
+    window.setTimeout(() => {
+      setSelectedBill(null)
+    }, MODAL_ANIMATION_DURATION)
+  }
+
   // Razorpay integration
   const { initiatePayment, isLoading: isPaymentLoading } = useRazorpay({
     onSuccess: () => {
       toast.success('Payment successful! Bill has been updated.')
       queryClient.invalidateQueries(['maintenanceBills'])
-      setShowPaymentModal(false)
-      setSelectedBill(null)
+      closePaymentModal()
     },
     onError: (error) => {
       toast.error(error?.description || error?.message || 'Payment failed. Please try again.')
@@ -176,8 +209,7 @@ export default function MaintenanceBills() {
     mutationFn: ({ id, data }) => maintenanceBillApi.update(id, data, user.id),
     onSuccess: () => {
       queryClient.invalidateQueries(['maintenanceBills'])
-      setShowEditModal(false)
-      setEditingBill(null)
+      closeEditModal()
       toast.success('Maintenance bill updated successfully')
     },
     onError: (error) => {
@@ -212,9 +244,7 @@ export default function MaintenanceBills() {
     },
     onSuccess: (deletedCount) => {
       queryClient.invalidateQueries(['maintenanceBills'])
-      setShowDeleteMonthModal(false)
-      setDeleteMonth('')
-      setDeleteMonthConfirmText('')
+      closeDeleteMonthModal()
       toast.success(`Deleted ${deletedCount} bill${deletedCount === 1 ? '' : 's'} for selected month`)
     },
     onError: (error) => {
@@ -227,9 +257,7 @@ export default function MaintenanceBills() {
       maintenanceBillApi.generateForSociety(societyId, billMonth, amount, user.id),
     onSuccess: () => {
       queryClient.invalidateQueries(['maintenanceBills'])
-      setShowBulkModal(false)
-      setBulkBillMonth('')
-      setPreviewCount(null)
+      closeBulkModal()
       toast.success('Bills generated for eligible units')
     },
     onError: (error) => {
@@ -242,8 +270,7 @@ export default function MaintenanceBills() {
       maintenanceBillApi.recordPayment(id, amount, paymentMode, referenceNumber, user.id),
     onSuccess: () => {
       queryClient.invalidateQueries(['maintenanceBills'])
-      setShowPaymentModal(false)
-      setSelectedBill(null)
+      closePaymentModal()
       toast.success('Payment recorded successfully')
     },
     onError: (error) => {
@@ -291,16 +318,28 @@ export default function MaintenanceBills() {
     })
   }
 
-  const handleDeleteBill = (bill) => {
+  const handleDeleteBill = async (bill) => {
     const isRiskyDelete = bill.status === 'PAID' || bill.status === 'PARTIAL'
     const warning = isRiskyDelete
-      ? 'Warning: this bill is paid/partially paid. Deleting it can affect society finance totals and linked records.\n\nProceed only if bill was created by mistake.'
+      ? 'This bill is paid/partially paid. Deleting it can affect finance totals and linked records.'
       : 'This bill appears unpaid. It is usually safe to delete if it was created by mistake.'
 
-    const ok = window.confirm(
-      `${warning}\n\nDelete bill for Flat ${bill.flatNumber}, Month ${bill.billMonth}?`,
-    )
-    if (!ok) return
+    const confirmed = await confirmDialog({
+      title: 'Delete Maintenance Bill',
+      message: `Delete bill for Flat ${bill.flatNumber}, Month ${bill.billMonth}?`,
+      confirmText: 'Delete',
+      tone: 'danger',
+      details: [
+        { label: 'Flat', value: bill.flatNumber || '-' },
+        { label: 'Month', value: bill.billMonth || '-' },
+        { label: 'Status', value: bill.status || '-' },
+        { label: 'Amount', value: formatMoney(getBillTotal(bill)) },
+        { label: 'Paid', value: formatMoney(getBillPaid(bill)) },
+      ],
+      caution: warning,
+    })
+
+    if (!confirmed) return
 
     deleteMutation.mutate(bill.id)
   }
@@ -692,21 +731,24 @@ export default function MaintenanceBills() {
       )}
 
       {/* Edit Bill Modal */}
-      {showEditModal && editingBill && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="flex max-h-[calc(100vh-3rem)] w-full max-w-[28rem] flex-col rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] shadow-[0_8px_24px_rgba(0,0,0,0.12)]">
+      <AnimatedModal
+        open={showEditModal && !!editingBill}
+        onRequestClose={closeEditModal}
+        className="flex max-h-[calc(100vh-3rem)] w-full max-w-[28rem] flex-col rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] shadow-[0_8px_24px_rgba(0,0,0,0.12)]"
+        durationMs={MODAL_ANIMATION_DURATION}
+      >
             <div className="shrink-0 border-b border-[var(--border-light)] px-5 py-4">
               <div className="flex items-center justify-between">
                 <h3 className="text-[1.1rem] font-semibold text-[var(--text-primary)]">Edit Maintenance Bill</h3>
-                <button onClick={() => setShowEditModal(false)} className="rounded-md p-1 text-[var(--text-tertiary)] transition-colors hover:bg-[rgba(148,163,184,0.2)] hover:text-[var(--text-primary)]">
+                <button onClick={closeEditModal} className="rounded-md p-1 text-[var(--text-tertiary)] transition-colors hover:bg-[rgba(148,163,184,0.2)] hover:text-[var(--text-primary)]">
                   <X size={20} />
                 </button>
               </div>
             </div>
             <form onSubmit={handleEditSubmit} className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-5">
               <div className="rounded-xl bg-[var(--bg-tertiary)] p-3 text-[var(--text-secondary)]">
-                <p className="text-[0.85rem]">Flat: <span className="font-semibold text-[var(--text-primary)]">{editingBill.flatNumber}</span></p>
-                <p className="text-[0.85rem]">Current Status: <span className="font-semibold text-[var(--text-primary)]">{editingBill.status}</span></p>
+                <p className="text-[0.85rem]">Flat: <span className="font-semibold text-[var(--text-primary)]">{editingBill?.flatNumber || '-'}</span></p>
+                <p className="text-[0.85rem]">Current Status: <span className="font-semibold text-[var(--text-primary)]">{editingBill?.status || '-'}</span></p>
               </div>
               <div className="flex flex-col gap-[0.4rem]">
                 <label className="text-[0.85rem] font-semibold text-[var(--text-secondary)]">Bill Month</label>
@@ -740,7 +782,7 @@ export default function MaintenanceBills() {
                 />
               </div>
               <div className="flex gap-3 pt-2">
-                <NeonSweepButton type="button" tone="slate" size="md" className="flex-1" onClick={() => setShowEditModal(false)}>
+                <NeonSweepButton type="button" tone="slate" size="md" className="flex-1" onClick={closeEditModal}>
                   Cancel
                 </NeonSweepButton>
                 <NeonSweepButton type="submit" tone="cyan" size="md" className="flex-1" disabled={updateMutation.isPending}>
@@ -748,24 +790,19 @@ export default function MaintenanceBills() {
                 </NeonSweepButton>
               </div>
             </form>
-          </div>
-        </div>
-      )}
+      </AnimatedModal>
 
       {/* Delete Month Bills Modal */}
-      {showDeleteMonthModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="w-full max-w-[28rem] rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] shadow-[0_8px_24px_rgba(0,0,0,0.12)]">
+      <AnimatedModal
+        open={showDeleteMonthModal}
+        onRequestClose={closeDeleteMonthModal}
+        className="w-full max-w-[28rem] rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] shadow-[0_8px_24px_rgba(0,0,0,0.12)]"
+        durationMs={MODAL_ANIMATION_DURATION}
+      >
             <div className="border-b border-[var(--border-light)] px-5 py-4">
               <div className="flex items-center justify-between">
                 <h3 className="text-[1.1rem] font-semibold text-[var(--text-primary)]">Delete Bills By Month</h3>
-                <button
-                  onClick={() => {
-                    setShowDeleteMonthModal(false)
-                    setDeleteMonthConfirmText('')
-                  }}
-                  className="rounded-md p-1 text-[var(--text-tertiary)] transition-colors hover:bg-[rgba(148,163,184,0.2)] hover:text-[var(--text-primary)]"
-                >
+                <button onClick={closeDeleteMonthModal} className="rounded-md p-1 text-[var(--text-tertiary)] transition-colors hover:bg-[rgba(148,163,184,0.2)] hover:text-[var(--text-primary)]">
                   <X size={20} />
                 </button>
               </div>
@@ -803,10 +840,7 @@ export default function MaintenanceBills() {
                   type="button"
                   tone="slate"
                   size="md"
-                  onClick={() => {
-                    setShowDeleteMonthModal(false)
-                    setDeleteMonthConfirmText('')
-                  }}
+                  onClick={closeDeleteMonthModal}
                   className="w-full"
                 >
                   Cancel
@@ -822,21 +856,18 @@ export default function MaintenanceBills() {
                 </NeonSweepButton>
               </div>
             </form>
-          </div>
-        </div>
-      )}
+      </AnimatedModal>
 
       {/* Bulk Generate Modal */}
-      {showBulkModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
-          <div className="w-full max-w-[32rem] max-h-[calc(100vh-3rem)] flex flex-col rounded-xl bg-[var(--bg-card)] border border-[var(--border-light)] shadow-[0_8px_24px_rgba(0,0,0,0.12)]">
+      <AnimatedModal
+        open={showBulkModal}
+        onRequestClose={closeBulkModal}
+        className="w-full max-w-[32rem] max-h-[calc(100vh-3rem)] flex flex-col rounded-xl bg-[var(--bg-card)] border border-[var(--border-light)] shadow-[0_8px_24px_rgba(0,0,0,0.12)]"
+        durationMs={MODAL_ANIMATION_DURATION}
+      >
             <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--border-light)] shrink-0">
               <h3 className="text-[1.1rem] font-semibold text-[var(--text-primary)]">Bulk Generate Bills</h3>
-              <button onClick={() => {
-                setShowBulkModal(false)
-                setBulkBillMonth('')
-                setPreviewCount(null)
-              }} className="rounded-md p-1 text-[var(--text-tertiary)] transition-colors hover:bg-[rgba(148,163,184,0.2)] hover:text-[var(--text-primary)]">
+              <button onClick={closeBulkModal} className="rounded-md p-1 text-[var(--text-tertiary)] transition-colors hover:bg-[rgba(148,163,184,0.2)] hover:text-[var(--text-primary)]">
                 <X size={20} />
               </button>
             </div>
@@ -898,11 +929,7 @@ export default function MaintenanceBills() {
                   tone="slate"
                   size="md"
                   className="flex-1"
-                  onClick={() => {
-                    setShowBulkModal(false)
-                    setBulkBillMonth('')
-                    setPreviewCount(null)
-                  }}
+                  onClick={closeBulkModal}
                 >
                   Cancel
                 </NeonSweepButton>
@@ -917,24 +944,25 @@ export default function MaintenanceBills() {
                 </NeonSweepButton>
               </div>
             </form>
-          </div>
-        </div>
-      )}
+      </AnimatedModal>
 
       {/* Payment Modal */}
-      {showPaymentModal && selectedBill && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
-          <div className="w-full max-w-[32rem] max-h-[calc(100vh-3rem)] flex flex-col rounded-xl bg-[var(--bg-card)] border border-[var(--border-light)] shadow-[0_8px_24px_rgba(0,0,0,0.12)]">
+      <AnimatedModal
+        open={showPaymentModal && !!selectedBill}
+        onRequestClose={closePaymentModal}
+        className="w-full max-w-[32rem] max-h-[calc(100vh-3rem)] flex flex-col rounded-xl bg-[var(--bg-card)] border border-[var(--border-light)] shadow-[0_8px_24px_rgba(0,0,0,0.12)]"
+        durationMs={MODAL_ANIMATION_DURATION}
+      >
             <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--border-light)] shrink-0">
               <h3 className="text-[1.1rem] font-semibold text-[var(--text-primary)]">Record Payment</h3>
-              <button onClick={() => setShowPaymentModal(false)} className="rounded-md p-1 text-[var(--text-tertiary)] transition-colors hover:bg-[rgba(148,163,184,0.2)] hover:text-[var(--text-primary)]">
+              <button onClick={closePaymentModal} className="rounded-md p-1 text-[var(--text-tertiary)] transition-colors hover:bg-[rgba(148,163,184,0.2)] hover:text-[var(--text-primary)]">
                 <X size={20} />
               </button>
             </div>
             <form onSubmit={handlePayment} className="p-5 flex flex-col gap-4 overflow-y-auto flex-1 min-h-0">
               <div className="p-3 rounded-xl bg-[var(--bg-tertiary)] text-[var(--text-secondary)]">
-                <p className="text-[0.85rem]">Flat: <span className="font-semibold text-[var(--text-primary)]">{selectedBill.flatNumber}</span></p>
-                <p className="text-[0.85rem]">Month: <span className="font-semibold text-[var(--text-primary)]">{selectedBill.billMonth}</span></p>
+                <p className="text-[0.85rem]">Flat: <span className="font-semibold text-[var(--text-primary)]">{selectedBill?.flatNumber || '-'}</span></p>
+                <p className="text-[0.85rem]">Month: <span className="font-semibold text-[var(--text-primary)]">{selectedBill?.billMonth || '-'}</span></p>
                 <p className="text-[0.85rem]">Total: <span className="font-semibold text-[var(--text-primary)]">₹{getBillTotal(selectedBill).toLocaleString()}</span></p>
                 <p className="text-[0.85rem]">Balance: <span className="font-semibold text-[#dc2626]">₹{getBillBalance(selectedBill).toLocaleString()}</span></p>
               </div>
@@ -970,7 +998,7 @@ export default function MaintenanceBills() {
                 />
               </div>
               <div className="flex gap-3 pt-2">
-                <NeonSweepButton type="button" tone="slate" size="md" className="flex-1" onClick={() => setShowPaymentModal(false)}>
+                <NeonSweepButton type="button" tone="slate" size="md" className="flex-1" onClick={closePaymentModal}>
                   Cancel
                 </NeonSweepButton>
                 <NeonSweepButton type="submit" tone="cyan" size="md" className="flex-1" disabled={paymentMutation.isPending}>
@@ -978,9 +1006,7 @@ export default function MaintenanceBills() {
                 </NeonSweepButton>
               </div>
             </form>
-          </div>
-        </div>
-      )}
+      </AnimatedModal>
     </div>
   )
 }

@@ -5,7 +5,7 @@ import { useAuth } from '../../context'
 import { complaintApi } from '../../../../api'
 import { Plus, Search, X, AlertTriangle, Clock, CheckCircle, XCircle } from 'lucide-react'
 import clsx from 'clsx'
-import { FormInput, SmartSelect, FormTextarea, InfoTooltip, NeonSweepButton } from '../../components'
+import { FormInput, SmartSelect, FormTextarea, InfoTooltip, NeonSweepButton, AnimatedModal } from '../../components'
 import { PermissionDenied } from '../../components'
 import { HeroSkeleton, SummaryRowSkeleton, FiltersSkeleton, ListSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
 import useMinLoadingTime from '../../hooks/useMinLoadingTime'
@@ -256,9 +256,8 @@ export default function Complaints() {
         </div>
 
       {/* Create Complaint Modal */}
-      {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
-          <div className="w-full max-w-[520px] max-h-[calc(100vh-3rem)] overflow-y-auto bg-[var(--bg-card)] rounded-xl border border-[var(--border-light)] shadow-[0_8px_24px_rgba(0,0,0,0.12)]">
+      <AnimatedModal open={showModal} onRequestClose={() => setShowModal(false)} closeOnBackdrop>
+        <div className="w-full max-w-[520px] max-h-[calc(100vh-3rem)] overflow-y-auto bg-[var(--bg-card)] rounded-xl border border-[var(--border-light)] shadow-[0_8px_24px_rgba(0,0,0,0.12)]">
             <div className="flex items-center justify-between p-4 border-b border-[var(--border-light)]">
               <h3 className="text-lg font-semibold text-[var(--text-primary)]">Log Complaint</h3>
               <button onClick={() => setShowModal(false)} className="border-none bg-transparent text-[var(--text-tertiary)] p-1 rounded-lg hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-primary)]">
@@ -297,9 +296,8 @@ export default function Complaints() {
                 <NeonSweepButton type="submit" tone="cyan" size="md" className="flex-1" disabled={createMutation.isPending}>{createMutation.isPending ? 'Submitting...' : 'Submit'}</NeonSweepButton>
               </div>
             </form>
-          </div>
         </div>
-      )}
+      </AnimatedModal>
     </div>
   )
 }

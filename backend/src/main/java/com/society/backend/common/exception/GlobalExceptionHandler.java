@@ -1,6 +1,7 @@
 package com.society.backend.common.exception;
 
 import java.time.LocalDateTime;
+import java.util.LinkedHashMap;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -135,6 +136,20 @@ public class GlobalExceptionHandler {
                                                 status.getReasonPhrase(),
                                                 ex.getMessage(),
                                                 request.getRequestURI()));
+        }
+
+        @ExceptionHandler(LinkedRecordsConflictException.class)
+        public ResponseEntity<Map<String, Object>> handleLinkedRecordsConflict(
+                        LinkedRecordsConflictException ex,
+                        HttpServletRequest request) {
+                Map<String, Object> response = new LinkedHashMap<>();
+                response.put("timestamp", LocalDateTime.now().toString());
+                response.put("status", 409);
+                response.put("error", "Conflict");
+                response.put("message", ex.getMessage());
+                response.put("path", request.getRequestURI());
+                response.put("impacts", ex.getImpacts());
+                return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
         }
 
         @ExceptionHandler(AccessDeniedException.class)

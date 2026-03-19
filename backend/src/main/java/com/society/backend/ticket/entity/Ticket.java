@@ -83,6 +83,12 @@ public class Ticket {
     @Column(name = "resolved_at")
     private LocalDateTime resolvedAt;
 
+    @Column(name = "close_undo_previous_status")
+    private String closeUndoPreviousStatus;
+
+    @Column(name = "close_undo_expires_at")
+    private LocalDateTime closeUndoExpiresAt;
+
     public Integer getPendingDays() {
         if (resolvedAt != null || "RESOLVED".equals(status) || "CLOSED".equals(status)) {
             return 0;

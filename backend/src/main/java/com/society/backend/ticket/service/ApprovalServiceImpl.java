@@ -6,6 +6,7 @@ import com.society.backend.common.exception.ApiException;
 import com.society.backend.ticket.repository.ApprovalActionRepository;
 import com.society.backend.ticket.repository.ApprovalRequestRepository;
 import com.society.backend.ticket.repository.ApprovalWorkflowRepository;
+import com.society.backend.ticket.repository.TicketRepository;
 import com.society.backend.society.repository.SocietyRepository;
 import com.society.backend.user.repository.UserRepository;
 import com.society.backend.common.service.RoleService;
@@ -23,11 +24,15 @@ import com.society.backend.ticket.entity.ApprovalAction;
 import com.society.backend.ticket.entity.ApprovalRequest;
 import com.society.backend.ticket.entity.ApprovalWorkflow;
 import com.society.backend.ticket.entity.ApprovalWorkflowStep;
+import com.society.backend.ticket.entity.Ticket;
 import com.society.backend.user.entity.Role;
 import com.society.backend.user.entity.User;
 @Service
 @RequiredArgsConstructor
 public class ApprovalServiceImpl implements ApprovalService {
+
+    private static final String TICKET_CREATE_ENTITY_TYPE = "TICKET_CREATE";
+    private static final String TICKET_CLOSE_ENTITY_TYPE = "TICKET_CLOSE";
 
     private final ApprovalWorkflowRepository workflowRepository;
     private final ApprovalRequestRepository requestRepository;
@@ -35,6 +40,7 @@ public class ApprovalServiceImpl implements ApprovalService {
     private final SocietyRepository societyRepository;
     private final UserRepository userRepository;
     private final RoleService roleService;
+    private final TicketRepository ticketRepository;
 
     // ===== WORKFLOW CRUD =====
 
@@ -255,6 +261,9 @@ public class ApprovalServiceImpl implements ApprovalService {
         String userRole = user.getRole().name();
         return all.stream()
                 .filter(req -> {
+                    if (isTicketApprovalEntity(req.getEntityType())) {
+                        return canUserApproveTicketRequest(req, user);
+                    }
                     if (req.getWorkflow() == null) {
                         // No workflow — any admin/committee can approve
                         return isApproverRole(user.getRole());
@@ -289,6 +298,18 @@ public class ApprovalServiceImpl implements ApprovalService {
         String action = actionReq.getAction().toUpperCase();
         if (!List.of("APPROVED", "REJECTED", "RETURNED", "ESCALATED").contains(action)) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "Invalid action: " + action);
+        }
+
+        if (isTicketApprovalEntity(request.getEntityType()) && !canUserApproveTicketRequest(request, actor)) {
+            throw new ApiException(HttpStatus.FORBIDDEN,
+                "This ticket approval action is allowed only for eligible C/S/T/CM approvers.");
+        }
+
+        if (TICKET_CLOSE_ENTITY_TYPE.equalsIgnoreCase(request.getEntityType())
+            && request.getRequestedBy() != null
+            && request.getRequestedBy().getId().equals(actor.getId())) {
+            throw new ApiException(HttpStatus.FORBIDDEN,
+                "Self-approval is not allowed for ticket closure requests.");
         }
 
         // Validate approver role against workflow step
@@ -349,8 +370,116 @@ public class ApprovalServiceImpl implements ApprovalService {
                 break;
         }
 
+        applyEntityOutcome(request);
+
         ApprovalRequest saved = requestRepository.save(request);
         return mapRequestToResponse(saved);
+    }
+
+    private void applyEntityOutcome(ApprovalRequest request) {
+        if (!isTicketApprovalEntity(request.getEntityType())) {
+            return;
+        }
+
+        Ticket ticket = ticketRepository.findById(request.getEntityId())
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Linked ticket not found for approval request"));
+
+        if (TICKET_CREATE_ENTITY_TYPE.equalsIgnoreCase(request.getEntityType())) {
+            if ("APPROVED".equalsIgnoreCase(request.getStatus())) {
+                if ("IN_REVIEW".equalsIgnoreCase(ticket.getStatus())) {
+                    ticket.setStatus("OPEN");
+                    ticket.setProgressPercent(0);
+                    ticket.setResolvedAt(null);
+                    ticket.setCloseUndoPreviousStatus(null);
+                    ticket.setCloseUndoExpiresAt(null);
+                }
+                ticketRepository.save(ticket);
+                return;
+            }
+
+            if ("REJECTED".equalsIgnoreCase(request.getStatus())) {
+                ticket.setStatus("CLOSED");
+                ticket.setProgressPercent(100);
+                ticket.setResolvedAt(java.time.LocalDateTime.now());
+                ticket.setCloseUndoPreviousStatus(null);
+                ticket.setCloseUndoExpiresAt(null);
+                ticketRepository.save(ticket);
+            }
+            return;
+        }
+
+        if ("APPROVED".equalsIgnoreCase(request.getStatus())) {
+            String desiredStatus = extractMetadataValue(request.getMetadata(), "desiredStatus");
+            String finalStatus = "CLOSED";
+            if ("RESOLVED".equalsIgnoreCase(desiredStatus)) {
+                finalStatus = "RESOLVED";
+            }
+            ticket.setStatus(finalStatus);
+            ticket.setProgressPercent(100);
+            ticket.setResolvedAt(java.time.LocalDateTime.now());
+            ticket.setCloseUndoPreviousStatus(null);
+            ticket.setCloseUndoExpiresAt(null);
+            ticketRepository.save(ticket);
+            return;
+        }
+
+        if ("REJECTED".equalsIgnoreCase(request.getStatus())) {
+            if ("IN_REVIEW".equalsIgnoreCase(ticket.getStatus())) {
+                ticket.setStatus("IN_PROGRESS");
+                if (ticket.getProgressPercent() == null || ticket.getProgressPercent() >= 100) {
+                    ticket.setProgressPercent(80);
+                }
+                ticket.setResolvedAt(null);
+                ticket.setCloseUndoPreviousStatus(null);
+                ticket.setCloseUndoExpiresAt(null);
+            }
+            ticketRepository.save(ticket);
+        }
+    }
+
+    private String extractMetadataValue(String metadata, String key) {
+        if (metadata == null || metadata.isBlank() || key == null || key.isBlank()) {
+            return null;
+        }
+        String prefix = key + "=";
+        for (String token : metadata.split(";")) {
+            String trimmed = token.trim();
+            if (trimmed.startsWith(prefix)) {
+                return trimmed.substring(prefix.length());
+            }
+        }
+        return null;
+    }
+
+    private boolean isTicketApprovalEntity(String entityType) {
+        return TICKET_CREATE_ENTITY_TYPE.equalsIgnoreCase(entityType)
+                || TICKET_CLOSE_ENTITY_TYPE.equalsIgnoreCase(entityType);
+    }
+
+    private boolean isCstcmRole(Role role) {
+        return role == Role.CHAIRMAN
+                || role == Role.SECRETARY
+                || role == Role.TREASURER
+                || role == Role.COMMITTEE;
+    }
+
+    private boolean canUserApproveTicketRequest(ApprovalRequest request, User actor) {
+        if (actor == null || actor.getRole() == null) {
+            return false;
+        }
+        if (!isCstcmRole(actor.getRole())) {
+            return false;
+        }
+
+        if (!TICKET_CLOSE_ENTITY_TYPE.equalsIgnoreCase(request.getEntityType())) {
+            return true;
+        }
+
+        String requiredApproverUserId = extractMetadataValue(request.getMetadata(), "requiredApproverUserId");
+        if (requiredApproverUserId == null || requiredApproverUserId.isBlank()) {
+            return true;
+        }
+        return requiredApproverUserId.equals(String.valueOf(actor.getId()));
     }
 
     @Override

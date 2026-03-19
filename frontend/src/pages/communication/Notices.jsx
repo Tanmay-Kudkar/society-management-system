@@ -1,13 +1,13 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '../../context'
 import { useConfirmDialog } from '../../context'
 import { useToast } from '../../context'
-import { noticeApi } from '../../../../api'
+import { noticeApi, downloadBlob } from '../../../../api'
 import { Plus, Search, X, Megaphone, Edit, Trash2 } from 'lucide-react'
 import clsx from 'clsx'
-import { FormInput, SmartSelect, FormTextarea, InfoTooltip, NeonSweepButton } from '../../components'
+import { FormInput, SmartSelect, FormTextarea, InfoTooltip, NeonSweepButton, AnimatedModal, DEFAULT_ANIMATED_MODAL_DURATION_MS } from '../../components'
 import { HeroSkeleton, FiltersSkeleton, CardGridSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
 import useMinLoadingTime from '../../hooks/useMinLoadingTime'
 import { formatDate } from '../../utils/formatUtils'
@@ -19,6 +19,8 @@ const priorityClasses = {
   URGENT: 'inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-700',
 }
 
+const MODAL_ANIMATION_MS = DEFAULT_ANIMATED_MODAL_DURATION_MS
+
 export default function Notices() {
   const { user, canManageNotices } = useAuth()
   const confirmDialog = useConfirmDialog()
@@ -28,6 +30,24 @@ export default function Notices() {
   const [showModal, setShowModal] = useState(false)
   const [editingNotice, setEditingNotice] = useState(null)
   const [searchTerm, setSearchTerm] = useState('')
+  const [filterType, setFilterType] = useState('')
+  const [attendanceByNotice, setAttendanceByNotice] = useState({})
+  const [attendanceSummaryByNotice, setAttendanceSummaryByNotice] = useState({})
+  const [markingNoticeId, setMarkingNoticeId] = useState(null)
+  const [showAttendanceModal, setShowAttendanceModal] = useState(false)
+  const [attendanceModalNotice, setAttendanceModalNotice] = useState(null)
+  const [attendanceList, setAttendanceList] = useState([])
+  const [attendanceListLoading, setAttendanceListLoading] = useState(false)
+  const [attendanceListFilter, setAttendanceListFilter] = useState('ALL')
+
+  const noticeTypeLabel = {
+    GENERAL: 'General',
+    CIRCULAR: 'Circular',
+    MEETING: 'Meeting',
+  }
+
+  const canRecordMeetingAttendance = ['MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE'].includes(user?.role)
+  const canViewMeetingAttendance = ['MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER'].includes(user?.role)
 
   // Get society filter from URL (for MASTER_ADMIN viewing specific society)
   const societyIdFromUrl = searchParams.get('society')
@@ -71,15 +91,165 @@ export default function Notices() {
     },
   })
 
+  const attendanceMutation = useMutation({
+    mutationFn: ({ noticeId, status }) => noticeApi.markAttendance(noticeId, user.id, { status }),
+    onMutate: ({ noticeId }) => {
+      setMarkingNoticeId(noticeId)
+    },
+    onSuccess: (response, variables) => {
+      const payload = response?.data
+      setAttendanceByNotice((prev) => ({ ...prev, [variables.noticeId]: payload }))
+      if (canViewMeetingAttendance) {
+        noticeApi.getAttendanceByNotice(variables.noticeId, user.id)
+          .then((res) => {
+            const records = res?.data || []
+            const present = records.filter((r) => (r?.status || '').toUpperCase() === 'PRESENT').length
+            const absent = records.filter((r) => (r?.status || '').toUpperCase() === 'ABSENT').length
+            setAttendanceSummaryByNotice((prev) => ({
+              ...prev,
+              [variables.noticeId]: { present, absent, total: records.length },
+            }))
+          })
+          .catch(() => {})
+      }
+      toast.success('Attendance recorded')
+    },
+    onError: (error) => {
+      toast.error(error?.response?.data?.message || 'Failed to record attendance')
+    },
+    onSettled: () => {
+      setMarkingNoticeId(null)
+    },
+  })
+
   const filteredNotices = useMemo(() => notices.filter(n => {
     const matchesSearch = n.title?.toLowerCase().includes(searchTerm.toLowerCase())
-    return matchesSearch
-  }), [notices, searchTerm])
+    const noticeType = (n.noticeType || 'GENERAL').toUpperCase()
+    const matchesType = !filterType || noticeType === filterType
+    return matchesSearch && matchesType
+  }), [notices, searchTerm, filterType])
+
+  useEffect(() => {
+    let cancelled = false
+
+    const loadMeetingAttendance = async () => {
+      if (!user?.id || !canRecordMeetingAttendance) return
+
+      const meetingNotices = notices.filter((n) => (n.noticeType || 'GENERAL').toUpperCase() === 'MEETING')
+      if (meetingNotices.length === 0) return
+
+      const next = {}
+      for (const notice of meetingNotices) {
+        try {
+          // eslint-disable-next-line no-await-in-loop
+          const res = await noticeApi.getMyAttendance(notice.id, user.id)
+          next[notice.id] = res.data
+        } catch (error) {
+          if (error?.response?.status !== 404) {
+            // Ignore transient issues and keep page usable.
+          }
+        }
+      }
+
+      if (!cancelled) {
+        setAttendanceByNotice((prev) => ({ ...prev, ...next }))
+      }
+    }
+
+    loadMeetingAttendance()
+    return () => {
+      cancelled = true
+    }
+  }, [notices, user?.id, canRecordMeetingAttendance])
+
+  useEffect(() => {
+    let cancelled = false
+
+    const loadMeetingAttendanceSummary = async () => {
+      if (!user?.id || !canViewMeetingAttendance) return
+
+      const meetingNotices = notices.filter((n) => (n.noticeType || 'GENERAL').toUpperCase() === 'MEETING')
+      if (meetingNotices.length === 0) return
+
+      const nextSummary = {}
+      await Promise.all(meetingNotices.map(async (notice) => {
+        try {
+          const res = await noticeApi.getAttendanceByNotice(notice.id, user.id)
+          const records = res?.data || []
+          const present = records.filter((r) => (r?.status || '').toUpperCase() === 'PRESENT').length
+          const absent = records.filter((r) => (r?.status || '').toUpperCase() === 'ABSENT').length
+          nextSummary[notice.id] = { present, absent, total: records.length }
+        } catch {
+          nextSummary[notice.id] = { present: 0, absent: 0, total: 0 }
+        }
+      }))
+
+      if (!cancelled) {
+        setAttendanceSummaryByNotice((prev) => ({ ...prev, ...nextSummary }))
+      }
+    }
+
+    loadMeetingAttendanceSummary()
+    return () => {
+      cancelled = true
+    }
+  }, [notices, user?.id, canViewMeetingAttendance])
 
   const closeModal = () => {
     setShowModal(false)
-    setEditingNotice(null)
+    setTimeout(() => setEditingNotice(null), MODAL_ANIMATION_MS)
   }
+
+  const closeAttendanceModal = () => {
+    setShowAttendanceModal(false)
+    setTimeout(() => {
+      setAttendanceModalNotice(null)
+      setAttendanceList([])
+      setAttendanceListLoading(false)
+      setAttendanceListFilter('ALL')
+    }, MODAL_ANIMATION_MS)
+  }
+
+  const openAttendanceModal = async (notice) => {
+    if (!notice?.id || !user?.id) return
+    setAttendanceModalNotice(notice)
+    setAttendanceListLoading(true)
+    setShowAttendanceModal(true)
+
+    try {
+      const res = await noticeApi.getAttendanceByNotice(notice.id, user.id)
+      setAttendanceList(res?.data || [])
+    } catch (error) {
+      toast.error(error?.response?.data?.message || 'Failed to load attendance list')
+      setAttendanceList([])
+    } finally {
+      setAttendanceListLoading(false)
+    }
+  }
+
+  const downloadAttendanceCsv = async (status = 'ALL') => {
+    if (!attendanceModalNotice?.id || !user?.id) return
+
+    try {
+      const response = await noticeApi.exportAttendanceCsv(attendanceModalNotice.id, user.id, status)
+      const statusLabel = String(status || 'ALL').toLowerCase()
+      const noticeSlug = (attendanceModalNotice?.title || 'meeting-attendance')
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '')
+        .slice(0, 60) || 'meeting-attendance'
+      const datePart = new Date().toISOString().split('T')[0]
+      downloadBlob(response.data, `${noticeSlug}-${statusLabel}-${datePart}.csv`)
+      toast.success('Attendance exported successfully')
+    } catch (error) {
+      toast.error(error?.response?.data?.message || 'Failed to export attendance')
+    }
+  }
+
+  const filteredAttendanceList = useMemo(() => {
+    if (attendanceListFilter === 'ALL') return attendanceList
+    return attendanceList.filter((row) => (row?.status || '').toUpperCase() === attendanceListFilter)
+  }, [attendanceList, attendanceListFilter])
 
   const confirmAndDeleteNotice = async (notice) => {
     const confirmed = await confirmDialog({
@@ -112,6 +282,7 @@ export default function Notices() {
       title: formData.get('title'),
       content: formData.get('content'),
       priority: formData.get('priority'),
+      noticeType: formData.get('noticeType') || 'GENERAL',
       expiryDate: formData.get('expiryDate') || null,
     }
     if (editingNotice) {
@@ -157,7 +328,7 @@ export default function Notices() {
 
       {/* Filters */}
       <div className="mb-6 rounded-2xl border border-[var(--border-light)] bg-[var(--bg-card)] p-4 shadow-[0_8px_20px_rgba(15,23,42,0.08)]">
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
           <div className="relative flex-1">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-[var(--text-tertiary)]" />
             <input
@@ -168,6 +339,16 @@ export default function Notices() {
               className="w-full rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] py-2 pl-10 pr-3 text-[var(--text-primary)] outline-none transition focus:border-blue-600 focus:shadow-[0_0_0_3px_rgba(37,99,235,0.2)]"
             />
           </div>
+          <select
+            value={filterType}
+            onChange={(e) => setFilterType(e.target.value)}
+            className="w-full rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] px-3 py-2 text-[var(--text-primary)] outline-none transition focus:border-blue-600 focus:shadow-[0_0_0_3px_rgba(37,99,235,0.2)] sm:w-auto sm:min-w-[220px]"
+          >
+            <option value="">All Notice Types</option>
+            <option value="GENERAL">General</option>
+            <option value="CIRCULAR">Circular</option>
+            <option value="MEETING">Meeting</option>
+          </select>
         </div>
       </div>
 
@@ -211,6 +392,9 @@ export default function Notices() {
               </div>
               
               <h3 className="mb-2 font-bold text-[var(--text-primary)]">{notice.title}</h3>
+              <p className="mb-1 text-[0.75rem] font-semibold uppercase tracking-[0.06em] text-[var(--text-tertiary)]">
+                {noticeTypeLabel[(notice.noticeType || 'GENERAL').toUpperCase()] || 'General'}
+              </p>
               <p className="mb-3 line-clamp-3 text-sm text-[var(--text-secondary)]">{notice.content}</p>
               
               <div className="flex flex-wrap items-center justify-between gap-2 border-t border-[var(--border-light)] pt-3 text-xs text-[var(--text-tertiary)]">
@@ -223,15 +407,160 @@ export default function Notices() {
                   Expires: {formatDate(notice.expiryDate)}
                 </p>
               )}
+
+              {(notice.noticeType || 'GENERAL').toUpperCase() === 'MEETING' && canRecordMeetingAttendance && (
+                <div className="mt-3 border-t border-[var(--border-light)] pt-3">
+                  <p className="mb-2 text-xs font-semibold text-[var(--text-secondary)]">
+                    Your attendance: {attendanceByNotice[notice.id]?.status || 'Not marked'}
+                  </p>
+                  <div className="grid grid-cols-2 gap-2">
+                    <NeonSweepButton
+                      tone={attendanceByNotice[notice.id]?.status === 'PRESENT' ? 'cyan' : 'slate'}
+                      size="sm"
+                      className="w-full justify-center"
+                      onClick={() => attendanceMutation.mutate({ noticeId: notice.id, status: 'PRESENT' })}
+                      disabled={attendanceMutation.isPending && markingNoticeId === notice.id}
+                    >
+                      {attendanceMutation.isPending && markingNoticeId === notice.id ? 'Saving...' : 'Mark Present'}
+                    </NeonSweepButton>
+                    <NeonSweepButton
+                      tone={attendanceByNotice[notice.id]?.status === 'ABSENT' ? 'danger' : 'slate'}
+                      size="sm"
+                      className="w-full justify-center"
+                      onClick={() => attendanceMutation.mutate({ noticeId: notice.id, status: 'ABSENT' })}
+                      disabled={attendanceMutation.isPending && markingNoticeId === notice.id}
+                    >
+                      {attendanceMutation.isPending && markingNoticeId === notice.id ? 'Saving...' : 'Mark Absent'}
+                    </NeonSweepButton>
+                  </div>
+                </div>
+              )}
+
+              {(notice.noticeType || 'GENERAL').toUpperCase() === 'MEETING' && canViewMeetingAttendance && (
+                <div className="mt-3 rounded-xl border border-[var(--border-light)] bg-[var(--bg-tertiary)]/50 px-3 py-2 text-xs text-[var(--text-secondary)]">
+                  <p className="font-semibold text-[var(--text-primary)]">Attendance Summary</p>
+                  <p className="mt-1">
+                    Present: {attendanceSummaryByNotice[notice.id]?.present ?? 0} | Absent: {attendanceSummaryByNotice[notice.id]?.absent ?? 0}
+                  </p>
+                  <NeonSweepButton
+                    tone="slate"
+                    size="sm"
+                    className="mt-2 w-full justify-center"
+                    onClick={() => openAttendanceModal(notice)}
+                  >
+                    View Attendance
+                  </NeonSweepButton>
+                </div>
+              )}
             </div>
           ))}
         </div>
       )}
 
+      <AnimatedModal open={showAttendanceModal} onRequestClose={closeAttendanceModal} closeOnBackdrop>
+        <div className="max-h-[calc(100vh-3rem)] w-full max-w-2xl overflow-y-auto rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] shadow-[0_8px_24px_rgba(0,0,0,0.12)]">
+          <div className="flex items-center justify-between border-b border-[var(--border-light)] p-4">
+            <div>
+              <h3 className="text-lg font-bold text-[var(--text-primary)]">Meeting Attendance</h3>
+              {attendanceModalNotice?.title && (
+                <p className="text-xs text-[var(--text-tertiary)]">{attendanceModalNotice.title}</p>
+              )}
+            </div>
+            <button onClick={closeAttendanceModal} className="rounded-lg p-1 text-[var(--text-tertiary)] transition hover:bg-[var(--bg-tertiary)]">
+              <X size={20} />
+            </button>
+          </div>
+
+          <div className="p-4">
+            {attendanceListLoading ? (
+              <p className="text-sm text-[var(--text-tertiary)]">Loading attendance...</p>
+            ) : attendanceList.length === 0 ? (
+              <p className="text-sm text-[var(--text-tertiary)]">No attendance records yet.</p>
+            ) : (
+              <>
+                <div className="mb-3 flex flex-wrap items-center gap-2">
+                  <NeonSweepButton
+                    tone={attendanceListFilter === 'ALL' ? 'cyan' : 'slate'}
+                    size="sm"
+                    onClick={() => setAttendanceListFilter('ALL')}
+                    className="justify-center"
+                  >
+                    All ({attendanceList.length})
+                  </NeonSweepButton>
+                  <NeonSweepButton
+                    tone={attendanceListFilter === 'PRESENT' ? 'cyan' : 'slate'}
+                    size="sm"
+                    onClick={() => setAttendanceListFilter('PRESENT')}
+                    className="justify-center"
+                  >
+                    Present ({attendanceList.filter((r) => (r?.status || '').toUpperCase() === 'PRESENT').length})
+                  </NeonSweepButton>
+                  <NeonSweepButton
+                    tone={attendanceListFilter === 'ABSENT' ? 'danger' : 'slate'}
+                    size="sm"
+                    onClick={() => setAttendanceListFilter('ABSENT')}
+                    className="justify-center"
+                  >
+                    Absent ({attendanceList.filter((r) => (r?.status || '').toUpperCase() === 'ABSENT').length})
+                  </NeonSweepButton>
+                  <NeonSweepButton
+                    tone="slate"
+                    size="sm"
+                    onClick={() => downloadAttendanceCsv(attendanceListFilter === 'ALL' ? 'ALL' : attendanceListFilter)}
+                    className="justify-center sm:ml-auto"
+                  >
+                    Export Filtered
+                  </NeonSweepButton>
+                  <NeonSweepButton
+                    tone="slate"
+                    size="sm"
+                    onClick={() => downloadAttendanceCsv('ALL')}
+                    className="justify-center"
+                  >
+                    Export All
+                  </NeonSweepButton>
+                </div>
+
+                {filteredAttendanceList.length === 0 ? (
+                  <p className="text-sm text-[var(--text-tertiary)]">No records for selected filter.</p>
+                ) : (
+                  <div className="overflow-hidden rounded-xl border border-[var(--border-light)]">
+                <table className="w-full border-collapse text-sm">
+                  <thead className="bg-[var(--bg-tertiary)] text-left text-[0.78rem] uppercase tracking-[0.06em] text-[var(--text-tertiary)]">
+                    <tr>
+                      <th className="px-3 py-2">Member</th>
+                      <th className="px-3 py-2">Status</th>
+                      <th className="px-3 py-2">Marked At</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredAttendanceList.map((row) => (
+                      <tr key={row.id} className="border-t border-[var(--border-light)]">
+                        <td className="px-3 py-2 text-[var(--text-primary)]">{row.userName || '-'}</td>
+                        <td className="px-3 py-2">
+                          <span className={clsx(
+                            'inline-flex rounded-full px-2 py-0.5 text-xs font-semibold',
+                            row.status === 'PRESENT' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700',
+                          )}>
+                            {row.status}
+                          </span>
+                        </td>
+                        <td className="px-3 py-2 text-[var(--text-secondary)]">{formatDate(row.markedAt)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+                )}
+              </>
+            )}
+          </div>
+        </div>
+      </AnimatedModal>
+
       {/* Modal */}
-      {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="max-h-[calc(100vh-3rem)] w-full max-w-2xl overflow-y-auto rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] shadow-[0_8px_24px_rgba(0,0,0,0.12)]">
+      <AnimatedModal open={showModal} onRequestClose={closeModal} closeOnBackdrop>
+        <div className="max-h-[calc(100vh-3rem)] w-full max-w-2xl overflow-y-auto rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] shadow-[0_8px_24px_rgba(0,0,0,0.12)]">
             <div className="flex items-center justify-between border-b border-[var(--border-light)] p-4">
               <h3 className="text-lg font-bold text-[var(--text-primary)]">{editingNotice ? 'Edit Notice' : 'Add Notice'}</h3>
               <button onClick={closeModal} className="rounded-lg p-1 text-[var(--text-tertiary)] transition hover:bg-[var(--bg-tertiary)]">
@@ -272,6 +601,17 @@ export default function Notices() {
                   defaultValue={editingNotice?.expiryDate || ''}
                 />
               </div>
+              <SmartSelect
+                label="Notice Type"
+                name="noticeType"
+                defaultValue={(editingNotice?.noticeType || 'GENERAL').toUpperCase()}
+                required
+                options={[
+                  { value: 'GENERAL', label: 'General' },
+                  { value: 'CIRCULAR', label: 'Circular' },
+                  { value: 'MEETING', label: 'Meeting' },
+                ]}
+              />
               <div className="flex gap-3 pt-2">
                 <NeonSweepButton type="button" tone="slate" size="md" onClick={closeModal} className="flex-1">Cancel</NeonSweepButton>
                 <NeonSweepButton
@@ -285,9 +625,8 @@ export default function Notices() {
                 </NeonSweepButton>
               </div>
             </form>
-          </div>
         </div>
-      )}
+      </AnimatedModal>
     </div>
   )
 }
