@@ -236,7 +236,7 @@ export default function Transactions() {
     }
   }
 
-  const handleExport = async (format) => {
+  const handleExport = async () => {
     if (!effectiveSocietyId) {
       showToast('Society context is required for export', 'error')
       return
@@ -246,9 +246,9 @@ export default function Transactions() {
       // Use a wide date range to capture all transactions (past and future-dated)
       const startDate = '1947-01-01'
       const endDate = '3000-12-31'
-      const response = await exportApi.transactions(effectiveSocietyId, startDate, endDate, format)
+      const response = await exportApi.transactions(effectiveSocietyId, startDate, endDate)
       const today = new Date().toISOString().split('T')[0]
-      downloadBlob(response.data, `transactions_${today}.${format}`)
+      downloadBlob(response.data, `transactions_${today}.xlsx`)
     } catch (error) {
       console.error('Export failed:', error)
     } finally {
@@ -299,19 +299,9 @@ export default function Transactions() {
         </div>
         <div className="flex flex-wrap gap-3">
           <NeonSweepButton
-            tone="cyan"
-            size="md"
-            onClick={() => handleExport('csv')}
-            disabled={isExporting}
-            className="w-full sm:w-auto"
-          >
-            <FileSpreadsheet size={20} />
-            {isExporting ? 'Exporting...' : 'Export CSV'}
-          </NeonSweepButton>
-          <NeonSweepButton
             tone="slate"
             size="md"
-            onClick={() => handleExport('xlsx')}
+            onClick={handleExport}
             disabled={isExporting}
             className="w-full sm:w-auto"
           >

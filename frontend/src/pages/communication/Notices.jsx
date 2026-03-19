@@ -227,11 +227,11 @@ export default function Notices() {
     }
   }
 
-  const downloadAttendanceCsv = async (status = 'ALL') => {
+  const downloadAttendance = async (status = 'ALL') => {
     if (!attendanceModalNotice?.id || !user?.id) return
 
     try {
-      const response = await noticeApi.exportAttendanceCsv(attendanceModalNotice.id, user.id, status)
+      const response = await noticeApi.exportAttendance(attendanceModalNotice.id, user.id, status)
       const statusLabel = String(status || 'ALL').toLowerCase()
       const noticeSlug = (attendanceModalNotice?.title || 'meeting-attendance')
         .toLowerCase()
@@ -239,7 +239,7 @@ export default function Notices() {
         .replace(/^-+|-+$/g, '')
         .slice(0, 60) || 'meeting-attendance'
       const datePart = new Date().toISOString().split('T')[0]
-      downloadBlob(response.data, `${noticeSlug}-${statusLabel}-${datePart}.csv`)
+      downloadBlob(response.data, `${noticeSlug}-${statusLabel}-${datePart}.xlsx`)
       toast.success('Attendance exported successfully')
     } catch (error) {
       toast.error(error?.response?.data?.message || 'Failed to export attendance')
@@ -506,7 +506,7 @@ export default function Notices() {
                   <NeonSweepButton
                     tone="slate"
                     size="sm"
-                    onClick={() => downloadAttendanceCsv(attendanceListFilter === 'ALL' ? 'ALL' : attendanceListFilter)}
+                    onClick={() => downloadAttendance(attendanceListFilter === 'ALL' ? 'ALL' : attendanceListFilter)}
                     className="justify-center sm:ml-auto"
                   >
                     Export Filtered
@@ -514,7 +514,7 @@ export default function Notices() {
                   <NeonSweepButton
                     tone="slate"
                     size="sm"
-                    onClick={() => downloadAttendanceCsv('ALL')}
+                    onClick={() => downloadAttendance('ALL')}
                     className="justify-center"
                   >
                     Export All

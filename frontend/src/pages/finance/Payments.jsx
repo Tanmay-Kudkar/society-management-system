@@ -225,15 +225,15 @@ export default function Payments() {
 
   const showSkeleton = useMinLoadingTime(isLoading || isError)
 
-  const handleExport = async (format) => {
+  const handleExport = async () => {
     setIsExporting(true)
     try {
       const response = effectiveSocietyId
-        ? await exportApi.paymentsBySociety(effectiveSocietyId, format)
-        : await exportApi.paymentsByUser(user.id, format)
+        ? await exportApi.paymentsBySociety(effectiveSocietyId)
+        : await exportApi.paymentsByUser(user.id)
 
       const datePart = new Date().toISOString().split('T')[0]
-      downloadBlob(response.data, `online_payments_${datePart}.${format}`)
+      downloadBlob(response.data, `online_payments_${datePart}.xlsx`)
       toast.success('Payments exported successfully')
     } catch (error) {
       toast.error(error?.response?.data?.message || 'Failed to export payments')
@@ -264,19 +264,9 @@ export default function Payments() {
         </div>
         <div className="flex flex-wrap gap-3">
           <NeonSweepButton
-            tone="cyan"
-            size="md"
-            onClick={() => handleExport('csv')}
-            disabled={isExporting}
-            className="w-full sm:w-auto"
-          >
-            <FileSpreadsheet size={20} />
-            {isExporting ? 'Exporting...' : 'Export CSV'}
-          </NeonSweepButton>
-          <NeonSweepButton
             tone="slate"
             size="md"
-            onClick={() => handleExport('xlsx')}
+            onClick={handleExport}
             disabled={isExporting}
             className="w-full sm:w-auto"
           >

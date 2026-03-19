@@ -423,7 +423,7 @@ export default function MaintenanceBills() {
     })
   }
 
-  const handleExport = async (format) => {
+  const handleExport = async () => {
     if (!effectiveSocietyId) {
       toast.error('Society context is required for export')
       return
@@ -431,9 +431,9 @@ export default function MaintenanceBills() {
 
     setIsExporting(true)
     try {
-      const response = await exportApi.maintenanceBills(effectiveSocietyId, null, format)
+      const response = await exportApi.maintenanceBills(effectiveSocietyId, null)
       const datePart = new Date().toISOString().split('T')[0]
-      downloadBlob(response.data, `maintenance_bills_${datePart}.${format}`)
+      downloadBlob(response.data, `maintenance_bills_${datePart}.xlsx`)
       toast.success('Maintenance bills exported successfully')
     } catch (error) {
       toast.error(error?.response?.data?.message || 'Failed to export maintenance bills')
@@ -474,19 +474,9 @@ export default function MaintenanceBills() {
           {canManageMaintenanceBills() && (
             <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
               <NeonSweepButton
-                tone="cyan"
-                size="md"
-                onClick={() => handleExport('csv')}
-                disabled={isExporting}
-                className="w-full sm:w-auto"
-              >
-                <FileSpreadsheet size={18} />
-                {isExporting ? 'Exporting...' : 'Export CSV'}
-              </NeonSweepButton>
-              <NeonSweepButton
                 tone="slate"
                 size="md"
-                onClick={() => handleExport('xlsx')}
+                onClick={handleExport}
                 disabled={isExporting}
                 className="w-full sm:w-auto"
               >

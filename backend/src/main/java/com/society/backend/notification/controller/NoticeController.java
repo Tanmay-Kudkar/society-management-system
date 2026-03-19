@@ -12,11 +12,13 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
-import java.nio.charset.StandardCharsets;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.util.List;
-
-import com.society.backend.society.entity.Society;
 @RestController
 @RequestMapping("/notices")
 @PreAuthorize("isAuthenticated()")
@@ -98,7 +100,7 @@ public class NoticeController {
     }
 
     @GetMapping("/{id}/attendance/export")
-    public ResponseEntity<byte[]> exportAttendanceCsv(
+    public ResponseEntity<byte[]> exportAttendance(
             @PathVariable Long id,
             @RequestParam Long userId,
             @RequestParam(defaultValue = "ALL") String status) {
@@ -111,26 +113,36 @@ public class NoticeController {
                     .toList();
         }
 
-        StringBuilder csv = new StringBuilder();
-        csv.append("Member,Status,Marked At\n");
-        for (NoticeAttendanceResponse row : attendance) {
-            csv.append(escapeCsv(row.getUserName())).append(',')
-                    .append(escapeCsv(row.getStatus())).append(',')
-                    .append(escapeCsv(row.getMarkedAt())).append('\n');
-        }
+        try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+            Sheet sheet = workbook.createSheet("Attendance");
 
-        String filename = "notice-attendance-" + id + "-" + normalizedStatus.toLowerCase() + ".csv";
-        return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
-                .contentType(new MediaType("text", "csv", StandardCharsets.UTF_8))
-                .body(csv.toString().getBytes(StandardCharsets.UTF_8));
-    }
+            Row header = sheet.createRow(0);
+            header.createCell(0).setCellValue("Member");
+            header.createCell(1).setCellValue("Status");
+            header.createCell(2).setCellValue("Marked At");
 
-    private String escapeCsv(Object value) {
-        String text = value == null ? "" : String.valueOf(value);
-        if (text.contains(",") || text.contains("\"") || text.contains("\n")) {
-            return "\"" + text.replace("\"", "\"\"") + "\"";
+            int rowIndex = 1;
+            for (NoticeAttendanceResponse row : attendance) {
+                Row dataRow = sheet.createRow(rowIndex++);
+                dataRow.createCell(0).setCellValue(row.getUserName() == null ? "" : row.getUserName());
+                dataRow.createCell(1).setCellValue(row.getStatus() == null ? "" : row.getStatus());
+                dataRow.createCell(2).setCellValue(row.getMarkedAt() == null ? "" : row.getMarkedAt().toString());
+            }
+
+            sheet.autoSizeColumn(0);
+            sheet.autoSizeColumn(1);
+            sheet.autoSizeColumn(2);
+
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            workbook.write(out);
+
+            String filename = "notice-attendance-" + id + "-" + normalizedStatus.toLowerCase() + ".xlsx";
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
+                    .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                    .body(out.toByteArray());
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to export attendance", e);
         }
-        return text;
     }
 }
