@@ -8,6 +8,15 @@ import { Users, CalendarCheck2, Wallet, BadgeCheck, Paperclip } from 'lucide-rea
 import { NeonSweepButton } from '../../components'
 
 const ATTENDANCE_STATUS = ['PRESENT', 'ABSENT', 'HALF_DAY', 'LEAVE']
+const PHONE_REGEX = /^(\+91)?[6-9]\d{9}$/
+
+const getApiErrorMessage = (error, fallback) => {
+  const data = error?.response?.data
+  if (typeof data === 'string' && data.trim()) return data
+  if (data?.message) return data.message
+  if (data?.error) return data.error
+  return fallback
+}
 
 const canManageAttendance = (role) => (
   ['MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'MANAGER'].includes(role)
@@ -223,12 +232,31 @@ export default function Employees() {
           return
         }
 
+        const normalizedName = newEmployeeName.trim()
+        const normalizedEmail = newEmployeeEmail.trim()
+        const normalizedPhone = newEmployeePhone.trim()
+
+        if (normalizedName.length < 2 || normalizedName.length > 100) {
+          toast.error('Name must be between 2 and 100 characters')
+          return
+        }
+
+        if (newEmployeePassword.length < 6 || newEmployeePassword.length > 50) {
+          toast.error('Password must be between 6 and 50 characters')
+          return
+        }
+
+        if (!PHONE_REGEX.test(normalizedPhone)) {
+          toast.error('Invalid phone number format. Use 10-digit mobile number starting with 6-9')
+          return
+        }
+
         const userCreateResponse = await userApi.create({
-          name: newEmployeeName,
-          email: newEmployeeEmail,
+          name: normalizedName,
+          email: normalizedEmail,
           password: newEmployeePassword,
           role: 'EMPLOYEE',
-          phone: newEmployeePhone,
+          phone: normalizedPhone,
           societyId: effectiveSocietyId,
           flatId: null,
         })
@@ -279,8 +307,8 @@ export default function Employees() {
       setCreateIdProofNumber('')
       setCreateIdProofFile(null)
       queryClient.invalidateQueries({ queryKey: ['users-by-society', effectiveSocietyId] })
-    } catch {
-      // Error toast is handled in mutation callbacks.
+    } catch (error) {
+      toast.error(getApiErrorMessage(error, 'Failed to create employee user/profile'))
     }
   }
 
