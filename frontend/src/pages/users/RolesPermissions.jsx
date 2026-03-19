@@ -37,7 +37,7 @@ const roleResponsibilities = [
   {
     role: 'EMPLOYEE',
     authority: 'Staff/Security',
-    responsibility: 'Handles visitors, basic operations',
+    responsibility: 'No system access or operational rights. Only staff records are maintained: attendance, salary details, identity proof documents, and advance payment details.',
   },
   {
     role: 'MEMBER',
@@ -95,9 +95,9 @@ const permissionMatrix = [
   },
   {
     role: 'EMPLOYEE',
-    create: 'VISITOR only',
-    updateDelete: 'VISITOR only',
-    read: 'VISITOR',
+    create: 'None',
+    updateDelete: 'None',
+    read: 'No system access',
   },
   {
     role: 'MEMBER',

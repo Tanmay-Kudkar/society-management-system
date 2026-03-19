@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '../../context'
 import { useConfirmDialog } from '../../context'
 import { useToast } from '../../context'
-import { userApi, societyApi, flatApi } from '../../../../api'
+import { userApi, societyApi, flatApi, employeeApi } from '../../../../api'
 import { Plus, Edit, Trash2, Search, X, AlertCircle, Shield, Users as UsersIcon, Building2, Home, Upload, Download, UserPlus, FileSpreadsheet, CheckCircle, XCircle, Info, Eye, EyeOff } from 'lucide-react'
 import clsx from 'clsx'
 import { useNavigate, useSearchParams } from 'react-router-dom'
@@ -44,6 +44,48 @@ const roleAccentColors = {
   VISITOR: '#ef4444',
 }
 
+const EMPLOYEE_ID_PROOF_MAX_SIZE_BYTES = 5 * 1024 * 1024
+const EMPLOYEE_ID_PROOF_ALLOWED_MIME = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp']
+const EMPLOYEE_ID_PROOF_ALLOWED_EXTENSIONS = ['pdf', 'jpg', 'jpeg', 'png', 'webp']
+
+const formatFileSize = (bytes) => {
+  const numericBytes = Number(bytes || 0)
+  if (!numericBytes) return '0 B'
+  if (numericBytes >= 1024 * 1024) return `${(numericBytes / (1024 * 1024)).toFixed(1)} MB`
+  if (numericBytes >= 1024) return `${(numericBytes / 1024).toFixed(1)} KB`
+  return `${numericBytes} B`
+}
+
+const validateEmployeeIdProofFile = (file) => {
+  if (!file || !(file instanceof File) || file.size <= 0) {
+    return { valid: true, message: '' }
+  }
+
+  if (file.size > EMPLOYEE_ID_PROOF_MAX_SIZE_BYTES) {
+    return {
+      valid: false,
+      message: `File is too large. Maximum allowed size is ${formatFileSize(EMPLOYEE_ID_PROOF_MAX_SIZE_BYTES)}.`,
+    }
+  }
+
+  const fileName = (file.name || '').toLowerCase()
+  const extension = fileName.includes('.') ? fileName.split('.').pop() : ''
+  const isMimeAllowed = EMPLOYEE_ID_PROOF_ALLOWED_MIME.includes((file.type || '').toLowerCase())
+  const isExtensionAllowed = EMPLOYEE_ID_PROOF_ALLOWED_EXTENSIONS.includes(extension)
+
+  if (!isMimeAllowed && !isExtensionAllowed) {
+    return {
+      valid: false,
+      message: 'Unsupported file type. Allowed: PDF, JPG, JPEG, PNG, WEBP.',
+    }
+  }
+
+  return {
+    valid: true,
+    message: `Selected: ${file.name} (${formatFileSize(file.size)})`,
+  }
+}
+
 export default function Users() {
   const { user, canManageUsers } = useAuth()
   const confirmDialog = useConfirmDialog()
@@ -64,6 +106,11 @@ export default function Users() {
   const [filterRole, setFilterRole] = useState(urlRole || '')
   const [error, setError] = useState('')
   const [selectedRole, setSelectedRole] = useState('')
+  const [createEmployeeProfile, setCreateEmployeeProfile] = useState(false)
+  const [employeeIdProofFileFeedback, setEmployeeIdProofFileFeedback] = useState({
+    type: '',
+    message: '',
+  })
   const [showPassword, setShowPassword] = useState(false)
   const [usersPage, setUsersPage] = useState(1)
   const [usersPageSize, setUsersPageSize] = useState(12)
@@ -110,6 +157,7 @@ export default function Users() {
   
   // Check if current user is MASTER_ADMIN
   const isPlatformLevel = user?.role === 'MASTER_ADMIN'
+  const canCreateEmployeeRecord = ['MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'MANAGER'].includes(user?.role)
   
   // Check if current user is MEMBER (for tenant assignment logic)
   // Check from session, profile API response, or users list
@@ -147,10 +195,43 @@ export default function Users() {
   })
 
   const handleOpenModal = (userToEdit = null) => {
+    const initialRole = userToEdit?.role || (creatableRoles.length === 1 ? creatableRoles[0] : creatableRoles[0] || 'MEMBER')
     setEditingUser(userToEdit)
-    setSelectedRole(userToEdit?.role || (creatableRoles.length === 1 ? creatableRoles[0] : creatableRoles[0] || 'MEMBER'))
+    setSelectedRole(initialRole)
+    setCreateEmployeeProfile(!userToEdit && canCreateEmployeeRecord && initialRole === 'EMPLOYEE')
     setShowPassword(false)
     setShowModal(true)
+  }
+
+  const closeModal = () => {
+    setShowModal(false)
+    setError('')
+    setShowPassword(false)
+    setCreateEmployeeProfile(false)
+    setEmployeeIdProofFileFeedback({ type: '', message: '' })
+  }
+
+  const handleRoleChange = (event) => {
+    const nextRole = event.target.value
+    setSelectedRole(nextRole)
+    if (editingUser) return
+    if (nextRole === 'EMPLOYEE') {
+      if (canCreateEmployeeRecord) {
+        setCreateEmployeeProfile(true)
+      }
+      return
+    }
+    setCreateEmployeeProfile(false)
+    setEmployeeIdProofFileFeedback({ type: '', message: '' })
+  }
+
+  const handleEmployeeIdProofFileChange = (event) => {
+    const file = event.target.files?.[0]
+    const result = validateEmployeeIdProofFile(file)
+    setEmployeeIdProofFileFeedback({
+      type: result.valid ? 'success' : 'error',
+      message: result.message,
+    })
   }
 
   const { data: societies = [] } = useQuery({
@@ -210,12 +291,38 @@ export default function Users() {
   })()
 
   const createMutation = useMutation({
-    mutationFn: (data) => userApi.create(data),
-    onSuccess: () => {
+    mutationFn: async ({ userData, employeeProfileData, employeeIdProofUpload }) => {
+      const createdUserResponse = await userApi.create(userData)
+      const createdUser = createdUserResponse?.data
+
+      if (employeeProfileData && createdUser?.id) {
+        const createdEmployeeResponse = await employeeApi.create({
+          ...employeeProfileData,
+          userId: createdUser.id,
+        }, user?.id)
+
+        const createdEmployee = createdEmployeeResponse?.data
+        if (employeeIdProofUpload?.file && createdEmployee?.id) {
+          await employeeApi.uploadIdProofDocument(
+            createdEmployee.id,
+            employeeIdProofUpload.file,
+            user?.id,
+            employeeIdProofUpload.idProofType,
+            employeeIdProofUpload.idProofNumber,
+          )
+        }
+      }
+
+      return createdUserResponse
+    },
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries(['users'])
+      queryClient.invalidateQueries(['employees'])
       setShowModal(false)
       setEditingUser(null)
       setError('')
+      setCreateEmployeeProfile(false)
+      toast.success(variables?.employeeProfileData ? 'User and employee profile created successfully' : 'User created successfully')
     },
     onError: (err) => {
       setError(parseApiError(err))
@@ -460,7 +567,59 @@ export default function Users() {
     if (editingUser) {
       updateMutation.mutate({ id: editingUser.id, data })
     } else {
-      createMutation.mutate(data)
+      let employeeProfileData = null
+      let employeeIdProofUpload = null
+      const shouldCreateEmployeeProfile = roleValue === 'EMPLOYEE' && createEmployeeProfile
+
+      if (shouldCreateEmployeeProfile) {
+        const targetSocietyId = data.societyId || user?.societyId || (urlSocietyId ? parseInt(urlSocietyId) : null)
+        if (!targetSocietyId) {
+          setError('Society is required to create an employee profile. Open Users with a society context or assign a society first.')
+          return
+        }
+
+        const department = (formData.get('employeeDepartment') || '').toString().trim()
+        const designation = (formData.get('employeeDesignation') || '').toString().trim()
+        const joiningDate = (formData.get('employeeJoiningDate') || '').toString().trim()
+        const monthlySalaryRaw = (formData.get('employeeMonthlySalary') || '').toString().trim()
+
+        if (!department || !designation) {
+          setError('Department and designation are required to create the employee profile.')
+          return
+        }
+
+        employeeProfileData = {
+          societyId: targetSocietyId,
+          department,
+          designation,
+          employeeCode: (formData.get('employeeCode') || '').toString().trim() || undefined,
+          joiningDate: joiningDate || undefined,
+          monthlySalary: monthlySalaryRaw ? Number(monthlySalaryRaw) : undefined,
+          employmentType: (formData.get('employeeEmploymentType') || '').toString().trim() || undefined,
+          shiftTiming: (formData.get('employeeShiftTiming') || '').toString().trim() || undefined,
+          notes: (formData.get('employeeNotes') || '').toString().trim() || undefined,
+        }
+
+        const idProofType = (formData.get('employeeIdProofType') || '').toString().trim()
+        const idProofNumber = (formData.get('employeeIdProofNumber') || '').toString().trim()
+        const idProofFile = formData.get('employeeIdProofFile')
+
+        if (idProofFile && idProofFile instanceof File && idProofFile.size > 0) {
+          const idProofValidation = validateEmployeeIdProofFile(idProofFile)
+          if (!idProofValidation.valid) {
+            setError(idProofValidation.message)
+            return
+          }
+
+          employeeIdProofUpload = {
+            file: idProofFile,
+            idProofType: idProofType || undefined,
+            idProofNumber: idProofNumber || undefined,
+          }
+        }
+      }
+
+      createMutation.mutate({ userData: data, employeeProfileData, employeeIdProofUpload })
     }
   }
 
@@ -850,7 +1009,7 @@ export default function Users() {
           <div className="max-h-[90vh] w-full max-w-[560px] overflow-hidden rounded-2xl border border-[var(--border-default)] bg-[var(--bg-card)] shadow-[0_24px_60px_rgba(0,0,0,0.3)]">
             <div className="flex items-center justify-between border-b border-[var(--border-light)] px-5 py-4">
               <h3 className="text-lg font-semibold text-[var(--text-primary)]">{editingUser ? 'Edit User' : 'Add User'}</h3>
-              <button onClick={() => { setShowModal(false); setError(''); setShowPassword(false); }} className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-transparent text-[var(--text-tertiary)] transition hover:border-[var(--border-light)] hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-primary)]">
+              <button onClick={closeModal} className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-transparent text-[var(--text-tertiary)] transition hover:border-[var(--border-light)] hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-primary)]">
                 <X size={20} />
               </button>
             </div>
@@ -892,7 +1051,7 @@ export default function Users() {
                 label="Role"
                 name="role"
                 value={selectedRole || editingUser?.role || creatableRoles[0] || 'MEMBER'}
-                onChange={(e) => setSelectedRole(e.target.value)}
+                onChange={handleRoleChange}
                 options={creatableRoles.map(role => ({ value: role, label: role.replace('_', ' ') }))}
                 required
                 icon={Shield}
@@ -960,10 +1119,116 @@ export default function Users() {
                 defaultValue={editingUser?.phone}
                 required
               />
+              {!editingUser && (selectedRole || creatableRoles[0]) === 'EMPLOYEE' && (
+                <div className="space-y-3 rounded-xl border border-[var(--border-light)] bg-[var(--bg-tertiary)] p-3.5">
+                  <label className="flex items-center gap-2 text-sm font-semibold text-[var(--text-primary)]">
+                    <input
+                      type="checkbox"
+                      name="createEmployeeProfile"
+                      checked={createEmployeeProfile}
+                      onChange={(e) => setCreateEmployeeProfile(e.target.checked)}
+                      disabled={!canCreateEmployeeRecord}
+                      className="h-4 w-4 rounded border-[var(--border-default)]"
+                    />
+                    Create employee HR profile now
+                  </label>
+                  {!canCreateEmployeeRecord && (
+                    <p className="text-xs text-[var(--text-tertiary)]">
+                      You can create the user here, but only Admin/Management roles can create the employee HR profile from Employees page.
+                    </p>
+                  )}
+                  {createEmployeeProfile && canCreateEmployeeRecord && (
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                      <FormInput
+                        label="Department"
+                        name="employeeDepartment"
+                        required
+                        placeholder="Housekeeping, Security, Maintenance"
+                      />
+                      <FormInput
+                        label="Designation"
+                        name="employeeDesignation"
+                        required
+                        placeholder="Guard, Cleaner, Technician"
+                      />
+                      <FormInput
+                        label="Employee Code"
+                        name="employeeCode"
+                        placeholder="EMP-001"
+                      />
+                      <FormInput
+                        label="Joining Date"
+                        name="employeeJoiningDate"
+                        type="date"
+                      />
+                      <FormInput
+                        label="Monthly Salary"
+                        name="employeeMonthlySalary"
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        placeholder="25000"
+                      />
+                      <FormInput
+                        label="Employment Type"
+                        name="employeeEmploymentType"
+                        placeholder="FULL_TIME / PART_TIME / CONTRACT"
+                      />
+                      <div className="sm:col-span-2">
+                        <FormInput
+                          label="Shift Timing"
+                          name="employeeShiftTiming"
+                          placeholder="09:00-17:00"
+                        />
+                      </div>
+                      <div className="sm:col-span-2">
+                        <FormInput
+                          label="Notes"
+                          name="employeeNotes"
+                          placeholder="Optional notes"
+                        />
+                      </div>
+                      <FormInput
+                        label="ID Proof Type"
+                        name="employeeIdProofType"
+                        placeholder="Aadhaar / PAN / Passport"
+                      />
+                      <FormInput
+                        label="ID Proof Number"
+                        name="employeeIdProofNumber"
+                        placeholder="Document number"
+                      />
+                      <div className="sm:col-span-2">
+                        <label className="mb-1 block text-sm font-medium text-[var(--text-primary)]">ID Proof File (optional)</label>
+                        <input
+                          type="file"
+                          name="employeeIdProofFile"
+                          accept=".pdf,.jpg,.jpeg,.png,.webp"
+                          onChange={handleEmployeeIdProofFileChange}
+                          className="w-full rounded-lg border border-[var(--border-default)] bg-[var(--bg-card)] px-3 py-2 text-sm text-[var(--text-primary)] file:mr-3 file:rounded-md file:border-0 file:bg-[var(--bg-tertiary)] file:px-2.5 file:py-1.5 file:text-xs file:font-semibold file:text-[var(--text-secondary)]"
+                        />
+                        {employeeIdProofFileFeedback.message && (
+                          <p
+                            className={clsx(
+                              'mt-1 text-xs',
+                              employeeIdProofFileFeedback.type === 'error' ? 'text-red-500' : 'text-emerald-500',
+                            )}
+                          >
+                            {employeeIdProofFileFeedback.message}
+                          </p>
+                        )}
+                        <p className="mt-1 text-xs text-[var(--text-tertiary)]">
+                          Allowed: PDF, JPG, JPEG, PNG, WEBP. Max size: {formatFileSize(EMPLOYEE_ID_PROOF_MAX_SIZE_BYTES)}.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
               <div className="mt-2 flex justify-end gap-2 border-t border-[var(--border-light)] pt-4">
                 <button
                   type="button"
-                  onClick={() => { setShowModal(false); setError(''); setShowPassword(false); }}
+                  onClick={closeModal}
                   className="inline-flex h-10 items-center justify-center rounded-lg border border-[var(--border-default)] bg-[var(--bg-card)] px-4 text-sm font-medium text-[var(--text-secondary)] transition hover:border-[var(--border-strong)] hover:text-[var(--text-primary)]"
                 >
                   Cancel

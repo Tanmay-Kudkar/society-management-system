@@ -188,15 +188,15 @@ export default function Vehicles() {
   return (
     <div>
       {/* Header */}
-      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between max-[360px]:mb-4 max-[360px]:gap-2.5">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold text-[var(--text-primary)]">Vehicles</h1>
+            <h1 className="text-2xl font-bold text-[var(--text-primary)] max-[360px]:text-[1.45rem]">Vehicles</h1>
             <InfoTooltip text="Manage resident vehicles and parking" />
           </div>
         </div>
         {canEditVehicles && (
-          <div className="flex gap-2">
+          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:justify-end">
             <NeonSweepButton
               tone="cyan"
               size="md"
@@ -220,8 +220,8 @@ export default function Vehicles() {
       </div>
 
       {/* Filters */}
-      <div className="mb-6 rounded-xl border border-[var(--border-default)] bg-[var(--bg-card)] p-4 shadow-sm">
-        <div className="flex flex-col gap-4 sm:flex-row">
+      <div className="mb-6 rounded-xl border border-[var(--border-default)] bg-[var(--bg-card)] p-4 shadow-sm max-[360px]:mb-4 max-[360px]:p-3">
+        <div className="flex flex-col gap-4 sm:flex-row max-[360px]:gap-2.5">
           <div className="relative flex-1">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-[var(--text-tertiary)]" />
             <input
@@ -235,7 +235,7 @@ export default function Vehicles() {
           <select
             value={filterType}
             onChange={(e) => setFilterType(e.target.value)}
-            className="rounded-lg border border-[var(--border-light)] bg-[var(--bg-card)] px-3 py-2 text-[var(--text-primary)] outline-none transition focus:border-blue-500 focus:shadow-[0_0_0_2px_rgba(59,130,246,0.3)]"
+            className="w-full rounded-lg border border-[var(--border-light)] bg-[var(--bg-card)] px-3 py-2 text-[var(--text-primary)] outline-none transition focus:border-blue-500 focus:shadow-[0_0_0_2px_rgba(59,130,246,0.3)] sm:w-auto"
           >
             <option value="">All Types</option>
             <option value="TWO_WHEELER">Two Wheeler</option>
@@ -245,51 +245,51 @@ export default function Vehicles() {
       </div>
 
       {/* Stats */}
-      <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <div className="rounded-xl border border-[var(--border-default)] bg-[var(--bg-card)] p-4 shadow-sm">
+      <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3 max-[360px]:mb-4 max-[360px]:gap-2">
+        <div className="rounded-xl border border-[var(--border-default)] bg-[var(--bg-card)] p-4 shadow-sm max-[360px]:p-3">
           <div className="flex items-center gap-3">
             <div className="rounded-lg bg-blue-500/15 p-2">
               <Car className="h-5 w-5 text-blue-600" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-[var(--text-primary)]">
+              <p className="text-2xl font-bold text-[var(--text-primary)] max-[360px]:text-xl">
                 {vehicleStats.fourWheelers}
               </p>
-              <p className="text-sm text-[var(--text-tertiary)]">Four Wheelers</p>
+              <p className="text-sm text-[var(--text-tertiary)] max-[360px]:text-xs">Four Wheelers</p>
             </div>
           </div>
         </div>
-        <div className="rounded-xl border border-[var(--border-default)] bg-[var(--bg-card)] p-4 shadow-sm">
+        <div className="rounded-xl border border-[var(--border-default)] bg-[var(--bg-card)] p-4 shadow-sm max-[360px]:p-3">
           <div className="flex items-center gap-3">
             <div className="rounded-lg bg-green-500/15 p-2">
               <Bike className="h-5 w-5 text-green-600" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-[var(--text-primary)]">
+              <p className="text-2xl font-bold text-[var(--text-primary)] max-[360px]:text-xl">
                 {vehicleStats.twoWheelers}
               </p>
-              <p className="text-sm text-[var(--text-tertiary)]">Two Wheelers</p>
+              <p className="text-sm text-[var(--text-tertiary)] max-[360px]:text-xs">Two Wheelers</p>
             </div>
           </div>
         </div>
-        <div className="rounded-xl border border-[var(--border-default)] bg-[var(--bg-card)] p-4 shadow-sm">
+        <div className="rounded-xl border border-[var(--border-default)] bg-[var(--bg-card)] p-4 shadow-sm max-[360px]:p-3">
           <div className="flex items-center gap-3">
             <div className="rounded-lg bg-violet-500/15 p-2">
               <Car className="h-5 w-5 text-violet-600" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-[var(--text-primary)]">{vehicleStats.total}</p>
-              <p className="text-sm text-[var(--text-tertiary)]">Total Vehicles</p>
+              <p className="text-2xl font-bold text-[var(--text-primary)] max-[360px]:text-xl">{vehicleStats.total}</p>
+              <p className="text-sm text-[var(--text-tertiary)] max-[360px]:text-xs">Total Vehicles</p>
             </div>
           </div>
         </div>
       </div>
 
       {effectiveSocietyId && (
-        <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <div className="rounded-xl border border-[var(--border-default)] bg-[var(--bg-card)] p-4 shadow-sm">
+        <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 max-[360px]:mb-4 max-[360px]:gap-2">
+          <div className="rounded-xl border border-[var(--border-default)] bg-[var(--bg-card)] p-4 shadow-sm max-[360px]:p-3">
             <div className="mb-2 flex items-center justify-between">
-              <p className="text-sm font-semibold text-[var(--text-secondary)]">Two-Wheeler Parking</p>
+              <p className="text-sm font-semibold text-[var(--text-secondary)] max-[360px]:text-xs">Two-Wheeler Parking</p>
               <span className="rounded-full bg-green-500/15 px-2 py-1 text-xs font-semibold text-green-600">
                 {parkingCapacityStats.twoWheelerUsed}
                 {parkingCapacityStats.twoWheelerCapacity == null ? '' : ` / ${parkingCapacityStats.twoWheelerCapacity}`}
@@ -302,9 +302,9 @@ export default function Vehicles() {
             </p>
           </div>
 
-          <div className="rounded-xl border border-[var(--border-default)] bg-[var(--bg-card)] p-4 shadow-sm">
+          <div className="rounded-xl border border-[var(--border-default)] bg-[var(--bg-card)] p-4 shadow-sm max-[360px]:p-3">
             <div className="mb-2 flex items-center justify-between">
-              <p className="text-sm font-semibold text-[var(--text-secondary)]">Four-Wheeler Parking</p>
+              <p className="text-sm font-semibold text-[var(--text-secondary)] max-[360px]:text-xs">Four-Wheeler Parking</p>
               <span className="rounded-full bg-blue-500/15 px-2 py-1 text-xs font-semibold text-blue-600">
                 {parkingCapacityStats.fourWheelerUsed}
                 {parkingCapacityStats.fourWheelerCapacity == null ? '' : ` / ${parkingCapacityStats.fourWheelerCapacity}`}
@@ -513,7 +513,7 @@ export default function Vehicles() {
       {showModal && canEditVehicles && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="fixed inset-0 bg-black/50" onClick={() => setShowModal(false)} />
-          <div className="relative w-full max-w-xl rounded-xl border border-[var(--border-default)] bg-[var(--bg-card)] p-6 shadow-xl">
+          <div className="relative w-full max-w-xl rounded-xl border border-[var(--border-default)] bg-[var(--bg-card)] p-6 shadow-xl max-[360px]:p-4">
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-xl font-semibold text-[var(--text-primary)]">
                 {editingVehicle ? 'Edit Vehicle' : 'Add Vehicle'}
@@ -537,7 +537,7 @@ export default function Vehicles() {
                 emptyMessage="No flats available"
               />
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <FormInput
                   label="Vehicle Number"
                   name="vehicleNumber"
@@ -558,7 +558,7 @@ export default function Vehicles() {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <FormInput
                   label="Brand"
                   name="brand"
@@ -575,7 +575,7 @@ export default function Vehicles() {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <FormInput
                   label="Color"
                   name="color"

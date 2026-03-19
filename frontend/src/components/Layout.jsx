@@ -47,6 +47,7 @@ const routePrefetchMap = {
   "/settings": () => import("../pages/core/Settings"),
   "/reports": () => import("../pages/core/Reports"),
   "/users": () => import("../pages/users/Users"),
+  "/employees": () => import("../pages/users/Employees"),
   "/roles-permissions": () => import("../pages/users/RolesPermissions"),
   "/society-admins": () => import("../pages/society/SocietyAdmins"),
   "/login-audit": () => import("../pages/society/LoginAudit"),
@@ -164,6 +165,19 @@ const standardMenuGroups = [
           "COMMITTEE",
           "MANAGER",
           "MEMBER",
+        ],
+      },
+      {
+        path: "/employees",
+        icon: Users,
+        label: "Employees",
+        roles: [
+          "MASTER_ADMIN",
+          "SOCIETY_ADMIN",
+          "CHAIRMAN",
+          "SECRETARY",
+          "TREASURER",
+          "MANAGER",
         ],
       },
       {

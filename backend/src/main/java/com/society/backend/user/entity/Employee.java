@@ -10,6 +10,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import com.society.backend.society.entity.Society;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 /**
  * Employee HR record — stores attendance, salary, identity documents
@@ -89,6 +91,32 @@ public class Employee {
 
     @Column(name = "id_proof_document_url", length = 500)
     private String idProofDocumentUrl;
+
+    @Column(name = "id_proof_metadata_encrypted", columnDefinition = "TEXT")
+    private String idProofMetadataEncrypted;
+
+    @Column(name = "id_proof_metadata_version", length = 20)
+    private String idProofMetadataVersion;
+
+    @Column(name = "id_proof_metadata_updated_at")
+    private LocalDateTime idProofMetadataUpdatedAt;
+
+    @Basic(fetch = FetchType.LAZY)
+    @JdbcTypeCode(SqlTypes.VARBINARY)
+    @Column(name = "id_proof_document_data", columnDefinition = "BYTEA")
+    private byte[] idProofDocumentData;
+
+    @Column(name = "id_proof_document_file_name", length = 255)
+    private String idProofDocumentFileName;
+
+    @Column(name = "id_proof_document_content_type", length = 120)
+    private String idProofDocumentContentType;
+
+    @Column(name = "id_proof_document_size")
+    private Long idProofDocumentSize;
+
+    @Column(name = "id_proof_document_checksum", length = 128)
+    private String idProofDocumentChecksum;
 
     @Column(name = "photo_url", length = 500)
     private String photoUrl;

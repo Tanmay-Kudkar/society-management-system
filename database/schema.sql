@@ -639,6 +639,14 @@ CREATE TABLE IF NOT EXISTS employees (
     id_proof_type               VARCHAR(30),
     id_proof_number             VARCHAR(50),
     id_proof_document_url       VARCHAR(500),
+    id_proof_metadata_encrypted TEXT,
+    id_proof_metadata_version   VARCHAR(20),
+    id_proof_metadata_updated_at TIMESTAMP,
+    id_proof_document_data      BYTEA,
+    id_proof_document_file_name VARCHAR(255),
+    id_proof_document_content_type VARCHAR(120),
+    id_proof_document_size      BIGINT,
+    id_proof_document_checksum  VARCHAR(128),
     photo_url                   VARCHAR(500),
     emergency_contact_name      VARCHAR(100),
     emergency_contact_phone     VARCHAR(20),
@@ -649,4 +657,62 @@ CREATE TABLE IF NOT EXISTS employees (
     created_at                  TIMESTAMP DEFAULT NOW(),
     updated_at                  TIMESTAMP DEFAULT NOW()
 );
+
+-- ————————————————————————————————————————————————————————————————
+-- 48. EMPLOYEE ATTENDANCE (HR Records)
+-- ————————————————————————————————————————————————————————————————
+CREATE TABLE IF NOT EXISTS employee_attendance (
+    id                          BIGSERIAL PRIMARY KEY,
+    employee_id                 BIGINT NOT NULL REFERENCES employees(id) ON DELETE CASCADE,
+    society_id                  BIGINT NOT NULL REFERENCES societies(id),
+    attendance_date             DATE NOT NULL,
+    status                      VARCHAR(20) NOT NULL,
+    check_in_time               TIME,
+    check_out_time              TIME,
+    remarks                     TEXT,
+    marked_by                   BIGINT REFERENCES users(id),
+    created_at                  TIMESTAMP DEFAULT NOW(),
+    updated_at                  TIMESTAMP DEFAULT NOW(),
+    CONSTRAINT uk_employee_attendance_employee_date UNIQUE (employee_id, attendance_date)
+);
+
+CREATE INDEX IF NOT EXISTS idx_employee_attendance_society_date
+    ON employee_attendance(society_id, attendance_date);
+
+CREATE INDEX IF NOT EXISTS idx_employee_attendance_employee_date
+    ON employee_attendance(employee_id, attendance_date);
+
+CREATE INDEX IF NOT EXISTS idx_employee_attendance_status
+    ON employee_attendance(status);
+
+-- ————————————————————————————————————————————————————————————————
+-- 49. EMPLOYEE SALARY PAYMENTS
+-- ————————————————————————————————————————————————————————————————
+CREATE TABLE IF NOT EXISTS employee_salary_payments (
+    id                          BIGSERIAL PRIMARY KEY,
+    employee_id                 BIGINT NOT NULL REFERENCES employees(id) ON DELETE CASCADE,
+    society_id                  BIGINT NOT NULL REFERENCES societies(id),
+    salary_month                DATE NOT NULL,
+    base_salary                 NUMERIC(12,2) NOT NULL,
+    deduction_amount            NUMERIC(12,2) NOT NULL DEFAULT 0,
+    net_paid                    NUMERIC(12,2) NOT NULL,
+    payment_date                DATE NOT NULL,
+    payment_mode                VARCHAR(30),
+    reference_number            VARCHAR(100),
+    deduction_reason            TEXT,
+    notes                       TEXT,
+    recorded_by                 BIGINT REFERENCES users(id),
+    paid_at                     TIMESTAMP DEFAULT NOW(),
+    created_at                  TIMESTAMP DEFAULT NOW(),
+    updated_at                  TIMESTAMP DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_emp_salary_society_month
+    ON employee_salary_payments(society_id, salary_month);
+
+CREATE INDEX IF NOT EXISTS idx_emp_salary_employee_month
+    ON employee_salary_payments(employee_id, salary_month);
+
+CREATE INDEX IF NOT EXISTS idx_emp_salary_paid_at
+    ON employee_salary_payments(paid_at);
 

@@ -120,7 +120,7 @@ public class RoleService {
     public void requireStaff(Long userId) {
         checkRole(userId, Role.MASTER_ADMIN, Role.SOCIETY_ADMIN,
                 Role.CHAIRMAN, Role.SECRETARY, Role.TREASURER,
-                Role.COMMITTEE, Role.MANAGER, Role.EMPLOYEE);
+                Role.COMMITTEE, Role.MANAGER);
     }
 
     /**
@@ -130,7 +130,7 @@ public class RoleService {
     public void requireTicketManager(Long userId) {
         checkRole(userId, Role.MASTER_ADMIN, Role.SOCIETY_ADMIN,
                 Role.CHAIRMAN, Role.SECRETARY, Role.TREASURER,
-                Role.MANAGER, Role.EMPLOYEE);
+                Role.MANAGER);
     }
 
     /**
@@ -205,7 +205,7 @@ public class RoleService {
     public void canUpdateComplaintStatus(Long userId) {
         checkRole(userId, Role.MASTER_ADMIN, Role.SOCIETY_ADMIN,
                 Role.CHAIRMAN, Role.SECRETARY, Role.TREASURER,
-                Role.COMMITTEE, Role.MANAGER, Role.EMPLOYEE);
+                Role.COMMITTEE, Role.MANAGER);
     }
 
     /**
@@ -228,7 +228,7 @@ public class RoleService {
     public void canManageVehicles(Long userId) {
         checkRole(userId, Role.MASTER_ADMIN, Role.SOCIETY_ADMIN,
                 Role.CHAIRMAN, Role.SECRETARY, Role.TREASURER, Role.COMMITTEE,
-                Role.MANAGER, Role.EMPLOYEE, Role.MEMBER);
+                Role.MANAGER, Role.MEMBER);
     }
 
     /**
@@ -262,7 +262,7 @@ public class RoleService {
     public void canRaiseComplaints(Long userId) {
         checkRole(userId, Role.MASTER_ADMIN, Role.SOCIETY_ADMIN,
                 Role.CHAIRMAN, Role.SECRETARY, Role.TREASURER, Role.COMMITTEE,
-                Role.MANAGER, Role.EMPLOYEE, Role.MEMBER, Role.TENANT);
+                Role.MANAGER, Role.MEMBER, Role.TENANT);
     }
 
     /**
@@ -271,5 +271,13 @@ public class RoleService {
     public void canManageFinancials(Long userId) {
         checkRole(userId, Role.MASTER_ADMIN, Role.SOCIETY_ADMIN,
                 Role.CHAIRMAN, Role.SECRETARY, Role.TREASURER);
+    }
+
+    /**
+     * Employee HR record access roles.
+     */
+    public void requireEmployeeRecordAccess(Long userId) {
+        checkRole(userId, Role.MASTER_ADMIN, Role.SOCIETY_ADMIN,
+                Role.CHAIRMAN, Role.SECRETARY, Role.TREASURER, Role.MANAGER);
     }
 }

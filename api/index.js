@@ -587,6 +587,33 @@ export const employeeApi = {
   delete: (id, userId) => api.delete(`/employees/${id}?userId=${userId}`),
   recordAdvance: (id, amount, userId) => api.patch(`/employees/${id}/advance/record?amount=${amount}&userId=${userId}`),
   deductAdvance: (id, amount, userId) => api.patch(`/employees/${id}/advance/deduct?amount=${amount}&userId=${userId}`),
+  updateIdProofMetadata: (id, data, userId) => api.put(`/employees/${id}/id-proof/metadata?userId=${userId}`, data),
+  getIdProofMetadata: (id, userId) => api.get(`/employees/${id}/id-proof/metadata?userId=${userId}`),
+  uploadIdProofDocument: (id, file, userId, idProofType, idProofNumber) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    if (idProofType) formData.append('idProofType', idProofType);
+    if (idProofNumber) formData.append('idProofNumber', idProofNumber);
+    return api.post(`/employees/${id}/id-proof/upload?userId=${userId}`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
+  downloadIdProofDocument: (id, userId) => api.get(`/employees/${id}/id-proof/file?userId=${userId}`, { responseType: 'blob' }),
+}
+
+// Employee Attendance API
+export const attendanceApi = {
+  markAttendance: (employeeId, data, userId) => api.post(`/employee-attendance/employee/${employeeId}?userId=${userId}`, data),
+  getBySociety: (societyId, userId, params = {}) => api.get(`/employee-attendance/society/${societyId}?userId=${userId}`, { params }),
+  getByEmployee: (employeeId, userId, params = {}) => api.get(`/employee-attendance/employee/${employeeId}?userId=${userId}`, { params }),
+  getSummary: (societyId, userId, params = {}) => api.get(`/employee-attendance/society/${societyId}/summary?userId=${userId}`, { params }),
+}
+
+// Employee Salary Payment API
+export const employeeSalaryPaymentApi = {
+  recordPayment: (employeeId, data, userId) => api.post(`/employee-salary-payments/employee/${employeeId}?userId=${userId}`, data),
+  getBySociety: (societyId, userId, params = {}) => api.get(`/employee-salary-payments/society/${societyId}?userId=${userId}`, { params }),
+  getByEmployee: (employeeId, userId, params = {}) => api.get(`/employee-salary-payments/employee/${employeeId}?userId=${userId}`, { params }),
 }
 
 // Helper function to download blob as file
