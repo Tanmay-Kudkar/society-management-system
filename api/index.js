@@ -473,29 +473,29 @@ export const reportApi = {
 
 // Export API for Excel downloads
 export const exportApi = {
-  transactions: (societyId, startDate, endDate) => 
-    api.get(`/api/export/transactions/${societyId}?startDate=${startDate}&endDate=${endDate}`, { responseType: 'blob' }),
-  maintenanceBills: (societyId, month) => 
-    api.get(`/api/export/maintenance-bills/${societyId}${month ? `?month=${month}` : ''}`, { responseType: 'blob' }),
-  vendorBills: (societyId, startDate, endDate) => {
-    let url = `/api/export/vendor-bills/${societyId}`;
-    if (startDate && endDate) url += `?startDate=${startDate}&endDate=${endDate}`;
-    return api.get(url, { responseType: 'blob' });
-  },
-  tickets: (societyId, status) => 
-    api.get(`/api/export/tickets/${societyId}${status ? `?status=${status}` : ''}`, { responseType: 'blob' }),
-  flats: (societyId) => 
-    api.get(`/api/export/flats/${societyId}`, { responseType: 'blob' }),
-  financialReport: (societyId, reportType, startDate, endDate) => {
-    let url = `/api/export/financial-report/${societyId}?reportType=${reportType}`;
+  transactions: (societyId, startDate, endDate, format = 'csv') => 
+    api.get(`/api/export/transactions/${societyId}?startDate=${startDate}&endDate=${endDate}&format=${format}`, { responseType: 'blob' }),
+  maintenanceBills: (societyId, month, format = 'csv') =>
+      api.get(`/api/export/maintenance-bills/${societyId}${month ? `?month=${month}&format=${format}` : `?format=${format}`}`, { responseType: 'blob' }),
+  vendorBills: (societyId, startDate, endDate, format = 'csv') => {
+      let url = `/api/export/vendor-bills/${societyId}?format=${format}`;
+      if (startDate && endDate) url += `&startDate=${startDate}&endDate=${endDate}`;
+      return api.get(url, { responseType: 'blob' });
+    },
+  tickets: (societyId, status, format = 'csv') => 
+    api.get(`/api/export/tickets/${societyId}${status ? `?status=${status}&format=${format}` : `?format=${format}`}`, { responseType: 'blob' }),
+  flats: (societyId, format = 'csv') =>
+      api.get(`/api/export/flats/${societyId}?format=${format}`, { responseType: 'blob' }),
+  financialReport: (societyId, reportType, startDate, endDate, format = 'csv') => {
+    let url = `/api/export/financial-report/${societyId}?reportType=${reportType}&format=${format}`;
     if (startDate) url += `&startDate=${startDate}`;
     if (endDate) url += `&endDate=${endDate}`;
     return api.get(url, { responseType: 'blob' });
   },
-  allTransactions: (startDate, endDate) => 
-    api.get(`/api/export/all-transactions?startDate=${startDate}&endDate=${endDate}`, { responseType: 'blob' }),
-  allTickets: (status) => 
-    api.get(`/api/export/all-tickets${status ? `?status=${status}` : ''}`, { responseType: 'blob' }),
+  allTransactions: (startDate, endDate, format = 'csv') => 
+    api.get(`/api/export/all-transactions?startDate=${startDate}&endDate=${endDate}&format=${format}`, { responseType: 'blob' }),
+  allTickets: (status, format = 'csv') => 
+    api.get(`/api/export/all-tickets${status ? `?status=${status}&format=${format}` : `?format=${format}`}`, { responseType: 'blob' }),
 }
 
 // Visitor API
@@ -595,4 +595,5 @@ export const downloadBlob = (blob, filename) => {
   window.URL.revokeObjectURL(url);
   document.body.removeChild(a);
 }
+
 
