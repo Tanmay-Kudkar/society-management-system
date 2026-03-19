@@ -109,8 +109,9 @@ const ProtectedRoute = ({ children }) => {
   return children;
 };
 
-const RoleRoute = ({ children, allow, message = "You don't have permission to access this page" }) => {
+const RoleRoute = ({ children, allow, requireSocietyScope = false, message = "You don't have permission to access this page" }) => {
   const { user } = useAuth();
+  const location = useLocation();
 
   if (!user) {
     return <Navigate to="/" replace />;
