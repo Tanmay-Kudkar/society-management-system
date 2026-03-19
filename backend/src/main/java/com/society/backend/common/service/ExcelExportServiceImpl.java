@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.YearMonth;
@@ -267,6 +268,54 @@ public class ExcelExportServiceImpl implements ExcelExportService {
         } catch (IOException e) {
             throw new RuntimeException("Failed to export transactions", e);
         }
+    }
+
+    @Override
+    public ByteArrayOutputStream exportTransactionsCsv(Long societyId, String startDate, String endDate) {
+        LocalDate start = LocalDate.parse(startDate);
+        LocalDate end = LocalDate.parse(endDate);
+
+        List<Transaction> transactions;
+        if (societyId != null) {
+            transactions = transactionRepository.findBySocietyIdAndTransactionDateBetween(societyId, start, end);
+        } else {
+            transactions = transactionRepository.findByTransactionDateBetween(start, end);
+        }
+
+        StringBuilder csv = new StringBuilder();
+        csv.append("ID,Date,Type,Category,Payment Mode,Amount,Reference,Cheque #,Bank Name,UPI ID,Transaction ID / UTR,Card Type,Card Last 4,Payment Month,Late Fee,Discount,Tax,Unit/Flat,Receipt #,Invoice #,Description\n");
+
+        for (Transaction t : transactions) {
+            csv.append(t.getId()).append(',')
+                    .append(csvValue(t.getTransactionDate() != null ? t.getTransactionDate().toString() : "")).append(',')
+                    .append(csvValue(t.getTransactionType())).append(',')
+                    .append(csvValue(t.getCategory())).append(',')
+                    .append(csvValue(t.getPaymentMode())).append(',')
+                    .append(csvValue(t.getAmount())).append(',')
+                    .append(csvValue(resolveTransactionReference(t))).append(',')
+                    .append(csvValue(resolveTransactionCheque(t))).append(',')
+                    .append(csvValue(resolveTransactionBankName(t))).append(',')
+                    .append(csvValue(resolveTransactionUpiId(t))).append(',')
+                    .append(csvValue(resolveTransactionUtr(t))).append(',')
+                    .append(csvValue(resolveTransactionCardType(t))).append(',')
+                    .append(csvValue(resolveTransactionCardLastFour(t))).append(',')
+                    .append(csvValue(resolveTransactionPaymentMonth(t))).append(',')
+                    .append(csvValue(t.getLateFee())).append(',')
+                    .append(csvValue(t.getDiscount())).append(',')
+                    .append(csvValue(t.getTaxAmount())).append(',')
+                    .append(csvValue(t.getFlat() != null ? t.getFlat().getFlatNumber() : "")).append(',')
+                    .append(csvValue(t.getReceiptNumber())).append(',')
+                    .append(csvValue(t.getInvoiceNumber())).append(',')
+                    .append(csvValue(t.getDescription())).append('\n');
+        }
+
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        try {
+            outputStream.write(csv.toString().getBytes(StandardCharsets.UTF_8));
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to export transactions as CSV", e);
+        }
+        return outputStream;
     }
 
     @Override
@@ -570,6 +619,51 @@ public class ExcelExportServiceImpl implements ExcelExportService {
     }
 
     @Override
+    public ByteArrayOutputStream exportTicketsCsv(Long societyId, String status) {
+        List<Ticket> tickets;
+        if (societyId != null && status != null && !status.isEmpty()) {
+            tickets = ticketRepository.findBySocietyIdAndStatus(societyId, status);
+        } else if (societyId != null) {
+            tickets = ticketRepository.findBySocietyId(societyId);
+        } else if (status != null && !status.isEmpty()) {
+            tickets = ticketRepository.findByStatus(status);
+        } else {
+            tickets = ticketRepository.findAll();
+        }
+
+        StringBuilder csv = new StringBuilder();
+        csv.append("ID,Society,Title,Type,Priority,Status,Progress %,Pending Days,Raised By,Assigned To,Resolution / Latest Reply,Last Reply By,Last Reply At,Overdue,Overdue Days,Escalation Level,Created At\n");
+
+        for (Ticket t : tickets) {
+            csv.append(t.getId()).append(',')
+                    .append(csvValue(t.getSociety() != null ? t.getSociety().getName() : "")).append(',')
+                    .append(csvValue(t.getTitle())).append(',')
+                    .append(csvValue(t.getType())).append(',')
+                    .append(csvValue(t.getPriority())).append(',')
+                    .append(csvValue(t.getStatus())).append(',')
+                    .append(csvValue(t.getProgressPercent() != null ? t.getProgressPercent() : 0)).append(',')
+                    .append(csvValue(t.getPendingDays())).append(',')
+                    .append(csvValue(t.getRaisedBy() != null ? t.getRaisedBy().getName() : "")).append(',')
+                    .append(csvValue(t.getAssignedTo() != null ? t.getAssignedTo().getName() : "Unassigned")).append(',')
+                    .append(csvValue(t.getResolution())).append(',')
+                    .append(csvValue(t.getLastReplyBy())).append(',')
+                    .append(csvValue(t.getLastReplyAt())).append(',')
+                    .append(csvValue(Boolean.TRUE.equals(t.getIsOverdue()) ? "Yes" : "No")).append(',')
+                    .append(csvValue(t.getOverdueDays() != null ? t.getOverdueDays() : 0)).append(',')
+                    .append(csvValue(t.getEscalationLevel() != null ? t.getEscalationLevel() : 0)).append(',')
+                    .append(csvValue(t.getCreatedAt() != null ? t.getCreatedAt().toString() : "")).append('\n');
+        }
+
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        try {
+            outputStream.write(csv.toString().getBytes(StandardCharsets.UTF_8));
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to export tickets as CSV", e);
+        }
+        return outputStream;
+    }
+
+    @Override
     public ByteArrayOutputStream exportFlats(Long societyId) {
         List<Flat> flats;
         if (societyId != null) {
@@ -855,6 +949,95 @@ public class ExcelExportServiceImpl implements ExcelExportService {
         }
     }
 
+    @Override
+    public ByteArrayOutputStream exportFinancialReportCsv(Long societyId, String reportType, String startDate,
+            String endDate) {
+        String normalizedType = reportType != null ? reportType.toUpperCase() : "MTD";
+        FinancialReportResponse report;
+        switch (normalizedType) {
+            case "YTD":
+                report = reportService.getYTDReport(societyId);
+                break;
+            case "CUSTOM":
+                report = reportService.getCustomReport(societyId, LocalDate.parse(startDate), LocalDate.parse(endDate));
+                break;
+            case "COMPARISON":
+                report = reportService.getComparisonReport(societyId, "MONTH");
+                break;
+            case "MTD":
+            default:
+                report = reportService.getMTDReport(societyId);
+                normalizedType = "MTD";
+                break;
+        }
+
+        StringBuilder csv = new StringBuilder();
+        csv.append("Section,Label,Value,Value 2,Value 3,Value 4\n");
+        csv.append(csvRow("REPORT", "Type", normalizedType, null, null, null));
+        csv.append(csvRow("REPORT", "Society", report.getSocietyName(), null, null, null));
+        csv.append(csvRow("REPORT", "Start Date", report.getStartDate(), null, null, null));
+        csv.append(csvRow("REPORT", "End Date", report.getEndDate(), null, null, null));
+        csv.append(csvRow("SUMMARY", "Total Income", safeAmount(report.getTotalIncome()), null, null, null));
+        csv.append(csvRow("SUMMARY", "Total Expense", safeAmount(report.getTotalExpense()), null, null, null));
+        csv.append(csvRow("SUMMARY", "Net Balance", safeAmount(report.getNetBalance()), null, null, null));
+        csv.append(csvRow("SUMMARY", "Cash Balance", safeAmount(report.getCashBalance()), null, null, null));
+
+        if ("COMPARISON".equals(normalizedType)) {
+            csv.append(csvRow("COMPARISON", "Previous Period Income", safeAmount(report.getPreviousPeriodIncome()), null, null, null));
+            csv.append(csvRow("COMPARISON", "Previous Period Expense", safeAmount(report.getPreviousPeriodExpense()), null, null, null));
+        }
+
+        appendMapSection(csv, "INCOME BY CATEGORY", report.getIncomeByCategory());
+        appendMapSection(csv, "EXPENSE BY CATEGORY", report.getExpenseByCategory());
+        appendMapSection(csv, "INCOME BY PAYMENT MODE", report.getIncomeByPaymentMode());
+        appendMapSection(csv, "EXPENSE BY PAYMENT MODE", report.getExpenseByPaymentMode());
+
+        if (!"COMPARISON".equals(normalizedType)) {
+            csv.append(csvRow("BILLS SUMMARY", "Total Bills", report.getTotalBillsGenerated(), null, null, null));
+            csv.append(csvRow("BILLS SUMMARY", "Paid Bills", report.getBillsPaid(), null, null, null));
+            csv.append(csvRow("BILLS SUMMARY", "Pending Bills", report.getBillsPending(), null, null, null));
+            csv.append(csvRow("BILLS SUMMARY", "Collected Amount", safeAmount(report.getBillsCollectedAmount()), null, null, null));
+            csv.append(csvRow("BILLS SUMMARY", "Pending Amount", safeAmount(report.getBillsPendingAmount()), null, null, null));
+
+            csv.append(csvRow("PERIOD STATISTICS", "Transactions", report.getTransactionCount(), null, null, null));
+            csv.append(csvRow("PERIOD STATISTICS", "Late Fees Collected", safeAmount(report.getLateFeeCollected()), null, null, null));
+            csv.append(csvRow("PERIOD STATISTICS", "Discounts Given", safeAmount(report.getDiscountGiven()), null, null, null));
+            csv.append(csvRow("PERIOD STATISTICS", "Tax Collected", safeAmount(report.getTaxCollected()), null, null, null));
+
+            csv.append(csvRow("OUTSTANDING DUES", "Unpaid / Partial Bills", report.getOutstandingDuesCount(), null, null, null));
+            csv.append(csvRow("OUTSTANDING DUES", "Outstanding Dues Amount", safeAmount(report.getOutstandingDuesAmount()), null, null, null));
+
+            csv.append(csvRow("UPCOMING PAYMENTS", "Upcoming Total", safeAmount(report.getUpcomingExpenses()), null, null, null));
+            if (report.getUpcomingPayments() != null) {
+                for (FinancialReportResponse.UpcomingPayment payment : report.getUpcomingPayments()) {
+                    csv.append(csvRow("UPCOMING PAYMENTS", payment.getDescription(), safeAmount(payment.getAmount()), payment.getDueDate(), payment.getType(), null));
+                }
+            }
+        }
+
+        if (report.getMonthlyTrends() != null) {
+            for (FinancialReportResponse.MonthlyTrend trend : report.getMonthlyTrends()) {
+                csv.append(csvRow("MONTHLY TRENDS", trend.getMonth(), safeAmount(trend.getIncome()), safeAmount(trend.getExpense()), safeAmount(trend.getBalance()), null));
+            }
+        }
+
+        if (report.getDailyTrends() != null && report.getDailyTrends().size() <= 31) {
+            for (FinancialReportResponse.DailyTrend trend : report.getDailyTrends()) {
+                BigDecimal income = safeAmount(trend.getIncome());
+                BigDecimal expense = safeAmount(trend.getExpense());
+                csv.append(csvRow("DAILY TRENDS", trend.getDate(), income, expense, income.subtract(expense), null));
+            }
+        }
+
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        try {
+            outputStream.write(csv.toString().getBytes(StandardCharsets.UTF_8));
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to export financial report as CSV", e);
+        }
+        return outputStream;
+    }
+
     private int writeMapSection(Sheet sheet, int rowNum, String title, java.util.Map<String, BigDecimal> data,
             CellStyle headerStyle, CellStyle currencyStyle) {
         Row sectionHeader = sheet.createRow(rowNum++);
@@ -902,6 +1085,36 @@ public class ExcelExportServiceImpl implements ExcelExportService {
         return value != null ? value : BigDecimal.ZERO;
     }
 
+        private String csvFormatRow(Object... values) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < values.length; i++) {
+            if (i > 0) sb.append(',');
+            sb.append(csvValue(values[i]));
+        }
+        sb.append('\n');
+        return sb.toString();
+    }
+
+    private String csvRow(String section, Object label, Object value, Object value2, Object value3, Object value4) {
+        return csvValue(section) + ','
+                + csvValue(label) + ','
+                + csvValue(value) + ','
+                + csvValue(value2) + ','
+                + csvValue(value3) + ','
+                + csvValue(value4) + '\n';
+    }
+
+    private void appendMapSection(StringBuilder csv, String section, java.util.Map<String, BigDecimal> data) {
+        if (data == null || data.isEmpty()) {
+            csv.append(csvRow(section, "No data", null, null, null, null));
+            return;
+        }
+
+        for (java.util.Map.Entry<String, BigDecimal> entry : data.entrySet()) {
+            csv.append(csvRow(section, prettyLabel(entry.getKey()), safeAmount(entry.getValue()), null, null, null));
+        }
+    }
+
     private String prettyLabel(String value) {
         if (value == null || value.isBlank()) {
             return "OTHER";
@@ -920,6 +1133,225 @@ public class ExcelExportServiceImpl implements ExcelExportService {
         }
         return builder.length() > 0 ? builder.toString() : "OTHER";
     }
+
+    private String csvValue(Object value) {
+        String text = value == null ? "" : String.valueOf(value);
+        if (text.contains(",") || text.contains("\"") || text.contains("\n") || text.contains("\r")) {
+            return '"' + text.replace("\"", "\"\"") + '"';
+        }
+        return text;
+    }
+
+    private String resolveTransactionReference(Transaction transaction) {
+        if (transaction.getReferenceNumber() != null && !transaction.getReferenceNumber().isBlank()) {
+            return transaction.getReferenceNumber();
+        }
+        return "CASH".equals(transaction.getPaymentMode()) ? "N/A - Cash payment" : "Missing";
+    }
+
+    private String resolveTransactionCheque(Transaction transaction) {
+        if (transaction.getChequeNumber() != null && !transaction.getChequeNumber().isBlank()) {
+            return transaction.getChequeNumber();
+        }
+        return "CHEQUE".equals(transaction.getPaymentMode()) ? "Missing" : "N/A - Not a cheque payment";
+    }
+
+    private String resolveTransactionBankName(Transaction transaction) {
+        if (transaction.getBankName() != null && !transaction.getBankName().isBlank()) {
+            return transaction.getBankName();
+        }
+        return ("CASH".equals(transaction.getPaymentMode()) || "UPI".equals(transaction.getPaymentMode()) || "WALLET".equals(transaction.getPaymentMode()))
+                ? "N/A"
+                : "Missing";
+    }
+
+    private String resolveTransactionUpiId(Transaction transaction) {
+        if (transaction.getUpiId() != null && !transaction.getUpiId().isBlank()) {
+            return transaction.getUpiId();
+        }
+        return "UPI".equals(transaction.getPaymentMode()) ? "Missing" : "N/A";
+    }
+
+    private String resolveTransactionUtr(Transaction transaction) {
+        if (transaction.getUtrNumber() != null && !transaction.getUtrNumber().isBlank()) {
+            return transaction.getUtrNumber();
+        }
+        return ("CASH".equals(transaction.getPaymentMode()) || "CHEQUE".equals(transaction.getPaymentMode()))
+                ? "N/A"
+                : "Missing";
+    }
+
+    private String resolveTransactionCardType(Transaction transaction) {
+        if (transaction.getCardType() != null && !transaction.getCardType().isBlank()) {
+            return transaction.getCardType();
+        }
+        return ("CREDIT_CARD".equals(transaction.getPaymentMode()) || "DEBIT_CARD".equals(transaction.getPaymentMode()))
+                ? "Missing"
+                : "N/A";
+    }
+
+    private String resolveTransactionCardLastFour(Transaction transaction) {
+        if (transaction.getCardLastFourDigits() != null && !transaction.getCardLastFourDigits().isBlank()) {
+            return transaction.getCardLastFourDigits();
+        }
+        return ("CREDIT_CARD".equals(transaction.getPaymentMode()) || "DEBIT_CARD".equals(transaction.getPaymentMode()))
+                ? "Missing"
+                : "N/A";
+    }
+
+    private String resolveTransactionPaymentMonth(Transaction transaction) {
+        if (transaction.getPaymentMonth() != null && !transaction.getPaymentMonth().isBlank()) {
+            return transaction.getPaymentMonth();
+        }
+        return "MAINTENANCE".equals(transaction.getCategory()) ? "Missing" : "N/A";
+    }
+
+        @Override
+    public ByteArrayOutputStream exportMaintenanceBillsCsv(Long societyId, String month) {
+        List<MaintenanceBill> bills;
+        if (month != null && !month.isEmpty()) {
+            bills = maintenanceBillRepository.findByBillMonth(month);
+        } else {
+            bills = maintenanceBillRepository.findAll();
+        }
+
+        if (societyId != null) {
+            bills = bills.stream()
+                    .filter(b -> b.getFlat().getSociety().getId().equals(societyId))
+                    .toList();
+        }
+
+        StringBuilder csv = new StringBuilder();
+        String title = "Maintenance Bills Report" + (month != null ? " - " + month : "");
+        csv.append(csvRow(title, null, null, null, null, null, null, null, null));
+        csv.append(csvFormatRow("ID", "Flat", "Society", "Month", "Amount", "Paid Amount", "Due Date", "Status", "Payment Mode"));
+
+        BigDecimal totalAmount = BigDecimal.ZERO;
+        BigDecimal totalPaid = BigDecimal.ZERO;
+
+        for (MaintenanceBill b : bills) {
+            String id = b.getId() != null ? b.getId().toString() : "";
+            String flat = b.getFlat() != null && b.getFlat().getFlatNumber() != null ? b.getFlat().getFlatNumber() : "";
+            String society = b.getFlat() != null && b.getFlat().getSociety() != null ? b.getFlat().getSociety().getName() : "";
+            String billMonth = b.getBillMonth() != null ? b.getBillMonth() : "";
+            String amount = b.getAmount() != null ? b.getAmount().toString() : "0";
+            String paid = b.getPaidAmount() != null ? b.getPaidAmount().toString() : "0";
+            String due = b.getDueDate() != null ? b.getDueDate().toString() : "";
+            String status = b.getStatus() != null ? b.getStatus() : "";
+            String mode = b.getPaymentMode() != null ? b.getPaymentMode() : "";
+
+            csv.append(csvFormatRow(id, flat, society, billMonth, amount, paid, due, status, mode));
+            
+            if (b.getAmount() != null) totalAmount = totalAmount.add(b.getAmount());
+            if (b.getPaidAmount() != null) totalPaid = totalPaid.add(b.getPaidAmount());
+        }
+
+        csv.append(csvFormatRow("", "", "", "Totals:", totalAmount.toString(), totalPaid.toString(), "", "", ""));
+
+        try {
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            out.write(csv.toString().getBytes(StandardCharsets.UTF_8));
+            return out;
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to generate CSV", e);
+        }
+    }
+
+    @Override
+    public ByteArrayOutputStream exportVendorBillsCsv(Long societyId, String startDate, String endDate) {
+        List<VendorBill> bills;
+        if (societyId != null) {
+            bills = vendorBillRepository.findBySocietyId(societyId);
+        } else {
+            bills = vendorBillRepository.findAll();
+        }
+
+        if (startDate != null && endDate != null) {
+            LocalDate start = LocalDate.parse(startDate);
+            LocalDate end = LocalDate.parse(endDate);
+            bills = bills.stream()
+                    .filter(b -> !b.getBillDate().isBefore(start) && !b.getBillDate().isAfter(end))
+                    .toList();
+        }
+
+        StringBuilder csv = new StringBuilder();
+        csv.append(csvFormatRow("Vendor Bills Report", null, null, null, null, null, null, null, null, null));
+        csv.append(csvFormatRow("ID", "Bill Number", "Vendor", "Bill Date", "Due Date", "Amount", "Paid", "Status", "Overdue Days", "Description"));
+
+        BigDecimal totalAmount = BigDecimal.ZERO;
+        BigDecimal totalPaid = BigDecimal.ZERO;
+
+        for (VendorBill b : bills) {
+            String id = b.getId() != null ? b.getId().toString() : "";
+            String billNum = b.getBillNumber() != null ? b.getBillNumber() : "";
+            String vendor = b.getVendor() != null && b.getVendor().getName() != null ? b.getVendor().getName() : "";
+            String bDate = b.getBillDate() != null ? b.getBillDate().toString() : "";
+            String due = b.getDueDate() != null ? b.getDueDate().toString() : "";
+            String amount = b.getAmount() != null ? b.getAmount().toString() : "0";
+            String paid = b.getPaidAmount() != null ? b.getPaidAmount().toString() : "0";
+            String status = b.getStatus() != null ? b.getStatus() : "";
+            String overdue = b.getOverdueDays() != null ? b.getOverdueDays().toString() : "0";
+            String desc = b.getDescription() != null ? b.getDescription() : "";
+
+            csv.append(csvFormatRow(id, billNum, vendor, bDate, due, amount, paid, status, overdue, desc));
+
+            if (b.getAmount() != null) totalAmount = totalAmount.add(b.getAmount());
+            if (b.getPaidAmount() != null) totalPaid = totalPaid.add(b.getPaidAmount());
+        }
+
+        csv.append(csvFormatRow("", "", "", "", "Totals:", totalAmount.toString(), totalPaid.toString(), "", "", ""));
+
+        try {
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            out.write(csv.toString().getBytes(StandardCharsets.UTF_8));
+            return out;
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to generate CSV", e);
+        }
+    }
+
+    @Override
+    public ByteArrayOutputStream exportFlatsCsv(Long societyId) {
+        List<Flat> flats;
+        if (societyId != null) {
+            flats = flatRepository.findBySocietyId(societyId);
+        } else {
+            flats = flatRepository.findAll();
+        }
+
+        StringBuilder csv = new StringBuilder();
+        csv.append(csvFormatRow("Flats Directory", null, null, null, null, null, null, null, null));
+        csv.append(csvFormatRow("ID", "Flat Number", "Floor", "Type", "Area (sq ft)", "Owner Name", "Owner Phone", "Owner Email", "Occupied"));
+
+        for (Flat f : flats) {
+            String id = f.getId() != null ? f.getId().toString() : "";
+            String num = f.getFlatNumber() != null ? f.getFlatNumber() : "";
+            String floor = f.getFloor() != null ? f.getFloor().toString() : "0";
+            String type = f.getFlatType() != null ? f.getFlatType() : "";
+            String area = f.getArea() != null ? f.getArea().toString() : "0";
+            String owner = f.getOwnerName() != null ? f.getOwnerName() : "";
+            String phone = f.getOwnerPhone() != null ? f.getOwnerPhone() : "";
+            String email = f.getOwnerEmail() != null ? f.getOwnerEmail() : "";
+            String occ = f.getIsOccupied() != null && f.getIsOccupied() ? "Yes" : "No";
+
+            csv.append(csvFormatRow(id, num, floor, type, area, owner, phone, email, occ));
+        }
+
+        long occupied = flats.stream().filter(f -> f.getIsOccupied() != null && f.getIsOccupied()).count();
+        csv.append(csvFormatRow(""));
+        csv.append(csvFormatRow("Total Flats:", String.valueOf(flats.size())));
+        csv.append(csvFormatRow("Occupied:", String.valueOf(occupied)));
+        csv.append(csvFormatRow("Vacant:", String.valueOf(flats.size() - occupied)));
+
+        try {
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            out.write(csv.toString().getBytes(StandardCharsets.UTF_8));
+            return out;
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to generate CSV", e);
+        }
+    }
+
 
     private CellStyle createHeaderStyle(Workbook workbook) {
         CellStyle style = workbook.createCellStyle();
@@ -959,3 +1391,6 @@ public class ExcelExportServiceImpl implements ExcelExportService {
         }
     }
 }
+
+
+

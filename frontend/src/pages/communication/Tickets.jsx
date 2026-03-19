@@ -120,6 +120,7 @@ export default function Tickets() {
   const [filterStatus, setFilterStatus] = useState('')
   const [showOverdueOnly, setShowOverdueOnly] = useState(false)
   const [isExporting, setIsExporting] = useState(false)
+  const [exportFormat, setExportFormat] = useState('csv')
   const [openReplies, setOpenReplies] = useState({})
   const [repliesByTicket, setRepliesByTicket] = useState({})
   const [loadingReplies, setLoadingReplies] = useState({})
@@ -491,9 +492,9 @@ export default function Tickets() {
     setIsExporting(true)
     try {
       const response = isPlatformLevel && !effectiveSocietyId
-        ? await exportApi.allTickets(filterStatus || null)
-        : await exportApi.tickets(effectiveSocietyId, filterStatus || null)
-      downloadBlob(response.data, `tickets_${new Date().toISOString().split('T')[0]}.xlsx`)
+        ? await exportApi.allTickets(filterStatus || null, exportFormat)
+        : await exportApi.tickets(effectiveSocietyId, filterStatus || null, exportFormat)
+      downloadBlob(response.data, `tickets_${new Date().toISOString().split('T')[0]}.${exportFormat}`)
       toast.success('Tickets exported successfully')
     } catch (error) {
       console.error('Export failed:', error)
@@ -545,6 +546,15 @@ export default function Tickets() {
           </div>
         </div>
         <div className="flex flex-wrap gap-3">
+          <select
+            value={exportFormat}
+            onChange={(e) => setExportFormat(e.target.value)}
+            className="w-full rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] px-3 py-2 text-sm text-[var(--text-primary)] outline-none transition focus:border-blue-600 focus:shadow-[0_0_0_3px_rgba(37,99,235,0.2)] sm:w-auto"
+            aria-label="Export format"
+          >
+            <option value="csv">CSV</option>
+            <option value="xlsx">XLSX</option>
+          </select>
           <NeonSweepButton
             tone="cyan"
             size="md"
@@ -553,7 +563,7 @@ export default function Tickets() {
             className="w-full sm:w-auto"
           >
             <FileSpreadsheet size={20} />
-            {isExporting ? 'Exporting...' : 'Export'}
+            {isExporting ? 'Exporting...' : `Export ${exportFormat.toUpperCase()}`}
           </NeonSweepButton>
           {canCreateTickets() && (
             <NeonSweepButton
