@@ -17,11 +17,11 @@ const UNDO_WINDOW_MS = 5 * 60 * 1000
 const MAX_ATTACHMENT_SIZE_BYTES = 25 * 1024 * 1024
 
 const statusColors = {
-  PENDING: 'bg-amber-100 text-amber-700',
-  UNDER_REVIEW: 'bg-blue-100 text-blue-700',
+  PENDING: 'bg-amber-200 dark:bg-amber-100 text-amber-900',
+  UNDER_REVIEW: 'bg-blue-200 dark:bg-blue-100 text-blue-900',
   RESOLVED: 'bg-green-100 text-green-800',
   REJECTED: 'bg-red-100 text-red-700',
-  DELETED: 'bg-rose-100 text-rose-700',
+  DELETED: 'bg-rose-200 dark:bg-rose-100 text-rose-900',
 }
 
 const statusIcons = {
@@ -33,21 +33,21 @@ const statusIcons = {
 }
 
 const categoryClasses = {
-  PARKING: 'bg-indigo-500/15 text-indigo-300 border-indigo-400/25',
-  MAINTENANCE: 'bg-cyan-500/15 text-cyan-300 border-cyan-400/25',
-  SECURITY: 'bg-rose-500/15 text-rose-300 border-rose-400/25',
-  CLEANLINESS: 'bg-emerald-500/15 text-emerald-300 border-emerald-400/25',
-  NOISE: 'bg-amber-500/15 text-amber-300 border-amber-400/25',
-  NEIGHBOR: 'bg-violet-500/15 text-violet-300 border-violet-400/25',
-  NEIGHBOR_ISSUE: 'bg-violet-500/15 text-violet-300 border-violet-400/25',
-  OTHER: 'bg-slate-500/15 text-slate-200 border-slate-400/25',
+  PARKING: 'bg-indigo-50 dark:bg-indigo-500/15 text-indigo-900 dark:text-indigo-300 border-indigo-300 dark:border-indigo-400/25',
+  MAINTENANCE: 'bg-cyan-50 dark:bg-cyan-500/15 text-cyan-900 dark:text-cyan-300 border-cyan-300 dark:border-cyan-400/25',
+  SECURITY: 'bg-rose-50 dark:bg-rose-500/15 text-rose-900 dark:text-rose-300 border-rose-300 dark:border-rose-400/25',
+  CLEANLINESS: 'bg-emerald-50 dark:bg-emerald-500/15 text-emerald-900 dark:text-emerald-300 border-emerald-300 dark:border-emerald-400/25',
+  NOISE: 'bg-amber-50 dark:bg-amber-500/15 text-amber-900 dark:text-amber-300 border-amber-300 dark:border-amber-400/25',
+  NEIGHBOR: 'bg-violet-50 dark:bg-violet-500/15 text-violet-900 dark:text-violet-300 border-violet-300 dark:border-violet-400/25',
+  NEIGHBOR_ISSUE: 'bg-violet-50 dark:bg-violet-500/15 text-violet-900 dark:text-violet-300 border-violet-300 dark:border-violet-400/25',
+  OTHER: 'bg-slate-50 dark:bg-slate-500/15 text-slate-900 dark:text-slate-200 border-slate-300 dark:border-slate-400/25',
 }
 
 const priorityClasses = {
-  LOW: 'bg-slate-500/15 text-slate-200 border-slate-400/25',
-  MEDIUM: 'bg-blue-500/15 text-blue-300 border-blue-400/25',
-  HIGH: 'bg-amber-500/15 text-amber-300 border-amber-400/25',
-  URGENT: 'bg-rose-500/15 text-rose-300 border-rose-400/25',
+  LOW: 'bg-slate-500/15 text-slate-900 dark:text-slate-200 border-slate-400/25',
+  MEDIUM: 'bg-blue-50 dark:bg-blue-500/15 text-blue-900 dark:text-blue-300 border-blue-300 dark:border-blue-400/25',
+  HIGH: 'bg-amber-50 dark:bg-amber-500/15 text-amber-900 dark:text-amber-300 border-amber-300 dark:border-amber-400/25',
+  URGENT: 'bg-rose-50 dark:bg-rose-500/15 text-rose-900 dark:text-rose-300 border-rose-300 dark:border-rose-400/25',
 }
 
 const normalizeCsvUrls = (raw) => {
@@ -74,6 +74,27 @@ const formatComplaintDateTimeWithDay = (value) => {
     hour12: true,
     timeZone: 'Asia/Kolkata',
   })
+}
+
+const formatDurationMinutes = (minutes) => {
+  if (minutes === null || minutes === undefined || Number.isNaN(Number(minutes))) {
+    return '-'
+  }
+
+  const totalMinutes = Math.max(0, Math.floor(Number(minutes)))
+  const days = Math.floor(totalMinutes / 1440)
+  const hours = Math.floor((totalMinutes % 1440) / 60)
+  const remainingMinutes = totalMinutes % 60
+
+  if (days > 0) {
+    return remainingMinutes > 0 ? `${days}d ${hours}h ${remainingMinutes}m` : `${days}d ${hours}h`
+  }
+
+  if (hours > 0) {
+    return remainingMinutes > 0 ? `${hours}h ${remainingMinutes}m` : `${hours}h`
+  }
+
+  return `${remainingMinutes}m`
 }
 
 export default function Complaints() {
@@ -687,11 +708,11 @@ export default function Complaints() {
           <p className="text-sm text-[var(--text-tertiary)]">Pending</p>
           <p className="mt-1 text-2xl font-bold text-amber-400">{activeComplaints.filter(c => c.status === 'PENDING').length}</p>
         </div>
-        <div className="complaint-summary-card complaint-summary-card--review rounded-2xl border border-blue-500/25 bg-[linear-gradient(145deg,rgba(59,130,246,0.14),transparent_65%)] p-4 shadow-[0_10px_24px_rgba(15,23,42,0.12)]">
+        <div className="complaint-summary-card complaint-summary-card--review rounded-2xl border border-blue-300 dark:border-blue-500/25 bg-[linear-gradient(145deg,rgba(59,130,246,0.14),transparent_65%)] p-4 shadow-[0_10px_24px_rgba(15,23,42,0.12)]">
           <p className="text-sm text-[var(--text-tertiary)]">Under Review</p>
           <p className="mt-1 text-2xl font-bold text-blue-400">{activeComplaints.filter(c => c.status === 'UNDER_REVIEW').length}</p>
         </div>
-        <div className="complaint-summary-card complaint-summary-card--resolved rounded-2xl border border-emerald-500/25 bg-[linear-gradient(145deg,rgba(16,185,129,0.14),transparent_65%)] p-4 shadow-[0_10px_24px_rgba(15,23,42,0.12)]">
+        <div className="complaint-summary-card complaint-summary-card--resolved rounded-2xl border border-emerald-300 dark:border-emerald-500/25 bg-[linear-gradient(145deg,rgba(16,185,129,0.14),transparent_65%)] p-4 shadow-[0_10px_24px_rgba(15,23,42,0.12)]">
           <p className="text-sm text-[var(--text-tertiary)]">Resolved</p>
           <p className="mt-1 text-2xl font-bold text-emerald-400">{activeComplaints.filter(c => c.status === 'RESOLVED').length}</p>
         </div>
@@ -703,7 +724,7 @@ export default function Complaints() {
           <>
             <div className="complaint-summary-card complaint-summary-card--breached rounded-2xl border border-rose-500/25 bg-[linear-gradient(145deg,rgba(244,63,94,0.14),transparent_65%)] p-4 shadow-[0_10px_24px_rgba(15,23,42,0.12)]">
               <p className="text-sm text-[var(--text-tertiary)]">SLA Breached</p>
-              <p className="mt-1 text-2xl font-bold text-rose-300">{slaSummary?.breached ?? activeComplaints.filter((c) => c.slaBreached).length}</p>
+              <p className="mt-1 text-2xl font-bold text-rose-900 dark:text-rose-300">{slaSummary?.breached ?? activeComplaints.filter((c) => c.slaBreached).length}</p>
             </div>
             <div className="complaint-summary-card complaint-summary-card--due rounded-2xl border border-orange-500/25 bg-[linear-gradient(145deg,rgba(249,115,22,0.14),transparent_65%)] p-4 shadow-[0_10px_24px_rgba(15,23,42,0.12)]">
               <p className="text-sm text-[var(--text-tertiary)]">Due Soon</p>
@@ -786,11 +807,11 @@ export default function Complaints() {
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-start gap-3">
                       <div className={clsx('flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border',
-                        effectiveStatus === 'PENDING' && 'border-amber-400/25 bg-amber-500/15 text-amber-300',
-                        effectiveStatus === 'UNDER_REVIEW' && 'border-blue-400/25 bg-blue-500/15 text-blue-300',
-                        effectiveStatus === 'RESOLVED' && 'border-emerald-400/25 bg-emerald-500/15 text-emerald-300',
-                        effectiveStatus === 'REJECTED' && 'border-rose-400/25 bg-rose-500/15 text-rose-300',
-                        effectiveStatus === 'DELETED' && 'border-rose-400/35 bg-rose-500/15 text-rose-300'
+                        effectiveStatus === 'PENDING' && 'border-amber-300 dark:border-amber-400/25 bg-amber-50 dark:bg-amber-500/15 text-amber-900 dark:text-amber-300',
+                        effectiveStatus === 'UNDER_REVIEW' && 'border-blue-300 dark:border-blue-400/25 bg-blue-50 dark:bg-blue-500/15 text-blue-900 dark:text-blue-300',
+                        effectiveStatus === 'RESOLVED' && 'border-emerald-300 dark:border-emerald-400/25 bg-emerald-50 dark:bg-emerald-500/15 text-emerald-900 dark:text-emerald-300',
+                        effectiveStatus === 'REJECTED' && 'border-rose-300 dark:border-rose-400/25 bg-rose-50 dark:bg-rose-500/15 text-rose-900 dark:text-rose-300',
+                        effectiveStatus === 'DELETED' && 'border-rose-400 dark:border-rose-400/35 bg-rose-50 dark:bg-rose-500/15 text-rose-900 dark:text-rose-300'
                       )}>
                         <StatusIcon className="h-[1.08rem] w-[1.08rem]" />
                       </div>
@@ -819,14 +840,14 @@ export default function Complaints() {
                         <p className="mt-2 max-w-3xl text-[0.92rem] leading-relaxed text-[var(--text-secondary)] line-clamp-3">{complaint.description}</p>
 
                         {complaint.resolution && (
-                          <div className="mt-3 max-w-3xl rounded-xl border border-emerald-500/25 bg-emerald-500/10 px-3.5 py-2.5">
-                            <p className="text-xs text-emerald-200"><span className="font-semibold">Resolution:</span> {complaint.resolution}</p>
+                          <div className="mt-3 max-w-3xl rounded-xl border border-emerald-300 dark:border-emerald-500/25 bg-emerald-50 dark:bg-emerald-500/10 px-3.5 py-2.5">
+                            <p className="text-xs text-emerald-900 dark:text-emerald-300"><span className="font-semibold">Resolution:</span> {complaint.resolution}</p>
                           </div>
                         )}
 
                         {complaint.adminRemarks && (
-                          <div className="mt-2 max-w-3xl rounded-xl border border-blue-500/25 bg-blue-500/10 px-3.5 py-2.5">
-                            <p className="text-xs text-blue-200"><span className="font-semibold">Admin Remarks:</span> {complaint.adminRemarks}</p>
+                          <div className="mt-2 max-w-3xl rounded-xl border border-blue-300 dark:border-blue-500/25 bg-blue-50 dark:bg-blue-500/10 px-3.5 py-2.5">
+                            <p className="text-xs text-blue-900 dark:text-blue-300"><span className="font-semibold">Admin Remarks:</span> {complaint.adminRemarks}</p>
                           </div>
                         )}
 
@@ -881,7 +902,7 @@ export default function Complaints() {
                                   type="button"
                                   onClick={() => handleDownloadAttachment(attachmentUrl, `${complaint.complaintNumber || 'complaint'}-attachment-${index + 1}`)}
                                   disabled={downloadingAttachmentUrl === attachmentUrl}
-                                  className="inline-flex items-center gap-1 rounded-md border border-cyan-400/35 bg-cyan-500/12 px-2.5 py-1 text-[10px] font-semibold text-cyan-100 hover:bg-cyan-500/20 disabled:cursor-not-allowed disabled:opacity-60 sm:rounded-full sm:px-2 sm:py-0.5 sm:text-[11px]"
+                                  className="inline-flex items-center gap-1 rounded-full border border-sky-400/70 bg-sky-100 px-2.5 py-1 text-[10px] font-semibold text-sky-950 shadow-sm shadow-sky-200/60 transition-colors hover:border-sky-500 hover:bg-sky-200 hover:text-sky-950 disabled:cursor-not-allowed disabled:opacity-60 dark:border-cyan-400/35 dark:bg-cyan-500/12 dark:text-cyan-100 dark:hover:bg-cyan-500/20 sm:px-2 sm:py-0.5 sm:text-[11px]"
                                 >
                                   {downloadingAttachmentUrl === attachmentUrl ? <Loader2 size={11} className="animate-spin" /> : <Download size={11} />}
                                   <span>Download</span>
@@ -892,16 +913,16 @@ export default function Complaints() {
                           {!['RESOLVED', 'REJECTED'].includes(String(complaint.status || '').toUpperCase()) && (
                             <span className={clsx(
                               'inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2 py-0.5 text-[11px] font-semibold',
-                              complaint.escalationLevel === 'BREACHED' && 'bg-rose-500/20 text-rose-200',
-                              complaint.escalationLevel === 'AT_RISK' && 'bg-amber-500/20 text-amber-200',
-                              (!complaint.escalationLevel || complaint.escalationLevel === 'ON_TRACK') && 'bg-emerald-500/15 text-emerald-200'
+                              complaint.escalationLevel === 'BREACHED' && 'bg-rose-50 dark:bg-rose-500/20 text-rose-900 dark:text-rose-300',
+                              complaint.escalationLevel === 'AT_RISK' && 'bg-amber-500/20 text-amber-900 dark:text-amber-300',
+                              (!complaint.escalationLevel || complaint.escalationLevel === 'ON_TRACK') && 'bg-emerald-50 dark:bg-emerald-500/15 text-emerald-900 dark:text-emerald-300'
                             )}>
                               <span className="h-1.5 w-1.5 rounded-full bg-current" />
                               SLA {complaint.escalationLevel === 'BREACHED'
-                                ? `Breached by ${complaint.breachDurationMinutes || 0}m`
+                                ? `Breached by ${formatDurationMinutes(complaint.breachDurationMinutes)}`
                                 : complaint.escalationLevel === 'AT_RISK'
-                                  ? `Due in ${complaint.slaRemainingMinutes ?? '-'}m`
-                                  : `On track (${complaint.slaRemainingMinutes ?? '-'}m left)`}
+                                  ? `Due in ${formatDurationMinutes(complaint.slaRemainingMinutes)}`
+                                  : `On track (${formatDurationMinutes(complaint.slaRemainingMinutes)} left)`}
                             </span>
                           )}
                         </div>
@@ -917,7 +938,7 @@ export default function Complaints() {
                       showUndoPanel ? 'mb-2.5 max-h-56 opacity-100' : 'max-h-0 opacity-0'
                     )}>
                       <div className="rounded-xl border border-blue-400/40 bg-blue-500/12 p-2.5">
-                        <p className="text-[11px] font-semibold uppercase tracking-[0.06em] text-blue-200">
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.06em] text-blue-900 dark:text-blue-300">
                           {undoContextLabel} • Undo available
                         </p>
                         <p className="mt-1 text-xs font-semibold text-blue-100/95">{formatCountdown(activeUndoRemainingMs)} remaining</p>
@@ -1090,7 +1111,7 @@ export default function Complaints() {
                     <p className="truncate text-xs text-[var(--text-tertiary)]">Selected: {selectedFile.name}</p>
                     <button
                       type="button"
-                      className="text-xs font-medium text-rose-300 hover:text-rose-200"
+                      className="text-xs font-medium text-rose-900 hover:text-rose-950 dark:text-rose-300 dark:hover:text-rose-200"
                       onClick={() => {
                         setSelectedFile(null)
                         setUploadProgress(0)
@@ -1102,14 +1123,14 @@ export default function Complaints() {
                   </div>
                 )}
                 {uploadValidationError && (
-                  <p className="mt-2 text-xs font-semibold text-rose-300">{uploadValidationError}</p>
+                  <p className="mt-2 text-xs font-semibold text-rose-900 dark:text-rose-300">{uploadValidationError}</p>
                 )}
                 {!uploadValidationError && (
                   <p className="mt-2 text-xs text-[var(--text-tertiary)]">Allowed: 1 file, up to 25MB</p>
                 )}
                 {(uploadAttachmentMutation.isPending || uploadProgress > 0) && (
                   <div className="mt-2">
-                    <div className="h-2 w-full overflow-hidden rounded-full bg-slate-700/50">
+                    <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-700/50">
                       <div
                         className="h-full rounded-full bg-cyan-400 transition-all duration-150"
                         style={{ width: `${uploadProgress}%` }}

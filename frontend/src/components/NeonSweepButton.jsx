@@ -55,7 +55,7 @@ export default function NeonSweepButton({
           toneConfig.sweep,
         )}
       />
-      <span className="relative z-[1] inline-flex items-center gap-2">{children}</span>
+      <span className="relative z-[1] inline-flex items-center gap-2 [&_svg]:shrink-0">{children}</span>
     </button>
   )
 }

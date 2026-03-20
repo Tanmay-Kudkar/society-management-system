@@ -725,7 +725,7 @@ export default function Tickets() {
         )}>
           {filteredTickets.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 text-center rounded-2xl bg-[var(--bg-card)] border border-[var(--border-light)]">
-              <div className="w-14 h-14 rounded-2xl bg-blue-100 dark:bg-blue-500/15 flex items-center justify-center mb-4">
+              <div className="w-14 h-14 rounded-2xl bg-blue-100 dark:bg-blue-100 dark:bg-blue-500/15 flex items-center justify-center mb-4">
                 <Ticket className="w-7 h-7 text-blue-600 dark:text-blue-400" />
               </div>
               <h3 className="text-base font-semibold text-[var(--text-primary)] mb-1">No tickets to display</h3>
@@ -751,7 +751,7 @@ export default function Tickets() {
               ticket.isOverdue && 'border-red-600/55',
               (isPageGlowActive || highlightedTicketId === ticket.id) && 'ticket-focus-glow'
             )}>
-              <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                 <div className="flex items-start gap-3 sm:gap-4 flex-1 min-w-0">
                   <div className="w-11 h-11 rounded-[0.9rem] bg-blue-600/[.12] flex items-center justify-center">
                     <Ticket className="w-5 h-5 text-blue-600" />
@@ -779,7 +779,7 @@ export default function Tickets() {
                       )}
                     </div>
                     <h3 className="mt-1.5 text-base font-semibold text-[var(--text-primary)]">{ticket.title}</h3>
-                    <p className="mt-1.5 text-[0.85rem] text-[var(--text-tertiary)] line-clamp-2">{ticket.description}</p>
+                    <p className="mt-1.5 text-[0.85rem] text-[var(--text-tertiary)] break-words whitespace-pre-line">{ticket.description}</p>
                     {ticket.resolution && (
                       <p className="mt-1.5 text-[0.8rem] font-semibold text-[var(--text-secondary)]">
                         Latest reply: {ticket.resolution}
@@ -823,14 +823,14 @@ export default function Tickets() {
                   </div>
                 </div>
 
-                <div className="flex flex-col gap-3 w-full md:w-auto md:items-end">
-                  <div className="grid grid-cols-2 gap-2 w-full md:w-auto md:flex md:items-center md:justify-end">
+                <div className="flex flex-col gap-3 w-full lg:w-auto lg:items-end">
+                  <div className="grid grid-cols-2 gap-2 w-full sm:grid-cols-3 lg:w-auto lg:grid-cols-2 xl:flex xl:flex-wrap xl:items-center xl:justify-end">
                     {ticket.status === 'OPEN' && canAssignTickets && (
                       <NeonSweepButton
                         onClick={() => { setSelectedTicket(ticket); setShowAssignModal(true) }}
                         tone="violet"
                         size="sm"
-                        className="w-full md:w-auto justify-center"
+                        className="w-full xl:w-auto justify-center"
                       >
                         Assign
                       </NeonSweepButton>
@@ -840,7 +840,7 @@ export default function Tickets() {
                         onClick={() => handleReply(ticket)}
                         tone="cyan"
                         size="sm"
-                        className="w-full md:w-auto justify-center"
+                        className="w-full xl:w-auto justify-center"
                       >
                         <MessageSquare size={14} />
                         Reply
@@ -851,7 +851,7 @@ export default function Tickets() {
                         onClick={() => openEditModal(ticket)}
                         tone="slate"
                         size="sm"
-                        className="w-full md:w-auto justify-center"
+                        className="w-full xl:w-auto justify-center"
                         disabled={!isTicketEditable(ticket)}
                       >
                         <Edit size={14} />
@@ -862,7 +862,7 @@ export default function Tickets() {
                       onClick={() => toggleReplies(ticket.id)}
                       tone="slate"
                       size="sm"
-                      className="w-full md:w-auto justify-center"
+                      className="w-full xl:w-auto justify-center"
                     >
                       <MessageSquare size={14} />
                       {openReplies[ticket.id] ? 'Hide Replies' : 'View Replies'}
@@ -872,7 +872,7 @@ export default function Tickets() {
                         onClick={() => openDeleteModal(ticket)}
                         tone="danger"
                         size="sm"
-                        className="w-full md:w-auto justify-center"
+                        className="w-full xl:w-auto justify-center"
                       >
                         <Trash2 size={14} />
                         Delete
@@ -882,7 +882,7 @@ export default function Tickets() {
                       value={ticket.status}
                       onChange={(e) => updateStatusMutation.mutate({ id: ticket.id, status: e.target.value, previousStatus: ticket.status })}
                       disabled={!canManageTickets()}
-                      className="col-span-2 w-full md:col-span-1 md:w-auto min-w-[9rem] px-3 py-2 text-[0.85rem] rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-blue-600 focus:ring-[3px] focus:ring-blue-600/20"
+                      className="col-span-2 w-full sm:col-span-3 lg:col-span-2 xl:col-span-1 xl:w-auto min-w-[9rem] px-3 py-2 text-[0.85rem] rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-blue-600 focus:ring-[3px] focus:ring-blue-600/20"
                     >
                       <option value="OPEN">Open</option>
                       <option value="IN_PROGRESS">In Progress</option>
@@ -898,7 +898,7 @@ export default function Tickets() {
                       showUndoBanner ? 'max-h-20 opacity-100 translate-y-0' : 'max-h-0 opacity-0 -translate-y-1 pointer-events-none'
                     )}
                   >
-                    <div className="flex items-center justify-between gap-2 rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-[0.78rem] text-amber-800 dark:text-amber-300">
+                    <div className="flex items-center justify-between gap-2 rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-[0.78rem] text-amber-800 dark:text-amber-700 dark:text-amber-300">
                       <span>Undo available for {formatCountdown(undoRemainingMs)}</span>
                       <div className="flex items-center gap-2">
                         <NeonSweepButton
@@ -929,7 +929,7 @@ export default function Tickets() {
                   
                   {/* Progress Slider for staff */}
                   {ticket.status !== 'CLOSED' && ticket.status !== 'RESOLVED' && (
-                    <div className="flex items-center gap-2 w-full md:w-auto justify-between md:justify-end">
+                    <div className="flex items-center gap-2 w-full lg:w-auto justify-between lg:justify-end">
                       <input
                         type="range"
                         min="0"
@@ -938,7 +938,7 @@ export default function Tickets() {
                         value={ticket.progressPercent || 0}
                         onChange={(e) => updateProgressMutation.mutate({ id: ticket.id, progress: parseInt(e.target.value) })}
                         disabled={ticket.status === 'IN_REVIEW' || !canManageTickets()}
-                        className="flex-1 md:flex-none md:w-24 h-[0.45rem] rounded-full accent-blue-600 cursor-pointer"
+                        className="flex-1 lg:flex-none lg:w-24 h-[0.45rem] rounded-full accent-blue-600 cursor-pointer"
                       />
                       <span className="w-9 text-right text-xs text-[var(--text-tertiary)] font-semibold">{ticket.progressPercent || 0}%</span>
                     </div>
@@ -1287,7 +1287,7 @@ export default function Tickets() {
               </div>
               {forceDeleteImpacts.length > 0 && (
                 <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-3.5 py-3">
-                  <p className="text-[0.82rem] font-semibold text-amber-800 dark:text-amber-300">Linked records that will be auto-cleaned</p>
+                  <p className="text-[0.82rem] font-semibold text-amber-800 dark:text-amber-700 dark:text-amber-300">Linked records that will be auto-cleaned</p>
                   <div className="mt-2 grid grid-cols-2 gap-2 text-[0.8rem] text-[var(--text-secondary)]">
                     {forceDeleteImpacts.map((impact) => (
                       <div key={impact.label} className="rounded-lg bg-[var(--bg-card)] px-2.5 py-1.5">
