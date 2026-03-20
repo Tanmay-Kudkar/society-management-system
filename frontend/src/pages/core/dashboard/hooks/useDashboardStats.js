@@ -91,6 +91,13 @@ export default function useDashboardStats(input) {
   const openTickets = allTickets.filter((ticket) => isActiveTicketStatus(ticket.status));
   const pendingTickets = allTickets.filter((ticket) => isActiveTicketStatus(ticket.status));
   const pendingComplaints = complaints.filter((complaint) => complaint.status === "PENDING" || complaint.status === "IN_PROGRESS");
+  const complaintSlaBreachedCount = complaints.filter((complaint) => complaint.slaBreached).length;
+  const complaintSlaDueSoonCount = complaints.filter((complaint) => {
+    if (complaint.slaBreached) return false;
+    if (complaint.status === "RESOLVED" || complaint.status === "REJECTED") return false;
+    const remaining = Number(complaint.slaRemainingMinutes);
+    return Number.isFinite(remaining) && remaining >= 0 && remaining <= 120;
+  }).length;
 
   const expiringContracts = contracts.filter((contract) => {
     if (!contract.endDate) return false;
@@ -359,7 +366,7 @@ export default function useDashboardStats(input) {
           value: pendingComplaints.length,
           icon: AlertTriangle,
           variant: "red",
-          subtext: `${complaints.length} total tracked`,
+          subtext: `${complaintSlaBreachedCount} SLA breached`,
           onClick: () => navigate("/complaints"),
         },
       ];
@@ -408,6 +415,7 @@ export default function useDashboardStats(input) {
         { key: "secretary-pending-tickets", title: "Pending Tickets", value: pendingTickets.length, icon: Ticket, variant: "sky", subtext: "Requests waiting for coordination" },
         { key: "secretary-expiring", title: "Expiring Agreements", value: expiringTenants.length + expiringContracts.length, icon: FileText, variant: "orange", subtext: "Renewals due within 30 days" },
         { key: "secretary-complaints", title: "Pending Complaints", value: pendingComplaints.length, icon: AlertTriangle, variant: "amber", subtext: "Cases still in progress" },
+        { key: "secretary-complaints-sla", title: "Complaint SLA Risk", value: complaintSlaDueSoonCount + complaintSlaBreachedCount, icon: Clock, variant: "orange", subtext: `${complaintSlaBreachedCount} breached, ${complaintSlaDueSoonCount} due soon` },
       ];
     }
 
@@ -433,8 +441,8 @@ export default function useDashboardStats(input) {
       return [
         { key: "manager-pending-tickets", title: "Pending Tickets", value: pendingTickets.length, icon: Ticket, variant: "sky", subtext: "Operational requests awaiting resolution" },
         { key: "manager-pending-complaints", title: "Pending Complaints", value: pendingComplaints.length, icon: AlertTriangle, variant: "amber", subtext: "Resident concerns in progress" },
+        { key: "manager-complaints-sla", title: "Complaint SLA Risk", value: complaintSlaDueSoonCount + complaintSlaBreachedCount, icon: Clock, variant: "orange", subtext: `${complaintSlaBreachedCount} breached, ${complaintSlaDueSoonCount} due soon` },
         { key: "manager-expiring-agreements", title: "Expiring Agreements", value: expiringTenants.length + expiringContracts.length, icon: FileText, variant: "orange", subtext: "Need renewal action in next 30 days" },
-        { key: "manager-occupancy", title: "Occupied Units", value: occupiedUnits, icon: Home, variant: "blue", subtext: `${totalUnits} total units` },
       ];
     }
 
@@ -460,6 +468,8 @@ export default function useDashboardStats(input) {
     billTotalCount,
     canManageTenants,
     canViewFinancials,
+    complaintSlaBreachedCount,
+    complaintSlaDueSoonCount,
     complaints,
     expiringContracts.length,
     expiringTenants.length,

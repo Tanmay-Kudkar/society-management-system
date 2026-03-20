@@ -65,7 +65,6 @@ const routePrefetchMap = {
   "/notices": () => import("../pages/communication/Notices"),
   "/tickets": () => import("../pages/communication/Tickets"),
   "/complaints": () => import("../pages/communication/Complaints"),
-  "/approvals": () => import("../pages/communication/Approvals"),
   "/emergency-contacts": () =>
     import("../pages/communication/EmergencyContacts"),
   "/documents": () => import("../pages/communication/Documents"),
@@ -284,19 +283,6 @@ const standardMenuGroups = [
       { path: "/notices", icon: Megaphone, label: "Notices" },
       { path: "/tickets", icon: Ticket, label: "Tickets" },
       { path: "/complaints", icon: MessageSquare, label: "Complaints" },
-      {
-        path: "/approvals",
-        icon: FileCheck,
-        label: "Approvals",
-        roles: [
-          "SOCIETY_ADMIN",
-          "CHAIRMAN",
-          "SECRETARY",
-          "TREASURER",
-          "COMMITTEE",
-          "MANAGER",
-        ],
-      },
     ],
   },
   {

@@ -12,7 +12,7 @@ const roleResponsibilities = [
   {
     role: 'SOCIETY_ADMIN',
     authority: 'Society Super Admin',
-    responsibility: 'Manages daily operations, handles tickets and resolutions, oversees document records, creates member bills and ledgers, records cash/cheque expenses, maintains compliance rules/penalties, and routes ticket closures through C/S/T/CM approval.',
+    responsibility: 'Manages daily operations, handles tickets and resolutions, oversees document records, creates member bills and ledgers, records cash/cheque expenses, and maintains compliance rules/penalties.',
   },
   {
     role: 'CHAIRMAN',

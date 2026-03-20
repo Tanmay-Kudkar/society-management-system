@@ -8,10 +8,8 @@ import com.society.backend.society.repository.SocietyRepository;
 import com.society.backend.ticket.dto.request.TicketRequest;
 import com.society.backend.ticket.dto.response.TicketReplyResponse;
 import com.society.backend.ticket.dto.response.TicketResponse;
-import com.society.backend.ticket.entity.ApprovalRequest;
 import com.society.backend.ticket.entity.Ticket;
 import com.society.backend.ticket.entity.TicketReply;
-import com.society.backend.ticket.repository.ApprovalRequestRepository;
 import com.society.backend.ticket.repository.TicketReplyRepository;
 import com.society.backend.ticket.repository.TicketRepository;
 import com.society.backend.user.entity.Role;
@@ -24,7 +22,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -34,12 +31,9 @@ public class TicketServiceImpl implements TicketService {
 
     private static final long DUPLICATE_REPLY_WINDOW_MINUTES = 5L;
     private static final long CLOSE_UNDO_WINDOW_MINUTES = 5L;
-    private static final String TICKET_CREATE_APPROVAL_ENTITY_TYPE = "TICKET_CREATE";
-    private static final String TICKET_CLOSE_APPROVAL_ENTITY_TYPE = "TICKET_CLOSE";
 
     private final TicketRepository ticketRepository;
     private final TicketReplyRepository ticketReplyRepository;
-    private final ApprovalRequestRepository approvalRequestRepository;
     private final SocietyRepository societyRepository;
     private final UserRepository userRepository;
     private final RoleService roleService;
@@ -90,27 +84,7 @@ public class TicketServiceImpl implements TicketService {
             ticket.setAssignedTo(assignedTo);
         }
 
-        if (isAdminRole(raisedBy.getRole())) {
-            ticket.setStatus("IN_REVIEW");
-        }
-
         Ticket saved = ticketRepository.save(ticket);
-
-        if (isAdminRole(raisedBy.getRole())) {
-            ApprovalRequest approvalRequest = new ApprovalRequest();
-            approvalRequest.setSociety(saved.getSociety());
-            approvalRequest.setEntityType(TICKET_CREATE_APPROVAL_ENTITY_TYPE);
-            approvalRequest.setEntityId(saved.getId());
-            approvalRequest.setTitle("Ticket creation approval - "
-                    + (saved.getTicketNumber() != null ? saved.getTicketNumber() : ("#" + saved.getId())));
-            approvalRequest.setDescription("Ticket created by Admin requires C/S/T/CM approval: " + saved.getTitle());
-            approvalRequest.setRequestedBy(raisedBy);
-            approvalRequest.setStatus("PENDING");
-            approvalRequest.setCurrentStep(1);
-            approvalRequest.setTotalSteps(1);
-            approvalRequestRepository.save(approvalRequest);
-        }
-
         return mapToResponse(saved);
     }
 
@@ -227,48 +201,6 @@ public class TicketServiceImpl implements TicketService {
 
         String targetStatus = status != null ? status.toUpperCase() : "";
         String currentStatus = ticket.getStatus() != null ? ticket.getStatus().toUpperCase() : "";
-
-        if ((actor.getRole() == Role.SOCIETY_ADMIN || actor.getRole() == Role.MASTER_ADMIN)
-            && isTicketRaisedByCstcm(ticket)
-                && ("RESOLVED".equals(targetStatus) || "CLOSED".equals(targetStatus))) {
-            List<ApprovalRequest> closeApprovals = approvalRequestRepository
-                    .findByEntityTypeAndEntityId(TICKET_CLOSE_APPROVAL_ENTITY_TYPE, ticket.getId());
-
-            boolean hasApproved = closeApprovals.stream()
-                    .anyMatch(req -> "APPROVED".equalsIgnoreCase(req.getStatus()));
-
-            if (!hasApproved) {
-                boolean hasPending = closeApprovals.stream()
-                        .anyMatch(req -> "PENDING".equalsIgnoreCase(req.getStatus())
-                                || "IN_REVIEW".equalsIgnoreCase(req.getStatus()));
-
-                if (hasPending) {
-                    throw new ApiException(HttpStatus.CONFLICT,
-                            "Ticket closure approval is already pending with C/S/T/CM.");
-                }
-
-                ApprovalRequest approvalRequest = new ApprovalRequest();
-                approvalRequest.setSociety(ticket.getSociety());
-                approvalRequest.setEntityType(TICKET_CLOSE_APPROVAL_ENTITY_TYPE);
-                approvalRequest.setEntityId(ticket.getId());
-                approvalRequest.setTitle("Ticket closure approval - "
-                        + (ticket.getTicketNumber() != null ? ticket.getTicketNumber() : ("#" + ticket.getId())));
-                approvalRequest.setDescription("Closure requested by Society Admin for ticket: " + ticket.getTitle());
-                approvalRequest.setRequestedBy(actor);
-                approvalRequest.setStatus("PENDING");
-                approvalRequest.setCurrentStep(1);
-                approvalRequest.setTotalSteps(1);
-                approvalRequest.setMetadata("desiredStatus=" + targetStatus + ";requiredApproverUserId=" + ticket.getRaisedBy().getId());
-                approvalRequestRepository.save(approvalRequest);
-
-                ticket.setStatus("IN_REVIEW");
-                if (resolution != null) {
-                    ticket.setResolution(resolution);
-                }
-                Ticket staged = ticketRepository.save(ticket);
-                return mapToResponse(staged);
-            }
-        }
 
         ticket.setStatus(targetStatus);
         if (resolution != null) {
@@ -442,37 +374,22 @@ public class TicketServiceImpl implements TicketService {
         }
 
         long replyCount = ticketReplyRepository.countByTicketId(id);
-        long createApprovalCount = approvalRequestRepository.countByEntityTypeAndEntityId(TICKET_CREATE_APPROVAL_ENTITY_TYPE, id);
-        long closeApprovalCount = approvalRequestRepository.countByEntityTypeAndEntityId(TICKET_CLOSE_APPROVAL_ENTITY_TYPE, id);
-        long approvalCount = createApprovalCount + closeApprovalCount;
 
-        if (!force && (replyCount > 0 || approvalCount > 0)) {
-            List<LinkedRecordsConflictException.Impact> impacts = new ArrayList<>();
-            if (replyCount > 0) {
-                impacts.add(new LinkedRecordsConflictException.Impact("Ticket Replies", replyCount));
-            }
-            if (approvalCount > 0) {
-                impacts.add(new LinkedRecordsConflictException.Impact("Approval Requests", approvalCount));
-            }
+        if (!force && replyCount > 0) {
+            List<LinkedRecordsConflictException.Impact> impacts = List.of(
+                    new LinkedRecordsConflictException.Impact("Ticket Replies", replyCount));
 
             throw new LinkedRecordsConflictException(
                     String.format(
-                            "Cannot delete ticket '%s'. Linked records: %d replies, %d approval requests. Use force delete to auto-clean linked records.",
+                            "Cannot delete ticket '%s'. Linked records: %d replies. Use force delete to auto-clean linked records.",
                             ticket.getTitle(),
-                            replyCount,
-                            approvalCount),
+                            replyCount),
                     impacts);
         }
 
         if (force) {
             if (replyCount > 0) {
                 ticketReplyRepository.deleteByTicketId(id);
-            }
-            if (createApprovalCount > 0) {
-                approvalRequestRepository.deleteByEntityTypeAndEntityId(TICKET_CREATE_APPROVAL_ENTITY_TYPE, id);
-            }
-            if (closeApprovalCount > 0) {
-                approvalRequestRepository.deleteByEntityTypeAndEntityId(TICKET_CLOSE_APPROVAL_ENTITY_TYPE, id);
             }
         }
 
@@ -585,18 +502,4 @@ public class TicketServiceImpl implements TicketService {
         return dateTime.atZone(ZoneId.systemDefault()).toOffsetDateTime().toString();
     }
 
-    private boolean isAdminRole(Role role) {
-        return role == Role.SOCIETY_ADMIN || role == Role.MASTER_ADMIN;
-    }
-
-    private boolean isTicketRaisedByCstcm(Ticket ticket) {
-        if (ticket == null || ticket.getRaisedBy() == null || ticket.getRaisedBy().getRole() == null) {
-            return false;
-        }
-        Role raisedByRole = ticket.getRaisedBy().getRole();
-        return raisedByRole == Role.CHAIRMAN
-                || raisedByRole == Role.SECRETARY
-                || raisedByRole == Role.TREASURER
-                || raisedByRole == Role.COMMITTEE;
-    }
 }

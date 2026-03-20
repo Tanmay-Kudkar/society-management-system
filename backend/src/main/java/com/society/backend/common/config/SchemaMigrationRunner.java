@@ -65,15 +65,63 @@ public class SchemaMigrationRunner {
                 jdbcTemplate.execute("ALTER TABLE complaints ADD COLUMN IF NOT EXISTS status_undo_previous_status VARCHAR(255)");
                 jdbcTemplate.execute("ALTER TABLE complaints ADD COLUMN IF NOT EXISTS status_undo_previous_resolution TEXT");
                 jdbcTemplate.execute("ALTER TABLE complaints ADD COLUMN IF NOT EXISTS status_undo_expires_at TIMESTAMP");
+                jdbcTemplate.execute("ALTER TABLE complaints ADD COLUMN IF NOT EXISTS priority VARCHAR(20)");
+                jdbcTemplate.execute("ALTER TABLE complaints ADD COLUMN IF NOT EXISTS wing VARCHAR(20)");
+                jdbcTemplate.execute("ALTER TABLE complaints ADD COLUMN IF NOT EXISTS floor INTEGER");
+                jdbcTemplate.execute("ALTER TABLE complaints ADD COLUMN IF NOT EXISTS flat_number VARCHAR(20)");
+                jdbcTemplate.execute("ALTER TABLE complaints ADD COLUMN IF NOT EXISTS location_details VARCHAR(255)");
+                jdbcTemplate.execute("ALTER TABLE complaints ADD COLUMN IF NOT EXISTS assigned_to_user_id BIGINT");
+                jdbcTemplate.execute("ALTER TABLE complaints ADD COLUMN IF NOT EXISTS raised_for_user_id BIGINT");
+                jdbcTemplate.execute("ALTER TABLE complaints ADD COLUMN IF NOT EXISTS raised_for_reason TEXT");
+                jdbcTemplate.execute("ALTER TABLE complaints ADD COLUMN IF NOT EXISTS admin_remarks TEXT");
+                jdbcTemplate.execute("ALTER TABLE complaints ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP");
+                jdbcTemplate.execute("ALTER TABLE complaints ADD COLUMN IF NOT EXISTS resolved_at TIMESTAMP");
                 jdbcTemplate.execute("ALTER TABLE complaints ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP");
                 jdbcTemplate.execute("ALTER TABLE complaints ADD COLUMN IF NOT EXISTS delete_undo_previous_status VARCHAR(255)");
                 jdbcTemplate.execute("ALTER TABLE complaints ADD COLUMN IF NOT EXISTS delete_undo_previous_resolution TEXT");
                 jdbcTemplate.execute("ALTER TABLE complaints ADD COLUMN IF NOT EXISTS delete_undo_expires_at TIMESTAMP");
 
+                jdbcTemplate.execute("CREATE TABLE IF NOT EXISTS complaint_attachments (complaint_id BIGINT NOT NULL, file_url TEXT)");
+                jdbcTemplate.execute("CREATE TABLE IF NOT EXISTS complaint_comments (" +
+                    "id BIGSERIAL PRIMARY KEY, " +
+                    "complaint_id BIGINT NOT NULL REFERENCES complaints(id) ON DELETE CASCADE, " +
+                    "user_id BIGINT NOT NULL REFERENCES users(id), " +
+                    "message TEXT NOT NULL, " +
+                    "created_at TIMESTAMP NOT NULL DEFAULT NOW(), " +
+                    "updated_at TIMESTAMP NOT NULL DEFAULT NOW())");
+                jdbcTemplate.execute("CREATE TABLE IF NOT EXISTS complaint_history (" +
+                    "id BIGSERIAL PRIMARY KEY, " +
+                    "complaint_id BIGINT NOT NULL REFERENCES complaints(id) ON DELETE CASCADE, " +
+                    "actor_user_id BIGINT REFERENCES users(id), " +
+                    "action_type VARCHAR(64) NOT NULL, " +
+                    "from_status VARCHAR(32), " +
+                    "to_status VARCHAR(32), " +
+                    "note TEXT, " +
+                    "created_at TIMESTAMP NOT NULL DEFAULT NOW())");
+                jdbcTemplate.execute("CREATE TABLE IF NOT EXISTS complaint_uploads (" +
+                    "id BIGSERIAL PRIMARY KEY, " +
+                    "society_id BIGINT NOT NULL REFERENCES societies(id) ON DELETE CASCADE, " +
+                    "uploaded_by_user_id BIGINT NOT NULL REFERENCES users(id), " +
+                    "original_file_name VARCHAR(255) NOT NULL, " +
+                    "stored_file_name VARCHAR(255) NOT NULL UNIQUE, " +
+                    "content_type VARCHAR(255), " +
+                    "file_size BIGINT NOT NULL, " +
+                    "file_data BYTEA, " +
+                    "created_at TIMESTAMP NOT NULL DEFAULT NOW())");
+                jdbcTemplate.execute("ALTER TABLE complaint_uploads ADD COLUMN IF NOT EXISTS file_data BYTEA");
+
                 jdbcTemplate.execute("ALTER TABLE complaints ADD COLUMN IF NOT EXISTS is_deleted BOOLEAN");
                 jdbcTemplate.execute("UPDATE complaints SET is_deleted = FALSE WHERE is_deleted IS NULL");
                 jdbcTemplate.execute("ALTER TABLE complaints ALTER COLUMN is_deleted SET DEFAULT FALSE");
                 jdbcTemplate.execute("ALTER TABLE complaints ALTER COLUMN is_deleted SET NOT NULL");
+
+                jdbcTemplate.execute("UPDATE complaints SET priority = 'MEDIUM' WHERE priority IS NULL");
+                jdbcTemplate.execute("ALTER TABLE complaints ALTER COLUMN priority SET DEFAULT 'MEDIUM'");
+                jdbcTemplate.execute("ALTER TABLE complaints ALTER COLUMN priority SET NOT NULL");
+
+                jdbcTemplate.execute("UPDATE complaints SET updated_at = created_at WHERE updated_at IS NULL");
+                jdbcTemplate.execute("UPDATE complaints SET updated_at = NOW() WHERE updated_at IS NULL");
+                jdbcTemplate.execute("ALTER TABLE complaints ALTER COLUMN updated_at SET NOT NULL");
 
                 log.info("complaints undo/soft-delete columns verified/updated");
             } catch (Exception ex) {

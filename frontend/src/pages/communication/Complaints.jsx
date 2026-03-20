@@ -3,8 +3,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../../context'
 import { useConfirmDialog } from '../../context'
-import { complaintApi } from '../../../../api'
-import { Plus, Search, X, AlertTriangle, Clock, CheckCircle, XCircle, Edit, Trash2 } from 'lucide-react'
+import { complaintApi, userApi } from '../../../../api'
+import { Plus, Search, X, AlertTriangle, Clock, CheckCircle, XCircle, Edit, Trash2, Upload, Loader2, Download } from 'lucide-react'
 import clsx from 'clsx'
 import { FormInput, SmartSelect, FormTextarea, InfoTooltip, NeonSweepButton, AnimatedModal } from '../../components'
 import { PermissionDenied } from '../../components'
@@ -14,6 +14,7 @@ import { useToast } from '../../context'
 import { parseServerDateTime } from '../../utils/formatUtils'
 
 const UNDO_WINDOW_MS = 5 * 60 * 1000
+const MAX_ATTACHMENT_SIZE_BYTES = 25 * 1024 * 1024
 
 const statusColors = {
   PENDING: 'bg-amber-100 text-amber-700',
@@ -38,8 +39,27 @@ const categoryClasses = {
   CLEANLINESS: 'bg-emerald-500/15 text-emerald-300 border-emerald-400/25',
   NOISE: 'bg-amber-500/15 text-amber-300 border-amber-400/25',
   NEIGHBOR: 'bg-violet-500/15 text-violet-300 border-violet-400/25',
+  NEIGHBOR_ISSUE: 'bg-violet-500/15 text-violet-300 border-violet-400/25',
   OTHER: 'bg-slate-500/15 text-slate-200 border-slate-400/25',
 }
+
+const priorityClasses = {
+  LOW: 'bg-slate-500/15 text-slate-200 border-slate-400/25',
+  MEDIUM: 'bg-blue-500/15 text-blue-300 border-blue-400/25',
+  HIGH: 'bg-amber-500/15 text-amber-300 border-amber-400/25',
+  URGENT: 'bg-rose-500/15 text-rose-300 border-rose-400/25',
+}
+
+const normalizeCsvUrls = (raw) => {
+  if (!raw) return []
+  return String(raw)
+    .split(/\r?\n|,/) 
+    .map((part) => part.trim())
+    .filter(Boolean)
+    .slice(0, 10)
+}
+
+const stringifyUrls = (urls) => Array.isArray(urls) ? urls.join(', ') : ''
 
 const formatComplaintDateTimeWithDay = (value) => {
   const date = parseServerDateTime(value)
@@ -68,12 +88,18 @@ export default function Complaints() {
   const [editingComplaint, setEditingComplaint] = useState(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [filterStatus, setFilterStatus] = useState('')
+  const [filterPriority, setFilterPriority] = useState('')
   const [nowTs, setNowTs] = useState(Date.now())
   const [highlightedComplaintId, setHighlightedComplaintId] = useState(null)
   const [isPageGlowActive, setIsPageGlowActive] = useState(false)
   const [showResolutionModal, setShowResolutionModal] = useState(false)
   const [complaintToResolve, setComplaintToResolve] = useState(null)
   const [resolutionDraft, setResolutionDraft] = useState('')
+  const [attachmentUrlsInput, setAttachmentUrlsInput] = useState('')
+  const [selectedFile, setSelectedFile] = useState(null)
+  const [uploadProgress, setUploadProgress] = useState(0)
+  const [downloadingAttachmentUrl, setDownloadingAttachmentUrl] = useState('')
+  const [uploadValidationError, setUploadValidationError] = useState('')
 
   // Get society filter from URL (for MASTER_ADMIN viewing specific society)
   const societyIdFromUrl = searchParams.get('society')
@@ -85,6 +111,7 @@ export default function Complaints() {
 
   // Check if current user is MASTER_ADMIN
   const isPlatformLevel = user?.role === 'MASTER_ADMIN'
+  const canUseAdvancedComplaintFields = user?.role === 'MASTER_ADMIN' || user?.role === 'SOCIETY_ADMIN'
 
   // Determine which societyId to use for filtering
   const effectiveSocietyId = isPlatformLevel && societyIdFromUrl ? societyIdFromUrl : user?.societyId
@@ -96,6 +123,20 @@ export default function Complaints() {
       complaintApi.getBySociety(effectiveSocietyId, user.id)
         .then(res => res.data),
     enabled: !!user?.id && !!effectiveSocietyId,
+  })
+
+  const { data: assignableUsers = [] } = useQuery({
+    queryKey: ['complaint-assignable-users', effectiveSocietyId],
+    queryFn: () => userApi.getBySociety(effectiveSocietyId).then((res) => res.data || []),
+    enabled: !!effectiveSocietyId && canUseAdvancedComplaintFields,
+    staleTime: 60 * 1000,
+  })
+
+  const { data: slaSummary } = useQuery({
+    queryKey: ['complaints-sla-summary', effectiveSocietyId, user?.id],
+    queryFn: () => complaintApi.getSlaSummary(effectiveSocietyId, user.id).then((res) => res.data),
+    enabled: !!effectiveSocietyId && !!user?.id && canManageComplaints(),
+    staleTime: 30 * 1000,
   })
 
   useEffect(() => {
@@ -121,9 +162,21 @@ export default function Complaints() {
         subject: newComplaint.subject,
         description: newComplaint.description,
         category: newComplaint.category,
+        priority: newComplaint.priority || 'MEDIUM',
+        wing: null,
+        floor: null,
+        flatNumber: null,
+        locationDetails: newComplaint.locationDetails || null,
+        attachmentUrls: newComplaint.attachmentUrls || [],
+        assignedToUserId: newComplaint.assignedToUserId || null,
+        raisedForUserId: newComplaint.raisedForUserId || null,
+        raisedForName: assignableUsers.find((entry) => Number(entry?.id) === Number(newComplaint.raisedForUserId))?.name || null,
+        raisedForReason: newComplaint.raisedForReason || null,
+        adminRemarks: newComplaint.adminRemarks || null,
         status: 'PENDING',
         resolution: null,
         createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
       }
 
       queryClient.setQueryData(complaintQueryKey, (old = []) => [optimisticComplaint, ...old])
@@ -155,6 +208,14 @@ export default function Complaints() {
                 subject: data.subject,
                 description: data.description,
                 category: data.category,
+                priority: data.priority,
+                locationDetails: data.locationDetails,
+                attachmentUrls: data.attachmentUrls,
+                assignedToUserId: data.assignedToUserId,
+                raisedForUserId: data.raisedForUserId,
+                raisedForName: assignableUsers.find((entry) => Number(entry?.id) === Number(data.raisedForUserId))?.name || item.raisedForName || null,
+                raisedForReason: data.raisedForReason,
+                adminRemarks: data.adminRemarks,
               }
             : item
         )
@@ -266,6 +327,18 @@ export default function Complaints() {
     },
   })
 
+  const uploadAttachmentMutation = useMutation({
+    mutationFn: ({ file, onUploadProgress }) => complaintApi.uploadAttachment(file, effectiveSocietyId, user.id, onUploadProgress),
+    onError: (error) => {
+      const backendMessage = error?.response?.data?.message || error?.response?.data?.error
+      const fallback = error?.response?.status === 413
+        ? 'File too large. Maximum allowed size is 25MB.'
+        : 'Failed to upload attachment'
+      toast.error(backendMessage || fallback)
+      setUploadProgress(0)
+    },
+  })
+
   const activeComplaints = useMemo(() => complaints.filter(c => !c.deleted), [complaints])
 
   const filteredComplaints = useMemo(() => complaints
@@ -273,20 +346,33 @@ export default function Complaints() {
       const matchesSearch = c.subject?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            c.complaintNumber?.toLowerCase().includes(searchTerm.toLowerCase())
       const matchesStatus = !filterStatus || c.status === filterStatus
-      return matchesSearch && matchesStatus
+      const matchesPriority = !filterPriority || String(c.priority || 'MEDIUM').toUpperCase() === filterPriority
+      return matchesSearch && matchesStatus && matchesPriority
     })
     .sort((a, b) => {
       const aTime = parseServerDateTime(a.createdAt)?.getTime() ?? 0
       const bTime = parseServerDateTime(b.createdAt)?.getTime() ?? 0
       if (bTime !== aTime) return bTime - aTime
       return (b.id || 0) - (a.id || 0)
-    }), [complaints, searchTerm, filterStatus])
+    }), [complaints, searchTerm, filterStatus, filterPriority])
 
   const closeModal = (force = false) => {
     if (!force && (createMutation.isPending || updateMutation.isPending)) return
     setShowModal(false)
     setEditingComplaint(null)
+    setAttachmentUrlsInput('')
+    setSelectedFile(null)
+    setUploadProgress(0)
+    setUploadValidationError('')
   }
+
+  useEffect(() => {
+    if (!showModal) return
+    setAttachmentUrlsInput(stringifyUrls(editingComplaint?.attachmentUrls))
+    setSelectedFile(null)
+    setUploadProgress(0)
+    setUploadValidationError('')
+  }, [showModal, editingComplaint])
 
   useEffect(() => {
     if (!pageFocusMode) return
@@ -356,6 +442,15 @@ export default function Complaints() {
       subject: formData.get('subject'),
       description: formData.get('description'),
       category: formData.get('category'),
+      priority: formData.get('priority') || 'MEDIUM',
+      locationDetails: formData.get('locationDetails') || null,
+      attachmentUrls: normalizeCsvUrls(attachmentUrlsInput),
+      ...(canUseAdvancedComplaintFields ? {
+        assignedToUserId: formData.get('assignedToUserId') ? Number(formData.get('assignedToUserId')) : null,
+        raisedForUserId: formData.get('raisedForUserId') ? Number(formData.get('raisedForUserId')) : null,
+        raisedForReason: formData.get('raisedForReason') || null,
+        adminRemarks: formData.get('adminRemarks') || null,
+      } : {}),
     }
 
     if (editingComplaint?.id) {
@@ -364,6 +459,91 @@ export default function Complaints() {
     }
 
     createMutation.mutate(payload)
+  }
+
+  const handleSelectAttachmentFiles = (event) => {
+    const files = Array.from(event.target.files || [])
+    if (!files.length) return
+
+    const firstFile = files[0]
+    if (firstFile.size > MAX_ATTACHMENT_SIZE_BYTES) {
+      const reason = 'File rejected: Maximum upload size is 25MB.'
+      setSelectedFile(null)
+      setUploadProgress(0)
+      setUploadValidationError(reason)
+      toast.error(reason)
+      event.target.value = ''
+      return
+    }
+
+    setSelectedFile(firstFile)
+    setUploadProgress(0)
+    setUploadValidationError('')
+    if (files.length > 1) {
+      toast.error('Only one file can be uploaded at a time')
+    }
+  }
+
+  const handleUploadAttachments = async () => {
+    if (!selectedFile || !effectiveSocietyId) return
+
+    if (selectedFile.size > MAX_ATTACHMENT_SIZE_BYTES) {
+      const reason = 'File rejected: Maximum upload size is 25MB.'
+      setUploadValidationError(reason)
+      toast.error(reason)
+      return
+    }
+
+    try {
+      setUploadProgress(0)
+      const response = await uploadAttachmentMutation.mutateAsync({
+        file: selectedFile,
+        onUploadProgress: (event) => {
+          if (!event?.total) return
+          const percent = Math.min(100, Math.round((event.loaded * 100) / event.total))
+          setUploadProgress(percent)
+        },
+      })
+
+      if (response?.data?.url) {
+        setAttachmentUrlsInput((prev) => {
+          const current = normalizeCsvUrls(prev)
+          return [...new Set([...current, response.data.url])].join(', ')
+        })
+        setSelectedFile(null)
+        setUploadProgress(100)
+        toast.success('1 attachment uploaded')
+        setTimeout(() => setUploadProgress(0), 600)
+      }
+    } catch {
+      // Error toast is handled in mutation onError.
+    }
+  }
+
+  const handleDownloadAttachment = async (attachmentUrl, fallbackName) => {
+    if (!attachmentUrl) return
+    try {
+      setDownloadingAttachmentUrl(attachmentUrl)
+      const response = await complaintApi.downloadAttachment(attachmentUrl)
+
+      const disposition = response?.headers?.['content-disposition'] || ''
+      const nameMatch = disposition.match(/filename=\"?([^\";]+)\"?/i)
+      const filename = nameMatch?.[1] || fallbackName || 'complaint-attachment'
+
+      const blob = new Blob([response.data], { type: response.headers?.['content-type'] || 'application/octet-stream' })
+      const objectUrl = window.URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = objectUrl
+      link.download = filename
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+      window.URL.revokeObjectURL(objectUrl)
+    } catch (error) {
+      toast.error(error?.response?.data?.message || 'Failed to download attachment')
+    } finally {
+      setDownloadingAttachmentUrl('')
+    }
   }
 
   const confirmAndDeleteComplaint = async (complaint) => {
@@ -479,7 +659,7 @@ export default function Complaints() {
   }
 
   return (
-    <div>
+    <div className="complaints-page">
       {/* Header */}
       <div className="flex flex-col gap-4 mb-6 sm:flex-row sm:items-center sm:justify-between">
         <div>
@@ -502,29 +682,41 @@ export default function Complaints() {
       </div>
 
       {/* Summary Cards */}
-      <div className="mb-6 grid grid-cols-2 gap-4 md:grid-cols-4">
-        <div className="rounded-2xl border border-amber-500/25 bg-[linear-gradient(145deg,rgba(245,158,11,0.14),transparent_65%)] p-4 shadow-[0_10px_24px_rgba(15,23,42,0.12)]">
+      <div className={clsx('mb-6 grid grid-cols-2 gap-4', canManageComplaints() ? 'md:grid-cols-3 xl:grid-cols-6' : 'md:grid-cols-4')}>
+        <div className="complaint-summary-card complaint-summary-card--pending rounded-2xl border border-amber-500/25 bg-[linear-gradient(145deg,rgba(245,158,11,0.14),transparent_65%)] p-4 shadow-[0_10px_24px_rgba(15,23,42,0.12)]">
           <p className="text-sm text-[var(--text-tertiary)]">Pending</p>
           <p className="mt-1 text-2xl font-bold text-amber-400">{activeComplaints.filter(c => c.status === 'PENDING').length}</p>
         </div>
-        <div className="rounded-2xl border border-blue-500/25 bg-[linear-gradient(145deg,rgba(59,130,246,0.14),transparent_65%)] p-4 shadow-[0_10px_24px_rgba(15,23,42,0.12)]">
+        <div className="complaint-summary-card complaint-summary-card--review rounded-2xl border border-blue-500/25 bg-[linear-gradient(145deg,rgba(59,130,246,0.14),transparent_65%)] p-4 shadow-[0_10px_24px_rgba(15,23,42,0.12)]">
           <p className="text-sm text-[var(--text-tertiary)]">Under Review</p>
           <p className="mt-1 text-2xl font-bold text-blue-400">{activeComplaints.filter(c => c.status === 'UNDER_REVIEW').length}</p>
         </div>
-        <div className="rounded-2xl border border-emerald-500/25 bg-[linear-gradient(145deg,rgba(16,185,129,0.14),transparent_65%)] p-4 shadow-[0_10px_24px_rgba(15,23,42,0.12)]">
+        <div className="complaint-summary-card complaint-summary-card--resolved rounded-2xl border border-emerald-500/25 bg-[linear-gradient(145deg,rgba(16,185,129,0.14),transparent_65%)] p-4 shadow-[0_10px_24px_rgba(15,23,42,0.12)]">
           <p className="text-sm text-[var(--text-tertiary)]">Resolved</p>
           <p className="mt-1 text-2xl font-bold text-emerald-400">{activeComplaints.filter(c => c.status === 'RESOLVED').length}</p>
         </div>
-        <div className="rounded-2xl border border-[var(--border-light)] bg-[linear-gradient(145deg,rgba(148,163,184,0.14),transparent_65%)] p-4 shadow-[0_10px_24px_rgba(15,23,42,0.12)]">
+        <div className="complaint-summary-card complaint-summary-card--total rounded-2xl border border-[var(--border-light)] bg-[linear-gradient(145deg,rgba(148,163,184,0.14),transparent_65%)] p-4 shadow-[0_10px_24px_rgba(15,23,42,0.12)]">
           <p className="text-sm text-[var(--text-tertiary)]">Total</p>
           <p className="mt-1 text-2xl font-bold text-[var(--text-primary)]">{activeComplaints.length}</p>
         </div>
+        {canManageComplaints() && (
+          <>
+            <div className="complaint-summary-card complaint-summary-card--breached rounded-2xl border border-rose-500/25 bg-[linear-gradient(145deg,rgba(244,63,94,0.14),transparent_65%)] p-4 shadow-[0_10px_24px_rgba(15,23,42,0.12)]">
+              <p className="text-sm text-[var(--text-tertiary)]">SLA Breached</p>
+              <p className="mt-1 text-2xl font-bold text-rose-300">{slaSummary?.breached ?? activeComplaints.filter((c) => c.slaBreached).length}</p>
+            </div>
+            <div className="complaint-summary-card complaint-summary-card--due rounded-2xl border border-orange-500/25 bg-[linear-gradient(145deg,rgba(249,115,22,0.14),transparent_65%)] p-4 shadow-[0_10px_24px_rgba(15,23,42,0.12)]">
+              <p className="text-sm text-[var(--text-tertiary)]">Due Soon</p>
+              <p className="mt-1 text-2xl font-bold text-orange-300">{slaSummary?.dueSoon ?? 0}</p>
+            </div>
+          </>
+        )}
       </div>
 
       {/* Filters */}
       <div className="mb-6 rounded-2xl border border-[var(--border-light)] bg-[var(--bg-card)]/95 p-4 shadow-[0_10px_22px_rgba(15,23,42,0.1)]">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-          <div className="relative flex-1">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center">
+          <div className="relative min-w-0 flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--text-tertiary)]" />
             <input
               type="text"
@@ -537,13 +729,24 @@ export default function Complaints() {
           <select
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
-            className="w-full rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] px-3 py-2 text-[var(--text-primary)] outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+            className="w-full rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] px-3 py-2 text-[var(--text-primary)] outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 lg:w-56"
           >
             <option value="">All Status</option>
             <option value="PENDING">Pending</option>
             <option value="UNDER_REVIEW">Under Review</option>
             <option value="RESOLVED">Resolved</option>
             <option value="REJECTED">Rejected</option>
+          </select>
+          <select
+            value={filterPriority}
+            onChange={(e) => setFilterPriority(e.target.value)}
+            className="w-full rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] px-3 py-2 text-[var(--text-primary)] outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 lg:w-56"
+          >
+            <option value="">All Priorities</option>
+            <option value="LOW">Low</option>
+            <option value="MEDIUM">Medium</option>
+            <option value="HIGH">High</option>
+            <option value="URGENT">Urgent</option>
           </select>
         </div>
       </div>
@@ -554,6 +757,7 @@ export default function Complaints() {
             const effectiveStatus = complaint.deleted ? 'DELETED' : complaint.status
             const StatusIcon = statusIcons[effectiveStatus] || Clock
             const normalizedCategory = String(complaint.category || 'OTHER').toUpperCase()
+            const normalizedPriority = String(complaint.priority || 'MEDIUM').toUpperCase()
             const deleteUndoRemainingMs = getUndoRemainingMs(complaint.deleteUndoExpiresAt)
             const statusUndoRemainingMs = getUndoRemainingMs(complaint.statusUndoExpiresAt)
             const canUndoDelete = Boolean(complaint.deleted) && deleteUndoRemainingMs > 0
@@ -563,21 +767,22 @@ export default function Complaints() {
               && statusUndoRemainingMs > 0
             const activeUndoRemainingMs = canUndoDelete ? deleteUndoRemainingMs : (canUndoStatus ? statusUndoRemainingMs : 0)
             const undoContextLabel = canUndoDelete ? 'Deleted' : complaint.status?.replace('_', ' ')
+            const canManage = canManageComplaints()
+            const showUndoPanel = (canUndoDelete || canUndoStatus) && canManage
+            const canChangeStatus = canManage && !complaint.deleted && complaint.status !== 'RESOLVED' && complaint.status !== 'REJECTED'
+            const showCurrentStatus = !canChangeStatus
 
             return (
               <div
                 id={`complaint-${complaint.id}`}
                 key={complaint.id}
                 className={clsx(
-                  'group relative overflow-hidden rounded-2xl border border-[var(--border-light)] bg-[var(--bg-card)] p-5 shadow-[0_14px_30px_rgba(15,23,42,0.10)] transition-[border-color,box-shadow] duration-300 ease-out hover:border-blue-500/45 hover:shadow-[0_20px_38px_rgba(30,64,175,0.18)]',
-                  complaint.deleted && 'border-rose-500/40 bg-[color-mix(in_srgb,var(--bg-card)_90%,rgba(244,63,94,0.10)_10%)]',
+                  'complaint-record-card relative overflow-hidden xl:overflow-visible rounded-2xl border-2 border-cyan-500/40 bg-[var(--bg-card)] p-5 shadow-[0_14px_30px_rgba(15,23,42,0.10)]',
+                  complaint.deleted && 'border-rose-500/55 bg-[color-mix(in_srgb,var(--bg-card)_90%,rgba(244,63,94,0.10)_10%)]',
                   (isPageGlowActive || highlightedComplaintId === complaint.id) && 'ticket-focus-glow'
                 )}
               >
-                <div className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-sky-500/85 via-blue-500/75 to-indigo-500/75" />
-                <div className="pointer-events-none absolute -right-12 -top-12 h-36 w-36 rounded-full bg-blue-500/10 blur-2xl transition-opacity duration-300 group-hover:opacity-100" />
-
-                <div className="flex flex-col gap-4 2xl:flex-row 2xl:items-start 2xl:justify-between">
+                <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-start gap-3">
                       <div className={clsx('flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border',
@@ -602,9 +807,15 @@ export default function Complaints() {
                           )}>
                             {normalizedCategory}
                           </span>
+                          <span className={clsx(
+                            'inline-flex rounded-full border px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-[0.05em]',
+                            priorityClasses[normalizedPriority] || priorityClasses.MEDIUM
+                          )}>
+                            {normalizedPriority}
+                          </span>
                         </div>
 
-                        <h3 className="mt-1.5 text-[1.16rem] font-bold leading-tight text-[var(--text-primary)]">{complaint.subject}</h3>
+                        <h3 className="mt-1.5 break-words text-[1.04rem] font-bold leading-tight text-[var(--text-primary)] sm:text-[1.16rem]">{complaint.subject}</h3>
                         <p className="mt-2 max-w-3xl text-[0.92rem] leading-relaxed text-[var(--text-secondary)] line-clamp-3">{complaint.description}</p>
 
                         {complaint.resolution && (
@@ -613,7 +824,13 @@ export default function Complaints() {
                           </div>
                         )}
 
-                        <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1.5 text-xs text-[var(--text-tertiary)]">
+                        {complaint.adminRemarks && (
+                          <div className="mt-2 max-w-3xl rounded-xl border border-blue-500/25 bg-blue-500/10 px-3.5 py-2.5">
+                            <p className="text-xs text-blue-200"><span className="font-semibold">Admin Remarks:</span> {complaint.adminRemarks}</p>
+                          </div>
+                        )}
+
+                        <div className="mt-3 flex flex-wrap gap-x-3 gap-y-2 text-xs text-[var(--text-tertiary)] sm:gap-x-4 sm:gap-y-1.5">
                           {isPlatformLevel && (
                             <span className="inline-flex items-center gap-1.5 whitespace-nowrap">
                               <span className="h-1.5 w-1.5 rounded-full bg-blue-400" />
@@ -628,20 +845,82 @@ export default function Complaints() {
                             <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
                             {formatComplaintDateTimeWithDay(complaint.createdAt)}
                           </span>
+                          {complaint.flatNumber && (
+                            <span className="inline-flex items-center gap-1.5 whitespace-nowrap">
+                              <span className="h-1.5 w-1.5 rounded-full bg-cyan-400" />
+                              {`${complaint.wing ? `${complaint.wing}-` : ''}${complaint.flatNumber}${complaint.floor ? ` (F${complaint.floor})` : ''}`}
+                            </span>
+                          )}
+                          {complaint.assignedToName && (
+                            <span className="inline-flex items-center gap-1.5 whitespace-nowrap">
+                              <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
+                              Assigned: {complaint.assignedToName}
+                            </span>
+                          )}
+                          {complaint.raisedForName && (
+                            <span className="inline-flex items-center gap-1.5 whitespace-nowrap">
+                              <span className="h-1.5 w-1.5 rounded-full bg-fuchsia-400" />
+                              Raised For: {complaint.raisedForName}
+                            </span>
+                          )}
+                          {complaint.raisedForReason && (
+                            <span className="inline-flex items-center gap-1.5 whitespace-nowrap">
+                              <span className="h-1.5 w-1.5 rounded-full bg-teal-400" />
+                              Reason: {complaint.raisedForReason}
+                            </span>
+                          )}
+                          {Array.isArray(complaint.attachmentUrls) && complaint.attachmentUrls.length > 0 && (
+                            <div className="flex w-full flex-col items-start gap-1.5 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center sm:gap-2">
+                              <span className="inline-flex items-center gap-1.5 whitespace-nowrap">
+                                <span className="h-1.5 w-1.5 rounded-full bg-rose-400" />
+                                Attachments: {complaint.attachmentUrls.length}
+                              </span>
+                              {complaint.attachmentUrls.map((attachmentUrl, index) => (
+                                <button
+                                  key={`${complaint.id}-attachment-${index}`}
+                                  type="button"
+                                  onClick={() => handleDownloadAttachment(attachmentUrl, `${complaint.complaintNumber || 'complaint'}-attachment-${index + 1}`)}
+                                  disabled={downloadingAttachmentUrl === attachmentUrl}
+                                  className="inline-flex items-center gap-1 rounded-md border border-cyan-400/35 bg-cyan-500/12 px-2.5 py-1 text-[10px] font-semibold text-cyan-100 hover:bg-cyan-500/20 disabled:cursor-not-allowed disabled:opacity-60 sm:rounded-full sm:px-2 sm:py-0.5 sm:text-[11px]"
+                                >
+                                  {downloadingAttachmentUrl === attachmentUrl ? <Loader2 size={11} className="animate-spin" /> : <Download size={11} />}
+                                  <span>Download</span>
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                          {!['RESOLVED', 'REJECTED'].includes(String(complaint.status || '').toUpperCase()) && (
+                            <span className={clsx(
+                              'inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2 py-0.5 text-[11px] font-semibold',
+                              complaint.escalationLevel === 'BREACHED' && 'bg-rose-500/20 text-rose-200',
+                              complaint.escalationLevel === 'AT_RISK' && 'bg-amber-500/20 text-amber-200',
+                              (!complaint.escalationLevel || complaint.escalationLevel === 'ON_TRACK') && 'bg-emerald-500/15 text-emerald-200'
+                            )}>
+                              <span className="h-1.5 w-1.5 rounded-full bg-current" />
+                              SLA {complaint.escalationLevel === 'BREACHED'
+                                ? `Breached by ${complaint.breachDurationMinutes || 0}m`
+                                : complaint.escalationLevel === 'AT_RISK'
+                                  ? `Due in ${complaint.slaRemainingMinutes ?? '-'}m`
+                                  : `On track (${complaint.slaRemainingMinutes ?? '-'}m left)`}
+                            </span>
+                          )}
                         </div>
                       </div>
                     </div>
                   </div>
 
-                  <div className="w-full rounded-xl border border-[var(--border-default)] bg-[var(--bg-tertiary)]/45 p-3 2xl:ml-5 2xl:w-[15.2rem]">
-                    <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.07em] text-[var(--text-tertiary)]">Update Status</p>
+                  <div className="complaint-status-panel w-full rounded-2xl border border-[var(--border-default)] bg-[var(--bg-tertiary)] p-3.5 shadow-[0_4px_12px_rgba(15,23,42,0.12)] transition-all duration-700 xl:sticky xl:top-4 xl:ml-5 xl:w-[16.8rem] xl:shrink-0 xl:self-start">
+                    <p className="mb-2.5 text-[11px] font-bold uppercase tracking-[0.08em] text-[var(--text-tertiary)]">Update Status</p>
 
-                    {(canUndoDelete || canUndoStatus) && canManageComplaints() && (
-                      <div className="mb-2.5 rounded-xl border border-blue-500/35 bg-blue-500/10 p-2.5">
+                    <div className={clsx(
+                      'overflow-hidden transition-all duration-700 ease-out',
+                      showUndoPanel ? 'mb-2.5 max-h-56 opacity-100' : 'max-h-0 opacity-0'
+                    )}>
+                      <div className="rounded-xl border border-blue-400/40 bg-blue-500/12 p-2.5">
                         <p className="text-[11px] font-semibold uppercase tracking-[0.06em] text-blue-200">
                           {undoContextLabel} • Undo available
                         </p>
-                        <p className="mt-1 text-xs text-blue-100/90">{formatCountdown(activeUndoRemainingMs)} remaining</p>
+                        <p className="mt-1 text-xs font-semibold text-blue-100/95">{formatCountdown(activeUndoRemainingMs)} remaining</p>
                         <NeonSweepButton
                           type="button"
                           tone="cyan"
@@ -679,42 +958,50 @@ export default function Complaints() {
                           </NeonSweepButton>
                         )}
                       </div>
-                    )}
+                    </div>
 
-                    {canManageComplaints() && !complaint.deleted && complaint.status !== 'RESOLVED' && complaint.status !== 'REJECTED' && (
+                    <div className={clsx(
+                      'overflow-hidden transition-all duration-700 ease-out',
+                      canChangeStatus ? 'max-h-20 opacity-100' : 'max-h-0 opacity-0'
+                    )}>
                       <select
                         value={complaint.status}
                         onChange={(e) => handleStatusChange(complaint, e.target.value)}
-                        className="w-full rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] px-3 py-2 text-sm font-semibold text-[var(--text-primary)] shadow-[0_2px_8px_rgba(15,23,42,0.08)] focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                        className="w-full rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] px-3 py-2.5 text-sm font-semibold text-[var(--text-primary)] shadow-[0_4px_10px_rgba(15,23,42,0.18)] focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
                       >
                         <option value="PENDING">Pending</option>
                         <option value="UNDER_REVIEW">Under Review</option>
                         <option value="RESOLVED">Resolved</option>
                         <option value="REJECTED">Rejected</option>
                       </select>
-                    )}
+                    </div>
 
-                    {(!canManageComplaints() || complaint.deleted || complaint.status === 'RESOLVED' || complaint.status === 'REJECTED') && (
-                      <div className="rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] px-3 py-2 text-sm font-semibold text-[var(--text-secondary)]">
+                    <div className={clsx(
+                      'overflow-hidden transition-all duration-700 ease-out',
+                      showCurrentStatus ? 'max-h-20 opacity-100' : 'max-h-0 opacity-0'
+                    )}>
+                      <div className="rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] px-3 py-2.5 text-sm font-semibold text-[var(--text-secondary)] shadow-[inset_0_0_0_1px_rgba(148,163,184,0.08)]">
                         Current: {complaint.deleted ? 'Deleted' : complaint.status?.replace('_', ' ')}
                       </div>
-                    )}
+                    </div>
 
-                    {canManageComplaints() && !complaint.deleted && (
-                      <div className="mt-2 grid grid-cols-2 gap-2">
-                        <NeonSweepButton
-                          type="button"
-                          tone="slate"
-                          size="sm"
-                          className="w-full justify-center"
-                          onClick={() => {
-                            setEditingComplaint(complaint)
-                            setShowModal(true)
-                          }}
-                        >
-                          <Edit size={14} />
-                          Edit
-                        </NeonSweepButton>
+                    {canManage && !complaint.deleted && (
+                      <div className={clsx('grid gap-2.5 transition-all duration-700', String(complaint.status || '').toUpperCase() === 'RESOLVED' ? 'grid-cols-1' : 'grid-cols-2', showCurrentStatus ? 'mt-2.5' : 'mt-1.5')}>
+                        {String(complaint.status || '').toUpperCase() !== 'RESOLVED' && (
+                          <NeonSweepButton
+                            type="button"
+                            tone="slate"
+                            size="sm"
+                            className="w-full justify-center"
+                            onClick={() => {
+                              setEditingComplaint(complaint)
+                              setShowModal(true)
+                            }}
+                          >
+                            <Edit size={14} />
+                            Edit
+                          </NeonSweepButton>
+                        )}
                         <NeonSweepButton
                           type="button"
                           tone="danger"
@@ -737,19 +1024,20 @@ export default function Complaints() {
 
       {/* Create Complaint Modal */}
       <AnimatedModal open={showModal} onRequestClose={closeModal} closeOnBackdrop>
-        <div className="w-full max-w-[520px] max-h-[calc(100vh-3rem)] overflow-y-auto bg-[var(--bg-card)] rounded-xl border border-[var(--border-light)] shadow-[0_8px_24px_rgba(0,0,0,0.12)]">
-            <div className="flex items-center justify-between p-4 border-b border-[var(--border-light)]">
+        <div className="mx-2 w-[calc(100vw-1rem)] max-w-[980px] max-h-[calc(100vh-1.2rem)] overflow-y-auto rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] shadow-[0_8px_24px_rgba(0,0,0,0.12)] sm:mx-0 sm:w-full sm:max-h-[calc(100vh-2.5rem)]">
+            <div className="flex items-center justify-between border-b border-[var(--border-light)] p-3 sm:p-4">
               <h3 className="text-lg font-semibold text-[var(--text-primary)]">{editingComplaint ? 'Edit Complaint' : 'Log Complaint'}</h3>
               <button onClick={closeModal} className="border-none bg-transparent text-[var(--text-tertiary)] p-1 rounded-lg hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-primary)]">
                 <X size={20} />
               </button>
             </div>
-            <form onSubmit={handleSubmit} className="p-4 grid gap-4">
+            <form onSubmit={handleSubmit} className="grid gap-4 p-3 sm:p-4 md:grid-cols-2">
               <FormInput
                 label="Subject"
                 name="subject"
                 defaultValue={editingComplaint?.subject || ''}
                 required
+                className="md:col-span-2"
               />
               <SmartSelect
                 label="Category"
@@ -762,19 +1050,145 @@ export default function Complaints() {
                   { value: 'MAINTENANCE', label: 'Maintenance' },
                   { value: 'SECURITY', label: 'Security' },
                   { value: 'CLEANLINESS', label: 'Cleanliness' },
-                  { value: 'NEIGHBOR', label: 'Neighbor Issue' },
+                  { value: 'NEIGHBOR_ISSUE', label: 'Neighbor Issue' },
                   { value: 'OTHER', label: 'Other' },
                 ]}
                 placeholder="Select Category"
               />
+              <SmartSelect
+                label="Priority"
+                name="priority"
+                defaultValue={editingComplaint?.priority || 'MEDIUM'}
+                required
+                options={[
+                  { value: 'LOW', label: 'Low' },
+                  { value: 'MEDIUM', label: 'Medium' },
+                  { value: 'HIGH', label: 'High' },
+                  { value: 'URGENT', label: 'Urgent' },
+                ]}
+                placeholder="Select Priority"
+              />
+              <FormInput
+                label="Location Details"
+                name="locationDetails"
+                defaultValue={editingComplaint?.locationDetails || ''}
+                placeholder="e.g., Near B-wing lift lobby"
+                className="md:col-span-2"
+              />
+              <div className="rounded-xl border border-[var(--border-light)] bg-[var(--bg-tertiary)]/35 p-3 md:col-span-2">
+                <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+                  <label className="block text-[13px] font-semibold text-[var(--text-secondary)]">Upload Attachment</label>
+                  <span className="rounded-full border border-cyan-400/30 bg-cyan-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.06em] text-cyan-200">1 file only</span>
+                </div>
+                <input
+                  type="file"
+                  onChange={handleSelectAttachmentFiles}
+                  className="block w-full rounded-lg border border-dashed border-[var(--border-light)] bg-[var(--bg-card)]/50 p-2 text-xs text-[var(--text-secondary)] file:mr-3 file:rounded-lg file:border-0 file:bg-blue-500/20 file:px-3 file:py-2 file:text-xs file:font-semibold file:text-blue-100 hover:file:bg-blue-500/30"
+                />
+                {selectedFile && (
+                  <div className="mt-2 flex flex-col items-start justify-between gap-2 rounded-lg border border-[var(--border-light)] bg-[var(--bg-card)]/40 px-2.5 py-1.5 sm:flex-row sm:items-center">
+                    <p className="truncate text-xs text-[var(--text-tertiary)]">Selected: {selectedFile.name}</p>
+                    <button
+                      type="button"
+                      className="text-xs font-medium text-rose-300 hover:text-rose-200"
+                      onClick={() => {
+                        setSelectedFile(null)
+                        setUploadProgress(0)
+                        setUploadValidationError('')
+                      }}
+                    >
+                      Remove
+                    </button>
+                  </div>
+                )}
+                {uploadValidationError && (
+                  <p className="mt-2 text-xs font-semibold text-rose-300">{uploadValidationError}</p>
+                )}
+                {!uploadValidationError && (
+                  <p className="mt-2 text-xs text-[var(--text-tertiary)]">Allowed: 1 file, up to 25MB</p>
+                )}
+                {(uploadAttachmentMutation.isPending || uploadProgress > 0) && (
+                  <div className="mt-2">
+                    <div className="h-2 w-full overflow-hidden rounded-full bg-slate-700/50">
+                      <div
+                        className="h-full rounded-full bg-cyan-400 transition-all duration-150"
+                        style={{ width: `${uploadProgress}%` }}
+                      />
+                    </div>
+                    <p className="mt-1 text-xs text-[var(--text-tertiary)]">Uploading: {uploadProgress}%</p>
+                  </div>
+                )}
+                {normalizeCsvUrls(attachmentUrlsInput).length > 0 && (
+                  <p className="mt-1 text-xs text-[var(--text-tertiary)]">Uploaded URLs attached: {normalizeCsvUrls(attachmentUrlsInput).length}</p>
+                )}
+                <NeonSweepButton
+                  type="button"
+                  tone="slate"
+                  size="sm"
+                  className="mt-3"
+                  onClick={handleUploadAttachments}
+                  disabled={!selectedFile || uploadAttachmentMutation.isPending}
+                >
+                  {uploadAttachmentMutation.isPending ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />}
+                  {uploadAttachmentMutation.isPending ? 'Uploading...' : 'Upload File'}
+                </NeonSweepButton>
+              </div>
+              {canUseAdvancedComplaintFields && (
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:col-span-2">
+                  <SmartSelect
+                    label="Assign To"
+                    name="assignedToUserId"
+                    defaultValue={editingComplaint?.assignedToUserId ?? ''}
+                    options={[
+                      { value: '', label: 'Unassigned' },
+                      ...assignableUsers
+                        .filter((entry) => entry?.id)
+                        .map((entry) => ({
+                          value: String(entry.id),
+                          label: `${entry.name || 'Unnamed'} (${entry.role || 'USER'})`,
+                        })),
+                    ]}
+                    placeholder="Select assignee"
+                  />
+                  <SmartSelect
+                    label="Raised For User"
+                    name="raisedForUserId"
+                    defaultValue={editingComplaint?.raisedForUserId ?? ''}
+                    options={[
+                      { value: '', label: 'Self / Not specified' },
+                      ...assignableUsers
+                        .filter((entry) => entry?.id)
+                        .map((entry) => ({
+                          value: String(entry.id),
+                          label: `${entry.name || 'Unnamed'} (${entry.role || 'USER'})`,
+                        })),
+                    ]}
+                    placeholder="Select user"
+                  />
+                  <FormInput
+                    label="Raised For Reason"
+                    name="raisedForReason"
+                    defaultValue={editingComplaint?.raisedForReason || ''}
+                    className="sm:col-span-2"
+                    placeholder="Why this complaint was raised for someone"
+                  />
+                  <FormInput
+                    label="Admin Remarks"
+                    name="adminRemarks"
+                    defaultValue={editingComplaint?.adminRemarks || ''}
+                    className="sm:col-span-2"
+                  />
+                </div>
+              )}
               <FormTextarea
                 label="Description"
                 name="description"
                 defaultValue={editingComplaint?.description || ''}
                 rows={4}
                 required
+                className="md:col-span-2"
               />
-              <div className="flex gap-3 pt-4">
+              <div className="flex gap-3 pt-4 md:col-span-2">
                 <NeonSweepButton type="button" tone="slate" size="md" onClick={closeModal} className="flex-1">Cancel</NeonSweepButton>
                 <NeonSweepButton
                   type="submit"

@@ -227,9 +227,7 @@ export default function Tickets() {
         return
       }
       const nextStatus = response?.data?.status
-      if (nextStatus === 'IN_REVIEW' && ['RESOLVED', 'CLOSED'].includes(variables?.status)) {
-        toast.info('Closure request sent for C/S/T/CM approval')
-      } else if (nextStatus === 'CLOSED') {
+      if (nextStatus === 'CLOSED') {
         toast.info('Ticket closed. Undo is available for 5 minutes.')
       }
     },
@@ -686,8 +684,8 @@ export default function Tickets() {
 
       {/* Filters */}
       <div className="p-4 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-light)] shadow-[0_10px_22px_rgba(15,23,42,0.08)] mb-6">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-          <div className="relative flex-1">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center">
+          <div className="relative min-w-0 flex-1">
             <Search className="absolute left-3 top-1/2 w-5 h-5 -translate-y-1/2 text-[var(--text-tertiary)]" />
             <input
               type="text"
@@ -700,12 +698,11 @@ export default function Tickets() {
           <select
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
-            className="w-full py-[0.55rem] px-3 rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] text-[var(--text-primary)] transition-all focus:outline-none focus:border-blue-600 focus:ring-[3px] focus:ring-blue-600/20"
+            className="w-full py-[0.55rem] px-3 rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] text-[var(--text-primary)] transition-all focus:outline-none focus:border-blue-600 focus:ring-[3px] focus:ring-blue-600/20 lg:w-56"
           >
             <option value="">All Status</option>
             <option value="OPEN">Open</option>
             <option value="IN_PROGRESS">In Progress</option>
-            <option value="IN_REVIEW">In Review</option>
             <option value="RESOLVED">Resolved</option>
             <option value="CLOSED">Closed</option>
           </select>
@@ -750,11 +747,10 @@ export default function Tickets() {
 
             return (
             <div id={`ticket-${ticket.id}`} key={ticket.id} className={clsx(
-              'relative overflow-hidden p-5 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-light)] shadow-[0_12px_24px_rgba(15,23,42,0.06)] transition-[border-color] duration-300 ease-out',
-              ticket.isOverdue && 'border-red-600/45',
+              'relative overflow-hidden p-5 rounded-2xl bg-[var(--bg-card)] border-2 border-blue-500/40 shadow-[0_12px_24px_rgba(15,23,42,0.06)]',
+              ticket.isOverdue && 'border-red-600/55',
               (isPageGlowActive || highlightedTicketId === ticket.id) && 'ticket-focus-glow'
             )}>
-              <div className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-blue-500/80 via-cyan-400/70 to-emerald-400/70" />
               <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                 <div className="flex items-start gap-3 sm:gap-4 flex-1 min-w-0">
                   <div className="w-11 h-11 rounded-[0.9rem] bg-blue-600/[.12] flex items-center justify-center">
@@ -784,12 +780,6 @@ export default function Tickets() {
                     </div>
                     <h3 className="mt-1.5 text-base font-semibold text-[var(--text-primary)]">{ticket.title}</h3>
                     <p className="mt-1.5 text-[0.85rem] text-[var(--text-tertiary)] line-clamp-2">{ticket.description}</p>
-                    {ticket.status === 'IN_REVIEW' && (
-                      <p className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-violet-100 px-2.5 py-1 text-[0.75rem] font-semibold text-violet-800 transition-all duration-300 ease-out">
-                        <Clock size={12} />
-                        Awaiting C/S/T/CM approval
-                      </p>
-                    )}
                     {ticket.resolution && (
                       <p className="mt-1.5 text-[0.8rem] font-semibold text-[var(--text-secondary)]">
                         Latest reply: {ticket.resolution}

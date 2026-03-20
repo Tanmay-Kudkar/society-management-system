@@ -220,6 +220,47 @@
   --glow-accent: 0 0 16px rgba(47, 129, 247, 0.15);
 }
 
+.light .complaints-page {
+  --text-tertiary: #334155;
+  --border-light: #8fa4be;
+  --border-default: #7f96b3;
+}
+
+.light .complaints-page .complaint-summary-card {
+  background-image: none;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+}
+
+.light .complaints-page .complaint-summary-card--pending p:last-child {
+  color: #b45309;
+}
+
+.light .complaints-page .complaint-summary-card--review p:last-child {
+  color: #1d4ed8;
+}
+
+.light .complaints-page .complaint-summary-card--resolved p:last-child {
+  color: #047857;
+}
+
+.light .complaints-page .complaint-summary-card--breached p:last-child {
+  color: #be123c;
+}
+
+.light .complaints-page .complaint-summary-card--due p:last-child {
+  color: #c2410c;
+}
+
+.light .complaints-page .complaint-record-card {
+  box-shadow: 0 3px 12px rgba(15, 23, 42, 0.09);
+}
+
+.light .complaints-page .complaint-status-panel {
+  background: #e2e8f0;
+  border-color: #94a3b8;
+  box-shadow: none;
+}
+
 /* ============================================
             Base resets and globals
    ============================================ */
