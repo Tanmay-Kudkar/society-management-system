@@ -10,7 +10,6 @@ import {
 } from "lucide-react";
 import PageShell from "../../components/PageShell";
 import PublicSweepButton from "../../components/PublicSweepButton";
-import clsx from "clsx";
 
 export default function Contact() {
   const [formData, setFormData] = useState({

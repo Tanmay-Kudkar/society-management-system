@@ -32,7 +32,7 @@ export function useRazorpay({ onSuccess, onError, onDismiss } = {}) {
   // Mutation to verify payment
   const verifyPaymentMutation = useMutation({
     mutationFn: (data) => paymentApi.verifyPayment(data),
-    onSuccess: (response) => {
+    onSuccess: () => {
       // Invalidate relevant queries
       queryClient.invalidateQueries(['maintenanceBills'])
       queryClient.invalidateQueries(['payments'])

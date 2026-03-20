@@ -1,6 +1,6 @@
 import { MapContainer, TileLayer, Circle, CircleMarker, useMapEvents } from 'react-leaflet'
 
-function LocationPicker({ location, onPick }) {
+function LocationPicker({ onPick }) {
   useMapEvents({
     click: (event) => {
       onPick({
@@ -36,7 +36,7 @@ export default function LocationPickerMap({ location, onPick }) {
         radius={8}
         pathOptions={{ color: '#f97316', fillColor: '#fb923c', fillOpacity: 0.95 }}
       />
-      <LocationPicker location={location} onPick={onPick} />
+      <LocationPicker onPick={onPick} />
     </MapContainer>
   )
 }

@@ -294,7 +294,7 @@ export const parseApiError = (error) => {
       return data?.message || 'You do not have permission to perform this action.'
     case 404:
       return data?.message || 'Requested resource not found.'
-    case 409:
+    case 409: {
       // Duplicate entry - parse for specific fields
       const msg = data?.message || ''
       if (msg.toLowerCase().includes('email')) {
@@ -304,6 +304,7 @@ export const parseApiError = (error) => {
         return 'Flat number already exists in this society.'
       }
       return msg || 'This record already exists.'
+    }
     case 422:
       return data?.message || 'Validation failed. Please check your input.'
     case 500:

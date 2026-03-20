@@ -95,8 +95,8 @@ export default function SocietyRules() {
     enabled: canLoadSocietyData,
   });
 
-  const rules = data?.content || [];
   const filtered = useMemo(() => {
+    const rules = data?.content || [];
     if (!search) return rules;
     const q = search.toLowerCase();
     return rules.filter(
@@ -105,7 +105,7 @@ export default function SocietyRules() {
         r.description?.toLowerCase().includes(q) ||
         r.category?.toLowerCase().includes(q),
     );
-  }, [rules, search]);
+  }, [data?.content, search]);
 
   const createMut = useMutation({
     mutationFn: (d) => societyRuleApi.create(userId, d),

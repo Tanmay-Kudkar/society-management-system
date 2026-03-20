@@ -74,10 +74,6 @@ export default function MyBills() {
 
   const showSkeleton = useMinLoadingTime(isLoading || isError)
 
-  if (!canAccessMyBills) {
-    return <PermissionDenied message="My Bills is available only for members and tenants." />
-  }
-
   const getBillTotal = (bill) => {
     const total = Number(bill?.totalAmount)
     return Number.isFinite(total) && total > 0 ? total : Number(bill?.amount) || 0
@@ -95,6 +91,10 @@ export default function MyBills() {
       overdueCount: overdue.length,
     }
   }, [bills])
+
+  if (!canAccessMyBills) {
+    return <PermissionDenied message="My Bills is available only for members and tenants." />
+  }
 
   // Handle online payment
   const handlePayOnline = (bill) => {

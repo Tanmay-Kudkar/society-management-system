@@ -67,7 +67,7 @@ export default function Login() {
         .join(', ')
 
       setLocationName(conciseName || data?.display_name || 'Pinned location selected')
-    } catch (_) {
+    } catch {
       setLocationName('Pinned location selected')
     } finally {
       setIsResolvingLocation(false)

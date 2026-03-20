@@ -204,11 +204,9 @@ export default function Flats() {
     const area = formData.get('area')
     const ownerEmail = formData.get('ownerEmail')
     const ownerPhone = formData.get('ownerPhone')
-    const unitType = formData.get('unitType')
-    const wingIdValue = formData.get('wingId')
 
     // Unit Number validation - alphanumeric with optional dash/slash
-    const unitNumberRegex = /^[A-Za-z0-9][A-Za-z0-9\-\/]*$/
+    const unitNumberRegex = /^[A-Za-z0-9][A-Za-z0-9-/]*$/
     if (!unitNumber || !unitNumber.trim()) {
       errors.flatNumber = 'Unit number is required'
     } else if (!unitNumberRegex.test(unitNumber)) {

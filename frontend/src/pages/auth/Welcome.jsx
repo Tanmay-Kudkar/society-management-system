@@ -8,13 +8,6 @@ import PublicFooter from '../../components/PublicFooter'
 import PublicSweepButton from '../../components/PublicSweepButton'
 import PublicOutlineButton from '../../components/PublicOutlineButton'
 
-import googlePlayBtn from '../../assets/icons/Get-it-on-Google-Play.svg'
-import appStoreBtn from '../../assets/icons/Download-on-app-store.svg'
-import twitterIcon from '../../assets/icons/twitter-logo.svg'
-import youtubeIcon from '../../assets/icons/youtube.svg'
-import linkedinIcon from '../../assets/icons/linkedin.svg'
-import githubIcon from '../../assets/icons/github.svg'
-
 /* Scroll-reveal hook */
 function useScrollReveal() {
   const ref = useRef(null)

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '../../context'
@@ -53,6 +53,7 @@ export default function Visitors() {
   const [filterType, setFilterType] = useState('')
   const [viewMode, setViewMode] = useState('all')
   const [overstayThreshold, setOverstayThreshold] = useState('4')
+  const [nowTs, setNowTs] = useState(0)
 
   const isMember = user?.role && user.role !== 'VISITOR'
 
@@ -144,6 +145,12 @@ export default function Visitors() {
 
   const showSkeleton = useMinLoadingTime(isLoading || isError)
 
+  useEffect(() => {
+    setNowTs(Date.now())
+    const intervalId = window.setInterval(() => setNowTs(Date.now()), 60000)
+    return () => window.clearInterval(intervalId)
+  }, [])
+
   if (!isMember) {
     return <PermissionDenied message="You don't have permission to access visitor management" />
   }
@@ -204,7 +211,7 @@ export default function Visitors() {
           <p className="mt-1 text-2xl font-bold text-red-600">{visitors.filter(v => {
             const checkIn = parseServerDateTime(v.checkInTime)
             if (v.status !== 'CHECKED_IN' || !checkIn) return false
-            return (Date.now() - checkIn.getTime()) >= (Number(overstayThreshold) * 60 * 60 * 1000)
+            return (nowTs - checkIn.getTime()) >= (Number(overstayThreshold) * 60 * 60 * 1000)
           }).length}</p>
         </div>
       </div>
