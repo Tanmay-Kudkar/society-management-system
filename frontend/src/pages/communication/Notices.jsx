@@ -521,12 +521,11 @@ export default function Notices() {
               id={`notice-${notice.id}`}
               key={notice.id}
               className={clsx(
-                'relative overflow-hidden rounded-2xl border border-[var(--border-light)] bg-[var(--bg-card)] p-5 shadow-[0_12px_24px_rgba(15,23,42,0.06)]',
-                notice.deleted && 'border-rose-500/40 bg-[color-mix(in_srgb,var(--bg-card)_90%,rgba(244,63,94,0.10)_10%)]',
+                'relative overflow-hidden rounded-2xl border-2 border-violet-500/40 bg-[var(--bg-card)] p-5 shadow-[0_12px_24px_rgba(15,23,42,0.06)]',
+                notice.deleted && 'border-rose-500/55 bg-[color-mix(in_srgb,var(--bg-card)_90%,rgba(244,63,94,0.10)_10%)]',
                 (isPageGlowActive || highlightedNoticeId === notice.id) && 'ticket-focus-glow'
               )}
             >
-              <div className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-blue-500/80 via-cyan-400/70 to-violet-500/70" />
               <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div className="flex items-center gap-2">
                   <div className="rounded-xl bg-blue-500/15 p-2">

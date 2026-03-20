@@ -65,9 +65,6 @@ const Tickets = lazyWithMinDelay(() => import("./pages/communication/Tickets"));
 const Complaints = lazyWithMinDelay(
   () => import("./pages/communication/Complaints"),
 );
-const Approvals = lazyWithMinDelay(
-  () => import("./pages/communication/Approvals"),
-);
 const EmergencyContacts = lazyWithMinDelay(
   () => import("./pages/communication/EmergencyContacts"),
 );
@@ -184,7 +181,6 @@ const PAGE_TITLES = {
   "/notices": "Notices",
   "/tickets": "Tickets",
   "/complaints": "Complaints",
-  "/approvals": "Approvals",
   "/emergency-contacts": "Emergency Contacts",
   "/documents": "Documents",
   "/visitors": "Visitors",
@@ -603,7 +599,6 @@ function App() {
                 <Route path="notices" element={<Notices />} />
                 <Route path="tickets" element={<Tickets />} />
                 <Route path="complaints" element={<Complaints />} />
-                <Route path="approvals" element={<Approvals />} />
                 <Route
                   path="emergency-contacts"
                   element={<EmergencyContacts />}

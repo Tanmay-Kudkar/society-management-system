@@ -13,6 +13,8 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.multipart.MultipartException;
 
 import com.society.backend.common.dto.ErrorResponse;
 
@@ -21,6 +23,40 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+        @ExceptionHandler(MaxUploadSizeExceededException.class)
+        public ResponseEntity<ErrorResponse> handleMaxUploadSizeExceeded(
+                        MaxUploadSizeExceededException ex,
+                        HttpServletRequest request) {
+                return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).body(
+                                new ErrorResponse(
+                                                LocalDateTime.now(),
+                                                HttpStatus.PAYLOAD_TOO_LARGE.value(),
+                                                "Payload Too Large",
+                                                "File too large. Maximum allowed size is 25MB.",
+                                                request.getRequestURI()));
+        }
+
+        @ExceptionHandler(MultipartException.class)
+        public ResponseEntity<ErrorResponse> handleMultipartException(
+                        MultipartException ex,
+                        HttpServletRequest request) {
+                String message = ex.getMessage() != null && ex.getMessage().toLowerCase().contains("size")
+                                ? "File too large. Maximum allowed size is 25MB."
+                                : "Invalid multipart request";
+
+                HttpStatus status = message.startsWith("File too large")
+                                ? HttpStatus.PAYLOAD_TOO_LARGE
+                                : HttpStatus.BAD_REQUEST;
+
+                return ResponseEntity.status(status).body(
+                                new ErrorResponse(
+                                                LocalDateTime.now(),
+                                                status.value(),
+                                                status.getReasonPhrase(),
+                                                message,
+                                                request.getRequestURI()));
+        }
 
         @ExceptionHandler(MethodArgumentNotValidException.class)
         public ResponseEntity<Map<String, Object>> handleValidation(

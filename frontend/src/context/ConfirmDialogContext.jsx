@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { AlertTriangle, Trash2 } from 'lucide-react'
 import NeonSweepButton from '../components/NeonSweepButton'
+import { acquireScrollLock, releaseScrollLock } from '../utils/scrollLock'
 
 const ConfirmDialogContext = createContext(null)
 
@@ -141,6 +142,8 @@ export function ConfirmDialogProvider({ children }) {
   useEffect(() => {
     if (!open) return undefined
 
+    acquireScrollLock()
+
     const onKeyDown = (event) => {
       if (event.key === 'Escape') {
         close(false)
@@ -148,7 +151,10 @@ export function ConfirmDialogProvider({ children }) {
     }
 
     window.addEventListener('keydown', onKeyDown)
-    return () => window.removeEventListener('keydown', onKeyDown)
+    return () => {
+      window.removeEventListener('keydown', onKeyDown)
+      releaseScrollLock()
+    }
   }, [open, close])
 
   useEffect(() => {

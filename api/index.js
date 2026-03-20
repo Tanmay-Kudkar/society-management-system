@@ -293,6 +293,7 @@ export const complaintApi = {
   getAll: (userId) => api.get(`/complaints?userId=${userId}`),
   getById: (id) => api.get(`/complaints/${id}`),
   getBySociety: (societyId, userId) => api.get(`/complaints/society/${societyId}?userId=${userId}`),
+  getSlaSummary: (societyId, userId) => api.get(`/complaints/society/${societyId}/sla-summary?userId=${userId}`),
   getByUser: (targetUserId, userId) => api.get(`/complaints/user/${targetUserId}?userId=${userId}`),
   getByStatus: (status, userId) => api.get(`/complaints/status/${status}?userId=${userId}`),
   create: (data, userId) => api.post(`/complaints?userId=${userId}`, data),
@@ -302,6 +303,21 @@ export const complaintApi = {
     if (resolution) url += `&resolution=${encodeURIComponent(resolution)}`;
     return api.patch(url);
   },
+  assign: (id, assignedToUserId, userId) => api.patch(`/complaints/${id}/assign?userId=${userId}`, { assignedToUserId }),
+  addRemarks: (id, remarks, userId) => api.patch(`/complaints/${id}/remarks?userId=${userId}`, { remarks }),
+  uploadAttachment: (file, societyId, userId, onUploadProgress) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('societyId', societyId);
+    return api.post(`/complaints/attachments/upload?userId=${userId}`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+      onUploadProgress,
+    });
+  },
+  getComments: (id, userId) => api.get(`/complaints/${id}/comments?userId=${userId}`),
+  addComment: (id, message, userId) => api.post(`/complaints/${id}/comments?userId=${userId}`, { message }),
+  getHistory: (id, userId) => api.get(`/complaints/${id}/history?userId=${userId}`),
+  downloadAttachment: (url) => api.get(url, { responseType: 'blob' }),
   undo: (id, userId) => api.patch(`/complaints/${id}/undo?userId=${userId}`),
   delete: (id, userId, force = false) => api.delete(`/complaints/${id}?userId=${userId}${force ? '&force=true' : ''}`),
 }
@@ -524,28 +540,6 @@ export const visitorApi = {
   verifyOtp: (id, userId, otpCode) => api.post(`/visitors/${id}/otp/verify?userId=${userId}&otpCode=${encodeURIComponent(otpCode)}`),
   updateStatus: (id, userId, status) => api.patch(`/visitors/${id}/status?userId=${userId}&status=${status}`),
   delete: (id, userId) => api.delete(`/visitors/${id}?userId=${userId}`),
-}
-
-// ===================== APPROVALS =====================
-export const approvalApi = {
-  // Workflows
-  createWorkflow: (userId, data) => api.post(`/approvals/workflows?userId=${userId}`, data),
-  getWorkflowById: (id) => api.get(`/approvals/workflows/${id}`),
-  getWorkflowsBySociety: (societyId) => api.get(`/approvals/workflows/society/${societyId}`),
-  getWorkflowsBySocietyAndType: (societyId, entityType) => api.get(`/approvals/workflows/society/${societyId}/type/${entityType}`),
-  updateWorkflow: (id, userId, data) => api.put(`/approvals/workflows/${id}?userId=${userId}`, data),
-  deleteWorkflow: (id, userId) => api.delete(`/approvals/workflows/${id}?userId=${userId}`),
-  // Approval Requests
-  createRequest: (userId, data) => api.post(`/approvals/requests?userId=${userId}`, data),
-  getRequestById: (id) => api.get(`/approvals/requests/${id}`),
-  getRequestsBySociety: (societyId) => api.get(`/approvals/requests/society/${societyId}`),
-  getRequestsByStatus: (societyId, status) => api.get(`/approvals/requests/society/${societyId}/status/${status}`),
-  getRequestsByEntityType: (societyId, entityType) => api.get(`/approvals/requests/society/${societyId}/type/${entityType}`),
-  getRequestsByUser: (userId) => api.get(`/approvals/requests/user/${userId}`),
-  getPendingForApprover: (societyId, userId) => api.get(`/approvals/requests/pending/${societyId}?userId=${userId}`),
-  // Actions
-  takeAction: (requestId, userId, data) => api.post(`/approvals/requests/${requestId}/action?userId=${userId}`, data),
-  cancelRequest: (requestId, userId) => api.post(`/approvals/requests/${requestId}/cancel?userId=${userId}`),
 }
 
 // Penalty & Fine System API

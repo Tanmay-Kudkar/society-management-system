@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import clsx from 'clsx'
+import { acquireScrollLock, releaseScrollLock } from '../utils/scrollLock'
 
 export const DEFAULT_ANIMATED_MODAL_DURATION_MS = 220
 
@@ -68,11 +69,10 @@ export default function AnimatedModal({
   useEffect(() => {
     if (!modalIsOpen || !lockScroll) return undefined
 
-    const originalOverflow = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
+    acquireScrollLock()
 
     return () => {
-      document.body.style.overflow = originalOverflow
+      releaseScrollLock()
     }
   }, [modalIsOpen, lockScroll])
 
