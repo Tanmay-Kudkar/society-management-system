@@ -528,7 +528,7 @@ export default function Notices() {
             >
               <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div className="flex items-center gap-2">
-                  <div className="rounded-xl bg-blue-500/15 p-2">
+                  <div className="rounded-xl bg-blue-100 dark:bg-blue-500/15 p-2">
                     <Megaphone className="h-4 w-4 text-blue-600" />
                   </div>
                   <span className={clsx(priorityClasses[notice.priority] || priorityClasses.LOW)}>
@@ -545,7 +545,7 @@ export default function Notices() {
                           size="sm"
                           className="w-full justify-center"
                         >
-                          <Edit size={16} />
+                          <Edit size={16} absoluteStrokeWidth className="h-4 w-4 shrink-0" />
                           Edit
                         </NeonSweepButton>
                         <NeonSweepButton
@@ -554,7 +554,7 @@ export default function Notices() {
                           size="sm"
                           className="w-full justify-center"
                         >
-                          <Trash2 size={16} />
+                          <Trash2 size={16} absoluteStrokeWidth className="h-4 w-4 shrink-0" />
                           Delete
                         </NeonSweepButton>
                       </>
@@ -565,7 +565,7 @@ export default function Notices() {
 
               {showDeleteUndoPanel && canManageNotices() && (
                 <div className="mb-3 rounded-xl border border-blue-500/35 bg-blue-500/10 p-2.5">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.06em] text-blue-200">Deleted • Undo available</p>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.06em] text-blue-800 dark:text-blue-200">Deleted • Undo available</p>
                   <p className="mt-1 text-xs text-blue-100/90">{formatCountdown(deleteUndoRemainingMs)} remaining</p>
                   <div className="mt-2 grid grid-cols-1 gap-2">
                     <NeonSweepButton
@@ -584,7 +584,7 @@ export default function Notices() {
                       onClick={() => confirmAndFinalDeleteNotice(notice)}
                       disabled={undoDeleteMutation.isPending || deleteMutation.isPending}
                     >
-                      <Trash2 size={14} />
+                      <Trash2 size={15} absoluteStrokeWidth className="h-[15px] w-[15px] shrink-0" />
                       {deleteMutation.isPending ? 'Deleting...' : 'Confirm Delete'}
                     </NeonSweepButton>
                   </div>
@@ -595,7 +595,7 @@ export default function Notices() {
               <p className="mb-1 text-[0.75rem] font-semibold uppercase tracking-[0.06em] text-[var(--text-tertiary)]">
                 {noticeTypeLabel[(notice.noticeType || 'GENERAL').toUpperCase()] || 'General'}
               </p>
-              <p className="mb-3 line-clamp-3 text-sm text-[var(--text-secondary)]">{notice.content}</p>
+              <p className="mb-3 text-sm text-[var(--text-secondary)] break-words whitespace-pre-line">{notice.content}</p>
               
               <div className="flex flex-wrap items-center justify-between gap-2 border-t border-[var(--border-light)] pt-3 text-xs text-[var(--text-tertiary)]">
                 {isPlatformLevel && <span>{notice.societyName || 'All Societies'}</span>}
