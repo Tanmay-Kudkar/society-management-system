@@ -59,7 +59,7 @@ export default function Tenants() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tenants'] })
       queryClient.invalidateQueries({ queryKey: ['flats', effectiveSocietyId] })
-      setShowModal(false)
+      closeModal(true)
     },
   })
 
@@ -68,8 +68,7 @@ export default function Tenants() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tenants'] })
       queryClient.invalidateQueries({ queryKey: ['flats', effectiveSocietyId] })
-      setShowModal(false)
-      setEditingTenant(null)
+      closeModal(true)
     },
   })
 
@@ -99,6 +98,12 @@ export default function Tenants() {
       queryClient.invalidateQueries({ queryKey: ['flats', effectiveSocietyId] })
     },
   })
+
+  const closeModal = (force = false) => {
+    if (!force && (createMutation.isPending || updateMutation.isPending)) return
+    setShowModal(false)
+    setEditingTenant(null)
+  }
 
   const filteredTenants = useMemo(() => {
     return tenants.filter(t => {
@@ -521,14 +526,14 @@ export default function Tenants() {
       {/* Modal */}
       {showModal && canEditTenants && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="fixed inset-0 bg-black/40" onClick={() => setShowModal(false)} />
+          <div className="fixed inset-0 bg-black/40" onClick={() => closeModal()} />
           <div className="relative z-[1] w-full max-w-[32rem] max-h-[calc(100vh-3rem)] overflow-y-auto rounded-xl bg-[var(--bg-card)] border border-[var(--border-light)] shadow-[0_8px_24px_rgba(0,0,0,0.12)] p-6">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-[1.1rem] font-semibold text-[var(--text-primary)]">
                   {editingTenant ? 'Edit Tenant' : 'Add Tenant'}
               </h2>
               <button
-                onClick={() => { setShowModal(false); setEditingTenant(null) }}
+                onClick={() => closeModal()}
                 className="p-[0.45rem] rounded-[0.65rem] text-[var(--text-tertiary)] hover:bg-[rgba(148,163,184,0.2)]"
               >
                 <X size={20} />
@@ -638,7 +643,7 @@ export default function Tenants() {
                     type="button"
                     tone="slate"
                     size="md"
-                    onClick={() => { setShowModal(false); setEditingTenant(null) }}
+                    onClick={() => closeModal()}
                     className="w-full sm:w-auto"
                   >
                     Cancel

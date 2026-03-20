@@ -39,7 +39,7 @@ export default function AlertsSection({ canSeeContractAlerts, expiringContracts,
         items={pendingTickets.map((ticket) => ({
           title: ticket.title,
           subtitle: ticket.type,
-          onClick: () => navigate("/tickets"),
+          onClick: () => navigate(`/tickets?ticket=${encodeURIComponent(ticket.id)}`),
         }))}
         actionLabel="Open Tickets"
         onActionClick={() => navigate("/tickets")}

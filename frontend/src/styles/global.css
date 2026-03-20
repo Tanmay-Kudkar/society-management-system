@@ -66,6 +66,12 @@
   --glow-subtle: 0 0 12px rgba(47, 129, 247, 0.08);
   --glow-card: 0 0 20px rgba(47, 129, 247, 0.06);
   --glow-accent: 0 0 16px rgba(47, 129, 247, 0.15);
+  --ticket-focus-border: color-mix(in srgb, var(--accent-primary) 84%, var(--border-light));
+  --ticket-focus-ring: rgba(56, 189, 248, 0.42);
+  --ticket-focus-glow: rgba(56, 189, 248, 0.34);
+  --ticket-focus-inset: rgba(125, 211, 252, 0.7);
+  --ticket-focus-sweep-soft: rgba(125, 211, 252, 0.1);
+  --ticket-focus-sweep-strong: rgba(125, 211, 252, 0.72);
 
   --flow-border-gradient: linear-gradient(90deg, #ff0000, #ff7a00, #ffe600, #00d26a, #00d5ff, #2563eb, #7c3aed, #ff00b8, #ff0000);
   --flow-border-opacity: 1;
@@ -181,6 +187,13 @@
   --flow-border-size: 100% 100%;
   --flow-border-speed: 0s;
   --flow-border-speed-admin: 0s;
+
+  --ticket-focus-border: color-mix(in srgb, #1d4ed8 72%, #1e293b 28%);
+  --ticket-focus-ring: rgba(29, 78, 216, 0.48);
+  --ticket-focus-glow: rgba(29, 78, 216, 0.36);
+  --ticket-focus-inset: rgba(59, 130, 246, 0.82);
+  --ticket-focus-sweep-soft: rgba(59, 130, 246, 0.16);
+  --ticket-focus-sweep-strong: rgba(59, 130, 246, 0.86);
 }
 
 .dark {
@@ -612,6 +625,81 @@ table th {
   100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
 }
 
+@keyframes ticketFocusGlow {
+  0% {
+    border-color: var(--ticket-focus-border);
+    box-shadow:
+      0 0 0 0 rgba(56, 189, 248, 0),
+      0 12px 24px rgba(15, 23, 42, 0.06);
+  }
+  30% {
+    border-color: var(--ticket-focus-border);
+    box-shadow:
+      0 0 0 3px var(--ticket-focus-ring),
+      0 0 36px var(--ticket-focus-glow),
+      inset 0 0 0 1px var(--ticket-focus-inset),
+      0 12px 24px rgba(15, 23, 42, 0.14);
+  }
+  100% {
+    border-color: var(--border-light);
+    box-shadow:
+      0 0 0 0 rgba(56, 189, 248, 0),
+      0 12px 24px rgba(15, 23, 42, 0.06);
+  }
+}
+
+@keyframes ticketFocusSweep {
+  0% {
+    opacity: 0;
+    transform: translateX(-140%) skewX(-22deg);
+  }
+  18% {
+    opacity: 0.18;
+  }
+  65% {
+    opacity: 0.44;
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(180%) skewX(-22deg);
+  }
+}
+
+@keyframes pageFocusGlow {
+  0% {
+    box-shadow:
+      inset 0 0 0 0 var(--ticket-focus-ring),
+      0 0 0 0 var(--ticket-focus-glow);
+  }
+  30% {
+    box-shadow:
+      inset 0 0 0 2px var(--ticket-focus-ring),
+      0 0 44px var(--ticket-focus-glow);
+  }
+  100% {
+    box-shadow:
+      inset 0 0 0 0 rgba(0, 0, 0, 0),
+      0 0 0 rgba(0, 0, 0, 0);
+  }
+}
+
+@keyframes pageFocusSweep {
+  0% {
+    opacity: 0;
+    transform: translateX(-135%) skewX(-20deg);
+  }
+  24% {
+    opacity: 0.18;
+  }
+  64% {
+    opacity: 0.42;
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(145%) skewX(-20deg);
+  }
+}
+
 @keyframes ticker {
   0% { transform: translate3d(0, 0, 0); }
   100% { transform: translate3d(-50%, 0, 0); }
@@ -648,6 +736,62 @@ table th {
 
 .animate-success-pulse {
   animation: successPulse 1s ease-in-out;
+}
+
+.ticket-focus-glow {
+  position: relative;
+  isolation: isolate;
+  animation: ticketFocusGlow 1400ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.ticket-focus-glow::after {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(
+    110deg,
+    rgba(255, 255, 255, 0) 22%,
+    var(--ticket-focus-sweep-soft) 40%,
+    var(--ticket-focus-sweep-strong) 50%,
+    var(--ticket-focus-sweep-soft) 60%,
+    rgba(255, 255, 255, 0) 78%
+  );
+  mix-blend-mode: screen;
+  animation: ticketFocusSweep 1200ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.light .ticket-focus-glow::after {
+  mix-blend-mode: normal;
+}
+
+.page-focus-glow {
+  position: relative;
+  isolation: isolate;
+  animation: pageFocusGlow 1350ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.page-focus-glow::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  background: linear-gradient(
+    110deg,
+    rgba(255, 255, 255, 0) 20%,
+    var(--ticket-focus-sweep-soft) 40%,
+    var(--ticket-focus-sweep-strong) 50%,
+    var(--ticket-focus-sweep-soft) 60%,
+    rgba(255, 255, 255, 0) 80%
+  );
+  mix-blend-mode: screen;
+  animation: pageFocusSweep 1150ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.light .page-focus-glow::after {
+  mix-blend-mode: normal;
 }
 
 .animate-ticker {
@@ -713,6 +857,10 @@ table th {
   .animate-slide-in-right,
   .animate-slide-in-left,
   .animate-success-pulse,
+  .ticket-focus-glow,
+  .ticket-focus-glow::after,
+  .page-focus-glow,
+  .page-focus-glow::after,
   .animate-ticker,
   .animate-sun,
   .animate-bounce-custom,

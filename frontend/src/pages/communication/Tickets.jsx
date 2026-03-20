@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { useSearchParams } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../../context'
 import { useToast } from '../../context'
 import { ticketApi, userApi, societyApi, exportApi, downloadBlob } from '../../../../api'
-import { Plus, Search, X, Ticket, MessageSquare, User, Edit, AlertTriangle, Clock, FileSpreadsheet, Trash2 } from 'lucide-react'
+import { Plus, Search, X, Ticket, MessageSquare, User, Edit, AlertTriangle, Clock, FileSpreadsheet, Trash2, CheckCircle } from 'lucide-react'
 import clsx from 'clsx'
 import { InfoTooltip, NeonSweepButton, AnimatedModal, DEFAULT_ANIMATED_MODAL_DURATION_MS } from '../../components'
 import { HeroSkeleton, SummaryRowSkeleton, FiltersSkeleton, ListSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
@@ -100,6 +100,7 @@ export default function Tickets() {
   const { user, canCreateTickets, canManageTickets } = useAuth()
   const toast = useToast()
   const queryClient = useQueryClient()
+  const navigate = useNavigate()
   const [showModal, setShowModal] = useState(false)
   const [showAssignModal, setShowAssignModal] = useState(false)
   const [showReplyModal, setShowReplyModal] = useState(false)
@@ -126,6 +127,9 @@ export default function Tickets() {
   const [loadingReplies, setLoadingReplies] = useState({})
   const [nowTs, setNowTs] = useState(Date.now())
   const [searchParams] = useSearchParams()
+  const [highlightedTicketId, setHighlightedTicketId] = useState(null)
+  const [isDeepLinkTransitioning, setIsDeepLinkTransitioning] = useState(false)
+  const [isPageGlowActive, setIsPageGlowActive] = useState(false)
 
   useEffect(() => {
     const timer = setInterval(() => setNowTs(Date.now()), 1000)
@@ -138,6 +142,11 @@ export default function Tickets() {
   const canAssignTickets = ['MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'MANAGER'].includes(user?.role)
   const isCommitteeUser = user?.role === 'COMMITTEE'
   const societyIdFromUrl = searchParams.get('society')
+  const selectedTicketFromUrlRaw = Number(searchParams.get('ticket'))
+  const selectedTicketFromUrl = Number.isFinite(selectedTicketFromUrlRaw) && selectedTicketFromUrlRaw > 0
+    ? selectedTicketFromUrlRaw
+    : null
+  const pageFocusMode = searchParams.get('focus') === 'page'
   const effectiveSocietyId = isPlatformLevel && societyIdFromUrl ? Number(societyIdFromUrl) : user?.societyId
 
   const { data: tickets = [], isLoading, isError } = useQuery({
@@ -213,6 +222,10 @@ export default function Tickets() {
     mutationFn: ({ id, status }) => ticketApi.updateStatus(id, status, null, user.id),
     onSuccess: (response, variables) => {
       queryClient.invalidateQueries(['tickets'])
+      if (variables?.finalizeClose) {
+        toast.success('Ticket close finalized')
+        return
+      }
       const nextStatus = response?.data?.status
       if (nextStatus === 'IN_REVIEW' && ['RESOLVED', 'CLOSED'].includes(variables?.status)) {
         toast.info('Closure request sent for C/S/T/CM approval')
@@ -305,6 +318,73 @@ export default function Tickets() {
       total: tickets.length,
     }
   }, [tickets])
+
+  useEffect(() => {
+    if (!pageFocusMode) return
+
+    const startTimer = setTimeout(() => {
+      window.scrollBy({ top: 220, behavior: 'smooth' })
+      setIsPageGlowActive(true)
+    }, 80)
+
+    const endTimer = setTimeout(() => setIsPageGlowActive(false), 2100)
+
+    const clearFocusParamTimer = setTimeout(() => {
+      const nextParams = new URLSearchParams(searchParams)
+      nextParams.delete('focus')
+      const nextSearch = nextParams.toString()
+      navigate({ search: nextSearch ? `?${nextSearch}` : '' }, { replace: true })
+    }, 2300)
+
+    return () => {
+      clearTimeout(startTimer)
+      clearTimeout(endTimer)
+      clearTimeout(clearFocusParamTimer)
+    }
+  }, [pageFocusMode, navigate, searchParams])
+
+  useEffect(() => {
+    if (pageFocusMode) {
+      setIsDeepLinkTransitioning(false)
+      return
+    }
+
+    if (!selectedTicketFromUrl) {
+      setIsDeepLinkTransitioning(false)
+      return
+    }
+
+    if (!selectedTicketFromUrl || isLoading || tickets.length === 0) return
+
+    const selectedExists = tickets.some((ticket) => ticket.id === selectedTicketFromUrl)
+    if (!selectedExists) return
+
+    setIsDeepLinkTransitioning(true)
+
+    let glowStartTimer
+    let glowEndTimer
+    let revealTimer
+
+    const timer = setTimeout(() => {
+      const element = document.getElementById(`ticket-${selectedTicketFromUrl}`)
+      if (!element) return
+      element.scrollIntoView({ behavior: 'smooth', block: 'center' })
+
+      revealTimer = setTimeout(() => setIsDeepLinkTransitioning(false), 420)
+
+      // Reset first so navigating to the same ticket can retrigger the glow.
+      setHighlightedTicketId(null)
+      glowStartTimer = setTimeout(() => setHighlightedTicketId(selectedTicketFromUrl), 540)
+      glowEndTimer = setTimeout(() => setHighlightedTicketId(null), 2480)
+    }, 80)
+
+    return () => {
+      clearTimeout(timer)
+      clearTimeout(revealTimer)
+      clearTimeout(glowStartTimer)
+      clearTimeout(glowEndTimer)
+    }
+  }, [pageFocusMode, selectedTicketFromUrl, isLoading, tickets])
 
   const handleSubmit = (e) => {
     e.preventDefault()
@@ -642,7 +722,10 @@ export default function Tickets() {
       </div>
 
       {/* Tickets List */}
-        <div className="flex flex-col gap-4">
+        <div className={clsx(
+          'flex flex-col gap-4 transition-all duration-300 ease-out',
+          isDeepLinkTransitioning ? 'opacity-0 translate-y-1' : 'opacity-100 translate-y-0'
+        )}>
           {filteredTickets.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 text-center rounded-2xl bg-[var(--bg-card)] border border-[var(--border-light)]">
               <div className="w-14 h-14 rounded-2xl bg-blue-100 dark:bg-blue-500/15 flex items-center justify-center mb-4">
@@ -666,9 +749,10 @@ export default function Tickets() {
             const repliesOpen = Boolean(openReplies[ticket.id])
 
             return (
-            <div key={ticket.id} className={clsx(
+            <div id={`ticket-${ticket.id}`} key={ticket.id} className={clsx(
               'relative overflow-hidden p-5 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-light)] shadow-[0_12px_24px_rgba(15,23,42,0.06)] transition-[border-color] duration-300 ease-out',
-              ticket.isOverdue && 'border-red-600/45'
+              ticket.isOverdue && 'border-red-600/45',
+              (isPageGlowActive || highlightedTicketId === ticket.id) && 'ticket-focus-glow'
             )}>
               <div className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-blue-500/80 via-cyan-400/70 to-emerald-400/70" />
               <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
@@ -826,17 +910,30 @@ export default function Tickets() {
                   >
                     <div className="flex items-center justify-between gap-2 rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-[0.78rem] text-amber-800 dark:text-amber-300">
                       <span>Undo available for {formatCountdown(undoRemainingMs)}</span>
-                      <NeonSweepButton
-                        tone="slate"
-                        size="sm"
-                        className="!px-3 !py-1"
-                        onClick={() => {
-                          const previousStatus = ticket?.closeUndoPreviousStatus || 'IN_PROGRESS'
-                          updateStatusMutation.mutate({ id: ticket.id, status: previousStatus, previousStatus: 'CLOSED' })
-                        }}
-                      >
-                        Undo Close
-                      </NeonSweepButton>
+                      <div className="flex items-center gap-2">
+                        <NeonSweepButton
+                          tone="slate"
+                          size="sm"
+                          className="!px-3 !py-1"
+                          onClick={() => {
+                            const previousStatus = ticket?.closeUndoPreviousStatus || 'IN_PROGRESS'
+                            updateStatusMutation.mutate({ id: ticket.id, status: previousStatus, previousStatus: 'CLOSED' })
+                          }}
+                        >
+                          Undo Close
+                        </NeonSweepButton>
+                        <NeonSweepButton
+                          tone="emerald"
+                          size="sm"
+                          className="!px-3 !py-1 border-2 border-emerald-300/55 bg-emerald-500/25 text-emerald-50 shadow-[0_0_0_1px_rgba(16,185,129,0.45),0_8px_20px_rgba(16,185,129,0.22)]"
+                          onClick={() => {
+                            updateStatusMutation.mutate({ id: ticket.id, status: 'CLOSED', finalizeClose: true })
+                          }}
+                        >
+                          <CheckCircle size={14} />
+                          Confirm Close
+                        </NeonSweepButton>
+                      </div>
                     </div>
                   </div>
                   

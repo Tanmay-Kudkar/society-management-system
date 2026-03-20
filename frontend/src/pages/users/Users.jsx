@@ -203,7 +203,8 @@ export default function Users() {
     setShowModal(true)
   }
 
-  const closeModal = () => {
+  const closeModal = (force = false) => {
+    if (!force && (createMutation.isPending || updateMutation.isPending)) return
     setShowModal(false)
     setError('')
     setShowPassword(false)
@@ -318,10 +319,8 @@ export default function Users() {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries(['users'])
       queryClient.invalidateQueries(['employees'])
-      setShowModal(false)
+      closeModal(true)
       setEditingUser(null)
-      setError('')
-      setCreateEmployeeProfile(false)
       toast.success(variables?.employeeProfileData ? 'User and employee profile created successfully' : 'User created successfully')
     },
     onError: (err) => {
@@ -333,9 +332,8 @@ export default function Users() {
     mutationFn: ({ id, data }) => userApi.update(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries(['users'])
-      setShowModal(false)
+      closeModal(true)
       setEditingUser(null)
-      setError('')
     },
     onError: (err) => {
       setError(parseApiError(err))

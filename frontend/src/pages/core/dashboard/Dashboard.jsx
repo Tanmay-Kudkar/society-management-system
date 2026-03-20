@@ -54,7 +54,13 @@ export default function Dashboard() {
 
   const navigateToScoped = (path) => {
     if (user?.role === 'MASTER_ADMIN' && dashboardSocietyId) {
-      navigate(`${path}?society=${encodeURIComponent(dashboardSocietyId)}`)
+      const [pathname, search = ""] = String(path).split("?")
+      const params = new URLSearchParams(search)
+      if (!params.get("society")) {
+        params.set("society", String(dashboardSocietyId))
+      }
+      const query = params.toString()
+      navigate(query ? `${pathname}?${query}` : pathname)
       return
     }
     navigate(path)
@@ -138,27 +144,18 @@ export default function Dashboard() {
               icon={Ticket}
               items={pendingTicketItems}
               emptyText="No pending tickets."
-              badgeLabel={`${pendingTicketItems.length} items`}
-              actionLabel="Open Tickets"
-              onActionClick={moduleActionCards.some((item) => item.key === "module-tickets") ? () => navigateToScoped("/tickets") : undefined}
             />
             <FeedSection
               title="Pending complaints"
               icon={AlertTriangle}
               items={pendingComplaintItems}
               emptyText="No pending complaints."
-              badgeLabel={`${pendingComplaintItems.length} items`}
-              actionLabel={moduleActionCards.some((item) => item.key === "module-complaints") ? "Open Complaints" : undefined}
-              onActionClick={moduleActionCards.some((item) => item.key === "module-complaints") ? () => navigateToScoped("/complaints") : undefined}
             />
             <FeedSection
               title="Recent notices"
               icon={Bell}
               items={noticeItems}
               emptyText="No recent notices."
-              badgeLabel={`${noticeItems.length} items`}
-              actionLabel={moduleActionCards.some((item) => item.key === "module-notices") ? "Open Notices" : undefined}
-              onActionClick={moduleActionCards.some((item) => item.key === "module-notices") ? () => navigateToScoped("/notices") : undefined}
             />
           </div>
         </section>

@@ -74,6 +74,16 @@ public class ComplaintController {
         return ResponseEntity.ok(complaintService.getById(id));
     }
 
+    // Management can edit complaint details
+    @PutMapping("/{id}")
+    public ResponseEntity<ComplaintResponse> update(
+            @PathVariable Long id,
+            @RequestParam Long userId,
+            @Valid @RequestBody ComplaintRequest request) {
+        roleService.canManageComplaints(userId);
+        return ResponseEntity.ok(complaintService.update(id, request));
+    }
+
     // Management can update status
     @PatchMapping("/{id}/status")
     public ResponseEntity<ComplaintResponse> updateStatus(
@@ -85,13 +95,22 @@ public class ComplaintController {
         return ResponseEntity.ok(complaintService.updateStatus(id, status, resolution));
     }
 
+    @PatchMapping("/{id}/undo")
+    public ResponseEntity<ComplaintResponse> undo(
+            @PathVariable Long id,
+            @RequestParam Long userId) {
+        roleService.canManageComplaints(userId);
+        return ResponseEntity.ok(complaintService.undo(id));
+    }
+
     // Management can delete
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(
             @PathVariable Long id,
-            @RequestParam Long userId) {
+            @RequestParam Long userId,
+            @RequestParam(defaultValue = "false") boolean force) {
         roleService.canManageComplaints(userId);
-        complaintService.delete(id);
+        complaintService.delete(id, force);
         return ResponseEntity.noContent().build();
     }
 }

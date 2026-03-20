@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { useSearchParams } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../../context'
 import { useConfirmDialog } from '../../context'
 import { useToast } from '../../context'
@@ -10,7 +10,9 @@ import clsx from 'clsx'
 import { FormInput, SmartSelect, FormTextarea, InfoTooltip, NeonSweepButton, AnimatedModal, DEFAULT_ANIMATED_MODAL_DURATION_MS } from '../../components'
 import { HeroSkeleton, FiltersSkeleton, CardGridSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
 import useMinLoadingTime from '../../hooks/useMinLoadingTime'
-import { formatDate } from '../../utils/formatUtils'
+import { formatDate, parseServerDateTime } from '../../utils/formatUtils'
+
+const NOTICE_DELETE_UNDO_WINDOW_MS = 5 * 60 * 1000
 
 const priorityClasses = {
   LOW: 'inline-flex items-center rounded-full bg-[var(--bg-tertiary)] px-2 py-0.5 text-xs font-semibold text-[var(--text-secondary)]',
@@ -21,11 +23,27 @@ const priorityClasses = {
 
 const MODAL_ANIMATION_MS = DEFAULT_ANIMATED_MODAL_DURATION_MS
 
+const formatNoticeDateTimeWithDay = (value) => {
+  const date = parseServerDateTime(value)
+  if (!date) return '-'
+  return date.toLocaleString('en-IN', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true,
+    timeZone: 'Asia/Kolkata',
+  })
+}
+
 export default function Notices() {
   const { user, canManageNotices } = useAuth()
   const confirmDialog = useConfirmDialog()
   const toast = useToast()
   const queryClient = useQueryClient()
+  const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const [showModal, setShowModal] = useState(false)
   const [editingNotice, setEditingNotice] = useState(null)
@@ -39,6 +57,10 @@ export default function Notices() {
   const [attendanceList, setAttendanceList] = useState([])
   const [attendanceListLoading, setAttendanceListLoading] = useState(false)
   const [attendanceListFilter, setAttendanceListFilter] = useState('ALL')
+  const [highlightedNoticeId, setHighlightedNoticeId] = useState(null)
+  const [isDeepLinkTransitioning, setIsDeepLinkTransitioning] = useState(false)
+  const [isPageGlowActive, setIsPageGlowActive] = useState(false)
+  const [nowTs, setNowTs] = useState(Date.now())
 
   const noticeTypeLabel = {
     GENERAL: 'General',
@@ -51,6 +73,11 @@ export default function Notices() {
 
   // Get society filter from URL (for MASTER_ADMIN viewing specific society)
   const societyIdFromUrl = searchParams.get('society')
+  const selectedNoticeFromUrlRaw = Number(searchParams.get('notice'))
+  const selectedNoticeFromUrl = Number.isFinite(selectedNoticeFromUrlRaw) && selectedNoticeFromUrlRaw > 0
+    ? selectedNoticeFromUrlRaw
+    : null
+  const pageFocusMode = searchParams.get('focus') === 'page'
 
   // Check if current user is MASTER_ADMIN
   const isPlatformLevel = user?.role === 'MASTER_ADMIN'
@@ -65,13 +92,18 @@ export default function Notices() {
       : noticeApi.getAll().then(res => res.data),
   })
 
+  useEffect(() => {
+    const timer = setInterval(() => setNowTs(Date.now()), 1000)
+    return () => clearInterval(timer)
+  }, [])
+
 
 
   const createMutation = useMutation({
     mutationFn: (data) => noticeApi.create(data, user.id),
     onSuccess: () => {
       queryClient.invalidateQueries(['notices'])
-      closeModal()
+      closeModal(true)
     },
   })
 
@@ -79,15 +111,30 @@ export default function Notices() {
     mutationFn: ({ id, data }) => noticeApi.update(id, data, user.id),
     onSuccess: () => {
       queryClient.invalidateQueries(['notices'])
-      closeModal()
+      closeModal(true)
     },
   })
 
   const deleteMutation = useMutation({
-    mutationFn: (id) => noticeApi.delete(id, user.id),
-    onSuccess: () => queryClient.invalidateQueries(['notices']),
+    mutationFn: ({ id, force = false }) => noticeApi.delete(id, user.id, force),
+    onSuccess: (_response, variables) => {
+      queryClient.invalidateQueries(['notices'])
+      toast.success(variables?.force ? 'Notice permanently deleted' : 'Notice deleted. Undo available for 5 minutes.')
+    },
     onError: (error) => {
       toast.error(error.response?.data?.message || 'Failed to delete notice')
+    },
+  })
+
+  const undoDeleteMutation = useMutation({
+    mutationFn: (id) => noticeApi.undo(id, user.id),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['notices'])
+      toast.success('Notice restored successfully')
+    },
+    onError: (error) => {
+      toast.error(error?.response?.data?.message || 'Undo window expired or action unavailable')
+      queryClient.invalidateQueries(['notices'])
     },
   })
 
@@ -122,12 +169,85 @@ export default function Notices() {
     },
   })
 
-  const filteredNotices = useMemo(() => notices.filter(n => {
-    const matchesSearch = n.title?.toLowerCase().includes(searchTerm.toLowerCase())
-    const noticeType = (n.noticeType || 'GENERAL').toUpperCase()
-    const matchesType = !filterType || noticeType === filterType
-    return matchesSearch && matchesType
-  }), [notices, searchTerm, filterType])
+  const filteredNotices = useMemo(() => notices
+    .filter(n => {
+      const matchesSearch = n.title?.toLowerCase().includes(searchTerm.toLowerCase())
+      const noticeType = (n.noticeType || 'GENERAL').toUpperCase()
+      const matchesType = !filterType || noticeType === filterType
+      return matchesSearch && matchesType
+    })
+    .sort((a, b) => {
+      const aTime = parseServerDateTime(a.createdAt)?.getTime() ?? 0
+      const bTime = parseServerDateTime(b.createdAt)?.getTime() ?? 0
+      if (bTime !== aTime) return bTime - aTime
+      return (b.id ?? 0) - (a.id ?? 0)
+    }), [notices, searchTerm, filterType])
+
+  useEffect(() => {
+    if (!pageFocusMode) return
+
+    const startTimer = setTimeout(() => {
+      window.scrollBy({ top: 180, behavior: 'smooth' })
+      setIsPageGlowActive(true)
+    }, 80)
+
+    const endTimer = setTimeout(() => setIsPageGlowActive(false), 2100)
+
+    const clearFocusParamTimer = setTimeout(() => {
+      const nextParams = new URLSearchParams(searchParams)
+      nextParams.delete('focus')
+      const nextSearch = nextParams.toString()
+      navigate({ search: nextSearch ? `?${nextSearch}` : '' }, { replace: true })
+    }, 2300)
+
+    return () => {
+      clearTimeout(startTimer)
+      clearTimeout(endTimer)
+      clearTimeout(clearFocusParamTimer)
+    }
+  }, [pageFocusMode, navigate, searchParams])
+
+  useEffect(() => {
+    if (pageFocusMode) {
+      setIsDeepLinkTransitioning(false)
+      return
+    }
+
+    if (!selectedNoticeFromUrl) {
+      setIsDeepLinkTransitioning(false)
+      return
+    }
+
+    if (!selectedNoticeFromUrl || isLoading || notices.length === 0) return
+
+    const selectedExists = notices.some((notice) => notice.id === selectedNoticeFromUrl)
+    if (!selectedExists) return
+
+    setIsDeepLinkTransitioning(true)
+
+    let glowStartTimer
+    let glowEndTimer
+    let revealTimer
+
+    const timer = setTimeout(() => {
+      const element = document.getElementById(`notice-${selectedNoticeFromUrl}`)
+      if (!element) return
+      element.scrollIntoView({ behavior: 'smooth', block: 'center' })
+
+      revealTimer = setTimeout(() => setIsDeepLinkTransitioning(false), 420)
+
+      setHighlightedNoticeId(null)
+      glowStartTimer = setTimeout(() => setHighlightedNoticeId(selectedNoticeFromUrl), 540)
+      glowEndTimer = setTimeout(() => setHighlightedNoticeId(null), 2480)
+    }, 80)
+
+    return () => {
+      clearTimeout(timer)
+      clearTimeout(revealTimer)
+      clearTimeout(glowStartTimer)
+      clearTimeout(glowEndTimer)
+    }
+  }, [pageFocusMode, selectedNoticeFromUrl, isLoading, notices])
 
   useEffect(() => {
     let cancelled = false
@@ -195,7 +315,8 @@ export default function Notices() {
     }
   }, [notices, user?.id, canViewMeetingAttendance])
 
-  const closeModal = () => {
+  const closeModal = (force = false) => {
+    if (!force && (createMutation.isPending || updateMutation.isPending)) return
     setShowModal(false)
     setTimeout(() => setEditingNotice(null), MODAL_ANIMATION_MS)
   }
@@ -254,18 +375,50 @@ export default function Notices() {
   const confirmAndDeleteNotice = async (notice) => {
     const confirmed = await confirmDialog({
       title: 'Delete Notice',
-      message: 'Are you sure you want to delete this notice? This action cannot be undone.',
+      message: 'Are you sure you want to delete this notice? You can undo this for 5 minutes.',
       confirmText: 'Delete',
       tone: 'danger',
       details: [
         { label: 'Title', value: notice.title || '-' },
         { label: 'Priority', value: notice.priority || '-' },
       ],
-      caution: 'This action permanently removes the notice.',
+      caution: 'This notice will remain recoverable for 5 minutes before permanent removal.',
     })
     if (confirmed) {
-      deleteMutation.mutate(notice.id)
+      deleteMutation.mutate({ id: notice.id, force: false })
     }
+  }
+
+  const confirmAndFinalDeleteNotice = async (notice) => {
+    const confirmed = await confirmDialog({
+      title: 'Final Delete Notice',
+      message: 'Delete this notice permanently right now? This cannot be undone.',
+      confirmText: 'Final Delete',
+      tone: 'danger',
+      details: [
+        { label: 'Title', value: notice.title || '-' },
+        { label: 'Status', value: 'Deleted' },
+      ],
+      caution: 'This bypasses the remaining undo window and permanently removes the notice.',
+    })
+    if (confirmed) {
+      deleteMutation.mutate({ id: notice.id, force: true })
+    }
+  }
+
+  const getDeleteUndoRemainingMs = (notice) => {
+    if (!notice?.deleted) return 0
+    const parsed = parseServerDateTime(notice.deleteUndoExpiresAt)
+    if (!parsed) return 0
+    const remaining = parsed.getTime() - nowTs
+    return remaining > 0 && remaining <= (NOTICE_DELETE_UNDO_WINDOW_MS + 5000) ? remaining : 0
+  }
+
+  const formatCountdown = (remainingMs) => {
+    const totalSeconds = Math.floor(remainingMs / 1000)
+    const minutes = Math.floor(totalSeconds / 60)
+    const seconds = totalSeconds % 60
+    return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
   }
 
   const handleSubmit = (e) => {
@@ -354,9 +507,25 @@ export default function Notices() {
 
       {/* Notices Grid */}
       {(
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className={clsx(
+          'grid grid-cols-1 gap-4 transition-all duration-300 ease-out md:grid-cols-2 lg:grid-cols-3',
+          isDeepLinkTransitioning ? 'opacity-0 translate-y-1' : 'opacity-100 translate-y-0'
+        )}>
           {filteredNotices.map((notice) => (
-            <div key={notice.id} className="relative overflow-hidden rounded-2xl border border-[var(--border-light)] bg-[var(--bg-card)] p-5 shadow-[0_12px_24px_rgba(15,23,42,0.06)]">
+            (() => {
+              const deleteUndoRemainingMs = getDeleteUndoRemainingMs(notice)
+              const showDeleteUndoPanel = Boolean(notice.deleted) && deleteUndoRemainingMs > 0
+
+              return (
+            <div
+              id={`notice-${notice.id}`}
+              key={notice.id}
+              className={clsx(
+                'relative overflow-hidden rounded-2xl border border-[var(--border-light)] bg-[var(--bg-card)] p-5 shadow-[0_12px_24px_rgba(15,23,42,0.06)]',
+                notice.deleted && 'border-rose-500/40 bg-[color-mix(in_srgb,var(--bg-card)_90%,rgba(244,63,94,0.10)_10%)]',
+                (isPageGlowActive || highlightedNoticeId === notice.id) && 'ticket-focus-glow'
+              )}
+            >
               <div className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-blue-500/80 via-cyan-400/70 to-violet-500/70" />
               <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div className="flex items-center gap-2">
@@ -369,27 +538,59 @@ export default function Notices() {
                 </div>
                 {canManageNotices() && (
                   <div className="grid grid-cols-2 gap-2 w-full sm:w-auto sm:flex">
-                    <NeonSweepButton
-                      onClick={() => { setEditingNotice(notice); setShowModal(true) }}
-                      tone="slate"
-                      size="sm"
-                      className="w-full justify-center"
-                    >
-                      <Edit size={16} />
-                      Edit
-                    </NeonSweepButton>
-                    <NeonSweepButton
-                      onClick={() => confirmAndDeleteNotice(notice)}
-                      tone="danger"
-                      size="sm"
-                      className="w-full justify-center"
-                    >
-                      <Trash2 size={16} />
-                      Delete
-                    </NeonSweepButton>
+                    {!notice.deleted && (
+                      <>
+                        <NeonSweepButton
+                          onClick={() => { setEditingNotice(notice); setShowModal(true) }}
+                          tone="slate"
+                          size="sm"
+                          className="w-full justify-center"
+                        >
+                          <Edit size={16} />
+                          Edit
+                        </NeonSweepButton>
+                        <NeonSweepButton
+                          onClick={() => confirmAndDeleteNotice(notice)}
+                          tone="danger"
+                          size="sm"
+                          className="w-full justify-center"
+                        >
+                          <Trash2 size={16} />
+                          Delete
+                        </NeonSweepButton>
+                      </>
+                    )}
                   </div>
                 )}
               </div>
+
+              {showDeleteUndoPanel && canManageNotices() && (
+                <div className="mb-3 rounded-xl border border-blue-500/35 bg-blue-500/10 p-2.5">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.06em] text-blue-200">Deleted • Undo available</p>
+                  <p className="mt-1 text-xs text-blue-100/90">{formatCountdown(deleteUndoRemainingMs)} remaining</p>
+                  <div className="mt-2 grid grid-cols-1 gap-2">
+                    <NeonSweepButton
+                      tone="cyan"
+                      size="sm"
+                      className="w-full justify-center"
+                      onClick={() => undoDeleteMutation.mutate(notice.id)}
+                      disabled={undoDeleteMutation.isPending || deleteMutation.isPending}
+                    >
+                      {undoDeleteMutation.isPending ? 'Undoing...' : 'Undo'}
+                    </NeonSweepButton>
+                    <NeonSweepButton
+                      tone="danger"
+                      size="sm"
+                      className="w-full justify-center"
+                      onClick={() => confirmAndFinalDeleteNotice(notice)}
+                      disabled={undoDeleteMutation.isPending || deleteMutation.isPending}
+                    >
+                      <Trash2 size={14} />
+                      {deleteMutation.isPending ? 'Deleting...' : 'Confirm Delete'}
+                    </NeonSweepButton>
+                  </div>
+                </div>
+              )}
               
               <h3 className="mb-2 font-bold text-[var(--text-primary)]">{notice.title}</h3>
               <p className="mb-1 text-[0.75rem] font-semibold uppercase tracking-[0.06em] text-[var(--text-tertiary)]">
@@ -399,7 +600,7 @@ export default function Notices() {
               
               <div className="flex flex-wrap items-center justify-between gap-2 border-t border-[var(--border-light)] pt-3 text-xs text-[var(--text-tertiary)]">
                 {isPlatformLevel && <span>{notice.societyName || 'All Societies'}</span>}
-                <span>{formatDate(notice.createdAt)}</span>
+                <span>{formatNoticeDateTimeWithDay(notice.createdAt)}</span>
               </div>
               
               {notice.expiryDate && (
@@ -409,6 +610,7 @@ export default function Notices() {
               )}
 
               {(notice.noticeType || 'GENERAL').toUpperCase() === 'MEETING' && canRecordMeetingAttendance && (
+                !notice.deleted && (
                 <div className="mt-3 border-t border-[var(--border-light)] pt-3">
                   <p className="mb-2 text-xs font-semibold text-[var(--text-secondary)]">
                     Your attendance: {attendanceByNotice[notice.id]?.status || 'Not marked'}
@@ -434,9 +636,11 @@ export default function Notices() {
                     </NeonSweepButton>
                   </div>
                 </div>
+                )
               )}
 
               {(notice.noticeType || 'GENERAL').toUpperCase() === 'MEETING' && canViewMeetingAttendance && (
+                !notice.deleted && (
                 <div className="mt-3 rounded-xl border border-[var(--border-light)] bg-[var(--bg-tertiary)]/50 px-3 py-2 text-xs text-[var(--text-secondary)]">
                   <p className="font-semibold text-[var(--text-primary)]">Attendance Summary</p>
                   <p className="mt-1">
@@ -451,8 +655,11 @@ export default function Notices() {
                     View Attendance
                   </NeonSweepButton>
                 </div>
+                )
               )}
             </div>
+              )
+            })()
           ))}
         </div>
       )}

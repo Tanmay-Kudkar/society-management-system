@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '../../context'
@@ -80,9 +80,15 @@ export default function Approvals() {
   const [searchTerm, setSearchTerm] = useState('')
   const [filterStatus, setFilterStatus] = useState('')
   const [workflowSteps, setWorkflowSteps] = useState([{ stepOrder: 1, approverRole: 'CHAIRMAN', isMandatory: true, autoApproveBelow: '' }])
+  const [highlightedRequestId, setHighlightedRequestId] = useState(null)
+  const [isDeepLinkTransitioning, setIsDeepLinkTransitioning] = useState(false)
 
   const isPlatformLevel = user?.role === 'MASTER_ADMIN'
   const societyIdFromUrl = searchParams.get('society')
+  const selectedApprovalFromUrlRaw = Number(searchParams.get('approval'))
+  const selectedApprovalFromUrl = Number.isFinite(selectedApprovalFromUrlRaw) && selectedApprovalFromUrlRaw > 0
+    ? selectedApprovalFromUrlRaw
+    : null
   const effectiveSocietyId = isPlatformLevel && societyIdFromUrl ? societyIdFromUrl : user?.societyId
 
   // === DATA FETCHING ===
@@ -237,6 +243,50 @@ export default function Approvals() {
 
   const selectedRequest = actionModalRequestId ? requests.find(r => r.id === actionModalRequestId) : null
 
+  useEffect(() => {
+    if (!selectedApprovalFromUrl) return
+    if (activeTab !== 'requests') {
+      setActiveTab('requests')
+    }
+  }, [selectedApprovalFromUrl, activeTab])
+
+  useEffect(() => {
+    if (!selectedApprovalFromUrl) {
+      setIsDeepLinkTransitioning(false)
+      return
+    }
+
+    if (!selectedApprovalFromUrl || activeTab !== 'requests' || requestsLoading || requests.length === 0) return
+
+    const selectedExists = requests.some((request) => request.id === selectedApprovalFromUrl)
+    if (!selectedExists) return
+
+    setIsDeepLinkTransitioning(true)
+
+    let glowStartTimer
+    let glowEndTimer
+    let revealTimer
+
+    const timer = setTimeout(() => {
+      const element = document.getElementById(`approval-${selectedApprovalFromUrl}`)
+      if (!element) return
+      element.scrollIntoView({ behavior: 'smooth', block: 'center' })
+
+      revealTimer = setTimeout(() => setIsDeepLinkTransitioning(false), 420)
+
+      setHighlightedRequestId(null)
+      glowStartTimer = setTimeout(() => setHighlightedRequestId(selectedApprovalFromUrl), 540)
+      glowEndTimer = setTimeout(() => setHighlightedRequestId(null), 2480)
+    }, 80)
+
+    return () => {
+      clearTimeout(timer)
+      clearTimeout(revealTimer)
+      clearTimeout(glowStartTimer)
+      clearTimeout(glowEndTimer)
+    }
+  }, [selectedApprovalFromUrl, activeTab, requestsLoading, requests])
+
   return (
     <div>
       {/* Header */}
@@ -360,7 +410,10 @@ export default function Approvals() {
 
       {/* === REQUESTS LIST === */}
       {activeTab === 'requests' && (
-        <div className="flex flex-col gap-4">
+        <div className={clsx(
+          'flex flex-col gap-4 transition-all duration-300 ease-out',
+          isDeepLinkTransitioning ? 'opacity-0 translate-y-1' : 'opacity-100 translate-y-0'
+        )}>
           {filteredRequests.length === 0 ? (
             <div className="py-12 text-center text-[var(--text-tertiary)]">
               <GitBranch size={48} className="mx-auto mb-3 opacity-40" />
@@ -369,7 +422,14 @@ export default function Approvals() {
           ) : filteredRequests.map(req => {
             const StatusIcon = statusIcons[req.status] || Clock
             return (
-              <div key={req.id} className="rounded-2xl border border-[var(--border-light)] bg-[var(--bg-card)] p-5 shadow-[0_1px_3px_rgba(15,23,42,0.06)] transition hover:shadow-[0_4px_12px_rgba(15,23,42,0.1)]">
+              <div
+                id={`approval-${req.id}`}
+                key={req.id}
+                className={clsx(
+                  'rounded-2xl border border-[var(--border-light)] bg-[var(--bg-card)] p-5 shadow-[0_1px_3px_rgba(15,23,42,0.06)] transition hover:shadow-[0_4px_12px_rgba(15,23,42,0.1)]',
+                  highlightedRequestId === req.id && 'ticket-focus-glow'
+                )}
+              >
                 <div className="mb-3 flex items-start justify-between">
                   <div className="flex flex-wrap items-center gap-2.5">
                     <h3>{req.title}</h3>

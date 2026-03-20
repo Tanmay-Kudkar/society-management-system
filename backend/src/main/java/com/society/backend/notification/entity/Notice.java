@@ -42,6 +42,15 @@ public class Notice {
     @Column(name = "is_active")
     private Boolean isActive = true;
 
+    @Column(name = "is_deleted")
+    private Boolean deleted = false;
+
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
+
+    @Column(name = "delete_undo_expires_at")
+    private LocalDateTime deleteUndoExpiresAt;
+
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 

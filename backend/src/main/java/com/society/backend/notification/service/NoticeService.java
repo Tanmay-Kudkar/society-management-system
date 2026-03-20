@@ -16,7 +16,9 @@ public interface NoticeService {
 
     NoticeResponse update(Long id, NoticeRequest request);
 
-    void delete(Long id);
+    NoticeResponse undo(Long id);
+
+    void delete(Long id, boolean force);
 
     List<NoticeResponse> getBySocietyId(Long societyId);
 

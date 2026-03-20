@@ -63,7 +63,7 @@ export default function EmergencyContacts() {
     mutationFn: (data) => emergencyContactApi.create(data, user.id),
     onSuccess: () => {
       queryClient.invalidateQueries(['emergencyContacts'])
-      closeModal()
+      closeModal(true)
     },
   })
 
@@ -71,7 +71,7 @@ export default function EmergencyContacts() {
     mutationFn: ({ id, data }) => emergencyContactApi.update(id, data, user.id),
     onSuccess: () => {
       queryClient.invalidateQueries(['emergencyContacts'])
-      closeModal()
+      closeModal(true)
     },
   })
 
@@ -113,7 +113,8 @@ export default function EmergencyContacts() {
     })
   }, [contacts, searchTerm, filterCategory])
 
-  const closeModal = () => {
+  const closeModal = (force = false) => {
+    if (!force && (createMutation.isPending || updateMutation.isPending)) return
     setShowModal(false)
     setTimeout(() => setEditingContact(null), MODAL_ANIMATION_MS)
   }

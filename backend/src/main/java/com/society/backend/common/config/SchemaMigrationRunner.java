@@ -57,4 +57,45 @@ public class SchemaMigrationRunner {
             }
         };
     }
+
+    @Bean
+    public ApplicationRunner repairComplaintUndoColumns() {
+        return args -> {
+            try {
+                jdbcTemplate.execute("ALTER TABLE complaints ADD COLUMN IF NOT EXISTS status_undo_previous_status VARCHAR(255)");
+                jdbcTemplate.execute("ALTER TABLE complaints ADD COLUMN IF NOT EXISTS status_undo_previous_resolution TEXT");
+                jdbcTemplate.execute("ALTER TABLE complaints ADD COLUMN IF NOT EXISTS status_undo_expires_at TIMESTAMP");
+                jdbcTemplate.execute("ALTER TABLE complaints ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP");
+                jdbcTemplate.execute("ALTER TABLE complaints ADD COLUMN IF NOT EXISTS delete_undo_previous_status VARCHAR(255)");
+                jdbcTemplate.execute("ALTER TABLE complaints ADD COLUMN IF NOT EXISTS delete_undo_previous_resolution TEXT");
+                jdbcTemplate.execute("ALTER TABLE complaints ADD COLUMN IF NOT EXISTS delete_undo_expires_at TIMESTAMP");
+
+                jdbcTemplate.execute("ALTER TABLE complaints ADD COLUMN IF NOT EXISTS is_deleted BOOLEAN");
+                jdbcTemplate.execute("UPDATE complaints SET is_deleted = FALSE WHERE is_deleted IS NULL");
+                jdbcTemplate.execute("ALTER TABLE complaints ALTER COLUMN is_deleted SET DEFAULT FALSE");
+                jdbcTemplate.execute("ALTER TABLE complaints ALTER COLUMN is_deleted SET NOT NULL");
+
+                log.info("complaints undo/soft-delete columns verified/updated");
+            } catch (Exception ex) {
+                log.warn("Failed to add/update complaints undo columns: {}", ex.getMessage());
+            }
+        };
+    }
+
+    @Bean
+    public ApplicationRunner repairNoticeUndoColumns() {
+        return args -> {
+            try {
+                jdbcTemplate.execute("ALTER TABLE notices ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP");
+                jdbcTemplate.execute("ALTER TABLE notices ADD COLUMN IF NOT EXISTS delete_undo_expires_at TIMESTAMP");
+                jdbcTemplate.execute("ALTER TABLE notices ADD COLUMN IF NOT EXISTS is_deleted BOOLEAN");
+                jdbcTemplate.execute("UPDATE notices SET is_deleted = FALSE WHERE is_deleted IS NULL");
+                jdbcTemplate.execute("ALTER TABLE notices ALTER COLUMN is_deleted SET DEFAULT FALSE");
+                jdbcTemplate.execute("ALTER TABLE notices ALTER COLUMN is_deleted SET NOT NULL");
+                log.info("notices undo/soft-delete columns verified/updated");
+            } catch (Exception ex) {
+                log.warn("Failed to add/update notices undo columns: {}", ex.getMessage());
+            }
+        };
+    }
 }

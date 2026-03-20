@@ -24,4 +24,11 @@ public class ComplaintResponse {
     private String status;
     private String resolution;
     private LocalDateTime createdAt;
+    private Boolean deleted;
+    private String statusUndoPreviousStatus;
+    private String statusUndoPreviousResolution;
+    private String statusUndoExpiresAt;
+    private String deleteUndoPreviousStatus;
+    private String deleteUndoPreviousResolution;
+    private String deleteUndoExpiresAt;
 }

@@ -45,6 +45,30 @@ public class Complaint {
     @Column(columnDefinition = "TEXT")
     private String resolution;
 
+    @Column(name = "status_undo_previous_status")
+    private String statusUndoPreviousStatus;
+
+    @Column(name = "status_undo_previous_resolution", columnDefinition = "TEXT")
+    private String statusUndoPreviousResolution;
+
+    @Column(name = "status_undo_expires_at")
+    private LocalDateTime statusUndoExpiresAt;
+
+    @Column(name = "is_deleted")
+    private Boolean deleted = false;
+
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
+
+    @Column(name = "delete_undo_previous_status")
+    private String deleteUndoPreviousStatus;
+
+    @Column(name = "delete_undo_previous_resolution", columnDefinition = "TEXT")
+    private String deleteUndoPreviousResolution;
+
+    @Column(name = "delete_undo_expires_at")
+    private LocalDateTime deleteUndoExpiresAt;
+
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 

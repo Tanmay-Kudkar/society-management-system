@@ -66,7 +66,7 @@ export default function Vehicles() {
     mutationFn: (data) => vehicleApi.create(data, user.id),
     onSuccess: () => {
       queryClient.invalidateQueries(['vehicles'])
-      setShowModal(false)
+      closeModal(true)
     },
   })
 
@@ -74,8 +74,7 @@ export default function Vehicles() {
     mutationFn: ({ id, data }) => vehicleApi.update(id, data, user.id),
     onSuccess: () => {
       queryClient.invalidateQueries(['vehicles'])
-      setShowModal(false)
-      setEditingVehicle(null)
+      closeModal(true)
     },
   })
 
@@ -86,6 +85,12 @@ export default function Vehicles() {
       toast.error(error.response?.data?.message || 'Failed to delete vehicle')
     },
   })
+
+  const closeModal = (force = false) => {
+    if (!force && (createMutation.isPending || updateMutation.isPending)) return
+    setShowModal(false)
+    setEditingVehicle(null)
+  }
 
   const filteredVehicles = useMemo(() => {
     return vehicles.filter(v => {
@@ -512,14 +517,14 @@ export default function Vehicles() {
       {/* Modal */}
       {showModal && canEditVehicles && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="fixed inset-0 bg-black/50" onClick={() => setShowModal(false)} />
+          <div className="fixed inset-0 bg-black/50" onClick={() => closeModal()} />
           <div className="relative w-full max-w-xl rounded-xl border border-[var(--border-default)] bg-[var(--bg-card)] p-6 shadow-xl max-[360px]:p-4">
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-xl font-semibold text-[var(--text-primary)]">
                 {editingVehicle ? 'Edit Vehicle' : 'Add Vehicle'}
               </h2>
               <button
-                onClick={() => { setShowModal(false); setEditingVehicle(null) }}
+                onClick={() => closeModal()}
                 className="rounded-lg p-2 text-[var(--text-tertiary)] transition hover:bg-[var(--bg-tertiary)]"
               >
                 <X size={20} />
@@ -603,7 +608,7 @@ export default function Vehicles() {
                   type="button"
                   tone="slate"
                   size="md"
-                  onClick={() => { setShowModal(false); setEditingVehicle(null) }}
+                  onClick={() => closeModal()}
                   className="w-full sm:w-auto"
                 >
                   Cancel

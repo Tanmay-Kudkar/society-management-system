@@ -167,7 +167,7 @@ export default function AnimatedModal({
         <div
           ref={modalRef}
           tabIndex={-1}
-          className={clsx('w-full', className)}
+          className={clsx('flex w-full justify-center', className)}
           style={{
             transitionDuration: `${effectiveDuration}ms`,
             ...panelThemeVariables,
