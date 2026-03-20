@@ -107,41 +107,65 @@ export default function SocietyRules() {
     );
   }, [rules, search]);
 
-  const mut = (fn, msg) =>
-    useMutation({
-      mutationFn: fn,
-      onSuccess: () => {
-        toast.success(msg);
-        qc.invalidateQueries({ queryKey: ["society-rules"] });
-        qc.invalidateQueries({ queryKey: ["society-rules-counts"] });
-      },
-      onError: () => toast.error("Operation failed"),
-    });
+  const createMut = useMutation({
+    mutationFn: (d) => societyRuleApi.create(userId, d),
+    onSuccess: () => {
+      toast.success("Rule created");
+      qc.invalidateQueries({ queryKey: ["society-rules"] });
+      qc.invalidateQueries({ queryKey: ["society-rules-counts"] });
+    },
+    onError: () => toast.error("Operation failed"),
+  });
 
-  const createMut = mut(
-    (d) => societyRuleApi.create(userId, d),
-    "Rule created",
-  );
-  const updateMut = mut(
-    ({ id, ...d }) => societyRuleApi.update(id, userId, d),
-    "Rule updated",
-  );
-  const deleteMut = mut(
-    (id) => societyRuleApi.delete(id, userId),
-    "Rule deleted",
-  );
-  const publishMut = mut(
-    (id) => societyRuleApi.publish(id, userId),
-    "Rule published",
-  );
-  const archiveMut = mut(
-    (id) => societyRuleApi.archive(id, userId),
-    "Rule archived",
-  );
-  const approveMut = mut(
-    (id) => societyRuleApi.approve(id, userId),
-    "Rule approved",
-  );
+  const updateMut = useMutation({
+    mutationFn: ({ id, ...d }) => societyRuleApi.update(id, userId, d),
+    onSuccess: () => {
+      toast.success("Rule updated");
+      qc.invalidateQueries({ queryKey: ["society-rules"] });
+      qc.invalidateQueries({ queryKey: ["society-rules-counts"] });
+    },
+    onError: () => toast.error("Operation failed"),
+  });
+
+  const deleteMut = useMutation({
+    mutationFn: (id) => societyRuleApi.delete(id, userId),
+    onSuccess: () => {
+      toast.success("Rule deleted");
+      qc.invalidateQueries({ queryKey: ["society-rules"] });
+      qc.invalidateQueries({ queryKey: ["society-rules-counts"] });
+    },
+    onError: () => toast.error("Operation failed"),
+  });
+
+  const publishMut = useMutation({
+    mutationFn: (id) => societyRuleApi.publish(id, userId),
+    onSuccess: () => {
+      toast.success("Rule published");
+      qc.invalidateQueries({ queryKey: ["society-rules"] });
+      qc.invalidateQueries({ queryKey: ["society-rules-counts"] });
+    },
+    onError: () => toast.error("Operation failed"),
+  });
+
+  const archiveMut = useMutation({
+    mutationFn: (id) => societyRuleApi.archive(id, userId),
+    onSuccess: () => {
+      toast.success("Rule archived");
+      qc.invalidateQueries({ queryKey: ["society-rules"] });
+      qc.invalidateQueries({ queryKey: ["society-rules-counts"] });
+    },
+    onError: () => toast.error("Operation failed"),
+  });
+
+  const approveMut = useMutation({
+    mutationFn: (id) => societyRuleApi.approve(id, userId),
+    onSuccess: () => {
+      toast.success("Rule approved");
+      qc.invalidateQueries({ queryKey: ["society-rules"] });
+      qc.invalidateQueries({ queryKey: ["society-rules-counts"] });
+    },
+    onError: () => toast.error("Operation failed"),
+  });
 
   const openCreate = () => {
     setEditing(null);

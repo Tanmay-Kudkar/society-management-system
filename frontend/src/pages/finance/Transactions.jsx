@@ -13,13 +13,10 @@ import { formatDate } from '../../utils/formatUtils'
 
 export default function Transactions() {
   const { user, canManageTransactions } = useAuth()
+  const canAccessTransactions = canManageTransactions()
   const [searchParams] = useSearchParams()
   const { showToast } = useToast()
-  
-  // Permission check
-  if (!canManageTransactions()) {
-    return <PermissionDenied message="You don't have permission to manage transactions" />
-  }
+
   const queryClient = useQueryClient()
   const confirmDialog = useConfirmDialog()
   const [showModal, setShowModal] = useState(false)
@@ -277,6 +274,10 @@ export default function Transactions() {
 
   const showSkeleton = useMinLoadingTime(isLoading || isError)
 
+  if (!canAccessTransactions) {
+    return <PermissionDenied message="You don't have permission to manage transactions" />
+  }
+
   if (showSkeleton) {
     return (
       <div>
@@ -308,7 +309,7 @@ export default function Transactions() {
             <FileSpreadsheet size={20} />
             {isExporting ? 'Exporting...' : 'Export XLSX'}
           </NeonSweepButton>
-          {canManageTransactions() && (
+          {canAccessTransactions && (
             <NeonSweepButton
               tone="violet"
               size="md"

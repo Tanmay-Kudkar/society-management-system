@@ -46,11 +46,7 @@ export default function Payments() {
   const [refundFilter, setRefundFilter] = useState('ALL')
   const [settlementFilter, setSettlementFilter] = useState('ALL')
   const [isExporting, setIsExporting] = useState(false)
-
-  // Permission check - same as maintenance bills
-  if (!canManageMaintenanceBills()) {
-    return <PermissionDenied message="You don't have permission to view payments" />
-  }
+  const canAccessPayments = canManageMaintenanceBills()
 
   // Get society filter from URL (for MASTER_ADMIN viewing specific society)
   const societyIdFromUrl = searchParams.get('society')
@@ -224,6 +220,10 @@ export default function Payments() {
   }
 
   const showSkeleton = useMinLoadingTime(isLoading || isError)
+
+  if (!canAccessPayments) {
+    return <PermissionDenied message="You don't have permission to view payments" />
+  }
 
   const handleExport = async () => {
     setIsExporting(true)
