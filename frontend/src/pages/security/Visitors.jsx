@@ -55,9 +55,6 @@ export default function Visitors() {
   const [overstayThreshold, setOverstayThreshold] = useState('4')
 
   const isMember = user?.role && user.role !== 'VISITOR'
-  if (!isMember) {
-    return <PermissionDenied message="You don't have permission to access visitor management" />
-  }
 
   const isPlatformLevel = user?.role === 'MASTER_ADMIN'
   const isStaff = ['MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'MANAGER', 'EMPLOYEE'].includes(user?.role)
@@ -146,6 +143,10 @@ export default function Visitors() {
   }
 
   const showSkeleton = useMinLoadingTime(isLoading || isError)
+
+  if (!isMember) {
+    return <PermissionDenied message="You don't have permission to access visitor management" />
+  }
 
   if (showSkeleton) {
     return (

@@ -11,14 +11,11 @@ import { PermissionDenied } from '../../components'
 
 export default function Flats() {
   const { user, canManageFlats } = useAuth()
+  const canAccessFlats = canManageFlats()
   const confirmDialog = useConfirmDialog()
   const toast = useToast()
   const queryClient = useQueryClient()
-  
-  // Permission check
-  if (!canManageFlats()) {
-    return <PermissionDenied message="You don't have permission to manage flats/units" />
-  }
+
   const [searchParams] = useSearchParams()
   const [showModal, setShowModal] = useState(false)
   const [editingFlat, setEditingFlat] = useState(null)
@@ -329,6 +326,10 @@ export default function Flats() {
     } finally {
       setIsExporting(false)
     }
+  }
+
+  if (!canAccessFlats) {
+    return <PermissionDenied message="You don't have permission to manage flats/units" />
   }
 
   return (
