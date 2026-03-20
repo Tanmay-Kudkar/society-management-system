@@ -14,6 +14,9 @@ import com.society.backend.finance.repository.MaintenanceBillRepository;
 import com.society.backend.finance.repository.PaymentRepository;
 import com.society.backend.finance.repository.PaymentWebhookEventRepository;
 import com.society.backend.user.repository.UserRepository;
+import com.society.backend.vendor.entity.VendorBill;
+import com.society.backend.vendor.repository.VendorBillRepository;
+import com.society.backend.vendor.service.VendorBillService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.json.JSONObject;
@@ -50,6 +53,8 @@ public class PaymentService {
     private final UserRepository userRepository;
     private final MaintenanceBillRepository maintenanceBillRepository;
     private final MaintenanceBillService maintenanceBillService;
+    private final VendorBillRepository vendorBillRepository;
+    private final VendorBillService vendorBillService;
 
     @Transactional
     public CreateOrderResponse createOrder(CreateOrderRequest request) {
@@ -101,6 +106,15 @@ public class PaymentService {
                     payment.setSociety(bill.getSociety());
                 } else if (bill.getFlat() != null && bill.getFlat().getSociety() != null) {
                     payment.setSociety(bill.getFlat().getSociety());
+                }
+            }
+
+            if (request.getVendorBillId() != null) {
+                VendorBill bill = vendorBillRepository.findById(request.getVendorBillId())
+                        .orElseThrow(() -> new ResourceNotFoundException("Vendor bill not found"));
+                payment.setVendorBill(bill);
+                if (bill.getSociety() != null) {
+                    payment.setSociety(bill.getSociety());
                 }
             }
 
@@ -166,7 +180,7 @@ public class PaymentService {
             }
 
             Payment savedPayment = paymentRepository.save(payment);
-            applyMaintenanceBillPaymentIfNeeded(savedPayment, request.getRazorpayPaymentId());
+            applyLinkedBillPaymentIfNeeded(savedPayment, request.getRazorpayPaymentId());
             return mapToResponse(savedPayment);
 
         } catch (RazorpayException e) {
@@ -554,7 +568,7 @@ public class PaymentService {
                 payment.setSettlementStatus("PENDING");
             }
         Payment saved = paymentRepository.save(payment);
-        applyMaintenanceBillPaymentIfNeeded(saved, payment.getRazorpayPaymentId());
+        applyLinkedBillPaymentIfNeeded(saved, payment.getRazorpayPaymentId());
     }
 
     private void handlePaymentRefundedWebhook(JSONObject payload) {
@@ -759,7 +773,7 @@ public class PaymentService {
             payment.setSettlementStatus("PENDING");
         }
         Payment saved = paymentRepository.save(payment);
-        applyMaintenanceBillPaymentIfNeeded(saved, saved.getRazorpayPaymentId());
+        applyLinkedBillPaymentIfNeeded(saved, saved.getRazorpayPaymentId());
     }
 
     private void validateRefundRequester(User requester, Payment payment) {
@@ -821,18 +835,31 @@ public class PaymentService {
         return null;
     }
 
-    private void applyMaintenanceBillPaymentIfNeeded(Payment payment, String referenceNumber) {
-        if (payment.getMaintenanceBill() == null || payment.getUser() == null) {
+    private void applyLinkedBillPaymentIfNeeded(Payment payment, String referenceNumber) {
+        if (payment.getUser() == null) {
             return;
         }
 
-        maintenanceBillService.recordOnlinePayment(
-                payment.getMaintenanceBill().getId(),
-                payment.getAmount(),
-                "RAZORPAY",
-                referenceNumber,
-                payment.getUser().getId()
-        );
+        if (payment.getMaintenanceBill() != null) {
+            maintenanceBillService.recordOnlinePayment(
+                    payment.getMaintenanceBill().getId(),
+                    payment.getAmount(),
+                    "RAZORPAY",
+                    referenceNumber,
+                    payment.getUser().getId()
+            );
+            return;
+        }
+
+        if (payment.getVendorBill() != null) {
+            vendorBillService.recordOnlinePayment(
+                    payment.getVendorBill().getId(),
+                    payment.getAmount(),
+                    "RAZORPAY",
+                    referenceNumber,
+                    payment.getUser().getId()
+            );
+        }
     }
 
     private PaymentResponse mapToResponse(Payment payment) {
@@ -853,6 +880,7 @@ public class PaymentService {
                 .description(payment.getDescription())
                 .receiptNumber(payment.getReceiptNumber())
                 .maintenanceBillId(payment.getMaintenanceBill() != null ? payment.getMaintenanceBill().getId() : null)
+                .vendorBillId(payment.getVendorBill() != null ? payment.getVendorBill().getId() : null)
                 .userId(payment.getUser() != null ? payment.getUser().getId() : null)
                 .userName(payment.getUser() != null ? payment.getUser().getName() : null)
                 .societyId(payment.getSociety() != null ? payment.getSociety().getId() : null)

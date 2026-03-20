@@ -21,7 +21,7 @@ const statusClasses = {
 }
 
 const priorityClasses = {
-  LOW: 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-white/10 text-[var(--text-secondary)]',
+  LOW: 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border border-slate-300 bg-slate-100 text-slate-900 dark:border-slate-500/45 dark:bg-slate-700/45 dark:text-slate-100',
   MEDIUM: 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-800',
   HIGH: 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-orange-100 text-orange-700',
   URGENT: 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-red-100 text-red-700',

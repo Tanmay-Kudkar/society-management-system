@@ -188,6 +188,8 @@ export const vendorBillApi = {
   update: (id, data, userId) => api.put(`/vendor-bills/${id}?userId=${userId}`, data),
   recordPayment: (id, amount, paymentMode, referenceNumber, userId) => 
     api.post(`/vendor-bills/${id}/payment?amount=${amount}&paymentMode=${paymentMode}&referenceNumber=${encodeURIComponent(referenceNumber || '')}&userId=${userId}`),
+  downloadReceiptPdf: (id, userId) =>
+    api.get(`/vendor-bills/${id}/receipt/pdf?userId=${userId}`, { responseType: 'blob' }),
   delete: (id, userId, force = true) => api.delete(`/vendor-bills/${id}?userId=${userId}${force ? '&force=true' : ''}`),
 }
 
