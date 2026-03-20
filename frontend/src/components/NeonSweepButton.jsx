@@ -17,6 +17,10 @@ const toneClasses = {
     button: 'border-[color-mix(in_srgb,var(--color-error)_72%,var(--border-default)_28%)] bg-[color-mix(in_srgb,var(--bg-tertiary)_75%,var(--color-error)_25%)] text-[var(--text-primary)] hover:text-[var(--text-inverse)] hover:border-[var(--color-error)]',
     sweep: 'bg-[var(--color-error)]',
   },
+  emerald: {
+    button: 'border-[color-mix(in_srgb,var(--color-success)_74%,var(--border-default)_26%)] bg-[color-mix(in_srgb,var(--bg-tertiary)_72%,var(--color-success)_28%)] text-[var(--text-primary)] hover:text-[var(--text-inverse)] hover:border-[var(--color-success)]',
+    sweep: 'bg-[var(--color-success)]',
+  },
 }
 
 const sizeClasses = {
@@ -26,7 +30,7 @@ const sizeClasses = {
 }
 
 const baseButtonClass =
-  'group relative inline-flex items-center justify-center gap-2 overflow-hidden border-2 font-extrabold transition-[color,border-color] duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] disabled:cursor-not-allowed disabled:opacity-75'
+  'group/neon relative inline-flex items-center justify-center gap-2 overflow-hidden border-2 font-extrabold transition-[color,border-color] duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] disabled:cursor-not-allowed disabled:opacity-75'
 
 export default function NeonSweepButton({
   tone = 'cyan',
@@ -47,7 +51,7 @@ export default function NeonSweepButton({
     >
       <span
         className={clsx(
-          'pointer-events-none absolute inset-y-0 left-[-24%] w-[148%] -skew-x-[35deg] -translate-x-[118%] transition-transform duration-[1150ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:translate-x-0',
+          'pointer-events-none absolute inset-y-0 left-[-24%] w-[148%] -skew-x-[35deg] -translate-x-[118%] transition-transform duration-[1150ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover/neon:translate-x-0',
           toneConfig.sweep,
         )}
       />

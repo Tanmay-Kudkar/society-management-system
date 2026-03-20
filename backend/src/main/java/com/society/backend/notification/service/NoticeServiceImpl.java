@@ -16,6 +16,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.util.Set;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -25,6 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class NoticeServiceImpl implements NoticeService {
+    private static final long DELETE_UNDO_WINDOW_MINUTES = 5L;
 
     private static final Set<String> ALLOWED_NOTICE_TYPES = Set.of("GENERAL", "CIRCULAR", "MEETING");
     private static final Set<String> ALLOWED_ATTENDANCE_STATUS = Set.of("PRESENT", "ABSENT");
@@ -71,6 +73,7 @@ public class NoticeServiceImpl implements NoticeService {
         }
 
         return noticeRepository.findAllByOrderByCreatedAtDesc().stream()
+                .filter(this::isVisibleForListing)
                 .filter(n -> {
                     if (currentUser.getRole() == com.society.backend.user.entity.Role.MASTER_ADMIN) {
                         return true;
@@ -86,6 +89,9 @@ public class NoticeServiceImpl implements NoticeService {
     public NoticeResponse getById(Long id) {
         Notice notice = noticeRepository.findById(id)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Notice not found"));
+        if (!isVisibleForListing(notice)) {
+            throw new ApiException(HttpStatus.NOT_FOUND, "Notice not found");
+        }
         if (notice.getSociety() != null) {
             roleService.enforceSocietyScope(roleService.getCurrentUser(), notice.getSociety().getId());
         }
@@ -96,6 +102,10 @@ public class NoticeServiceImpl implements NoticeService {
     public NoticeResponse update(Long id, NoticeRequest request) {
         Notice notice = noticeRepository.findById(id)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Notice not found"));
+
+        if (Boolean.TRUE.equals(notice.getDeleted())) {
+            throw new ApiException(HttpStatus.CONFLICT, "Cannot edit a deleted notice. Undo delete first.");
+        }
 
         if (notice.getSociety() != null) {
             roleService.enforceSocietyScope(roleService.getCurrentUser(), notice.getSociety().getId());
@@ -123,22 +133,60 @@ public class NoticeServiceImpl implements NoticeService {
     }
 
     @Override
-    public void delete(Long id) {
+    public NoticeResponse undo(Long id) {
         var notice = noticeRepository.findById(id)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Notice not found"));
         if (notice.getSociety() != null) {
             roleService.enforceSocietyScope(roleService.getCurrentUser(), notice.getSociety().getId());
         }
-        if (!noticeRepository.existsById(id)) {
-            throw new ApiException(HttpStatus.NOT_FOUND, "Notice not found");
+
+        if (!Boolean.TRUE.equals(notice.getDeleted())) {
+            throw new ApiException(HttpStatus.CONFLICT, "Notice is not deleted");
         }
-        noticeRepository.deleteById(id);
+
+        LocalDateTime now = LocalDateTime.now();
+        if (notice.getDeleteUndoExpiresAt() == null || notice.getDeleteUndoExpiresAt().isBefore(now)) {
+            throw new ApiException(HttpStatus.CONFLICT, "Delete undo window has expired");
+        }
+
+        notice.setDeleted(false);
+        notice.setDeletedAt(null);
+        notice.setDeleteUndoExpiresAt(null);
+        notice.setIsActive(true);
+
+        Notice saved = noticeRepository.save(notice);
+        return toResponse(saved);
+    }
+
+    @Override
+    public void delete(Long id, boolean force) {
+        var notice = noticeRepository.findById(id)
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Notice not found"));
+        if (notice.getSociety() != null) {
+            roleService.enforceSocietyScope(roleService.getCurrentUser(), notice.getSociety().getId());
+        }
+
+        if (force) {
+            noticeRepository.delete(notice);
+            return;
+        }
+
+        if (Boolean.TRUE.equals(notice.getDeleted())) {
+            return;
+        }
+
+        notice.setDeleted(true);
+        notice.setDeletedAt(LocalDateTime.now());
+        notice.setDeleteUndoExpiresAt(LocalDateTime.now().plusMinutes(DELETE_UNDO_WINDOW_MINUTES));
+        notice.setIsActive(false);
+        noticeRepository.save(notice);
     }
 
     @Override
     public List<NoticeResponse> getBySocietyId(Long societyId) {
         roleService.enforceSocietyScope(roleService.getCurrentUser(), societyId);
         return noticeRepository.findBySocietyIdOrderByCreatedAtDesc(societyId).stream()
+                .filter(this::isVisibleForListing)
                 .map(this::toResponse)
                 .collect(Collectors.toList());
     }
@@ -220,7 +268,18 @@ public class NoticeServiceImpl implements NoticeService {
         response.setExpiryDate(notice.getExpiryDate());
         response.setIsActive(notice.getIsActive());
         response.setCreatedAt(notice.getCreatedAt());
+        response.setDeleted(Boolean.TRUE.equals(notice.getDeleted()));
+        response.setDeleteUndoExpiresAt(notice.getDeleteUndoExpiresAt());
         return response;
+    }
+
+    private boolean isVisibleForListing(Notice notice) {
+        if (!Boolean.TRUE.equals(notice.getDeleted())) {
+            return true;
+        }
+        return notice.getDeleteUndoExpiresAt() != null
+                && (notice.getDeleteUndoExpiresAt().isAfter(LocalDateTime.now())
+                || notice.getDeleteUndoExpiresAt().isEqual(LocalDateTime.now()));
     }
 
     private String normalizeNoticeType(String noticeType) {

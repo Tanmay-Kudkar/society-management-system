@@ -107,12 +107,18 @@ export default function SocietyRules() {
     );
   }, [rules, search]);
 
+  const closeModal = (force = false) => {
+    if (!force && (createMut.isPending || updateMut.isPending)) return;
+    setShowModal(false);
+  };
+
   const createMut = useMutation({
     mutationFn: (d) => societyRuleApi.create(userId, d),
     onSuccess: () => {
       toast.success("Rule created");
       qc.invalidateQueries({ queryKey: ["society-rules"] });
       qc.invalidateQueries({ queryKey: ["society-rules-counts"] });
+      closeModal(true);
     },
     onError: () => toast.error("Operation failed"),
   });
@@ -123,6 +129,7 @@ export default function SocietyRules() {
       toast.success("Rule updated");
       qc.invalidateQueries({ queryKey: ["society-rules"] });
       qc.invalidateQueries({ queryKey: ["society-rules-counts"] });
+      closeModal(true);
     },
     onError: () => toast.error("Operation failed"),
   });
@@ -201,7 +208,6 @@ export default function SocietyRules() {
     };
     if (editing) updateMut.mutate({ id: editing.id, ...payload });
     else createMut.mutate(payload);
-    setShowModal(false);
   };
 
   const summaryCards = [
@@ -384,13 +390,13 @@ export default function SocietyRules() {
 
       {/* Create/Edit Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/45 flex items-center justify-center z-[1200]" onClick={() => setShowModal(false)}>
+        <div className="fixed inset-0 bg-black/45 flex items-center justify-center z-[1200]" onClick={() => closeModal()}>
           <div className="relative isolate bg-[var(--bg-secondary,#ffffff)] border border-[var(--border-default)] rounded-xl w-[95%] max-w-[600px] max-h-[90vh] overflow-y-auto shadow-[0_8px_32px_rgba(0,0,0,0.18)]" onClick={(e) => e.stopPropagation()}>
             <div className="flex justify-between items-center px-5 py-4 border-b border-[var(--border-default)]">
               <h3 className="m-0 text-[1.1rem]">{editing ? "Edit Rule" : "Add Rule"}</h3>
               <button
                 className="bg-transparent border-none cursor-pointer text-[var(--text-secondary)]"
-                onClick={() => setShowModal(false)}
+                onClick={() => closeModal()}
               >
                 <X size={18} />
               </button>
@@ -505,7 +511,7 @@ export default function SocietyRules() {
                 </div>
               </div>
               <div className="flex justify-end gap-[0.65rem] mt-5 pt-4 border-t border-[var(--border-default)]">
-                <NeonSweepButton type="button" tone="slate" size="md" onClick={() => setShowModal(false)}>
+                <NeonSweepButton type="button" tone="slate" size="md" onClick={() => closeModal()}>
                   Cancel
                 </NeonSweepButton>
                 <NeonSweepButton type="submit" tone="cyan" size="md">

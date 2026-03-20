@@ -28,7 +28,8 @@ export default function Contracts() {
   const [searchTerm, setSearchTerm] = useState('')
   const [filterType, setFilterType] = useState('')
 
-  function closeContractModal() {
+  function closeContractModal(force = false) {
+    if (!force && (createMutation.isPending || updateMutation.isPending)) return
     setShowModal(false)
     window.setTimeout(() => {
       setEditingContract(null)
@@ -69,7 +70,7 @@ export default function Contracts() {
     mutationFn: (data) => contractApi.create(data, user.id),
     onSuccess: () => {
       queryClient.invalidateQueries(['contracts'])
-      closeContractModal()
+      closeContractModal(true)
     },
   })
 
@@ -77,7 +78,7 @@ export default function Contracts() {
     mutationFn: ({ id, data }) => contractApi.update(id, data, user.id),
     onSuccess: () => {
       queryClient.invalidateQueries(['contracts'])
-      closeContractModal()
+      closeContractModal(true)
     },
   })
 

@@ -67,13 +67,22 @@ public class NoticeController {
         return ResponseEntity.ok(noticeService.update(id, request));
     }
 
+    @PatchMapping("/{id}/undo")
+    public ResponseEntity<NoticeResponse> undo(
+            @PathVariable Long id,
+            @RequestParam Long userId) {
+        roleService.canManageNotices(userId);
+        return ResponseEntity.ok(noticeService.undo(id));
+    }
+
     // MASTER_ADMIN, COMMITTEE, EMPLOYEE can delete
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(
             @PathVariable Long id,
-            @RequestParam Long userId) {
+            @RequestParam Long userId,
+            @RequestParam(defaultValue = "false") boolean force) {
         roleService.canManageNotices(userId);
-        noticeService.delete(id);
+        noticeService.delete(id, force);
         return ResponseEntity.noContent().build();
     }
 

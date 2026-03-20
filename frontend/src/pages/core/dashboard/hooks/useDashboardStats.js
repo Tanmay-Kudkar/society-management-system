@@ -67,6 +67,26 @@ export default function useDashboardStats(input) {
     : "";
 
   const buildScopedRoute = (path) => `${path}${scopedSuffix}`;
+  const buildPageFocusRoute = (path) => {
+    const base = buildScopedRoute(path);
+    const separator = base.includes("?") ? "&" : "?";
+    return `${base}${separator}focus=page`;
+  };
+  const buildTicketRoute = (ticketId) => {
+    const base = buildScopedRoute("/tickets");
+    const separator = base.includes("?") ? "&" : "?";
+    return `${base}${separator}ticket=${encodeURIComponent(ticketId)}`;
+  };
+  const buildComplaintRoute = (complaintId) => {
+    const base = buildScopedRoute("/complaints");
+    const separator = base.includes("?") ? "&" : "?";
+    return `${base}${separator}complaint=${encodeURIComponent(complaintId)}`;
+  };
+  const buildNoticeRoute = (noticeId) => {
+    const base = buildScopedRoute("/notices");
+    const separator = base.includes("?") ? "&" : "?";
+    return `${base}${separator}notice=${encodeURIComponent(noticeId)}`;
+  };
 
   const openTickets = allTickets.filter((ticket) => isActiveTicketStatus(ticket.status));
   const pendingTickets = allTickets.filter((ticket) => isActiveTicketStatus(ticket.status));
@@ -473,7 +493,7 @@ export default function useDashboardStats(input) {
     meta: notice.createdAt ? formatDate(notice.createdAt) : "Recently posted",
     badge: "Notice",
     badgeTone: "info",
-    onClick: canAccessNotices ? () => navigate(buildScopedRoute("/notices")) : undefined,
+    onClick: canAccessNotices ? () => navigate(buildNoticeRoute(notice.id)) : undefined,
   }));
 
   const pendingTicketItems = pendingTickets.slice(0, 5).map((ticket) => ({
@@ -481,7 +501,7 @@ export default function useDashboardStats(input) {
     meta: ticket.type || "Ticket",
     badge: ticket.priority || ticket.status || "Open",
     badgeTone: (ticket.priority === "URGENT" || ticket.priority === "HIGH") ? "danger" : "warning",
-    onClick: canAccessTickets ? () => navigate(buildScopedRoute("/tickets")) : undefined,
+    onClick: canAccessTickets ? () => navigate(buildTicketRoute(ticket.id)) : undefined,
   }));
 
   const pendingComplaintItems = pendingComplaints.slice(0, 5).map((complaint) => ({
@@ -489,7 +509,7 @@ export default function useDashboardStats(input) {
     meta: complaint.type || "Complaint",
     badge: complaint.status || "Pending",
     badgeTone: complaint.status === "IN_PROGRESS" ? "warning" : "danger",
-    onClick: canAccessComplaints ? () => navigate(buildScopedRoute("/complaints")) : undefined,
+    onClick: canAccessComplaints ? () => navigate(buildComplaintRoute(complaint.id)) : undefined,
   }));
 
   const securityFeedItems = (securityLogs.length > 0 ? securityLogs : [{
@@ -624,7 +644,7 @@ export default function useDashboardStats(input) {
         value: openTickets.length,
         helper: `${pendingTickets.length} pending for action`,
         tone: "blue",
-        onClick: () => navigate(buildScopedRoute("/tickets")),
+        onClick: () => navigate(buildPageFocusRoute("/tickets")),
       });
     }
 
@@ -635,7 +655,7 @@ export default function useDashboardStats(input) {
         value: pendingComplaints.length,
         helper: "Resident complaints requiring follow-up",
         tone: "amber",
-        onClick: () => navigate(buildScopedRoute("/complaints")),
+        onClick: () => navigate(buildPageFocusRoute("/complaints")),
       });
     }
 
@@ -646,7 +666,7 @@ export default function useDashboardStats(input) {
         value: notices.length,
         helper: notices.length > 0 ? "Latest communication updates" : "No notices posted yet",
         tone: "violet",
-        onClick: () => navigate(buildScopedRoute("/notices")),
+        onClick: () => navigate(buildPageFocusRoute("/notices")),
       });
     }
 

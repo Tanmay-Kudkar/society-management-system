@@ -64,11 +64,22 @@ export default function VendorBills() {
     },
   })
 
+  const closeCreateModal = (force = false) => {
+    if (!force && createMutation.isPending) return
+    setShowModal(false)
+  }
+
+  const closePaymentModal = (force = false) => {
+    if (!force && paymentMutation.isPending) return
+    setShowPaymentModal(false)
+    setEditingBill(null)
+  }
+
   const createMutation = useMutation({
     mutationFn: (data) => vendorBillApi.create(data, user.id),
     onSuccess: () => {
       queryClient.invalidateQueries(['vendorBills'])
-      setShowModal(false)
+      closeCreateModal(true)
     },
   })
 
@@ -77,8 +88,7 @@ export default function VendorBills() {
       vendorBillApi.recordPayment(id, amount, paymentMode, referenceNumber, user.id),
     onSuccess: () => {
       queryClient.invalidateQueries(['vendorBills'])
-      setShowPaymentModal(false)
-      setEditingBill(null)
+      closePaymentModal(true)
     },
   })
 
@@ -313,7 +323,7 @@ export default function VendorBills() {
           <div className="w-full max-w-[420px] bg-[var(--bg-card)] rounded-2xl shadow-[0_24px_60px_rgba(15,23,42,0.2)]">
             <div className="flex items-center justify-between p-4 border-b border-[var(--border-light)]">
               <h3 className="text-lg font-semibold text-[var(--text-primary)]">Add Vendor Bill</h3>
-              <button onClick={() => setShowModal(false)} className="border-none bg-transparent text-[var(--text-tertiary)] p-1 rounded-lg hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-primary)]">
+              <button onClick={() => closeCreateModal()} className="border-none bg-transparent text-[var(--text-tertiary)] p-1 rounded-lg hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-primary)]">
                 <X size={20} />
               </button>
             </div>
@@ -384,7 +394,7 @@ export default function VendorBills() {
                   type="button"
                   tone="slate"
                   size="md"
-                  onClick={() => setShowModal(false)}
+                  onClick={() => closeCreateModal()}
                   className="flex-1"
                 >
                   Cancel
@@ -410,7 +420,7 @@ export default function VendorBills() {
           <div className="w-full max-w-[420px] bg-[var(--bg-card)] rounded-2xl shadow-[0_24px_60px_rgba(15,23,42,0.2)]">
             <div className="flex items-center justify-between p-4 border-b border-[var(--border-light)]">
               <h3 className="text-lg font-semibold text-[var(--text-primary)]">Record Payment</h3>
-              <button onClick={() => setShowPaymentModal(false)} className="border-none bg-transparent text-[var(--text-tertiary)] p-1 rounded-lg hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-primary)]">
+              <button onClick={() => closePaymentModal()} className="border-none bg-transparent text-[var(--text-tertiary)] p-1 rounded-lg hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-primary)]">
                 <X size={20} />
               </button>
             </div>
@@ -457,7 +467,7 @@ export default function VendorBills() {
                   type="button"
                   tone="slate"
                   size="md"
-                  onClick={() => setShowPaymentModal(false)}
+                  onClick={() => closePaymentModal()}
                   className="flex-1"
                 >
                   Cancel

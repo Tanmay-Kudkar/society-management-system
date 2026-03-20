@@ -255,7 +255,8 @@ export const noticeApi = {
   getActive: (societyId) => api.get(`/notices/society/${societyId}`),
   create: (data, userId) => api.post(`/notices?userId=${userId}`, data),
   update: (id, data, userId) => api.put(`/notices/${id}?userId=${userId}`, data),
-  delete: (id, userId, force = true) => api.delete(`/notices/${id}?userId=${userId}${force ? '&force=true' : ''}`),
+  undo: (id, userId) => api.patch(`/notices/${id}/undo?userId=${userId}`),
+  delete: (id, userId, force = false) => api.delete(`/notices/${id}?userId=${userId}${force ? '&force=true' : ''}`),
   markAttendance: (id, userId, data) => api.post(`/notices/${id}/attendance?userId=${userId}`, data || {}),
   getMyAttendance: (id, userId) => api.get(`/notices/${id}/attendance/me?userId=${userId}`),
   getAttendanceByNotice: (id, userId) => api.get(`/notices/${id}/attendance?userId=${userId}`),
@@ -295,12 +296,14 @@ export const complaintApi = {
   getByUser: (targetUserId, userId) => api.get(`/complaints/user/${targetUserId}?userId=${userId}`),
   getByStatus: (status, userId) => api.get(`/complaints/status/${status}?userId=${userId}`),
   create: (data, userId) => api.post(`/complaints?userId=${userId}`, data),
+  update: (id, data, userId) => api.put(`/complaints/${id}?userId=${userId}`, data),
   updateStatus: (id, status, resolution, userId) => {
     let url = `/complaints/${id}/status?status=${status}&userId=${userId}`;
     if (resolution) url += `&resolution=${encodeURIComponent(resolution)}`;
     return api.patch(url);
   },
-  delete: (id, userId, force = true) => api.delete(`/complaints/${id}?userId=${userId}${force ? '&force=true' : ''}`),
+  undo: (id, userId) => api.patch(`/complaints/${id}/undo?userId=${userId}`),
+  delete: (id, userId, force = false) => api.delete(`/complaints/${id}?userId=${userId}${force ? '&force=true' : ''}`),
 }
 
 // Emergency Contact API

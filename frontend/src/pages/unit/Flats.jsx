@@ -152,7 +152,7 @@ export default function Flats() {
     mutationFn: (data) => flatApi.create(data, user.id),
     onSuccess: () => {
       queryClient.invalidateQueries(['flats'])
-      setShowModal(false)
+      closeModal(true)
     },
   })
 
@@ -160,8 +160,7 @@ export default function Flats() {
     mutationFn: ({ id, data }) => flatApi.update(id, data, user.id),
     onSuccess: () => {
       queryClient.invalidateQueries(['flats'])
-      setShowModal(false)
-      setEditingFlat(null)
+      closeModal(true)
     },
   })
 
@@ -172,6 +171,13 @@ export default function Flats() {
       toast.error(error.response?.data?.message || 'Failed to delete unit')
     },
   })
+
+  const closeModal = (force = false) => {
+    if (!force && (createMutation.isPending || updateMutation.isPending)) return
+    setShowModal(false)
+    setEditingFlat(null)
+    setFormErrors({})
+  }
 
   const filteredFlats = useMemo(() => flats.filter(f => {
     const matchesSearch = f.flatNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -514,7 +520,7 @@ export default function Flats() {
           <div className="w-full max-w-[32rem] max-h-[calc(100vh-3rem)] overflow-y-auto rounded-xl bg-[var(--bg-card)] border border-[var(--border-light)] shadow-[0_8px_24px_rgba(0,0,0,0.12)]">
             <div className="sticky top-0 z-[2] flex items-center justify-between p-4 border-b border-[var(--border-light)] bg-inherit">
               <h3 className="text-lg font-bold text-[var(--text-primary)]">{editingFlat ? 'Edit Unit' : 'Add Unit'}</h3>
-              <button onClick={() => { setShowModal(false); setFormErrors({}); }} className="p-1 rounded-lg text-[var(--text-tertiary)] hover:bg-[var(--bg-tertiary)]">
+              <button onClick={() => closeModal()} className="p-1 rounded-lg text-[var(--text-tertiary)] hover:bg-[var(--bg-tertiary)]">
                 <X size={20} />
               </button>
             </div>
@@ -658,7 +664,7 @@ export default function Flats() {
               <div className="flex gap-3 pt-2">
                 <button
                   type="button"
-                  onClick={() => { setShowModal(false); setFormErrors({}); }}
+                  onClick={() => closeModal()}
                   className="flex-1 py-2 px-4 rounded-xl font-semibold border border-[var(--border-light)] bg-transparent text-[#334155] hover:bg-[var(--bg-tertiary)]"
                 >
                   Cancel

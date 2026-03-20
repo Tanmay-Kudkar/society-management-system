@@ -245,14 +245,45 @@ export default function UnitManagement() {
     return filteredUnits.slice(start, start + unitPageSize)
   }, [filteredUnits, unitPage, unitPageSize])
 
+  function closeUnitModal(force = false) {
+    if (!force && (createUnitMutation.isPending || updateUnitMutation.isPending || createWingMutation.isPending)) return
+    setShowUnitModal(false)
+    setEditingUnit(null)
+    setUnitFormErrors({})
+    setApiError('')
+  }
+
+  function closeUserModal(force = false) {
+    if (!force && createUserMutation.isPending) return
+    setShowUserModal(false)
+    setSelectedUnit(null)
+    setUserFormErrors({})
+    setApiError('')
+  }
+
+  function closeEditUserModal(force = false) {
+    if (!force && updateUserMutation.isPending) return
+    setShowEditUserModal(false)
+    setEditingUser(null)
+    setSelectedUnit(null)
+    setUserFormErrors({})
+    setApiError('')
+  }
+
+  function closeStandaloneUserModal(force = false) {
+    if (!force && standaloneUpdateUserMutation.isPending) return
+    setShowStandaloneUserModal(false)
+    setEditingStandaloneUser(null)
+    setShowStandalonePassword(false)
+    setUserError('')
+  }
+
   // Unit CRUD mutations
   const createUnitMutation = useMutation({
     mutationFn: (data) => flatApi.create(data, user.id),
     onSuccess: () => {
       queryClient.invalidateQueries(['flats'])
-      setShowUnitModal(false)
-      setUnitFormErrors({})
-      setApiError('')
+      closeUnitModal(true)
     },
     onError: (err) => {
       setApiError(parseApiError(err))
@@ -263,10 +294,7 @@ export default function UnitManagement() {
     mutationFn: ({ id, data }) => flatApi.update(id, data, user.id),
     onSuccess: () => {
       queryClient.invalidateQueries(['flats'])
-      setShowUnitModal(false)
-      setEditingUnit(null)
-      setUnitFormErrors({})
-      setApiError('')
+      closeUnitModal(true)
     },
     onError: (err) => {
       setApiError(parseApiError(err))
@@ -294,9 +322,7 @@ export default function UnitManagement() {
     mutationFn: (data) => userApi.create(data),
     onSuccess: () => {
       queryClient.invalidateQueries(['users'])
-      setShowUserModal(false)
-      setUserFormErrors({})
-      setApiError('')
+      closeUserModal(true)
     },
     onError: (err) => {
       setApiError(parseApiError(err))
@@ -307,11 +333,8 @@ export default function UnitManagement() {
     mutationFn: ({ id, data }) => userApi.update(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries(['users'])
-      setShowUserModal(false)
-      setShowEditUserModal(false)
-      setEditingUser(null)
-      setUserFormErrors({})
-      setApiError('')
+      closeUserModal(true)
+      closeEditUserModal(true)
       showToast('User updated successfully', 'success')
     },
     onError: (err) => {
@@ -381,10 +404,7 @@ export default function UnitManagement() {
     onSuccess: () => {
       queryClient.invalidateQueries(['users'])
       queryClient.invalidateQueries(['flats'])
-      setShowStandaloneUserModal(false)
-      setEditingStandaloneUser(null)
-      setShowStandalonePassword(false)
-      setUserError('')
+      closeStandaloneUserModal(true)
       showToast('User updated successfully', 'success')
     },
     onError: (err) => {
@@ -1644,7 +1664,7 @@ export default function UnitManagement() {
             <div className="w-full max-w-[28rem] max-h-[90vh] overflow-y-auto rounded-2xl bg-[var(--bg-card)] border border-[var(--border-light)] shadow-[0_24px_48px_rgba(15,23,42,0.24)]">
               <div className="sticky top-0 flex items-center justify-between p-4 px-5 border-b border-[var(--border-light)] bg-[var(--bg-card)] z-[1]">
                 <h3 className="text-[1.1rem] font-semibold text-[var(--text-primary)]">Edit User</h3>
-                <button onClick={() => { setShowStandaloneUserModal(false); setUserError(''); setShowStandalonePassword(false); }} className="p-[0.35rem] rounded-[0.6rem] text-[var(--text-tertiary)] hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-primary)]">
+                <button onClick={() => closeStandaloneUserModal()} className="p-[0.35rem] rounded-[0.6rem] text-[var(--text-tertiary)] hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-primary)]">
                   <X size={20} />
                 </button>
               </div>
@@ -1710,7 +1730,7 @@ export default function UnitManagement() {
                 <PhoneInput label="Phone" name="phone" defaultValue={editingStandaloneUser?.phone} required />
                 
                 <div className="flex gap-3 pt-3 border-t border-[var(--border-light)]">
-                  <NeonSweepButton type="button" tone="slate" size="md" onClick={() => { setShowStandaloneUserModal(false); setUserError(''); setShowStandalonePassword(false); }} className="flex-1">
+                  <NeonSweepButton type="button" tone="slate" size="md" onClick={() => closeStandaloneUserModal()} className="flex-1">
                     Cancel
                   </NeonSweepButton>
                   <NeonSweepButton
@@ -1903,10 +1923,7 @@ export default function UnitManagement() {
           apiError={apiError}
           onSubmit={handleUnitSubmit}
           onClose={() => {
-            setShowUnitModal(false)
-            setEditingUnit(null)
-            setUnitFormErrors({})
-            setApiError('')
+            closeUnitModal()
           }}
           isLoading={createUnitMutation.isPending || updateUnitMutation.isPending || createWingMutation.isPending}
         />
@@ -1921,10 +1938,7 @@ export default function UnitManagement() {
           apiError={apiError}
           onSubmit={handleUserSubmit}
           onClose={() => {
-            setShowUserModal(false)
-            setSelectedUnit(null)
-            setUserFormErrors({})
-            setApiError('')
+            closeUserModal()
           }}
           isLoading={createUserMutation.isPending}
         />
@@ -1940,11 +1954,7 @@ export default function UnitManagement() {
           apiError={apiError}
           onSubmit={handleEditUserSubmit}
           onClose={() => {
-            setShowEditUserModal(false)
-            setEditingUser(null)
-            setSelectedUnit(null)
-            setUserFormErrors({})
-            setApiError('')
+            closeEditUserModal()
           }}
           isLoading={updateUserMutation.isPending}
         />

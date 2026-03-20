@@ -18,7 +18,11 @@ public interface ComplaintService {
 
     ComplaintResponse getById(Long id);
 
+    ComplaintResponse update(Long id, ComplaintRequest request);
+
     ComplaintResponse updateStatus(Long id, String status, String resolution);
 
-    void delete(Long id);
+    ComplaintResponse undo(Long id);
+
+    void delete(Long id, boolean force);
 }

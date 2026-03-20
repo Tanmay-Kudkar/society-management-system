@@ -300,6 +300,10 @@ public class TicketServiceImpl implements TicketService {
                 String previousStatus = currentStatus.isBlank() ? fallbackStatus : currentStatus;
                 ticket.setCloseUndoPreviousStatus(previousStatus);
                 ticket.setCloseUndoExpiresAt(LocalDateTime.now().plusMinutes(CLOSE_UNDO_WINDOW_MINUTES));
+            } else if ("CLOSED".equalsIgnoreCase(targetStatus) && "CLOSED".equalsIgnoreCase(currentStatus)) {
+                // Setting CLOSED again is treated as explicit finalization of close.
+                ticket.setCloseUndoPreviousStatus(null);
+                ticket.setCloseUndoExpiresAt(null);
             }
         }
 

@@ -517,7 +517,7 @@ public class UserServiceImpl implements UserService {
         java.util.List<String> associations = new java.util.ArrayList<>();
 
         // Check complaints
-        int complaintCount = complaintRepository.findByUserId(id).size();
+        int complaintCount = complaintRepository.findByUserIdAndDeletedFalse(id).size();
         if (complaintCount > 0) {
             associations.add(complaintCount + " complaint(s)");
         }

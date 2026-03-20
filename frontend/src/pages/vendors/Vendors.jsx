@@ -62,7 +62,7 @@ export default function Vendors() {
     mutationFn: (data) => vendorApi.create(data, user.id),
     onSuccess: () => {
       queryClient.invalidateQueries(['vendors'])
-      setShowModal(false)
+      closeModal(true)
     },
   })
 
@@ -70,8 +70,7 @@ export default function Vendors() {
     mutationFn: ({ id, data }) => vendorApi.update(id, data, user.id),
     onSuccess: () => {
       queryClient.invalidateQueries(['vendors'])
-      setShowModal(false)
-      setEditingVendor(null)
+      closeModal(true)
     },
   })
 
@@ -103,6 +102,12 @@ export default function Vendors() {
     v.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     v.serviceType?.toLowerCase().includes(searchTerm.toLowerCase())
   ), [vendors, searchTerm])
+
+  const closeModal = (force = false) => {
+    if (!force && (createMutation.isPending || updateMutation.isPending)) return
+    setShowModal(false)
+    setEditingVendor(null)
+  }
 
   const handleApprove = async (vendor) => {
     if (!canApproveRejectVendors) {
@@ -399,7 +404,7 @@ export default function Vendors() {
           <div className="w-full max-w-[540px] max-h-[90vh] overflow-y-auto bg-[var(--bg-card)] rounded-2xl shadow-[0_24px_60px_rgba(15,23,42,0.2)]">
             <div className="sticky top-0 bg-[var(--bg-card)] flex items-center justify-between p-4 border-b border-[var(--border-light)]">
               <h3 className="text-lg font-semibold text-[var(--text-primary)]">{editingVendor ? 'Edit Vendor' : 'Add Vendor'}</h3>
-              <button onClick={() => setShowModal(false)} className="border-none bg-transparent text-[var(--text-tertiary)] p-1 rounded-lg hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-primary)]">
+              <button onClick={() => closeModal()} className="border-none bg-transparent text-[var(--text-tertiary)] p-1 rounded-lg hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-primary)]">
                 <X size={20} />
               </button>
             </div>
@@ -566,7 +571,7 @@ export default function Vendors() {
                   type="button"
                   tone="slate"
                   size="md"
-                  onClick={() => setShowModal(false)}
+                  onClick={() => closeModal()}
                   className="flex-1"
                 >
                   Cancel

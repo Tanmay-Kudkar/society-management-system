@@ -19,4 +19,6 @@ public class NoticeResponse {
     private LocalDate expiryDate;
     private Boolean isActive;
     private LocalDateTime createdAt;
+    private Boolean deleted;
+    private LocalDateTime deleteUndoExpiresAt;
 }
