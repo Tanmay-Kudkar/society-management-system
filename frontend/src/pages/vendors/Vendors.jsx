@@ -251,24 +251,6 @@ export default function Vendors() {
         )}
       </div>
 
-      <div className="rounded-2xl border border-[color-mix(in_srgb,var(--border-default)_86%,#334155_14%)] bg-[color-mix(in_srgb,var(--bg-card)_92%,var(--bg-tertiary)_8%)] p-5 shadow-[0_8px_24px_rgba(15,23,42,0.08)] mb-6">
-        <p className="text-sm text-[var(--text-secondary)]">
-          The <strong className="text-[var(--text-primary)]">Vendor module</strong> tracks service providers and <strong className="text-[var(--text-primary)]">AMC contracts</strong>.
-        </p>
-        <h2 className="mt-6 text-3xl font-bold text-[color-mix(in_srgb,var(--text-primary)_76%,#475569_24%)]">Stored Information</h2>
-        <ul className="mt-6 list-disc space-y-2 pl-8 text-sm text-[var(--text-secondary)]">
-          <li>Vendor contact details</li>
-          <li>AMC contract details</li>
-          <li>Contract value</li>
-          <li>Renewal date</li>
-          <li>Expiry date</li>
-          <li>Service logs (entry / exit records)</li>
-          <li>Payment history</li>
-          <li>Pending payments</li>
-          <li>Service activity history</li>
-        </ul>
-      </div>
-
       {/* Search */}
       <div className="bg-[var(--bg-card)] border border-[var(--border-light)] rounded-xl p-4 mb-6 shadow-sm">
         <div className="relative">

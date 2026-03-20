@@ -15,6 +15,8 @@ public class CreateOrderRequest {
     private BigDecimal amount;
     
     private Long maintenanceBillId;
+
+    private Long vendorBillId;
     
     private String paymentType = "MAINTENANCE"; // MAINTENANCE, VENDOR_BILL, OTHER
     

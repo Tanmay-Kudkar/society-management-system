@@ -5,7 +5,9 @@ import com.society.backend.vendor.dto.response.VendorBillResponse;
 import com.society.backend.vendor.service.VendorBillService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -76,6 +78,17 @@ public class VendorBillController {
             @RequestParam(required = false) String referenceNumber,
             @RequestParam Long userId) {
         return ResponseEntity.ok(vendorBillService.recordPayment(id, amount, paymentMode, referenceNumber, userId));
+    }
+
+    @GetMapping("/{id}/receipt/pdf")
+    public ResponseEntity<byte[]> downloadReceiptPdf(
+            @PathVariable Long id,
+            @RequestParam Long userId) {
+        byte[] pdf = vendorBillService.downloadReceiptPdf(id, userId);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=vendor-receipt-" + id + ".pdf")
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(pdf);
     }
 
     @DeleteMapping("/{id}")

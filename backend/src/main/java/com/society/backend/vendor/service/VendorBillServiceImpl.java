@@ -12,11 +12,23 @@ import com.society.backend.vendor.repository.VendorBillRepository;
 import com.society.backend.vendor.repository.VendorRepository;
 import com.society.backend.common.service.RoleService;
 import com.society.backend.finance.service.TransactionService;
+import com.lowagie.text.Document;
+import com.lowagie.text.Element;
+import com.lowagie.text.Font;
+import com.lowagie.text.FontFactory;
+import com.lowagie.text.PageSize;
+import com.lowagie.text.Paragraph;
+import com.lowagie.text.Phrase;
+import com.lowagie.text.Rectangle;
+import com.lowagie.text.pdf.PdfPCell;
+import com.lowagie.text.pdf.PdfPTable;
+import com.lowagie.text.pdf.PdfWriter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.ByteArrayOutputStream;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -197,6 +209,35 @@ public class VendorBillServiceImpl implements VendorBillService {
 
         return mapToResponse(saved);
     }
+
+    @Override
+    @Transactional
+    public VendorBillResponse recordOnlinePayment(Long id, BigDecimal amount, String paymentMode, String referenceNumber,
+            Long userId) {
+        VendorBill bill = vendorBillRepository.findById(id)
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Vendor bill not found"));
+
+        BigDecimal newPaidAmount = bill.getPaidAmount().add(amount);
+        if (newPaidAmount.compareTo(bill.getAmount()) > 0) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Payment amount exceeds bill amount");
+        }
+
+        bill.setPaidAmount(newPaidAmount);
+        bill.setPaymentMode(paymentMode);
+        bill.setReferenceNumber(referenceNumber);
+
+        updateBillStatus(bill);
+
+        if ("PAID".equals(bill.getStatus())) {
+            bill.setPaidAt(LocalDateTime.now());
+        }
+
+        VendorBill saved = vendorBillRepository.save(bill);
+
+        createExpenseTransaction(saved, amount, paymentMode, referenceNumber, userId);
+
+        return mapToResponse(saved);
+    }
     
     /**
      * Creates an expense transaction linked to the vendor bill payment
@@ -226,6 +267,130 @@ public class VendorBillServiceImpl implements VendorBillService {
             throw new ApiException(HttpStatus.NOT_FOUND, "Vendor bill not found");
         }
         vendorBillRepository.deleteById(id);
+    }
+
+    @Override
+    public byte[] downloadReceiptPdf(Long billId, Long userId) {
+        User requester = roleService.getUser(userId);
+        VendorBill bill = vendorBillRepository.findById(billId)
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Vendor bill not found"));
+
+        if (requester.getRole() != Role.MASTER_ADMIN) {
+            Long billSocietyId = bill.getSociety() != null ? bill.getSociety().getId() : null;
+            roleService.enforceSocietyScope(requester, billSocietyId);
+        }
+
+        if ((bill.getPaidAmount() == null || bill.getPaidAmount().compareTo(BigDecimal.ZERO) <= 0)) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Receipt is available only after payment");
+        }
+
+        try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+            Document document = new Document(PageSize.A4, 30, 30, 30, 30);
+            PdfWriter.getInstance(document, outputStream);
+            document.open();
+
+            Font titleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 18);
+            Font bodyFont = FontFactory.getFont(FontFactory.HELVETICA, 10);
+            Font bodyBold = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10);
+
+            Paragraph title = new Paragraph("Vendor Payment Receipt", titleFont);
+            title.setAlignment(Element.ALIGN_CENTER);
+            title.setSpacingAfter(14);
+            document.add(title);
+
+            String receiptNo = "VPR-" + bill.getId() + "-" + LocalDate.now().toString().replace("-", "");
+
+            PdfPTable summary = new PdfPTable(new float[] { 1f, 2f, 1f, 2f });
+            summary.setWidthPercentage(100);
+            summary.setSpacingAfter(12);
+            addSummaryCell(summary, "Receipt #", bodyBold);
+            addSummaryCell(summary, receiptNo, bodyFont);
+            addSummaryCell(summary, "Date", bodyBold);
+            addSummaryCell(summary, String.valueOf(LocalDate.now()), bodyFont);
+            addSummaryCell(summary, "Status", bodyBold);
+            addSummaryCell(summary, safe(bill.getStatus()), bodyFont);
+            addSummaryCell(summary, "Bill #", bodyBold);
+            addSummaryCell(summary, safe(bill.getBillNumber()), bodyFont);
+            document.add(summary);
+
+            PdfPTable details = new PdfPTable(new float[] { 1.4f, 2.6f });
+            details.setWidthPercentage(100);
+            details.setSpacingAfter(12);
+            addDetailRow(details, "Society", bill.getSociety() != null ? bill.getSociety().getName() : "-", bodyBold, bodyFont);
+            addDetailRow(details, "Vendor", bill.getVendor() != null ? bill.getVendor().getName() : "-", bodyBold, bodyFont);
+            addDetailRow(details, "Bill Date", bill.getBillDate() != null ? String.valueOf(bill.getBillDate()) : "-", bodyBold, bodyFont);
+            addDetailRow(details, "Due Date", bill.getDueDate() != null ? String.valueOf(bill.getDueDate()) : "-", bodyBold, bodyFont);
+            addDetailRow(details, "Payment Mode", safe(bill.getPaymentMode()), bodyBold, bodyFont);
+            addDetailRow(details, "Reference", safe(bill.getReferenceNumber()), bodyBold, bodyFont);
+            addDetailRow(details, "Paid At", bill.getPaidAt() != null ? String.valueOf(bill.getPaidAt()) : "-", bodyBold, bodyFont);
+            document.add(details);
+
+            PdfPTable amounts = new PdfPTable(new float[] { 2.5f, 1.5f });
+            amounts.setWidthPercentage(60);
+            amounts.setHorizontalAlignment(Element.ALIGN_RIGHT);
+            amounts.setSpacingAfter(14);
+            addAmountRow(amounts, "Bill Amount", "₹" + formatMoney(bill.getAmount()), bodyFont, false);
+            addAmountRow(amounts, "Paid Amount", "₹" + formatMoney(bill.getPaidAmount()), bodyBold, false);
+            addAmountRow(amounts, "Pending Amount", "₹" + formatMoney(bill.getPendingAmount()), bodyBold, true);
+            document.add(amounts);
+
+            PdfPCell noteBox = new PdfPCell(new Phrase(
+                    "This is a system-generated receipt for vendor bill payment.",
+                    bodyFont));
+            noteBox.setPadding(8);
+            noteBox.setBorder(Rectangle.BOX);
+            noteBox.setBorderColor(new java.awt.Color(110, 110, 110));
+            PdfPTable noteTable = new PdfPTable(1);
+            noteTable.setWidthPercentage(100);
+            noteTable.addCell(noteBox);
+            document.add(noteTable);
+
+            document.close();
+            return outputStream.toByteArray();
+        } catch (Exception ex) {
+            throw new ApiException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to generate receipt PDF: " + ex.getMessage());
+        }
+    }
+
+    private void addSummaryCell(PdfPTable table, String text, Font font) {
+        PdfPCell cell = new PdfPCell(new Phrase(safe(text), font));
+        cell.setPadding(6);
+        table.addCell(cell);
+    }
+
+    private void addDetailRow(PdfPTable table, String key, String value, Font keyFont, Font valueFont) {
+        PdfPCell keyCell = new PdfPCell(new Phrase(key, keyFont));
+        keyCell.setPadding(6);
+        table.addCell(keyCell);
+        PdfPCell valueCell = new PdfPCell(new Phrase(safe(value), valueFont));
+        valueCell.setPadding(6);
+        table.addCell(valueCell);
+    }
+
+    private void addAmountRow(PdfPTable table, String label, String value, Font font, boolean highlight) {
+        PdfPCell left = new PdfPCell(new Phrase(label, font));
+        left.setPadding(6);
+        if (highlight) {
+            left.setBackgroundColor(new java.awt.Color(246, 248, 252));
+        }
+        table.addCell(left);
+
+        PdfPCell right = new PdfPCell(new Phrase(value, font));
+        right.setPadding(6);
+        right.setHorizontalAlignment(Element.ALIGN_RIGHT);
+        if (highlight) {
+            right.setBackgroundColor(new java.awt.Color(246, 248, 252));
+        }
+        table.addCell(right);
+    }
+
+    private String safe(String value) {
+        return value == null || value.isBlank() ? "-" : value;
+    }
+
+    private String formatMoney(BigDecimal amount) {
+        BigDecimal safeAmount = amount != null ? amount : BigDecimal.ZERO;
+        return safeAmount.setScale(2, java.math.RoundingMode.HALF_UP).toPlainString();
     }
 
     private void updateBillStatus(VendorBill bill) {
