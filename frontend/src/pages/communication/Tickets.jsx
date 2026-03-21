@@ -138,6 +138,7 @@ export default function Tickets() {
 
   // Check if current user is MASTER_ADMIN
   const isPlatformLevel = user?.role === 'MASTER_ADMIN'
+  const requiresClosureApproval = ['SOCIETY_ADMIN', 'MANAGER'].includes(user?.role)
   const canDeleteTickets = ['MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY'].includes(user?.role)
   const canAssignTickets = ['MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'MANAGER'].includes(user?.role)
   const isCommitteeUser = user?.role === 'COMMITTEE'
@@ -880,16 +881,28 @@ export default function Tickets() {
                     )}
                     <select
                       value={ticket.status}
-                      onChange={(e) => updateStatusMutation.mutate({ id: ticket.id, status: e.target.value, previousStatus: ticket.status })}
+                      onChange={(e) => {
+                        const nextStatus = String(e.target.value || '').toUpperCase()
+                        if (requiresClosureApproval && (nextStatus === 'RESOLVED' || nextStatus === 'CLOSED')) {
+                          toast.info('Final closure must be approved by Chairman, Secretary, or Treasurer.')
+                          return
+                        }
+                        updateStatusMutation.mutate({ id: ticket.id, status: nextStatus, previousStatus: ticket.status })
+                      }}
                       disabled={!canManageTickets()}
                       className="col-span-2 w-full sm:col-span-3 lg:col-span-2 xl:col-span-1 xl:w-auto min-w-[9rem] px-3 py-2 text-[0.85rem] rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-blue-600 focus:ring-[3px] focus:ring-blue-600/20"
                     >
                       <option value="OPEN">Open</option>
                       <option value="IN_PROGRESS">In Progress</option>
                       <option value="IN_REVIEW">In Review</option>
-                      <option value="RESOLVED">Resolved</option>
-                      <option value="CLOSED">Closed</option>
+                      <option value="RESOLVED" disabled={requiresClosureApproval}>Resolved</option>
+                      <option value="CLOSED" disabled={requiresClosureApproval}>Closed</option>
                     </select>
+                    {requiresClosureApproval && canManageTickets() && (
+                      <p className="col-span-2 text-[11px] font-semibold text-amber-700 dark:text-amber-300 sm:col-span-3 lg:col-span-2 xl:col-span-1">
+                        Final closure requires Chairman/Secretary/Treasurer approval.
+                      </p>
+                    )}
                   </div>
 
                   <div
@@ -898,7 +911,7 @@ export default function Tickets() {
                       showUndoBanner ? 'max-h-20 opacity-100 translate-y-0' : 'max-h-0 opacity-0 -translate-y-1 pointer-events-none'
                     )}
                   >
-                    <div className="flex items-center justify-between gap-2 rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-[0.78rem] text-amber-800 dark:text-amber-700 dark:text-amber-300">
+                    <div className="flex items-center justify-between gap-2 rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-[0.78rem] text-amber-800 dark:text-amber-300">
                       <span>Undo available for {formatCountdown(undoRemainingMs)}</span>
                       <div className="flex items-center gap-2">
                         <NeonSweepButton
@@ -1287,7 +1300,7 @@ export default function Tickets() {
               </div>
               {forceDeleteImpacts.length > 0 && (
                 <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-3.5 py-3">
-                  <p className="text-[0.82rem] font-semibold text-amber-800 dark:text-amber-700 dark:text-amber-300">Linked records that will be auto-cleaned</p>
+                  <p className="text-[0.82rem] font-semibold text-amber-800 dark:text-amber-300">Linked records that will be auto-cleaned</p>
                   <div className="mt-2 grid grid-cols-2 gap-2 text-[0.8rem] text-[var(--text-secondary)]">
                     {forceDeleteImpacts.map((impact) => (
                       <div key={impact.label} className="rounded-lg bg-[var(--bg-card)] px-2.5 py-1.5">

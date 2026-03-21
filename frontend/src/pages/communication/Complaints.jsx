@@ -132,6 +132,7 @@ export default function Complaints() {
 
   // Check if current user is MASTER_ADMIN
   const isPlatformLevel = user?.role === 'MASTER_ADMIN'
+  const requiresClosureApproval = ['SOCIETY_ADMIN', 'MANAGER'].includes(user?.role)
   const canUseAdvancedComplaintFields = user?.role === 'MASTER_ADMIN' || user?.role === 'SOCIETY_ADMIN'
 
   // Determine which societyId to use for filtering
@@ -616,6 +617,11 @@ export default function Complaints() {
   }
 
   const handleStatusChange = (complaint, newStatus) => {
+    if (requiresClosureApproval && (newStatus === 'RESOLVED' || newStatus === 'REJECTED')) {
+      toast.info('Final closure must be approved by Chairman, Secretary, or Treasurer.')
+      return
+    }
+
     if (newStatus === 'RESOLVED') {
       setComplaintToResolve(complaint)
       setResolutionDraft('')
@@ -992,10 +998,16 @@ export default function Complaints() {
                       >
                         <option value="PENDING">Pending</option>
                         <option value="UNDER_REVIEW">Under Review</option>
-                        <option value="RESOLVED">Resolved</option>
-                        <option value="REJECTED">Rejected</option>
+                        <option value="RESOLVED" disabled={requiresClosureApproval}>Resolved</option>
+                        <option value="REJECTED" disabled={requiresClosureApproval}>Rejected</option>
                       </select>
                     </div>
+
+                    {requiresClosureApproval && canManage && !complaint.deleted && (
+                      <p className="mt-2 text-[11px] font-semibold text-amber-700 dark:text-amber-300">
+                        Final closure requires Chairman/Secretary/Treasurer approval.
+                      </p>
+                    )}
 
                     <div className={clsx(
                       'overflow-hidden transition-all duration-700 ease-out',
@@ -1053,6 +1065,11 @@ export default function Complaints() {
               </button>
             </div>
             <form onSubmit={handleSubmit} className="grid gap-4 p-3 sm:p-4 md:grid-cols-2">
+              {user?.role === 'MEMBER' && (
+                <div className="rounded-xl border border-amber-400/35 bg-amber-500/10 px-3 py-2 text-xs text-amber-100 md:col-span-2">
+                  Direct complaint communication is available during office timings only. Outside office timings, raise a ticket for requests or issues.
+                </div>
+              )}
               <FormInput
                 label="Subject"
                 name="subject"

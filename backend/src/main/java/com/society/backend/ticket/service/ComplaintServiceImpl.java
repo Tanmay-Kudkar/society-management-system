@@ -22,19 +22,24 @@ import com.society.backend.ticket.repository.ComplaintUploadRepository;
 import com.society.backend.society.repository.SocietyRepository;
 import com.society.backend.user.repository.UserRepository;
 import com.society.backend.common.service.RoleService;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.time.DayOfWeek;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.ZonedDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.UUID;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -45,12 +50,28 @@ public class ComplaintServiceImpl implements ComplaintService {
     private static final Set<String> ALLOWED_STATUSES = Set.of("PENDING", "UNDER_REVIEW", "RESOLVED", "REJECTED");
     private static final Set<String> ALLOWED_PRIORITIES = Set.of("LOW", "MEDIUM", "HIGH", "URGENT");
     private static final Set<String> ALLOWED_CATEGORIES = Set.of("NOISE", "PARKING", "MAINTENANCE", "SECURITY", "CLEANLINESS", "NEIGHBOR_ISSUE", "OTHER");
+    private static final Set<Role> MEMBER_DIRECT_COMMUNICATION_ROLES = Set.of(Role.MEMBER);
     private static final Map<String, Long> SLA_MINUTES_BY_PRIORITY = Map.of(
             "LOW", 72L * 60L,
             "MEDIUM", 48L * 60L,
             "HIGH", 24L * 60L,
             "URGENT", 8L * 60L
     );
+
+    @Value("${member.office-hours.start:09:30}")
+    private String memberOfficeHoursStart;
+
+    @Value("${member.office-hours.end:18:30}")
+    private String memberOfficeHoursEnd;
+
+    @Value("${member.office-hours.zone:Asia/Kolkata}")
+    private String memberOfficeHoursZone;
+
+    @Value("${member.office-hours.days:MONDAY,TUESDAY,WEDNESDAY,THURSDAY,FRIDAY,SATURDAY}")
+    private String memberOfficeHoursDays;
+
+    @Value("${member.direct-communication.complaint-categories:NOISE,PARKING,MAINTENANCE,CLEANLINESS,NEIGHBOR_ISSUE,OTHER}")
+    private String memberDirectComplaintCategories;
 
     private final ComplaintRepository complaintRepository;
     private final ComplaintCommentRepository complaintCommentRepository;
@@ -81,6 +102,12 @@ public class ComplaintServiceImpl implements ComplaintService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "User not found"));
         boolean canManageAdvancedFields = canManageAdvancedComplaintFields(user);
+        String normalizedCategory = normalizeCategory(request.getCategory());
+
+        if (isRestrictedMemberDirectCommunication(user, normalizedCategory)) {
+            throw new ApiException(HttpStatus.FORBIDDEN,
+                "Direct communication is allowed only during office timings. Outside office timings, please raise a ticket for your request or issue.");
+        }
 
         if (!canManageAdvancedFields && hasAdvancedComplaintFieldValues(request)) {
             throw new ApiException(HttpStatus.FORBIDDEN,
@@ -91,7 +118,7 @@ public class ComplaintServiceImpl implements ComplaintService {
         complaint.setUser(user);
         complaint.setSubject(request.getSubject());
         complaint.setDescription(request.getDescription());
-        complaint.setCategory(normalizeCategory(request.getCategory()));
+        complaint.setCategory(normalizedCategory);
         complaint.setPriority(normalizePriority(request.getPriority()));
         complaint.setWing(cleanString(request.getWing()));
         complaint.setFloor(request.getFloor());
@@ -298,6 +325,12 @@ public class ComplaintServiceImpl implements ComplaintService {
         String currentStatus = complaint.getStatus() == null ? "" : complaint.getStatus().trim().toUpperCase();
         String targetStatus = normalizeStatus(status);
 
+        if (("RESOLVED".equalsIgnoreCase(targetStatus) || "REJECTED".equalsIgnoreCase(targetStatus))
+            && (actor.getRole() == Role.SOCIETY_ADMIN || actor.getRole() == Role.MANAGER)) {
+            throw new ApiException(HttpStatus.FORBIDDEN,
+                "Closure approval required from Chairman/Secretary/Treasurer.");
+        }
+
         if (!currentStatus.equals(targetStatus) && ("RESOLVED".equals(targetStatus) || "REJECTED".equals(targetStatus))) {
             complaint.setStatusUndoPreviousStatus(currentStatus);
             complaint.setStatusUndoPreviousResolution(complaint.getResolution());
@@ -443,6 +476,11 @@ public class ComplaintServiceImpl implements ComplaintService {
         Complaint complaint = getComplaintForUserScope(complaintId, userId, false);
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "User not found"));
+
+        if (isRestrictedMemberDirectCommunication(user, complaint.getCategory())) {
+            throw new ApiException(HttpStatus.FORBIDDEN,
+                "One-to-one communication is allowed only during office timings. Outside office timings, please raise a ticket for your request or issue.");
+        }
 
         String cleaned = cleanString(message);
         if (cleaned == null) {
@@ -838,4 +876,112 @@ public class ComplaintServiceImpl implements ComplaintService {
         }
         return dateTime.atZone(ZoneId.systemDefault()).toOffsetDateTime().toString();
     }
+
+    private boolean isWithinMemberOfficeHours() {
+        ZoneId zone = parseZone(memberOfficeHoursZone);
+        ZonedDateTime now = ZonedDateTime.now(zone);
+
+        Set<DayOfWeek> allowedDays = parseOfficeDays(memberOfficeHoursDays);
+        if (!allowedDays.contains(now.getDayOfWeek())) {
+            return false;
+        }
+
+        LocalTime nowTime = now.toLocalTime();
+        LocalTime start = parseOfficeTime(memberOfficeHoursStart, LocalTime.of(9, 30));
+        LocalTime end = parseOfficeTime(memberOfficeHoursEnd, LocalTime.of(18, 30));
+
+        if (end.isAfter(start) || end.equals(start)) {
+            return !nowTime.isBefore(start) && !nowTime.isAfter(end);
+        }
+
+        // Supports overnight windows such as 22:00 -> 06:00.
+        return !nowTime.isBefore(start) || !nowTime.isAfter(end);
+    }
+
+    private LocalTime parseOfficeTime(String value, LocalTime fallback) {
+        try {
+            return LocalTime.parse(value);
+        } catch (Exception ignored) {
+            return fallback;
+        }
+    }
+
+    private ZoneId parseZone(String value) {
+        try {
+            return ZoneId.of(value);
+        } catch (Exception ignored) {
+            return ZoneId.of("Asia/Kolkata");
+        }
+    }
+
+    private Set<DayOfWeek> parseOfficeDays(String value) {
+        if (value == null || value.isBlank()) {
+            return Set.of(
+                    DayOfWeek.MONDAY,
+                    DayOfWeek.TUESDAY,
+                    DayOfWeek.WEDNESDAY,
+                    DayOfWeek.THURSDAY,
+                    DayOfWeek.FRIDAY,
+                    DayOfWeek.SATURDAY
+            );
+        }
+
+        Set<DayOfWeek> parsed = Arrays.stream(value.split(","))
+                .map(String::trim)
+                .filter(token -> !token.isBlank())
+                .map(token -> {
+                    try {
+                        return DayOfWeek.valueOf(token.toUpperCase(Locale.ROOT));
+                    } catch (Exception ignored) {
+                        return null;
+                    }
+                })
+                .filter(day -> day != null)
+                .collect(Collectors.toSet());
+
+        if (parsed.isEmpty()) {
+            return Set.of(
+                    DayOfWeek.MONDAY,
+                    DayOfWeek.TUESDAY,
+                    DayOfWeek.WEDNESDAY,
+                    DayOfWeek.THURSDAY,
+                    DayOfWeek.FRIDAY,
+                    DayOfWeek.SATURDAY
+            );
+        }
+
+        return parsed;
+    }
+
+    private boolean isRestrictedMemberDirectCommunication(User user, String complaintCategory) {
+        if (user == null || user.getRole() == null) {
+            return false;
+        }
+
+        if (!MEMBER_DIRECT_COMMUNICATION_ROLES.contains(user.getRole())) {
+            return false;
+        }
+
+        if (!isDirectCommunicationComplaintCategory(complaintCategory)) {
+            return false;
+        }
+
+        return !isWithinMemberOfficeHours();
+    }
+
+    private boolean isDirectCommunicationComplaintCategory(String category) {
+        String normalized = normalizeCategory(category);
+        Set<String> restrictedCategories = Arrays.stream(memberDirectComplaintCategories.split(","))
+                .map(String::trim)
+                .map(value -> value.toUpperCase(Locale.ROOT))
+                .filter(value -> !value.isBlank())
+                .collect(Collectors.toSet());
+
+        if (restrictedCategories.isEmpty()) {
+            return true;
+        }
+
+        return restrictedCategories.contains(normalized);
+    }
+
 }

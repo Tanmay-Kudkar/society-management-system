@@ -202,6 +202,12 @@ public class TicketServiceImpl implements TicketService {
         String targetStatus = status != null ? status.toUpperCase() : "";
         String currentStatus = ticket.getStatus() != null ? ticket.getStatus().toUpperCase() : "";
 
+        if (("RESOLVED".equalsIgnoreCase(targetStatus) || "CLOSED".equalsIgnoreCase(targetStatus))
+            && (actor.getRole() == Role.SOCIETY_ADMIN || actor.getRole() == Role.MANAGER)) {
+            throw new ApiException(HttpStatus.FORBIDDEN,
+                "Closure approval required from Chairman/Secretary/Treasurer.");
+        }
+
         ticket.setStatus(targetStatus);
         if (resolution != null) {
             ticket.setResolution(resolution);

@@ -42,71 +42,88 @@ const roleResponsibilities = [
   {
     role: 'MEMBER',
     authority: 'Flat Owner',
-    responsibility: 'Views own data, raises tickets/complaints',
+    responsibility: 'Maintains complete flat ownership and occupancy details: owner name/date as per sale agreement, agreement chain from builder to current owner, contact/email, flat status (self-occupied/tenant/vacant), tenant tenancy period, two/four-wheeler records, maintenance reminders, notices/penalty communications, and penalty photograph records with date/details; outside office timings, requests/issues are raised via tickets.',
   },
   {
     role: 'TENANT',
     authority: 'Renter',
-    responsibility: 'Limited access to own profile and bills',
+    responsibility: 'Can raise requests with respective flat-owner approval, allow/register visitors for own flat, view important society notices and general information, and maintains tenancy agreement and vehicle identification records (two/four-wheelers).',
+  },
+  {
+    role: 'VENDOR',
+    authority: 'AMC/Service Provider',
+    responsibility: 'Maintains AMC and service-provider records including contact details, service charges and contract value, renewal/expiry dates, service in-out logs, payment records (paid/issued/pending), and service/maintenance history.',
   },
   {
     role: 'VISITOR',
     authority: 'Guest',
-    responsibility: 'Minimal access, read-only',
+    responsibility: 'Visitor entries are recorded by security/supervisor via dedicated device, shared with respective member for approval, and maintained as accurate movement logs for visitors/deliveries.',
   },
 ]
 
 const permissionMatrix = [
   {
     role: 'MASTER_ADMIN',
-    create: 'SOCIETY_ADMIN',
-    updateDelete: 'SOCIETY_ADMIN',
+    create: 'ALL roles',
+    updateDelete: 'ALL roles',
     read: 'ALL roles',
   },
   {
     role: 'SOCIETY_ADMIN',
-    create: 'ALL below (full access)',
-    updateDelete: 'ALL below (full access)',
+    create: 'CHAIRMAN, SECRETARY, TREASURER, COMMITTEE, MANAGER, EMPLOYEE, MEMBER, TENANT, VENDOR, VISITOR',
+    updateDelete: 'CHAIRMAN, SECRETARY, TREASURER, COMMITTEE, MANAGER, EMPLOYEE, MEMBER, TENANT, VENDOR, VISITOR',
     read: 'ALL in society',
   },
   {
     role: 'CHAIRMAN',
-    create: 'SECRETARY, TREASURER',
-    updateDelete: 'SECRETARY, TREASURER',
-    read: 'All below',
+    create: 'COMMITTEE, MANAGER, EMPLOYEE, MEMBER, TENANT, VISITOR',
+    updateDelete: 'COMMITTEE, MANAGER, EMPLOYEE, MEMBER, TENANT, VISITOR',
+    read: 'CHAIRMAN, SECRETARY, TREASURER, COMMITTEE, MANAGER, EMPLOYEE, MEMBER, TENANT, VENDOR, VISITOR',
   },
   {
     role: 'SECRETARY',
-    create: 'COMMITTEE only',
-    updateDelete: 'COMMITTEE only',
-    read: 'COMMITTEE and below',
+    create: 'COMMITTEE, MANAGER, EMPLOYEE, MEMBER, TENANT, VISITOR',
+    updateDelete: 'COMMITTEE, MANAGER, EMPLOYEE, MEMBER, TENANT, VISITOR',
+    read: 'SECRETARY, COMMITTEE, MANAGER, EMPLOYEE, MEMBER, TENANT, VENDOR, VISITOR',
   },
   {
     role: 'TREASURER',
-    create: 'COMMITTEE only',
-    updateDelete: 'COMMITTEE only',
-    read: 'COMMITTEE and below',
+    create: 'COMMITTEE, MANAGER, EMPLOYEE, MEMBER, TENANT, VISITOR',
+    updateDelete: 'COMMITTEE, MANAGER, EMPLOYEE, MEMBER, TENANT, VISITOR',
+    read: 'TREASURER, COMMITTEE, MANAGER, EMPLOYEE, MEMBER, TENANT, VENDOR, VISITOR',
   },
   {
     role: 'COMMITTEE',
     create: 'EMPLOYEE, MEMBER',
     updateDelete: 'EMPLOYEE, MEMBER',
-    read: 'EMPLOYEE, MEMBER, below',
+    read: 'COMMITTEE, EMPLOYEE, MEMBER, TENANT, VENDOR, VISITOR',
+  },
+  {
+    role: 'MANAGER',
+    create: 'None',
+    updateDelete: 'None',
+    read: 'MANAGER, EMPLOYEE, VISITOR',
   },
   {
     role: 'EMPLOYEE',
     create: 'None',
     updateDelete: 'None',
-    read: 'No system access',
+    read: 'EMPLOYEE (own profile)',
   },
   {
     role: 'MEMBER',
     create: 'TENANT only',
     updateDelete: 'TENANT only',
-    read: 'TENANT',
+    read: 'MEMBER, TENANT',
   },
   {
     role: 'TENANT',
+    create: 'None',
+    updateDelete: 'None',
+    read: 'Own profile only',
+  },
+  {
+    role: 'VENDOR',
     create: 'None',
     updateDelete: 'None',
     read: 'Own profile only',
@@ -125,6 +142,12 @@ const accessRules = [
   'Update/Delete LIMITED to direct children - no skip-level modification',
   'Grandchildren are READ-ONLY - can view but not modify',
   'EXCEPTION: SOCIETY_ADMIN has full CRUD on all roles below',
+]
+
+const memberInteractionRules = [
+  'One-to-one communication is available only during office timings.',
+  'Outside office timings, members must raise a ticket for any request or issue.',
+  'Ticket-based communication remains auditable and is available for follow-up at any time.',
 ]
 
 export default function RolesPermissions() {
@@ -213,6 +236,20 @@ export default function RolesPermissions() {
         <div className="rounded-[18px] border border-slate-700 bg-slate-950/90 px-6 py-5 shadow-[0_16px_40px_rgba(0,0,0,0.35)]">
           <ol className="grid list-decimal gap-2.5 pl-6 text-slate-200">
             {accessRules.map((rule) => (
+              <li key={rule} className="leading-7 text-slate-300">{rule}</li>
+            ))}
+          </ol>
+        </div>
+      </section>
+
+      <section className="mt-7">
+        <div className="mb-4 flex flex-col gap-1.5">
+          <h2 className="text-xl font-bold">Member Interaction Flow</h2>
+          <p className="text-sm text-slate-400">Client-defined communication policy for members.</p>
+        </div>
+        <div className="rounded-[18px] border border-slate-700 bg-slate-950/90 px-6 py-5 shadow-[0_16px_40px_rgba(0,0,0,0.35)]">
+          <ol className="grid list-decimal gap-2.5 pl-6 text-slate-200">
+            {memberInteractionRules.map((rule) => (
               <li key={rule} className="leading-7 text-slate-300">{rule}</li>
             ))}
           </ol>

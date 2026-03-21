@@ -28,7 +28,7 @@ public class TransactionController {
     private final TransactionService transactionService;
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER')")
+    @PreAuthorize("hasAnyRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'MANAGER')")
     public ResponseEntity<TransactionResponse> create(
             @Valid @RequestBody TransactionRequest request,
             @RequestParam Long userId) {
@@ -69,7 +69,7 @@ public class TransactionController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER')")
+    @PreAuthorize("hasAnyRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'MANAGER')")
     public ResponseEntity<TransactionResponse> update(
             @PathVariable Long id,
             @Valid @RequestBody TransactionRequest request,
@@ -78,7 +78,7 @@ public class TransactionController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER')")
+    @PreAuthorize("hasAnyRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'MANAGER')")
     public ResponseEntity<Void> delete(
             @PathVariable Long id,
             @RequestParam Long userId) {
