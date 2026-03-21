@@ -39,6 +39,12 @@ import com.society.backend.ticket.entity.Ticket;
 public class UserServiceImpl implements UserService {
 
     private static final Logger log = LoggerFactory.getLogger(UserServiceImpl.class);
+    private static final Set<Role> SINGLE_SEAT_SOCIETY_ROLES = Set.of(
+            Role.SOCIETY_ADMIN,
+            Role.CHAIRMAN,
+            Role.SECRETARY,
+            Role.TREASURER
+    );
 
     @Value("${security.master-admin.special-key:}")
     private String masterAdminSpecialKey;
@@ -110,15 +116,6 @@ public class UserServiceImpl implements UserService {
             }
         }
 
-        // Enforce: each society can have at most 1 SOCIETY_ADMIN
-        if (targetRole == Role.SOCIETY_ADMIN && request.getSocietyId() != null) {
-            boolean adminExists = userRepository.existsBySocietyIdAndRole(request.getSocietyId(), Role.SOCIETY_ADMIN);
-            if (adminExists) {
-                throw new ApiException(HttpStatus.CONFLICT,
-                        "This society already has a Society Admin. Each society can have only one admin.");
-            }
-        }
-
         User user = new User();
         user.setName(request.getName());
         user.setEmail(request.getEmail());
@@ -148,6 +145,11 @@ public class UserServiceImpl implements UserService {
             user.setSociety(currentUser.getSociety());
         }
 
+        enforceSingleSeatRolePerSociety(
+            targetRole,
+            user.getSociety() != null ? user.getSociety().getId() : null,
+            null);
+
         Flat assignedFlat = null;
         boolean updateFlatOwnerAfterUserSave = false;
 
@@ -171,7 +173,7 @@ public class UserServiceImpl implements UserService {
             } else {
                 // Flat is mandatory for resident unit roles
                 throw new ApiException(HttpStatus.BAD_REQUEST,
-                        "Flat/Unit assignment is required for MEMBER, TENANT, CHAIRMAN, SECRETARY, TREASURER, and COMMITTEE roles");
+                    "Flat/Unit assignment is required for MEMBER, TENANT, SOCIETY_ADMIN, CHAIRMAN, SECRETARY, TREASURER, and COMMITTEE roles");
             }
 
             if (assignedFlat != null && targetRole == Role.MEMBER) {
@@ -179,8 +181,8 @@ public class UserServiceImpl implements UserService {
                 updateFlatOwnerAfterUserSave = true;
             }
         } else if (request.getFlatId() != null) {
-            // Optional flat assignment for management roles (CHAIRMAN, SECRETARY, TREASURER, COMMITTEE)
-            if (targetRole == Role.CHAIRMAN || targetRole == Role.SECRETARY || 
+            // Optional flat assignment for management roles (SOCIETY_ADMIN, CHAIRMAN, SECRETARY, TREASURER, COMMITTEE)
+            if (targetRole == Role.SOCIETY_ADMIN || targetRole == Role.CHAIRMAN || targetRole == Role.SECRETARY || 
                 targetRole == Role.TREASURER || targetRole == Role.COMMITTEE) {
                 assignedFlat = flatRepository.findById(request.getFlatId())
                         .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND,
@@ -451,6 +453,11 @@ public class UserServiceImpl implements UserService {
                     .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Society not found")));
         }
 
+        enforceSingleSeatRolePerSociety(
+            updatedRole,
+            user.getSociety() != null ? user.getSociety().getId() : null,
+            user.getId());
+
         Flat previousFlat = user.getFlat();
         Flat assignedFlat = previousFlat;
 
@@ -461,7 +468,7 @@ public class UserServiceImpl implements UserService {
 
             if (targetFlatId == null) {
                 throw new ApiException(HttpStatus.BAD_REQUEST,
-                        "Flat/Unit assignment is required for MEMBER, TENANT, CHAIRMAN, SECRETARY, TREASURER, and COMMITTEE roles");
+                    "Flat/Unit assignment is required for MEMBER, TENANT, SOCIETY_ADMIN, CHAIRMAN, SECRETARY, TREASURER, and COMMITTEE roles");
             }
 
             assignedFlat = flatRepository.findById(targetFlatId)
@@ -589,14 +596,31 @@ public class UserServiceImpl implements UserService {
     }
 
     private boolean isResidentUnitRole(Role role) {
-        // MEMBER, TENANT, CHAIRMAN, SECRETARY, TREASURER, COMMITTEE require flat assignment
+        // MEMBER, TENANT, SOCIETY_ADMIN, CHAIRMAN, SECRETARY, TREASURER, COMMITTEE require flat assignment
         return role == Role.MEMBER
                 || role == Role.TENANT
+            || role == Role.SOCIETY_ADMIN
                 || role == Role.CHAIRMAN
                 || role == Role.SECRETARY
                 || role == Role.TREASURER
                 || role == Role.COMMITTEE;
     }
+
+        private void enforceSingleSeatRolePerSociety(Role role, Long societyId, Long excludedUserId) {
+        if (role == null || societyId == null || !SINGLE_SEAT_SOCIETY_ROLES.contains(role)) {
+            return;
+        }
+
+        userRepository.findBySocietyIdAndRole(societyId, role).stream()
+            .filter(existing -> excludedUserId == null || !existing.getId().equals(excludedUserId))
+            .findFirst()
+            .ifPresent(existing -> {
+                String roleName = role.name().replace('_', ' ');
+                throw new ApiException(HttpStatus.CONFLICT,
+                    "This society already has a " + roleName + ": " + existing.getName()
+                        + ". Only one " + roleName + " is allowed per society.");
+            });
+        }
 
     private void validateFlatAssignmentAvailability(Flat flat, Long excludedUserId) {
         userRepository.findByFlatId(flat.getId()).stream()

@@ -524,7 +524,7 @@ export default function Users() {
 
     // Validate flatId is required for resident society roles
     // Exception: MEMBER creating TENANT - backend auto-assigns the member's flat
-    const residentUnitRoles = ['MEMBER', 'TENANT', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE']
+    const residentUnitRoles = ['MEMBER', 'TENANT', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE']
     if (residentUnitRoles.includes(roleValue) && !data.flatId) {
       // Skip validation if MEMBER is creating TENANT (backend will auto-assign)
       if (!(confirmedIsMember && roleValue === 'TENANT')) {
@@ -535,11 +535,11 @@ export default function Users() {
 
     // Roles that cannot be assigned to any unit
     // EMPLOYEE, VISITOR = staff/visitor roles, no unit
-    // MEMBER, CHAIRMAN, SECRETARY, TREASURER, COMMITTEE = can have FLAT
+    // SOCIETY_ADMIN, MEMBER, CHAIRMAN, SECRETARY, TREASURER, COMMITTEE = can have FLAT
     // TENANT = can have any unit (FLAT, SHOP, OFFICE)
     const nonUnitRoles = ['EMPLOYEE', 'VISITOR']
     if (nonUnitRoles.includes(roleValue) && data.flatId) {
-      setError(`${roleValue} role cannot be assigned to a property. Only MEMBER, TENANT, CHAIRMAN, SECRETARY, TREASURER, and COMMITTEE can occupy units.`)
+      setError(`${roleValue} role cannot be assigned to a property. Only SOCIETY_ADMIN, MEMBER, TENANT, CHAIRMAN, SECRETARY, TREASURER, and COMMITTEE can occupy units.`)
       return
     }
 
@@ -1068,7 +1068,7 @@ export default function Users() {
                 />
               )}
               {/* Property selection for resident society roles - hidden only for non-unit roles */}
-              {['MEMBER', 'TENANT', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE'].includes(selectedRole || creatableRoles[0]) && (
+              {['MEMBER', 'TENANT', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE'].includes(selectedRole || creatableRoles[0]) && (
                 <div>
                   {/* MEMBER creating TENANT: auto-assign from member's flat */}
                   {confirmedIsMember && (selectedRole || creatableRoles[0]) === 'TENANT' ? (
@@ -1401,7 +1401,7 @@ export default function Users() {
                     <div>
                       <p className="mb-1 text-xs font-semibold uppercase tracking-[0.06em] text-[var(--text-tertiary)]">Role & Unit Type Rules:</p>
                       <ul className="space-y-1 text-sm text-[var(--text-secondary)]">
-                        <li>• <strong>MEMBER, CHAIRMAN, SECRETARY, TREASURER, COMMITTEE, TENANT</strong> → Can own FLAT, SHOP, or OFFICE</li>
+                        <li>• <strong>SOCIETY_ADMIN, MEMBER, CHAIRMAN, SECRETARY, TREASURER, COMMITTEE, TENANT</strong> → Can own FLAT, SHOP, or OFFICE</li>
                         <li>• <strong>Multiple units:</strong> Use comma-separated values (e.g., "A-101, S-001") for owners with multiple properties</li>
                         <li>• <strong>EMPLOYEE, VISITOR</strong> → Cannot be assigned to any unit (leave Flat Number empty)</li>
                       </ul>
