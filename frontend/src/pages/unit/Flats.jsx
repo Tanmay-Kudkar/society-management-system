@@ -38,6 +38,15 @@ export default function Flats() {
   // Determine effective society ID for filtering
   const effectiveSocietyId = isPlatformLevel && societyIdFromUrl ? parseInt(societyIdFromUrl) : user?.societyId
 
+  // Get society filter from URL (for MASTER_ADMIN viewing specific society)
+  const societyIdFromUrl = searchParams.get('society')
+
+  // Check if current user is MASTER_ADMIN or SOCIETY_ADMIN
+  const isPlatformLevel = user?.role === 'MASTER_ADMIN'
+
+  // Determine effective society ID for filtering
+  const effectiveSocietyId = isPlatformLevel && societyIdFromUrl ? parseInt(societyIdFromUrl) : user?.societyId
+
   // Initialize form when editing
   useEffect(() => {
     if (editingFlat) {
