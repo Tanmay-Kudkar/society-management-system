@@ -173,7 +173,7 @@ public class UserServiceImpl implements UserService {
             } else {
                 // Flat is mandatory for resident unit roles
                 throw new ApiException(HttpStatus.BAD_REQUEST,
-                    "Flat/Unit assignment is required for MEMBER, TENANT, SOCIETY_ADMIN, CHAIRMAN, SECRETARY, TREASURER, and COMMITTEE roles");
+                    "Flat/Unit assignment is required for MEMBER, TENANT, CHAIRMAN, SECRETARY, TREASURER, and COMMITTEE roles");
             }
 
             if (assignedFlat != null && targetRole == Role.MEMBER) {
@@ -468,7 +468,7 @@ public class UserServiceImpl implements UserService {
 
             if (targetFlatId == null) {
                 throw new ApiException(HttpStatus.BAD_REQUEST,
-                    "Flat/Unit assignment is required for MEMBER, TENANT, SOCIETY_ADMIN, CHAIRMAN, SECRETARY, TREASURER, and COMMITTEE roles");
+                    "Flat/Unit assignment is required for MEMBER, TENANT, CHAIRMAN, SECRETARY, TREASURER, and COMMITTEE roles");
             }
 
             assignedFlat = flatRepository.findById(targetFlatId)
@@ -596,10 +596,9 @@ public class UserServiceImpl implements UserService {
     }
 
     private boolean isResidentUnitRole(Role role) {
-        // MEMBER, TENANT, SOCIETY_ADMIN, CHAIRMAN, SECRETARY, TREASURER, COMMITTEE require flat assignment
+        // Resident/unit roles that must have a flat assignment
         return role == Role.MEMBER
                 || role == Role.TENANT
-            || role == Role.SOCIETY_ADMIN
                 || role == Role.CHAIRMAN
                 || role == Role.SECRETARY
                 || role == Role.TREASURER

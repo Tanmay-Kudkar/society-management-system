@@ -25,8 +25,6 @@ public interface FlatRepository extends JpaRepository<Flat, Long> {
     // Count occupied by unit type
     long countBySocietyIdAndUnitTypeAndIsOccupied(Long societyId, String unitType, Boolean isOccupied);
 
-    long countByWingId1(Long id);
-
     // Count by wing
     long countByWingId(Long wingId);
 
