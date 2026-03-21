@@ -81,35 +81,6 @@ public class SchemaMigrationRunner {
                 jdbcTemplate.execute("ALTER TABLE complaints ADD COLUMN IF NOT EXISTS delete_undo_previous_resolution TEXT");
                 jdbcTemplate.execute("ALTER TABLE complaints ADD COLUMN IF NOT EXISTS delete_undo_expires_at TIMESTAMP");
 
-                jdbcTemplate.execute("CREATE TABLE IF NOT EXISTS complaint_attachments (complaint_id BIGINT NOT NULL, file_url TEXT)");
-                jdbcTemplate.execute("CREATE TABLE IF NOT EXISTS complaint_comments (" +
-                    "id BIGSERIAL PRIMARY KEY, " +
-                    "complaint_id BIGINT NOT NULL REFERENCES complaints(id) ON DELETE CASCADE, " +
-                    "user_id BIGINT NOT NULL REFERENCES users(id), " +
-                    "message TEXT NOT NULL, " +
-                    "created_at TIMESTAMP NOT NULL DEFAULT NOW(), " +
-                    "updated_at TIMESTAMP NOT NULL DEFAULT NOW())");
-                jdbcTemplate.execute("CREATE TABLE IF NOT EXISTS complaint_history (" +
-                    "id BIGSERIAL PRIMARY KEY, " +
-                    "complaint_id BIGINT NOT NULL REFERENCES complaints(id) ON DELETE CASCADE, " +
-                    "actor_user_id BIGINT REFERENCES users(id), " +
-                    "action_type VARCHAR(64) NOT NULL, " +
-                    "from_status VARCHAR(32), " +
-                    "to_status VARCHAR(32), " +
-                    "note TEXT, " +
-                    "created_at TIMESTAMP NOT NULL DEFAULT NOW())");
-                jdbcTemplate.execute("CREATE TABLE IF NOT EXISTS complaint_uploads (" +
-                    "id BIGSERIAL PRIMARY KEY, " +
-                    "society_id BIGINT NOT NULL REFERENCES societies(id) ON DELETE CASCADE, " +
-                    "uploaded_by_user_id BIGINT NOT NULL REFERENCES users(id), " +
-                    "original_file_name VARCHAR(255) NOT NULL, " +
-                    "stored_file_name VARCHAR(255) NOT NULL UNIQUE, " +
-                    "content_type VARCHAR(255), " +
-                    "file_size BIGINT NOT NULL, " +
-                    "file_data BYTEA, " +
-                    "created_at TIMESTAMP NOT NULL DEFAULT NOW())");
-                jdbcTemplate.execute("ALTER TABLE complaint_uploads ADD COLUMN IF NOT EXISTS file_data BYTEA");
-
                 jdbcTemplate.execute("ALTER TABLE complaints ADD COLUMN IF NOT EXISTS is_deleted BOOLEAN");
                 jdbcTemplate.execute("UPDATE complaints SET is_deleted = FALSE WHERE is_deleted IS NULL");
                 jdbcTemplate.execute("ALTER TABLE complaints ALTER COLUMN is_deleted SET DEFAULT FALSE");
