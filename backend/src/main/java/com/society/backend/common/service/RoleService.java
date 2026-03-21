@@ -180,8 +180,9 @@ public class RoleService {
      */
     public void canRecordMeetingAttendance(Long userId) {
         checkRole(userId, Role.MASTER_ADMIN, Role.SOCIETY_ADMIN,
-                Role.CHAIRMAN, Role.SECRETARY, Role.TREASURER,
-                Role.COMMITTEE);
+            Role.CHAIRMAN, Role.SECRETARY, Role.TREASURER,
+            Role.COMMITTEE, Role.MANAGER, Role.EMPLOYEE,
+            Role.MEMBER);
     }
 
     /**
@@ -189,7 +190,9 @@ public class RoleService {
      */
     public void canViewMeetingAttendance(Long userId) {
         checkRole(userId, Role.MASTER_ADMIN, Role.SOCIETY_ADMIN,
-                Role.CHAIRMAN, Role.SECRETARY, Role.TREASURER);
+                Role.CHAIRMAN, Role.SECRETARY, Role.TREASURER,
+                Role.COMMITTEE, Role.MANAGER, Role.EMPLOYEE,
+                Role.MEMBER);
     }
 
     /**

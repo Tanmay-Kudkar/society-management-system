@@ -5,7 +5,7 @@ import { useAuth, useConfirmDialog, useToast } from '../../context'
 import { paymentApi, exportApi, downloadBlob } from '../../../../api'
 import { Search, CreditCard, CheckCircle, XCircle, Clock, Trash2, RotateCcw, AlertTriangle, FileSpreadsheet } from 'lucide-react'
 import clsx from 'clsx'
-import { PermissionDenied, InfoTooltip, NeonSweepButton } from '../../components'
+import { PermissionDenied, InfoTooltip, NeonSweepButton, EmptyStateSection } from '../../components'
 import { HeroSkeleton, FinancePageSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
 import useMinLoadingTime from '../../hooks/useMinLoadingTime'
 
@@ -219,7 +219,7 @@ export default function Payments() {
     return `${minutes}m ${String(seconds).padStart(2, '0')}s left`
   }
 
-  const showSkeleton = useMinLoadingTime(isLoading || isError)
+  const showSkeleton = useMinLoadingTime(isLoading)
 
   if (!canAccessPayments) {
     return <PermissionDenied message="You don't have permission to view payments" />
@@ -391,10 +391,12 @@ export default function Payments() {
       {/* Table */}
       <div className="overflow-hidden rounded-2xl border border-[var(--border-default)] bg-[var(--bg-card)]">
         {filteredPayments.length === 0 ? (
-          <div className="flex flex-col items-center justify-center p-12 text-[var(--text-secondary)]">
-            <CreditCard size={48} className="mb-3 opacity-50" />
-            <p className="text-sm">No payments found</p>
-          </div>
+          <EmptyStateSection
+            title="No payments found"
+            description="Try changing filters or date range to view payment records."
+            icon={CreditCard}
+            className="border-0 shadow-none"
+          />
         ) : (
           <>
             <div className="hidden lg:block overflow-x-auto">

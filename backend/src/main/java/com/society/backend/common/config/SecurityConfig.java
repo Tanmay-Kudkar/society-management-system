@@ -108,15 +108,19 @@ public class SecurityConfig {
                                                                 "CHAIRMAN", "SECRETARY")
 
                                                 // ==================== NOTICES ====================
+                                                .requestMatchers(HttpMethod.POST, "/notices/*/attendance")
+                                                .hasAnyRole("MASTER_ADMIN", "SOCIETY_ADMIN",
+                                                                "CHAIRMAN", "SECRETARY", "TREASURER", "COMMITTEE",
+                                                                "MANAGER", "EMPLOYEE", "MEMBER")
                                                 .requestMatchers(HttpMethod.POST, "/notices/**")
                                                 .hasAnyRole("MASTER_ADMIN", "SOCIETY_ADMIN",
-                                                                "CHAIRMAN", "SECRETARY", "MANAGER")
+                                                                "CHAIRMAN", "SECRETARY", "TREASURER")
                                                 .requestMatchers(HttpMethod.PUT, "/notices/**")
                                                 .hasAnyRole("MASTER_ADMIN", "SOCIETY_ADMIN",
-                                                                "CHAIRMAN", "SECRETARY", "MANAGER")
+                                                                "CHAIRMAN", "SECRETARY", "TREASURER")
                                                 .requestMatchers(HttpMethod.DELETE, "/notices/**")
                                                 .hasAnyRole("MASTER_ADMIN", "SOCIETY_ADMIN",
-                                                                "CHAIRMAN", "SECRETARY", "MANAGER")
+                                                                "CHAIRMAN", "SECRETARY", "TREASURER")
 
                                                 // ==================== FINANCE ====================
                                                 .requestMatchers("/transactions/**")
@@ -159,6 +163,8 @@ public class SecurityConfig {
                                                 .hasAnyRole("MASTER_ADMIN", "SOCIETY_ADMIN",
                                                                 "CHAIRMAN", "SECRETARY", "TREASURER", "COMMITTEE",
                                                                 "MANAGER", "EMPLOYEE", "MEMBER")
+                                                .requestMatchers(HttpMethod.GET, "/document-templates/**")
+                                                .authenticated()
                                                 .requestMatchers("/document-templates/**")
                                                 .hasAnyRole("MASTER_ADMIN", "SOCIETY_ADMIN",
                                                                 "CHAIRMAN", "SECRETARY", "TREASURER", "COMMITTEE",

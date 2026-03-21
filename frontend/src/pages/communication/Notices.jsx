@@ -7,7 +7,7 @@ import { useToast } from '../../context'
 import { noticeApi, downloadBlob } from '../../../../api'
 import { Plus, Search, X, Megaphone, Edit, Trash2 } from 'lucide-react'
 import clsx from 'clsx'
-import { FormInput, SmartSelect, FormTextarea, InfoTooltip, NeonSweepButton, AnimatedModal, DEFAULT_ANIMATED_MODAL_DURATION_MS } from '../../components'
+import { FormInput, SmartSelect, FormTextarea, InfoTooltip, NeonSweepButton, AnimatedModal, DEFAULT_ANIMATED_MODAL_DURATION_MS, EmptyStateSection } from '../../components'
 import { HeroSkeleton, FiltersSkeleton, CardGridSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
 import useMinLoadingTime from '../../hooks/useMinLoadingTime'
 import { formatDate, parseServerDateTime } from '../../utils/formatUtils'
@@ -37,6 +37,27 @@ const formatNoticeDateTimeWithDay = (value) => {
     timeZone: 'Asia/Kolkata',
   })
 }
+
+const formatRoleLabel = (value) => String(value || '')
+  .toLowerCase()
+  .replace(/_/g, ' ')
+  .replace(/\b\w/g, (char) => char.toUpperCase())
+
+const getRoleBadgeClass = (role) => {
+  const normalized = String(role || '').toUpperCase()
+  if (normalized === 'MASTER_ADMIN') {
+    return 'border-violet-300 bg-violet-100 text-violet-900 dark:border-violet-300/80 dark:bg-violet-400/25 dark:text-violet-100'
+  }
+  if (normalized === 'SOCIETY_ADMIN') {
+    return 'border-blue-300 bg-blue-100 text-blue-900 dark:border-blue-300/80 dark:bg-blue-400/25 dark:text-blue-100'
+  }
+  if (normalized === 'TREASURER') {
+    return 'border-amber-300 bg-amber-100 text-amber-900 dark:border-amber-300/80 dark:bg-amber-400/25 dark:text-amber-100'
+  }
+  return 'border-slate-300 bg-slate-100 text-slate-900 dark:border-slate-300/80 dark:bg-slate-400/25 dark:text-slate-100'
+}
+
+const getAttendanceContact = (row) => row?.userEmail || row?.userPhone || '-'
 
 export default function Notices() {
   const { user, canManageNotices } = useAuth()
@@ -68,8 +89,9 @@ export default function Notices() {
     MEETING: 'Meeting',
   }
 
-  const canRecordMeetingAttendance = ['MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE'].includes(user?.role)
-  const canViewMeetingAttendance = ['MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER'].includes(user?.role)
+  const attendanceExcludedRoles = ['VENDOR', 'TENANT', 'VISITOR']
+  const canRecordMeetingAttendance = Boolean(user?.role) && !attendanceExcludedRoles.includes(user.role)
+  const canViewMeetingAttendance = canRecordMeetingAttendance
 
   // Get society filter from URL (for MASTER_ADMIN viewing specific society)
   const societyIdFromUrl = searchParams.get('society')
@@ -261,7 +283,6 @@ export default function Notices() {
       const next = {}
       for (const notice of meetingNotices) {
         try {
-          // eslint-disable-next-line no-await-in-loop
           const res = await noticeApi.getMyAttendance(notice.id, user.id)
           next[notice.id] = res.data
         } catch (error) {
@@ -445,7 +466,7 @@ export default function Notices() {
     }
   }
 
-  const showSkeleton = useMinLoadingTime(isLoading || isError)
+  const showSkeleton = useMinLoadingTime(isLoading)
 
   if (showSkeleton) return (
     <div>
@@ -664,7 +685,7 @@ export default function Notices() {
       )}
 
       <AnimatedModal open={showAttendanceModal} onRequestClose={closeAttendanceModal} closeOnBackdrop>
-        <div className="max-h-[calc(100vh-3rem)] w-full max-w-2xl overflow-y-auto rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] shadow-[0_8px_24px_rgba(0,0,0,0.12)]">
+        <div className="max-h-[calc(100vh-2.4rem)] w-[min(96vw,68rem)] overflow-y-auto rounded-2xl border border-[var(--border-light)] bg-[var(--bg-card)] shadow-[0_20px_48px_rgba(2,8,23,0.28)]">
           <div className="flex items-center justify-between border-b border-[var(--border-light)] p-4">
             <div>
               <h3 className="text-lg font-bold text-[var(--text-primary)]">Meeting Attendance</h3>
@@ -677,11 +698,16 @@ export default function Notices() {
             </button>
           </div>
 
-          <div className="p-4">
+          <div className="p-4 sm:p-5">
             {attendanceListLoading ? (
-              <p className="text-sm text-[var(--text-tertiary)]">Loading attendance...</p>
+              <p className="rounded-xl border border-dashed border-[var(--border-light)] bg-[var(--bg-tertiary)]/40 px-3 py-2.5 text-sm text-[var(--text-tertiary)]">Loading attendance...</p>
             ) : attendanceList.length === 0 ? (
-              <p className="text-sm text-[var(--text-tertiary)]">No attendance records yet.</p>
+              <EmptyStateSection
+                title="No attendance records yet"
+                description="Attendance entries will appear after members mark present or absent."
+                icon={Megaphone}
+                className="border-dashed p-6"
+              />
             ) : (
               <>
                 <div className="mb-3 flex flex-wrap items-center gap-2">
@@ -728,35 +754,112 @@ export default function Notices() {
                 </div>
 
                 {filteredAttendanceList.length === 0 ? (
-                  <p className="text-sm text-[var(--text-tertiary)]">No records for selected filter.</p>
+                  <EmptyStateSection
+                    title="No records for selected filter"
+                    description="Try switching the attendance filter to view available records."
+                    icon={Megaphone}
+                    className="border-dashed p-6"
+                  />
                 ) : (
-                  <div className="overflow-hidden rounded-xl border border-[var(--border-light)]">
-                <table className="w-full border-collapse text-sm">
-                  <thead className="bg-[var(--bg-tertiary)] text-left text-[0.78rem] uppercase tracking-[0.06em] text-[var(--text-tertiary)]">
-                    <tr>
-                      <th className="px-3 py-2">Member</th>
-                      <th className="px-3 py-2">Status</th>
-                      <th className="px-3 py-2">Marked At</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredAttendanceList.map((row) => (
-                      <tr key={row.id} className="border-t border-[var(--border-light)]">
-                        <td className="px-3 py-2 text-[var(--text-primary)]">{row.userName || '-'}</td>
-                        <td className="px-3 py-2">
-                          <span className={clsx(
-                            'inline-flex rounded-full px-2 py-0.5 text-xs font-semibold',
-                            row.status === 'PRESENT' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700',
-                          )}>
-                            {row.status}
-                          </span>
-                        </td>
-                        <td className="px-3 py-2 text-[var(--text-secondary)]">{formatDate(row.markedAt)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                  <>
+                    <div className="space-y-2.5 md:hidden">
+                      {filteredAttendanceList.map((row) => (
+                        <div
+                          key={row.id}
+                          className={clsx(
+                            'rounded-xl border border-[var(--border-light)] border-l-4 bg-[var(--bg-card)] px-3 py-2.5',
+                            row.status === 'PRESENT'
+                              ? 'border-l-emerald-500'
+                              : 'border-l-rose-500'
+                          )}
+                        >
+                          <div className="flex items-start justify-between gap-2">
+                            <p className="text-sm font-semibold text-[var(--text-primary)]">{row.userName || '-'}</p>
+                            <span className={clsx(
+                              'inline-flex rounded-full px-2 py-0.5 text-[11px] font-semibold',
+                              row.status === 'PRESENT' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700',
+                            )}>
+                              {row.status}
+                            </span>
+                          </div>
+
+                          <div className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1 text-[11px]">
+                            <span className="text-[var(--text-tertiary)]">Role</span>
+                            <span className="text-right">
+                              {row.userRole ? (
+                                <span className={clsx(
+                                  'inline-flex rounded-full border px-2 py-0.5 text-[10px] font-semibold',
+                                  getRoleBadgeClass(row.userRole)
+                                )}>
+                                  {formatRoleLabel(row.userRole)}
+                                </span>
+                              ) : (
+                                <span className="text-[var(--text-secondary)]">-</span>
+                              )}
+                            </span>
+
+                            <span className="text-[var(--text-tertiary)]">Contact</span>
+                            <span className="text-[var(--text-secondary)] text-right break-all">{getAttendanceContact(row)}</span>
+
+                            <span className="text-[var(--text-tertiary)]">Unit</span>
+                            <span className="text-[var(--text-secondary)] text-right">{row.unitNumber ? (row.wingName ? `${row.wingName}-${row.unitNumber}` : row.unitNumber) : '-'}</span>
+
+                            <span className="text-[var(--text-tertiary)]">Marked At</span>
+                            <span className="text-[var(--text-secondary)] text-right">{formatNoticeDateTimeWithDay(row.markedAt)}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="hidden overflow-hidden rounded-xl border border-[var(--border-light)] md:block">
+                      <table className="w-full border-collapse text-sm">
+                        <thead className="bg-[var(--bg-tertiary)] text-left text-[0.74rem] uppercase tracking-[0.08em] text-[var(--text-tertiary)]">
+                          <tr>
+                            <th className="px-3 py-2">Member</th>
+                            <th className="px-3 py-2">Role</th>
+                            <th className="px-3 py-2">Contact</th>
+                            <th className="px-3 py-2">Unit</th>
+                            <th className="px-3 py-2">Status</th>
+                            <th className="px-3 py-2">Marked At</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {filteredAttendanceList.map((row) => (
+                            <tr key={row.id} className="border-t border-[var(--border-light)]">
+                              <td className="px-3 py-2 text-[var(--text-primary)]">
+                                <div className="font-semibold">{row.userName || '-'}</div>
+                              </td>
+                              <td className="px-3 py-2 text-[var(--text-secondary)]">
+                                {row.userRole ? (
+                                  <span className={clsx(
+                                    'inline-flex rounded-full border px-2 py-0.5 text-[11px] font-semibold',
+                                    getRoleBadgeClass(row.userRole)
+                                  )}>
+                                    {formatRoleLabel(row.userRole)}
+                                  </span>
+                                ) : '-'}
+                              </td>
+                              <td className="px-3 py-2 text-[var(--text-secondary)]">{getAttendanceContact(row)}</td>
+                              <td className="px-3 py-2 text-[var(--text-secondary)]">
+                                {row.unitNumber ? (
+                                  <span>{row.wingName ? `${row.wingName}-${row.unitNumber}` : row.unitNumber}</span>
+                                ) : '-'}
+                              </td>
+                              <td className="px-3 py-2">
+                                <span className={clsx(
+                                  'inline-flex rounded-full px-2 py-0.5 text-xs font-semibold',
+                                  row.status === 'PRESENT' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700',
+                                )}>
+                                  {row.status}
+                                </span>
+                              </td>
+                              <td className="px-3 py-2 text-[var(--text-secondary)]">{formatNoticeDateTimeWithDay(row.markedAt)}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </>
                 )}
               </>
             )}

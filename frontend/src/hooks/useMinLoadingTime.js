@@ -7,7 +7,7 @@
  * - Once skeleton is shown, it stays for at least MIN_MS (400ms) to avoid flash
  *
  * Usage:
- *   const showSkeleton = useMinLoadingTime(isLoading || isError)
+ *   const showSkeleton = useMinLoadingTime(isLoading)
  *   if (showSkeleton) return <Skeleton />
  */
 import { useState, useEffect, useRef } from 'react'

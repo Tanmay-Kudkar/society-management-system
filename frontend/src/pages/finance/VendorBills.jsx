@@ -208,7 +208,7 @@ export default function VendorBills() {
     }
   }
 
-  const showSkeleton = useMinLoadingTime(isLoading || isError)
+  const showSkeleton = useMinLoadingTime(isLoading)
 
   if (showSkeleton) return (
     <div>

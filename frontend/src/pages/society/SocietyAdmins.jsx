@@ -9,7 +9,7 @@ import { parseApiError } from '../../utils'
 import * as XLSX from 'xlsx'
 import {
   FormInput, PhoneInput, PincodeInput, NumberInput,
-  StateCitySelector, SmartSelect, NeonSweepButton
+  StateCitySelector, SmartSelect, NeonSweepButton, EmptyStateSection
 } from '../../components'
 import { BulkImportModal } from '../../components'
 import { FiltersSkeleton, CardGridSkeleton, HeroSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
@@ -282,7 +282,7 @@ export default function SocietyAdmins() {
   const [hasWingsEnabled, setHasWingsEnabled] = useState(true)
 
   // Fetch all users, filter to SOCIETY_ADMIN
-  const { data: allUsers = [], isLoading: usersLoading, isError: usersError } = useQuery({
+  const { data: allUsers = [], isLoading: usersLoading } = useQuery({
     queryKey: ['users'],
     queryFn: () => userApi.getAll().then(res => res.data),
   })
@@ -861,7 +861,7 @@ export default function SocietyAdmins() {
     createMutation.mutate({ societyData, adminData })
   }
 
-  const showSkeleton = useMinLoadingTime(usersLoading || usersError)
+  const showSkeleton = useMinLoadingTime(usersLoading)
 
   if (showSkeleton) {
     return (
@@ -1020,9 +1020,11 @@ export default function SocietyAdmins() {
       {/* Content */}
       {filteredAdmins.length === 0 ? (
         <div className="py-16 px-6 text-center text-[var(--text-secondary)]">
-          <UserCheck size={48} className="text-[var(--text-muted)] mb-3" />
-          <h3 className="m-0 mb-[6px] text-lg">No society admins found</h3>
-          <p className="m-0 text-sm text-[var(--text-tertiary)]">Create a society and its admin to get started</p>
+          <EmptyStateSection
+            title="No society admins found"
+            description="Create a society and its admin to get started."
+            icon={UserCheck}
+          />
           {canManageSocietyAdmins && (
             <div className="mt-[18px] inline-flex items-center gap-[10px] flex-wrap">
               <NeonSweepButton tone="slate" size="md" onClick={() => setShowBulkImportModal(true)}>

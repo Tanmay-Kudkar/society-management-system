@@ -5,6 +5,7 @@ import { useAuth } from "../../context/AuthContext";
 import { useToast } from "../../context/ToastContext";
 import PageShell from "../../components/PageShell";
 import NeonSweepButton from "../../components/NeonSweepButton";
+import EmptyStateSection from "../../components/EmptyStateSection";
 import {
   BookOpen,
   Plus,
@@ -276,7 +277,14 @@ export default function SocietyRules() {
 
       {/* List */}
       <div className="flex flex-col gap-[0.85rem]">
-        {filtered.length === 0 && <p className="text-center text-[var(--text-secondary)] py-10">No rules found.</p>}
+        {filtered.length === 0 && (
+          <EmptyStateSection
+            title="No rules found"
+            description="No rules match your current filters."
+            icon={BookOpen}
+            className="py-10"
+          />
+        )}
         {filtered.map((r) => (
           <div
             key={r.id}

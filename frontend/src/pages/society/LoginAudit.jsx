@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '../../context'
 import { authApi, societyApi } from '../../../../api'
-import { InfoTooltip, NeonSweepButton } from '../../components'
+import { InfoTooltip, NeonSweepButton, EmptyStateSection } from '../../components'
 import { HeroSkeleton, FiltersSkeleton, TableSkeleton, SummaryRowSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
 import useMinLoadingTime from '../../hooks/useMinLoadingTime'
 import useBackendStatus from '../../hooks/useBackendStatus'
@@ -325,9 +325,12 @@ export default function LoginAudit() {
           {/* Audit Table */}
           {filtered.length === 0 ? (
             <div className="flex flex-col items-center justify-center rounded-2xl border border-[var(--border-light)] bg-[var(--bg-card)] py-16 text-center">
-              <p className="text-[var(--text-tertiary)]">
-                {audits.length === 0 ? 'No audit records found for this society' : 'No records match your filters'}
-              </p>
+              <EmptyStateSection
+                title={audits.length === 0 ? 'No audit records found' : 'No records match your filters'}
+                description={audits.length === 0 ? 'Audit activity will appear here after logins begin.' : 'Try clearing one or more filters to see matching records.'}
+                icon={Shield}
+                className="w-full max-w-xl border-0"
+              />
             </div>
           ) : (
             <div className="rounded-2xl border border-[var(--border-light)] bg-[var(--bg-card)] shadow-[0_10px_22px_rgba(15,23,42,0.08)] overflow-hidden">

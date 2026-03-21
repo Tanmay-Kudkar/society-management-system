@@ -6,7 +6,7 @@ import { useConfirmDialog } from '../../context'
 import { useToast } from '../../context'
 import { tenantApi, flatApi, userApi } from '../../../../api'
 import { Plus, Edit, Trash2, Search, X, User, Calendar, Phone, Mail, Upload } from 'lucide-react'
-import { FormInput, PhoneInput, SmartSelect, NumberInput, BulkImportModal, InfoTooltip, NeonSweepButton, PaginationControls } from '../../components'
+import { FormInput, PhoneInput, SmartSelect, NumberInput, BulkImportModal, InfoTooltip, NeonSweepButton, PaginationControls, EmptyStateSection } from '../../components'
 import { HeroSkeleton, FiltersSkeleton, TableSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
 import useMinLoadingTime from '../../hooks/useMinLoadingTime'
 
@@ -37,15 +37,21 @@ export default function Tenants() {
   // Determine effective society ID for filtering
   const effectiveSocietyId = scopedSocietyId || user?.societyId
   const canEditTenants = canManageTenants()
+  const isResidentMember = user?.role === 'MEMBER'
 
   const { data: tenants = [], isLoading, isError } = useQuery({
-    queryKey: ['tenants', effectiveSocietyId, isPlatformLevel],
+    queryKey: ['tenants', effectiveSocietyId, isPlatformLevel, isResidentMember, user?.flatId],
     queryFn: () => {
+      if (isResidentMember) {
+        if (!user?.flatId) return Promise.resolve([])
+        return tenantApi.getByFlat(user.flatId).then(res => res.data)
+      }
       if (effectiveSocietyId) {
         return tenantApi.getBySociety(effectiveSocietyId).then(res => res.data)
       }
       return tenantApi.getAll().then(res => res.data)
     },
+    enabled: isResidentMember ? !!user?.flatId : true,
   })
 
   const { data: flats = [] } = useQuery({
@@ -170,7 +176,7 @@ export default function Tenants() {
     return daysUntil > 0 && daysUntil <= 30
   }
 
-  const showSkeleton = useMinLoadingTime(isLoading || isError)
+  const showSkeleton = useMinLoadingTime(isLoading)
 
   if (showSkeleton) return (
     <div>
@@ -385,7 +391,12 @@ export default function Tenants() {
                 {filteredTenants.length === 0 && (
                   <tr>
                     <td colSpan="7" className="p-8 text-center text-[var(--text-tertiary)]">
-                      No tenants found
+                      <EmptyStateSection
+                        title="No tenants found"
+                        description="No tenant records match your current search and filters."
+                        icon={User}
+                        className="p-6"
+                      />
                     </td>
                   </tr>
                 )}
@@ -396,7 +407,14 @@ export default function Tenants() {
 
         <div className="lg:hidden divide-y divide-[var(--border-light)]">
           {filteredTenants.length === 0 ? (
-            <div className="p-8 text-center text-sm text-[var(--text-tertiary)] max-[360px]:p-6 max-[360px]:text-xs">No tenants found</div>
+            <div className="p-4">
+              <EmptyStateSection
+                title="No tenants found"
+                description="No tenant records match your current search and filters."
+                icon={User}
+                className="max-[360px]:p-6"
+              />
+            </div>
           ) : (
             paginatedTenants.map((tenant) => (
               <div key={tenant.id} className="p-3 sm:p-4 max-[360px]:p-2.5">

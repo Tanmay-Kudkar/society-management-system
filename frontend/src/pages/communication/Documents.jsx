@@ -159,7 +159,7 @@ export default function Documents() {
     }
   }
 
-  const showSkeleton = useMinLoadingTime(isLoading || isError)
+  const showSkeleton = useMinLoadingTime(isLoading)
 
   if (showSkeleton) {
     return (
@@ -167,6 +167,18 @@ export default function Documents() {
         <WakeUpBanner />
         <HeroSkeleton />
         <DocumentsSkeleton />
+      </div>
+    )
+  }
+
+  if (isError) {
+    return (
+      <div className="rounded-2xl border border-[var(--border-light)] bg-[var(--bg-card)] p-6 text-center">
+        <h2 className="text-lg font-semibold text-[var(--text-primary)]">Unable To Load Documents</h2>
+        <p className="mt-2 text-sm text-[var(--text-tertiary)]">Please try again. If the issue persists, check your role permissions.</p>
+        <NeonSweepButton tone="slate" size="md" className="mt-4" onClick={() => queryClient.invalidateQueries({ queryKey: ['documentTemplates'] })}>
+          Retry
+        </NeonSweepButton>
       </div>
     )
   }

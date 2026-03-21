@@ -6,7 +6,7 @@ import { useConfirmDialog } from '../../context'
 import { complaintApi, userApi } from '../../../../api'
 import { Plus, Search, X, AlertTriangle, Clock, CheckCircle, XCircle, Edit, Trash2, Upload, Loader2, Download } from 'lucide-react'
 import clsx from 'clsx'
-import { FormInput, SmartSelect, FormTextarea, InfoTooltip, NeonSweepButton, AnimatedModal } from '../../components'
+import { FormInput, SmartSelect, FormTextarea, InfoTooltip, NeonSweepButton, AnimatedModal, EmptyStateSection } from '../../components'
 import { PermissionDenied } from '../../components'
 import { HeroSkeleton, SummaryRowSkeleton, FiltersSkeleton, ListSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
 import useMinLoadingTime from '../../hooks/useMinLoadingTime'
@@ -142,7 +142,9 @@ export default function Complaints() {
   const { data: complaints = [], isLoading, isError } = useQuery({
     queryKey: complaintQueryKey,
     queryFn: () =>
-      complaintApi.getBySociety(effectiveSocietyId, user.id)
+      (canManageComplaints()
+        ? complaintApi.getBySociety(effectiveSocietyId, user.id)
+        : complaintApi.getByUser(user.id, user.id))
         .then(res => res.data),
     enabled: !!user?.id && !!effectiveSocietyId,
   })
@@ -549,7 +551,7 @@ export default function Complaints() {
       const response = await complaintApi.downloadAttachment(attachmentUrl)
 
       const disposition = response?.headers?.['content-disposition'] || ''
-      const nameMatch = disposition.match(/filename=\"?([^\";]+)\"?/i)
+      const nameMatch = disposition.match(/filename="?([^";]+)"?/i)
       const filename = nameMatch?.[1] || fallbackName || 'complaint-attachment'
 
       const blob = new Blob([response.data], { type: response.headers?.['content-type'] || 'application/octet-stream' })
@@ -666,7 +668,7 @@ export default function Complaints() {
     )
   }
 
-  const showSkeleton = useMinLoadingTime(isLoading || isError)
+  const showSkeleton = useMinLoadingTime(isLoading)
 
   // Permission check - users must be able to at least raise complaints
   if (!canRaiseComplaints()) {
@@ -681,6 +683,18 @@ export default function Complaints() {
         <SummaryRowSkeleton count={4} />
         <FiltersSkeleton filterCount={1} />
         <ListSkeleton count={4} />
+      </div>
+    )
+  }
+
+  if (isError) {
+    return (
+      <div className="rounded-2xl border border-[var(--border-light)] bg-[var(--bg-card)] p-6 text-center">
+        <h2 className="text-lg font-semibold text-[var(--text-primary)]">Unable To Load Complaints</h2>
+        <p className="mt-2 text-sm text-[var(--text-tertiary)]">Please try again. If the issue persists, check your role permissions.</p>
+        <NeonSweepButton tone="slate" size="md" className="mt-4" onClick={() => queryClient.invalidateQueries({ queryKey: complaintQueryKey })}>
+          Retry
+        </NeonSweepButton>
       </div>
     )
   }
@@ -780,7 +794,17 @@ export default function Complaints() {
 
       {/* Complaints List */}
         <div className="grid gap-4">
-          {filteredComplaints.map((complaint) => {
+          {filteredComplaints.length === 0 ? (
+            <EmptyStateSection
+              title="No complaints to display"
+              description={searchTerm || filterStatus || filterPriority
+                ? 'No complaints match your current filters. Try changing search, status, or priority.'
+                : 'There are no complaints yet. Log one to get started.'}
+              icon={AlertTriangle}
+              actionLabel={canRaiseComplaints() ? 'Log Complaint' : undefined}
+              onAction={canRaiseComplaints() ? () => setShowModal(true) : undefined}
+            />
+          ) : filteredComplaints.map((complaint) => {
             const effectiveStatus = complaint.deleted ? 'DELETED' : complaint.status
             const StatusIcon = statusIcons[effectiveStatus] || Clock
             const normalizedCategory = String(complaint.category || 'OTHER').toUpperCase()
@@ -857,7 +881,7 @@ export default function Complaints() {
                           </div>
                         )}
 
-                        <div className="mt-3 flex flex-wrap gap-x-3 gap-y-2 text-xs text-[var(--text-tertiary)] sm:gap-x-4 sm:gap-y-1.5">
+                        <div className="mt-3 flex flex-wrap gap-x-3 gap-y-2 text-xs text-[var(--text-secondary)] sm:gap-x-4 sm:gap-y-1.5">
                           {isPlatformLevel && (
                             <span className="inline-flex items-center gap-1.5 whitespace-nowrap">
                               <span className="h-1.5 w-1.5 rounded-full bg-blue-400" />
@@ -898,7 +922,7 @@ export default function Complaints() {
                           )}
                           {Array.isArray(complaint.attachmentUrls) && complaint.attachmentUrls.length > 0 && (
                             <div className="flex w-full flex-col items-start gap-1.5 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center sm:gap-2">
-                              <span className="inline-flex items-center gap-1.5 whitespace-nowrap">
+                              <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border border-cyan-300 bg-cyan-100 px-2 py-0.5 text-[11px] font-semibold text-cyan-900 dark:border-cyan-400/35 dark:bg-cyan-500/20 dark:text-cyan-200">
                                 <span className="h-1.5 w-1.5 rounded-full bg-rose-400" />
                                 Attachments: {complaint.attachmentUrls.length}
                               </span>
@@ -908,7 +932,7 @@ export default function Complaints() {
                                   type="button"
                                   onClick={() => handleDownloadAttachment(attachmentUrl, `${complaint.complaintNumber || 'complaint'}-attachment-${index + 1}`)}
                                   disabled={downloadingAttachmentUrl === attachmentUrl}
-                                  className="inline-flex items-center gap-1 rounded-full border border-sky-400/70 bg-sky-100 px-2.5 py-1 text-[10px] font-semibold text-sky-950 shadow-sm shadow-sky-200/60 transition-colors hover:border-sky-500 hover:bg-sky-200 hover:text-sky-950 disabled:cursor-not-allowed disabled:opacity-60 dark:border-cyan-400/35 dark:bg-cyan-500/12 dark:text-cyan-100 dark:hover:bg-cyan-500/20 sm:px-2 sm:py-0.5 sm:text-[11px]"
+                                  className="inline-flex items-center gap-1 rounded-full border border-sky-300 bg-sky-100 px-2.5 py-1 text-[10px] font-semibold text-sky-900 transition-colors hover:border-sky-400 hover:bg-sky-200 hover:text-sky-950 disabled:cursor-not-allowed disabled:opacity-60 dark:border-sky-400/35 dark:bg-sky-500/20 dark:text-sky-100 dark:hover:bg-sky-500/28 sm:px-2 sm:py-0.5 sm:text-[11px]"
                                 >
                                   {downloadingAttachmentUrl === attachmentUrl ? <Loader2 size={11} className="animate-spin" /> : <Download size={11} />}
                                   <span>Download</span>
@@ -947,7 +971,7 @@ export default function Complaints() {
                         <p className="text-[11px] font-semibold uppercase tracking-[0.06em] text-blue-900 dark:text-blue-300">
                           {undoContextLabel} • Undo available
                         </p>
-                        <p className="mt-1 text-xs font-semibold text-blue-100/95">{formatCountdown(activeUndoRemainingMs)} remaining</p>
+                        <p className="mt-1 text-xs font-semibold text-blue-700 dark:text-blue-300">{formatCountdown(activeUndoRemainingMs)} remaining</p>
                         <NeonSweepButton
                           type="button"
                           tone="cyan"
@@ -998,8 +1022,8 @@ export default function Complaints() {
                       >
                         <option value="PENDING">Pending</option>
                         <option value="UNDER_REVIEW">Under Review</option>
-                        <option value="RESOLVED" disabled={requiresClosureApproval}>Resolved</option>
-                        <option value="REJECTED" disabled={requiresClosureApproval}>Rejected</option>
+                        {!requiresClosureApproval && <option value="RESOLVED">Resolved</option>}
+                        {!requiresClosureApproval && <option value="REJECTED">Rejected</option>}
                       </select>
                     </div>
 

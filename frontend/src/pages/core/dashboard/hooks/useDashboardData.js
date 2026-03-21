@@ -51,7 +51,7 @@ export default function useDashboardData() {
   const canSeeContractAlerts = hasRole("SOCIETY_ADMIN", "CHAIRMAN", "SECRETARY", "TREASURER", "COMMITTEE", "MANAGER");
   const roleUi = ROLE_UI[role] || DEFAULT_ROLE_UI;
 
-  const { data: societies = [], isLoading: societiesLoading, isError: societiesError } = useQuery({
+  const { data: societies = [], isLoading: societiesLoading } = useQuery({
     queryKey: ["societies"],
     queryFn: () => societyApi.getAll().then((res) => res.data),
     enabled: isPlatformLevel,
@@ -135,7 +135,7 @@ export default function useDashboardData() {
 
   const securityLogs = [];
   const { data: weather, locationName } = useWeather();
-  const showSkeleton = useMinLoadingTime(societiesLoading || societiesError);
+  const showSkeleton = useMinLoadingTime(societiesLoading);
 
   return {
     user, navigate, role, roleUi, isPlatformOwner, isPlatformLevel, isMemberOrTenant, isSocietyOpsLevel,

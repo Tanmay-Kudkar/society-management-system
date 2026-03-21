@@ -12,6 +12,11 @@ public class NoticeAttendanceResponse {
     private Long noticeId;
     private Long userId;
     private String userName;
+    private String userRole;
+    private String userEmail;
+    private String userPhone;
+    private String unitNumber;
+    private String wingName;
     private String status;
     private LocalDateTime markedAt;
 }

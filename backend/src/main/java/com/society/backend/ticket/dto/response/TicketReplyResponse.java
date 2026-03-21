@@ -10,6 +10,9 @@ public class TicketReplyResponse {
     private Long ticketId;
     private Long repliedById;
     private String repliedByName;
+    private String repliedByRole;
+    private String repliedByEmail;
+    private String repliedByPhone;
     private String message;
     private String createdAt;
 }

@@ -198,7 +198,7 @@ export default function Vendors() {
     }
   }
 
-  const showSkeleton = useMinLoadingTime(isLoading || isError)
+  const showSkeleton = useMinLoadingTime(isLoading)
 
   // Permission check
   if (!canManageVendors()) {

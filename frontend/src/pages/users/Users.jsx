@@ -9,7 +9,7 @@ import clsx from 'clsx'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { parseApiError, validateUserForm } from '../../utils'
 import * as XLSX from 'xlsx'
-import { FormInput, PhoneInput, SmartSelect, FormErrorSummary, PaginationControls } from '../../components'
+import { FormInput, PhoneInput, SmartSelect, FormErrorSummary, PaginationControls, EmptyStateSection } from '../../components'
 import { PermissionDenied } from '../../components'
 import { HeroSkeleton, FiltersSkeleton, TableSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
 import useMinLoadingTime from '../../hooks/useMinLoadingTime'
@@ -657,7 +657,7 @@ export default function Users() {
     return 'Manage system users and roles'
   }
 
-  const showSkeleton = useMinLoadingTime(isLoading || isError)
+  const showSkeleton = useMinLoadingTime(isLoading)
 
   if (!hasUserManagementPermission) {
     return <PermissionDenied message="You don't have permission to manage users" />
@@ -800,11 +800,11 @@ export default function Users() {
           </h2>
           
           {filteredUsers.length === 0 ? (
-            <div className="rounded-2xl border border-[var(--border-light)] bg-[var(--bg-card)] p-8 text-center">
-              <UsersIcon className="mb-3 text-[#4b5563]" size={48} />
-              <p className="m-0 text-[var(--text-secondary)]">No users found</p>
-              <p className="mt-1.5 text-xs text-[var(--text-tertiary)]">Create a new Society Admin to get started</p>
-            </div>
+            <EmptyStateSection
+              title="No users found"
+              description="Create a new society admin to get started."
+              icon={UsersIcon}
+            />
           ) : (
             <div className="grid grid-cols-[repeat(auto-fit,minmax(260px,1fr))] gap-3.5">
               {paginatedUsers.map((u) => {

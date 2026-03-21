@@ -6,10 +6,10 @@ import { useToast } from '../../context'
 import { ticketApi, userApi, societyApi, exportApi, downloadBlob } from '../../../../api'
 import { Plus, Search, X, Ticket, MessageSquare, User, Edit, AlertTriangle, Clock, FileSpreadsheet, Trash2, CheckCircle } from 'lucide-react'
 import clsx from 'clsx'
-import { InfoTooltip, NeonSweepButton, AnimatedModal, DEFAULT_ANIMATED_MODAL_DURATION_MS } from '../../components'
+import { InfoTooltip, NeonSweepButton, AnimatedModal, DEFAULT_ANIMATED_MODAL_DURATION_MS, EmptyStateSection } from '../../components'
 import { HeroSkeleton, SummaryRowSkeleton, FiltersSkeleton, ListSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
 import useMinLoadingTime from '../../hooks/useMinLoadingTime'
-import { formatDate, parseServerDateTime } from '../../utils/formatUtils'
+import { parseServerDateTime } from '../../utils/formatUtils'
 import { isActiveTicketStatus, isOpenTicketStatus, isResolvedTicketStatus } from '../../utils/ticketStatusGroups'
 
 const statusClasses = {
@@ -54,6 +54,11 @@ const formatTicketDateTimeWithDay = (value) => {
     timeZone: 'Asia/Kolkata',
   })
 }
+
+const formatRoleLabel = (value) => String(value || '')
+  .toLowerCase()
+  .replace(/_/g, ' ')
+  .replace(/\b\w/g, (char) => char.toUpperCase())
 
 const toTitle = (value) => String(value || '')
   .replace(/[_-]+/g, ' ')
@@ -625,7 +630,7 @@ export default function Tickets() {
   }
 
   return (
-    <div className="block">
+    <div className="block min-w-0">
       {/* Header */}
       <div className="flex flex-col gap-4 mb-6 sm:flex-row sm:items-center sm:justify-between">
         <div>
@@ -660,7 +665,7 @@ export default function Tickets() {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-2 gap-4 mb-6 md:grid-cols-5">
+      <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5">
         <div className="p-4 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-light)] shadow-[0_10px_22px_rgba(15,23,42,0.08)]">
           <p className="text-[0.85rem] text-[var(--text-tertiary)]">Active Queue</p>
           <p className="mt-1 text-2xl font-bold text-yellow-600">{summary.active}</p>
@@ -685,7 +690,7 @@ export default function Tickets() {
 
       {/* Filters */}
       <div className="p-4 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-light)] shadow-[0_10px_22px_rgba(15,23,42,0.08)] mb-6">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center">
+        <div className="flex flex-col gap-4 xl:flex-row xl:items-center">
           <div className="relative min-w-0 flex-1">
             <Search className="absolute left-3 top-1/2 w-5 h-5 -translate-y-1/2 text-[var(--text-tertiary)]" />
             <input
@@ -699,7 +704,7 @@ export default function Tickets() {
           <select
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
-            className="w-full py-[0.55rem] px-3 rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] text-[var(--text-primary)] transition-all focus:outline-none focus:border-blue-600 focus:ring-[3px] focus:ring-blue-600/20 lg:w-56"
+            className="w-full py-[0.55rem] px-3 rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] text-[var(--text-primary)] transition-all focus:outline-none focus:border-blue-600 focus:ring-[3px] focus:ring-blue-600/20 md:w-56"
           >
             <option value="">All Status</option>
             <option value="OPEN">Open</option>
@@ -725,41 +730,39 @@ export default function Tickets() {
           isDeepLinkTransitioning ? 'opacity-0 translate-y-1' : 'opacity-100 translate-y-0'
         )}>
           {filteredTickets.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-16 text-center rounded-2xl bg-[var(--bg-card)] border border-[var(--border-light)]">
-              <div className="w-14 h-14 rounded-2xl bg-blue-100 dark:bg-blue-100 dark:bg-blue-500/15 flex items-center justify-center mb-4">
-                <Ticket className="w-7 h-7 text-blue-600 dark:text-blue-400" />
-              </div>
-              <h3 className="text-base font-semibold text-[var(--text-primary)] mb-1">No tickets to display</h3>
-              <p className="text-sm text-[var(--text-tertiary)] mb-4">
-                {searchTerm || filterStatus || showOverdueOnly
+            <div className="rounded-2xl bg-[var(--bg-card)] border border-[var(--border-light)] p-6">
+              <EmptyStateSection
+                title="No tickets to display"
+                description={searchTerm || filterStatus || showOverdueOnly
                   ? 'No tickets match your current filters. Try adjusting your search.'
                   : 'There are no tickets yet. Create one to get started.'}
-              </p>
-              {canCreateTickets && !searchTerm && !filterStatus && !showOverdueOnly && (
-                <NeonSweepButton tone="cyan" size="md" onClick={() => setShowModal(true)}>
-                  <Plus size={18} /> Create Ticket
-                </NeonSweepButton>
-              )}
+                icon={Ticket}
+                actionLabel={canCreateTickets && !searchTerm && !filterStatus && !showOverdueOnly ? 'Create Ticket' : undefined}
+                onAction={canCreateTickets && !searchTerm && !filterStatus && !showOverdueOnly ? () => setShowModal(true) : undefined}
+                className="border-0"
+              />
             </div>
           ) : filteredTickets.map((ticket) => {
             const undoRemainingMs = getUndoCloseRemainingMs(ticket)
             const showUndoBanner = ticket.status === 'CLOSED' && undoRemainingMs > 0
             const repliesOpen = Boolean(openReplies[ticket.id])
+            const canShowResolvedOption = !requiresClosureApproval || ticket.status === 'RESOLVED'
+            const canShowClosedOption = !requiresClosureApproval || ticket.status === 'CLOSED'
 
             return (
             <div id={`ticket-${ticket.id}`} key={ticket.id} className={clsx(
-              'relative overflow-hidden p-5 rounded-2xl bg-[var(--bg-card)] border-2 border-blue-500/40 shadow-[0_12px_24px_rgba(15,23,42,0.06)]',
+              'relative overflow-hidden rounded-2xl border-2 border-blue-500/40 bg-[var(--bg-card)] p-4 shadow-[0_12px_24px_rgba(15,23,42,0.06)] sm:p-5',
               ticket.isOverdue && 'border-red-600/55',
               (isPageGlowActive || highlightedTicketId === ticket.id) && 'ticket-focus-glow'
             )}>
-              <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+              <div className="flex min-w-0 flex-col gap-4 2xl:flex-row 2xl:items-start 2xl:justify-between">
                 <div className="flex items-start gap-3 sm:gap-4 flex-1 min-w-0">
                   <div className="w-11 h-11 rounded-[0.9rem] bg-blue-600/[.12] flex items-center justify-center">
                     <Ticket className="w-5 h-5 text-blue-600" />
                   </div>
                   <div className="flex-1">
-                    <div className="flex flex-wrap gap-2 items-center">
-                      <span className="text-[0.8rem] font-mono text-[var(--text-tertiary)]">{getTicketDisplayNumber(ticket)}</span>
+                    <div className="flex flex-wrap items-center gap-2 rounded-lg border border-[var(--border-light)] bg-[var(--bg-tertiary)]/35 px-2.5 py-2">
+                      <span className="break-all text-[0.78rem] font-mono font-semibold text-[var(--text-tertiary)]">{getTicketDisplayNumber(ticket)}</span>
                       <span className={clsx(statusClasses[ticket.status] || statusClasses.OPEN)}>
                         {ticket.status?.replace('_', ' ')}
                       </span>
@@ -802,7 +805,7 @@ export default function Tickets() {
                       </div>
                     </div>
                     
-                    <div className="mt-3 flex flex-wrap gap-3 text-xs text-[var(--text-tertiary)]">
+                    <div className="mt-3 flex flex-wrap gap-2 text-xs text-[var(--text-tertiary)] sm:gap-3">
                       <span className="inline-flex items-center gap-1.5">{ticket.type}</span>
                       {isPlatformLevel && <span className="inline-flex items-center gap-1.5">{ticket.societyName}</span>}
                       <span className="inline-flex items-center gap-1.5">
@@ -824,14 +827,14 @@ export default function Tickets() {
                   </div>
                 </div>
 
-                <div className="flex flex-col gap-3 w-full lg:w-auto lg:items-end">
-                  <div className="grid grid-cols-2 gap-2 w-full sm:grid-cols-3 lg:w-auto lg:grid-cols-2 xl:flex xl:flex-wrap xl:items-center xl:justify-end">
+                <div className="flex w-full flex-col gap-3 2xl:w-auto 2xl:min-w-[22rem] 2xl:items-end">
+                  <div className="grid w-full grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-2">
                     {ticket.status === 'OPEN' && canAssignTickets && (
                       <NeonSweepButton
                         onClick={() => { setSelectedTicket(ticket); setShowAssignModal(true) }}
                         tone="violet"
                         size="sm"
-                        className="w-full xl:w-auto justify-center"
+                        className="w-full justify-center"
                       >
                         Assign
                       </NeonSweepButton>
@@ -841,7 +844,7 @@ export default function Tickets() {
                         onClick={() => handleReply(ticket)}
                         tone="cyan"
                         size="sm"
-                        className="w-full xl:w-auto justify-center"
+                        className="w-full justify-center"
                       >
                         <MessageSquare size={14} />
                         Reply
@@ -852,7 +855,7 @@ export default function Tickets() {
                         onClick={() => openEditModal(ticket)}
                         tone="slate"
                         size="sm"
-                        className="w-full xl:w-auto justify-center"
+                        className="w-full justify-center"
                         disabled={!isTicketEditable(ticket)}
                       >
                         <Edit size={14} />
@@ -863,7 +866,7 @@ export default function Tickets() {
                       onClick={() => toggleReplies(ticket.id)}
                       tone="slate"
                       size="sm"
-                      className="w-full xl:w-auto justify-center"
+                      className="w-full justify-center"
                     >
                       <MessageSquare size={14} />
                       {openReplies[ticket.id] ? 'Hide Replies' : 'View Replies'}
@@ -873,7 +876,7 @@ export default function Tickets() {
                         onClick={() => openDeleteModal(ticket)}
                         tone="danger"
                         size="sm"
-                        className="w-full xl:w-auto justify-center"
+                        className="w-full justify-center"
                       >
                         <Trash2 size={14} />
                         Delete
@@ -890,16 +893,16 @@ export default function Tickets() {
                         updateStatusMutation.mutate({ id: ticket.id, status: nextStatus, previousStatus: ticket.status })
                       }}
                       disabled={!canManageTickets()}
-                      className="col-span-2 w-full sm:col-span-3 lg:col-span-2 xl:col-span-1 xl:w-auto min-w-[9rem] px-3 py-2 text-[0.85rem] rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-blue-600 focus:ring-[3px] focus:ring-blue-600/20"
+                      className="w-full min-w-[9rem] rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] px-3 py-2 text-[0.85rem] text-[var(--text-primary)] focus:outline-none focus:border-blue-600 focus:ring-[3px] focus:ring-blue-600/20 sm:col-span-2 lg:col-span-3 2xl:col-span-2"
                     >
                       <option value="OPEN">Open</option>
                       <option value="IN_PROGRESS">In Progress</option>
                       <option value="IN_REVIEW">In Review</option>
-                      <option value="RESOLVED" disabled={requiresClosureApproval}>Resolved</option>
-                      <option value="CLOSED" disabled={requiresClosureApproval}>Closed</option>
+                      {canShowResolvedOption && <option value="RESOLVED">Resolved</option>}
+                      {canShowClosedOption && <option value="CLOSED">Closed</option>}
                     </select>
                     {requiresClosureApproval && canManageTickets() && (
-                      <p className="col-span-2 text-[11px] font-semibold text-amber-700 dark:text-amber-300 sm:col-span-3 lg:col-span-2 xl:col-span-1">
+                      <p className="text-[11px] font-semibold text-amber-700 dark:text-amber-300 sm:col-span-2 lg:col-span-3 2xl:col-span-2">
                         Final closure requires Chairman/Secretary/Treasurer approval.
                       </p>
                     )}
@@ -942,7 +945,7 @@ export default function Tickets() {
                   
                   {/* Progress Slider for staff */}
                   {ticket.status !== 'CLOSED' && ticket.status !== 'RESOLVED' && (
-                    <div className="flex items-center gap-2 w-full lg:w-auto justify-between lg:justify-end">
+                    <div className="flex w-full items-center justify-between gap-2 2xl:w-auto 2xl:justify-end">
                       <input
                         type="range"
                         min="0"
@@ -951,7 +954,7 @@ export default function Tickets() {
                         value={ticket.progressPercent || 0}
                         onChange={(e) => updateProgressMutation.mutate({ id: ticket.id, progress: parseInt(e.target.value) })}
                         disabled={ticket.status === 'IN_REVIEW' || !canManageTickets()}
-                        className="flex-1 lg:flex-none lg:w-24 h-[0.45rem] rounded-full accent-blue-600 cursor-pointer"
+                        className="h-[0.45rem] flex-1 cursor-pointer rounded-full accent-blue-600 2xl:w-24 2xl:flex-none"
                       />
                       <span className="w-9 text-right text-xs text-[var(--text-tertiary)] font-semibold">{ticket.progressPercent || 0}%</span>
                     </div>
@@ -966,20 +969,49 @@ export default function Tickets() {
                 )}
               >
                 {repliesOpen && (
-                  <div className="rounded-xl border border-[var(--border-light)] bg-[var(--bg-tertiary)]/35 p-3">
-                    <p className="mb-2 text-xs font-bold uppercase tracking-[0.05em] text-[var(--text-tertiary)]">Reply Thread</p>
+                  <div className="rounded-2xl border border-[var(--border-light)] bg-[var(--bg-tertiary)]/45 p-3.5 sm:p-4">
+                    <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                      <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-[var(--text-tertiary)]">Reply Thread</p>
+                      <span className="rounded-md border border-[var(--border-light)] bg-[var(--bg-card)] px-2 py-1 text-[11px] font-semibold text-[var(--text-secondary)]">
+                        {(repliesByTicket[ticket.id] || []).length} {(repliesByTicket[ticket.id] || []).length === 1 ? 'reply' : 'replies'}
+                      </span>
+                    </div>
                     {loadingReplies[ticket.id] ? (
-                      <p className="text-sm text-[var(--text-tertiary)]">Loading replies...</p>
+                      <p className="rounded-xl border border-dashed border-[var(--border-light)] bg-[var(--bg-card)] px-3 py-2.5 text-sm text-[var(--text-tertiary)]">Loading replies...</p>
                     ) : (repliesByTicket[ticket.id] || []).length === 0 ? (
-                      <p className="text-sm text-[var(--text-tertiary)]">No replies yet.</p>
+                      <EmptyStateSection
+                        title="No replies yet"
+                        description="Replies will appear here once someone responds."
+                        icon={MessageSquare}
+                        className="border-dashed p-6"
+                      />
                     ) : (
-                      <div className="space-y-2">
+                      <div className="space-y-2.5">
                         {(repliesByTicket[ticket.id] || []).map((reply) => (
-                          <div key={reply.id} className="rounded-lg border border-[var(--border-light)] bg-[var(--bg-card)] px-3 py-2">
-                            <p className="text-[0.86rem] font-semibold text-[var(--text-primary)]">{reply.message}</p>
-                            <p className="mt-1 text-[0.75rem] text-[var(--text-tertiary)]">
-                              {reply.repliedByName || 'Unknown user'} - {formatDate(reply.createdAt)}
-                            </p>
+                          <div key={reply.id} className="rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] px-3 py-2.5 shadow-[0_2px_10px_rgba(15,23,42,0.04)]">
+                            <div className="flex items-start gap-2.5">
+                              <div className="mt-[2px] flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-blue-200 bg-blue-50 text-[11px] font-bold uppercase text-blue-700 dark:border-blue-500/35 dark:bg-blue-500/10 dark:text-blue-300">
+                                {String(reply.repliedByName || 'U').charAt(0)}
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <p className="break-words text-[0.86rem] font-semibold leading-relaxed text-[var(--text-primary)]">{reply.message}</p>
+                                <div className="mt-1.5 flex flex-wrap items-center gap-1.5 text-[0.74rem] text-[var(--text-tertiary)]">
+                                  <span className="font-semibold text-[var(--text-secondary)]">{reply.repliedByName || 'Unknown user'}</span>
+                                  {reply.repliedByRole && (
+                                    <span className="rounded-md border border-blue-200 bg-blue-50 px-1.5 py-0.5 text-[0.66rem] font-semibold uppercase tracking-wide text-blue-700 dark:border-blue-500/35 dark:bg-blue-500/10 dark:text-blue-300">
+                                      {formatRoleLabel(reply.repliedByRole)}
+                                    </span>
+                                  )}
+                                  <span className="hidden sm:inline">•</span>
+                                  <span>{formatTicketDateTimeWithDay(reply.createdAt)}</span>
+                                </div>
+                                {(reply.repliedByEmail || reply.repliedByPhone) && (
+                                  <p className="mt-1 break-all text-[0.72rem] text-[var(--text-tertiary)]">
+                                    {reply.repliedByEmail || reply.repliedByPhone}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
                           </div>
                         ))}
                       </div>

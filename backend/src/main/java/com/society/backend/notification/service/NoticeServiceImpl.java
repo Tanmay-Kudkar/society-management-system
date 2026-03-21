@@ -312,6 +312,25 @@ public class NoticeServiceImpl implements NoticeService {
         response.setNoticeId(attendance.getNotice() != null ? attendance.getNotice().getId() : null);
         response.setUserId(attendance.getUser() != null ? attendance.getUser().getId() : null);
         response.setUserName(attendance.getUser() != null ? attendance.getUser().getName() : null);
+        response.setUserRole(
+            attendance.getUser() != null && attendance.getUser().getRole() != null
+                ? attendance.getUser().getRole().name()
+                : null
+        );
+        response.setUserEmail(attendance.getUser() != null ? attendance.getUser().getEmail() : null);
+        response.setUserPhone(attendance.getUser() != null ? attendance.getUser().getPhone() : null);
+        response.setUnitNumber(
+            attendance.getUser() != null && attendance.getUser().getFlat() != null
+                ? attendance.getUser().getFlat().getFlatNumber()
+                : null
+        );
+        response.setWingName(
+            attendance.getUser() != null
+                && attendance.getUser().getFlat() != null
+                && attendance.getUser().getFlat().getWing() != null
+                ? attendance.getUser().getFlat().getWing().getName()
+                : null
+        );
         response.setStatus(attendance.getStatus());
         response.setMarkedAt(attendance.getMarkedAt());
         return response;
