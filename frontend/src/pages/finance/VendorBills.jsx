@@ -4,12 +4,13 @@ import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '../../context'
 import { useConfirmDialog } from '../../context'
 import { useToast } from '../../context'
-import { vendorBillApi, vendorApi } from '../../../../api'
-import { Plus, Edit, Trash2, Search, X, Receipt, CheckCircle, Clock, AlertCircle } from 'lucide-react'
+import { vendorBillApi, vendorApi, exportApi, downloadBlob } from '../../../../api'
+import { Plus, Edit, Trash2, Search, X, Receipt, CheckCircle, Clock, AlertCircle, FileSpreadsheet, Download } from 'lucide-react'
 import clsx from 'clsx'
 import { InfoTooltip, NeonSweepButton } from '../../components'
 import { HeroSkeleton, FinancePageSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
 import useMinLoadingTime from '../../hooks/useMinLoadingTime'
+import { useRazorpay } from '../../hooks/useRazorpay'
 
 const statusColors = {
   PENDING: 'bg-amber-100 text-amber-700',
@@ -34,6 +35,8 @@ export default function VendorBills() {
   const [editingBill, setEditingBill] = useState(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [filterStatus, setFilterStatus] = useState('')
+  const [isExporting, setIsExporting] = useState(false)
+  const [isDownloadingReceiptId, setIsDownloadingReceiptId] = useState(null)
 
   const societyIdFromUrl = searchParams.get('society')
   const parsedSocietyIdFromUrl = Number(societyIdFromUrl)
@@ -63,11 +66,22 @@ export default function VendorBills() {
     },
   })
 
+  const closeCreateModal = (force = false) => {
+    if (!force && createMutation.isPending) return
+    setShowModal(false)
+  }
+
+  const closePaymentModal = (force = false) => {
+    if (!force && paymentMutation.isPending) return
+    setShowPaymentModal(false)
+    setEditingBill(null)
+  }
+
   const createMutation = useMutation({
     mutationFn: (data) => vendorBillApi.create(data, user.id),
     onSuccess: () => {
       queryClient.invalidateQueries(['vendorBills'])
-      setShowModal(false)
+      closeCreateModal(true)
     },
   })
 
@@ -76,8 +90,18 @@ export default function VendorBills() {
       vendorBillApi.recordPayment(id, amount, paymentMode, referenceNumber, user.id),
     onSuccess: () => {
       queryClient.invalidateQueries(['vendorBills'])
-      setShowPaymentModal(false)
-      setEditingBill(null)
+      closePaymentModal(true)
+    },
+  })
+
+  const { initiatePayment, isLoading: isRazorpayLoading } = useRazorpay({
+    onSuccess: () => {
+      queryClient.invalidateQueries(['vendorBills'])
+      closePaymentModal(true)
+      toast.success('Online payment completed successfully')
+    },
+    onError: (error) => {
+      toast.error(error?.description || error?.message || 'Online payment failed')
     },
   })
 
@@ -124,6 +148,66 @@ export default function VendorBills() {
     })
   }
 
+  const handleOnlinePayment = (bill) => {
+    const balance = Number(bill.pendingAmount || (bill.amount - (bill.paidAmount || 0)) || 0)
+    if (balance <= 0) {
+      toast.info('This bill is already fully paid')
+      return
+    }
+    initiatePayment({
+      amount: balance,
+      vendorBillId: bill.id,
+      userId: user.id,
+      description: `Vendor Bill - ${bill.billNumber || `#${bill.id}`} - ${bill.vendorName || 'Vendor'}`,
+      paymentType: 'VENDOR_BILL',
+      prefill: {
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+      },
+    })
+  }
+
+  const handleDownloadReceipt = async (bill) => {
+    try {
+      setIsDownloadingReceiptId(bill.id)
+      const response = await vendorBillApi.downloadReceiptPdf(bill.id, user.id)
+      const blob = new Blob([response.data], { type: 'application/pdf' })
+      const objectUrl = window.URL.createObjectURL(blob)
+      const anchor = document.createElement('a')
+      anchor.href = objectUrl
+      anchor.download = `vendor-receipt-${bill.billNumber || bill.id}.pdf`
+      document.body.appendChild(anchor)
+      anchor.click()
+      document.body.removeChild(anchor)
+      window.URL.revokeObjectURL(objectUrl)
+      toast.success('Receipt downloaded successfully')
+    } catch (error) {
+      toast.error(error?.response?.data?.message || 'Failed to download receipt PDF')
+    } finally {
+      setIsDownloadingReceiptId(null)
+    }
+  }
+
+  const handleExport = async () => {
+    if (!effectiveSocietyId) {
+      toast.error('Society context is required for export')
+      return
+    }
+
+    setIsExporting(true)
+    try {
+      const response = await exportApi.vendorBills(effectiveSocietyId, null, null)
+      const datePart = new Date().toISOString().split('T')[0]
+      downloadBlob(response.data, `vendor_bills_${datePart}.xlsx`)
+      toast.success('Vendor bills exported successfully')
+    } catch (error) {
+      toast.error(error?.response?.data?.message || 'Failed to export vendor bills')
+    } finally {
+      setIsExporting(false)
+    }
+  }
+
   const showSkeleton = useMinLoadingTime(isLoading || isError)
 
   if (showSkeleton) return (
@@ -144,17 +228,29 @@ export default function VendorBills() {
             <InfoTooltip text="Track vendor invoices and payments" />
           </div>
         </div>
-        {canManageVendorBills() && (
+        <div className="flex flex-wrap gap-3">
           <NeonSweepButton
-            tone="violet"
+            tone="slate"
             size="md"
-            onClick={() => { setEditingBill(null); setShowModal(true) }}
+            onClick={handleExport}
+            disabled={isExporting}
             className="w-full sm:w-auto"
           >
-            <Plus size={20} />
-            Add Bill
+            <FileSpreadsheet size={20} />
+            {isExporting ? 'Exporting...' : 'Export XLSX'}
           </NeonSweepButton>
-        )}
+          {canManageVendorBills() && (
+            <NeonSweepButton
+              tone="violet"
+              size="md"
+              onClick={() => { setEditingBill(null); setShowModal(true) }}
+              className="w-full sm:w-auto"
+            >
+              <Plus size={20} />
+              Add Bill
+            </NeonSweepButton>
+          )}
+        </div>
       </div>
 
       {/* Filters */}
@@ -184,27 +280,27 @@ export default function VendorBills() {
       </div>
 
       {/* Table */}
-      <div className="bg-[var(--bg-card)] border border-[var(--border-light)] rounded-2xl overflow-hidden shadow-sm">
+      <div className="rounded-[18px] border border-[color-mix(in_srgb,var(--border-default)_82%,#94a3b8_18%)] bg-[var(--bg-card)] shadow-[0_14px_34px_rgba(15,23,42,0.08)] overflow-hidden">
         {(
           <div className="overflow-x-auto">
             <table className="w-full border-collapse">
-              <thead className="bg-[var(--bg-tertiary)] border-b border-[var(--border-light)]">
+              <thead className="bg-[linear-gradient(180deg,color-mix(in_srgb,var(--bg-tertiary)_88%,#dbeafe_12%),color-mix(in_srgb,var(--bg-card)_94%,#e2e8f0_6%))] border-b border-[var(--border-light)]">
                 <tr>
-                  <th className="text-left px-6 py-3 text-xs uppercase tracking-[0.08em] text-[var(--text-tertiary)]">Vendor</th>
-                  <th className="text-left px-6 py-3 text-xs uppercase tracking-[0.08em] text-[var(--text-tertiary)]">Bill #</th>
-                  <th className="text-left px-6 py-3 text-xs uppercase tracking-[0.08em] text-[var(--text-tertiary)]">Amount</th>
-                  <th className="text-left px-6 py-3 text-xs uppercase tracking-[0.08em] text-[var(--text-tertiary)]">Paid</th>
-                  <th className="text-left px-6 py-3 text-xs uppercase tracking-[0.08em] text-[var(--text-tertiary)]">Pending</th>
-                  <th className="text-left px-6 py-3 text-xs uppercase tracking-[0.08em] text-[var(--text-tertiary)]">Due Date</th>
-                  <th className="text-left px-6 py-3 text-xs uppercase tracking-[0.08em] text-[var(--text-tertiary)]">Status</th>
-                  <th className="text-right px-6 py-3 text-xs uppercase tracking-[0.08em] text-[var(--text-tertiary)]">Actions</th>
+                  <th className="text-left px-6 py-4 text-xs font-extrabold uppercase tracking-[0.1em] text-[var(--text-primary)]">Vendor</th>
+                  <th className="text-left px-6 py-4 text-xs font-extrabold uppercase tracking-[0.1em] text-[var(--text-primary)]">Bill #</th>
+                  <th className="text-left px-6 py-4 text-xs font-extrabold uppercase tracking-[0.1em] text-[var(--text-primary)]">Amount</th>
+                  <th className="text-left px-6 py-4 text-xs font-extrabold uppercase tracking-[0.1em] text-[var(--text-primary)]">Paid</th>
+                  <th className="text-left px-6 py-4 text-xs font-extrabold uppercase tracking-[0.1em] text-[var(--text-primary)]">Pending</th>
+                  <th className="text-left px-6 py-4 text-xs font-extrabold uppercase tracking-[0.1em] text-[var(--text-primary)]">Due Date</th>
+                  <th className="text-left px-6 py-4 text-xs font-extrabold uppercase tracking-[0.1em] text-[var(--text-primary)]">Status</th>
+                  <th className="text-right px-6 py-4 text-xs font-extrabold uppercase tracking-[0.1em] text-[var(--text-primary)]">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredBills.map((bill) => {
                   const StatusIcon = statusIcons[bill.status] || Clock
                   return (
-                    <tr key={bill.id} className="hover:bg-[var(--bg-tertiary)] transition-colors">
+                    <tr key={bill.id} className="border-b border-[color-mix(in_srgb,var(--border-light)_80%,transparent)] last:border-b-0 hover:bg-[color-mix(in_srgb,var(--bg-tertiary)_70%,#e2e8f0_30%)] transition-colors">
                       <td className="px-6 py-4 whitespace-nowrap text-[var(--text-primary)]">
                         <div className="flex items-center gap-3">
                           <div className="w-8 h-8 rounded-[10px] bg-orange-50 inline-flex items-center justify-center">
@@ -213,7 +309,7 @@ export default function VendorBills() {
                           <span className="font-semibold">{bill.vendorName}</span>
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-[var(--text-tertiary)]">{bill.billNumber}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-[var(--text-primary)]">{bill.billNumber}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-[var(--text-primary)] font-semibold">₹{bill.amount?.toLocaleString()}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-[var(--text-tertiary)]">₹{bill.paidAmount?.toLocaleString() || 0}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-[var(--text-primary)]">
@@ -236,12 +332,21 @@ export default function VendorBills() {
                       <td className="px-6 py-4 whitespace-nowrap text-right">
                         {bill.status !== 'PAID' && (
                           <button
-                            onClick={() => { setEditingBill(bill); setShowPaymentModal(true) }}
-                            className="px-2 py-1 text-xs rounded-lg border border-transparent bg-green-100 text-green-700 mr-2 hover:bg-green-200 transition-colors"
+                            onClick={() => handleOnlinePayment(bill)}
+                            disabled={isRazorpayLoading}
+                            className="px-2 py-1 text-xs rounded-lg border border-transparent bg-green-100 text-green-700 mr-2 hover:bg-green-200 disabled:opacity-60 transition-colors"
                           >
-                            Pay
+                            {isRazorpayLoading ? 'Paying...' : 'Pay'}
                           </button>
                         )}
+                        <button
+                          onClick={() => handleDownloadReceipt(bill)}
+                          disabled={isDownloadingReceiptId === bill.id || (!bill.paidAmount || Number(bill.paidAmount) <= 0)}
+                          className="inline-flex items-center justify-center p-1.5 rounded-lg bg-transparent border-none text-[var(--text-tertiary)] hover:text-blue-600 disabled:opacity-40 transition-colors"
+                          title="Download receipt PDF"
+                        >
+                          <Download size={18} />
+                        </button>
                         <button
                           onClick={async () => {
                             const confirmed = await confirmDialog({
@@ -281,7 +386,7 @@ export default function VendorBills() {
           <div className="w-full max-w-[420px] bg-[var(--bg-card)] rounded-2xl shadow-[0_24px_60px_rgba(15,23,42,0.2)]">
             <div className="flex items-center justify-between p-4 border-b border-[var(--border-light)]">
               <h3 className="text-lg font-semibold text-[var(--text-primary)]">Add Vendor Bill</h3>
-              <button onClick={() => setShowModal(false)} className="border-none bg-transparent text-[var(--text-tertiary)] p-1 rounded-lg hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-primary)]">
+              <button onClick={() => closeCreateModal()} className="border-none bg-transparent text-[var(--text-tertiary)] p-1 rounded-lg hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-primary)]">
                 <X size={20} />
               </button>
             </div>
@@ -352,7 +457,7 @@ export default function VendorBills() {
                   type="button"
                   tone="slate"
                   size="md"
-                  onClick={() => setShowModal(false)}
+                  onClick={() => closeCreateModal()}
                   className="flex-1"
                 >
                   Cancel
@@ -378,7 +483,7 @@ export default function VendorBills() {
           <div className="w-full max-w-[420px] bg-[var(--bg-card)] rounded-2xl shadow-[0_24px_60px_rgba(15,23,42,0.2)]">
             <div className="flex items-center justify-between p-4 border-b border-[var(--border-light)]">
               <h3 className="text-lg font-semibold text-[var(--text-primary)]">Record Payment</h3>
-              <button onClick={() => setShowPaymentModal(false)} className="border-none bg-transparent text-[var(--text-tertiary)] p-1 rounded-lg hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-primary)]">
+              <button onClick={() => closePaymentModal()} className="border-none bg-transparent text-[var(--text-tertiary)] p-1 rounded-lg hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-primary)]">
                 <X size={20} />
               </button>
             </div>
@@ -410,6 +515,7 @@ export default function VendorBills() {
                   <option value="CASH">Cash</option>
                   <option value="CHEQUE">Cheque</option>
                   <option value="ONLINE">Online Transfer</option>
+                  <option value="RAZORPAY">Razorpay</option>
                 </select>
               </div>
               <div>
@@ -425,7 +531,7 @@ export default function VendorBills() {
                   type="button"
                   tone="slate"
                   size="md"
-                  onClick={() => setShowPaymentModal(false)}
+                  onClick={() => closePaymentModal()}
                   className="flex-1"
                 >
                   Cancel

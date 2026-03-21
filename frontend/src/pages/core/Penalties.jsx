@@ -70,7 +70,7 @@ export default function Penalties() {
 
   const saveMutation = useMutation({
     mutationFn: (data) => editingId ? penaltyApi.update(editingId, userId, data) : penaltyApi.create(userId, data),
-    onSuccess: () => { toast.success(editingId ? 'Updated' : 'Penalty issued'); invalidate(); closeModal() },
+    onSuccess: () => { toast.success(editingId ? 'Updated' : 'Penalty issued'); invalidate(); closeModal(true) },
     onError: () => toast.error('Failed to save'),
   })
   const payMut = useMutation({ mutationFn: (id) => penaltyApi.markPaid(id, userId), onSuccess: () => { toast.success('Marked paid'); invalidate() } })
@@ -89,7 +89,12 @@ export default function Penalties() {
     return list
   }, [penalties, statusFilter, typeFilter, search])
 
-  const closeModal = () => { setShowModal(false); setEditingId(null); setForm(emptyForm) }
+  const closeModal = (force = false) => {
+    if (!force && saveMutation.isPending) return
+    setShowModal(false)
+    setEditingId(null)
+    setForm(emptyForm)
+  }
 
   const openEdit = (p) => {
     setEditingId(p.id)

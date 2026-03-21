@@ -24,10 +24,10 @@ The platform operates using a **multi-level role hierarchy** that separates:
 | 💰 **TREASURER** | Finance Governance | Financial View, Tickets, Notices |
 | 👥 **COMMITTEE** | Limited Governance | Tickets Dashboard, Meeting Attendance |
 | 👨‍🔧 **EMPLOYEE** | Operational Staff | Profile Records |
-| 🏠 **MEMBER** | Flat Owner | Profile, Tickets, Notices, Vehicles, Penalty Records |
-| 🛠 **VENDOR** | Service Provider | AMC Records, Payment Logs |
-| 🧍 **TENANT** | Resident (Limited) | Visitor Entry, Notices, Rental Info |
-| 🚶 **VISITOR** | Guest | Entry Logs |
+| 🏠 **MEMBER** | Flat Owner | Ownership/occupancy records, tickets, notices, vehicles, penalty evidence records |
+| 🛠 **VENDOR** | Service Provider | AMC/vendor details, contract value/renewals, service logs, payment records/history |
+| 🧍 **TENANT** | Resident (Limited) | Owner-approved requests, visitor permissions, notices, tenancy and vehicle records |
+| 🚶 **VISITOR** | Guest | Security-entered entry logs with member approval workflow |
 
 ---
 

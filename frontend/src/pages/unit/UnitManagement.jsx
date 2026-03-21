@@ -12,7 +12,7 @@ import {
 } from 'lucide-react'
 import clsx from 'clsx'
 import { validateFlatForm, validateUserForm, parseApiError } from '../../utils'
-import { SmartSelect, FormInput, NumberInput, PhoneInput, FormErrorSummary, InfoTooltip, NeonSweepButton } from '../../components'
+import { SmartSelect, FormInput, NumberInput, PhoneInput, FormErrorSummary, InfoTooltip, NeonSweepButton, PaginationControls } from '../../components'
 import { BulkImportModal as SharedBulkImportModal } from '../../components'
 import { HeroSkeleton, TabsSkeleton, FiltersSkeleton, CardGridSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
 import useMinLoadingTime from '../../hooks/useMinLoadingTime'
@@ -119,6 +119,10 @@ export default function UnitManagement() {
   const [searchTerm, setSearchTerm] = useState('')
   const filterType = unitTypeFromUrl || ''
   const [viewMode, setViewMode] = useState('units') // 'units' or 'table'
+  const [unitPage, setUnitPage] = useState(1)
+  const [unitPageSize, setUnitPageSize] = useState(12)
+  const [tabUsersPage, setTabUsersPage] = useState(1)
+  const [tabUsersPageSize, setTabUsersPageSize] = useState(10)
   
   // Form states
   const [unitFormErrors, setUnitFormErrors] = useState({})
@@ -236,14 +240,50 @@ export default function UnitManagement() {
     })
   }, [flats, searchTerm, filterType, unitUserMap])
 
+  const paginatedUnits = useMemo(() => {
+    const start = (unitPage - 1) * unitPageSize
+    return filteredUnits.slice(start, start + unitPageSize)
+  }, [filteredUnits, unitPage, unitPageSize])
+
+  function closeUnitModal(force = false) {
+    if (!force && (createUnitMutation.isPending || updateUnitMutation.isPending || createWingMutation.isPending)) return
+    setShowUnitModal(false)
+    setEditingUnit(null)
+    setUnitFormErrors({})
+    setApiError('')
+  }
+
+  function closeUserModal(force = false) {
+    if (!force && createUserMutation.isPending) return
+    setShowUserModal(false)
+    setSelectedUnit(null)
+    setUserFormErrors({})
+    setApiError('')
+  }
+
+  function closeEditUserModal(force = false) {
+    if (!force && updateUserMutation.isPending) return
+    setShowEditUserModal(false)
+    setEditingUser(null)
+    setSelectedUnit(null)
+    setUserFormErrors({})
+    setApiError('')
+  }
+
+  function closeStandaloneUserModal(force = false) {
+    if (!force && standaloneUpdateUserMutation.isPending) return
+    setShowStandaloneUserModal(false)
+    setEditingStandaloneUser(null)
+    setShowStandalonePassword(false)
+    setUserError('')
+  }
+
   // Unit CRUD mutations
   const createUnitMutation = useMutation({
     mutationFn: (data) => flatApi.create(data, user.id),
     onSuccess: () => {
       queryClient.invalidateQueries(['flats'])
-      setShowUnitModal(false)
-      setUnitFormErrors({})
-      setApiError('')
+      closeUnitModal(true)
     },
     onError: (err) => {
       setApiError(parseApiError(err))
@@ -254,10 +294,7 @@ export default function UnitManagement() {
     mutationFn: ({ id, data }) => flatApi.update(id, data, user.id),
     onSuccess: () => {
       queryClient.invalidateQueries(['flats'])
-      setShowUnitModal(false)
-      setEditingUnit(null)
-      setUnitFormErrors({})
-      setApiError('')
+      closeUnitModal(true)
     },
     onError: (err) => {
       setApiError(parseApiError(err))
@@ -285,9 +322,7 @@ export default function UnitManagement() {
     mutationFn: (data) => userApi.create(data),
     onSuccess: () => {
       queryClient.invalidateQueries(['users'])
-      setShowUserModal(false)
-      setUserFormErrors({})
-      setApiError('')
+      closeUserModal(true)
     },
     onError: (err) => {
       setApiError(parseApiError(err))
@@ -298,11 +333,8 @@ export default function UnitManagement() {
     mutationFn: ({ id, data }) => userApi.update(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries(['users'])
-      setShowUserModal(false)
-      setShowEditUserModal(false)
-      setEditingUser(null)
-      setUserFormErrors({})
-      setApiError('')
+      closeUserModal(true)
+      closeEditUserModal(true)
       showToast('User updated successfully', 'success')
     },
     onError: (err) => {
@@ -372,10 +404,7 @@ export default function UnitManagement() {
     onSuccess: () => {
       queryClient.invalidateQueries(['users'])
       queryClient.invalidateQueries(['flats'])
-      setShowStandaloneUserModal(false)
-      setEditingStandaloneUser(null)
-      setShowStandalonePassword(false)
-      setUserError('')
+      closeStandaloneUserModal(true)
       showToast('User updated successfully', 'success')
     },
     onError: (err) => {
@@ -434,6 +463,19 @@ export default function UnitManagement() {
       return matchesSearch && matchesRole
     })
   }, [scopedUsers, userSearchTerm, filterRole])
+
+  const paginatedTabUsers = useMemo(() => {
+    const start = (tabUsersPage - 1) * tabUsersPageSize
+    return filteredTabUsers.slice(start, start + tabUsersPageSize)
+  }, [filteredTabUsers, tabUsersPage, tabUsersPageSize])
+
+  useEffect(() => {
+    setUnitPage(1)
+  }, [searchTerm, filterType, activeTab])
+
+  useEffect(() => {
+    setTabUsersPage(1)
+  }, [userSearchTerm, filterRole, filterSociety, activeTab])
 
   const societyOptions = useMemo(() => {
     return societies
@@ -643,14 +685,12 @@ export default function UnitManagement() {
   const handleUserSubmit = (e) => {
     e.preventDefault()
     const formData = new FormData(e.target)
-    
-    // Default password = flat number padded to meet minimum length requirement
-    const defaultPassword = selectedUnit?.flatNumber?.padEnd(6, '123456') || '123456'
+    const passwordValue = (formData.get('password') || '').toString().trim()
     
     const data = {
       name: formData.get('name'),
       email: formData.get('email'),
-      password: formData.get('password') || defaultPassword,
+      password: passwordValue,
       role: formData.get('role') || 'MEMBER',
       phone: formData.get('phone'),
       societyId: effectiveSocietyId,
@@ -671,10 +711,12 @@ export default function UnitManagement() {
   const handleEditUserSubmit = (e) => {
     e.preventDefault()
     const formData = new FormData(e.target)
+    const passwordValue = (formData.get('password') || '').toString().trim()
     
     const data = {
       name: formData.get('name'),
       email: formData.get('email'),
+      password: passwordValue ? passwordValue : undefined,
       role: formData.get('role') || 'MEMBER',
       phone: formData.get('phone'),
       societyId: effectiveSocietyId,
@@ -817,7 +859,7 @@ export default function UnitManagement() {
   return (
     <div>
       {/* Header */}
-      <div className="flex flex-col items-start gap-4 mb-6 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col items-start gap-4 mb-6 sm:flex-row sm:items-center sm:justify-between max-[360px]:mb-4 max-[360px]:gap-2.5">
         <div>
           <h1 className="inline-flex items-center gap-2 text-2xl font-bold text-[var(--text-primary)]">
             <Home className="text-[var(--text-secondary)]" />
@@ -921,7 +963,7 @@ export default function UnitManagement() {
       {activeTab === 'units' && (
       <>
       {/* Stats Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-[0.85rem] mb-6">
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-[0.85rem] mb-6 max-[360px]:mb-4 max-[360px]:gap-2">
         <StatCard label="Total Units" value={stats.totalUnits} icon={Layers} color="blue" />
         <StatCard label="Flats" value={`${stats.flats}/${stats.maxFlats}`} icon={Home} color="indigo" />
         <StatCard label="Shops" value={`${stats.shops}/${stats.maxShops}`} icon={Store} color="green" />
@@ -945,7 +987,7 @@ export default function UnitManagement() {
       )}
 
       {/* Filters */}
-      <div className="p-[0.9rem] rounded-[14px] bg-[var(--bg-card)] border border-[var(--border-default)] shadow-[var(--shadow-sm)] mb-6 dark:border-[rgba(148,163,184,0.22)] dark:shadow-[0_10px_22px_rgba(2,6,23,0.45)]">
+      <div className="p-[0.9rem] rounded-[14px] bg-[var(--bg-card)] border border-[var(--border-default)] shadow-[var(--shadow-sm)] mb-6 max-[360px]:mb-4 max-[360px]:p-3 dark:border-[rgba(148,163,184,0.22)] dark:shadow-[0_10px_22px_rgba(2,6,23,0.45)]">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 w-5 h-5 -translate-y-1/2 text-[var(--text-tertiary)]" />
@@ -1011,7 +1053,7 @@ export default function UnitManagement() {
       {viewMode === 'units' ? (
         /* Card View */
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredUnits.map((unit) => {
+          {paginatedUnits.map((unit) => {
             const UnitIcon = getUnitIcon(unit.unitType)
             const unitColor = getUnitColor(unit.unitType)
             const assignedUser = unitUserMap[unit.id]?.member
@@ -1020,7 +1062,7 @@ export default function UnitManagement() {
             const isOccupied = !!assignedUser || !!linkedTenant
             
             return (
-              <div key={unit.id} className="p-[1.15rem] rounded-[14px] bg-[var(--bg-card)] border border-[var(--border-default)] shadow-[var(--shadow-sm)] transition-all duration-200 hover:-translate-y-px hover:shadow-[var(--shadow-md)] dark:border-[rgba(148,163,184,0.22)] dark:shadow-[0_10px_22px_rgba(2,6,23,0.45)]">
+              <div key={unit.id} className="p-[1.15rem] rounded-[14px] bg-[var(--bg-card)] border border-[var(--border-default)] shadow-[var(--shadow-sm)] dark:border-[rgba(148,163,184,0.22)] dark:shadow-[0_10px_22px_rgba(2,6,23,0.45)]">
                 {/* Unit Header */}
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex items-center gap-3">
@@ -1206,7 +1248,7 @@ export default function UnitManagement() {
                 </tr>
               </thead>
               <tbody>
-                {filteredUnits.map((unit) => {
+                {paginatedUnits.map((unit) => {
                   const UnitIcon = getUnitIcon(unit.unitType)
                   const assignedUser = unitUserMap[unit.id]?.member
                   const linkedTenant = unitUserMap[unit.id]?.tenant
@@ -1339,6 +1381,17 @@ export default function UnitManagement() {
           </div>
         </div>
       )}
+
+      <PaginationControls
+        totalItems={filteredUnits.length}
+        currentPage={unitPage}
+        pageSize={unitPageSize}
+        onPageChange={setUnitPage}
+        onPageSizeChange={(nextSize) => {
+          setUnitPageSize(nextSize)
+          setUnitPage(1)
+        }}
+      />
       </>
       )}
 
@@ -1391,7 +1444,7 @@ export default function UnitManagement() {
         )}
 
         {/* User Filters */}
-        <div className="p-[0.9rem] rounded-[14px] bg-[var(--bg-card)] border border-[var(--border-default)] shadow-[var(--shadow-sm)] mb-6 dark:border-[rgba(148,163,184,0.22)] dark:shadow-[0_10px_22px_rgba(2,6,23,0.45)]">
+        <div className="p-[0.9rem] rounded-[14px] bg-[var(--bg-card)] border border-[var(--border-default)] shadow-[var(--shadow-sm)] mb-6 max-[360px]:mb-4 max-[360px]:p-3 dark:border-[rgba(148,163,184,0.22)] dark:shadow-[0_10px_22px_rgba(2,6,23,0.45)]">
           <div className="flex flex-col gap-[0.85rem] sm:flex-row sm:items-center">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 w-5 h-5 -translate-y-1/2 text-[var(--text-tertiary)]" />
@@ -1443,7 +1496,8 @@ export default function UnitManagement() {
               <p className="text-[#64748b] dark:text-[#94a3b8]">No users found</p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
+            <>
+            <div className="hidden overflow-x-auto lg:block">
               <table className="w-full">
                 <thead className="border-b border-[var(--border-default)] dark:border-b-[rgba(148,163,184,0.16)]" style={{ background: 'linear-gradient(90deg, color-mix(in srgb, var(--bg-tertiary) 88%, transparent) 0%, color-mix(in srgb, var(--bg-secondary) 92%, transparent) 100%)' }}>
                   <tr>
@@ -1456,7 +1510,7 @@ export default function UnitManagement() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredTabUsers.map((u) => {
+                  {paginatedTabUsers.map((u) => {
                     const canEdit = u.id === user?.id || updatableRoles.includes(u.role)
                     const canDelete = u.role !== 'MASTER_ADMIN' && u.id !== user?.id && updatableRoles.includes(u.role)
                     const isSelf = u.id === user?.id
@@ -1533,6 +1587,74 @@ export default function UnitManagement() {
                 </tbody>
               </table>
             </div>
+            <div className="divide-y divide-[var(--border-light)] lg:hidden">
+              {paginatedTabUsers.map((u) => {
+                const canEdit = u.id === user?.id || updatableRoles.includes(u.role)
+                const canDelete = u.role !== 'MASTER_ADMIN' && u.id !== user?.id && updatableRoles.includes(u.role)
+                const isSelf = u.id === user?.id
+                const userFlat = flats.find(f => f.id === u.flatId)
+
+                return (
+                  <div key={u.id} className="p-3 sm:p-4 max-[360px]:p-2.5">
+                    <div className="mb-2 flex items-start justify-between gap-3">
+                      <div className="flex min-w-0 items-center gap-2.5">
+                        <div className="w-[34px] h-[34px] rounded-full grid place-items-center" style={{ background: 'linear-gradient(135deg, rgba(100,116,139,0.70) 0%, rgba(30,41,59,0.90) 100%)' }}>
+                          <span className="text-[13px] font-[650] text-white/95">{u.name?.charAt(0)?.toUpperCase()}</span>
+                        </div>
+                        <div className="min-w-0">
+                          <p className="truncate text-[13px] font-[650] text-[var(--text-primary)] max-[360px]:text-xs">{u.name}</p>
+                          <p className="truncate text-[11px] text-[var(--text-secondary)]">{u.email}</p>
+                        </div>
+                      </div>
+                      {isSelf && (
+                        <span className="text-[10px] py-[2px] px-2 rounded-full border text-[var(--text-secondary)]" style={{ borderColor: 'color-mix(in srgb, var(--border-light) 70%, transparent)' }}>You</span>
+                      )}
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-1.5 text-[11px] sm:text-xs">
+                      <p className="text-[var(--text-secondary)]">Role</p>
+                      <p className="text-right text-[var(--text-primary)]">{u.role?.replace(/_/g, ' ')}</p>
+                      <p className="text-[var(--text-secondary)]">Property</p>
+                      <p className="text-right text-[var(--text-primary)]">{userFlat ? `${userFlat.flatNumber}${userFlat.wingName ? ` (${userFlat.wingName})` : ''}` : '-'}</p>
+                      <p className="text-[var(--text-secondary)]">Phone</p>
+                      <p className="text-right text-[var(--text-primary)]">{u.phone || '-'}</p>
+                    </div>
+
+                    <div className="mt-3 flex justify-end gap-2">
+                      {canEdit ? (
+                        <button
+                          onClick={() => handleOpenStandaloneUserModal(u)}
+                          className="appearance-none w-[30px] h-[30px] inline-flex items-center justify-center p-[6px] rounded-lg border bg-transparent text-[var(--text-secondary)]"
+                          style={{ borderColor: 'color-mix(in srgb, var(--border-light) 78%, transparent)' }}
+                          title={isSelf ? 'Edit your profile' : 'Edit user'}
+                        >
+                          <Edit size={16} />
+                        </button>
+                      ) : (
+                        <button disabled className="appearance-none w-[30px] h-[30px] inline-flex items-center justify-center p-[6px] rounded-lg border bg-transparent text-[var(--text-secondary)] opacity-50 cursor-not-allowed" style={{ borderColor: 'color-mix(in srgb, var(--border-light) 78%, transparent)' }} title="No permission to edit">
+                          <Edit size={16} />
+                        </button>
+                      )}
+                      {canDelete ? (
+                        <button
+                          onClick={() => confirmAndDeleteUser(u, { userFlat })}
+                          className="appearance-none w-[30px] h-[30px] inline-flex items-center justify-center p-[6px] rounded-lg border bg-transparent text-[var(--text-secondary)]"
+                          style={{ borderColor: 'color-mix(in srgb, var(--border-light) 78%, transparent)' }}
+                          title="Delete user"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      ) : (
+                        <button disabled className="appearance-none w-[30px] h-[30px] inline-flex items-center justify-center p-[6px] rounded-lg border bg-transparent text-[var(--text-secondary)] opacity-50 cursor-not-allowed" style={{ borderColor: 'color-mix(in srgb, var(--border-light) 78%, transparent)' }} title={isSelf ? 'Cannot delete yourself' : 'No permission'}>
+                          <Trash2 size={16} />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+            </>
           )}
         </div>
 
@@ -1542,7 +1664,7 @@ export default function UnitManagement() {
             <div className="w-full max-w-[28rem] max-h-[90vh] overflow-y-auto rounded-2xl bg-[var(--bg-card)] border border-[var(--border-light)] shadow-[0_24px_48px_rgba(15,23,42,0.24)]">
               <div className="sticky top-0 flex items-center justify-between p-4 px-5 border-b border-[var(--border-light)] bg-[var(--bg-card)] z-[1]">
                 <h3 className="text-[1.1rem] font-semibold text-[var(--text-primary)]">Edit User</h3>
-                <button onClick={() => { setShowStandaloneUserModal(false); setUserError(''); setShowStandalonePassword(false); }} className="p-[0.35rem] rounded-[0.6rem] text-[var(--text-tertiary)] hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-primary)]">
+                <button onClick={() => closeStandaloneUserModal()} className="p-[0.35rem] rounded-[0.6rem] text-[var(--text-tertiary)] hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-primary)]">
                   <X size={20} />
                 </button>
               </div>
@@ -1608,7 +1730,7 @@ export default function UnitManagement() {
                 <PhoneInput label="Phone" name="phone" defaultValue={editingStandaloneUser?.phone} required />
                 
                 <div className="flex gap-3 pt-3 border-t border-[var(--border-light)]">
-                  <NeonSweepButton type="button" tone="slate" size="md" onClick={() => { setShowStandaloneUserModal(false); setUserError(''); setShowStandalonePassword(false); }} className="flex-1">
+                  <NeonSweepButton type="button" tone="slate" size="md" onClick={() => closeStandaloneUserModal()} className="flex-1">
                     Cancel
                   </NeonSweepButton>
                   <NeonSweepButton
@@ -1696,6 +1818,17 @@ export default function UnitManagement() {
                   <div>
                     <div className="grid grid-cols-3 gap-3 mb-4">
                       <div className="rounded-lg p-3 text-center bg-[rgba(22,163,74,0.10)]">
+
+              <PaginationControls
+                totalItems={filteredTabUsers.length}
+                currentPage={tabUsersPage}
+                pageSize={tabUsersPageSize}
+                onPageChange={setTabUsersPage}
+                onPageSizeChange={(nextSize) => {
+                  setTabUsersPageSize(nextSize)
+                  setTabUsersPage(1)
+                }}
+              />
                         <p className="text-2xl font-bold leading-tight text-[var(--text-primary)]">{bulkImportPreview.validCount || 0}</p>
                         <p className="text-xs text-[var(--text-secondary)]">Valid</p>
                       </div>
@@ -1790,10 +1923,7 @@ export default function UnitManagement() {
           apiError={apiError}
           onSubmit={handleUnitSubmit}
           onClose={() => {
-            setShowUnitModal(false)
-            setEditingUnit(null)
-            setUnitFormErrors({})
-            setApiError('')
+            closeUnitModal()
           }}
           isLoading={createUnitMutation.isPending || updateUnitMutation.isPending || createWingMutation.isPending}
         />
@@ -1808,10 +1938,7 @@ export default function UnitManagement() {
           apiError={apiError}
           onSubmit={handleUserSubmit}
           onClose={() => {
-            setShowUserModal(false)
-            setSelectedUnit(null)
-            setUserFormErrors({})
-            setApiError('')
+            closeUserModal()
           }}
           isLoading={createUserMutation.isPending}
         />
@@ -1827,11 +1954,7 @@ export default function UnitManagement() {
           apiError={apiError}
           onSubmit={handleEditUserSubmit}
           onClose={() => {
-            setShowEditUserModal(false)
-            setEditingUser(null)
-            setSelectedUnit(null)
-            setUserFormErrors({})
-            setApiError('')
+            closeEditUserModal()
           }}
           isLoading={updateUserMutation.isPending}
         />
@@ -1888,7 +2011,7 @@ function StatCard({ label, value, icon: Icon, color }) {
   }
   
   return (
-    <div className="p-4 rounded-[14px] bg-[var(--bg-card)] border border-[var(--border-light)] shadow-[var(--shadow-sm)] transition-all duration-200 hover:-translate-y-px hover:shadow-[var(--shadow-md)] dark:border-[rgba(148,163,184,0.22)] dark:shadow-[0_10px_22px_rgba(2,6,23,0.45)]">
+    <div className="p-4 rounded-[14px] bg-[var(--bg-card)] border border-[var(--border-light)] shadow-[var(--shadow-sm)] dark:border-[rgba(148,163,184,0.22)] dark:shadow-[0_10px_22px_rgba(2,6,23,0.45)]">
       <div className="flex items-center gap-3">
         <div className={clsx('w-8 h-8 rounded-xl flex items-center justify-center', colorClasses[color])}>
           <Icon className="w-4 h-4" />
@@ -2462,6 +2585,8 @@ function UnitFormModal({ unit, flats, societies, wings, currentSociety, hasWings
 
 // User Form Modal for linking user to unit
 function UserFormModal({ unit, roleOptions, errors, apiError, onSubmit, onClose, isLoading }) {
+  const [showPassword, setShowPassword] = useState(false)
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[rgba(15,23,42,0.6)]">
       <div className="w-full max-w-[28rem] max-h-[90vh] overflow-y-auto rounded-2xl bg-[var(--bg-card)] border border-[var(--border-light)] shadow-[0_24px_48px_rgba(15,23,42,0.24)]">
@@ -2478,10 +2603,6 @@ function UserFormModal({ unit, roleOptions, errors, apiError, onSubmit, onClose,
         {apiError && <div className="px-5 pt-3"><FormErrorSummary message={apiError} /></div>}
 
         <form onSubmit={onSubmit} className="p-5 flex flex-col gap-4">
-          <div className="p-3 rounded-xl text-[0.85rem] text-[var(--text-secondary)]" style={{ background: 'color-mix(in srgb, var(--bg-tertiary) 85%, transparent)' }}>
-            <p><strong>Default Password:</strong> {unit.flatNumber?.padEnd(6, '123456') || '123456'}</p>
-            <p className="text-xs text-[var(--text-tertiary)] mt-1">User can change password after login</p>
-          </div>
 
           <FormInput
             label="Name"
@@ -2499,6 +2620,32 @@ function UserFormModal({ unit, roleOptions, errors, apiError, onSubmit, onClose,
             placeholder="email@example.com"
             error={errors.email}
           />
+
+          <div className="flex flex-col gap-1.5 min-w-0">
+            <label htmlFor="unit-user-password" className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-[var(--text-secondary)]">
+              Password
+              <span className="text-red-500 ml-0.5">*</span>
+            </label>
+            <div className="relative min-w-0">
+              <input
+                id="unit-user-password"
+                name="password"
+                type={showPassword ? 'text' : 'password'}
+                required
+                placeholder="Minimum 6 characters"
+                className="w-full rounded-lg border border-[var(--border-default)] bg-[var(--bg-card)] py-2.5 pl-3 pr-11 text-sm text-[var(--text-primary)] outline-none transition placeholder:text-[var(--placeholder-color)] focus:border-blue-500 focus:shadow-[0_0_0_2px_rgba(59,130,246,0.12)]"
+              />
+              <button
+                type="button"
+                className="absolute right-1.5 top-1/2 -translate-y-1/2 inline-flex h-7 w-7 items-center justify-center rounded-md border border-[var(--border-light)] bg-[var(--bg-tertiary)] text-[var(--text-tertiary)] transition hover:text-[var(--text-primary)]"
+                onClick={() => setShowPassword((prev) => !prev)}
+                title={showPassword ? 'Hide password' : 'Show password'}
+              >
+                {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
+              </button>
+            </div>
+            {errors.password && <p className="text-xs text-amber-700">{errors.password}</p>}
+          </div>
 
           <PhoneInput
             label="Phone"
@@ -2543,6 +2690,8 @@ function UserFormModal({ unit, roleOptions, errors, apiError, onSubmit, onClose,
 
 // Edit User Form Modal for editing user linked to unit
 function EditUserFormModal({ user, unit, roleOptions, errors, apiError, onSubmit, onClose, isLoading }) {
+  const [showPassword, setShowPassword] = useState(false)
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[rgba(15,23,42,0.6)]">
       <div className="w-full max-w-[28rem] max-h-[90vh] overflow-y-auto rounded-2xl bg-[var(--bg-card)] border border-[var(--border-light)] shadow-[0_24px_48px_rgba(15,23,42,0.24)]">
@@ -2559,10 +2708,6 @@ function EditUserFormModal({ user, unit, roleOptions, errors, apiError, onSubmit
         {apiError && <div className="px-5 pt-3"><FormErrorSummary message={apiError} /></div>}
 
         <form onSubmit={onSubmit} className="p-5 flex flex-col gap-4">
-          <div className="p-3 rounded-xl bg-[var(--bg-tertiary)] text-[0.85rem]">
-            <p className="text-[var(--text-tertiary)]">User ID: <span className="font-mono text-xs">{user.id}</span></p>
-          </div>
-
           <FormInput
             label="Name"
             name="name"
@@ -2581,6 +2726,30 @@ function EditUserFormModal({ user, unit, roleOptions, errors, apiError, onSubmit
             placeholder="email@example.com"
             error={errors.email}
           />
+
+          <div className="flex flex-col gap-1.5 min-w-0">
+            <label htmlFor="unit-edit-user-password" className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-[var(--text-secondary)]">
+              New Password (optional)
+            </label>
+            <div className="relative min-w-0">
+              <input
+                id="unit-edit-user-password"
+                name="password"
+                type={showPassword ? 'text' : 'password'}
+                placeholder="Leave blank to keep current password"
+                className="w-full rounded-lg border border-[var(--border-default)] bg-[var(--bg-card)] py-2.5 pl-3 pr-11 text-sm text-[var(--text-primary)] outline-none transition placeholder:text-[var(--placeholder-color)] focus:border-blue-500 focus:shadow-[0_0_0_2px_rgba(59,130,246,0.12)]"
+              />
+              <button
+                type="button"
+                className="absolute right-1.5 top-1/2 -translate-y-1/2 inline-flex h-7 w-7 items-center justify-center rounded-md border border-[var(--border-light)] bg-[var(--bg-tertiary)] text-[var(--text-tertiary)] transition hover:text-[var(--text-primary)]"
+                onClick={() => setShowPassword((prev) => !prev)}
+                title={showPassword ? 'Hide password' : 'Show password'}
+              >
+                {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
+              </button>
+            </div>
+            {errors.password && <p className="text-xs text-amber-700">{errors.password}</p>}
+          </div>
 
           <PhoneInput
             label="Phone"

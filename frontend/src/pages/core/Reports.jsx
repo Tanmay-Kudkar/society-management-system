@@ -169,16 +169,18 @@ export default function Reports() {
             <InfoTooltip text="MTD, YTD and custom period financial analysis" />
           </div>
         </div>
-        <NeonSweepButton
-          tone="cyan"
-          size="md"
-          onClick={handleExport}
-          disabled={!societyId || isExporting}
-          className="w-full md:w-auto"
-        >
-          <FileSpreadsheet size={20} />
-          {isExporting ? 'Exporting...' : 'Export to Excel'}
-        </NeonSweepButton>
+        <div className="flex flex-wrap items-center gap-3">
+          <NeonSweepButton
+            tone="slate"
+            size="md"
+            onClick={handleExport}
+            disabled={!societyId || isExporting}
+            className="w-full md:w-auto"
+          >
+            <FileSpreadsheet size={20} />
+            {isExporting ? 'Exporting...' : 'Export XLSX'}
+          </NeonSweepButton>
+        </div>
       </div>
 
       {!invalidUrlSociety && (

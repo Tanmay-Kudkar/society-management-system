@@ -1,6 +1,7 @@
 package com.society.backend.ticket.controller;
 
 import com.society.backend.ticket.dto.request.TicketRequest;
+import com.society.backend.ticket.dto.response.TicketReplyResponse;
 import com.society.backend.ticket.dto.response.TicketResponse;
 import com.society.backend.ticket.service.TicketService;
 import jakarta.validation.Valid;
@@ -58,7 +59,7 @@ public class TicketController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'COMMITTEE', 'MANAGER')")
+    @PreAuthorize("hasAnyRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'MANAGER', 'EMPLOYEE')")
     public ResponseEntity<TicketResponse> update(
             @PathVariable Long id,
             @Valid @RequestBody TicketRequest request,
@@ -67,7 +68,7 @@ public class TicketController {
     }
 
     @PatchMapping("/{id}/status")
-    @PreAuthorize("hasAnyRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'COMMITTEE', 'MANAGER')")
+    @PreAuthorize("hasAnyRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'MANAGER', 'EMPLOYEE')")
     public ResponseEntity<TicketResponse> updateStatus(
             @PathVariable Long id,
             @RequestParam String status,
@@ -76,8 +77,22 @@ public class TicketController {
         return ResponseEntity.ok(ticketService.updateStatus(id, status, resolution, userId));
     }
 
+    @PatchMapping("/{id}/reply")
+    @PreAuthorize("hasAnyRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'MANAGER', 'EMPLOYEE')")
+    public ResponseEntity<TicketResponse> reply(
+            @PathVariable Long id,
+            @RequestParam String message,
+            @RequestParam Long userId) {
+        return ResponseEntity.ok(ticketService.addReply(id, message, userId));
+    }
+
+    @GetMapping("/{id}/replies")
+    public ResponseEntity<List<TicketReplyResponse>> getReplies(@PathVariable Long id) {
+        return ResponseEntity.ok(ticketService.getReplies(id));
+    }
+
     @PatchMapping("/{id}/assign")
-    @PreAuthorize("hasAnyRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'MANAGER')")
+    @PreAuthorize("hasAnyRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'MANAGER')")
     public ResponseEntity<TicketResponse> assign(
             @PathVariable Long id,
             @RequestParam Long assignedToId,
@@ -97,8 +112,9 @@ public class TicketController {
     @PreAuthorize("hasAnyRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY')")
     public ResponseEntity<Void> delete(
             @PathVariable Long id,
-            @RequestParam Long userId) {
-        ticketService.delete(id, userId);
+            @RequestParam Long userId,
+            @RequestParam(defaultValue = "false") boolean force) {
+        ticketService.delete(id, userId, force);
         return ResponseEntity.noContent().build();
     }
 

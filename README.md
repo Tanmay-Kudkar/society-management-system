@@ -117,10 +117,13 @@ Level 2 ── CHAIRMAN           Final approval, bank signatory
 Level 3 ── COMMITTEE          Intermediate management
            MANAGER             Day-to-day operations (no user CRUD)
 Level 4 ── EMPLOYEE           Staff/security — visitors, gate logs
-           MEMBER              Flat owner — own bills, tickets, profile
-Level 5 ── TENANT             Renter — own profile & bills
-           VENDOR              External vendor — own bills, invoices
-Level 6 ── VISITOR            Guest — minimal read-only access
+           MEMBER              Flat owner — ownership/occupancy records, tenant/vehicle mapping,
+                               reminders/notices, and ticket-based issue flow
+Level 5 ── TENANT             Renter — owner-approved requests, visitor permissions,
+                               notices, tenancy and vehicle records
+           VENDOR              AMC/service provider — contract terms, service logs,
+                               payment tracking, and maintenance history
+Level 6 ── VISITOR            Security-entered visitor logs with member approval flow
 ```
 
 **Key rules:**

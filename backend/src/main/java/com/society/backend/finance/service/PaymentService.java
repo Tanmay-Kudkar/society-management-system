@@ -14,11 +14,15 @@ import com.society.backend.finance.repository.MaintenanceBillRepository;
 import com.society.backend.finance.repository.PaymentRepository;
 import com.society.backend.finance.repository.PaymentWebhookEventRepository;
 import com.society.backend.user.repository.UserRepository;
+import com.society.backend.vendor.entity.VendorBill;
+import com.society.backend.vendor.repository.VendorBillRepository;
+import com.society.backend.vendor.service.VendorBillService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.json.JSONObject;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -50,6 +54,8 @@ public class PaymentService {
     private final UserRepository userRepository;
     private final MaintenanceBillRepository maintenanceBillRepository;
     private final MaintenanceBillService maintenanceBillService;
+    private final VendorBillRepository vendorBillRepository;
+    private final VendorBillService vendorBillService;
 
     @Transactional
     public CreateOrderResponse createOrder(CreateOrderRequest request) {
@@ -101,6 +107,15 @@ public class PaymentService {
                     payment.setSociety(bill.getSociety());
                 } else if (bill.getFlat() != null && bill.getFlat().getSociety() != null) {
                     payment.setSociety(bill.getFlat().getSociety());
+                }
+            }
+
+            if (request.getVendorBillId() != null) {
+                VendorBill bill = vendorBillRepository.findById(request.getVendorBillId())
+                        .orElseThrow(() -> new ResourceNotFoundException("Vendor bill not found"));
+                payment.setVendorBill(bill);
+                if (bill.getSociety() != null) {
+                    payment.setSociety(bill.getSociety());
                 }
             }
 
@@ -166,7 +181,7 @@ public class PaymentService {
             }
 
             Payment savedPayment = paymentRepository.save(payment);
-            applyMaintenanceBillPaymentIfNeeded(savedPayment, request.getRazorpayPaymentId());
+            applyLinkedBillPaymentIfNeeded(savedPayment, request.getRazorpayPaymentId());
             return mapToResponse(savedPayment);
 
         } catch (RazorpayException e) {
@@ -181,8 +196,13 @@ public class PaymentService {
 
     @Transactional
     public PaymentResponse handlePaymentFailure(Long paymentId, String errorCode, String errorDescription) {
+        User requester = getAuthenticatedUser();
         Payment payment = paymentRepository.findByIdAndDeletedAtIsNull(paymentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Payment not found"));
+
+        if (!canReadPayment(requester, payment)) {
+            throw new ApiException(HttpStatus.FORBIDDEN, "Access denied to this payment record");
+        }
 
         if ("CAPTURED".equals(payment.getStatus())) {
             return mapToResponse(payment);
@@ -197,8 +217,13 @@ public class PaymentService {
 
     @Transactional
     public PaymentResponse handlePaymentCancelled(Long paymentId, String reason) {
+        User requester = getAuthenticatedUser();
         Payment payment = paymentRepository.findByIdAndDeletedAtIsNull(paymentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Payment not found"));
+
+        if (!canReadPayment(requester, payment)) {
+            throw new ApiException(HttpStatus.FORBIDDEN, "Access denied to this payment record");
+        }
 
         if ("CAPTURED".equals(payment.getStatus()) || "FAILED".equals(payment.getStatus()) || "REFUNDED".equals(payment.getStatus())) {
             return mapToResponse(payment);
@@ -218,8 +243,11 @@ public class PaymentService {
         Payment payment = paymentRepository.findByIdAndDeletedAtIsNull(paymentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Payment not found"));
 
-        User requester = userRepository.findById(requesterUserId)
-                .orElseThrow(() -> new ResourceNotFoundException("Requester user not found"));
+        User requester = getAuthenticatedUser();
+
+        if (!requester.getId().equals(requesterUserId) && !isManagementRole(requester.getRole())) {
+            throw new ApiException(HttpStatus.FORBIDDEN, "You are not allowed to request refund for another user");
+        }
 
         validateRefundRequester(requester, payment);
 
@@ -420,20 +448,39 @@ public class PaymentService {
     }
 
     public PaymentResponse getPaymentById(Long id) {
+        User requester = getAuthenticatedUser();
         Payment payment = paymentRepository.findByIdAndDeletedAtIsNull(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Payment not found"));
+
+        if (!canReadPayment(requester, payment)) {
+            throw new ApiException(HttpStatus.FORBIDDEN, "Access denied to this payment record");
+        }
+
         return mapToResponse(payment);
     }
 
     public PaymentResponse getPaymentByOrderId(String orderId) {
+        User requester = getAuthenticatedUser();
         Payment payment = paymentRepository.findByRazorpayOrderIdAndDeletedAtIsNull(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Payment not found for order: " + orderId));
+
+        if (!canReadPayment(requester, payment)) {
+            throw new ApiException(HttpStatus.FORBIDDEN, "Access denied to this payment record");
+        }
+
         return mapToResponse(payment);
     }
 
     public List<PaymentResponse> getPaymentsByUser(Long userId) {
+        User requester = getAuthenticatedUser();
+
+        if (!isManagementRole(requester.getRole()) && !requester.getId().equals(userId)) {
+            throw new ApiException(HttpStatus.FORBIDDEN, "You can access only your own payments");
+        }
+
         return paymentRepository.findByUserIdAndDeletedAtIsNullOrderByCreatedAtDesc(userId)
                 .stream()
+                .filter(payment -> canReadPayment(requester, payment))
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
@@ -446,10 +493,43 @@ public class PaymentService {
     }
 
     public List<PaymentResponse> getPaymentsByMaintenanceBill(Long billId) {
+        User requester = getAuthenticatedUser();
         return paymentRepository.findByMaintenanceBillIdAndDeletedAtIsNull(billId)
                 .stream()
+                .filter(payment -> canReadPayment(requester, payment))
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
+    }
+
+    private User getAuthenticatedUser() {
+        var auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || auth.getName() == null) {
+            throw new ApiException(HttpStatus.UNAUTHORIZED, "Not authenticated");
+        }
+
+        return userRepository.findByEmail(auth.getName())
+                .orElseThrow(() -> new ApiException(HttpStatus.UNAUTHORIZED, "Authenticated user not found"));
+    }
+
+    private boolean canReadPayment(User requester, Payment payment) {
+        if (requester == null || payment == null) {
+            return false;
+        }
+
+        if (isManagementRole(requester.getRole())) {
+            return true;
+        }
+
+        return payment.getUser() != null && requester.getId().equals(payment.getUser().getId());
+    }
+
+    private boolean isManagementRole(Role role) {
+        return role == Role.MASTER_ADMIN
+                || role == Role.SOCIETY_ADMIN
+                || role == Role.MANAGER
+                || role == Role.CHAIRMAN
+                || role == Role.SECRETARY
+                || role == Role.TREASURER;
     }
 
     private RazorpayClient requireRazorpayClient() {
@@ -554,7 +634,7 @@ public class PaymentService {
                 payment.setSettlementStatus("PENDING");
             }
         Payment saved = paymentRepository.save(payment);
-        applyMaintenanceBillPaymentIfNeeded(saved, payment.getRazorpayPaymentId());
+        applyLinkedBillPaymentIfNeeded(saved, payment.getRazorpayPaymentId());
     }
 
     private void handlePaymentRefundedWebhook(JSONObject payload) {
@@ -759,15 +839,11 @@ public class PaymentService {
             payment.setSettlementStatus("PENDING");
         }
         Payment saved = paymentRepository.save(payment);
-        applyMaintenanceBillPaymentIfNeeded(saved, saved.getRazorpayPaymentId());
+        applyLinkedBillPaymentIfNeeded(saved, saved.getRazorpayPaymentId());
     }
 
     private void validateRefundRequester(User requester, Payment payment) {
-        boolean elevated = requester.getRole() == Role.MASTER_ADMIN
-                || requester.getRole() == Role.SOCIETY_ADMIN
-                || requester.getRole() == Role.CHAIRMAN
-                || requester.getRole() == Role.SECRETARY
-                || requester.getRole() == Role.TREASURER;
+        boolean elevated = isManagementRole(requester.getRole());
 
         boolean isOwner = payment.getUser() != null && payment.getUser().getId().equals(requester.getId());
 
@@ -821,18 +897,31 @@ public class PaymentService {
         return null;
     }
 
-    private void applyMaintenanceBillPaymentIfNeeded(Payment payment, String referenceNumber) {
-        if (payment.getMaintenanceBill() == null || payment.getUser() == null) {
+    private void applyLinkedBillPaymentIfNeeded(Payment payment, String referenceNumber) {
+        if (payment.getUser() == null) {
             return;
         }
 
-        maintenanceBillService.recordOnlinePayment(
-                payment.getMaintenanceBill().getId(),
-                payment.getAmount(),
-                "RAZORPAY",
-                referenceNumber,
-                payment.getUser().getId()
-        );
+        if (payment.getMaintenanceBill() != null) {
+            maintenanceBillService.recordOnlinePayment(
+                    payment.getMaintenanceBill().getId(),
+                    payment.getAmount(),
+                    "RAZORPAY",
+                    referenceNumber,
+                    payment.getUser().getId()
+            );
+            return;
+        }
+
+        if (payment.getVendorBill() != null) {
+            vendorBillService.recordOnlinePayment(
+                    payment.getVendorBill().getId(),
+                    payment.getAmount(),
+                    "RAZORPAY",
+                    referenceNumber,
+                    payment.getUser().getId()
+            );
+        }
     }
 
     private PaymentResponse mapToResponse(Payment payment) {
@@ -853,6 +942,7 @@ public class PaymentService {
                 .description(payment.getDescription())
                 .receiptNumber(payment.getReceiptNumber())
                 .maintenanceBillId(payment.getMaintenanceBill() != null ? payment.getMaintenanceBill().getId() : null)
+                .vendorBillId(payment.getVendorBill() != null ? payment.getVendorBill().getId() : null)
                 .userId(payment.getUser() != null ? payment.getUser().getId() : null)
                 .userName(payment.getUser() != null ? payment.getUser().getName() : null)
                 .societyId(payment.getSociety() != null ? payment.getSociety().getId() : null)

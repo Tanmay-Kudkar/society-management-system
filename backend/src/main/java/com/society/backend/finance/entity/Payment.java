@@ -10,6 +10,7 @@ import java.time.LocalDateTime;
 
 import com.society.backend.society.entity.Society;
 import com.society.backend.user.entity.User;
+import com.society.backend.vendor.entity.VendorBill;
 @Entity
 @Table(name = "payments")
 @Getter
@@ -33,6 +34,10 @@ public class Payment {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "maintenance_bill_id")
     private MaintenanceBill maintenanceBill;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "vendor_bill_id")
+    private VendorBill vendorBill;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")

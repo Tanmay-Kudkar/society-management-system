@@ -13,13 +13,10 @@ import { formatDate } from '../../utils/formatUtils'
 
 export default function Transactions() {
   const { user, canManageTransactions } = useAuth()
+  const canAccessTransactions = canManageTransactions()
   const [searchParams] = useSearchParams()
   const { showToast } = useToast()
-  
-  // Permission check
-  if (!canManageTransactions()) {
-    return <PermissionDenied message="You don't have permission to manage transactions" />
-  }
+
   const queryClient = useQueryClient()
   const confirmDialog = useConfirmDialog()
   const [showModal, setShowModal] = useState(false)
@@ -101,12 +98,17 @@ export default function Transactions() {
     setShowModal(true)
   }
 
+  const closeModal = (force = false) => {
+    if (!force && (createMutation.isPending || updateMutation.isPending)) return
+    setShowModal(false)
+    resetFormState()
+  }
+
   const createMutation = useMutation({
     mutationFn: (data) => transactionApi.create(data, user.id),
     onSuccess: () => {
       queryClient.invalidateQueries(['transactions'])
-      setShowModal(false)
-      resetFormState()
+      closeModal(true)
       showToast('Transaction created successfully', 'success')
     },
     onError: (error) => {
@@ -118,8 +120,7 @@ export default function Transactions() {
     mutationFn: ({ id, data }) => transactionApi.update(id, data, user.id),
     onSuccess: () => {
       queryClient.invalidateQueries(['transactions'])
-      setShowModal(false)
-      resetFormState()
+      closeModal(true)
       showToast('Transaction updated successfully', 'success')
     },
     onError: (error) => {
@@ -277,6 +278,10 @@ export default function Transactions() {
 
   const showSkeleton = useMinLoadingTime(isLoading || isError)
 
+  if (!canAccessTransactions) {
+    return <PermissionDenied message="You don't have permission to manage transactions" />
+  }
+
   if (showSkeleton) {
     return (
       <div>
@@ -299,16 +304,16 @@ export default function Transactions() {
         </div>
         <div className="flex flex-wrap gap-3">
           <NeonSweepButton
-            tone="cyan"
+            tone="slate"
             size="md"
             onClick={handleExport}
             disabled={isExporting}
             className="w-full sm:w-auto"
           >
             <FileSpreadsheet size={20} />
-            {isExporting ? 'Exporting...' : 'Export'}
+            {isExporting ? 'Exporting...' : 'Export XLSX'}
           </NeonSweepButton>
-          {canManageTransactions() && (
+          {canAccessTransactions && (
             <NeonSweepButton
               tone="violet"
               size="md"
@@ -554,7 +559,7 @@ export default function Transactions() {
           <div className="w-full max-w-[40rem] max-h-[90vh] overflow-y-auto rounded-2xl bg-[var(--bg-card)] border border-[var(--border-light)] shadow-[0_24px_48px_rgba(15,23,42,0.2)]">
             <div className="sticky top-0 flex items-center justify-between py-4 px-5 bg-[var(--bg-card)] border-b border-[var(--border-light)] z-[1]">
               <h3 className="text-[1.1rem] font-semibold text-[var(--text-primary)]">{editingTransaction ? 'Edit Transaction' : 'Add Transaction'}</h3>
-              <button onClick={() => { setShowModal(false); resetFormState() }} className="rounded-[0.65rem] p-1 text-[var(--text-tertiary)] transition-colors hover:bg-[rgba(148,163,184,0.2)] hover:text-[var(--text-primary)]">
+              <button onClick={() => closeModal()} className="rounded-[0.65rem] p-1 text-[var(--text-tertiary)] transition-colors hover:bg-[rgba(148,163,184,0.2)] hover:text-[var(--text-primary)]">
                 <X size={20} />
               </button>
             </div>
@@ -824,7 +829,7 @@ export default function Transactions() {
                   type="button"
                   tone="slate"
                   size="md"
-                  onClick={() => { setShowModal(false); resetFormState() }}
+                  onClick={() => closeModal()}
                   className="flex-1"
                 >
                   Cancel

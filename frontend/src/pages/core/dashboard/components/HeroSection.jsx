@@ -14,6 +14,8 @@ export default function HeroSection({
   getWeatherDesc,
   getWeatherIcon,
   timeGreeting,
+  currentSocietyName,
+  currentSocietyId,
 }) {
   return (
     <>
@@ -89,22 +91,23 @@ export default function HeroSection({
               </p>
 
               {/* Role / Society badge row */}
-              <div className="mt-4 flex flex-wrap items-center gap-2">
-                {!isMemberOrTenant && !isPlatformLevel && user?.societyId && (
-                  <span className="flex items-center gap-1.5 rounded-lg border border-[var(--border-default)] bg-[var(--bg-tertiary)] px-3 py-1.5 text-xs font-medium text-[var(--text-muted)] transition-colors hover:border-[var(--accent-primary)]">
-                    <Building2 className="h-3.5 w-3.5 text-[var(--accent-primary)]" aria-hidden="true" />
-                    Society ID: <span className="text-[var(--text-primary)]">{user.societyId}</span>
+              <div className="mt-4 flex flex-wrap items-center gap-2.5">
+                {!isPlatformLevel && currentSocietyId && (
+                  <span className="inline-flex w-full max-w-full items-center gap-2 rounded-xl border border-[var(--border-default)] bg-[var(--bg-tertiary)] px-3.5 py-2 text-[13px] font-semibold text-[var(--text-muted)] sm:w-auto sm:text-sm">
+                    <Building2 className="h-4 w-4 shrink-0 text-[var(--accent-primary)]" aria-hidden="true" />
+                    <span className="shrink-0">Society:</span>
+                    <span className="truncate text-[var(--text-primary)] sm:max-w-[22rem]">{currentSocietyName || `Society #${currentSocietyId}`}</span>
                   </span>
                 )}
                 {isPlatformLevel && (
-                  <span className="flex items-center gap-1.5 rounded-lg border border-violet-500/25 bg-violet-500/8 px-3 py-1.5 text-xs font-semibold text-violet-700 dark:text-violet-400">
-                    <Layers className="h-3.5 w-3.5" aria-hidden="true" />
+                  <span className="inline-flex items-center gap-2 rounded-xl border border-violet-500/25 bg-violet-500/8 px-3.5 py-2 text-[13px] font-semibold text-violet-700 dark:text-violet-400 sm:text-sm">
+                    <Layers className="h-4 w-4" aria-hidden="true" />
                     {formatRole(user?.role)}
                   </span>
                 )}
                 {isMemberOrTenant && (
-                  <span className="flex items-center gap-1.5 rounded-lg border border-[var(--border-default)] bg-[var(--bg-tertiary)] px-3 py-1.5 text-xs font-medium text-[var(--text-muted)] transition-colors hover:border-[var(--accent-primary)]">
-                    <Home className="h-3.5 w-3.5 text-[var(--accent-primary)]" aria-hidden="true" />
+                  <span className="inline-flex items-center gap-2 rounded-xl border border-[var(--border-default)] bg-[var(--bg-tertiary)] px-3.5 py-2 text-[13px] font-semibold text-[var(--text-muted)] sm:text-sm">
+                    <Home className="h-4 w-4 text-[var(--accent-primary)]" aria-hidden="true" />
                     {user?.flatNumber ? <span className="text-[var(--text-primary)]">Unit {user.flatNumber}</span> : "Resident"}
                   </span>
                 )}

@@ -1,16 +1,18 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { useSearchParams } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../../context'
 import { useConfirmDialog } from '../../context'
 import { useToast } from '../../context'
-import { noticeApi } from '../../../../api'
+import { noticeApi, downloadBlob } from '../../../../api'
 import { Plus, Search, X, Megaphone, Edit, Trash2 } from 'lucide-react'
 import clsx from 'clsx'
-import { FormInput, SmartSelect, FormTextarea, InfoTooltip, NeonSweepButton } from '../../components'
+import { FormInput, SmartSelect, FormTextarea, InfoTooltip, NeonSweepButton, AnimatedModal, DEFAULT_ANIMATED_MODAL_DURATION_MS } from '../../components'
 import { HeroSkeleton, FiltersSkeleton, CardGridSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
 import useMinLoadingTime from '../../hooks/useMinLoadingTime'
-import { formatDate } from '../../utils/formatUtils'
+import { formatDate, parseServerDateTime } from '../../utils/formatUtils'
+
+const NOTICE_DELETE_UNDO_WINDOW_MS = 5 * 60 * 1000
 
 const priorityClasses = {
   LOW: 'inline-flex items-center rounded-full bg-[var(--bg-tertiary)] px-2 py-0.5 text-xs font-semibold text-[var(--text-secondary)]',
@@ -19,18 +21,63 @@ const priorityClasses = {
   URGENT: 'inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-700',
 }
 
+const MODAL_ANIMATION_MS = DEFAULT_ANIMATED_MODAL_DURATION_MS
+
+const formatNoticeDateTimeWithDay = (value) => {
+  const date = parseServerDateTime(value)
+  if (!date) return '-'
+  return date.toLocaleString('en-IN', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true,
+    timeZone: 'Asia/Kolkata',
+  })
+}
+
 export default function Notices() {
   const { user, canManageNotices } = useAuth()
   const confirmDialog = useConfirmDialog()
   const toast = useToast()
   const queryClient = useQueryClient()
+  const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const [showModal, setShowModal] = useState(false)
   const [editingNotice, setEditingNotice] = useState(null)
   const [searchTerm, setSearchTerm] = useState('')
+  const [filterType, setFilterType] = useState('')
+  const [attendanceByNotice, setAttendanceByNotice] = useState({})
+  const [attendanceSummaryByNotice, setAttendanceSummaryByNotice] = useState({})
+  const [markingNoticeId, setMarkingNoticeId] = useState(null)
+  const [showAttendanceModal, setShowAttendanceModal] = useState(false)
+  const [attendanceModalNotice, setAttendanceModalNotice] = useState(null)
+  const [attendanceList, setAttendanceList] = useState([])
+  const [attendanceListLoading, setAttendanceListLoading] = useState(false)
+  const [attendanceListFilter, setAttendanceListFilter] = useState('ALL')
+  const [highlightedNoticeId, setHighlightedNoticeId] = useState(null)
+  const [isDeepLinkTransitioning, setIsDeepLinkTransitioning] = useState(false)
+  const [isPageGlowActive, setIsPageGlowActive] = useState(false)
+  const [nowTs, setNowTs] = useState(Date.now())
+
+  const noticeTypeLabel = {
+    GENERAL: 'General',
+    CIRCULAR: 'Circular',
+    MEETING: 'Meeting',
+  }
+
+  const canRecordMeetingAttendance = ['MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE'].includes(user?.role)
+  const canViewMeetingAttendance = ['MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER'].includes(user?.role)
 
   // Get society filter from URL (for MASTER_ADMIN viewing specific society)
   const societyIdFromUrl = searchParams.get('society')
+  const selectedNoticeFromUrlRaw = Number(searchParams.get('notice'))
+  const selectedNoticeFromUrl = Number.isFinite(selectedNoticeFromUrlRaw) && selectedNoticeFromUrlRaw > 0
+    ? selectedNoticeFromUrlRaw
+    : null
+  const pageFocusMode = searchParams.get('focus') === 'page'
 
   // Check if current user is MASTER_ADMIN
   const isPlatformLevel = user?.role === 'MASTER_ADMIN'
@@ -45,13 +92,18 @@ export default function Notices() {
       : noticeApi.getAll().then(res => res.data),
   })
 
+  useEffect(() => {
+    const timer = setInterval(() => setNowTs(Date.now()), 1000)
+    return () => clearInterval(timer)
+  }, [])
+
 
 
   const createMutation = useMutation({
     mutationFn: (data) => noticeApi.create(data, user.id),
     onSuccess: () => {
       queryClient.invalidateQueries(['notices'])
-      closeModal()
+      closeModal(true)
     },
   })
 
@@ -59,53 +111,331 @@ export default function Notices() {
     mutationFn: ({ id, data }) => noticeApi.update(id, data, user.id),
     onSuccess: () => {
       queryClient.invalidateQueries(['notices'])
-      closeModal()
+      closeModal(true)
     },
   })
 
   const deleteMutation = useMutation({
-    mutationFn: (id) => noticeApi.delete(id, user.id),
-    onSuccess: () => queryClient.invalidateQueries(['notices']),
+    mutationFn: ({ id, force = false }) => noticeApi.delete(id, user.id, force),
+    onSuccess: (_response, variables) => {
+      queryClient.invalidateQueries(['notices'])
+      toast.success(variables?.force ? 'Notice permanently deleted' : 'Notice deleted. Undo available for 5 minutes.')
+    },
     onError: (error) => {
       toast.error(error.response?.data?.message || 'Failed to delete notice')
     },
   })
 
-  const filteredNotices = useMemo(() => notices.filter(n => {
-    const matchesSearch = n.title?.toLowerCase().includes(searchTerm.toLowerCase())
-    return matchesSearch
-  }), [notices, searchTerm])
+  const undoDeleteMutation = useMutation({
+    mutationFn: (id) => noticeApi.undo(id, user.id),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['notices'])
+      toast.success('Notice restored successfully')
+    },
+    onError: (error) => {
+      toast.error(error?.response?.data?.message || 'Undo window expired or action unavailable')
+      queryClient.invalidateQueries(['notices'])
+    },
+  })
 
-  const closeModal = () => {
+  const attendanceMutation = useMutation({
+    mutationFn: ({ noticeId, status }) => noticeApi.markAttendance(noticeId, user.id, { status }),
+    onMutate: ({ noticeId }) => {
+      setMarkingNoticeId(noticeId)
+    },
+    onSuccess: (response, variables) => {
+      const payload = response?.data
+      setAttendanceByNotice((prev) => ({ ...prev, [variables.noticeId]: payload }))
+      if (canViewMeetingAttendance) {
+        noticeApi.getAttendanceByNotice(variables.noticeId, user.id)
+          .then((res) => {
+            const records = res?.data || []
+            const present = records.filter((r) => (r?.status || '').toUpperCase() === 'PRESENT').length
+            const absent = records.filter((r) => (r?.status || '').toUpperCase() === 'ABSENT').length
+            setAttendanceSummaryByNotice((prev) => ({
+              ...prev,
+              [variables.noticeId]: { present, absent, total: records.length },
+            }))
+          })
+          .catch(() => {})
+      }
+      toast.success('Attendance recorded')
+    },
+    onError: (error) => {
+      toast.error(error?.response?.data?.message || 'Failed to record attendance')
+    },
+    onSettled: () => {
+      setMarkingNoticeId(null)
+    },
+  })
+
+  const filteredNotices = useMemo(() => notices
+    .filter(n => {
+      const matchesSearch = n.title?.toLowerCase().includes(searchTerm.toLowerCase())
+      const noticeType = (n.noticeType || 'GENERAL').toUpperCase()
+      const matchesType = !filterType || noticeType === filterType
+      return matchesSearch && matchesType
+    })
+    .sort((a, b) => {
+      const aTime = parseServerDateTime(a.createdAt)?.getTime() ?? 0
+      const bTime = parseServerDateTime(b.createdAt)?.getTime() ?? 0
+      if (bTime !== aTime) return bTime - aTime
+      return (b.id ?? 0) - (a.id ?? 0)
+    }), [notices, searchTerm, filterType])
+
+  useEffect(() => {
+    if (!pageFocusMode) return
+
+    const startTimer = setTimeout(() => {
+      window.scrollBy({ top: 180, behavior: 'smooth' })
+      setIsPageGlowActive(true)
+    }, 80)
+
+    const endTimer = setTimeout(() => setIsPageGlowActive(false), 2100)
+
+    const clearFocusParamTimer = setTimeout(() => {
+      const nextParams = new URLSearchParams(searchParams)
+      nextParams.delete('focus')
+      const nextSearch = nextParams.toString()
+      navigate({ search: nextSearch ? `?${nextSearch}` : '' }, { replace: true })
+    }, 2300)
+
+    return () => {
+      clearTimeout(startTimer)
+      clearTimeout(endTimer)
+      clearTimeout(clearFocusParamTimer)
+    }
+  }, [pageFocusMode, navigate, searchParams])
+
+  useEffect(() => {
+    if (pageFocusMode) {
+      setIsDeepLinkTransitioning(false)
+      return
+    }
+
+    if (!selectedNoticeFromUrl) {
+      setIsDeepLinkTransitioning(false)
+      return
+    }
+
+    if (!selectedNoticeFromUrl || isLoading || notices.length === 0) return
+
+    const selectedExists = notices.some((notice) => notice.id === selectedNoticeFromUrl)
+    if (!selectedExists) return
+
+    setIsDeepLinkTransitioning(true)
+
+    let glowStartTimer
+    let glowEndTimer
+    let revealTimer
+
+    const timer = setTimeout(() => {
+      const element = document.getElementById(`notice-${selectedNoticeFromUrl}`)
+      if (!element) return
+      element.scrollIntoView({ behavior: 'smooth', block: 'center' })
+
+      revealTimer = setTimeout(() => setIsDeepLinkTransitioning(false), 420)
+
+      setHighlightedNoticeId(null)
+      glowStartTimer = setTimeout(() => setHighlightedNoticeId(selectedNoticeFromUrl), 540)
+      glowEndTimer = setTimeout(() => setHighlightedNoticeId(null), 2480)
+    }, 80)
+
+    return () => {
+      clearTimeout(timer)
+      clearTimeout(revealTimer)
+      clearTimeout(glowStartTimer)
+      clearTimeout(glowEndTimer)
+    }
+  }, [pageFocusMode, selectedNoticeFromUrl, isLoading, notices])
+
+  useEffect(() => {
+    let cancelled = false
+
+    const loadMeetingAttendance = async () => {
+      if (!user?.id || !canRecordMeetingAttendance) return
+
+      const meetingNotices = notices.filter((n) => (n.noticeType || 'GENERAL').toUpperCase() === 'MEETING')
+      if (meetingNotices.length === 0) return
+
+      const next = {}
+      for (const notice of meetingNotices) {
+        try {
+          // eslint-disable-next-line no-await-in-loop
+          const res = await noticeApi.getMyAttendance(notice.id, user.id)
+          next[notice.id] = res.data
+        } catch (error) {
+          if (error?.response?.status !== 404) {
+            // Ignore transient issues and keep page usable.
+          }
+        }
+      }
+
+      if (!cancelled) {
+        setAttendanceByNotice((prev) => ({ ...prev, ...next }))
+      }
+    }
+
+    loadMeetingAttendance()
+    return () => {
+      cancelled = true
+    }
+  }, [notices, user?.id, canRecordMeetingAttendance])
+
+  useEffect(() => {
+    let cancelled = false
+
+    const loadMeetingAttendanceSummary = async () => {
+      if (!user?.id || !canViewMeetingAttendance) return
+
+      const meetingNotices = notices.filter((n) => (n.noticeType || 'GENERAL').toUpperCase() === 'MEETING')
+      if (meetingNotices.length === 0) return
+
+      const nextSummary = {}
+      await Promise.all(meetingNotices.map(async (notice) => {
+        try {
+          const res = await noticeApi.getAttendanceByNotice(notice.id, user.id)
+          const records = res?.data || []
+          const present = records.filter((r) => (r?.status || '').toUpperCase() === 'PRESENT').length
+          const absent = records.filter((r) => (r?.status || '').toUpperCase() === 'ABSENT').length
+          nextSummary[notice.id] = { present, absent, total: records.length }
+        } catch {
+          nextSummary[notice.id] = { present: 0, absent: 0, total: 0 }
+        }
+      }))
+
+      if (!cancelled) {
+        setAttendanceSummaryByNotice((prev) => ({ ...prev, ...nextSummary }))
+      }
+    }
+
+    loadMeetingAttendanceSummary()
+    return () => {
+      cancelled = true
+    }
+  }, [notices, user?.id, canViewMeetingAttendance])
+
+  const closeModal = (force = false) => {
+    if (!force && (createMutation.isPending || updateMutation.isPending)) return
     setShowModal(false)
-    setEditingNotice(null)
+    setTimeout(() => setEditingNotice(null), MODAL_ANIMATION_MS)
   }
+
+  const closeAttendanceModal = () => {
+    setShowAttendanceModal(false)
+    setTimeout(() => {
+      setAttendanceModalNotice(null)
+      setAttendanceList([])
+      setAttendanceListLoading(false)
+      setAttendanceListFilter('ALL')
+    }, MODAL_ANIMATION_MS)
+  }
+
+  const openAttendanceModal = async (notice) => {
+    if (!notice?.id || !user?.id) return
+    setAttendanceModalNotice(notice)
+    setAttendanceListLoading(true)
+    setShowAttendanceModal(true)
+
+    try {
+      const res = await noticeApi.getAttendanceByNotice(notice.id, user.id)
+      setAttendanceList(res?.data || [])
+    } catch (error) {
+      toast.error(error?.response?.data?.message || 'Failed to load attendance list')
+      setAttendanceList([])
+    } finally {
+      setAttendanceListLoading(false)
+    }
+  }
+
+  const downloadAttendance = async (status = 'ALL') => {
+    if (!attendanceModalNotice?.id || !user?.id) return
+
+    try {
+      const response = await noticeApi.exportAttendance(attendanceModalNotice.id, user.id, status)
+      const statusLabel = String(status || 'ALL').toLowerCase()
+      const noticeSlug = (attendanceModalNotice?.title || 'meeting-attendance')
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '')
+        .slice(0, 60) || 'meeting-attendance'
+      const datePart = new Date().toISOString().split('T')[0]
+      downloadBlob(response.data, `${noticeSlug}-${statusLabel}-${datePart}.xlsx`)
+      toast.success('Attendance exported successfully')
+    } catch (error) {
+      toast.error(error?.response?.data?.message || 'Failed to export attendance')
+    }
+  }
+
+  const filteredAttendanceList = useMemo(() => {
+    if (attendanceListFilter === 'ALL') return attendanceList
+    return attendanceList.filter((row) => (row?.status || '').toUpperCase() === attendanceListFilter)
+  }, [attendanceList, attendanceListFilter])
 
   const confirmAndDeleteNotice = async (notice) => {
     const confirmed = await confirmDialog({
       title: 'Delete Notice',
-      message: 'Are you sure you want to delete this notice? This action cannot be undone.',
+      message: 'Are you sure you want to delete this notice? You can undo this for 5 minutes.',
       confirmText: 'Delete',
       tone: 'danger',
       details: [
         { label: 'Title', value: notice.title || '-' },
         { label: 'Priority', value: notice.priority || '-' },
       ],
-      caution: 'This action permanently removes the notice.',
+      caution: 'This notice will remain recoverable for 5 minutes before permanent removal.',
     })
     if (confirmed) {
-      deleteMutation.mutate(notice.id)
+      deleteMutation.mutate({ id: notice.id, force: false })
     }
+  }
+
+  const confirmAndFinalDeleteNotice = async (notice) => {
+    const confirmed = await confirmDialog({
+      title: 'Final Delete Notice',
+      message: 'Delete this notice permanently right now? This cannot be undone.',
+      confirmText: 'Final Delete',
+      tone: 'danger',
+      details: [
+        { label: 'Title', value: notice.title || '-' },
+        { label: 'Status', value: 'Deleted' },
+      ],
+      caution: 'This bypasses the remaining undo window and permanently removes the notice.',
+    })
+    if (confirmed) {
+      deleteMutation.mutate({ id: notice.id, force: true })
+    }
+  }
+
+  const getDeleteUndoRemainingMs = (notice) => {
+    if (!notice?.deleted) return 0
+    const parsed = parseServerDateTime(notice.deleteUndoExpiresAt)
+    if (!parsed) return 0
+    const remaining = parsed.getTime() - nowTs
+    return remaining > 0 && remaining <= (NOTICE_DELETE_UNDO_WINDOW_MS + 5000) ? remaining : 0
+  }
+
+  const formatCountdown = (remainingMs) => {
+    const totalSeconds = Math.floor(remainingMs / 1000)
+    const minutes = Math.floor(totalSeconds / 60)
+    const seconds = totalSeconds % 60
+    return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
   }
 
   const handleSubmit = (e) => {
     e.preventDefault()
     const formData = new FormData(e.target)
+
+    if (!effectiveSocietyId) {
+      toast.error('Society ID is required')
+      return
+    }
+
     const data = {
-      societyId: user.societyId,
+      societyId: Number(effectiveSocietyId),
       title: formData.get('title'),
       content: formData.get('content'),
       priority: formData.get('priority'),
+      noticeType: formData.get('noticeType') || 'GENERAL',
       expiryDate: formData.get('expiryDate') || null,
     }
     if (editingNotice) {
@@ -151,7 +481,7 @@ export default function Notices() {
 
       {/* Filters */}
       <div className="mb-6 rounded-2xl border border-[var(--border-light)] bg-[var(--bg-card)] p-4 shadow-[0_8px_20px_rgba(15,23,42,0.08)]">
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
           <div className="relative flex-1">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-[var(--text-tertiary)]" />
             <input
@@ -162,17 +492,43 @@ export default function Notices() {
               className="w-full rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] py-2 pl-10 pr-3 text-[var(--text-primary)] outline-none transition focus:border-blue-600 focus:shadow-[0_0_0_3px_rgba(37,99,235,0.2)]"
             />
           </div>
+          <select
+            value={filterType}
+            onChange={(e) => setFilterType(e.target.value)}
+            className="w-full rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] px-3 py-2 text-[var(--text-primary)] outline-none transition focus:border-blue-600 focus:shadow-[0_0_0_3px_rgba(37,99,235,0.2)] sm:w-auto sm:min-w-[220px]"
+          >
+            <option value="">All Notice Types</option>
+            <option value="GENERAL">General</option>
+            <option value="CIRCULAR">Circular</option>
+            <option value="MEETING">Meeting</option>
+          </select>
         </div>
       </div>
 
       {/* Notices Grid */}
       {(
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className={clsx(
+          'grid grid-cols-1 gap-4 transition-all duration-300 ease-out md:grid-cols-2 lg:grid-cols-3',
+          isDeepLinkTransitioning ? 'opacity-0 translate-y-1' : 'opacity-100 translate-y-0'
+        )}>
           {filteredNotices.map((notice) => (
-            <div key={notice.id} className="rounded-2xl border border-[var(--border-light)] bg-[var(--bg-card)] p-5 shadow-[0_12px_24px_rgba(15,23,42,0.06)] transition hover:-translate-y-0.5 hover:shadow-[0_16px_32px_rgba(15,23,42,0.12)]">
-              <div className="mb-3 flex items-start justify-between">
+            (() => {
+              const deleteUndoRemainingMs = getDeleteUndoRemainingMs(notice)
+              const showDeleteUndoPanel = Boolean(notice.deleted) && deleteUndoRemainingMs > 0
+
+              return (
+            <div
+              id={`notice-${notice.id}`}
+              key={notice.id}
+              className={clsx(
+                'relative overflow-hidden rounded-2xl border-2 border-violet-500/40 bg-[var(--bg-card)] p-5 shadow-[0_12px_24px_rgba(15,23,42,0.06)]',
+                notice.deleted && 'border-rose-500/55 bg-[color-mix(in_srgb,var(--bg-card)_90%,rgba(244,63,94,0.10)_10%)]',
+                (isPageGlowActive || highlightedNoticeId === notice.id) && 'ticket-focus-glow'
+              )}
+            >
+              <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div className="flex items-center gap-2">
-                  <div className="rounded-xl bg-blue-500/15 p-2">
+                  <div className="rounded-xl bg-blue-100 dark:bg-blue-500/15 p-2">
                     <Megaphone className="h-4 w-4 text-blue-600" />
                   </div>
                   <span className={clsx(priorityClasses[notice.priority] || priorityClasses.LOW)}>
@@ -180,29 +536,70 @@ export default function Notices() {
                   </span>
                 </div>
                 {canManageNotices() && (
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => { setEditingNotice(notice); setShowModal(true) }}
-                      className="rounded-lg p-1.5 text-[var(--text-tertiary)] transition hover:bg-[var(--bg-tertiary)]"
-                    >
-                      <Edit size={16} />
-                    </button>
-                    <button
-                      onClick={() => confirmAndDeleteNotice(notice)}
-                      className="rounded-lg p-1.5 text-red-500 transition hover:bg-red-500/10"
-                    >
-                      <Trash2 size={16} />
-                    </button>
+                  <div className="grid grid-cols-2 gap-2 w-full sm:w-auto sm:flex">
+                    {!notice.deleted && (
+                      <>
+                        <NeonSweepButton
+                          onClick={() => { setEditingNotice(notice); setShowModal(true) }}
+                          tone="slate"
+                          size="sm"
+                          className="w-full justify-center"
+                        >
+                          <Edit size={16} absoluteStrokeWidth className="h-4 w-4 shrink-0" />
+                          Edit
+                        </NeonSweepButton>
+                        <NeonSweepButton
+                          onClick={() => confirmAndDeleteNotice(notice)}
+                          tone="danger"
+                          size="sm"
+                          className="w-full justify-center"
+                        >
+                          <Trash2 size={16} absoluteStrokeWidth className="h-4 w-4 shrink-0" />
+                          Delete
+                        </NeonSweepButton>
+                      </>
+                    )}
                   </div>
                 )}
               </div>
+
+              {showDeleteUndoPanel && canManageNotices() && (
+                <div className="mb-3 rounded-xl border border-blue-500/35 bg-blue-500/10 p-2.5">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.06em] text-blue-800 dark:text-blue-200">Deleted • Undo available</p>
+                  <p className="mt-1 text-xs text-blue-100/90">{formatCountdown(deleteUndoRemainingMs)} remaining</p>
+                  <div className="mt-2 grid grid-cols-1 gap-2">
+                    <NeonSweepButton
+                      tone="cyan"
+                      size="sm"
+                      className="w-full justify-center"
+                      onClick={() => undoDeleteMutation.mutate(notice.id)}
+                      disabled={undoDeleteMutation.isPending || deleteMutation.isPending}
+                    >
+                      {undoDeleteMutation.isPending ? 'Undoing...' : 'Undo'}
+                    </NeonSweepButton>
+                    <NeonSweepButton
+                      tone="danger"
+                      size="sm"
+                      className="w-full justify-center"
+                      onClick={() => confirmAndFinalDeleteNotice(notice)}
+                      disabled={undoDeleteMutation.isPending || deleteMutation.isPending}
+                    >
+                      <Trash2 size={15} absoluteStrokeWidth className="h-[15px] w-[15px] shrink-0" />
+                      {deleteMutation.isPending ? 'Deleting...' : 'Confirm Delete'}
+                    </NeonSweepButton>
+                  </div>
+                </div>
+              )}
               
               <h3 className="mb-2 font-bold text-[var(--text-primary)]">{notice.title}</h3>
-              <p className="mb-3 line-clamp-3 text-sm text-[var(--text-secondary)]">{notice.content}</p>
+              <p className="mb-1 text-[0.75rem] font-semibold uppercase tracking-[0.06em] text-[var(--text-tertiary)]">
+                {noticeTypeLabel[(notice.noticeType || 'GENERAL').toUpperCase()] || 'General'}
+              </p>
+              <p className="mb-3 text-sm text-[var(--text-secondary)] break-words whitespace-pre-line">{notice.content}</p>
               
-              <div className="flex items-center justify-between border-t border-[var(--border-light)] pt-3 text-xs text-[var(--text-tertiary)]">
+              <div className="flex flex-wrap items-center justify-between gap-2 border-t border-[var(--border-light)] pt-3 text-xs text-[var(--text-tertiary)]">
                 {isPlatformLevel && <span>{notice.societyName || 'All Societies'}</span>}
-                <span>{formatDate(notice.createdAt)}</span>
+                <span>{formatNoticeDateTimeWithDay(notice.createdAt)}</span>
               </div>
               
               {notice.expiryDate && (
@@ -210,15 +607,166 @@ export default function Notices() {
                   Expires: {formatDate(notice.expiryDate)}
                 </p>
               )}
+
+              {(notice.noticeType || 'GENERAL').toUpperCase() === 'MEETING' && canRecordMeetingAttendance && (
+                !notice.deleted && (
+                <div className="mt-3 border-t border-[var(--border-light)] pt-3">
+                  <p className="mb-2 text-xs font-semibold text-[var(--text-secondary)]">
+                    Your attendance: {attendanceByNotice[notice.id]?.status || 'Not marked'}
+                  </p>
+                  <div className="grid grid-cols-2 gap-2">
+                    <NeonSweepButton
+                      tone={attendanceByNotice[notice.id]?.status === 'PRESENT' ? 'cyan' : 'slate'}
+                      size="sm"
+                      className="w-full justify-center"
+                      onClick={() => attendanceMutation.mutate({ noticeId: notice.id, status: 'PRESENT' })}
+                      disabled={attendanceMutation.isPending && markingNoticeId === notice.id}
+                    >
+                      {attendanceMutation.isPending && markingNoticeId === notice.id ? 'Saving...' : 'Mark Present'}
+                    </NeonSweepButton>
+                    <NeonSweepButton
+                      tone={attendanceByNotice[notice.id]?.status === 'ABSENT' ? 'danger' : 'slate'}
+                      size="sm"
+                      className="w-full justify-center"
+                      onClick={() => attendanceMutation.mutate({ noticeId: notice.id, status: 'ABSENT' })}
+                      disabled={attendanceMutation.isPending && markingNoticeId === notice.id}
+                    >
+                      {attendanceMutation.isPending && markingNoticeId === notice.id ? 'Saving...' : 'Mark Absent'}
+                    </NeonSweepButton>
+                  </div>
+                </div>
+                )
+              )}
+
+              {(notice.noticeType || 'GENERAL').toUpperCase() === 'MEETING' && canViewMeetingAttendance && (
+                !notice.deleted && (
+                <div className="mt-3 rounded-xl border border-[var(--border-light)] bg-[var(--bg-tertiary)]/50 px-3 py-2 text-xs text-[var(--text-secondary)]">
+                  <p className="font-semibold text-[var(--text-primary)]">Attendance Summary</p>
+                  <p className="mt-1">
+                    Present: {attendanceSummaryByNotice[notice.id]?.present ?? 0} | Absent: {attendanceSummaryByNotice[notice.id]?.absent ?? 0}
+                  </p>
+                  <NeonSweepButton
+                    tone="slate"
+                    size="sm"
+                    className="mt-2 w-full justify-center"
+                    onClick={() => openAttendanceModal(notice)}
+                  >
+                    View Attendance
+                  </NeonSweepButton>
+                </div>
+                )
+              )}
             </div>
+              )
+            })()
           ))}
         </div>
       )}
 
+      <AnimatedModal open={showAttendanceModal} onRequestClose={closeAttendanceModal} closeOnBackdrop>
+        <div className="max-h-[calc(100vh-3rem)] w-full max-w-2xl overflow-y-auto rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] shadow-[0_8px_24px_rgba(0,0,0,0.12)]">
+          <div className="flex items-center justify-between border-b border-[var(--border-light)] p-4">
+            <div>
+              <h3 className="text-lg font-bold text-[var(--text-primary)]">Meeting Attendance</h3>
+              {attendanceModalNotice?.title && (
+                <p className="text-xs text-[var(--text-tertiary)]">{attendanceModalNotice.title}</p>
+              )}
+            </div>
+            <button onClick={closeAttendanceModal} className="rounded-lg p-1 text-[var(--text-tertiary)] transition hover:bg-[var(--bg-tertiary)]">
+              <X size={20} />
+            </button>
+          </div>
+
+          <div className="p-4">
+            {attendanceListLoading ? (
+              <p className="text-sm text-[var(--text-tertiary)]">Loading attendance...</p>
+            ) : attendanceList.length === 0 ? (
+              <p className="text-sm text-[var(--text-tertiary)]">No attendance records yet.</p>
+            ) : (
+              <>
+                <div className="mb-3 flex flex-wrap items-center gap-2">
+                  <NeonSweepButton
+                    tone={attendanceListFilter === 'ALL' ? 'cyan' : 'slate'}
+                    size="sm"
+                    onClick={() => setAttendanceListFilter('ALL')}
+                    className="justify-center"
+                  >
+                    All ({attendanceList.length})
+                  </NeonSweepButton>
+                  <NeonSweepButton
+                    tone={attendanceListFilter === 'PRESENT' ? 'cyan' : 'slate'}
+                    size="sm"
+                    onClick={() => setAttendanceListFilter('PRESENT')}
+                    className="justify-center"
+                  >
+                    Present ({attendanceList.filter((r) => (r?.status || '').toUpperCase() === 'PRESENT').length})
+                  </NeonSweepButton>
+                  <NeonSweepButton
+                    tone={attendanceListFilter === 'ABSENT' ? 'danger' : 'slate'}
+                    size="sm"
+                    onClick={() => setAttendanceListFilter('ABSENT')}
+                    className="justify-center"
+                  >
+                    Absent ({attendanceList.filter((r) => (r?.status || '').toUpperCase() === 'ABSENT').length})
+                  </NeonSweepButton>
+                  <NeonSweepButton
+                    tone="slate"
+                    size="sm"
+                    onClick={() => downloadAttendance(attendanceListFilter === 'ALL' ? 'ALL' : attendanceListFilter)}
+                    className="justify-center sm:ml-auto"
+                  >
+                    Export Filtered
+                  </NeonSweepButton>
+                  <NeonSweepButton
+                    tone="slate"
+                    size="sm"
+                    onClick={() => downloadAttendance('ALL')}
+                    className="justify-center"
+                  >
+                    Export All
+                  </NeonSweepButton>
+                </div>
+
+                {filteredAttendanceList.length === 0 ? (
+                  <p className="text-sm text-[var(--text-tertiary)]">No records for selected filter.</p>
+                ) : (
+                  <div className="overflow-hidden rounded-xl border border-[var(--border-light)]">
+                <table className="w-full border-collapse text-sm">
+                  <thead className="bg-[var(--bg-tertiary)] text-left text-[0.78rem] uppercase tracking-[0.06em] text-[var(--text-tertiary)]">
+                    <tr>
+                      <th className="px-3 py-2">Member</th>
+                      <th className="px-3 py-2">Status</th>
+                      <th className="px-3 py-2">Marked At</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredAttendanceList.map((row) => (
+                      <tr key={row.id} className="border-t border-[var(--border-light)]">
+                        <td className="px-3 py-2 text-[var(--text-primary)]">{row.userName || '-'}</td>
+                        <td className="px-3 py-2">
+                          <span className={clsx(
+                            'inline-flex rounded-full px-2 py-0.5 text-xs font-semibold',
+                            row.status === 'PRESENT' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700',
+                          )}>
+                            {row.status}
+                          </span>
+                        </td>
+                        <td className="px-3 py-2 text-[var(--text-secondary)]">{formatDate(row.markedAt)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+                )}
+              </>
+            )}
+          </div>
+        </div>
+      </AnimatedModal>
+
       {/* Modal */}
-      {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="max-h-[calc(100vh-3rem)] w-full max-w-2xl overflow-y-auto rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] shadow-[0_8px_24px_rgba(0,0,0,0.12)]">
+      <AnimatedModal open={showModal} onRequestClose={closeModal} closeOnBackdrop>
+        <div className="max-h-[calc(100vh-3rem)] w-full max-w-2xl overflow-y-auto rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] shadow-[0_8px_24px_rgba(0,0,0,0.12)]">
             <div className="flex items-center justify-between border-b border-[var(--border-light)] p-4">
               <h3 className="text-lg font-bold text-[var(--text-primary)]">{editingNotice ? 'Edit Notice' : 'Add Notice'}</h3>
               <button onClick={closeModal} className="rounded-lg p-1 text-[var(--text-tertiary)] transition hover:bg-[var(--bg-tertiary)]">
@@ -259,6 +807,17 @@ export default function Notices() {
                   defaultValue={editingNotice?.expiryDate || ''}
                 />
               </div>
+              <SmartSelect
+                label="Notice Type"
+                name="noticeType"
+                defaultValue={(editingNotice?.noticeType || 'GENERAL').toUpperCase()}
+                required
+                options={[
+                  { value: 'GENERAL', label: 'General' },
+                  { value: 'CIRCULAR', label: 'Circular' },
+                  { value: 'MEETING', label: 'Meeting' },
+                ]}
+              />
               <div className="flex gap-3 pt-2">
                 <NeonSweepButton type="button" tone="slate" size="md" onClick={closeModal} className="flex-1">Cancel</NeonSweepButton>
                 <NeonSweepButton
@@ -272,9 +831,8 @@ export default function Notices() {
                 </NeonSweepButton>
               </div>
             </form>
-          </div>
         </div>
-      )}
+      </AnimatedModal>
     </div>
   )
 }

@@ -17,10 +17,12 @@ import com.society.backend.vendor.entity.Vendor;
  * Level 3 ─┬─ COMMITTEE             View all + limited write
  *           └─ MANAGER               Operational management
  * Level 4 ─┬─ EMPLOYEE              Staff/Security (visitors, gate logs)
- *           └─ MEMBER                Flat owner (own bills, tickets, profile)
- * Level 5 ─┬─ TENANT                Renter (own profile, raise tickets)
- *           └─ VENDOR                External vendor (own bills, invoices)
- * Level 6 ─── VISITOR                Minimal access (own profile only)
+ *           └─ MEMBER                Flat owner (ownership/occupancy details, tenant/vehicle records,
+ *                                     reminders/notices, and ticket-driven issue handling)
+ * Level 5 ─┬─ TENANT                Renter (owner-approved requests, visitor permissions,
+ *           │                        tenancy and vehicle records)
+ *           └─ VENDOR                External AMC/service provider (contracts, logs, payments)
+ * Level 6 ─── VISITOR                Entry logging via security workflow and member approval
  *
  * PERMISSION MATRIX (User Management):
  * ─────────────────────────────────────
@@ -58,8 +60,8 @@ public enum Role {
     COMMITTEE,     // Level 3: Committee Member - intermediate management, assigns tasks
     MANAGER,       // Level 3: Operational Manager - day-to-day tasks (NO user CRUD)
     EMPLOYEE,      // Level 4: Staff/Security - handles visitors, basic operations
-    MEMBER,        // Level 4: Flat Owner - views own data, raises tickets/complaints
-    TENANT,        // Level 5: Renter - limited access to own profile & bills
-    VENDOR,        // Level 5: External vendor - own bills, invoices, work status
-    VISITOR        // Level 6: Guest - minimal access, read-only
+    MEMBER,        // Level 4: Flat Owner - manages own occupancy records and raises tickets/complaints
+    TENANT,        // Level 5: Renter - owner-approved requests, notices, tenancy/vehicle records
+    VENDOR,        // Level 5: AMC/service provider - contract, payment, and service history records
+    VISITOR        // Level 6: Guest - security-entered logs with member approval flow
 }

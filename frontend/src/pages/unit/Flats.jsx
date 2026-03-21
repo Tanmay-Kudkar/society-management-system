@@ -4,21 +4,18 @@ import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '../../context'
 import { useConfirmDialog } from '../../context'
 import { useToast } from '../../context'
-import { flatApi, societyApi, wingApi } from '../../../../api'
-import { Plus, Edit, Trash2, Search, X, Home, Store, Briefcase, Layers, AlertCircle } from 'lucide-react'
-import { FormInput, PhoneInput, SmartSelect, NumberInput, FormErrorSummary, AsyncButton, InfoTooltip } from '../../components'
+import { flatApi, societyApi, wingApi, exportApi, downloadBlob } from '../../../../api'
+import { Plus, Edit, Trash2, Search, X, Home, Store, Briefcase, Layers, AlertCircle, FileSpreadsheet } from 'lucide-react'
+import { FormInput, PhoneInput, SmartSelect, NumberInput, FormErrorSummary, AsyncButton, InfoTooltip, NeonSweepButton } from '../../components'
 import { PermissionDenied } from '../../components'
 
 export default function Flats() {
   const { user, canManageFlats } = useAuth()
+  const canAccessFlats = canManageFlats()
   const confirmDialog = useConfirmDialog()
   const toast = useToast()
   const queryClient = useQueryClient()
-  
-  // Permission check
-  if (!canManageFlats()) {
-    return <PermissionDenied message="You don't have permission to manage flats/units" />
-  }
+
   const [searchParams] = useSearchParams()
   const [showModal, setShowModal] = useState(false)
   const [editingFlat, setEditingFlat] = useState(null)
@@ -30,6 +27,16 @@ export default function Flats() {
   const [modalSocietyId, setModalSocietyId] = useState('')
   const [wingSyncAttempted, setWingSyncAttempted] = useState(false)
   const [formErrors, setFormErrors] = useState({})
+  const [isExporting, setIsExporting] = useState(false)
+
+  // Get society filter from URL (for MASTER_ADMIN viewing specific society)
+  const societyIdFromUrl = searchParams.get('society')
+
+  // Check if current user is MASTER_ADMIN or SOCIETY_ADMIN
+  const isPlatformLevel = user?.role === 'MASTER_ADMIN'
+
+  // Determine effective society ID for filtering
+  const effectiveSocietyId = isPlatformLevel && societyIdFromUrl ? parseInt(societyIdFromUrl) : user?.societyId
 
   // Get society filter from URL (for MASTER_ADMIN viewing specific society)
   const societyIdFromUrl = searchParams.get('society')
@@ -154,7 +161,7 @@ export default function Flats() {
     mutationFn: (data) => flatApi.create(data, user.id),
     onSuccess: () => {
       queryClient.invalidateQueries(['flats'])
-      setShowModal(false)
+      closeModal(true)
     },
   })
 
@@ -162,8 +169,7 @@ export default function Flats() {
     mutationFn: ({ id, data }) => flatApi.update(id, data, user.id),
     onSuccess: () => {
       queryClient.invalidateQueries(['flats'])
-      setShowModal(false)
-      setEditingFlat(null)
+      closeModal(true)
     },
   })
 
@@ -174,6 +180,13 @@ export default function Flats() {
       toast.error(error.response?.data?.message || 'Failed to delete unit')
     },
   })
+
+  const closeModal = (force = false) => {
+    if (!force && (createMutation.isPending || updateMutation.isPending)) return
+    setShowModal(false)
+    setEditingFlat(null)
+    setFormErrors({})
+  }
 
   const filteredFlats = useMemo(() => flats.filter(f => {
     const matchesSearch = f.flatNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -311,6 +324,29 @@ export default function Flats() {
     setShowModal(true)
   }
 
+  const handleExport = async () => {
+    if (!effectiveSocietyId) {
+      toast.error('Society context is required for export')
+      return
+    }
+
+    setIsExporting(true)
+    try {
+      const response = await exportApi.flats(effectiveSocietyId)
+      const datePart = new Date().toISOString().split('T')[0]
+      downloadBlob(response.data, `flats_${datePart}.xlsx`)
+      toast.success('Units exported successfully')
+    } catch (error) {
+      toast.error(error?.response?.data?.message || 'Failed to export units')
+    } finally {
+      setIsExporting(false)
+    }
+  }
+
+  if (!canAccessFlats) {
+    return <PermissionDenied message="You don't have permission to manage flats/units" />
+  }
+
   return (
     <div>
       {/* Header */}
@@ -321,13 +357,27 @@ export default function Flats() {
             <InfoTooltip text="Manage society flats, shops, and offices" />
           </div>
         </div>
-        <button
-          onClick={() => handleOpenModal(null)}
-          className="inline-flex items-center gap-2 py-2 px-4 rounded-xl bg-[#2563eb] text-white font-semibold transition-all hover:bg-[#1d4ed8] hover:-translate-y-px"
-        >
-          <Plus size={20} />
-          Add Unit
-        </button>
+        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+          <NeonSweepButton
+            tone="slate"
+            size="md"
+            onClick={handleExport}
+            disabled={isExporting}
+            className="w-full sm:w-auto"
+          >
+            <FileSpreadsheet size={18} />
+            {isExporting ? 'Exporting...' : 'Export XLSX'}
+          </NeonSweepButton>
+          <NeonSweepButton
+            tone="violet"
+            size="md"
+            onClick={() => handleOpenModal(null)}
+            className="w-full sm:w-auto"
+          >
+            <Plus size={20} />
+            Add Unit
+          </NeonSweepButton>
+        </div>
       </div>
 
       {/* Filters */}
@@ -479,7 +529,7 @@ export default function Flats() {
           <div className="w-full max-w-[32rem] max-h-[calc(100vh-3rem)] overflow-y-auto rounded-xl bg-[var(--bg-card)] border border-[var(--border-light)] shadow-[0_8px_24px_rgba(0,0,0,0.12)]">
             <div className="sticky top-0 z-[2] flex items-center justify-between p-4 border-b border-[var(--border-light)] bg-inherit">
               <h3 className="text-lg font-bold text-[var(--text-primary)]">{editingFlat ? 'Edit Unit' : 'Add Unit'}</h3>
-              <button onClick={() => { setShowModal(false); setFormErrors({}); }} className="p-1 rounded-lg text-[var(--text-tertiary)] hover:bg-[var(--bg-tertiary)]">
+              <button onClick={() => closeModal()} className="p-1 rounded-lg text-[var(--text-tertiary)] hover:bg-[var(--bg-tertiary)]">
                 <X size={20} />
               </button>
             </div>
@@ -623,7 +673,7 @@ export default function Flats() {
               <div className="flex gap-3 pt-2">
                 <button
                   type="button"
-                  onClick={() => { setShowModal(false); setFormErrors({}); }}
+                  onClick={() => closeModal()}
                   className="flex-1 py-2 px-4 rounded-xl font-semibold border border-[var(--border-light)] bg-transparent text-[#334155] hover:bg-[var(--bg-tertiary)]"
                 >
                   Cancel

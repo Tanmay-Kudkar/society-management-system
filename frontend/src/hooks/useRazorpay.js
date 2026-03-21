@@ -35,6 +35,7 @@ export function useRazorpay({ onSuccess, onError, onDismiss } = {}) {
     onSuccess: (response) => {
       // Invalidate relevant queries
       queryClient.invalidateQueries(['maintenanceBills'])
+      queryClient.invalidateQueries(['vendorBills'])
       queryClient.invalidateQueries(['payments'])
       queryClient.invalidateQueries(['transactions'])
     },
@@ -53,6 +54,7 @@ export function useRazorpay({ onSuccess, onError, onDismiss } = {}) {
   const initiatePayment = useCallback(async ({
     amount,
     maintenanceBillId,
+    vendorBillId,
     userId,
     description,
     paymentType = 'MAINTENANCE',
@@ -66,6 +68,7 @@ export function useRazorpay({ onSuccess, onError, onDismiss } = {}) {
       const orderResponse = await createOrderMutation.mutateAsync({
         amount,
         maintenanceBillId,
+        vendorBillId,
         userId,
         description,
         paymentType,

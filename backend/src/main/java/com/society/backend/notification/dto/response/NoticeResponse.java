@@ -15,7 +15,10 @@ public class NoticeResponse {
     private String title;
     private String content;
     private String priority;
+    private String noticeType;
     private LocalDate expiryDate;
     private Boolean isActive;
     private LocalDateTime createdAt;
+    private Boolean deleted;
+    private LocalDateTime deleteUndoExpiresAt;
 }

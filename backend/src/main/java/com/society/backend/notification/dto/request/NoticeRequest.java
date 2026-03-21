@@ -24,5 +24,7 @@ public class NoticeRequest {
     @NotBlank(message = "Priority is required")
     private String priority = "MEDIUM"; // LOW, MEDIUM, HIGH, URGENT
 
+    private String noticeType; // GENERAL, CIRCULAR, MEETING
+
     private LocalDate expiryDate;
 }

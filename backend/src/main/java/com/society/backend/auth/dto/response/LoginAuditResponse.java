@@ -22,6 +22,7 @@ public class LoginAuditResponse {
     private String proximityReason;
 
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
+    private Boolean usedFallbackLocation;
 
     public LoginAuditResponse() {}
 
@@ -35,6 +36,7 @@ public class LoginAuditResponse {
         dto.latitude = audit.getLatitude();
         dto.longitude = audit.getLongitude();
         dto.isNearby = audit.getIsNearby();
+        dto.usedFallbackLocation = audit.getUsedFallbackLocation();
         dto.distanceMeters = audit.getDistanceMeters();
         dto.proximityThresholdMeters = audit.getProximityThresholdMeters();
         dto.proximityReason = resolveProximityReason(audit);
@@ -47,6 +49,10 @@ public class LoginAuditResponse {
     }
 
     private static String resolveProximityReason(LoginAudit audit) {
+        if (Boolean.TRUE.equals(audit.getUsedFallbackLocation())) {
+            return "Used last known location (GPS was unavailable during logout)";
+        }
+
         if (audit.getLatitude() == null || audit.getLongitude() == null) {
             return "Location not shared by the device";
         }
@@ -80,5 +86,6 @@ public class LoginAuditResponse {
     public Boolean getIsNearby() { return isNearby; }
     public Double getDistanceMeters() { return distanceMeters; }
     public Double getProximityThresholdMeters() { return proximityThresholdMeters; }
+    public Boolean getUsedFallbackLocation() { return usedFallbackLocation; }
     public String getProximityReason() { return proximityReason; }
 }

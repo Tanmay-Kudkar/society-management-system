@@ -6,7 +6,7 @@ import { useConfirmDialog } from '../../context'
 import { useToast } from '../../context'
 import { contractApi, vendorApi } from '../../../../api'
 import { Plus, Edit, Trash2, Search, X, FileText, AlertTriangle, CheckCircle } from 'lucide-react'
-import { FormInput, SmartSelect, NumberInput, FormTextarea, InfoTooltip, NeonSweepButton } from '../../components'
+import { FormInput, SmartSelect, NumberInput, FormTextarea, InfoTooltip, NeonSweepButton, AnimatedModal } from '../../components'
 import { HeroSkeleton, FinancePageSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
 import useMinLoadingTime from '../../hooks/useMinLoadingTime'
 
@@ -14,6 +14,8 @@ const contractTypes = [
   'AMC', 'INSURANCE', 'PEST_CONTROL', 'HOUSEKEEPING', 'CCTV', 
   'LIFT', 'GENERATOR', 'SECURITY', 'FD', 'OTHER'
 ]
+
+const MODAL_ANIMATION_DURATION = 220
 
 export default function Contracts() {
   const { user, canManageContracts } = useAuth()
@@ -25,6 +27,14 @@ export default function Contracts() {
   const [editingContract, setEditingContract] = useState(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [filterType, setFilterType] = useState('')
+
+  function closeContractModal(force = false) {
+    if (!force && (createMutation.isPending || updateMutation.isPending)) return
+    setShowModal(false)
+    window.setTimeout(() => {
+      setEditingContract(null)
+    }, MODAL_ANIMATION_DURATION)
+  }
 
   const societyIdFromUrl = searchParams.get('society')
   const parsedSocietyIdFromUrl = Number(societyIdFromUrl)
@@ -60,7 +70,7 @@ export default function Contracts() {
     mutationFn: (data) => contractApi.create(data, user.id),
     onSuccess: () => {
       queryClient.invalidateQueries(['contracts'])
-      setShowModal(false)
+      closeContractModal(true)
     },
   })
 
@@ -68,8 +78,7 @@ export default function Contracts() {
     mutationFn: ({ id, data }) => contractApi.update(id, data, user.id),
     onSuccess: () => {
       queryClient.invalidateQueries(['contracts'])
-      setShowModal(false)
-      setEditingContract(null)
+      closeContractModal(true)
     },
   })
 
@@ -276,12 +285,15 @@ export default function Contracts() {
       </div>
 
       {/* Modal */}
-      {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="max-h-[calc(100vh-3rem)] w-full max-w-[520px] overflow-y-auto rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] shadow-[0_8px_24px_rgba(0,0,0,0.12)]">
+      <AnimatedModal
+        open={showModal}
+        onRequestClose={closeContractModal}
+        className="max-h-[calc(100vh-3rem)] w-full max-w-[520px] overflow-y-auto rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] shadow-[0_8px_24px_rgba(0,0,0,0.12)]"
+        durationMs={MODAL_ANIMATION_DURATION}
+      >
             <div className="sticky top-0 flex items-center justify-between border-b border-[var(--border-light)] bg-inherit p-4">
               <h3 className="text-lg font-semibold text-[var(--text-primary)]">{editingContract ? 'Edit Contract' : 'Add Contract'}</h3>
-              <button onClick={() => setShowModal(false)} className="rounded-lg border-0 bg-transparent p-1 text-[var(--text-tertiary)] transition hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-primary)]">
+              <button onClick={closeContractModal} className="rounded-lg border-0 bg-transparent p-1 text-[var(--text-tertiary)] transition hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-primary)]">
                 <X size={20} />
               </button>
             </div>
@@ -344,7 +356,7 @@ export default function Contracts() {
                   type="button"
                   tone="slate"
                   size="md"
-                  onClick={() => setShowModal(false)}
+                  onClick={closeContractModal}
                   className="flex-1"
                 >
                   Cancel
@@ -360,9 +372,7 @@ export default function Contracts() {
                 </NeonSweepButton>
               </div>
             </form>
-          </div>
-        </div>
-      )}
+      </AnimatedModal>
     </div>
   )
 }

@@ -25,6 +25,7 @@ public class PaymentResponse {
     private String description;
     private String receiptNumber;
     private Long maintenanceBillId;
+    private Long vendorBillId;
     private Long userId;
     private String userName;
     private Long societyId;

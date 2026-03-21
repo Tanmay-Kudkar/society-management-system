@@ -120,7 +120,26 @@ public class RoleService {
     public void requireStaff(Long userId) {
         checkRole(userId, Role.MASTER_ADMIN, Role.SOCIETY_ADMIN,
                 Role.CHAIRMAN, Role.SECRETARY, Role.TREASURER,
-                Role.COMMITTEE, Role.MANAGER, Role.EMPLOYEE);
+                Role.COMMITTEE, Role.MANAGER);
+    }
+
+    /**
+     * Ticket management roles (committee excluded):
+     * MASTER_ADMIN, SOCIETY_ADMIN, C/S/T, MANAGER, EMPLOYEE.
+     */
+    public void requireTicketManager(Long userId) {
+        checkRole(userId, Role.MASTER_ADMIN, Role.SOCIETY_ADMIN,
+                Role.CHAIRMAN, Role.SECRETARY, Role.TREASURER,
+                Role.MANAGER);
+    }
+
+    /**
+     * Ticket assignment roles: MASTER_ADMIN, SOCIETY_ADMIN, C/S/T, MANAGER.
+     */
+    public void requireTicketAssigner(Long userId) {
+        checkRole(userId, Role.MASTER_ADMIN, Role.SOCIETY_ADMIN,
+                Role.CHAIRMAN, Role.SECRETARY, Role.TREASURER,
+                Role.MANAGER);
     }
 
     /**
@@ -152,7 +171,25 @@ public class RoleService {
      * Check if user can manage notices
      */
     public void canManageNotices(Long userId) {
-        requireStaff(userId);
+        checkRole(userId, Role.MASTER_ADMIN, Role.SOCIETY_ADMIN,
+                Role.CHAIRMAN, Role.SECRETARY, Role.TREASURER);
+    }
+
+    /**
+     * Record own attendance for meeting notices.
+     */
+    public void canRecordMeetingAttendance(Long userId) {
+        checkRole(userId, Role.MASTER_ADMIN, Role.SOCIETY_ADMIN,
+                Role.CHAIRMAN, Role.SECRETARY, Role.TREASURER,
+                Role.COMMITTEE);
+    }
+
+    /**
+     * View all attendance records for a meeting notice.
+     */
+    public void canViewMeetingAttendance(Long userId) {
+        checkRole(userId, Role.MASTER_ADMIN, Role.SOCIETY_ADMIN,
+                Role.CHAIRMAN, Role.SECRETARY, Role.TREASURER);
     }
 
     /**
@@ -168,7 +205,7 @@ public class RoleService {
     public void canUpdateComplaintStatus(Long userId) {
         checkRole(userId, Role.MASTER_ADMIN, Role.SOCIETY_ADMIN,
                 Role.CHAIRMAN, Role.SECRETARY, Role.TREASURER,
-                Role.COMMITTEE, Role.MANAGER, Role.EMPLOYEE);
+                Role.COMMITTEE, Role.MANAGER);
     }
 
     /**
@@ -191,7 +228,7 @@ public class RoleService {
     public void canManageVehicles(Long userId) {
         checkRole(userId, Role.MASTER_ADMIN, Role.SOCIETY_ADMIN,
                 Role.CHAIRMAN, Role.SECRETARY, Role.TREASURER, Role.COMMITTEE,
-                Role.MANAGER, Role.EMPLOYEE, Role.MEMBER);
+                Role.MANAGER, Role.MEMBER);
     }
 
     /**
@@ -225,7 +262,7 @@ public class RoleService {
     public void canRaiseComplaints(Long userId) {
         checkRole(userId, Role.MASTER_ADMIN, Role.SOCIETY_ADMIN,
                 Role.CHAIRMAN, Role.SECRETARY, Role.TREASURER, Role.COMMITTEE,
-                Role.MANAGER, Role.EMPLOYEE, Role.MEMBER, Role.TENANT);
+                Role.MANAGER, Role.MEMBER, Role.TENANT);
     }
 
     /**
@@ -233,6 +270,14 @@ public class RoleService {
      */
     public void canManageFinancials(Long userId) {
         checkRole(userId, Role.MASTER_ADMIN, Role.SOCIETY_ADMIN,
-                Role.CHAIRMAN, Role.SECRETARY, Role.TREASURER);
+                Role.CHAIRMAN, Role.SECRETARY, Role.TREASURER, Role.MANAGER);
+    }
+
+    /**
+     * Employee HR record access roles.
+     */
+    public void requireEmployeeRecordAccess(Long userId) {
+        checkRole(userId, Role.MASTER_ADMIN, Role.SOCIETY_ADMIN,
+                Role.CHAIRMAN, Role.SECRETARY, Role.TREASURER, Role.MANAGER);
     }
 }

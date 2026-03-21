@@ -1,4 +1,4 @@
-import { Bell, Clock, Cloud, CreditCard, DollarSign, ShieldCheck, Sun, Ticket } from "lucide-react";
+import { AlertTriangle, Bell, Clock, Cloud, CreditCard, DollarSign, ShieldCheck, Sun, Ticket } from "lucide-react";
 
 import { DashboardSkeleton, WakeUpBanner } from "../../../components/SkeletonLoaders";
 import MetricPanel from "./components/MetricPanel";
@@ -37,10 +37,12 @@ export default function Dashboard() {
     role,
     roleUi,
     navigate,
+    dashboardSocietyId,
     isPlatformLevel,
     isPlatformOwner,
     isMemberOrTenant,
     isSocietyOpsLevel,
+    currentSocietyName,
     canSeeFinanceSection,
     canSeeContractAlerts,
     showSkeleton,
@@ -50,13 +52,30 @@ export default function Dashboard() {
     societies,
   } = dashboardData;
 
+  const navigateToScoped = (path) => {
+    if (user?.role === 'MASTER_ADMIN' && dashboardSocietyId) {
+      const [pathname, search = ""] = String(path).split("?")
+      const params = new URLSearchParams(search)
+      if (!params.get("society")) {
+        params.set("society", String(dashboardSocietyId))
+      }
+      const query = params.toString()
+      navigate(query ? `${pathname}?${query}` : pathname)
+      return
+    }
+    navigate(path)
+  }
+
   const {
     primaryStats,
+    moduleActionCards,
     roleActionItems,
     overviewConfig,
     noticeItems,
+    pendingComplaintItems,
     securityFeedItems,
     pendingBillItems,
+    pendingTicketItems,
     pendingBillsCount,
     memberIssueStats,
     operationsCards,
@@ -92,10 +111,55 @@ export default function Dashboard() {
         getWeatherDesc={getWeatherDesc}
         getWeatherIcon={getWeatherIcon}
         timeGreeting={getTimeGreeting()}
+        currentSocietyName={currentSocietyName}
+        currentSocietyId={dashboardSocietyId}
       />
 
       <PrimaryStatsSection roleUi={roleUi} primaryStats={primaryStats} />
       <RolePrioritySection role={role} roleActionItems={roleActionItems} />
+
+      {moduleActionCards.length > 0 && !isPlatformLevel && (
+        <section className={sectionShellClass}>
+          <SectionHeader
+            icon={Ticket}
+            eyebrow="ACTION HUB"
+            title="Communication workboard"
+            description="Click any tile to open the module and take role-allowed actions."
+          />
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {moduleActionCards.map((item) => (
+              <MetricPanel
+                key={item.key}
+                title={item.title}
+                value={item.value}
+                helper={item.helper}
+                tone={item.tone}
+                onClick={item.onClick}
+              />
+            ))}
+          </div>
+          <div className="mt-5 grid gap-4 xl:grid-cols-3">
+            <FeedSection
+              title="Pending tickets"
+              icon={Ticket}
+              items={pendingTicketItems}
+              emptyText="No pending tickets."
+            />
+            <FeedSection
+              title="Pending complaints"
+              icon={AlertTriangle}
+              items={pendingComplaintItems}
+              emptyText="No pending complaints."
+            />
+            <FeedSection
+              title="Recent notices"
+              icon={Bell}
+              items={noticeItems}
+              emptyText="No recent notices."
+            />
+          </div>
+        </section>
+      )}
 
       {isMemberOrTenant ? (
         <div className="grid gap-5 xl:grid-cols-[1.1fr_0.9fr]">
@@ -133,7 +197,6 @@ export default function Dashboard() {
             icon={ShieldCheck}
             items={securityFeedItems}
             emptyText="No building activity has been recorded yet."
-            badgeLabel="Live"
           />
         </div>
       ) : (
@@ -152,7 +215,7 @@ export default function Dashboard() {
 
             <div className="grid gap-5">
               <FeedSection title="Recent notices" icon={Bell} items={noticeItems} emptyText="No recent notices." badgeLabel={`${noticeItems.length} items`} />
-              <FeedSection title="Security feed" icon={ShieldCheck} items={securityFeedItems} emptyText="No security events yet." badgeLabel="Live" />
+              <FeedSection title="Security feed" icon={ShieldCheck} items={securityFeedItems} emptyText="No security events yet." />
             </div>
           </div>
 
@@ -182,6 +245,7 @@ export default function Dashboard() {
               expiringContracts={expiringContracts}
               expiringTenants={expiringTenants}
               pendingTickets={pendingTickets}
+              navigate={navigateToScoped}
             />
           )}
         </>

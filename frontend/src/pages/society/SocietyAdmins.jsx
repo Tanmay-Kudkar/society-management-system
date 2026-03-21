@@ -528,6 +528,15 @@ export default function SocietyAdmins() {
   }
 
   // Create society + admin combined mutation
+  const closeAdminModal = (force = false) => {
+    if (!force && (createMutation.isPending || updateMutation.isPending || assignMutation.isPending)) return
+    setShowModal(false)
+    setEditingAdmin(null)
+    setAssignmentSociety(null)
+    setFormError('')
+    setShowPassword(false)
+  }
+
   const createMutation = useMutation({
     mutationFn: async ({ societyData, adminData }) => {
       // Create society first
@@ -549,9 +558,7 @@ export default function SocietyAdmins() {
     onSuccess: () => {
       queryClient.invalidateQueries(['users'])
       queryClient.invalidateQueries(['societies'])
-      setShowModal(false)
-      setFormError('')
-      setShowPassword(false)
+      closeAdminModal(true)
       toast.success('Society & Admin created successfully')
     },
     onError: (error) => setFormError(parseApiError(error)),
@@ -566,10 +573,7 @@ export default function SocietyAdmins() {
     onSuccess: () => {
       queryClient.invalidateQueries(['users'])
       queryClient.invalidateQueries(['societies'])
-      setShowModal(false)
-      setEditingAdmin(null)
-      setFormError('')
-      setShowPassword(false)
+      closeAdminModal(true)
       toast.success('Society & Admin updated successfully')
     },
     onError: (error) => setFormError(parseApiError(error)),
@@ -589,10 +593,7 @@ export default function SocietyAdmins() {
     onSuccess: () => {
       queryClient.invalidateQueries(['users'])
       queryClient.invalidateQueries(['societies'])
-      setShowModal(false)
-      setAssignmentSociety(null)
-      setFormError('')
-      setShowPassword(false)
+      closeAdminModal(true)
       toast.success('Society admin assigned successfully')
     },
     onError: (error) => setFormError(parseApiError(error)),
@@ -1112,14 +1113,14 @@ export default function SocietyAdmins() {
 
       {/* Modal */}
       {showModal && (
-        <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/60 backdrop-blur-[4px] p-4" onClick={(e) => e.target === e.currentTarget && setShowModal(false)}>
+        <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/60 backdrop-blur-[4px] p-4" onClick={(e) => e.target === e.currentTarget && closeAdminModal()}>
           <div className="w-full max-w-[620px] max-h-[90vh] overflow-y-auto bg-[var(--bg-card)] rounded-2xl border border-[var(--border-light)] shadow-[0_20px_60px_rgba(0,0,0,0.3)]">
             <div className="flex justify-between items-start px-6 pt-5 gap-3">
               <div>
                 <h3 className="m-0 text-lg font-bold text-[var(--text-primary)]">{editingAdmin ? 'Edit Society Admin' : assignmentSociety ? 'Assign Society Admin' : 'Create Society + Admin'}</h3>
                 <p className="mt-1 text-[13px] text-[var(--text-tertiary)]">{editingAdmin ? 'Update society and admin details' : assignmentSociety ? 'Assign an individual society admin' : 'Create a new society with its administrator'}</p>
               </div>
-              <button onClick={() => { setShowModal(false); setShowPassword(false) }} className="bg-transparent border-none cursor-pointer text-[var(--text-tertiary)] p-1 rounded-lg flex hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-primary)]">
+              <button onClick={() => closeAdminModal()} className="bg-transparent border-none cursor-pointer text-[var(--text-tertiary)] p-1 rounded-lg flex hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-primary)]">
                 <X size={20} />
               </button>
             </div>
@@ -1219,7 +1220,7 @@ export default function SocietyAdmins() {
               </div>
 
               <div className="flex justify-end gap-[10px] pt-3 border-t border-[var(--border-light)]">
-                <NeonSweepButton tone="slate" size="md" type="button" onClick={() => { setShowModal(false); setShowPassword(false) }}>
+                <NeonSweepButton tone="slate" size="md" type="button" onClick={() => closeAdminModal()}>
                   Cancel
                 </NeonSweepButton>
                 <NeonSweepButton

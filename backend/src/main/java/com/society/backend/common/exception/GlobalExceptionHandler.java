@@ -1,6 +1,7 @@
 package com.society.backend.common.exception;
 
 import java.time.LocalDateTime;
+import java.util.LinkedHashMap;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -12,6 +13,8 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.multipart.MultipartException;
 
 import com.society.backend.common.dto.ErrorResponse;
 
@@ -20,6 +23,40 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+        @ExceptionHandler(MaxUploadSizeExceededException.class)
+        public ResponseEntity<ErrorResponse> handleMaxUploadSizeExceeded(
+                        MaxUploadSizeExceededException ex,
+                        HttpServletRequest request) {
+                return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).body(
+                                new ErrorResponse(
+                                                LocalDateTime.now(),
+                                                HttpStatus.PAYLOAD_TOO_LARGE.value(),
+                                                "Payload Too Large",
+                                                "File too large. Maximum allowed size is 25MB.",
+                                                request.getRequestURI()));
+        }
+
+        @ExceptionHandler(MultipartException.class)
+        public ResponseEntity<ErrorResponse> handleMultipartException(
+                        MultipartException ex,
+                        HttpServletRequest request) {
+                String message = ex.getMessage() != null && ex.getMessage().toLowerCase().contains("size")
+                                ? "File too large. Maximum allowed size is 25MB."
+                                : "Invalid multipart request";
+
+                HttpStatus status = message.startsWith("File too large")
+                                ? HttpStatus.PAYLOAD_TOO_LARGE
+                                : HttpStatus.BAD_REQUEST;
+
+                return ResponseEntity.status(status).body(
+                                new ErrorResponse(
+                                                LocalDateTime.now(),
+                                                status.value(),
+                                                status.getReasonPhrase(),
+                                                message,
+                                                request.getRequestURI()));
+        }
 
         @ExceptionHandler(MethodArgumentNotValidException.class)
         public ResponseEntity<Map<String, Object>> handleValidation(
@@ -135,6 +172,20 @@ public class GlobalExceptionHandler {
                                                 status.getReasonPhrase(),
                                                 ex.getMessage(),
                                                 request.getRequestURI()));
+        }
+
+        @ExceptionHandler(LinkedRecordsConflictException.class)
+        public ResponseEntity<Map<String, Object>> handleLinkedRecordsConflict(
+                        LinkedRecordsConflictException ex,
+                        HttpServletRequest request) {
+                Map<String, Object> response = new LinkedHashMap<>();
+                response.put("timestamp", LocalDateTime.now().toString());
+                response.put("status", 409);
+                response.put("error", "Conflict");
+                response.put("message", ex.getMessage());
+                response.put("path", request.getRequestURI());
+                response.put("impacts", ex.getImpacts());
+                return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
         }
 
         @ExceptionHandler(AccessDeniedException.class)

@@ -188,6 +188,8 @@ export const vendorBillApi = {
   update: (id, data, userId) => api.put(`/vendor-bills/${id}?userId=${userId}`, data),
   recordPayment: (id, amount, paymentMode, referenceNumber, userId) => 
     api.post(`/vendor-bills/${id}/payment?amount=${amount}&paymentMode=${paymentMode}&referenceNumber=${encodeURIComponent(referenceNumber || '')}&userId=${userId}`),
+  downloadReceiptPdf: (id, userId) =>
+    api.get(`/vendor-bills/${id}/receipt/pdf?userId=${userId}`, { responseType: 'blob' }),
   delete: (id, userId, force = true) => api.delete(`/vendor-bills/${id}?userId=${userId}${force ? '&force=true' : ''}`),
 }
 
@@ -255,7 +257,12 @@ export const noticeApi = {
   getActive: (societyId) => api.get(`/notices/society/${societyId}`),
   create: (data, userId) => api.post(`/notices?userId=${userId}`, data),
   update: (id, data, userId) => api.put(`/notices/${id}?userId=${userId}`, data),
-  delete: (id, userId, force = true) => api.delete(`/notices/${id}?userId=${userId}${force ? '&force=true' : ''}`),
+  undo: (id, userId) => api.patch(`/notices/${id}/undo?userId=${userId}`),
+  delete: (id, userId, force = false) => api.delete(`/notices/${id}?userId=${userId}${force ? '&force=true' : ''}`),
+  markAttendance: (id, userId, data) => api.post(`/notices/${id}/attendance?userId=${userId}`, data || {}),
+  getMyAttendance: (id, userId) => api.get(`/notices/${id}/attendance/me?userId=${userId}`),
+  getAttendanceByNotice: (id, userId) => api.get(`/notices/${id}/attendance?userId=${userId}`),
+  exportAttendance: (id, userId, status = 'ALL') => api.get(`/notices/${id}/attendance/export?userId=${userId}&status=${encodeURIComponent(status)}`, { responseType: 'blob' }),
 }
 
 // Ticket API
@@ -276,6 +283,8 @@ export const ticketApi = {
     if (resolution) url += `&resolution=${encodeURIComponent(resolution)}`;
     return api.patch(url);
   },
+  reply: (id, message, userId) => api.patch(`/tickets/${id}/reply?message=${encodeURIComponent(message)}&userId=${userId}`),
+  getReplies: (id) => api.get(`/tickets/${id}/replies`),
   updateProgress: (id, progress, userId) => api.patch(`/tickets/${id}/progress?progress=${progress}&userId=${userId}`),
   assign: (id, assignedToId, userId) => api.patch(`/tickets/${id}/assign?assignedToId=${assignedToId}&userId=${userId}`),
   delete: (id, userId, force = true) => api.delete(`/tickets/${id}?userId=${userId}${force ? '&force=true' : ''}`),
@@ -286,15 +295,33 @@ export const complaintApi = {
   getAll: (userId) => api.get(`/complaints?userId=${userId}`),
   getById: (id) => api.get(`/complaints/${id}`),
   getBySociety: (societyId, userId) => api.get(`/complaints/society/${societyId}?userId=${userId}`),
+  getSlaSummary: (societyId, userId) => api.get(`/complaints/society/${societyId}/sla-summary?userId=${userId}`),
   getByUser: (targetUserId, userId) => api.get(`/complaints/user/${targetUserId}?userId=${userId}`),
   getByStatus: (status, userId) => api.get(`/complaints/status/${status}?userId=${userId}`),
   create: (data, userId) => api.post(`/complaints?userId=${userId}`, data),
+  update: (id, data, userId) => api.put(`/complaints/${id}?userId=${userId}`, data),
   updateStatus: (id, status, resolution, userId) => {
     let url = `/complaints/${id}/status?status=${status}&userId=${userId}`;
     if (resolution) url += `&resolution=${encodeURIComponent(resolution)}`;
     return api.patch(url);
   },
-  delete: (id, userId, force = true) => api.delete(`/complaints/${id}?userId=${userId}${force ? '&force=true' : ''}`),
+  assign: (id, assignedToUserId, userId) => api.patch(`/complaints/${id}/assign?userId=${userId}`, { assignedToUserId }),
+  addRemarks: (id, remarks, userId) => api.patch(`/complaints/${id}/remarks?userId=${userId}`, { remarks }),
+  uploadAttachment: (file, societyId, userId, onUploadProgress) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('societyId', societyId);
+    return api.post(`/complaints/attachments/upload?userId=${userId}`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+      onUploadProgress,
+    });
+  },
+  getComments: (id, userId) => api.get(`/complaints/${id}/comments?userId=${userId}`),
+  addComment: (id, message, userId) => api.post(`/complaints/${id}/comments?userId=${userId}`, { message }),
+  getHistory: (id, userId) => api.get(`/complaints/${id}/history?userId=${userId}`),
+  downloadAttachment: (url) => api.get(url, { responseType: 'blob' }),
+  undo: (id, userId) => api.patch(`/complaints/${id}/undo?userId=${userId}`),
+  delete: (id, userId, force = false) => api.delete(`/complaints/${id}?userId=${userId}${force ? '&force=true' : ''}`),
 }
 
 // Emergency Contact API
@@ -469,17 +496,22 @@ export const reportApi = {
 export const exportApi = {
   transactions: (societyId, startDate, endDate) => 
     api.get(`/api/export/transactions/${societyId}?startDate=${startDate}&endDate=${endDate}`, { responseType: 'blob' }),
-  maintenanceBills: (societyId, month) => 
-    api.get(`/api/export/maintenance-bills/${societyId}${month ? `?month=${month}` : ''}`, { responseType: 'blob' }),
+  maintenanceBills: (societyId, month) =>
+      api.get(`/api/export/maintenance-bills/${societyId}${month ? `?month=${month}` : ''}`, { responseType: 'blob' }),
   vendorBills: (societyId, startDate, endDate) => {
-    let url = `/api/export/vendor-bills/${societyId}`;
-    if (startDate && endDate) url += `?startDate=${startDate}&endDate=${endDate}`;
-    return api.get(url, { responseType: 'blob' });
-  },
+      const url = startDate && endDate
+        ? `/api/export/vendor-bills/${societyId}?startDate=${startDate}&endDate=${endDate}`
+        : `/api/export/vendor-bills/${societyId}`;
+      return api.get(url, { responseType: 'blob' });
+    },
   tickets: (societyId, status) => 
     api.get(`/api/export/tickets/${societyId}${status ? `?status=${status}` : ''}`, { responseType: 'blob' }),
-  flats: (societyId) => 
-    api.get(`/api/export/flats/${societyId}`, { responseType: 'blob' }),
+  flats: (societyId) =>
+      api.get(`/api/export/flats/${societyId}`, { responseType: 'blob' }),
+  paymentsBySociety: (societyId) =>
+    api.get(`/api/export/payments/${societyId}`, { responseType: 'blob' }),
+  paymentsByUser: (userId) =>
+    api.get(`/api/export/payments/user/${userId}`, { responseType: 'blob' }),
   financialReport: (societyId, reportType, startDate, endDate) => {
     let url = `/api/export/financial-report/${societyId}?reportType=${reportType}`;
     if (startDate) url += `&startDate=${startDate}`;
@@ -510,28 +542,6 @@ export const visitorApi = {
   verifyOtp: (id, userId, otpCode) => api.post(`/visitors/${id}/otp/verify?userId=${userId}&otpCode=${encodeURIComponent(otpCode)}`),
   updateStatus: (id, userId, status) => api.patch(`/visitors/${id}/status?userId=${userId}&status=${status}`),
   delete: (id, userId) => api.delete(`/visitors/${id}?userId=${userId}`),
-}
-
-// ===================== APPROVALS =====================
-export const approvalApi = {
-  // Workflows
-  createWorkflow: (userId, data) => api.post(`/approvals/workflows?userId=${userId}`, data),
-  getWorkflowById: (id) => api.get(`/approvals/workflows/${id}`),
-  getWorkflowsBySociety: (societyId) => api.get(`/approvals/workflows/society/${societyId}`),
-  getWorkflowsBySocietyAndType: (societyId, entityType) => api.get(`/approvals/workflows/society/${societyId}/type/${entityType}`),
-  updateWorkflow: (id, userId, data) => api.put(`/approvals/workflows/${id}?userId=${userId}`, data),
-  deleteWorkflow: (id, userId) => api.delete(`/approvals/workflows/${id}?userId=${userId}`),
-  // Approval Requests
-  createRequest: (userId, data) => api.post(`/approvals/requests?userId=${userId}`, data),
-  getRequestById: (id) => api.get(`/approvals/requests/${id}`),
-  getRequestsBySociety: (societyId) => api.get(`/approvals/requests/society/${societyId}`),
-  getRequestsByStatus: (societyId, status) => api.get(`/approvals/requests/society/${societyId}/status/${status}`),
-  getRequestsByEntityType: (societyId, entityType) => api.get(`/approvals/requests/society/${societyId}/type/${entityType}`),
-  getRequestsByUser: (userId) => api.get(`/approvals/requests/user/${userId}`),
-  getPendingForApprover: (societyId, userId) => api.get(`/approvals/requests/pending/${societyId}?userId=${userId}`),
-  // Actions
-  takeAction: (requestId, userId, data) => api.post(`/approvals/requests/${requestId}/action?userId=${userId}`, data),
-  cancelRequest: (requestId, userId) => api.post(`/approvals/requests/${requestId}/cancel?userId=${userId}`),
 }
 
 // Penalty & Fine System API
@@ -576,6 +586,33 @@ export const employeeApi = {
   delete: (id, userId) => api.delete(`/employees/${id}?userId=${userId}`),
   recordAdvance: (id, amount, userId) => api.patch(`/employees/${id}/advance/record?amount=${amount}&userId=${userId}`),
   deductAdvance: (id, amount, userId) => api.patch(`/employees/${id}/advance/deduct?amount=${amount}&userId=${userId}`),
+  updateIdProofMetadata: (id, data, userId) => api.put(`/employees/${id}/id-proof/metadata?userId=${userId}`, data),
+  getIdProofMetadata: (id, userId) => api.get(`/employees/${id}/id-proof/metadata?userId=${userId}`),
+  uploadIdProofDocument: (id, file, userId, idProofType, idProofNumber) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    if (idProofType) formData.append('idProofType', idProofType);
+    if (idProofNumber) formData.append('idProofNumber', idProofNumber);
+    return api.post(`/employees/${id}/id-proof/upload?userId=${userId}`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
+  downloadIdProofDocument: (id, userId) => api.get(`/employees/${id}/id-proof/file?userId=${userId}`, { responseType: 'blob' }),
+}
+
+// Employee Attendance API
+export const attendanceApi = {
+  markAttendance: (employeeId, data, userId) => api.post(`/employee-attendance/employee/${employeeId}?userId=${userId}`, data),
+  getBySociety: (societyId, userId, params = {}) => api.get(`/employee-attendance/society/${societyId}?userId=${userId}`, { params }),
+  getByEmployee: (employeeId, userId, params = {}) => api.get(`/employee-attendance/employee/${employeeId}?userId=${userId}`, { params }),
+  getSummary: (societyId, userId, params = {}) => api.get(`/employee-attendance/society/${societyId}/summary?userId=${userId}`, { params }),
+}
+
+// Employee Salary Payment API
+export const employeeSalaryPaymentApi = {
+  recordPayment: (employeeId, data, userId) => api.post(`/employee-salary-payments/employee/${employeeId}?userId=${userId}`, data),
+  getBySociety: (societyId, userId, params = {}) => api.get(`/employee-salary-payments/society/${societyId}?userId=${userId}`, { params }),
+  getByEmployee: (employeeId, userId, params = {}) => api.get(`/employee-salary-payments/employee/${employeeId}?userId=${userId}`, { params }),
 }
 
 // Helper function to download blob as file
@@ -589,4 +626,5 @@ export const downloadBlob = (blob, filename) => {
   window.URL.revokeObjectURL(url);
   document.body.removeChild(a);
 }
+
 

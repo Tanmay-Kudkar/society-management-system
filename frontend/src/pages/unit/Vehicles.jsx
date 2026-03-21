@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '../../context'
@@ -6,7 +6,7 @@ import { useConfirmDialog } from '../../context'
 import { useToast } from '../../context'
 import { vehicleApi, flatApi, societyApi } from '../../../../api'
 import { Plus, Edit, Trash2, Search, X, Car, Bike, Upload } from 'lucide-react'
-import { FormInput, SmartSelect, BulkImportModal, InfoTooltip, NeonSweepButton } from '../../components'
+import { FormInput, SmartSelect, BulkImportModal, InfoTooltip, NeonSweepButton, PaginationControls } from '../../components'
 import { HeroSkeleton, StatCardSkeleton, CardGridSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
 import useMinLoadingTime from '../../hooks/useMinLoadingTime'
 
@@ -21,6 +21,8 @@ export default function Vehicles() {
   const [editingVehicle, setEditingVehicle] = useState(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [filterType, setFilterType] = useState('')
+  const [vehiclePage, setVehiclePage] = useState(1)
+  const [vehiclePageSize, setVehiclePageSize] = useState(12)
 
   // Get society filter from URL (for MASTER_ADMIN viewing specific society)
   const societyIdFromUrl = searchParams.get('society')
@@ -64,7 +66,7 @@ export default function Vehicles() {
     mutationFn: (data) => vehicleApi.create(data, user.id),
     onSuccess: () => {
       queryClient.invalidateQueries(['vehicles'])
-      setShowModal(false)
+      closeModal(true)
     },
   })
 
@@ -72,8 +74,7 @@ export default function Vehicles() {
     mutationFn: ({ id, data }) => vehicleApi.update(id, data, user.id),
     onSuccess: () => {
       queryClient.invalidateQueries(['vehicles'])
-      setShowModal(false)
-      setEditingVehicle(null)
+      closeModal(true)
     },
   })
 
@@ -85,6 +86,12 @@ export default function Vehicles() {
     },
   })
 
+  const closeModal = (force = false) => {
+    if (!force && (createMutation.isPending || updateMutation.isPending)) return
+    setShowModal(false)
+    setEditingVehicle(null)
+  }
+
   const filteredVehicles = useMemo(() => {
     return vehicles.filter(v => {
       const matchesSearch = v.vehicleNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -94,6 +101,15 @@ export default function Vehicles() {
       return matchesSearch && matchesType
     })
   }, [vehicles, searchTerm, filterType])
+
+  const paginatedVehicles = useMemo(() => {
+    const start = (vehiclePage - 1) * vehiclePageSize
+    return filteredVehicles.slice(start, start + vehiclePageSize)
+  }, [filteredVehicles, vehiclePage, vehiclePageSize])
+
+  useEffect(() => {
+    setVehiclePage(1)
+  }, [searchTerm, filterType])
 
   const vehicleStats = useMemo(() => {
     return {
@@ -177,15 +193,15 @@ export default function Vehicles() {
   return (
     <div>
       {/* Header */}
-      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between max-[360px]:mb-4 max-[360px]:gap-2.5">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold text-[var(--text-primary)]">Vehicles</h1>
+            <h1 className="text-2xl font-bold text-[var(--text-primary)] max-[360px]:text-[1.45rem]">Vehicles</h1>
             <InfoTooltip text="Manage resident vehicles and parking" />
           </div>
         </div>
         {canEditVehicles && (
-          <div className="flex gap-2">
+          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:justify-end">
             <NeonSweepButton
               tone="cyan"
               size="md"
@@ -209,8 +225,8 @@ export default function Vehicles() {
       </div>
 
       {/* Filters */}
-      <div className="mb-6 rounded-xl border border-[var(--border-default)] bg-[var(--bg-card)] p-4 shadow-sm">
-        <div className="flex flex-col gap-4 sm:flex-row">
+      <div className="mb-6 rounded-xl border border-[var(--border-default)] bg-[var(--bg-card)] p-4 shadow-sm max-[360px]:mb-4 max-[360px]:p-3">
+        <div className="flex flex-col gap-4 sm:flex-row max-[360px]:gap-2.5">
           <div className="relative flex-1">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-[var(--text-tertiary)]" />
             <input
@@ -224,7 +240,7 @@ export default function Vehicles() {
           <select
             value={filterType}
             onChange={(e) => setFilterType(e.target.value)}
-            className="rounded-lg border border-[var(--border-light)] bg-[var(--bg-card)] px-3 py-2 text-[var(--text-primary)] outline-none transition focus:border-blue-500 focus:shadow-[0_0_0_2px_rgba(59,130,246,0.3)]"
+            className="w-full rounded-lg border border-[var(--border-light)] bg-[var(--bg-card)] px-3 py-2 text-[var(--text-primary)] outline-none transition focus:border-blue-500 focus:shadow-[0_0_0_2px_rgba(59,130,246,0.3)] sm:w-auto"
           >
             <option value="">All Types</option>
             <option value="TWO_WHEELER">Two Wheeler</option>
@@ -234,51 +250,51 @@ export default function Vehicles() {
       </div>
 
       {/* Stats */}
-      <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <div className="rounded-xl border border-[var(--border-default)] bg-[var(--bg-card)] p-4 shadow-sm">
+      <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3 max-[360px]:mb-4 max-[360px]:gap-2">
+        <div className="rounded-xl border border-[var(--border-default)] bg-[var(--bg-card)] p-4 shadow-sm max-[360px]:p-3">
           <div className="flex items-center gap-3">
             <div className="rounded-lg bg-blue-500/15 p-2">
               <Car className="h-5 w-5 text-blue-600" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-[var(--text-primary)]">
+              <p className="text-2xl font-bold text-[var(--text-primary)] max-[360px]:text-xl">
                 {vehicleStats.fourWheelers}
               </p>
-              <p className="text-sm text-[var(--text-tertiary)]">Four Wheelers</p>
+              <p className="text-sm text-[var(--text-tertiary)] max-[360px]:text-xs">Four Wheelers</p>
             </div>
           </div>
         </div>
-        <div className="rounded-xl border border-[var(--border-default)] bg-[var(--bg-card)] p-4 shadow-sm">
+        <div className="rounded-xl border border-[var(--border-default)] bg-[var(--bg-card)] p-4 shadow-sm max-[360px]:p-3">
           <div className="flex items-center gap-3">
             <div className="rounded-lg bg-green-500/15 p-2">
               <Bike className="h-5 w-5 text-green-600" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-[var(--text-primary)]">
+              <p className="text-2xl font-bold text-[var(--text-primary)] max-[360px]:text-xl">
                 {vehicleStats.twoWheelers}
               </p>
-              <p className="text-sm text-[var(--text-tertiary)]">Two Wheelers</p>
+              <p className="text-sm text-[var(--text-tertiary)] max-[360px]:text-xs">Two Wheelers</p>
             </div>
           </div>
         </div>
-        <div className="rounded-xl border border-[var(--border-default)] bg-[var(--bg-card)] p-4 shadow-sm">
+        <div className="rounded-xl border border-[var(--border-default)] bg-[var(--bg-card)] p-4 shadow-sm max-[360px]:p-3">
           <div className="flex items-center gap-3">
             <div className="rounded-lg bg-violet-500/15 p-2">
               <Car className="h-5 w-5 text-violet-600" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-[var(--text-primary)]">{vehicleStats.total}</p>
-              <p className="text-sm text-[var(--text-tertiary)]">Total Vehicles</p>
+              <p className="text-2xl font-bold text-[var(--text-primary)] max-[360px]:text-xl">{vehicleStats.total}</p>
+              <p className="text-sm text-[var(--text-tertiary)] max-[360px]:text-xs">Total Vehicles</p>
             </div>
           </div>
         </div>
       </div>
 
       {effectiveSocietyId && (
-        <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <div className="rounded-xl border border-[var(--border-default)] bg-[var(--bg-card)] p-4 shadow-sm">
+        <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 max-[360px]:mb-4 max-[360px]:gap-2">
+          <div className="rounded-xl border border-[var(--border-default)] bg-[var(--bg-card)] p-4 shadow-sm max-[360px]:p-3">
             <div className="mb-2 flex items-center justify-between">
-              <p className="text-sm font-semibold text-[var(--text-secondary)]">Two-Wheeler Parking</p>
+              <p className="text-sm font-semibold text-[var(--text-secondary)] max-[360px]:text-xs">Two-Wheeler Parking</p>
               <span className="rounded-full bg-green-500/15 px-2 py-1 text-xs font-semibold text-green-600">
                 {parkingCapacityStats.twoWheelerUsed}
                 {parkingCapacityStats.twoWheelerCapacity == null ? '' : ` / ${parkingCapacityStats.twoWheelerCapacity}`}
@@ -291,9 +307,9 @@ export default function Vehicles() {
             </p>
           </div>
 
-          <div className="rounded-xl border border-[var(--border-default)] bg-[var(--bg-card)] p-4 shadow-sm">
+          <div className="rounded-xl border border-[var(--border-default)] bg-[var(--bg-card)] p-4 shadow-sm max-[360px]:p-3">
             <div className="mb-2 flex items-center justify-between">
-              <p className="text-sm font-semibold text-[var(--text-secondary)]">Four-Wheeler Parking</p>
+              <p className="text-sm font-semibold text-[var(--text-secondary)] max-[360px]:text-xs">Four-Wheeler Parking</p>
               <span className="rounded-full bg-blue-500/15 px-2 py-1 text-xs font-semibold text-blue-600">
                 {parkingCapacityStats.fourWheelerUsed}
                 {parkingCapacityStats.fourWheelerCapacity == null ? '' : ` / ${parkingCapacityStats.fourWheelerCapacity}`}
@@ -323,7 +339,7 @@ export default function Vehicles() {
                 </tr>
               </thead>
               <tbody>
-                {filteredVehicles.map((vehicle) => (
+                {paginatedVehicles.map((vehicle) => (
                   <tr key={vehicle.id} className="border-t border-[var(--border-light)] transition hover:bg-[var(--bg-tertiary)]">
                     <td className="whitespace-nowrap px-6 py-4">
                       <div className="flex items-center gap-3">
@@ -414,7 +430,7 @@ export default function Vehicles() {
             {filteredVehicles.length === 0 ? (
               <div className="px-6 py-8 text-center text-sm text-[var(--text-tertiary)]">No vehicles found</div>
             ) : (
-              filteredVehicles.map((vehicle) => (
+              paginatedVehicles.map((vehicle) => (
                 <div key={vehicle.id} className="p-3 sm:p-4">
                   <div className="mb-2 flex items-start justify-between gap-2 sm:gap-3">
                     <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
@@ -487,17 +503,28 @@ export default function Vehicles() {
           </div>
       </div>
 
+      <PaginationControls
+        totalItems={filteredVehicles.length}
+        currentPage={vehiclePage}
+        pageSize={vehiclePageSize}
+        onPageChange={setVehiclePage}
+        onPageSizeChange={(nextSize) => {
+          setVehiclePageSize(nextSize)
+          setVehiclePage(1)
+        }}
+      />
+
       {/* Modal */}
       {showModal && canEditVehicles && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="fixed inset-0 bg-black/50" onClick={() => setShowModal(false)} />
-          <div className="relative w-full max-w-xl rounded-xl border border-[var(--border-default)] bg-[var(--bg-card)] p-6 shadow-xl">
+          <div className="fixed inset-0 bg-black/50" onClick={() => closeModal()} />
+          <div className="relative w-full max-w-xl rounded-xl border border-[var(--border-default)] bg-[var(--bg-card)] p-6 shadow-xl max-[360px]:p-4">
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-xl font-semibold text-[var(--text-primary)]">
                 {editingVehicle ? 'Edit Vehicle' : 'Add Vehicle'}
               </h2>
               <button
-                onClick={() => { setShowModal(false); setEditingVehicle(null) }}
+                onClick={() => closeModal()}
                 className="rounded-lg p-2 text-[var(--text-tertiary)] transition hover:bg-[var(--bg-tertiary)]"
               >
                 <X size={20} />
@@ -515,7 +542,7 @@ export default function Vehicles() {
                 emptyMessage="No flats available"
               />
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <FormInput
                   label="Vehicle Number"
                   name="vehicleNumber"
@@ -536,7 +563,7 @@ export default function Vehicles() {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <FormInput
                   label="Brand"
                   name="brand"
@@ -553,7 +580,7 @@ export default function Vehicles() {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <FormInput
                   label="Color"
                   name="color"
@@ -581,7 +608,7 @@ export default function Vehicles() {
                   type="button"
                   tone="slate"
                   size="md"
-                  onClick={() => { setShowModal(false); setEditingVehicle(null) }}
+                  onClick={() => closeModal()}
                   className="w-full sm:w-auto"
                 >
                   Cancel

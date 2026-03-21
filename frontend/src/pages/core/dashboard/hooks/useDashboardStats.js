@@ -17,11 +17,22 @@ import {
 } from "lucide-react";
 import { formatCurrency } from "../utils/dashboardUtils";
 import { formatDate, formatDateTime } from "../../../../utils/formatUtils";
+import {
+  isActiveTicketStatus,
+  isOpenTicketStatus,
+  isResolvedTicketStatus,
+  isWorkflowTicketStatus,
+} from "../../../../utils/ticketStatusGroups";
 
 export default function useDashboardStats(input) {
   const {
     allTickets,
+    canCreateTickets,
+    canManageComplaints,
+    canManageNotices,
     canManageTenants,
+    canManageTickets,
+    canRaiseComplaints,
     canSeeFinanceSection,
     canViewFinancials,
     complaints,
@@ -34,6 +45,7 @@ export default function useDashboardStats(input) {
     isMemberOrTenant,
     isPlatformLevel,
     isSocietyOpsLevel,
+    dashboardSocietyId,
     maintenanceBills,
     navigate,
     notices,
@@ -46,9 +58,46 @@ export default function useDashboardStats(input) {
     securityLogs,
   } = input;
 
-  const openTickets = allTickets.filter((ticket) => ticket.status === "OPEN" || ticket.status === "IN_PROGRESS");
-  const pendingTickets = allTickets.filter((ticket) => ticket.status === "OPEN");
+  const canAccessTickets = canManageTickets() || canCreateTickets();
+  const canAccessComplaints = canManageComplaints() || canRaiseComplaints();
+  const canAccessNotices = canManageNotices();
+
+  const scopedSuffix = user?.role === "MASTER_ADMIN" && dashboardSocietyId
+    ? `?society=${encodeURIComponent(dashboardSocietyId)}`
+    : "";
+
+  const buildScopedRoute = (path) => `${path}${scopedSuffix}`;
+  const buildPageFocusRoute = (path) => {
+    const base = buildScopedRoute(path);
+    const separator = base.includes("?") ? "&" : "?";
+    return `${base}${separator}focus=page`;
+  };
+  const buildTicketRoute = (ticketId) => {
+    const base = buildScopedRoute("/tickets");
+    const separator = base.includes("?") ? "&" : "?";
+    return `${base}${separator}ticket=${encodeURIComponent(ticketId)}`;
+  };
+  const buildComplaintRoute = (complaintId) => {
+    const base = buildScopedRoute("/complaints");
+    const separator = base.includes("?") ? "&" : "?";
+    return `${base}${separator}complaint=${encodeURIComponent(complaintId)}`;
+  };
+  const buildNoticeRoute = (noticeId) => {
+    const base = buildScopedRoute("/notices");
+    const separator = base.includes("?") ? "&" : "?";
+    return `${base}${separator}notice=${encodeURIComponent(noticeId)}`;
+  };
+
+  const openTickets = allTickets.filter((ticket) => isActiveTicketStatus(ticket.status));
+  const pendingTickets = allTickets.filter((ticket) => isActiveTicketStatus(ticket.status));
   const pendingComplaints = complaints.filter((complaint) => complaint.status === "PENDING" || complaint.status === "IN_PROGRESS");
+  const complaintSlaBreachedCount = complaints.filter((complaint) => complaint.slaBreached).length;
+  const complaintSlaDueSoonCount = complaints.filter((complaint) => {
+    if (complaint.slaBreached) return false;
+    if (complaint.status === "RESOLVED" || complaint.status === "REJECTED") return false;
+    const remaining = Number(complaint.slaRemainingMinutes);
+    return Number.isFinite(remaining) && remaining >= 0 && remaining <= 120;
+  }).length;
 
   const expiringContracts = contracts.filter((contract) => {
     if (!contract.endDate) return false;
@@ -129,10 +178,10 @@ export default function useDashboardStats(input) {
 
   const priorityTicketBreakdown = useMemo(() => {
     const rows = [
-      { label: "Urgent", count: allTickets.filter((t) => t.priority === "URGENT" && (t.status === "OPEN" || t.status === "IN_PROGRESS")).length, tone: "rose" },
-      { label: "High", count: allTickets.filter((t) => t.priority === "HIGH" && (t.status === "OPEN" || t.status === "IN_PROGRESS")).length, tone: "amber" },
-      { label: "Medium", count: allTickets.filter((t) => t.priority === "MEDIUM" && (t.status === "OPEN" || t.status === "IN_PROGRESS")).length, tone: "blue" },
-      { label: "Low", count: allTickets.filter((t) => t.priority === "LOW" && (t.status === "OPEN" || t.status === "IN_PROGRESS")).length, tone: "emerald" },
+      { label: "Urgent", count: allTickets.filter((t) => t.priority === "URGENT" && isActiveTicketStatus(t.status)).length, tone: "rose" },
+      { label: "High", count: allTickets.filter((t) => t.priority === "HIGH" && isActiveTicketStatus(t.status)).length, tone: "amber" },
+      { label: "Medium", count: allTickets.filter((t) => t.priority === "MEDIUM" && isActiveTicketStatus(t.status)).length, tone: "blue" },
+      { label: "Low", count: allTickets.filter((t) => t.priority === "LOW" && isActiveTicketStatus(t.status)).length, tone: "emerald" },
     ];
     const total = rows.reduce((sum, row) => sum + row.count, 0);
     return rows
@@ -149,7 +198,7 @@ export default function useDashboardStats(input) {
   const ticketsBySociety = useMemo(() => {
     const map = {};
     allTickets
-      .filter((ticket) => ticket.status === "OPEN" || ticket.status === "IN_PROGRESS")
+      .filter((ticket) => isActiveTicketStatus(ticket.status))
       .forEach((ticket) => {
         const name = ticket.societyName || "Unknown";
         if (!map[name]) map[name] = { name, count: 0, urgent: 0 };
@@ -197,17 +246,17 @@ export default function useDashboardStats(input) {
     const rows = [
       {
         label: "Open",
-        count: allTickets.filter((item) => item.status === "OPEN").length + complaints.filter((item) => item.status === "PENDING").length,
+        count: allTickets.filter((item) => isOpenTicketStatus(item.status)).length + complaints.filter((item) => item.status === "PENDING").length,
         tone: "amber",
       },
       {
         label: "In Progress",
-        count: allTickets.filter((item) => item.status === "IN_PROGRESS").length + complaints.filter((item) => item.status === "IN_PROGRESS").length,
+        count: allTickets.filter((item) => isWorkflowTicketStatus(item.status)).length + complaints.filter((item) => item.status === "IN_PROGRESS").length,
         tone: "blue",
       },
       {
         label: "Resolved",
-        count: allTickets.filter((item) => item.status === "CLOSED" || item.status === "RESOLVED").length + complaints.filter((item) => item.status === "CLOSED" || item.status === "RESOLVED").length,
+        count: allTickets.filter((item) => isResolvedTicketStatus(item.status)).length + complaints.filter((item) => item.status === "CLOSED" || item.status === "RESOLVED").length,
         tone: "emerald",
       },
     ];
@@ -246,7 +295,7 @@ export default function useDashboardStats(input) {
     const myComplaints = complaints.filter((complaint) => complaint.raisedById === user?.id);
     return {
       myTicketsCount: myTickets.length,
-      myOpenTicketsCount: myTickets.filter((ticket) => ticket.status === "OPEN").length,
+      myOpenTicketsCount: myTickets.filter((ticket) => isActiveTicketStatus(ticket.status)).length,
       myComplaintsCount: myComplaints.length,
       myPendingComplaintsCount: myComplaints.filter((complaint) => complaint.status === "PENDING").length,
     };
@@ -317,7 +366,7 @@ export default function useDashboardStats(input) {
           value: pendingComplaints.length,
           icon: AlertTriangle,
           variant: "red",
-          subtext: `${complaints.length} total tracked`,
+          subtext: `${complaintSlaBreachedCount} SLA breached`,
           onClick: () => navigate("/complaints"),
         },
       ];
@@ -366,6 +415,7 @@ export default function useDashboardStats(input) {
         { key: "secretary-pending-tickets", title: "Pending Tickets", value: pendingTickets.length, icon: Ticket, variant: "sky", subtext: "Requests waiting for coordination" },
         { key: "secretary-expiring", title: "Expiring Agreements", value: expiringTenants.length + expiringContracts.length, icon: FileText, variant: "orange", subtext: "Renewals due within 30 days" },
         { key: "secretary-complaints", title: "Pending Complaints", value: pendingComplaints.length, icon: AlertTriangle, variant: "amber", subtext: "Cases still in progress" },
+        { key: "secretary-complaints-sla", title: "Complaint SLA Risk", value: complaintSlaDueSoonCount + complaintSlaBreachedCount, icon: Clock, variant: "orange", subtext: `${complaintSlaBreachedCount} breached, ${complaintSlaDueSoonCount} due soon` },
       ];
     }
 
@@ -391,8 +441,8 @@ export default function useDashboardStats(input) {
       return [
         { key: "manager-pending-tickets", title: "Pending Tickets", value: pendingTickets.length, icon: Ticket, variant: "sky", subtext: "Operational requests awaiting resolution" },
         { key: "manager-pending-complaints", title: "Pending Complaints", value: pendingComplaints.length, icon: AlertTriangle, variant: "amber", subtext: "Resident concerns in progress" },
+        { key: "manager-complaints-sla", title: "Complaint SLA Risk", value: complaintSlaDueSoonCount + complaintSlaBreachedCount, icon: Clock, variant: "orange", subtext: `${complaintSlaBreachedCount} breached, ${complaintSlaDueSoonCount} due soon` },
         { key: "manager-expiring-agreements", title: "Expiring Agreements", value: expiringTenants.length + expiringContracts.length, icon: FileText, variant: "orange", subtext: "Need renewal action in next 30 days" },
-        { key: "manager-occupancy", title: "Occupied Units", value: occupiedUnits, icon: Home, variant: "blue", subtext: `${totalUnits} total units` },
       ];
     }
 
@@ -418,6 +468,8 @@ export default function useDashboardStats(input) {
     billTotalCount,
     canManageTenants,
     canViewFinancials,
+    complaintSlaBreachedCount,
+    complaintSlaDueSoonCount,
     complaints,
     expiringContracts.length,
     expiringTenants.length,
@@ -451,6 +503,23 @@ export default function useDashboardStats(input) {
     meta: notice.createdAt ? formatDate(notice.createdAt) : "Recently posted",
     badge: "Notice",
     badgeTone: "info",
+    onClick: canAccessNotices ? () => navigate(buildNoticeRoute(notice.id)) : undefined,
+  }));
+
+  const pendingTicketItems = pendingTickets.slice(0, 5).map((ticket) => ({
+    title: ticket.title || `Ticket #${ticket.id}`,
+    meta: ticket.type || "Ticket",
+    badge: ticket.priority || ticket.status || "Open",
+    badgeTone: (ticket.priority === "URGENT" || ticket.priority === "HIGH") ? "danger" : "warning",
+    onClick: canAccessTickets ? () => navigate(buildTicketRoute(ticket.id)) : undefined,
+  }));
+
+  const pendingComplaintItems = pendingComplaints.slice(0, 5).map((complaint) => ({
+    title: complaint.title || complaint.subject || `Complaint #${complaint.id}`,
+    meta: complaint.type || "Complaint",
+    badge: complaint.status || "Pending",
+    badgeTone: complaint.status === "IN_PROGRESS" ? "warning" : "danger",
+    onClick: canAccessComplaints ? () => navigate(buildComplaintRoute(complaint.id)) : undefined,
   }));
 
   const securityFeedItems = (securityLogs.length > 0 ? securityLogs : [{
@@ -573,6 +642,55 @@ export default function useDashboardStats(input) {
     totalBillAmount,
     totalUnits,
     twoWheelerCount,
+  ]);
+
+  const moduleActionCards = useMemo(() => {
+    const cards = [];
+
+    if (canAccessTickets) {
+      cards.push({
+        key: "module-tickets",
+        title: "Tickets",
+        value: openTickets.length,
+        helper: `${pendingTickets.length} pending for action`,
+        tone: "blue",
+        onClick: () => navigate(buildPageFocusRoute("/tickets")),
+      });
+    }
+
+    if (canAccessComplaints) {
+      cards.push({
+        key: "module-complaints",
+        title: "Complaints",
+        value: pendingComplaints.length,
+        helper: "Resident complaints requiring follow-up",
+        tone: "amber",
+        onClick: () => navigate(buildPageFocusRoute("/complaints")),
+      });
+    }
+
+    if (canAccessNotices) {
+      cards.push({
+        key: "module-notices",
+        title: "Notices",
+        value: notices.length,
+        helper: notices.length > 0 ? "Latest communication updates" : "No notices posted yet",
+        tone: "violet",
+        onClick: () => navigate(buildPageFocusRoute("/notices")),
+      });
+    }
+
+    return cards;
+  }, [
+    canAccessComplaints,
+    canAccessNotices,
+    canAccessTickets,
+    scopedSuffix,
+    navigate,
+    notices.length,
+    openTickets.length,
+    pendingComplaints.length,
+    pendingTickets.length,
   ]);
 
   const operationsCards = useMemo(() => {
@@ -880,7 +998,10 @@ export default function useDashboardStats(input) {
     fourWheelerCount,
     memberIssueStats,
     noticeItems,
+    pendingComplaintItems,
+    pendingTicketItems,
     openTickets,
+    moduleActionCards,
     operationsCards,
     overviewConfig,
     overdueBills,

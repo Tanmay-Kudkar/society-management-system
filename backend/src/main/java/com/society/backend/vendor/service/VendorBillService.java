@@ -26,5 +26,10 @@ public interface VendorBillService {
     VendorBillResponse recordPayment(Long id, BigDecimal amount, String paymentMode, String referenceNumber,
             Long userId);
 
+    VendorBillResponse recordOnlinePayment(Long id, BigDecimal amount, String paymentMode, String referenceNumber,
+            Long userId);
+
+    byte[] downloadReceiptPdf(Long billId, Long userId);
+
     void delete(Long id, Long userId);
 }

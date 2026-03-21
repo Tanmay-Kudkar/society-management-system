@@ -40,6 +40,7 @@ export default function Vendors() {
     : null
   const isPlatformLevel = user?.role === 'MASTER_ADMIN' && !scopedSocietyId
   const effectiveSocietyId = scopedSocietyId || user?.societyId
+  const canApproveRejectVendors = ['MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY'].includes(user?.role)
 
   const { data: vendors = [], isLoading, isError } = useQuery({
     queryKey: ['vendors', effectiveSocietyId, isPlatformLevel],
@@ -61,7 +62,7 @@ export default function Vendors() {
     mutationFn: (data) => vendorApi.create(data, user.id),
     onSuccess: () => {
       queryClient.invalidateQueries(['vendors'])
-      setShowModal(false)
+      closeModal(true)
     },
   })
 
@@ -69,8 +70,7 @@ export default function Vendors() {
     mutationFn: ({ id, data }) => vendorApi.update(id, data, user.id),
     onSuccess: () => {
       queryClient.invalidateQueries(['vendors'])
-      setShowModal(false)
-      setEditingVendor(null)
+      closeModal(true)
     },
   })
 
@@ -103,7 +103,18 @@ export default function Vendors() {
     v.serviceType?.toLowerCase().includes(searchTerm.toLowerCase())
   ), [vendors, searchTerm])
 
+  const closeModal = (force = false) => {
+    if (!force && (createMutation.isPending || updateMutation.isPending)) return
+    setShowModal(false)
+    setEditingVendor(null)
+  }
+
   const handleApprove = async (vendor) => {
+    if (!canApproveRejectVendors) {
+      toast.error('You do not have permission to approve vendors')
+      return
+    }
+
     const confirmed = await confirmDialog({
       title: 'Approve Vendor',
       message: 'Approve this vendor for partnership?',
@@ -124,6 +135,11 @@ export default function Vendors() {
   }
 
   const handleReject = async (vendor) => {
+    if (!canApproveRejectVendors) {
+      toast.error('You do not have permission to reject vendors')
+      return
+    }
+
     const confirmed = await confirmDialog({
       title: 'Reject Vendor',
       message: 'Reject this vendor application?',
@@ -253,9 +269,9 @@ export default function Vendors() {
       {(
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredVendors.map((vendor) => (
-            <div key={vendor.id} className="bg-[var(--bg-card)] border border-[var(--border-light)] rounded-2xl p-6 shadow-sm transition-all hover:shadow-xl hover:border-blue-300 hover:-translate-y-0.5 group">
+            <div key={vendor.id} className="bg-[var(--bg-card)] border border-[var(--border-light)] rounded-2xl p-6 shadow-sm transition-[border-color,box-shadow] duration-200 hover:shadow-md hover:border-[var(--border-strong)]">
               <div className="flex items-start justify-between mb-4">
-                <div className="p-3 rounded-[14px] bg-gradient-to-br from-orange-50 to-orange-200 transition-transform group-hover:scale-105">
+                <div className="p-3 rounded-[14px] bg-gradient-to-br from-orange-50 to-orange-200">
                   <Truck className="w-7 h-7 text-orange-600" />
                 </div>
                 <div className="flex gap-1">
@@ -319,7 +335,7 @@ export default function Vendors() {
                   </button>
                 </div>
               </div>
-              <h3 className="text-lg font-bold text-[var(--text-primary)] mb-2 transition-colors group-hover:text-blue-600">{vendor.name}</h3>
+              <h3 className="text-lg font-bold text-[var(--text-primary)] mb-2 truncate" title={vendor.name}>{vendor.name}</h3>
               <div className="flex flex-wrap gap-2 mb-3">
                 <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold text-blue-700 bg-gradient-to-r from-blue-50 to-blue-100">
                   {vendor.serviceType}
@@ -340,13 +356,13 @@ export default function Vendors() {
                   </div>
                 )}
                 {vendor.phone && (
-                  <div className="flex items-center gap-2 text-[var(--text-secondary)] transition-colors hover:text-blue-600">
+                  <div className="flex items-center gap-2 text-[var(--text-secondary)]">
                     <Phone size={16} className="flex-shrink-0 text-green-600" />
                     <span>{vendor.phone}</span>
                   </div>
                 )}
                 {vendor.email && (
-                  <div className="flex items-center gap-2 text-[var(--text-secondary)] overflow-hidden transition-colors hover:text-blue-600">
+                  <div className="flex items-center gap-2 text-[var(--text-secondary)] overflow-hidden">
                     <Mail size={16} className="flex-shrink-0 text-blue-600" />
                     <span className="truncate">{vendor.email}</span>
                   </div>
@@ -354,7 +370,7 @@ export default function Vendors() {
               </div>
               <button
                 onClick={() => setViewingVendor(vendor)}
-                className="w-full mt-2 px-4 py-2.5 rounded-xl border-none bg-gradient-to-r from-blue-500 to-blue-600 text-white font-semibold inline-flex items-center justify-center gap-2 shadow-[0_6px_12px_rgba(37,99,235,0.2)] transition-all hover:-translate-y-px hover:shadow-[0_10px_16px_rgba(37,99,235,0.25)]"
+                className="w-full mt-2 px-4 py-2.5 rounded-xl border-none bg-gradient-to-r from-blue-500 to-blue-600 text-white font-semibold inline-flex items-center justify-center gap-2 shadow-[0_6px_12px_rgba(37,99,235,0.2)] transition-[filter,box-shadow] duration-200 hover:brightness-105 hover:shadow-[0_8px_14px_rgba(37,99,235,0.22)]"
               >
                 <Eye size={16} />
                 View Full Details
@@ -370,7 +386,7 @@ export default function Vendors() {
           <div className="w-full max-w-[540px] max-h-[90vh] overflow-y-auto bg-[var(--bg-card)] rounded-2xl shadow-[0_24px_60px_rgba(15,23,42,0.2)]">
             <div className="sticky top-0 bg-[var(--bg-card)] flex items-center justify-between p-4 border-b border-[var(--border-light)]">
               <h3 className="text-lg font-semibold text-[var(--text-primary)]">{editingVendor ? 'Edit Vendor' : 'Add Vendor'}</h3>
-              <button onClick={() => setShowModal(false)} className="border-none bg-transparent text-[var(--text-tertiary)] p-1 rounded-lg hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-primary)]">
+              <button onClick={() => closeModal()} className="border-none bg-transparent text-[var(--text-tertiary)] p-1 rounded-lg hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-primary)]">
                 <X size={20} />
               </button>
             </div>
@@ -537,7 +553,7 @@ export default function Vendors() {
                   type="button"
                   tone="slate"
                   size="md"
-                  onClick={() => setShowModal(false)}
+                  onClick={() => closeModal()}
                   className="flex-1"
                 >
                   Cancel
@@ -770,7 +786,7 @@ export default function Vendors() {
                     
                     {/* Approval Action Buttons */}
                     <div className="flex gap-2 flex-wrap">
-                      {viewingVendor.approvalStatus !== 'APPROVED' && (
+                      {canApproveRejectVendors && viewingVendor.approvalStatus !== 'APPROVED' && (
                         <button
                           onClick={() => handleApprove(viewingVendor)}
                           className="px-4 py-2 rounded-[10px] text-sm font-bold border-none text-white bg-green-600 hover:bg-green-700 transition-colors"
@@ -778,7 +794,7 @@ export default function Vendors() {
                           ✓ Approve
                         </button>
                       )}
-                      {viewingVendor.approvalStatus !== 'REJECTED' && (
+                      {canApproveRejectVendors && viewingVendor.approvalStatus !== 'REJECTED' && (
                         <button
                           onClick={() => handleReject(viewingVendor)}
                           className="px-4 py-2 rounded-[10px] text-sm font-bold border-none text-white bg-red-600 hover:bg-red-700 transition-colors"

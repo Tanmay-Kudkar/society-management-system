@@ -1,6 +1,7 @@
 package com.society.backend.ticket.service;
 
 import com.society.backend.ticket.dto.request.TicketRequest;
+import com.society.backend.ticket.dto.response.TicketReplyResponse;
 import com.society.backend.ticket.dto.response.TicketResponse;
 
 import java.util.List;
@@ -24,11 +25,15 @@ public interface TicketService {
 
     TicketResponse updateStatus(Long id, String status, String resolution, Long userId);
 
+    TicketResponse addReply(Long id, String message, Long userId);
+
+    List<TicketReplyResponse> getReplies(Long id);
+
     TicketResponse assign(Long id, Long assignedToId, Long userId);
 
     TicketResponse updateProgress(Long id, Integer progress, Long userId);
 
-    void delete(Long id, Long userId);
+    void delete(Long id, Long userId, boolean force);
 
     // Overdue tracking methods
     List<TicketResponse> getOverdue();

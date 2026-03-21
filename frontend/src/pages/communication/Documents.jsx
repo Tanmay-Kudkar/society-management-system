@@ -1,15 +1,18 @@
-import { useState, useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '../../context'
 import { useConfirmDialog } from '../../context'
 import { useToast } from '../../context'
 import { documentTemplateApi } from '../../../../api'
 import { Plus, Search, X, FileText, Edit, Trash2 } from 'lucide-react'
 import clsx from 'clsx'
-import { InfoTooltip, NeonSweepButton } from '../../components'
+import { InfoTooltip, NeonSweepButton, AnimatedModal, DEFAULT_ANIMATED_MODAL_DURATION_MS } from '../../components'
 import { HeroSkeleton, DocumentsSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
 import useMinLoadingTime from '../../hooks/useMinLoadingTime'
 import { formatDate } from '../../utils/formatUtils'
+
+const MODAL_ANIMATION_MS = DEFAULT_ANIMATED_MODAL_DURATION_MS
 
 const templateTypeClasses = {
   NOC: 'inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-xs font-semibold text-blue-700',
@@ -29,6 +32,13 @@ export default function Documents() {
   const [editingDocument, setEditingDocument] = useState(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [filterCategory, setFilterCategory] = useState('')
+  const [highlightedDocumentId, setHighlightedDocumentId] = useState(null)
+  const [isDeepLinkTransitioning, setIsDeepLinkTransitioning] = useState(false)
+  const [searchParams] = useSearchParams()
+  const selectedDocumentFromUrlRaw = Number(searchParams.get('document'))
+  const selectedDocumentFromUrl = Number.isFinite(selectedDocumentFromUrlRaw) && selectedDocumentFromUrlRaw > 0
+    ? selectedDocumentFromUrlRaw
+    : null
 
   const { data: documents = [], isLoading, isError } = useQuery({
     queryKey: ['documentTemplates'],
@@ -39,7 +49,7 @@ export default function Documents() {
     mutationFn: (data) => documentTemplateApi.create(data, user.id),
     onSuccess: () => {
       queryClient.invalidateQueries(['documentTemplates'])
-      closeModal()
+      closeModal(true)
     },
   })
 
@@ -47,7 +57,7 @@ export default function Documents() {
     mutationFn: ({ id, data }) => documentTemplateApi.update(id, data, user.id),
     onSuccess: () => {
       queryClient.invalidateQueries(['documentTemplates'])
-      closeModal()
+      closeModal(true)
     },
   })
 
@@ -74,9 +84,47 @@ export default function Documents() {
     }, {})
   }, [documents])
 
-  const closeModal = () => {
+  useEffect(() => {
+    if (!selectedDocumentFromUrl) {
+      setIsDeepLinkTransitioning(false)
+      return
+    }
+
+    if (!selectedDocumentFromUrl || isLoading || documents.length === 0) return
+
+    const selectedExists = documents.some((documentItem) => documentItem.id === selectedDocumentFromUrl)
+    if (!selectedExists) return
+
+    setIsDeepLinkTransitioning(true)
+
+    let glowStartTimer
+    let glowEndTimer
+    let revealTimer
+
+    const timer = setTimeout(() => {
+      const element = document.getElementById(`document-${selectedDocumentFromUrl}`)
+      if (!element) return
+      element.scrollIntoView({ behavior: 'smooth', block: 'center' })
+
+      revealTimer = setTimeout(() => setIsDeepLinkTransitioning(false), 420)
+
+      setHighlightedDocumentId(null)
+      glowStartTimer = setTimeout(() => setHighlightedDocumentId(selectedDocumentFromUrl), 540)
+      glowEndTimer = setTimeout(() => setHighlightedDocumentId(null), 2480)
+    }, 80)
+
+    return () => {
+      clearTimeout(timer)
+      clearTimeout(revealTimer)
+      clearTimeout(glowStartTimer)
+      clearTimeout(glowEndTimer)
+    }
+  }, [selectedDocumentFromUrl, isLoading, documents])
+
+  const closeModal = (force = false) => {
+    if (!force && (createMutation.isPending || updateMutation.isPending)) return
     setShowModal(false)
-    setEditingDocument(null)
+    setTimeout(() => setEditingDocument(null), MODAL_ANIMATION_MS)
   }
 
   const confirmAndDeleteDocument = async (doc) => {
@@ -190,9 +238,19 @@ export default function Documents() {
       </div>
 
       {/* Documents Grid */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div className={clsx(
+        'grid grid-cols-1 gap-4 transition-all duration-300 ease-out md:grid-cols-2 lg:grid-cols-3',
+        isDeepLinkTransitioning ? 'opacity-0 translate-y-1' : 'opacity-100 translate-y-0'
+      )}>
         {filteredDocuments.map((doc) => (
-          <div key={doc.id} className="rounded-2xl border border-[var(--border-light)] bg-[var(--bg-card)] p-5 shadow-[0_12px_24px_rgba(15,23,42,0.06)] transition hover:-translate-y-0.5 hover:shadow-[0_16px_32px_rgba(15,23,42,0.12)]">
+          <div
+            id={`document-${doc.id}`}
+            key={doc.id}
+            className={clsx(
+              'rounded-2xl border border-[var(--border-light)] bg-[var(--bg-card)] p-5 shadow-[0_12px_24px_rgba(15,23,42,0.06)] transition-[border-color,box-shadow] duration-200 hover:shadow-[0_16px_32px_rgba(15,23,42,0.12)]',
+              highlightedDocumentId === doc.id && 'ticket-focus-glow'
+            )}
+          >
             <div className="mb-3 flex items-start justify-between">
               <div className="flex items-center gap-3">
                 <div className="rounded-xl bg-[var(--bg-tertiary)] p-2">
@@ -243,9 +301,8 @@ export default function Documents() {
       </div>
 
       {/* Modal */}
-      {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="max-h-[calc(100vh-3rem)] w-full max-w-3xl overflow-y-auto rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] shadow-[0_8px_24px_rgba(0,0,0,0.12)]">
+      <AnimatedModal open={showModal} onRequestClose={closeModal} closeOnBackdrop>
+        <div className="max-h-[calc(100vh-3rem)] w-full max-w-3xl overflow-y-auto rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] shadow-[0_8px_24px_rgba(0,0,0,0.12)]">
             <div className="sticky top-0 z-[2] flex items-center justify-between border-b border-[var(--border-light)] bg-[var(--bg-card)] p-4">
               <h3 className="text-lg font-bold text-[var(--text-primary)]">{editingDocument ? 'Edit Template' : 'Add Document Template'}</h3>
               <button onClick={closeModal} className="rounded-lg p-1 text-[var(--text-tertiary)] transition hover:bg-[var(--bg-tertiary)]">
@@ -308,9 +365,8 @@ export default function Documents() {
                 </NeonSweepButton>
               </div>
             </form>
-          </div>
         </div>
-      )}
+      </AnimatedModal>
     </div>
   )
 }

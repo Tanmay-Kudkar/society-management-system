@@ -5,7 +5,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 import com.society.backend.society.entity.Society;
 import com.society.backend.user.entity.User;
@@ -19,6 +21,9 @@ public class Ticket {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(name = "ticket_number", unique = true)
+    private String ticketNumber;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "raised_by", nullable = false)
@@ -50,6 +55,12 @@ public class Ticket {
     @Column(columnDefinition = "TEXT")
     private String resolution;
 
+    @Column(name = "last_reply_by")
+    private String lastReplyBy;
+
+    @Column(name = "last_reply_at")
+    private LocalDateTime lastReplyAt;
+
     @Column(name = "progress_percent")
     private Integer progressPercent = 0; // 0-100
 
@@ -71,6 +82,12 @@ public class Ticket {
 
     @Column(name = "resolved_at")
     private LocalDateTime resolvedAt;
+
+    @Column(name = "close_undo_previous_status")
+    private String closeUndoPreviousStatus;
+
+    @Column(name = "close_undo_expires_at")
+    private LocalDateTime closeUndoExpiresAt;
 
     public Integer getPendingDays() {
         if (resolvedAt != null || "RESOLVED".equals(status) || "CLOSED".equals(status)) {
@@ -120,6 +137,9 @@ public class Ticket {
     protected void onCreate() {
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
+        if (ticketNumber == null || ticketNumber.isBlank()) {
+            ticketNumber = "TKT-" + LocalDate.now().format(DateTimeFormatter.BASIC_ISO_DATE) + "-" + System.currentTimeMillis();
+        }
     }
 
     @PreUpdate

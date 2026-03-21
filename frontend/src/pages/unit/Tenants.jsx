@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '../../context'
@@ -6,7 +6,7 @@ import { useConfirmDialog } from '../../context'
 import { useToast } from '../../context'
 import { tenantApi, flatApi, userApi } from '../../../../api'
 import { Plus, Edit, Trash2, Search, X, User, Calendar, Phone, Mail, Upload } from 'lucide-react'
-import { FormInput, PhoneInput, SmartSelect, NumberInput, BulkImportModal, InfoTooltip, NeonSweepButton } from '../../components'
+import { FormInput, PhoneInput, SmartSelect, NumberInput, BulkImportModal, InfoTooltip, NeonSweepButton, PaginationControls } from '../../components'
 import { HeroSkeleton, FiltersSkeleton, TableSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
 import useMinLoadingTime from '../../hooks/useMinLoadingTime'
 
@@ -21,6 +21,8 @@ export default function Tenants() {
   const [editingTenant, setEditingTenant] = useState(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [filterStatus, setFilterStatus] = useState('')
+  const [tenantPage, setTenantPage] = useState(1)
+  const [tenantPageSize, setTenantPageSize] = useState(10)
 
   // Get society filter from URL (for MASTER_ADMIN viewing specific society)
   const societyIdFromUrl = searchParams.get('society')
@@ -57,7 +59,7 @@ export default function Tenants() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tenants'] })
       queryClient.invalidateQueries({ queryKey: ['flats', effectiveSocietyId] })
-      setShowModal(false)
+      closeModal(true)
     },
   })
 
@@ -66,8 +68,7 @@ export default function Tenants() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tenants'] })
       queryClient.invalidateQueries({ queryKey: ['flats', effectiveSocietyId] })
-      setShowModal(false)
-      setEditingTenant(null)
+      closeModal(true)
     },
   })
 
@@ -98,6 +99,12 @@ export default function Tenants() {
     },
   })
 
+  const closeModal = (force = false) => {
+    if (!force && (createMutation.isPending || updateMutation.isPending)) return
+    setShowModal(false)
+    setEditingTenant(null)
+  }
+
   const filteredTenants = useMemo(() => {
     return tenants.filter(t => {
       const matchesSearch = t.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -109,6 +116,15 @@ export default function Tenants() {
       return matchesSearch && matchesStatus
     })
   }, [tenants, searchTerm, filterStatus])
+
+  const paginatedTenants = useMemo(() => {
+    const start = (tenantPage - 1) * tenantPageSize
+    return filteredTenants.slice(start, start + tenantPageSize)
+  }, [filteredTenants, tenantPage, tenantPageSize])
+
+  useEffect(() => {
+    setTenantPage(1)
+  }, [searchTerm, filterStatus])
 
   const handleSubmit = (e) => {
     e.preventDefault()
@@ -168,10 +184,10 @@ export default function Tenants() {
   return (
     <div>
       {/* Header */}
-      <div className="flex flex-col gap-4 mb-6 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-4 mb-6 sm:flex-row sm:items-center sm:justify-between max-[360px]:mb-4 max-[360px]:gap-2.5">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold text-[var(--text-primary)]">Tenants</h1>
+            <h1 className="text-2xl font-bold text-[var(--text-primary)] max-[360px]:text-[1.45rem]">Tenants</h1>
             <InfoTooltip text="Manage tenant details and agreements" />
           </div>
         </div>
@@ -200,8 +216,8 @@ export default function Tenants() {
       </div>
 
       {/* Filters */}
-      <div className="p-4 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-light)] shadow-[0_10px_22px_rgba(15,23,42,0.08)] mb-6">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+      <div className="p-4 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-light)] shadow-[0_10px_22px_rgba(15,23,42,0.08)] mb-6 max-[360px]:p-3 max-[360px]:mb-4">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center max-[360px]:gap-2.5">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 w-5 h-5 -translate-y-1/2 text-[var(--text-tertiary)]" />
             <input
@@ -241,7 +257,7 @@ export default function Tenants() {
                 </tr>
               </thead>
               <tbody>
-                {filteredTenants.map((tenant) => (
+                {paginatedTenants.map((tenant) => (
                   <tr key={tenant.id} className="transition-colors hover:bg-[var(--bg-tertiary)]">
                     <td className="py-[0.85rem] px-6 text-[0.9rem] text-[var(--text-primary)]">
                       <div className="flex items-center gap-3">
@@ -380,17 +396,17 @@ export default function Tenants() {
 
         <div className="lg:hidden divide-y divide-[var(--border-light)]">
           {filteredTenants.length === 0 ? (
-            <div className="p-8 text-center text-sm text-[var(--text-tertiary)]">No tenants found</div>
+            <div className="p-8 text-center text-sm text-[var(--text-tertiary)] max-[360px]:p-6 max-[360px]:text-xs">No tenants found</div>
           ) : (
-            filteredTenants.map((tenant) => (
-              <div key={tenant.id} className="p-3 sm:p-4">
+            paginatedTenants.map((tenant) => (
+              <div key={tenant.id} className="p-3 sm:p-4 max-[360px]:p-2.5">
                 <div className="mb-2 flex items-start justify-between gap-2 sm:gap-3">
                   <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
                     <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center bg-[rgba(147,51,234,0.15)]">
                       <span className="text-[#7c3aed] font-semibold">{tenant.name?.charAt(0)?.toUpperCase() || 'T'}</span>
                     </div>
                     <div className="min-w-0">
-                      <p className="text-[13px] sm:text-sm font-semibold text-[var(--text-primary)] break-words">{tenant.name}</p>
+                      <p className="text-[13px] sm:text-sm font-semibold text-[var(--text-primary)] break-words max-[360px]:text-xs">{tenant.name}</p>
                       <p className="text-[11px] sm:text-xs text-[var(--text-secondary)] break-words">{getFlatDisplay(tenant.flatId)}</p>
                     </div>
                   </div>
@@ -496,17 +512,28 @@ export default function Tenants() {
         </div>
       </div>
 
+      <PaginationControls
+        totalItems={filteredTenants.length}
+        currentPage={tenantPage}
+        pageSize={tenantPageSize}
+        onPageChange={setTenantPage}
+        onPageSizeChange={(nextSize) => {
+          setTenantPageSize(nextSize)
+          setTenantPage(1)
+        }}
+      />
+
       {/* Modal */}
       {showModal && canEditTenants && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="fixed inset-0 bg-black/40" onClick={() => setShowModal(false)} />
+          <div className="fixed inset-0 bg-black/40" onClick={() => closeModal()} />
           <div className="relative z-[1] w-full max-w-[32rem] max-h-[calc(100vh-3rem)] overflow-y-auto rounded-xl bg-[var(--bg-card)] border border-[var(--border-light)] shadow-[0_8px_24px_rgba(0,0,0,0.12)] p-6">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-[1.1rem] font-semibold text-[var(--text-primary)]">
                   {editingTenant ? 'Edit Tenant' : 'Add Tenant'}
               </h2>
               <button
-                onClick={() => { setShowModal(false); setEditingTenant(null) }}
+                onClick={() => closeModal()}
                 className="p-[0.45rem] rounded-[0.65rem] text-[var(--text-tertiary)] hover:bg-[rgba(148,163,184,0.2)]"
               >
                 <X size={20} />
@@ -616,7 +643,7 @@ export default function Tenants() {
                     type="button"
                     tone="slate"
                     size="md"
-                    onClick={() => { setShowModal(false); setEditingTenant(null) }}
+                    onClick={() => closeModal()}
                     className="w-full sm:w-auto"
                   >
                     Cancel

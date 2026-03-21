@@ -1,9 +1,6 @@
 package com.society.backend.common.service;
 
 import java.io.ByteArrayOutputStream;
-import java.util.List;
-
-import com.society.backend.vendor.entity.Vendor;
 public interface ExcelExportService {
 
     /**
@@ -35,4 +32,11 @@ public interface ExcelExportService {
      * Export financial report to Excel
      */
     ByteArrayOutputStream exportFinancialReport(Long societyId, String reportType, String startDate, String endDate);
+
+    /**
+     * Export online payments to Excel
+     */
+    ByteArrayOutputStream exportPayments(Long societyId, Long userId);
+
 }
+

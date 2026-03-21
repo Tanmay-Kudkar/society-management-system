@@ -44,13 +44,9 @@ export default function MyBills() {
   const [selectedBill, setSelectedBill] = useState(null)
   const canAccessMyBills = user?.role === 'MEMBER' || user?.role === 'TENANT'
 
-  if (!canAccessMyBills) {
-    return <PermissionDenied message="My Bills is available only for members and tenants." />
-  }
-
   // Razorpay integration
   const { initiatePayment, isLoading: isPaymentLoading } = useRazorpay({
-    onSuccess: (paymentData) => {
+    onSuccess: () => {
       toast.success('Payment successful! Your bill has been updated.')
       queryClient.invalidateQueries(['myBills'])
       setSelectedBill(null)
@@ -77,6 +73,10 @@ export default function MyBills() {
   }, [bills])
 
   const showSkeleton = useMinLoadingTime(isLoading || isError)
+
+  if (!canAccessMyBills) {
+    return <PermissionDenied message="My Bills is available only for members and tenants." />
+  }
 
   const getBillTotal = (bill) => {
     const total = Number(bill?.totalAmount)

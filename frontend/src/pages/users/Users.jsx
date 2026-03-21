@@ -1,15 +1,15 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useMemo, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '../../context'
 import { useConfirmDialog } from '../../context'
 import { useToast } from '../../context'
-import { userApi, societyApi, flatApi } from '../../../../api'
+import { userApi, societyApi, flatApi, employeeApi } from '../../../../api'
 import { Plus, Edit, Trash2, Search, X, AlertCircle, Shield, Users as UsersIcon, Building2, Home, Upload, Download, UserPlus, FileSpreadsheet, CheckCircle, XCircle, Info, Eye, EyeOff } from 'lucide-react'
 import clsx from 'clsx'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { parseApiError, validateUserForm } from '../../utils'
 import * as XLSX from 'xlsx'
-import { FormInput, PhoneInput, SmartSelect, FormErrorSummary } from '../../components'
+import { FormInput, PhoneInput, SmartSelect, FormErrorSummary, PaginationControls } from '../../components'
 import { PermissionDenied } from '../../components'
 import { HeroSkeleton, FiltersSkeleton, TableSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
 import useMinLoadingTime from '../../hooks/useMinLoadingTime'
@@ -44,6 +44,48 @@ const roleAccentColors = {
   VISITOR: '#ef4444',
 }
 
+const EMPLOYEE_ID_PROOF_MAX_SIZE_BYTES = 5 * 1024 * 1024
+const EMPLOYEE_ID_PROOF_ALLOWED_MIME = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp']
+const EMPLOYEE_ID_PROOF_ALLOWED_EXTENSIONS = ['pdf', 'jpg', 'jpeg', 'png', 'webp']
+
+const formatFileSize = (bytes) => {
+  const numericBytes = Number(bytes || 0)
+  if (!numericBytes) return '0 B'
+  if (numericBytes >= 1024 * 1024) return `${(numericBytes / (1024 * 1024)).toFixed(1)} MB`
+  if (numericBytes >= 1024) return `${(numericBytes / 1024).toFixed(1)} KB`
+  return `${numericBytes} B`
+}
+
+const validateEmployeeIdProofFile = (file) => {
+  if (!file || !(file instanceof File) || file.size <= 0) {
+    return { valid: true, message: '' }
+  }
+
+  if (file.size > EMPLOYEE_ID_PROOF_MAX_SIZE_BYTES) {
+    return {
+      valid: false,
+      message: `File is too large. Maximum allowed size is ${formatFileSize(EMPLOYEE_ID_PROOF_MAX_SIZE_BYTES)}.`,
+    }
+  }
+
+  const fileName = (file.name || '').toLowerCase()
+  const extension = fileName.includes('.') ? fileName.split('.').pop() : ''
+  const isMimeAllowed = EMPLOYEE_ID_PROOF_ALLOWED_MIME.includes((file.type || '').toLowerCase())
+  const isExtensionAllowed = EMPLOYEE_ID_PROOF_ALLOWED_EXTENSIONS.includes(extension)
+
+  if (!isMimeAllowed && !isExtensionAllowed) {
+    return {
+      valid: false,
+      message: 'Unsupported file type. Allowed: PDF, JPG, JPEG, PNG, WEBP.',
+    }
+  }
+
+  return {
+    valid: true,
+    message: `Selected: ${file.name} (${formatFileSize(file.size)})`,
+  }
+}
+
 export default function Users() {
   const { user, canManageUsers } = useAuth()
   const confirmDialog = useConfirmDialog()
@@ -64,7 +106,14 @@ export default function Users() {
   const [filterRole, setFilterRole] = useState(urlRole || '')
   const [error, setError] = useState('')
   const [selectedRole, setSelectedRole] = useState('')
+  const [createEmployeeProfile, setCreateEmployeeProfile] = useState(false)
+  const [employeeIdProofFileFeedback, setEmployeeIdProofFileFeedback] = useState({
+    type: '',
+    message: '',
+  })
   const [showPassword, setShowPassword] = useState(false)
+  const [usersPage, setUsersPage] = useState(1)
+  const [usersPageSize, setUsersPageSize] = useState(12)
   
   // Bulk import state
   const [showBulkImportModal, setShowBulkImportModal] = useState(false)
@@ -108,6 +157,7 @@ export default function Users() {
   
   // Check if current user is MASTER_ADMIN
   const isPlatformLevel = user?.role === 'MASTER_ADMIN'
+  const canCreateEmployeeRecord = ['MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'MANAGER'].includes(user?.role)
   
   // Check if current user is MEMBER (for tenant assignment logic)
   // Check from session, profile API response, or users list
@@ -145,10 +195,44 @@ export default function Users() {
   })
 
   const handleOpenModal = (userToEdit = null) => {
+    const initialRole = userToEdit?.role || (creatableRoles.length === 1 ? creatableRoles[0] : creatableRoles[0] || 'MEMBER')
     setEditingUser(userToEdit)
-    setSelectedRole(userToEdit?.role || (creatableRoles.length === 1 ? creatableRoles[0] : creatableRoles[0] || 'MEMBER'))
+    setSelectedRole(initialRole)
+    setCreateEmployeeProfile(!userToEdit && canCreateEmployeeRecord && initialRole === 'EMPLOYEE')
     setShowPassword(false)
     setShowModal(true)
+  }
+
+  const closeModal = (force = false) => {
+    if (!force && (createMutation.isPending || updateMutation.isPending)) return
+    setShowModal(false)
+    setError('')
+    setShowPassword(false)
+    setCreateEmployeeProfile(false)
+    setEmployeeIdProofFileFeedback({ type: '', message: '' })
+  }
+
+  const handleRoleChange = (event) => {
+    const nextRole = event.target.value
+    setSelectedRole(nextRole)
+    if (editingUser) return
+    if (nextRole === 'EMPLOYEE') {
+      if (canCreateEmployeeRecord) {
+        setCreateEmployeeProfile(true)
+      }
+      return
+    }
+    setCreateEmployeeProfile(false)
+    setEmployeeIdProofFileFeedback({ type: '', message: '' })
+  }
+
+  const handleEmployeeIdProofFileChange = (event) => {
+    const file = event.target.files?.[0]
+    const result = validateEmployeeIdProofFile(file)
+    setEmployeeIdProofFileFeedback({
+      type: result.valid ? 'success' : 'error',
+      message: result.message,
+    })
   }
 
   const { data: societies = [] } = useQuery({
@@ -208,12 +292,36 @@ export default function Users() {
   })()
 
   const createMutation = useMutation({
-    mutationFn: (data) => userApi.create(data),
-    onSuccess: () => {
+    mutationFn: async ({ userData, employeeProfileData, employeeIdProofUpload }) => {
+      const createdUserResponse = await userApi.create(userData)
+      const createdUser = createdUserResponse?.data
+
+      if (employeeProfileData && createdUser?.id) {
+        const createdEmployeeResponse = await employeeApi.create({
+          ...employeeProfileData,
+          userId: createdUser.id,
+        }, user?.id)
+
+        const createdEmployee = createdEmployeeResponse?.data
+        if (employeeIdProofUpload?.file && createdEmployee?.id) {
+          await employeeApi.uploadIdProofDocument(
+            createdEmployee.id,
+            employeeIdProofUpload.file,
+            user?.id,
+            employeeIdProofUpload.idProofType,
+            employeeIdProofUpload.idProofNumber,
+          )
+        }
+      }
+
+      return createdUserResponse
+    },
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries(['users'])
-      setShowModal(false)
+      queryClient.invalidateQueries(['employees'])
+      closeModal(true)
       setEditingUser(null)
-      setError('')
+      toast.success(variables?.employeeProfileData ? 'User and employee profile created successfully' : 'User created successfully')
     },
     onError: (err) => {
       setError(parseApiError(err))
@@ -224,9 +332,8 @@ export default function Users() {
     mutationFn: ({ id, data }) => userApi.update(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries(['users'])
-      setShowModal(false)
+      closeModal(true)
       setEditingUser(null)
-      setError('')
     },
     onError: (err) => {
       setError(parseApiError(err))
@@ -368,6 +475,15 @@ export default function Users() {
     return matchesSearch && matchesRole
   })
 
+  const paginatedUsers = useMemo(() => {
+    const start = (usersPage - 1) * usersPageSize
+    return filteredUsers.slice(start, start + usersPageSize)
+  }, [filteredUsers, usersPage, usersPageSize])
+
+  useEffect(() => {
+    setUsersPage(1)
+  }, [searchTerm, filterRole, urlSocietyId, urlRole])
+
   // Get society name for a user
   const getSocietyName = (societyId) => {
     const society = societies.find(s => s.id === societyId)
@@ -408,7 +524,7 @@ export default function Users() {
 
     // Validate flatId is required for resident society roles
     // Exception: MEMBER creating TENANT - backend auto-assigns the member's flat
-    const residentUnitRoles = ['MEMBER', 'TENANT', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE']
+    const residentUnitRoles = ['MEMBER', 'TENANT', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE']
     if (residentUnitRoles.includes(roleValue) && !data.flatId) {
       // Skip validation if MEMBER is creating TENANT (backend will auto-assign)
       if (!(confirmedIsMember && roleValue === 'TENANT')) {
@@ -419,11 +535,11 @@ export default function Users() {
 
     // Roles that cannot be assigned to any unit
     // EMPLOYEE, VISITOR = staff/visitor roles, no unit
-    // MEMBER, CHAIRMAN, SECRETARY, TREASURER, COMMITTEE = can have FLAT
+    // SOCIETY_ADMIN, MEMBER, CHAIRMAN, SECRETARY, TREASURER, COMMITTEE = can have FLAT
     // TENANT = can have any unit (FLAT, SHOP, OFFICE)
     const nonUnitRoles = ['EMPLOYEE', 'VISITOR']
     if (nonUnitRoles.includes(roleValue) && data.flatId) {
-      setError(`${roleValue} role cannot be assigned to a property. Only MEMBER, TENANT, CHAIRMAN, SECRETARY, TREASURER, and COMMITTEE can occupy units.`)
+      setError(`${roleValue} role cannot be assigned to a property. Only SOCIETY_ADMIN, MEMBER, TENANT, CHAIRMAN, SECRETARY, TREASURER, and COMMITTEE can occupy units.`)
       return
     }
 
@@ -449,7 +565,59 @@ export default function Users() {
     if (editingUser) {
       updateMutation.mutate({ id: editingUser.id, data })
     } else {
-      createMutation.mutate(data)
+      let employeeProfileData = null
+      let employeeIdProofUpload = null
+      const shouldCreateEmployeeProfile = roleValue === 'EMPLOYEE' && createEmployeeProfile
+
+      if (shouldCreateEmployeeProfile) {
+        const targetSocietyId = data.societyId || user?.societyId || (urlSocietyId ? parseInt(urlSocietyId) : null)
+        if (!targetSocietyId) {
+          setError('Society is required to create an employee profile. Open Users with a society context or assign a society first.')
+          return
+        }
+
+        const department = (formData.get('employeeDepartment') || '').toString().trim()
+        const designation = (formData.get('employeeDesignation') || '').toString().trim()
+        const joiningDate = (formData.get('employeeJoiningDate') || '').toString().trim()
+        const monthlySalaryRaw = (formData.get('employeeMonthlySalary') || '').toString().trim()
+
+        if (!department || !designation) {
+          setError('Department and designation are required to create the employee profile.')
+          return
+        }
+
+        employeeProfileData = {
+          societyId: targetSocietyId,
+          department,
+          designation,
+          employeeCode: (formData.get('employeeCode') || '').toString().trim() || undefined,
+          joiningDate: joiningDate || undefined,
+          monthlySalary: monthlySalaryRaw ? Number(monthlySalaryRaw) : undefined,
+          employmentType: (formData.get('employeeEmploymentType') || '').toString().trim() || undefined,
+          shiftTiming: (formData.get('employeeShiftTiming') || '').toString().trim() || undefined,
+          notes: (formData.get('employeeNotes') || '').toString().trim() || undefined,
+        }
+
+        const idProofType = (formData.get('employeeIdProofType') || '').toString().trim()
+        const idProofNumber = (formData.get('employeeIdProofNumber') || '').toString().trim()
+        const idProofFile = formData.get('employeeIdProofFile')
+
+        if (idProofFile && idProofFile instanceof File && idProofFile.size > 0) {
+          const idProofValidation = validateEmployeeIdProofFile(idProofFile)
+          if (!idProofValidation.valid) {
+            setError(idProofValidation.message)
+            return
+          }
+
+          employeeIdProofUpload = {
+            file: idProofFile,
+            idProofType: idProofType || undefined,
+            idProofNumber: idProofNumber || undefined,
+          }
+        }
+      }
+
+      createMutation.mutate({ userData: data, employeeProfileData, employeeIdProofUpload })
     }
   }
 
@@ -639,7 +807,7 @@ export default function Users() {
             </div>
           ) : (
             <div className="grid grid-cols-[repeat(auto-fit,minmax(260px,1fr))] gap-3.5">
-              {filteredUsers.map((u) => {
+              {paginatedUsers.map((u) => {
                 const canEdit = updatableRoles.includes(u.role)
                 const canDelete = u.role !== 'MASTER_ADMIN' && updatableRoles.includes(u.role)
                 const societyName = getSocietyName(u.societyId)
@@ -740,7 +908,7 @@ export default function Users() {
 
           {/* Rows */}
           <div className="flex flex-col gap-1.5">
-            {filteredUsers.map((u) => {
+            {paginatedUsers.map((u) => {
               const canEdit = u.id === user?.id || updatableRoles.includes(u.role)
               const canDelete = u.role !== 'MASTER_ADMIN' && updatableRoles.includes(u.role)
               const isSelf = u.id === user?.id
@@ -822,13 +990,24 @@ export default function Users() {
       </div>
       )}
 
+      <PaginationControls
+        totalItems={filteredUsers.length}
+        currentPage={usersPage}
+        pageSize={usersPageSize}
+        onPageChange={setUsersPage}
+        onPageSizeChange={(nextSize) => {
+          setUsersPageSize(nextSize)
+          setUsersPage(1)
+        }}
+      />
+
       {/* Modal */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-[2px]">
           <div className="max-h-[90vh] w-full max-w-[560px] overflow-hidden rounded-2xl border border-[var(--border-default)] bg-[var(--bg-card)] shadow-[0_24px_60px_rgba(0,0,0,0.3)]">
             <div className="flex items-center justify-between border-b border-[var(--border-light)] px-5 py-4">
               <h3 className="text-lg font-semibold text-[var(--text-primary)]">{editingUser ? 'Edit User' : 'Add User'}</h3>
-              <button onClick={() => { setShowModal(false); setError(''); setShowPassword(false); }} className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-transparent text-[var(--text-tertiary)] transition hover:border-[var(--border-light)] hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-primary)]">
+              <button onClick={closeModal} className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-transparent text-[var(--text-tertiary)] transition hover:border-[var(--border-light)] hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-primary)]">
                 <X size={20} />
               </button>
             </div>
@@ -870,7 +1049,7 @@ export default function Users() {
                 label="Role"
                 name="role"
                 value={selectedRole || editingUser?.role || creatableRoles[0] || 'MEMBER'}
-                onChange={(e) => setSelectedRole(e.target.value)}
+                onChange={handleRoleChange}
                 options={creatableRoles.map(role => ({ value: role, label: role.replace('_', ' ') }))}
                 required
                 icon={Shield}
@@ -889,7 +1068,7 @@ export default function Users() {
                 />
               )}
               {/* Property selection for resident society roles - hidden only for non-unit roles */}
-              {['MEMBER', 'TENANT', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE'].includes(selectedRole || creatableRoles[0]) && (
+              {['MEMBER', 'TENANT', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE'].includes(selectedRole || creatableRoles[0]) && (
                 <div>
                   {/* MEMBER creating TENANT: auto-assign from member's flat */}
                   {confirmedIsMember && (selectedRole || creatableRoles[0]) === 'TENANT' ? (
@@ -938,10 +1117,116 @@ export default function Users() {
                 defaultValue={editingUser?.phone}
                 required
               />
+              {!editingUser && (selectedRole || creatableRoles[0]) === 'EMPLOYEE' && (
+                <div className="space-y-3 rounded-xl border border-[var(--border-light)] bg-[var(--bg-tertiary)] p-3.5">
+                  <label className="flex items-center gap-2 text-sm font-semibold text-[var(--text-primary)]">
+                    <input
+                      type="checkbox"
+                      name="createEmployeeProfile"
+                      checked={createEmployeeProfile}
+                      onChange={(e) => setCreateEmployeeProfile(e.target.checked)}
+                      disabled={!canCreateEmployeeRecord}
+                      className="h-4 w-4 rounded border-[var(--border-default)]"
+                    />
+                    Create employee HR profile now
+                  </label>
+                  {!canCreateEmployeeRecord && (
+                    <p className="text-xs text-[var(--text-tertiary)]">
+                      You can create the user here, but only Admin/Management roles can create the employee HR profile from Employees page.
+                    </p>
+                  )}
+                  {createEmployeeProfile && canCreateEmployeeRecord && (
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                      <FormInput
+                        label="Department"
+                        name="employeeDepartment"
+                        required
+                        placeholder="Housekeeping, Security, Maintenance"
+                      />
+                      <FormInput
+                        label="Designation"
+                        name="employeeDesignation"
+                        required
+                        placeholder="Guard, Cleaner, Technician"
+                      />
+                      <FormInput
+                        label="Employee Code"
+                        name="employeeCode"
+                        placeholder="EMP-001"
+                      />
+                      <FormInput
+                        label="Joining Date"
+                        name="employeeJoiningDate"
+                        type="date"
+                      />
+                      <FormInput
+                        label="Monthly Salary"
+                        name="employeeMonthlySalary"
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        placeholder="25000"
+                      />
+                      <FormInput
+                        label="Employment Type"
+                        name="employeeEmploymentType"
+                        placeholder="FULL_TIME / PART_TIME / CONTRACT"
+                      />
+                      <div className="sm:col-span-2">
+                        <FormInput
+                          label="Shift Timing"
+                          name="employeeShiftTiming"
+                          placeholder="09:00-17:00"
+                        />
+                      </div>
+                      <div className="sm:col-span-2">
+                        <FormInput
+                          label="Notes"
+                          name="employeeNotes"
+                          placeholder="Optional notes"
+                        />
+                      </div>
+                      <FormInput
+                        label="ID Proof Type"
+                        name="employeeIdProofType"
+                        placeholder="Aadhaar / PAN / Passport"
+                      />
+                      <FormInput
+                        label="ID Proof Number"
+                        name="employeeIdProofNumber"
+                        placeholder="Document number"
+                      />
+                      <div className="sm:col-span-2">
+                        <label className="mb-1 block text-sm font-medium text-[var(--text-primary)]">ID Proof File (optional)</label>
+                        <input
+                          type="file"
+                          name="employeeIdProofFile"
+                          accept=".pdf,.jpg,.jpeg,.png,.webp"
+                          onChange={handleEmployeeIdProofFileChange}
+                          className="w-full rounded-lg border border-[var(--border-default)] bg-[var(--bg-card)] px-3 py-2 text-sm text-[var(--text-primary)] file:mr-3 file:rounded-md file:border-0 file:bg-[var(--bg-tertiary)] file:px-2.5 file:py-1.5 file:text-xs file:font-semibold file:text-[var(--text-secondary)]"
+                        />
+                        {employeeIdProofFileFeedback.message && (
+                          <p
+                            className={clsx(
+                              'mt-1 text-xs',
+                              employeeIdProofFileFeedback.type === 'error' ? 'text-red-500' : 'text-emerald-500',
+                            )}
+                          >
+                            {employeeIdProofFileFeedback.message}
+                          </p>
+                        )}
+                        <p className="mt-1 text-xs text-[var(--text-tertiary)]">
+                          Allowed: PDF, JPG, JPEG, PNG, WEBP. Max size: {formatFileSize(EMPLOYEE_ID_PROOF_MAX_SIZE_BYTES)}.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
               <div className="mt-2 flex justify-end gap-2 border-t border-[var(--border-light)] pt-4">
                 <button
                   type="button"
-                  onClick={() => { setShowModal(false); setError(''); setShowPassword(false); }}
+                  onClick={closeModal}
                   className="inline-flex h-10 items-center justify-center rounded-lg border border-[var(--border-default)] bg-[var(--bg-card)] px-4 text-sm font-medium text-[var(--text-secondary)] transition hover:border-[var(--border-strong)] hover:text-[var(--text-primary)]"
                 >
                   Cancel
@@ -1116,7 +1401,7 @@ export default function Users() {
                     <div>
                       <p className="mb-1 text-xs font-semibold uppercase tracking-[0.06em] text-[var(--text-tertiary)]">Role & Unit Type Rules:</p>
                       <ul className="space-y-1 text-sm text-[var(--text-secondary)]">
-                        <li>• <strong>MEMBER, CHAIRMAN, SECRETARY, TREASURER, COMMITTEE, TENANT</strong> → Can own FLAT, SHOP, or OFFICE</li>
+                        <li>• <strong>SOCIETY_ADMIN, MEMBER, CHAIRMAN, SECRETARY, TREASURER, COMMITTEE, TENANT</strong> → Can own FLAT, SHOP, or OFFICE</li>
                         <li>• <strong>Multiple units:</strong> Use comma-separated values (e.g., "A-101, S-001") for owners with multiple properties</li>
                         <li>• <strong>EMPLOYEE, VISITOR</strong> → Cannot be assigned to any unit (leave Flat Number empty)</li>
                       </ul>

@@ -33,11 +33,23 @@ public class Notice {
     @Column
     private String priority = "MEDIUM"; // LOW, MEDIUM, HIGH, URGENT
 
+    @Column(name = "notice_type")
+    private String noticeType = "GENERAL"; // GENERAL, CIRCULAR, MEETING
+
     @Column(name = "expiry_date")
     private LocalDate expiryDate;
 
     @Column(name = "is_active")
     private Boolean isActive = true;
+
+    @Column(name = "is_deleted")
+    private Boolean deleted = false;
+
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
+
+    @Column(name = "delete_undo_expires_at")
+    private LocalDateTime deleteUndoExpiresAt;
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;

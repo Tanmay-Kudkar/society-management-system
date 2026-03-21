@@ -7,8 +7,6 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.Optional;
 
-import com.society.backend.flat.entity.Wing;
-import com.society.backend.society.entity.Society;
 @Repository
 public interface FlatRepository extends JpaRepository<Flat, Long> {
     List<Flat> findBySocietyId(Long societyId);

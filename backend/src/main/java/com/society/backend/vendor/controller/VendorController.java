@@ -103,6 +103,7 @@ public class VendorController {
     }
 
     @GetMapping("/pending")
+    @PreAuthorize("hasAnyRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'MANAGER', 'CHAIRMAN', 'SECRETARY')")
     public ResponseEntity<List<VendorResponse>> getPendingVendors(
             @RequestParam(required = false) Long societyId) {
         List<VendorResponse> vendors = vendorService.getPendingVendors(societyId);

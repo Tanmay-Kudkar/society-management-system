@@ -55,13 +55,12 @@ export default function Visitors() {
   const [overstayThreshold, setOverstayThreshold] = useState('4')
 
   const isMember = user?.role && user.role !== 'VISITOR'
-  if (!isMember) {
-    return <PermissionDenied message="You don't have permission to access visitor management" />
-  }
 
   const isPlatformLevel = user?.role === 'MASTER_ADMIN'
   const isStaff = ['MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'MANAGER', 'EMPLOYEE'].includes(user?.role)
-  const canGenerateOtp = isMember
+  const isSecurityPersonnel = ['MASTER_ADMIN', 'SOCIETY_ADMIN', 'MANAGER', 'EMPLOYEE'].includes(user?.role)
+  const canCreateVisitorEntries = isSecurityPersonnel
+  const canGenerateOtp = isSecurityPersonnel
   const societyIdFromUrl = searchParams.get('society')
   const effectiveSocietyId = isPlatformLevel && societyIdFromUrl ? societyIdFromUrl : user?.societyId
 
@@ -81,9 +80,14 @@ export default function Visitors() {
     enabled: !!user?.id && !!effectiveSocietyId,
   })
 
+  const closeModal = (force = false) => {
+    if (!force && createMutation.isPending) return
+    setShowModal(false)
+  }
+
   const createMutation = useMutation({
     mutationFn: (data) => visitorApi.create(user.id, data),
-    onSuccess: () => { queryClient.invalidateQueries(['visitors']); setShowModal(false) },
+    onSuccess: () => { queryClient.invalidateQueries(['visitors']); closeModal(true) },
   })
 
   const checkInMutation = useMutation({
@@ -145,6 +149,10 @@ export default function Visitors() {
 
   const showSkeleton = useMinLoadingTime(isLoading || isError)
 
+  if (!isMember) {
+    return <PermissionDenied message="You don't have permission to access visitor management" />
+  }
+
   if (showSkeleton) {
     return (
       <div>
@@ -166,15 +174,17 @@ export default function Visitors() {
             <InfoTooltip text="Track and manage visitors" />
           </div>
         </div>
-        <NeonSweepButton
-          tone="violet"
-          size="md"
-          onClick={() => setShowModal(true)}
-          className="w-full sm:w-auto"
-        >
-          <Plus size={20} />
-          Pre-approve Visitor
-        </NeonSweepButton>
+        {canCreateVisitorEntries && (
+          <NeonSweepButton
+            tone="violet"
+            size="md"
+            onClick={() => setShowModal(true)}
+            className="w-full sm:w-auto"
+          >
+            <Plus size={20} />
+            Pre-approve Visitor
+          </NeonSweepButton>
+        )}
       </div>
 
       <div className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-5">
@@ -330,13 +340,13 @@ export default function Visitors() {
                     </NeonSweepButton>
                   )}
 
-                  {isStaff && visitor.status === 'EXPECTED' && requiresOtp(visitor.visitorType) && !visitor.otpVerifiedAt && (
+                  {isSecurityPersonnel && visitor.status === 'EXPECTED' && requiresOtp(visitor.visitorType) && !visitor.otpVerifiedAt && (
                     <NeonSweepButton onClick={() => handleVerifyOtp(visitor)} tone="violet" size="sm">
                       Verify OTP
                     </NeonSweepButton>
                   )}
 
-                  {isStaff && visitor.status === 'EXPECTED' && (
+                  {isSecurityPersonnel && visitor.status === 'EXPECTED' && (
                     <>
                       {(!requiresOtp(visitor.visitorType) || visitor.otpVerifiedAt) && (
                         <NeonSweepButton onClick={() => checkInMutation.mutate(visitor.id)} tone="cyan" size="sm">Check In</NeonSweepButton>
@@ -345,7 +355,7 @@ export default function Visitors() {
                     </>
                   )}
 
-                  {isStaff && visitor.status === 'CHECKED_IN' && (
+                  {isSecurityPersonnel && visitor.status === 'CHECKED_IN' && (
                     <NeonSweepButton onClick={() => checkOutMutation.mutate(visitor.id)} tone="slate" size="sm">Check Out</NeonSweepButton>
                   )}
                 </div>
@@ -360,7 +370,7 @@ export default function Visitors() {
           <div className="max-h-[90vh] w-full max-w-[520px] overflow-y-auto rounded-2xl border border-[color-mix(in_srgb,var(--border-default)_86%,#334155_14%)] bg-[color-mix(in_srgb,var(--bg-card)_96%,var(--bg-tertiary)_4%)] p-5 shadow-[0_24px_64px_rgba(2,6,23,0.35)] sm:p-6">
             <div className="mb-5 flex items-center justify-between border-b border-[var(--border-light)] pb-3">
               <h3 className="text-lg font-bold text-[var(--text-primary)]">Pre-approve Visitor</h3>
-              <button onClick={() => setShowModal(false)} className="rounded-md p-1 text-[var(--text-tertiary)] transition hover:bg-[var(--bg-tertiary)]"><X size={20} /></button>
+              <button onClick={() => closeModal()} className="rounded-md p-1 text-[var(--text-tertiary)] transition hover:bg-[var(--bg-tertiary)]"><X size={20} /></button>
             </div>
             <form onSubmit={handleSubmit} className="flex flex-col gap-4">
               <FormInput label="Visitor Name" name="visitorName" required />
@@ -379,7 +389,7 @@ export default function Visitors() {
                 <input type="checkbox" name="isPreApproved" defaultChecked className="h-4 w-4 accent-[var(--accent-primary)]" /> Pre-approve this visitor
               </label>
               <div className="mt-2 flex items-center justify-end gap-3 border-t border-[var(--border-light)] pt-4">
-                <NeonSweepButton type="button" tone="slate" size="md" onClick={() => setShowModal(false)}>
+                <NeonSweepButton type="button" tone="slate" size="md" onClick={() => closeModal()}>
                   Cancel
                 </NeonSweepButton>
                 <NeonSweepButton type="submit" tone="cyan" size="md" disabled={createMutation.isPending}>

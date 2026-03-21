@@ -47,6 +47,7 @@ const routePrefetchMap = {
   "/settings": () => import("../pages/core/Settings"),
   "/reports": () => import("../pages/core/Reports"),
   "/users": () => import("../pages/users/Users"),
+  "/employees": () => import("../pages/users/Employees"),
   "/roles-permissions": () => import("../pages/users/RolesPermissions"),
   "/society-admins": () => import("../pages/society/SocietyAdmins"),
   "/login-audit": () => import("../pages/society/LoginAudit"),
@@ -64,7 +65,6 @@ const routePrefetchMap = {
   "/notices": () => import("../pages/communication/Notices"),
   "/tickets": () => import("../pages/communication/Tickets"),
   "/complaints": () => import("../pages/communication/Complaints"),
-  "/approvals": () => import("../pages/communication/Approvals"),
   "/emergency-contacts": () =>
     import("../pages/communication/EmergencyContacts"),
   "/documents": () => import("../pages/communication/Documents"),
@@ -164,6 +164,19 @@ const standardMenuGroups = [
           "COMMITTEE",
           "MANAGER",
           "MEMBER",
+        ],
+      },
+      {
+        path: "/employees",
+        icon: Users,
+        label: "Employees",
+        roles: [
+          "MASTER_ADMIN",
+          "SOCIETY_ADMIN",
+          "CHAIRMAN",
+          "SECRETARY",
+          "TREASURER",
+          "MANAGER",
         ],
       },
       {
@@ -270,19 +283,6 @@ const standardMenuGroups = [
       { path: "/notices", icon: Megaphone, label: "Notices" },
       { path: "/tickets", icon: Ticket, label: "Tickets" },
       { path: "/complaints", icon: MessageSquare, label: "Complaints" },
-      {
-        path: "/approvals",
-        icon: FileCheck,
-        label: "Approvals",
-        roles: [
-          "SOCIETY_ADMIN",
-          "CHAIRMAN",
-          "SECRETARY",
-          "TREASURER",
-          "COMMITTEE",
-          "MANAGER",
-        ],
-      },
     ],
   },
   {
@@ -469,7 +469,7 @@ function MobileAccordion({
         onFocus={() => onPrefetch?.(group.path)}
         onClick={onNavigate}
         className={clsx(
-          "mb-0.5 flex items-center gap-[11px] rounded-[10px] px-3.5 py-3 text-[13.5px] sm:text-sm font-semibold no-underline transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-card)]",
+          "mb-0.5 flex items-center gap-[10px] rounded-[10px] px-3 py-2.5 text-[13px] sm:text-[13.5px] font-semibold no-underline transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-card)]",
           isActiveGroup
             ? "bg-[var(--accent-primary)] text-white"
             : "text-[var(--text-secondary)] hover:bg-[rgba(47,129,247,0.06)] hover:text-[var(--text-primary)]",
@@ -487,7 +487,7 @@ function MobileAccordion({
       <button
         onClick={onToggle}
         className={clsx(
-          "mb-0.5 flex w-full items-center justify-between rounded-[10px] border-none px-3.5 py-3 text-left text-[13.5px] sm:text-sm font-semibold transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-card)]",
+          "mb-0.5 flex w-full items-center justify-between rounded-[10px] border-none px-3 py-2.5 text-left text-[13px] sm:text-[13.5px] font-semibold transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-card)]",
           isActiveGroup || isOpen
             ? "bg-[color-mix(in_srgb,var(--accent-primary)_6%,transparent)] text-[var(--accent-primary)] font-[650]"
             : "bg-transparent text-[var(--text-secondary)] hover:bg-[rgba(47,129,247,0.06)] hover:text-[var(--text-primary)]",
@@ -520,7 +520,7 @@ function MobileAccordion({
               onClick={onNavigate}
               className={({ isActive }) =>
                 clsx(
-                  "mx-1.5 mb-px flex items-center gap-3 rounded-lg py-2.5 pr-3.5 pl-[46px] text-[13px] sm:text-[13.5px] font-medium no-underline transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-card)]",
+                  "mx-1.5 mb-px flex items-center gap-2.5 rounded-lg py-2 pr-3 pl-[42px] text-[12.5px] sm:text-[13px] font-medium no-underline transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-card)]",
                   isActive
                     ? "bg-[rgba(47,129,247,0.1)] text-[var(--accent-primary)] font-semibold"
                     : "text-[var(--text-secondary)] hover:bg-[rgba(47,129,247,0.08)] hover:text-[var(--text-primary)]",
@@ -842,7 +842,7 @@ export default function Layout() {
               className="mb-2 flex w-full items-center gap-2 rounded-lg border border-[var(--border-default)] bg-[var(--bg-tertiary)] px-3 py-2 text-xs font-semibold uppercase tracking-[0.05em] text-[var(--text-secondary)] transition hover:border-[var(--border-strong)] hover:text-[var(--text-primary)]"
             >
               <ArrowLeftRight size={14} />
-              Exit Society Mode
+              Exit Society
             </button>
           )}
           {menuGroups.map((group) =>
@@ -977,7 +977,7 @@ export default function Layout() {
         {/* Drawer */}
         <aside
           className={clsx(
-            "absolute right-0 top-0 flex h-full w-[min(94vw,360px)] sm:w-[340px] md:w-[360px] max-w-[94vw] flex-col bg-[var(--bg-card)] shadow-[-8px_0_28px_rgba(0,0,0,0.38)] will-change-transform transition-transform duration-300 motion-reduce:transition-none",
+            "absolute right-0 top-0 flex h-full w-[min(84vw,312px)] sm:w-[312px] md:w-[332px] max-w-[84vw] flex-col bg-[var(--bg-card)] shadow-[-8px_0_28px_rgba(0,0,0,0.38)] will-change-transform transition-transform duration-300 motion-reduce:transition-none",
             mobileMenuOpen
               ? "translate-x-0"
               : "translate-x-full",
@@ -1003,7 +1003,20 @@ export default function Layout() {
           </div>
 
           {/* Mobile Navigation */}
-          <nav className="flex-1 overflow-y-auto px-2.5 pb-36 pt-3 sm:px-3">
+          <nav className="flex-1 overflow-y-auto px-1.5 pb-28 pt-2 sm:px-2">
+            {isMasterSocietyMode && (
+              <button
+                type="button"
+                onClick={() => {
+                  navigate("/dashboard");
+                  closeMobileMenu();
+                }}
+                className="mb-2 flex w-full items-center gap-2 rounded-lg border border-[var(--border-default)] bg-[var(--bg-tertiary)] px-3 py-2 text-xs font-semibold uppercase tracking-[0.05em] text-[var(--text-secondary)] transition hover:border-[var(--border-strong)] hover:text-[var(--text-primary)]"
+              >
+                <ArrowLeftRight size={14} />
+                Exit Society
+              </button>
+            )}
             {menuGroups.map((group) => (
               <MobileAccordion
                 key={group.id}
