@@ -102,7 +102,7 @@ public class PaymentController {
      * Get all payments for a society
      */
     @GetMapping("/society/{societyId}")
-    @PreAuthorize("hasAnyRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER')")
+    @PreAuthorize("hasAnyRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'MANAGER', 'CHAIRMAN', 'SECRETARY', 'TREASURER')")
     public ResponseEntity<List<PaymentResponse>> getPaymentsBySociety(@PathVariable Long societyId) {
         return ResponseEntity.ok(paymentService.getPaymentsBySociety(societyId));
     }
@@ -111,7 +111,7 @@ public class PaymentController {
      * Get recently deleted payments for a society (undo-eligible records only).
      */
     @GetMapping("/deleted/society/{societyId}")
-    @PreAuthorize("hasAnyRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER')")
+    @PreAuthorize("hasAnyRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'MANAGER', 'CHAIRMAN', 'SECRETARY', 'TREASURER')")
     public ResponseEntity<List<PaymentResponse>> getDeletedPaymentsBySociety(@PathVariable Long societyId) {
         return ResponseEntity.ok(paymentService.getDeletedPaymentsBySociety(societyId));
     }
@@ -128,7 +128,7 @@ public class PaymentController {
      * Soft-delete payment record (undo available for 30 minutes).
      */
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER')")
+    @PreAuthorize("hasAnyRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'MANAGER', 'CHAIRMAN', 'SECRETARY', 'TREASURER')")
     public ResponseEntity<Void> deletePayment(@PathVariable Long id, @RequestParam Long userId) {
         paymentService.deletePayment(id, userId);
         return ResponseEntity.noContent().build();
@@ -138,7 +138,7 @@ public class PaymentController {
      * Undo soft-delete if requested within 30 minutes.
      */
     @PostMapping("/{id}/undo-delete")
-    @PreAuthorize("hasAnyRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER')")
+    @PreAuthorize("hasAnyRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'MANAGER', 'CHAIRMAN', 'SECRETARY', 'TREASURER')")
     public ResponseEntity<PaymentResponse> undoDeletePayment(@PathVariable Long id) {
         return ResponseEntity.ok(paymentService.undoDeletePayment(id));
     }

@@ -270,7 +270,7 @@ public class RoleService {
      */
     public void canManageFinancials(Long userId) {
         checkRole(userId, Role.MASTER_ADMIN, Role.SOCIETY_ADMIN,
-                Role.CHAIRMAN, Role.SECRETARY, Role.TREASURER);
+                Role.CHAIRMAN, Role.SECRETARY, Role.TREASURER, Role.MANAGER);
     }
 
     /**

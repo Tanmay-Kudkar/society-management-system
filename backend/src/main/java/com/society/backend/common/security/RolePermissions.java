@@ -80,8 +80,12 @@ public final class RolePermissions {
                 ALLOWED_CREATIONS.put(Role.COMMITTEE, EnumSet.of(
                                 Role.EMPLOYEE, Role.MEMBER));
 
-                // MANAGER — no user CRUD rights
-                ALLOWED_CREATIONS.put(Role.MANAGER, EnumSet.noneOf(Role.class));
+                // MANAGER — same scope as SOCIETY_ADMIN (alternate admin designation)
+                ALLOWED_CREATIONS.put(Role.MANAGER, EnumSet.of(
+                                Role.CHAIRMAN, Role.SECRETARY, Role.TREASURER,
+                                Role.COMMITTEE, Role.MANAGER,
+                                Role.EMPLOYEE, Role.MEMBER,
+                                Role.TENANT, Role.VENDOR, Role.VISITOR));
 
                 // EMPLOYEE — no operational user CRUD rights
                 ALLOWED_CREATIONS.put(Role.EMPLOYEE, EnumSet.noneOf(Role.class));
@@ -129,7 +133,11 @@ public final class RolePermissions {
                 ALLOWED_UPDATES.put(Role.COMMITTEE, EnumSet.of(
                                 Role.EMPLOYEE, Role.MEMBER));
 
-                ALLOWED_UPDATES.put(Role.MANAGER, EnumSet.noneOf(Role.class));
+                ALLOWED_UPDATES.put(Role.MANAGER, EnumSet.of(
+                                Role.CHAIRMAN, Role.SECRETARY, Role.TREASURER,
+                                Role.COMMITTEE, Role.MANAGER,
+                                Role.EMPLOYEE, Role.MEMBER,
+                                Role.TENANT, Role.VENDOR, Role.VISITOR));
 
                 ALLOWED_UPDATES.put(Role.EMPLOYEE, EnumSet.noneOf(Role.class));
 
@@ -181,9 +189,13 @@ public final class RolePermissions {
                                 Role.EMPLOYEE, Role.MEMBER,
                                 Role.TENANT, Role.VENDOR, Role.VISITOR));
 
-                // MANAGER — reads employee and visitor (operational visibility)
+                // MANAGER — reads all in society, same as SOCIETY_ADMIN
                 ALLOWED_READS.put(Role.MANAGER, EnumSet.of(
-                                Role.MANAGER, Role.EMPLOYEE, Role.VISITOR));
+                                Role.SOCIETY_ADMIN,
+                                Role.CHAIRMAN, Role.SECRETARY, Role.TREASURER,
+                                Role.COMMITTEE, Role.MANAGER,
+                                Role.EMPLOYEE, Role.MEMBER,
+                                Role.TENANT, Role.VENDOR, Role.VISITOR));
 
                 // EMPLOYEE — no system access
                 ALLOWED_READS.put(Role.EMPLOYEE, EnumSet.of(Role.EMPLOYEE));

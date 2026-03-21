@@ -7,7 +7,7 @@ const roleResponsibilities = [
   {
     role: 'MANAGER',
     authority: 'Operational Manager',
-    responsibility: 'Handles day-to-day management tasks',
+    responsibility: 'Same operational access profile as Society Admin within society scope, used as an alternate designation for day-to-day administration.',
   },
   {
     role: 'SOCIETY_ADMIN',
@@ -100,9 +100,9 @@ const permissionMatrix = [
   },
   {
     role: 'MANAGER',
-    create: 'None',
-    updateDelete: 'None',
-    read: 'MANAGER, EMPLOYEE, VISITOR',
+    create: 'CHAIRMAN, SECRETARY, TREASURER, COMMITTEE, MANAGER, EMPLOYEE, MEMBER, TENANT, VENDOR, VISITOR',
+    updateDelete: 'CHAIRMAN, SECRETARY, TREASURER, COMMITTEE, MANAGER, EMPLOYEE, MEMBER, TENANT, VENDOR, VISITOR',
+    read: 'ALL in society',
   },
   {
     role: 'EMPLOYEE',

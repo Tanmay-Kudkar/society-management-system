@@ -90,18 +90,21 @@ public class TicketServiceImpl implements TicketService {
 
     @Override
     public TicketResponse getById(Long id) {
+        User currentUser = roleService.getCurrentUser();
         Ticket ticket = ticketRepository.findById(id)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Ticket not found"));
-        if (ticket.getSociety() != null) {
-            roleService.enforceSocietyScope(roleService.getCurrentUser(), ticket.getSociety().getId());
+        if (!canViewTicket(currentUser, ticket)) {
+            throw new ApiException(HttpStatus.NOT_FOUND, "Ticket not found");
         }
         return mapToResponse(ticket);
     }
 
     @Override
     public List<TicketResponse> getBySocietyId(Long societyId) {
-        roleService.enforceSocietyScope(roleService.getCurrentUser(), societyId);
+        User currentUser = roleService.getCurrentUser();
+        roleService.enforceSocietyScope(currentUser, societyId);
         return ticketRepository.findBySocietyId(societyId).stream()
+            .filter(ticket -> canViewTicket(currentUser, ticket))
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
@@ -110,11 +113,7 @@ public class TicketServiceImpl implements TicketService {
     public List<TicketResponse> getByRaisedBy(Long userId) {
         var currentUser = roleService.getCurrentUser();
         return ticketRepository.findByRaisedById(userId).stream()
-                .filter(t -> {
-                    if (currentUser.getRole() == Role.MASTER_ADMIN) return true;
-                    return t.getSociety() != null && currentUser.getSociety() != null
-                            && t.getSociety().getId().equals(currentUser.getSociety().getId());
-                })
+                .filter(t -> canViewTicket(currentUser, t))
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
@@ -123,11 +122,7 @@ public class TicketServiceImpl implements TicketService {
     public List<TicketResponse> getByAssignedTo(Long userId) {
         var currentUser = roleService.getCurrentUser();
         return ticketRepository.findByAssignedToId(userId).stream()
-                .filter(t -> {
-                    if (currentUser.getRole() == Role.MASTER_ADMIN) return true;
-                    return t.getSociety() != null && currentUser.getSociety() != null
-                            && t.getSociety().getId().equals(currentUser.getSociety().getId());
-                })
+                .filter(t -> canViewTicket(currentUser, t))
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
@@ -136,11 +131,7 @@ public class TicketServiceImpl implements TicketService {
     public List<TicketResponse> getByStatus(String status) {
         var currentUser = roleService.getCurrentUser();
         return ticketRepository.findByStatus(status).stream()
-                .filter(t -> {
-                    if (currentUser.getRole() == Role.MASTER_ADMIN) return true;
-                    return t.getSociety() != null && currentUser.getSociety() != null
-                            && t.getSociety().getId().equals(currentUser.getSociety().getId());
-                })
+                .filter(t -> canViewTicket(currentUser, t))
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
@@ -153,13 +144,7 @@ public class TicketServiceImpl implements TicketService {
         }
 
         return ticketRepository.findAll().stream()
-                .filter(t -> {
-                    if (currentUser.getRole() == Role.MASTER_ADMIN) {
-                        return true;
-                    }
-                    return t.getSociety() != null && currentUser.getSociety() != null
-                            && t.getSociety().getId().equals(currentUser.getSociety().getId());
-                })
+                .filter(t -> canViewTicket(currentUser, t))
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
@@ -298,11 +283,12 @@ public class TicketServiceImpl implements TicketService {
 
     @Override
     public List<TicketReplyResponse> getReplies(Long id) {
+        User currentUser = roleService.getCurrentUser();
         Ticket ticket = ticketRepository.findById(id)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Ticket not found"));
 
-        if (ticket.getSociety() != null) {
-            roleService.enforceSocietyScope(roleService.getCurrentUser(), ticket.getSociety().getId());
+        if (!canViewTicket(currentUser, ticket)) {
+            throw new ApiException(HttpStatus.NOT_FOUND, "Ticket not found");
         }
 
         return ticketReplyRepository.findByTicketIdOrderByCreatedAtAsc(id).stream()
@@ -407,11 +393,8 @@ public class TicketServiceImpl implements TicketService {
         var currentUser = roleService.getCurrentUser();
         return ticketRepository.findAll().stream()
                 .filter(ticket -> {
-                    if (currentUser.getRole() != Role.MASTER_ADMIN) {
-                        if (ticket.getSociety() == null || currentUser.getSociety() == null
-                                || !ticket.getSociety().getId().equals(currentUser.getSociety().getId())) {
-                            return false;
-                        }
+                    if (!canViewTicket(currentUser, ticket)) {
+                        return false;
                     }
                     ticket.updateOverdueStatus();
                     return ticket.getIsOverdue();
@@ -422,8 +405,13 @@ public class TicketServiceImpl implements TicketService {
 
     @Override
     public List<TicketResponse> getOverdueBySociety(Long societyId) {
+        User currentUser = roleService.getCurrentUser();
+        roleService.enforceSocietyScope(currentUser, societyId);
         return ticketRepository.findBySocietyId(societyId).stream()
                 .filter(ticket -> {
+                    if (!canViewTicket(currentUser, ticket)) {
+                        return false;
+                    }
                     ticket.updateOverdueStatus();
                     return ticket.getIsOverdue();
                 })
@@ -436,16 +424,35 @@ public class TicketServiceImpl implements TicketService {
         var currentUser = roleService.getCurrentUser();
         return ticketRepository.findAll().stream()
                 .filter(ticket -> {
-                    if (currentUser.getRole() != Role.MASTER_ADMIN) {
-                        if (ticket.getSociety() == null || currentUser.getSociety() == null
-                                || !ticket.getSociety().getId().equals(currentUser.getSociety().getId())) {
-                            return false;
-                        }
+                    if (!canViewTicket(currentUser, ticket)) {
+                        return false;
                     }
                     ticket.updateOverdueStatus();
                     return ticket.getIsOverdue();
                 })
                 .count();
+    }
+
+    private boolean canViewTicket(User currentUser, Ticket ticket) {
+        if (currentUser == null || ticket == null) {
+            return false;
+        }
+
+        if (currentUser.getRole() != Role.MASTER_ADMIN) {
+            if (ticket.getSociety() == null || currentUser.getSociety() == null
+                    || !ticket.getSociety().getId().equals(currentUser.getSociety().getId())) {
+                return false;
+            }
+        }
+
+        if (currentUser.getRole() == Role.MEMBER || currentUser.getRole() == Role.TENANT) {
+            boolean isOwner = ticket.getRaisedBy() != null && currentUser.getId().equals(ticket.getRaisedBy().getId());
+            boolean isExplicitlyAssigned = ticket.getAssignedTo() != null
+                    && currentUser.getId().equals(ticket.getAssignedTo().getId());
+            return isOwner || isExplicitlyAssigned;
+        }
+
+        return true;
     }
 
     private TicketResponse mapToResponse(Ticket ticket) {

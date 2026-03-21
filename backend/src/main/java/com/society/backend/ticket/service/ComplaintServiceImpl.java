@@ -178,6 +178,7 @@ public class ComplaintServiceImpl implements ComplaintService {
         if (user.getRole().name().equals("MASTER_ADMIN")) {
             return complaintRepository.findAll().stream()
                     .filter(this::isVisibleForListing)
+                    .filter(complaint -> canViewComplaint(user, complaint))
                     .map(this::toResponse)
                     .collect(Collectors.toList());
         }
@@ -186,6 +187,7 @@ public class ComplaintServiceImpl implements ComplaintService {
         if (user.getSociety() != null) {
             return complaintRepository.findBySocietyId(user.getSociety().getId()).stream()
                     .filter(this::isVisibleForListing)
+                    .filter(complaint -> canViewComplaint(user, complaint))
                     .map(this::toResponse)
                     .collect(Collectors.toList());
         }
@@ -196,9 +198,11 @@ public class ComplaintServiceImpl implements ComplaintService {
 
     @Override
     public List<ComplaintResponse> getBySociety(Long societyId) {
-        roleService.enforceSocietyScope(roleService.getCurrentUser(), societyId);
+        User currentUser = roleService.getCurrentUser();
+        roleService.enforceSocietyScope(currentUser, societyId);
         return complaintRepository.findBySocietyId(societyId).stream()
                 .filter(this::isVisibleForListing)
+            .filter(complaint -> canViewComplaint(currentUser, complaint))
                 .map(this::toResponse)
                 .collect(Collectors.toList());
     }
@@ -219,14 +223,17 @@ public class ComplaintServiceImpl implements ComplaintService {
 
     @Override
     public List<ComplaintResponse> getByStatus(String status) {
+        User currentUser = roleService.getCurrentUser();
         return complaintRepository.findByStatus(status).stream()
                 .filter(this::isVisibleForListing)
+            .filter(complaint -> canViewComplaint(currentUser, complaint))
                 .map(this::toResponse)
                 .collect(Collectors.toList());
     }
 
     @Override
     public ComplaintResponse getById(Long id) {
+        User currentUser = roleService.getCurrentUser();
         Complaint complaint = complaintRepository.findById(id)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Complaint not found"));
 
@@ -234,8 +241,8 @@ public class ComplaintServiceImpl implements ComplaintService {
             throw new ApiException(HttpStatus.NOT_FOUND, "Complaint not found");
         }
 
-        if (complaint.getSociety() != null) {
-            roleService.enforceSocietyScope(roleService.getCurrentUser(), complaint.getSociety().getId());
+        if (!canViewComplaint(currentUser, complaint)) {
+            throw new ApiException(HttpStatus.NOT_FOUND, "Complaint not found");
         }
         return toResponse(complaint);
     }
@@ -779,6 +786,10 @@ public class ComplaintServiceImpl implements ComplaintService {
         }
 
         boolean isOwner = complaint.getUser() != null && complaint.getUser().getId().equals(userId);
+        boolean isAssignedTo = complaint.getAssignedToUser() != null
+                && complaint.getAssignedToUser().getId().equals(userId);
+        boolean isSharedWith = complaint.getRaisedForUser() != null
+                && complaint.getRaisedForUser().getId().equals(userId);
         boolean isManager = user.getRole() == com.society.backend.user.entity.Role.MASTER_ADMIN
                 || user.getRole() == com.society.backend.user.entity.Role.SOCIETY_ADMIN
                 || user.getRole() == com.society.backend.user.entity.Role.CHAIRMAN
@@ -787,10 +798,34 @@ public class ComplaintServiceImpl implements ComplaintService {
                 || user.getRole() == com.society.backend.user.entity.Role.COMMITTEE
                 || user.getRole() == com.society.backend.user.entity.Role.MANAGER;
 
-        if (!isOwner && !isManager) {
+        if (!isOwner && !isAssignedTo && !isSharedWith && !isManager) {
             throw new ApiException(HttpStatus.FORBIDDEN, "You cannot access comments/history for this complaint");
         }
         return complaint;
+    }
+
+    private boolean canViewComplaint(User currentUser, Complaint complaint) {
+        if (currentUser == null || complaint == null) {
+            return false;
+        }
+
+        if (currentUser.getRole() != Role.MASTER_ADMIN) {
+            if (complaint.getSociety() == null || currentUser.getSociety() == null
+                    || !complaint.getSociety().getId().equals(currentUser.getSociety().getId())) {
+                return false;
+            }
+        }
+
+        if (currentUser.getRole() == Role.MEMBER || currentUser.getRole() == Role.TENANT) {
+            boolean isOwner = complaint.getUser() != null && currentUser.getId().equals(complaint.getUser().getId());
+            boolean isAssignedTo = complaint.getAssignedToUser() != null
+                    && currentUser.getId().equals(complaint.getAssignedToUser().getId());
+            boolean isSharedWith = complaint.getRaisedForUser() != null
+                    && currentUser.getId().equals(complaint.getRaisedForUser().getId());
+            return isOwner || isAssignedTo || isSharedWith;
+        }
+
+        return true;
     }
 
     private ComplaintCommentResponse toCommentResponse(ComplaintComment comment) {
