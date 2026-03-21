@@ -12,7 +12,8 @@ import useMinLoadingTime from '../../hooks/useMinLoadingTime'
 import { formatDateTime, parseServerDateTime } from '../../utils/formatUtils'
 
 const statusIcons = {
-  EXPECTED: Clock,
+  PENDING_APPROVAL: Clock,
+  APPROVED: Clock,
   CHECKED_IN: LogIn,
   CHECKED_OUT: LogOut,
   REJECTED: UserX,
@@ -20,7 +21,8 @@ const statusIcons = {
 }
 
 const statusBadgeClasses = {
-  EXPECTED: 'bg-blue-500/10 text-blue-600',
+  PENDING_APPROVAL: 'bg-blue-500/10 text-blue-600',
+  APPROVED: 'bg-cyan-500/10 text-cyan-700',
   CHECKED_IN: 'bg-amber-500/10 text-amber-600',
   CHECKED_OUT: 'bg-emerald-500/10 text-emerald-600',
   REJECTED: 'bg-red-500/10 text-red-600',
@@ -28,7 +30,8 @@ const statusBadgeClasses = {
 }
 
 const iconWrapClasses = {
-  EXPECTED: 'bg-blue-500/10',
+  PENDING_APPROVAL: 'bg-blue-500/10',
+  APPROVED: 'bg-cyan-500/10',
   CHECKED_IN: 'bg-amber-500/10',
   CHECKED_OUT: 'bg-emerald-500/10',
   REJECTED: 'bg-red-500/10',
@@ -36,7 +39,8 @@ const iconWrapClasses = {
 }
 
 const iconColorClasses = {
-  EXPECTED: 'text-blue-600',
+  PENDING_APPROVAL: 'text-blue-600',
+  APPROVED: 'text-cyan-700',
   CHECKED_IN: 'text-amber-600',
   CHECKED_OUT: 'text-emerald-600',
   REJECTED: 'text-red-600',
@@ -60,6 +64,7 @@ export default function Visitors() {
   const isPlatformLevel = user?.role === 'MASTER_ADMIN'
   const isStaff = ['MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'MANAGER', 'EMPLOYEE'].includes(user?.role)
   const isSecurityPersonnel = ['MASTER_ADMIN', 'SOCIETY_ADMIN', 'MANAGER', 'EMPLOYEE'].includes(user?.role)
+  const isOwnerMember = user?.role === 'MEMBER'
   const canCreateVisitorEntries = isSecurityPersonnel
   const canGenerateOtp = isSecurityPersonnel
   const societyIdFromUrl = searchParams.get('society')
@@ -96,6 +101,11 @@ export default function Visitors() {
     onSuccess: () => queryClient.invalidateQueries(['visitors']),
   })
 
+  const approveByMemberMutation = useMutation({
+    mutationFn: (id) => visitorApi.approveByMember(id, user.id),
+    onSuccess: () => queryClient.invalidateQueries(['visitors']),
+  })
+
   const rejectMutation = useMutation({
     mutationFn: (id) => visitorApi.updateStatus(id, user.id, 'REJECTED'),
     onSuccess: () => queryClient.invalidateQueries(['visitors']),
@@ -127,11 +137,11 @@ export default function Visitors() {
       visitorName: formData.get('visitorName'),
       visitorPhone: formData.get('visitorPhone'),
       visitorType: formData.get('visitorType'),
+      flatId: Number(formData.get('flatId')),
       purpose: formData.get('purpose'),
       vehicleNumber: formData.get('vehicleNumber'),
       notes: formData.get('notes'),
       societyId: user.societyId,
-      isPreApproved: formData.get('isPreApproved') === 'on',
     })
   }
 
@@ -184,15 +194,19 @@ export default function Visitors() {
             className="w-full sm:w-auto"
           >
             <Plus size={20} />
-            Pre-approve Visitor
+            Create Visitor Entry
           </NeonSweepButton>
         )}
       </div>
 
       <div className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-5">
         <div className="rounded-2xl border border-[color-mix(in_srgb,var(--border-default)_86%,#334155_14%)] bg-[color-mix(in_srgb,var(--bg-card)_88%,var(--bg-tertiary)_12%)] p-4 shadow-[0_8px_24px_rgba(15,23,42,0.08)]">
-          <p className="text-xs text-[var(--text-tertiary)]">Expected</p>
-          <p className="mt-1 text-2xl font-bold text-blue-600">{visitors.filter(v => v.status === 'EXPECTED').length}</p>
+          <p className="text-xs text-[var(--text-tertiary)]">Pending Approval</p>
+          <p className="mt-1 text-2xl font-bold text-blue-600">{visitors.filter(v => v.status === 'PENDING_APPROVAL').length}</p>
+        </div>
+        <div className="rounded-2xl border border-[color-mix(in_srgb,var(--border-default)_86%,#334155_14%)] bg-[color-mix(in_srgb,var(--bg-card)_88%,var(--bg-tertiary)_12%)] p-4 shadow-[0_8px_24px_rgba(15,23,42,0.08)]">
+          <p className="text-xs text-[var(--text-tertiary)]">Approved</p>
+          <p className="mt-1 text-2xl font-bold text-cyan-700">{visitors.filter(v => v.status === 'APPROVED').length}</p>
         </div>
         <div className="rounded-2xl border border-[color-mix(in_srgb,var(--border-default)_86%,#334155_14%)] bg-[color-mix(in_srgb,var(--bg-card)_88%,var(--bg-tertiary)_12%)] p-4 shadow-[0_8px_24px_rgba(15,23,42,0.08)]">
           <p className="text-xs text-[var(--text-tertiary)]">Checked In</p>
@@ -230,7 +244,8 @@ export default function Visitors() {
           </div>
           <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="rounded-xl border border-[var(--border-default)] bg-[var(--bg-card)] px-3 py-2.5 text-sm text-[var(--text-primary)] outline-none transition-[border-color,box-shadow] focus:border-[var(--accent-primary)] focus:shadow-[0_0_0_3px_color-mix(in_srgb,var(--accent-primary)_22%,transparent)]">
             <option value="">All Status</option>
-            <option value="EXPECTED">Expected</option>
+            <option value="PENDING_APPROVAL">Pending Approval</option>
+            <option value="APPROVED">Approved</option>
             <option value="CHECKED_IN">Checked In</option>
             <option value="CHECKED_OUT">Checked Out</option>
             <option value="REJECTED">Rejected</option>
@@ -308,7 +323,7 @@ export default function Visitors() {
                     <div className="mb-1 flex flex-wrap items-center gap-2">
                       <span className={clsx('inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold uppercase', statusBadgeClasses[visitor.status] || statusBadgeClasses.CANCELLED)}>{visitor.status?.replace('_', ' ')}</span>
                       <span className="inline-flex items-center rounded-full bg-violet-500/10 px-2 py-0.5 text-[11px] font-medium text-violet-600">{visitor.visitorType}</span>
-                      {visitor.isPreApproved && <span className="inline-flex items-center rounded-full bg-blue-500/10 px-2 py-0.5 text-[11px] font-semibold uppercase text-blue-600">PRE-APPROVED</span>}
+                      {visitor.isPreApproved && <span className="inline-flex items-center rounded-full bg-cyan-500/10 px-2 py-0.5 text-[11px] font-semibold uppercase text-cyan-700">APPROVED BY MEMBER</span>}
                       {visitor.otpVerifiedAt && <span className="inline-flex items-center rounded-full bg-emerald-500/10 px-2 py-0.5 text-[11px] font-semibold uppercase text-emerald-600">OTP VERIFIED</span>}
                     </div>
                     <h3 className="font-semibold text-[var(--text-primary)]">{visitor.visitorName}</h3>
@@ -319,7 +334,7 @@ export default function Visitors() {
                       {visitor.vehicleNumber && <span className="text-xs text-[var(--text-tertiary)]">Vehicle: {visitor.vehicleNumber}</span>}
                       {visitor.expectedArrival && <span className="text-xs text-[var(--text-tertiary)]">Expected: {formatDateTime(visitor.expectedArrival)}</span>}
                       {visitor.approvalCode && <span className="text-xs text-[var(--text-tertiary)]">Code: {visitor.approvalCode}</span>}
-                      {requiresOtp(visitor.visitorType) && visitor.status === 'EXPECTED' && visitor.otpCode && (
+                      {requiresOtp(visitor.visitorType) && visitor.status === 'APPROVED' && visitor.otpCode && (
                         <span className="text-xs font-semibold text-blue-600">OTP: {visitor.otpCode} {(() => {
                           const otpExpiry = parseServerDateTime(visitor.otpExpiresAt)
                           return otpExpiry
@@ -332,7 +347,7 @@ export default function Visitors() {
                   </div>
                 </div>
                 <div className="flex shrink-0 flex-wrap justify-end gap-1.5">
-                  {visitor.status === 'EXPECTED' && requiresOtp(visitor.visitorType) && canGenerateOtp && (
+                  {visitor.status === 'APPROVED' && requiresOtp(visitor.visitorType) && canGenerateOtp && (
                     <NeonSweepButton
                       onClick={() => generateOtpMutation.mutate(visitor.id)}
                       tone="cyan"
@@ -342,19 +357,29 @@ export default function Visitors() {
                     </NeonSweepButton>
                   )}
 
-                  {isSecurityPersonnel && visitor.status === 'EXPECTED' && requiresOtp(visitor.visitorType) && !visitor.otpVerifiedAt && (
+                  {isSecurityPersonnel && visitor.status === 'APPROVED' && requiresOtp(visitor.visitorType) && !visitor.otpVerifiedAt && (
                     <NeonSweepButton onClick={() => handleVerifyOtp(visitor)} tone="violet" size="sm">
                       Verify OTP
                     </NeonSweepButton>
                   )}
 
-                  {isSecurityPersonnel && visitor.status === 'EXPECTED' && (
+                  {isOwnerMember && visitor.status === 'PENDING_APPROVAL' && (
+                    <NeonSweepButton onClick={() => approveByMemberMutation.mutate(visitor.id)} tone="cyan" size="sm">
+                      Approve Entry
+                    </NeonSweepButton>
+                  )}
+
+                  {isSecurityPersonnel && visitor.status === 'APPROVED' && (
                     <>
                       {(!requiresOtp(visitor.visitorType) || visitor.otpVerifiedAt) && (
                         <NeonSweepButton onClick={() => checkInMutation.mutate(visitor.id)} tone="cyan" size="sm">Check In</NeonSweepButton>
                       )}
                       <NeonSweepButton onClick={() => rejectMutation.mutate(visitor.id)} tone="danger" size="sm">Reject</NeonSweepButton>
                     </>
+                  )}
+
+                  {isSecurityPersonnel && visitor.status === 'PENDING_APPROVAL' && (
+                    <NeonSweepButton onClick={() => rejectMutation.mutate(visitor.id)} tone="danger" size="sm">Reject</NeonSweepButton>
                   )}
 
                   {isSecurityPersonnel && visitor.status === 'CHECKED_IN' && (
@@ -371,12 +396,13 @@ export default function Visitors() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-[color-mix(in_srgb,#020617_65%,transparent)] p-4 backdrop-blur-sm">
           <div className="max-h-[90vh] w-full max-w-[520px] overflow-y-auto rounded-2xl border border-[color-mix(in_srgb,var(--border-default)_86%,#334155_14%)] bg-[color-mix(in_srgb,var(--bg-card)_96%,var(--bg-tertiary)_4%)] p-5 shadow-[0_24px_64px_rgba(2,6,23,0.35)] sm:p-6">
             <div className="mb-5 flex items-center justify-between border-b border-[var(--border-light)] pb-3">
-              <h3 className="text-lg font-bold text-[var(--text-primary)]">Pre-approve Visitor</h3>
+              <h3 className="text-lg font-bold text-[var(--text-primary)]">Create Visitor Entry</h3>
               <button onClick={() => setShowModal(false)} className="rounded-md p-1 text-[var(--text-tertiary)] transition hover:bg-[var(--bg-tertiary)]"><X size={20} /></button>
             </div>
             <form onSubmit={handleSubmit} className="flex flex-col gap-4">
               <FormInput label="Visitor Name" name="visitorName" required />
               <FormInput label="Phone Number" name="visitorPhone" />
+              <FormInput label="Flat ID" name="flatId" type="number" required />
               <SmartSelect label="Visitor Type" name="visitorType" required options={[
                 { value: 'GUEST', label: 'Guest' },
                 { value: 'DELIVERY', label: 'Delivery' },
@@ -387,9 +413,6 @@ export default function Visitors() {
               <FormInput label="Purpose" name="purpose" />
               <FormInput label="Vehicle Number" name="vehicleNumber" />
               <FormTextarea label="Notes" name="notes" rows={3} />
-              <label className="inline-flex items-center gap-2 text-sm font-medium text-[var(--text-secondary)]">
-                <input type="checkbox" name="isPreApproved" defaultChecked className="h-4 w-4 accent-[var(--accent-primary)]" /> Pre-approve this visitor
-              </label>
               <div className="mt-2 flex items-center justify-end gap-3 border-t border-[var(--border-light)] pt-4">
                 <NeonSweepButton type="button" tone="slate" size="md" onClick={() => setShowModal(false)}>
                   Cancel

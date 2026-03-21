@@ -515,6 +515,7 @@ export const visitorApi = {
   getByStatus: (status, userId) => api.get(`/visitors/status/${status}?userId=${userId}`),
   getByType: (type, userId) => api.get(`/visitors/type/${type}?userId=${userId}`),
   create: (userId, data) => api.post(`/visitors?userId=${userId}`, data),
+  approveByMember: (id, userId) => api.patch(`/visitors/${id}/approve?userId=${userId}`),
   checkIn: (id, userId) => api.patch(`/visitors/${id}/check-in?userId=${userId}`),
   checkOut: (id, userId) => api.patch(`/visitors/${id}/check-out?userId=${userId}`),
   generateOtp: (id, userId) => api.post(`/visitors/${id}/otp/generate?userId=${userId}`),

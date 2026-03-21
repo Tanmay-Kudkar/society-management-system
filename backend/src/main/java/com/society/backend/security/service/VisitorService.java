@@ -19,6 +19,7 @@ public interface VisitorService {
     VisitorResponse getById(Long id);
     VisitorResponse checkIn(Long id, Long userId);
     VisitorResponse checkOut(Long id, Long userId);
+    VisitorResponse approveByMember(Long id, Long userId);
     VisitorResponse generateOtp(Long id, Long userId);
     VisitorResponse verifyOtp(Long id, Long userId, String otpCode);
     VisitorResponse updateStatus(Long id, String status, Long userId);

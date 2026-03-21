@@ -24,6 +24,11 @@ import java.util.stream.Collectors;
 @Service
 public class VisitorServiceImpl implements VisitorService {
 
+    private static final String STATUS_PENDING_APPROVAL = "PENDING_APPROVAL";
+    private static final String STATUS_APPROVED = "APPROVED";
+    private static final String STATUS_CHECKED_IN = "CHECKED_IN";
+    private static final String STATUS_CHECKED_OUT = "CHECKED_OUT";
+
     private final VisitorRepository visitorRepository;
     private final UserRepository userRepository;
     private final SocietyRepository societyRepository;
@@ -43,6 +48,8 @@ public class VisitorServiceImpl implements VisitorService {
     public VisitorResponse create(Long userId, VisitorRequest request) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "User not found"));
+
+        roleService.requireStaff(userId);
 
         Society society;
         if (request.getSocietyId() != null) {
@@ -65,17 +72,20 @@ public class VisitorServiceImpl implements VisitorService {
         visitor.setExpectedArrival(request.getExpectedArrival());
         visitor.setNotes(request.getNotes());
 
-        if (request.getFlatId() != null) {
-            Flat flat = flatRepository.findById(request.getFlatId())
-                    .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Flat not found"));
-            visitor.setFlat(flat);
+        if (request.getFlatId() == null) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Flat ID is required for visitor approval workflow");
         }
 
-        if (request.getIsPreApproved() != null && request.getIsPreApproved()) {
-            visitor.setIsPreApproved(true);
-            visitor.setApprovedBy(user);
-            visitor.setStatus("EXPECTED");
+        Flat flat = flatRepository.findById(request.getFlatId())
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Flat not found"));
+        if (flat.getSociety() == null || !flat.getSociety().getId().equals(society.getId())) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Flat does not belong to the selected society");
         }
+
+        visitor.setFlat(flat);
+        visitor.setIsPreApproved(false);
+        visitor.setApprovedBy(null);
+        visitor.setStatus(STATUS_PENDING_APPROVAL);
 
         Visitor saved = visitorRepository.save(visitor);
         return toResponse(saved);
@@ -180,13 +190,14 @@ public class VisitorServiceImpl implements VisitorService {
     @Override
     public VisitorResponse checkIn(Long id, Long userId) {
         User user = roleService.getUser(userId);
+        roleService.requireStaff(userId);
         Visitor visitor = visitorRepository.findById(id)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Visitor not found"));
 
         roleService.enforceSocietyScope(user, visitor.getSociety().getId());
-        if (!"EXPECTED".equals(visitor.getStatus())) {
+        if (!STATUS_APPROVED.equals(visitor.getStatus())) {
             throw new ApiException(HttpStatus.BAD_REQUEST,
-                    "Visitor can only be checked in from EXPECTED status");
+                "Visitor can only be checked in after member approval");
         }
 
         if (requiresOtp(visitor.getVisitorType())) {
@@ -200,30 +211,68 @@ public class VisitorServiceImpl implements VisitorService {
         }
 
         visitor.setCheckInTime(LocalDateTime.now());
-        visitor.setStatus("CHECKED_IN");
+        visitor.setStatus(STATUS_CHECKED_IN);
         return toResponse(visitorRepository.save(visitor));
     }
 
     @Override
     public VisitorResponse checkOut(Long id, Long userId) {
         User user = roleService.getUser(userId);
+        roleService.requireStaff(userId);
         Visitor visitor = visitorRepository.findById(id)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Visitor not found"));
 
         roleService.enforceSocietyScope(user, visitor.getSociety().getId());
-        if (!"CHECKED_IN".equals(visitor.getStatus())) {
+        if (!STATUS_CHECKED_IN.equals(visitor.getStatus())) {
             throw new ApiException(HttpStatus.BAD_REQUEST,
                     "Visitor can only be checked out from CHECKED_IN status");
         }
 
         visitor.setCheckOutTime(LocalDateTime.now());
-        visitor.setStatus("CHECKED_OUT");
+        visitor.setStatus(STATUS_CHECKED_OUT);
+        return toResponse(visitorRepository.save(visitor));
+    }
+
+    @Override
+    public VisitorResponse approveByMember(Long id, Long userId) {
+        User user = roleService.getUser(userId);
+        Visitor visitor = visitorRepository.findById(id)
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Visitor not found"));
+
+        roleService.enforceSocietyScope(user, visitor.getSociety().getId());
+
+        if (user.getRole() != com.society.backend.user.entity.Role.MEMBER) {
+            throw new ApiException(HttpStatus.FORBIDDEN, "Only MEMBER can approve visitor entries");
+        }
+
+        if (visitor.getFlat() == null) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Visitor must be linked to a flat before approval");
+        }
+
+        boolean ownsViaFlatAssignment = user.getFlat() != null
+                && visitor.getFlat().getId().equals(user.getFlat().getId());
+        boolean ownsViaFlatOwner = visitor.getFlat().getOwner() != null
+                && visitor.getFlat().getOwner().getId().equals(user.getId());
+
+        if (!ownsViaFlatAssignment && !ownsViaFlatOwner) {
+            throw new ApiException(HttpStatus.FORBIDDEN, "Only the flat owner/member can approve this visitor");
+        }
+
+        if (!STATUS_PENDING_APPROVAL.equals(visitor.getStatus())) {
+            throw new ApiException(HttpStatus.BAD_REQUEST,
+                    "Visitor approval can only be done from PENDING_APPROVAL status");
+        }
+
+        visitor.setIsPreApproved(true);
+        visitor.setApprovedBy(user);
+        visitor.setStatus(STATUS_APPROVED);
         return toResponse(visitorRepository.save(visitor));
     }
 
     @Override
     public VisitorResponse generateOtp(Long id, Long userId) {
         User user = roleService.getUser(userId);
+        roleService.requireStaff(userId);
         Visitor visitor = visitorRepository.findById(id)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Visitor not found"));
 
@@ -232,9 +281,9 @@ public class VisitorServiceImpl implements VisitorService {
             throw new ApiException(HttpStatus.BAD_REQUEST,
                     "OTP is only supported for DELIVERY and CAB visitor types");
         }
-        if (!"EXPECTED".equals(visitor.getStatus())) {
+        if (!STATUS_APPROVED.equals(visitor.getStatus())) {
             throw new ApiException(HttpStatus.BAD_REQUEST,
-                    "OTP can only be generated while visitor status is EXPECTED");
+                "OTP can only be generated after member approval");
         }
 
         LocalDateTime now = LocalDateTime.now();
@@ -256,6 +305,7 @@ public class VisitorServiceImpl implements VisitorService {
     @Override
     public VisitorResponse verifyOtp(Long id, Long userId, String otpCode) {
         User user = roleService.getUser(userId);
+        roleService.requireStaff(userId);
         Visitor visitor = visitorRepository.findById(id)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Visitor not found"));
 
@@ -264,9 +314,9 @@ public class VisitorServiceImpl implements VisitorService {
             throw new ApiException(HttpStatus.BAD_REQUEST,
                     "OTP verification is only supported for DELIVERY and CAB visitor types");
         }
-        if (!"EXPECTED".equals(visitor.getStatus())) {
+        if (!STATUS_APPROVED.equals(visitor.getStatus())) {
             throw new ApiException(HttpStatus.BAD_REQUEST,
-                    "OTP can only be verified while visitor status is EXPECTED");
+                "OTP can only be verified after member approval");
         }
         if (visitor.getOtpCode() == null || visitor.getOtpExpiresAt() == null) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "No OTP found. Please generate OTP first");
@@ -290,29 +340,35 @@ public class VisitorServiceImpl implements VisitorService {
     @Override
     public VisitorResponse updateStatus(Long id, String status, Long userId) {
         User user = roleService.getUser(userId);
+        roleService.requireStaff(userId);
         Visitor visitor = visitorRepository.findById(id)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Visitor not found"));
 
         roleService.enforceSocietyScope(user, visitor.getSociety().getId());
 
         String normalizedStatus = status == null ? "" : status.toUpperCase();
-        if (!List.of("EXPECTED", "CHECKED_IN", "CHECKED_OUT", "REJECTED", "CANCELLED").contains(normalizedStatus)) {
+        if (!List.of(STATUS_PENDING_APPROVAL, STATUS_APPROVED, STATUS_CHECKED_IN, STATUS_CHECKED_OUT, "REJECTED", "CANCELLED").contains(normalizedStatus)) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "Invalid visitor status: " + status);
         }
 
-        if ("CHECKED_OUT".equals(normalizedStatus) && visitor.getCheckInTime() == null) {
+        if (STATUS_PENDING_APPROVAL.equals(normalizedStatus) || STATUS_APPROVED.equals(normalizedStatus)) {
+            throw new ApiException(HttpStatus.BAD_REQUEST,
+                    "Use member approval endpoint for pending/approved workflow transitions");
+        }
+
+        if (STATUS_CHECKED_OUT.equals(normalizedStatus) && visitor.getCheckInTime() == null) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "Cannot check out visitor without check-in");
         }
 
-        if ("CHECKED_IN".equals(normalizedStatus) && "CHECKED_OUT".equals(visitor.getStatus())) {
+        if (STATUS_CHECKED_IN.equals(normalizedStatus) && STATUS_CHECKED_OUT.equals(visitor.getStatus())) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "Cannot move visitor from CHECKED_OUT back to CHECKED_IN");
         }
 
         visitor.setStatus(normalizedStatus);
-        if ("CHECKED_IN".equals(normalizedStatus) && visitor.getCheckInTime() == null) {
+        if (STATUS_CHECKED_IN.equals(normalizedStatus) && visitor.getCheckInTime() == null) {
             visitor.setCheckInTime(LocalDateTime.now());
         }
-        if ("CHECKED_OUT".equals(normalizedStatus) && visitor.getCheckOutTime() == null) {
+        if (STATUS_CHECKED_OUT.equals(normalizedStatus) && visitor.getCheckOutTime() == null) {
             visitor.setCheckOutTime(LocalDateTime.now());
         }
         return toResponse(visitorRepository.save(visitor));

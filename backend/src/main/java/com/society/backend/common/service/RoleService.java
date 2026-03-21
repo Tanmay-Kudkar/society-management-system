@@ -120,7 +120,7 @@ public class RoleService {
     public void requireStaff(Long userId) {
         checkRole(userId, Role.MASTER_ADMIN, Role.SOCIETY_ADMIN,
                 Role.CHAIRMAN, Role.SECRETARY, Role.TREASURER,
-                Role.COMMITTEE, Role.MANAGER);
+                Role.COMMITTEE, Role.MANAGER, Role.EMPLOYEE);
     }
 
     /**

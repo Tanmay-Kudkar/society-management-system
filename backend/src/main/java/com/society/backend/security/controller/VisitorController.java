@@ -28,7 +28,7 @@ public class VisitorController {
     public ResponseEntity<VisitorResponse> create(
             @RequestParam Long userId,
             @Valid @RequestBody VisitorRequest request) {
-        roleService.requireMember(userId);
+        roleService.requireStaff(userId);
         return ResponseEntity.ok(visitorService.create(userId, request));
     }
 
@@ -119,6 +119,14 @@ public class VisitorController {
             @RequestParam Long userId) {
         roleService.requireStaff(userId);
         return ResponseEntity.ok(visitorService.checkOut(id, userId));
+    }
+
+    @PatchMapping("/{id}/approve")
+    public ResponseEntity<VisitorResponse> approveByMember(
+            @PathVariable Long id,
+            @RequestParam Long userId) {
+        roleService.requireMember(userId);
+        return ResponseEntity.ok(visitorService.approveByMember(id, userId));
     }
 
     @PostMapping("/{id}/otp/generate")
