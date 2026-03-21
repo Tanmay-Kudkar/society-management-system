@@ -223,11 +223,8 @@ export default function LoginAudit() {
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-2xl font-bold text-[var(--text-primary)]">Login Audit</h1>
-            <InfoTooltip text="Track login & logout sessions of Society Admins with proximity monitoring" />
+            <InfoTooltip text="Track login & logout sessions of Society Admins with proximity monitoring. Monitor Society Admin login activity and location proximity." />
           </div>
-          <p className="mt-1 text-sm text-[var(--text-tertiary)]">
-            Monitor Society Admin login activity and location proximity
-          </p>
         </div>
       </div>
 

@@ -9,7 +9,7 @@ import clsx from 'clsx'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { parseApiError, validateUserForm } from '../../utils'
 import * as XLSX from 'xlsx'
-import { FormInput, PhoneInput, SmartSelect, FormErrorSummary, PaginationControls } from '../../components'
+import { FormInput, PhoneInput, SmartSelect, FormErrorSummary, PaginationControls, InfoTooltip } from '../../components'
 import { PermissionDenied } from '../../components'
 import { HeroSkeleton, FiltersSkeleton, TableSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
 import useMinLoadingTime from '../../hooks/useMinLoadingTime'
@@ -677,12 +677,10 @@ export default function Users() {
       {/* Header */}
       <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="m-0 text-[28px] font-bold text-[var(--text-primary)]">
+          <h1 className="m-0 inline-flex items-center gap-2 text-[28px] font-bold text-[var(--text-primary)]">
             {getPageTitle()}
+            <InfoTooltip text={getPageDescription()} />
           </h1>
-          <p className="mt-1.5 text-sm text-[var(--text-secondary)]">
-            {getPageDescription()}
-          </p>
         </div>
         <div className="flex flex-wrap gap-2.5">
           {/* Bulk Actions - only show for SECRETARY and COMMITTEE (they manage multiple users like MEMBER, EMPLOYEE, etc.) */}

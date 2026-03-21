@@ -1,3 +1,5 @@
+import { InfoTooltip } from '../../components'
+
 const roleResponsibilities = [
   {
     role: 'MASTER_ADMIN',
@@ -133,18 +135,20 @@ export default function RolesPermissions() {
       <header className="relative flex items-center justify-between overflow-hidden rounded-[20px] border border-sky-400/20 bg-[linear-gradient(135deg,rgba(36,56,82,0.9),rgba(20,28,45,0.9))] px-9 py-8 shadow-[0_20px_60px_rgba(0,0,0,0.45)] max-[980px]:flex-col max-[980px]:items-start max-[980px]:gap-4 max-md:px-6 max-md:py-7">
         <div className="relative z-[2] max-w-[680px]">
           <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.32em] text-emerald-300">Access Governance</p>
-          <h1 className="mb-2.5 text-[32px] font-bold leading-tight max-md:text-[26px]">Roles, Permissions, and Responsibilities</h1>
-          <p className="text-[15px] text-slate-300">
-            A strict, auditable access model for master admin and society governance.
-          </p>
+          <h1 className="mb-2.5 inline-flex items-center gap-2 text-[32px] font-bold leading-tight max-md:text-[26px]">
+            Roles, Permissions, and Responsibilities
+            <InfoTooltip text="A strict, auditable access model for master admin and society governance." />
+          </h1>
         </div>
         <div className="pointer-events-none absolute -right-[120px] -top-20 h-80 w-80 bg-[radial-gradient(circle,rgba(62,166,255,0.25),transparent_60%)] blur-md" />
       </header>
 
       <section className="mt-7">
         <div className="mb-4 flex flex-col gap-1.5">
-          <h2 className="text-xl font-bold">Role Responsibilities</h2>
-          <p className="text-sm text-slate-400">Defines the authority and primary scope for each role.</p>
+          <h2 className="inline-flex items-center gap-2 text-xl font-bold">
+            Role Responsibilities
+            <InfoTooltip text="Defines the authority and primary scope for each role." />
+          </h2>
         </div>
         <div className="overflow-hidden rounded-[18px] border border-slate-700 bg-slate-950/90 shadow-[0_16px_40px_rgba(0,0,0,0.35)]">
           <div className="overflow-x-auto">
@@ -174,8 +178,10 @@ export default function RolesPermissions() {
 
       <section className="mt-7">
         <div className="mb-4 flex flex-col gap-1.5">
-          <h2 className="text-xl font-bold">Permission Matrix</h2>
-          <p className="text-sm text-slate-400">CRUD capability per role, aligned to the hierarchy rules.</p>
+          <h2 className="inline-flex items-center gap-2 text-xl font-bold">
+            Permission Matrix
+            <InfoTooltip text="CRUD capability per role, aligned to the hierarchy rules." />
+          </h2>
         </div>
         <div className="overflow-hidden rounded-[18px] border border-slate-700 bg-slate-950/90 shadow-[0_16px_40px_rgba(0,0,0,0.35)]">
           <div className="overflow-x-auto">
@@ -207,8 +213,10 @@ export default function RolesPermissions() {
 
       <section className="mt-7">
         <div className="mb-4 flex flex-col gap-1.5">
-          <h2 className="text-xl font-bold">Access Control Rules</h2>
-          <p className="text-sm text-slate-400">Non-negotiable rules that guarantee strict data isolation.</p>
+          <h2 className="inline-flex items-center gap-2 text-xl font-bold">
+            Access Control Rules
+            <InfoTooltip text="Non-negotiable rules that guarantee strict data isolation." />
+          </h2>
         </div>
         <div className="rounded-[18px] border border-slate-700 bg-slate-950/90 px-6 py-5 shadow-[0_16px_40px_rgba(0,0,0,0.35)]">
           <ol className="grid list-decimal gap-2.5 pl-6 text-slate-200">

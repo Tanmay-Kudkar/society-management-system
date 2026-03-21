@@ -5,7 +5,7 @@ import { useAuth } from '../../context'
 import { useToast } from '../../context'
 import { employeeApi, attendanceApi, employeeSalaryPaymentApi, userApi, downloadBlob } from '../../../../api'
 import { Users, CalendarCheck2, Wallet, BadgeCheck, Paperclip } from 'lucide-react'
-import { NeonSweepButton } from '../../components'
+import { NeonSweepButton, InfoTooltip } from '../../components'
 
 const ATTENDANCE_STATUS = ['PRESENT', 'ABSENT', 'HALF_DAY', 'LEAVE']
 const PHONE_REGEX = /^(\+91)?[6-9]\d{9}$/
@@ -330,10 +330,10 @@ export default function Employees() {
     <div className="space-y-6 max-[360px]:space-y-4">
       <div className="mb-6 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between max-[360px]:mb-4">
         <div>
-          <h1 className="text-2xl font-bold text-[var(--text-primary)] max-[360px]:text-[1.45rem]">Employee Records</h1>
-          <p className="text-sm text-[var(--text-secondary)] max-[360px]:text-xs">
-            HR-only records for salary, ID proof, advance balances, and attendance.
-          </p>
+          <h1 className="inline-flex items-center gap-2 text-2xl font-bold text-[var(--text-primary)] max-[360px]:text-[1.45rem]">
+            Employee Records
+            <InfoTooltip text="HR-only records for salary, ID proof, advance balances, and attendance." />
+          </h1>
         </div>
       </div>
 
@@ -379,8 +379,10 @@ export default function Employees() {
       {canManageAttendance(user?.role) && (
         <form onSubmit={handleCreateEmployee} className="mb-6 rounded-xl border border-[var(--border-default)] bg-[var(--bg-card)] p-4 shadow-sm max-[360px]:mb-4 max-[360px]:p-3">
           <div className="mb-3">
-            <h2 className="text-lg font-semibold text-[var(--text-primary)] max-[360px]:text-base">Create Employee Profile</h2>
-            <p className="text-sm text-[var(--text-secondary)] max-[360px]:text-xs">Create EMPLOYEE user and HR profile in one place, with optional ID-proof attachment.</p>
+            <h2 className="inline-flex items-center gap-2 text-lg font-semibold text-[var(--text-primary)] max-[360px]:text-base">
+              Create Employee Profile
+              <InfoTooltip text="Create EMPLOYEE user and HR profile in one place, with optional ID-proof attachment." />
+            </h2>
           </div>
           <div className="mb-3 flex flex-wrap items-center gap-3">
             <label className="inline-flex items-center gap-2 text-sm font-medium text-[var(--text-primary)]">
@@ -443,8 +445,10 @@ export default function Employees() {
       {canManageAttendance(user?.role) && (
         <form onSubmit={handleMarkAttendance} className="mb-6 rounded-xl border border-[var(--border-default)] bg-[var(--bg-card)] p-4 shadow-sm max-[360px]:mb-4 max-[360px]:p-3">
           <div className="mb-3">
-            <h2 className="text-lg font-semibold text-[var(--text-primary)] max-[360px]:text-base">Mark Attendance</h2>
-            <p className="text-sm text-[var(--text-secondary)] max-[360px]:text-xs">Only management roles can create or update attendance records.</p>
+            <h2 className="inline-flex items-center gap-2 text-lg font-semibold text-[var(--text-primary)] max-[360px]:text-base">
+              Mark Attendance
+              <InfoTooltip text="Only management roles can create or update attendance records." />
+            </h2>
           </div>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
             <select
@@ -497,8 +501,10 @@ export default function Employees() {
       {canManageAttendance(user?.role) && (
         <form onSubmit={handleRecordSalaryPayment} className="mb-6 rounded-xl border border-[var(--border-default)] bg-[var(--bg-card)] p-4 shadow-sm max-[360px]:mb-4 max-[360px]:p-3">
           <div className="mb-3">
-            <h2 className="text-lg font-semibold text-[var(--text-primary)] max-[360px]:text-base">Record Salary Payment</h2>
-            <p className="text-sm text-[var(--text-secondary)] max-[360px]:text-xs">Track salary structure, deductions, and payment history.</p>
+            <h2 className="inline-flex items-center gap-2 text-lg font-semibold text-[var(--text-primary)] max-[360px]:text-base">
+              Record Salary Payment
+              <InfoTooltip text="Track salary structure, deductions, and payment history." />
+            </h2>
           </div>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-6">
             <select

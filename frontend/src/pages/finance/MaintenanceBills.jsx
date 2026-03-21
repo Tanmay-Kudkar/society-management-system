@@ -465,11 +465,8 @@ export default function MaintenanceBills() {
           <div>
             <div className="flex items-center gap-2">
               <h1 className="text-2xl font-bold text-[var(--text-primary)] sm:text-[1.85rem]">Maintenance Bills</h1>
-              <InfoTooltip text="Generate, search, and track monthly maintenance bills" />
+              <InfoTooltip text="Generate, search, and track monthly maintenance bills. Responsive billing control center for desktop, tablet, and mobile." />
             </div>
-            <p className="mt-2 text-sm text-[var(--text-secondary)]">
-              Responsive billing control center for desktop, tablet, and mobile.
-            </p>
           </div>
           {canManageMaintenanceBills() && (
             <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">

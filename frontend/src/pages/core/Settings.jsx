@@ -642,8 +642,10 @@ export default function Settings() {
           {activeTab === 'notifications' && (
             <div className="animate-fadeIn flex max-w-full flex-col gap-4">
               <div className="flex flex-col gap-0.5">
-                <h3 className="text-lg font-bold text-[var(--text-primary)]">Notification Preferences</h3>
-                <p className="text-sm font-semibold text-[var(--text-secondary)]">Choose which email notifications you want to receive</p>
+                <h3 className="flex items-center gap-2 text-lg font-bold text-[var(--text-primary)]">
+                  Notification Preferences
+                  <InfoTooltip text="Choose which email notifications you want to receive" />
+                </h3>
               </div>
 
               {error && <Alert type="error">{error}</Alert>}
@@ -688,8 +690,10 @@ export default function Settings() {
           {activeTab === 'security' && (
             <div className="animate-fadeIn flex max-w-full flex-col gap-4">
               <div className="flex flex-col gap-0.5">
-                <h3 className="text-lg font-bold text-[var(--text-primary)]">Change Password</h3>
-                <p className="text-sm font-semibold text-[var(--text-secondary)]">Enter your current password and choose a new one</p>
+                <h3 className="flex items-center gap-2 text-lg font-bold text-[var(--text-primary)]">
+                  Change Password
+                  <InfoTooltip text="Enter your current password and choose a new one" />
+                </h3>
               </div>
 
               {passwordError && <Alert type="error">{passwordError}</Alert>}
@@ -832,8 +836,10 @@ export default function Settings() {
               {/* Session Control */}
               <div className="border-t border-[var(--border-light)] pt-6">
                 <div className="mb-4 flex flex-col gap-1">
-                  <h3 className="text-[1.04rem] font-extrabold tracking-[-0.01em] text-[var(--text-primary)] sm:text-[1.1rem]">Session Control Center</h3>
-                  <p className="text-[0.84rem] font-medium leading-5 text-[var(--text-secondary)] sm:text-sm">Review this device session and manage account-wide access.</p>
+                  <h3 className="flex items-center gap-2 text-[1.04rem] font-extrabold tracking-[-0.01em] text-[var(--text-primary)] sm:text-[1.1rem]">
+                    Session Control Center
+                    <InfoTooltip text="Review this device session and manage account-wide access." />
+                  </h3>
                 </div>
 
                 {(() => {
@@ -939,8 +945,10 @@ export default function Settings() {
           {activeTab === 'appearance' && (
             <div className="animate-fadeIn flex max-w-full flex-col gap-4">
               <div className="flex flex-col gap-0.5">
-                <h3 className="text-lg font-bold text-[var(--text-primary)]">Theme</h3>
-                <p className="text-sm font-semibold text-[var(--text-secondary)]">Choose how the interface looks</p>
+                <h3 className="flex items-center gap-2 text-lg font-bold text-[var(--text-primary)]">
+                  Theme
+                  <InfoTooltip text="Choose how the interface looks" />
+                </h3>
               </div>
 
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">

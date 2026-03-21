@@ -9,7 +9,7 @@ import { parseApiError } from '../../utils'
 import * as XLSX from 'xlsx'
 import {
   FormInput, PhoneInput, PincodeInput, NumberInput,
-  StateCitySelector, SmartSelect, NeonSweepButton
+  StateCitySelector, SmartSelect, NeonSweepButton, InfoTooltip
 } from '../../components'
 import { BulkImportModal } from '../../components'
 import { FiltersSkeleton, CardGridSkeleton, HeroSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
@@ -50,6 +50,12 @@ const BULK_FIELD_CONFIG = [
 const normalizeHeader = (value) => String(value || '').toLowerCase().replace(/[^a-z0-9]/g, '')
 const normalizeText = (value) => String(value ?? '').trim()
 const normalizePhone = (value) => normalizeText(value).replace(/\D/g, '').replace(/^91(?=\d{10}$)/, '')
+const normalizeSocietyKey = (value) => {
+  if (value === null || value === undefined) return null
+  const normalized = String(value).trim()
+  return normalized.length ? normalized : null
+}
+const resolveAdminSocietyId = (admin) => admin?.societyId ?? admin?.society?.id ?? null
 const isBlankRow = (row = []) => row.every((cell) => normalizeText(cell) === '')
 const createApiError = (message) => ({ response: { data: { message } } })
 
@@ -299,24 +305,33 @@ export default function SocietyAdmins() {
     [allUsers]
   )
 
-  const assignedSocietyIds = useMemo(
-    () => new Set(societyAdmins.map((admin) => admin.societyId).filter(Boolean)),
-    [societyAdmins]
-  )
+  const assignedSocietyIds = useMemo(() => {
+    const keys = societyAdmins
+      .map((admin) => normalizeSocietyKey(resolveAdminSocietyId(admin)))
+      .filter(Boolean)
+    return new Set(keys)
+  }, [societyAdmins])
 
   const societiesNeedingAssignment = useMemo(
-    () => societies.filter((society) => !assignedSocietyIds.has(society.id)),
+    () => societies.filter((society) => {
+      const societyKey = normalizeSocietyKey(society.id)
+      return !societyKey || !assignedSocietyIds.has(societyKey)
+    }),
     [societies, assignedSocietyIds]
   )
 
   // Build a map of societyId to society data for quick lookup
   const societyMap = useMemo(() => {
     const map = {}
-    societies.forEach(s => { map[s.id] = s })
+    societies.forEach((society) => {
+      const key = normalizeSocietyKey(society.id)
+      if (key) map[key] = society
+    })
     return map
   }, [societies])
 
-  const editingSociety = editingAdmin?.societyId ? societyMap[editingAdmin.societyId] : null
+  const editingSocietyKey = normalizeSocietyKey(resolveAdminSocietyId(editingAdmin))
+  const editingSociety = editingSocietyKey ? societyMap[editingSocietyKey] : null
   const activeSociety = assignmentSociety || editingSociety
 
   useEffect(() => {
@@ -901,10 +916,8 @@ export default function SocietyAdmins() {
             <h1 className="m-0 flex items-center gap-3 text-[40px] font-extrabold tracking-tight text-[var(--text-primary)] max-md:text-[31px]">
               <UserCheck size={28} className="text-[var(--accent-primary)]" />
               Society Admins
+              <InfoTooltip text="Manage society administrators, assignment gaps, and onboarding operations from one command surface." />
             </h1>
-            <p className="mt-2 max-w-xl text-[15px] leading-relaxed text-[color-mix(in_srgb,var(--text-secondary)_90%,white_10%)] sm:text-[17px]">
-              Manage society administrators, assignment gaps, and onboarding operations from one command surface.
-            </p>
 
             <div className="mt-4 flex flex-wrap items-center gap-2">
               <span className="inline-flex items-center rounded-full border border-[color-mix(in_srgb,var(--accent-primary)_40%,transparent)] bg-[color-mix(in_srgb,var(--accent-primary)_10%,transparent)] px-3 py-1 text-[11px] font-semibold text-[var(--accent-primary)]">
@@ -1008,7 +1021,7 @@ export default function SocietyAdmins() {
                     </div>
                   </div>
                   <div className="mt-2 flex gap-[6px] flex-wrap">
-                    {!assignedSocietyIds.has(society.id) && <span className="inline-flex items-center border border-[rgba(245,158,11,0.35)] bg-[rgba(245,158,11,0.14)] text-[#f59e0b] rounded-full py-[2px] px-2 text-[11px] font-semibold">No Society Admin</span>}
+                    {!assignedSocietyIds.has(normalizeSocietyKey(society.id)) && <span className="inline-flex items-center border border-[rgba(245,158,11,0.35)] bg-[rgba(245,158,11,0.14)] text-[#f59e0b] rounded-full py-[2px] px-2 text-[11px] font-semibold">No Society Admin</span>}
                   </div>
                 </div>
               )

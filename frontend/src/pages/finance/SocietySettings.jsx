@@ -672,10 +672,10 @@ export default function SocietySettings() {
         </section>
 
         <section className="rounded-[14px] border border-[var(--border-default)] bg-[var(--bg-elevated)] px-5 py-4">
-          <h3 className="mb-3.5 text-base font-semibold text-[var(--text-primary)]">Bill Math Preview</h3>
-          <p className="mb-3 text-xs text-[var(--text-tertiary)]">
-            Preview per-unit calculation before bill generation. Uses current settings and sample inputs.
-          </p>
+          <h3 className="mb-3.5 inline-flex items-center gap-2 text-base font-semibold text-[var(--text-primary)]">
+            Bill Math Preview
+            <InfoTooltip text="Preview per-unit calculation before bill generation. Uses current settings and sample inputs." />
+          </h3>
 
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <FormInput label="Area (SqFt)" name="preview-area" type="number" min="0" step="0.01" value={previewInput.areaSqft} onChange={handlePreviewChange('areaSqft')} />
