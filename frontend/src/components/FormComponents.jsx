@@ -4,9 +4,10 @@
  * - Attractive inline validation with animations (no harsh red errors)
  * - Phone number live formatting & digit restriction
  */
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { AlertCircle, Check, ChevronDown, Lock, Info } from "lucide-react";
 import clsx from "clsx";
+import { useToast } from "../context";
 
 /* ─── Helper: animated field hint ─── */
 const FieldHint = ({ message, type = "error" }) => {
@@ -1319,36 +1320,72 @@ export const StateCitySelector = ({
 
 /* ─── Form Error Summary (gentle toast-style) ─── */
 export const FormErrorSummary = ({ errors, message }) => {
-  const errorList = errors
-    ? Object.values(errors).filter(Boolean)
-    : message
-      ? [message]
-      : [];
+  const { validation } = useToast();
+  const lastShownRef = useRef("");
+  const anchorRef = useRef(null);
 
-  if (errorList.length === 0) return null;
-
-  return (
-    <div className="rounded-lg border border-amber-500/25 bg-amber-500/10 py-2.5 px-3 text-amber-800 text-xs">
-      <div className="flex items-start gap-2.5">
-        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-amber-500/15">
-          <AlertCircle size={14} />
-        </div>
-        <div>
-          <p className="m-0 text-[13px] font-semibold">
-            Please fix the following:
-          </p>
-          <ul className="mt-1.5 grid list-inside list-none gap-1 pl-0">
-            {errorList.map((err, i) => (
-              <li key={i} className="flex items-start gap-1.5">
-                <span className="mt-0.5 text-amber-500">›</span>
-                {err}
-              </li>
-            ))}
-          </ul>
-        </div>
-      </div>
-    </div>
+  const errorList = useMemo(
+    () =>
+      errors
+        ? Object.values(errors).filter(Boolean)
+        : message
+          ? [message]
+          : [],
+    [errors, message],
   );
+
+  const signature = useMemo(() => errorList.join("||"), [errorList]);
+
+  useEffect(() => {
+    if (errorList.length === 0) {
+      lastShownRef.current = "";
+      return;
+    }
+
+    if (lastShownRef.current === signature) return;
+    lastShownRef.current = signature;
+
+    const popupMessage = errorList.join("\n");
+
+    validation(
+      {
+        title: "Please fix these fields",
+        message: popupMessage,
+      },
+      6000,
+    );
+
+    const firstErrorField = errors
+      ? Object.keys(errors).find((field) => Boolean(errors[field]))
+      : "";
+
+    const timer = setTimeout(() => {
+      const formRoot = anchorRef.current?.closest("form") || document;
+      const escapedFieldName =
+        firstErrorField && typeof CSS !== "undefined" && typeof CSS.escape === "function"
+          ? CSS.escape(firstErrorField)
+          : firstErrorField;
+
+      const firstInvalidByName = escapedFieldName
+        ? formRoot.querySelector(`[name="${escapedFieldName}"]`)
+        : null;
+      const firstInvalidNative = formRoot.querySelector(
+        "input:invalid, select:invalid, textarea:invalid",
+      );
+      const targetField = firstInvalidByName || firstInvalidNative;
+
+      if (targetField && typeof targetField.focus === "function") {
+        targetField.focus({ preventScroll: true });
+        if (typeof targetField.scrollIntoView === "function") {
+          targetField.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+      }
+    }, 80);
+
+    return () => clearTimeout(timer);
+  }, [errorList, signature, validation]);
+
+  return <span ref={anchorRef} className="sr-only" aria-hidden="true" />;
 };
 
 export default {
