@@ -43,6 +43,7 @@ const roleColors = {
 }
 
 const UNIT_ASSIGNABLE_ROLES = ['MEMBER', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE']
+const SINGLE_OCCUPANCY_ROLES = ['SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER']
 
 const formatRoleLabel = (role) => {
   if (role === 'MEMBER') return 'Member (Owner)'
@@ -523,6 +524,7 @@ export default function UnitManagement() {
   // Handle standalone user form submission (Users tab)
   const handleStandaloneUserSubmit = (e) => {
     e.preventDefault()
+    setUserError('')
     const formData = new FormData(e.target)
     const roleValue = formData.get('role') || selectedRole || editingStandaloneUser?.role || standaloneRoleOptions[0] || 'MEMBER'
     const passwordValue = (formData.get('password') || '').toString().trim()
@@ -553,8 +555,7 @@ export default function UnitManagement() {
     }
 
     // Prevent duplicate restricted roles
-    const restrictedRoles = ['CHAIRMAN', 'SECRETARY', 'TREASURER']
-    if (restrictedRoles.includes(roleValue)) {
+    if (SINGLE_OCCUPANCY_ROLES.includes(roleValue)) {
       const targetSocietyId = data.societyId || user?.societyId
       const existingRoleUser = users.find(u => 
         u.role === roleValue && 
@@ -684,6 +685,8 @@ export default function UnitManagement() {
   // Handle user form submission for linking to unit
   const handleUserSubmit = (e) => {
     e.preventDefault()
+    setApiError('')
+    setUserFormErrors({})
     const formData = new FormData(e.target)
     const passwordValue = (formData.get('password') || '').toString().trim()
     
@@ -695,6 +698,19 @@ export default function UnitManagement() {
       phone: formData.get('phone'),
       societyId: effectiveSocietyId,
       flatId: selectedUnit?.id,
+    }
+
+    if (SINGLE_OCCUPANCY_ROLES.includes(data.role)) {
+      const existingRoleUser = users.find((u) => u.role === data.role && u.societyId === data.societyId)
+      if (existingRoleUser) {
+        const conflictMessage = `This society already has a ${data.role}: ${existingRoleUser.name}. Only one ${data.role} is allowed per society.`
+        if (data.role === 'SOCIETY_ADMIN') {
+          setApiError(conflictMessage)
+        } else {
+          setUserFormErrors((prev) => ({ ...prev, role: conflictMessage }))
+        }
+        return
+      }
     }
 
     // Validate
@@ -710,6 +726,8 @@ export default function UnitManagement() {
   // Handle edit user form submission
   const handleEditUserSubmit = (e) => {
     e.preventDefault()
+    setApiError('')
+    setUserFormErrors({})
     const formData = new FormData(e.target)
     const passwordValue = (formData.get('password') || '').toString().trim()
     
@@ -721,6 +739,21 @@ export default function UnitManagement() {
       phone: formData.get('phone'),
       societyId: effectiveSocietyId,
       flatId: editingUser?.flatId,
+    }
+
+    if (SINGLE_OCCUPANCY_ROLES.includes(data.role)) {
+      const existingRoleUser = users.find(
+        (u) => u.role === data.role && u.societyId === data.societyId && u.id !== editingUser?.id,
+      )
+      if (existingRoleUser) {
+        const conflictMessage = `This society already has a ${data.role}: ${existingRoleUser.name}. Only one ${data.role} is allowed per society.`
+        if (data.role === 'SOCIETY_ADMIN') {
+          setApiError(conflictMessage)
+        } else {
+          setUserFormErrors((prev) => ({ ...prev, role: conflictMessage }))
+        }
+        return
+      }
     }
 
     // Validate (isEditing = true, so no password required)
@@ -974,7 +1007,7 @@ export default function UnitManagement() {
       </div>
 
       {/* API Error Alert */}
-      {apiError && (
+      {apiError && !showUnitModal && !showUserModal && !showEditUserModal && !showStandaloneUserModal && (
         <div className="flex items-center justify-between gap-2 p-4 rounded-2xl mb-6 border border-[rgba(239,68,68,0.35)] bg-[rgba(239,68,68,0.1)] text-[#dc2626]">
           <div className="inline-flex items-center gap-2">
             <AlertCircle size={20} />
@@ -1431,7 +1464,7 @@ export default function UnitManagement() {
         )}
 
         {/* User Error Alert */}
-        {userError && !showStandaloneUserModal && (
+        {userError && !showStandaloneUserModal && !showUserModal && !showEditUserModal && (
           <div className="flex items-center justify-between gap-2 mb-6 p-4 rounded-xl border border-[rgba(239,68,68,0.28)] bg-[rgba(239,68,68,0.10)] text-[#b91c1c] dark:border-[rgba(239,68,68,0.32)] dark:bg-[rgba(185,28,28,0.22)] dark:text-[rgba(252,165,165,0.98)]">
             <div className="inline-flex items-center gap-2">
               <AlertCircle size={20} />
@@ -1934,6 +1967,8 @@ export default function UnitManagement() {
         <UserFormModal
           unit={selectedUnit}
           roleOptions={unitAssignableCreatableRoles}
+          users={users}
+          societyId={effectiveSocietyId}
           errors={userFormErrors}
           apiError={apiError}
           onSubmit={handleUserSubmit}
@@ -1950,6 +1985,8 @@ export default function UnitManagement() {
           user={editingUser}
           unit={selectedUnit}
           roleOptions={unitAssignableUpdatableRoles}
+          users={users}
+          societyId={effectiveSocietyId}
           errors={userFormErrors}
           apiError={apiError}
           onSubmit={handleEditUserSubmit}
@@ -2027,9 +2064,9 @@ function StatCard({ label, value, icon: Icon, color }) {
 
 // Unit Form Modal
 function UnitFormModal({ unit, flats, societies, wings, currentSociety, hasWingsEnabled, canCreateWingsInline, isPlatformLevel, userSocietyId, errors, apiError, onSubmit, onClose, isLoading }) {
-  const totalWizardSteps = 3
-  const wizardStepLabels = ['Basics', 'Wing & Location', 'Review']
-  const [wizardStep, setWizardStep] = useState(unit ? 3 : 1)
+  const totalWizardSteps = unit ? 2 : 3
+  const wizardStepLabels = unit ? ['Basics', 'Wing & Location'] : ['Basics', 'Wing & Location', 'Review']
+  const [wizardStep, setWizardStep] = useState(1)
   const [wizardError, setWizardError] = useState('')
   const [transitionDirection, setTransitionDirection] = useState('forward')
   const stepBodyRef = useRef(null)
@@ -2118,9 +2155,21 @@ function UnitFormModal({ unit, flats, societies, wings, currentSociety, hasWings
     : (wingFloorLimit > 0 ? wingFloorLimit : 100)
 
   const selectedFloorNumber = Number(floorValue)
-  const wingNamePrefix = selectedWing?.name
-    ? String(selectedWing.name).trim().replace(/\s+/g, '').toUpperCase()
-    : null
+  const getWingCode = (wingName) => {
+    const cleaned = String(wingName || '').toUpperCase().replace(/[^A-Z0-9]+/g, ' ').trim()
+    if (!cleaned) return ''
+
+    const ignoredWords = new Set(['WING', 'TOWER', 'BLOCK', 'PHASE'])
+    const meaningful = cleaned
+      .split(/\s+/)
+      .filter((token) => token && !ignoredWords.has(token))
+
+    if (meaningful.length === 0) return ''
+    if (meaningful.length === 1) return meaningful[0].slice(0, 2)
+    return `${meaningful[0][0]}${meaningful[1][0]}`
+  }
+
+  const wingNamePrefix = selectedWing?.name ? getWingCode(selectedWing.name) : null
 
   const parseRoomNoFromUnit = (flatNumber, floorNumber) => {
     const value = String(flatNumber || '')
@@ -2327,9 +2376,9 @@ function UnitFormModal({ unit, flats, societies, wings, currentSociety, hasWings
           </button>
         </div>
 
-        {apiError && <div className="px-5 pt-3"><FormErrorSummary message={apiError} /></div>}
-        {wizardError && <div className="px-5 pt-3"><FormErrorSummary message={wizardError} /></div>}
-        {errors.capacity && <div className="px-5 pt-3"><FormErrorSummary message={errors.capacity} /></div>}
+        {apiError && <FormErrorSummary message={apiError} />}
+        {wizardError && <FormErrorSummary message={wizardError} />}
+        {errors.capacity && <FormErrorSummary message={errors.capacity} />}
 
         <form onSubmit={onSubmit} className="p-5 flex flex-col gap-4">
           {/* Hidden payload fields preserved across wizard steps */}
@@ -2530,7 +2579,7 @@ function UnitFormModal({ unit, flats, societies, wings, currentSociety, hasWings
             </div>
           )}
 
-          {wizardStep === 3 && (
+          {!unit && wizardStep === 3 && (
             <div className="space-y-3">
               <div className="rounded-xl border border-[var(--border-light)] bg-[var(--bg-tertiary)] p-3">
                 <div className="flex items-center justify-between mb-1">
@@ -2562,17 +2611,19 @@ function UnitFormModal({ unit, flats, societies, wings, currentSociety, hasWings
             </NeonSweepButton>
 
             {wizardStep > 1 && (
-              <NeonSweepButton type="button" tone="slate" size="md" onClick={handleBack} className="flex-1">
+              <NeonSweepButton key="btn-back" type="button" tone="slate" size="md" onClick={handleBack} className="flex-1">
                 Back
               </NeonSweepButton>
             )}
 
-            {wizardStep < totalWizardSteps ? (
-              <NeonSweepButton type="button" tone="violet" size="md" onClick={handleNext} className="flex-1">
+            {wizardStep < totalWizardSteps && (
+              <NeonSweepButton key="btn-next" type="button" tone="violet" size="md" onClick={handleNext} className="flex-1">
                 Next
               </NeonSweepButton>
-            ) : (
-              <NeonSweepButton type="submit" tone="cyan" size="md" className="flex-1" disabled={isLoading}>
+            )}
+            
+            {wizardStep === totalWizardSteps && (
+              <NeonSweepButton key="btn-submit" type="submit" tone="cyan" size="md" className="flex-1" disabled={isLoading}>
                 {isLoading ? 'Saving...' : (unit ? 'Update Unit' : 'Create Unit')}
               </NeonSweepButton>
             )}
@@ -2584,8 +2635,18 @@ function UnitFormModal({ unit, flats, societies, wings, currentSociety, hasWings
 }
 
 // User Form Modal for linking user to unit
-function UserFormModal({ unit, roleOptions, errors, apiError, onSubmit, onClose, isLoading }) {
+function UserFormModal({ unit, roleOptions, users = [], societyId, errors, apiError, onSubmit, onClose, isLoading }) {
   const [showPassword, setShowPassword] = useState(false)
+  const [selectedRole, setSelectedRole] = useState(roleOptions?.[0] || 'MEMBER')
+
+  useEffect(() => {
+    setSelectedRole(roleOptions?.[0] || 'MEMBER')
+  }, [roleOptions])
+
+  const existingRoleHolder = useMemo(() => {
+    if (selectedRole !== 'SOCIETY_ADMIN') return null
+    return users.find((u) => u.role === selectedRole && u.societyId === societyId) || null
+  }, [selectedRole, users, societyId])
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[rgba(15,23,42,0.6)]">
@@ -2600,7 +2661,7 @@ function UserFormModal({ unit, roleOptions, errors, apiError, onSubmit, onClose,
           </button>
         </div>
 
-        {apiError && <div className="px-5 pt-3"><FormErrorSummary message={apiError} /></div>}
+        {apiError && <FormErrorSummary message={apiError} />}
 
         <form onSubmit={onSubmit} className="p-5 flex flex-col gap-4">
 
@@ -2657,10 +2718,21 @@ function UserFormModal({ unit, roleOptions, errors, apiError, onSubmit, onClose,
           <SmartSelect
             label="Role"
             name="role"
-            defaultValue={roleOptions?.[0] || 'MEMBER'}
+            value={selectedRole}
+            onChange={(e) => setSelectedRole(e.target.value)}
+            error={errors.role}
             required
             options={(roleOptions || ['MEMBER']).map((role) => ({ value: role, label: formatRoleLabel(role) }))}
           />
+
+          {existingRoleHolder && (
+            <div className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-900">
+              <p className="m-0 font-semibold">Existing {formatRoleLabel(selectedRole)} details</p>
+              <p className="m-0 mt-0.5">Name: {existingRoleHolder.name || '-'}</p>
+              <p className="m-0">Email: {existingRoleHolder.email || '-'}</p>
+              <p className="m-0">Phone: {existingRoleHolder.phone || '-'}</p>
+            </div>
+          )}
 
           <div className="flex gap-3 pt-3 border-t border-[var(--border-light)]">
             <NeonSweepButton
@@ -2677,7 +2749,7 @@ function UserFormModal({ unit, roleOptions, errors, apiError, onSubmit, onClose,
               tone="cyan"
               size="md"
               className="flex-1"
-              disabled={isLoading}
+              disabled={isLoading || !!existingRoleHolder}
             >
               {isLoading ? 'Creating...' : 'Create User'}
             </NeonSweepButton>
@@ -2689,8 +2761,20 @@ function UserFormModal({ unit, roleOptions, errors, apiError, onSubmit, onClose,
 }
 
 // Edit User Form Modal for editing user linked to unit
-function EditUserFormModal({ user, unit, roleOptions, errors, apiError, onSubmit, onClose, isLoading }) {
+function EditUserFormModal({ user, unit, roleOptions, users = [], societyId, errors, apiError, onSubmit, onClose, isLoading }) {
   const [showPassword, setShowPassword] = useState(false)
+  const [selectedRole, setSelectedRole] = useState(user.role || roleOptions?.[0] || 'MEMBER')
+
+  useEffect(() => {
+    setSelectedRole(user.role || roleOptions?.[0] || 'MEMBER')
+  }, [user, roleOptions])
+
+  const existingRoleHolder = useMemo(() => {
+    if (selectedRole !== 'SOCIETY_ADMIN') return null
+    return users.find(
+      (u) => u.role === selectedRole && u.societyId === societyId && u.id !== user.id,
+    ) || null
+  }, [selectedRole, users, societyId, user])
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[rgba(15,23,42,0.6)]">
@@ -2705,7 +2789,7 @@ function EditUserFormModal({ user, unit, roleOptions, errors, apiError, onSubmit
           </button>
         </div>
 
-        {apiError && <div className="px-5 pt-3"><FormErrorSummary message={apiError} /></div>}
+        {apiError && <FormErrorSummary message={apiError} />}
 
         <form onSubmit={onSubmit} className="p-5 flex flex-col gap-4">
           <FormInput
@@ -2762,10 +2846,21 @@ function EditUserFormModal({ user, unit, roleOptions, errors, apiError, onSubmit
           <SmartSelect
             label="Role (Ownership Type)"
             name="role"
-            defaultValue={user.role}
+            value={selectedRole}
+            onChange={(e) => setSelectedRole(e.target.value)}
+            error={errors.role}
             required
             options={(roleOptions || ['MEMBER']).map((role) => ({ value: role, label: formatRoleLabel(role) }))}
           />
+
+          {existingRoleHolder && (
+            <div className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-900">
+              <p className="m-0 font-semibold">Existing {formatRoleLabel(selectedRole)} details</p>
+              <p className="m-0 mt-0.5">Name: {existingRoleHolder.name || '-'}</p>
+              <p className="m-0">Email: {existingRoleHolder.email || '-'}</p>
+              <p className="m-0">Phone: {existingRoleHolder.phone || '-'}</p>
+            </div>
+          )}
 
           <div className="flex gap-3 pt-3 border-t border-[var(--border-light)]">
             <NeonSweepButton
@@ -2782,7 +2877,7 @@ function EditUserFormModal({ user, unit, roleOptions, errors, apiError, onSubmit
               tone="cyan"
               size="md"
               className="flex-1"
-              disabled={isLoading}
+              disabled={isLoading || !!existingRoleHolder}
             >
               {isLoading ? 'Saving...' : 'Update User'}
             </NeonSweepButton>
