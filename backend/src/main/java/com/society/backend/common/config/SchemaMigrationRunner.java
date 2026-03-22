@@ -117,4 +117,89 @@ public class SchemaMigrationRunner {
             }
         };
     }
+
+    @Bean
+    public ApplicationRunner repairPaymentLifecycleColumns() {
+        return args -> {
+            // Core relation columns used by Payment entity queries.
+            executeMigrationStep("ALTER TABLE payments ADD COLUMN IF NOT EXISTS maintenance_bill_id BIGINT", "payments.maintenance_bill_id");
+            executeMigrationStep("ALTER TABLE payments ADD COLUMN IF NOT EXISTS vendor_bill_id BIGINT", "payments.vendor_bill_id");
+            executeMigrationStep("ALTER TABLE payments ADD COLUMN IF NOT EXISTS user_id BIGINT", "payments.user_id");
+            executeMigrationStep("ALTER TABLE payments ADD COLUMN IF NOT EXISTS society_id BIGINT", "payments.society_id");
+
+            // Core payment columns for compatibility with both old and new schemas.
+            executeMigrationStep("ALTER TABLE payments ADD COLUMN IF NOT EXISTS razorpay_order_id VARCHAR(255)", "payments.razorpay_order_id");
+            executeMigrationStep("ALTER TABLE payments ADD COLUMN IF NOT EXISTS razorpay_payment_id VARCHAR(255)", "payments.razorpay_payment_id");
+            executeMigrationStep("ALTER TABLE payments ADD COLUMN IF NOT EXISTS razorpay_signature VARCHAR(255)", "payments.razorpay_signature");
+            executeMigrationStep("ALTER TABLE payments ADD COLUMN IF NOT EXISTS payment_type VARCHAR(255)", "payments.payment_type");
+            executeMigrationStep("ALTER TABLE payments ADD COLUMN IF NOT EXISTS payment_method VARCHAR(255)", "payments.payment_method");
+            executeMigrationStep("ALTER TABLE payments ADD COLUMN IF NOT EXISTS receipt_number VARCHAR(255)", "payments.receipt_number");
+            executeMigrationStep("ALTER TABLE payments ADD COLUMN IF NOT EXISTS error_code VARCHAR(255)", "payments.error_code");
+            executeMigrationStep("ALTER TABLE payments ADD COLUMN IF NOT EXISTS error_description TEXT", "payments.error_description");
+            executeMigrationStep("ALTER TABLE payments ADD COLUMN IF NOT EXISTS paid_at TIMESTAMP", "payments.paid_at");
+            executeMigrationStep("ALTER TABLE payments ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP", "payments.updated_at");
+
+            executeMigrationStep("ALTER TABLE payments ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP", "payments.deleted_at");
+            executeMigrationStep("ALTER TABLE payments ADD COLUMN IF NOT EXISTS deleted_by BIGINT", "payments.deleted_by");
+
+            // Keep payment lifecycle fields resilient for older databases.
+            executeMigrationStep("ALTER TABLE payments ADD COLUMN IF NOT EXISTS refund_id VARCHAR(255)", "payments.refund_id");
+            executeMigrationStep("ALTER TABLE payments ADD COLUMN IF NOT EXISTS refund_status VARCHAR(255)", "payments.refund_status");
+            executeMigrationStep("ALTER TABLE payments ADD COLUMN IF NOT EXISTS refund_amount NUMERIC(12,2)", "payments.refund_amount");
+            executeMigrationStep("ALTER TABLE payments ADD COLUMN IF NOT EXISTS refund_initiated_at TIMESTAMP", "payments.refund_initiated_at");
+            executeMigrationStep("ALTER TABLE payments ADD COLUMN IF NOT EXISTS refund_processed_at TIMESTAMP", "payments.refund_processed_at");
+            executeMigrationStep("ALTER TABLE payments ADD COLUMN IF NOT EXISTS refund_failure_reason VARCHAR(255)", "payments.refund_failure_reason");
+            executeMigrationStep("ALTER TABLE payments ADD COLUMN IF NOT EXISTS settlement_status VARCHAR(255)", "payments.settlement_status");
+            executeMigrationStep("ALTER TABLE payments ADD COLUMN IF NOT EXISTS settlement_id VARCHAR(255)", "payments.settlement_id");
+            executeMigrationStep("ALTER TABLE payments ADD COLUMN IF NOT EXISTS settlement_utr VARCHAR(255)", "payments.settlement_utr");
+            executeMigrationStep("ALTER TABLE payments ADD COLUMN IF NOT EXISTS settled_at TIMESTAMP", "payments.settled_at");
+
+            // Add FK constraints only if they do not already exist.
+            executeMigrationStep(
+                "DO $$ BEGIN " +
+                "IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'fk_payments_maintenance_bill') THEN " +
+                "ALTER TABLE payments ADD CONSTRAINT fk_payments_maintenance_bill FOREIGN KEY (maintenance_bill_id) REFERENCES maintenance_bills(id); " +
+                "END IF; " +
+                "END $$;",
+                "fk_payments_maintenance_bill");
+
+            executeMigrationStep(
+                "DO $$ BEGIN " +
+                "IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'fk_payments_vendor_bill') THEN " +
+                "ALTER TABLE payments ADD CONSTRAINT fk_payments_vendor_bill FOREIGN KEY (vendor_bill_id) REFERENCES vendor_bills(id); " +
+                "END IF; " +
+                "END $$;",
+                "fk_payments_vendor_bill");
+
+            executeMigrationStep(
+                "DO $$ BEGIN " +
+                "IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'fk_payments_user') THEN " +
+                "ALTER TABLE payments ADD CONSTRAINT fk_payments_user FOREIGN KEY (user_id) REFERENCES users(id); " +
+                "END IF; " +
+                "END $$;",
+                "fk_payments_user");
+
+            executeMigrationStep(
+                "DO $$ BEGIN " +
+                "IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'fk_payments_society') THEN " +
+                "ALTER TABLE payments ADD CONSTRAINT fk_payments_society FOREIGN KEY (society_id) REFERENCES societies(id); " +
+                "END IF; " +
+                "END $$;",
+                "fk_payments_society");
+
+            executeMigrationStep("CREATE INDEX IF NOT EXISTS idx_payments_deleted_at ON payments(deleted_at)", "idx_payments_deleted_at");
+            executeMigrationStep("CREATE INDEX IF NOT EXISTS idx_payments_society_deleted_at ON payments(society_id, deleted_at)", "idx_payments_society_deleted_at");
+            executeMigrationStep("CREATE INDEX IF NOT EXISTS idx_payments_vendor_bill_id ON payments(vendor_bill_id)", "idx_payments_vendor_bill_id");
+
+            log.info("payments lifecycle/soft-delete columns verified/updated");
+        };
+    }
+
+        private void executeMigrationStep(String sql, String stepName) {
+        try {
+            jdbcTemplate.execute(sql);
+        } catch (Exception ex) {
+            log.warn("Migration step failed [{}]: {}", stepName, ex.getMessage());
+        }
+        }
 }

@@ -242,7 +242,7 @@ function App() {
       () => import("./pages/communication/Notices"),
     ];
 
-    if (role === "MASTER_ADMIN" || role === "MASTER_ADMIN") {
+    if (role === "MASTER_ADMIN") {
       importers.push(
         () => import("./pages/society/SocietyAdmins"),
         () => import("./pages/society/LoginAudit"),
@@ -550,7 +550,6 @@ function App() {
                       allow={(currentUser) => hasAnyRole(currentUser, [
                         "MEMBER",
                         "TENANT",
-                        "VENDOR",
                       ])}
                     >
                       <MyBills />

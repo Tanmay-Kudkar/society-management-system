@@ -81,7 +81,7 @@ public class RoleService {
      * Check if user has any of the allowed roles
      */
     public void checkRole(Long userId, Role... allowedRoles) {
-        User user = getUser(userId);
+        User user = requireAuthenticatedActor(userId);
         List<Role> allowed = Arrays.asList(allowedRoles);
 
         if (!allowed.contains(user.getRole())) {
@@ -146,11 +146,24 @@ public class RoleService {
      * Check if user is any registered member (not VISITOR or VENDOR)
      */
     public void requireMember(Long userId) {
-        User user = getUser(userId);
+        User user = requireAuthenticatedActor(userId);
         if (user.getRole() == Role.VISITOR || user.getRole() == Role.VENDOR) {
             throw new AccessDeniedException(
                     "Access denied. VISITOR and VENDOR cannot perform this action.");
         }
+    }
+
+    private User requireAuthenticatedActor(Long userId) {
+        User currentUser = getCurrentUser();
+        if (currentUser == null) {
+            throw new AccessDeniedException("Access denied. Not authenticated.");
+        }
+
+        if (userId == null || !currentUser.getId().equals(userId)) {
+            throw new AccessDeniedException("Access denied. User identity mismatch.");
+        }
+
+        return currentUser;
     }
 
     /**
