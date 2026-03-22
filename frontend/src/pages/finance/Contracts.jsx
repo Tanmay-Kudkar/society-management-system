@@ -288,7 +288,7 @@ export default function Contracts() {
       <AnimatedModal
         open={showModal}
         onRequestClose={closeContractModal}
-        className="max-h-[calc(100vh-3rem)] w-full max-w-[520px] overflow-y-auto rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] shadow-[0_8px_24px_rgba(0,0,0,0.12)]"
+        className="flex max-h-[calc(100vh-3rem)] w-full max-w-[520px] flex-col overflow-y-auto rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] shadow-[0_8px_24px_rgba(0,0,0,0.12)]"
         durationMs={MODAL_ANIMATION_DURATION}
       >
             <div className="sticky top-0 flex items-center justify-between border-b border-[var(--border-light)] bg-inherit p-4">

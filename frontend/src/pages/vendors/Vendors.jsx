@@ -4,8 +4,8 @@ import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '../../context'
 import { useConfirmDialog } from '../../context'
 import { useToast } from '../../context'
-import { vendorApi, societyApi } from '../../../../api'
-import { Plus, Edit, Trash2, Search, X, Truck, Phone, Mail, Eye, Building2, Landmark, FileText, User, MapPin, Upload } from 'lucide-react'
+import { vendorApi, societyApi, exportApi, downloadBlob } from '../../../../api'
+import { Plus, Edit, Trash2, Search, X, Truck, Phone, Mail, Eye, Building2, Landmark, FileText, User, MapPin, Upload, Download } from 'lucide-react'
 import clsx from 'clsx'
 import { FormInput, PhoneInput, SmartSelect, FormTextarea, InfoTooltip, NeonSweepButton } from '../../components'
 import { PermissionDenied } from '../../components'
@@ -13,11 +13,12 @@ import { BulkImportModal } from '../../components'
 import { HeroSkeleton, FiltersSkeleton, CardGridSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
 import useMinLoadingTime from '../../hooks/useMinLoadingTime'
 import { formatDate } from '../../utils/formatUtils'
+import { getErrorPayload, getErrorPayloadAsync } from '../../utils'
 
 const approvalBadgeClass = {
-  APPROVED: 'bg-green-600',
-  REJECTED: 'bg-red-600',
-  PENDING: 'bg-yellow-500',
+  APPROVED: 'border border-emerald-300/70 bg-emerald-50 text-emerald-700 dark:border-emerald-500/40 dark:bg-emerald-500/20 dark:text-emerald-300',
+  REJECTED: 'border border-rose-300/70 bg-rose-50 text-rose-700 dark:border-rose-500/40 dark:bg-rose-500/20 dark:text-rose-300',
+  PENDING: 'border border-amber-300/70 bg-amber-50 text-amber-700 dark:border-amber-500/40 dark:bg-amber-500/20 dark:text-amber-300',
 }
 
 export default function Vendors() {
@@ -32,6 +33,7 @@ export default function Vendors() {
   const [editingVendor, setEditingVendor] = useState(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [viewingVendor, setViewingVendor] = useState(null)
+  const [isExporting, setIsExporting] = useState(false)
 
   const societyIdFromUrl = searchParams.get('society')
   const parsedSocietyIdFromUrl = Number(societyIdFromUrl)
@@ -42,7 +44,7 @@ export default function Vendors() {
   const effectiveSocietyId = scopedSocietyId || user?.societyId
   const canApproveRejectVendors = ['MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY'].includes(user?.role)
 
-  const { data: vendors = [], isLoading, isError } = useQuery({
+  const { data: vendors = [], isLoading } = useQuery({
     queryKey: ['vendors', effectiveSocietyId, isPlatformLevel],
     queryFn: () => {
       if (effectiveSocietyId) {
@@ -78,7 +80,8 @@ export default function Vendors() {
     mutationFn: ({ id, force = false }) => vendorApi.delete(id, user.id, force),
     onSuccess: () => queryClient.invalidateQueries(['vendors']),
     onError: (error) => {
-      toast.error(error.response?.data?.message || 'Failed to delete vendor')
+      const payload = getErrorPayload(error, 'This vendor could not be removed right now.')
+      toast.error(payload.retryable ? `${payload.message} You can retry now.` : payload.message)
     },
   })
 
@@ -107,6 +110,31 @@ export default function Vendors() {
     if (!force && (createMutation.isPending || updateMutation.isPending)) return
     setShowModal(false)
     setEditingVendor(null)
+  }
+
+  const handleExport = async () => {
+    if (isExporting) return
+    try {
+      setIsExporting(true)
+      const response = (isPlatformLevel && user?.role === 'MASTER_ADMIN')
+        ? await exportApi.allVendors()
+        : await exportApi.vendors(effectiveSocietyId)
+      const datePart = new Date().toISOString().split('T')[0]
+      const filename = (isPlatformLevel && user?.role === 'MASTER_ADMIN')
+        ? `all_vendors_${datePart}.xlsx`
+        : `vendors_${datePart}.xlsx`
+      downloadBlob(response.data, filename)
+      toast.success('Vendor export completed')
+    } catch (error) {
+      const payload = await getErrorPayloadAsync(error, 'We could not prepare this vendor export right now.')
+      if (payload.code === 'EXPORT_HTTP_404') {
+        toast.error('No vendor data is available for the current filter and scope.')
+      } else {
+        toast.error(payload.retryable ? `${payload.message} Please retry in a moment.` : payload.message)
+      }
+    } finally {
+      setIsExporting(false)
+    }
   }
 
   const handleApprove = async (vendor) => {
@@ -229,6 +257,16 @@ export default function Vendors() {
             <NeonSweepButton
               tone="slate"
               size="md"
+              onClick={handleExport}
+              disabled={isExporting || (!isPlatformLevel && !effectiveSocietyId)}
+              className="w-full sm:w-auto"
+            >
+              <Download size={20} />
+              {isExporting ? 'Exporting...' : 'Export XLSX'}
+            </NeonSweepButton>
+            <NeonSweepButton
+              tone="slate"
+              size="md"
               onClick={() => setShowBulkImport(true)}
               className="w-full sm:w-auto"
             >
@@ -267,17 +305,20 @@ export default function Vendors() {
 
       {/* Cards Grid */}
       {(
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
           {filteredVendors.map((vendor) => (
-            <div key={vendor.id} className="bg-[var(--bg-card)] border border-[var(--border-light)] rounded-2xl p-6 shadow-sm transition-[border-color,box-shadow] duration-200 hover:shadow-md hover:border-[var(--border-strong)]">
-              <div className="flex items-start justify-between mb-4">
-                <div className="p-3 rounded-[14px] bg-gradient-to-br from-orange-50 to-orange-200">
-                  <Truck className="w-7 h-7 text-orange-600" />
+            <div
+              key={vendor.id}
+              className="relative overflow-hidden rounded-3xl border border-[var(--border-light)] bg-[var(--bg-card)] p-5 shadow-[0_10px_30px_rgba(2,8,20,0.08)]"
+            >
+              <div className="relative mb-4 flex items-start justify-between">
+                <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl border border-[var(--border-light)] bg-[var(--bg-tertiary)]">
+                  <Truck className="h-6 w-6 text-orange-600 dark:text-orange-300" />
                 </div>
-                <div className="flex gap-1">
+                <div className="flex gap-1.5 rounded-xl border border-[var(--border-light)] bg-[color-mix(in_srgb,var(--bg-card)_88%,black_12%)] p-1 shadow-sm">
                   <button
                     onClick={() => setViewingVendor(vendor)}
-                    className="inline-flex items-center justify-center p-2 rounded-[10px] bg-transparent text-[var(--text-tertiary)] transition-colors hover:bg-green-100 hover:text-green-600"
+                    className="inline-flex items-center justify-center rounded-[10px] p-2 text-[var(--text-tertiary)]"
                     title="View Details"
                   >
                     <Eye size={18} />
@@ -287,7 +328,7 @@ export default function Vendors() {
                       setEditingVendor(vendor)
                       setShowModal(true) 
                     }}
-                    className="inline-flex items-center justify-center p-2 rounded-[10px] bg-transparent text-[var(--text-tertiary)] transition-colors hover:bg-blue-100/50 hover:text-blue-600"
+                    className="inline-flex items-center justify-center rounded-[10px] p-2 text-[var(--text-tertiary)]"
                     title="Edit"
                   >
                     <Edit size={18} />
@@ -328,53 +369,55 @@ export default function Vendors() {
                         })
                       }
                     }}
-                    className="inline-flex items-center justify-center p-2 rounded-[10px] bg-transparent text-[var(--text-tertiary)] transition-colors hover:bg-red-100 hover:text-red-600"
+                    className="inline-flex items-center justify-center rounded-[10px] p-2 text-[var(--text-tertiary)]"
                     title="Delete"
                   >
                     <Trash2 size={18} />
                   </button>
                 </div>
               </div>
-              <h3 className="text-lg font-bold text-[var(--text-primary)] mb-2 truncate" title={vendor.name}>{vendor.name}</h3>
-              <div className="flex flex-wrap gap-2 mb-3">
-                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold text-blue-700 bg-gradient-to-r from-blue-50 to-blue-100">
+              <h3 className="mb-2 truncate text-[1.22rem] font-extrabold leading-tight tracking-[-0.02em] text-[var(--text-primary)]" title={vendor.name}>{vendor.name}</h3>
+              <div className="mb-3 flex flex-wrap items-center gap-2">
+                <span className="inline-flex items-center rounded-full border border-blue-300/70 bg-blue-50 px-3 py-1 text-[11px] font-semibold tracking-wide text-blue-700 dark:border-blue-500/40 dark:bg-blue-500/15 dark:text-blue-300">
                   {vendor.serviceType}
                 </span>
-                <span className={clsx('inline-flex items-center px-3 py-1 rounded-full text-xs font-bold text-white', approvalBadgeClass[vendor.approvalStatus] || approvalBadgeClass.PENDING)}>
+                <span className={clsx('inline-flex items-center rounded-full px-3 py-1 text-[11px] font-bold tracking-wide', approvalBadgeClass[vendor.approvalStatus] || approvalBadgeClass.PENDING)}>
                   {vendor.approvalStatus === 'APPROVED' ? '✓ Approved' :
                    vendor.approvalStatus === 'REJECTED' ? 'Rejected' :
                    '⏳ Pending'}
                 </span>
               </div>
-              <div className="grid gap-2.5 mb-4 text-sm">
+              <div className="mb-4 grid gap-2.5 text-sm">
                 {vendor.contactPerson && (
-                  <div className="flex items-center gap-2 px-3 py-2 rounded-[10px] bg-[var(--bg-tertiary)] text-slate-700">
-                    <div className="w-6 h-6 rounded-full bg-violet-100 inline-flex items-center justify-center flex-shrink-0">
-                      <span className="text-xs font-bold text-violet-700">{vendor.contactPerson.charAt(0)}</span>
+                  <div className="flex items-center gap-2 rounded-xl border border-[var(--border-light)] bg-[color-mix(in_srgb,var(--bg-tertiary)_85%,white_15%)] px-3 py-2 text-[var(--text-secondary)] dark:bg-[color-mix(in_srgb,var(--bg-tertiary)_88%,black_12%)]">
+                    <div className="inline-flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-violet-200/70 dark:bg-violet-500/30">
+                      <span className="text-xs font-bold text-violet-700 dark:text-violet-200">{vendor.contactPerson.charAt(0)}</span>
                     </div>
-                    <span className="font-semibold truncate">{vendor.contactPerson}</span>
+                    <span className="truncate font-semibold">{vendor.contactPerson}</span>
                   </div>
                 )}
                 {vendor.phone && (
-                  <div className="flex items-center gap-2 text-[var(--text-secondary)]">
-                    <Phone size={16} className="flex-shrink-0 text-green-600" />
-                    <span>{vendor.phone}</span>
+                  <div className="flex items-center gap-2.5 text-[var(--text-secondary)]">
+                    <Phone size={15} className="flex-shrink-0 text-emerald-500" />
+                    <span className="font-medium">{vendor.phone}</span>
                   </div>
                 )}
                 {vendor.email && (
-                  <div className="flex items-center gap-2 text-[var(--text-secondary)] overflow-hidden">
-                    <Mail size={16} className="flex-shrink-0 text-blue-600" />
+                  <div className="flex items-center gap-2.5 overflow-hidden text-[var(--text-secondary)]">
+                    <Mail size={15} className="flex-shrink-0 text-blue-500" />
                     <span className="truncate">{vendor.email}</span>
                   </div>
                 )}
               </div>
-              <button
+              <NeonSweepButton
+                tone="cyan"
+                size="md"
                 onClick={() => setViewingVendor(vendor)}
-                className="w-full mt-2 px-4 py-2.5 rounded-xl border-none bg-gradient-to-r from-blue-500 to-blue-600 text-white font-semibold inline-flex items-center justify-center gap-2 shadow-[0_6px_12px_rgba(37,99,235,0.2)] transition-[filter,box-shadow] duration-200 hover:brightness-105 hover:shadow-[0_8px_14px_rgba(37,99,235,0.22)]"
+                className="mt-2 w-full"
               >
                 <Eye size={16} />
                 View Full Details
-              </button>
+              </NeonSweepButton>
             </div>
           ))}
         </div>
@@ -383,8 +426,8 @@ export default function Vendors() {
       {/* Modal */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50">
-          <div className="w-full max-w-[540px] max-h-[90vh] overflow-y-auto bg-[var(--bg-card)] rounded-2xl shadow-[0_24px_60px_rgba(15,23,42,0.2)]">
-            <div className="sticky top-0 bg-[var(--bg-card)] flex items-center justify-between p-4 border-b border-[var(--border-light)]">
+          <div className="w-full max-w-[540px] max-h-[90vh] overflow-y-auto overflow-x-hidden overscroll-contain bg-[var(--bg-card)] rounded-2xl shadow-[0_24px_60px_rgba(15,23,42,0.2)]">
+            <div className="sticky top-0 z-20 bg-[var(--bg-card)] flex items-center justify-between p-4 border-b border-[var(--border-light)]">
               <h3 className="text-lg font-semibold text-[var(--text-primary)]">{editingVendor ? 'Edit Vendor' : 'Add Vendor'}</h3>
               <button onClick={() => closeModal()} className="border-none bg-transparent text-[var(--text-tertiary)] p-1 rounded-lg hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-primary)]">
                 <X size={20} />
@@ -578,9 +621,9 @@ export default function Vendors() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
           <div className="w-full max-w-[960px] max-h-[90vh] bg-[var(--bg-card)] rounded-[20px] overflow-hidden flex flex-col shadow-[0_30px_70px_rgba(15,23,42,0.25)]">
             {/* Header */}
-            <div className="flex items-center justify-between p-6 border-b border-[var(--border-light)] bg-gradient-to-r from-orange-50 to-orange-200">
+            <div className="flex items-center justify-between p-6 border-b border-[var(--border-light)] bg-[var(--bg-card)]">
               <div className="flex items-center gap-4">
-                <div className="p-3 rounded-[14px] bg-[var(--bg-card)] shadow-[0_6px_14px_rgba(15,23,42,0.15)]">
+                <div className="p-3 rounded-[14px] bg-[var(--bg-tertiary)] border border-[var(--border-light)]">
                   <Truck className="w-7 h-7 text-orange-600" />
                 </div>
                 <div>
@@ -590,7 +633,7 @@ export default function Vendors() {
               </div>
               <button 
                 onClick={() => setViewingVendor(null)} 
-                className="border-none bg-transparent text-[var(--text-tertiary)] p-2 rounded-[10px] transition-colors hover:bg-white/70 hover:text-slate-700"
+                className="border border-[var(--border-light)] bg-[var(--bg-card)] text-[var(--text-tertiary)] p-2 rounded-[10px]"
               >
                 <X size={24} />
               </button>
@@ -606,24 +649,22 @@ export default function Vendors() {
                 </h4>
                 
                 {/* Service Type - Hero Card */}
-                <div className="relative overflow-hidden rounded-[18px] p-6 bg-gradient-to-br from-violet-600 to-indigo-600 text-white shadow-[0_16px_30px_rgba(79,70,229,0.2)]">
-                  <div className="absolute w-[120px] h-[120px] top-[-40px] right-[-40px] rounded-full bg-white/12"></div>
-                  <div className="absolute w-[100px] h-[100px] bottom-[-40px] left-[-30px] rounded-full bg-white/8"></div>
+                <div className="rounded-[18px] p-6 border border-[var(--border-light)] bg-[var(--bg-tertiary)]">
                   <div className="relative">
-                    <p className="text-xs font-bold uppercase tracking-widest text-white/80 mb-2">Service Type</p>
-                    <p className="text-[28px] font-extrabold">{viewingVendor.serviceType}</p>
+                    <p className="text-xs font-bold uppercase tracking-widest text-[var(--text-tertiary)] mb-2">Service Type</p>
+                    <p className="text-[28px] font-extrabold text-[var(--text-primary)]">{viewingVendor.serviceType}</p>
                   </div>
                 </div>
 
                 {/* Society Info - only show for MASTER_ADMIN */}
                 {isPlatformLevel && viewingVendor.societyName && (
-                  <div className="p-4 rounded-[14px] border-2 border-orange-200 bg-gradient-to-br from-orange-50 to-amber-50">
+                  <div className="p-4 rounded-[14px] border border-[var(--border-light)] bg-[var(--bg-tertiary)]">
                     <div className="flex items-center gap-3">
-                      <div className="p-2 rounded-[10px] bg-orange-200">
-                        <Building2 className="w-[18px] h-[18px] text-orange-700" />
+                      <div className="p-2 rounded-[10px] bg-[var(--bg-card)] border border-[var(--border-light)]">
+                        <Building2 className="w-[18px] h-[18px] text-[var(--text-secondary)]" />
                       </div>
                       <div>
-                        <p className="text-xs font-bold text-orange-700 mb-1">Assigned Society</p>
+                        <p className="text-xs font-bold text-[var(--text-secondary)] mb-1">Assigned Society</p>
                         <p className="text-base font-bold text-[var(--text-primary)]">{viewingVendor.societyName}</p>
                       </div>
                     </div>
@@ -640,21 +681,21 @@ export default function Vendors() {
                 
                 {/* Contact Person Details */}
                 {viewingVendor.contactPerson && (
-                  <div className="p-4 rounded-[14px] border border-purple-300/30 bg-gradient-to-br from-purple-50 to-pink-50">
+                  <div className="p-4 rounded-[14px] border border-[var(--border-light)] bg-[var(--bg-tertiary)]">
                     <div className="flex items-center gap-3 mb-3">
-                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-violet-500 to-pink-500 inline-flex items-center justify-center text-white font-bold text-lg shadow-[0_6px_12px_rgba(139,92,246,0.3)]">
+                      <div className="w-12 h-12 rounded-full bg-[var(--bg-card)] border border-[var(--border-light)] inline-flex items-center justify-center text-[var(--text-primary)] font-bold text-lg">
                         {viewingVendor.contactPerson.charAt(0).toUpperCase()}
                       </div>
                       <div>
-                        <p className="text-[11px] font-bold text-violet-700 mb-1">PRIMARY CONTACT PERSON</p>
+                        <p className="text-[11px] font-bold text-[var(--text-secondary)] mb-1">PRIMARY CONTACT PERSON</p>
                         <p className="text-lg font-bold text-[var(--text-primary)]">{viewingVendor.contactPerson}</p>
                       </div>
                     </div>
                     
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                       {viewingVendor.contactPersonPhone && (
-                        <div className="flex items-center gap-2 p-3 rounded-xl bg-white/70">
-                          <Phone className="w-4 h-4 text-violet-500" />
+                        <div className="flex items-center gap-2 p-3 rounded-xl bg-[var(--bg-card)] border border-[var(--border-light)]">
+                          <Phone className="w-4 h-4 text-[var(--text-secondary)]" />
                           <div>
                             <p className="text-xs text-[var(--text-tertiary)]">Direct Phone</p>
                             <p className="text-sm font-semibold text-[var(--text-primary)]">{viewingVendor.contactPersonPhone}</p>
@@ -662,8 +703,8 @@ export default function Vendors() {
                         </div>
                       )}
                       {viewingVendor.contactPersonEmail && (
-                        <div className="flex items-center gap-2 p-3 rounded-xl bg-white/70">
-                          <Mail className="w-4 h-4 text-violet-500" />
+                        <div className="flex items-center gap-2 p-3 rounded-xl bg-[var(--bg-card)] border border-[var(--border-light)]">
+                          <Mail className="w-4 h-4 text-[var(--text-secondary)]" />
                           <div>
                             <p className="text-xs text-[var(--text-tertiary)]">Direct Email</p>
                             <p className="text-sm font-semibold text-[var(--text-primary)] break-words">{viewingVendor.contactPersonEmail}</p>
@@ -679,9 +720,9 @@ export default function Vendors() {
                   <p className="text-xs font-bold text-[var(--text-tertiary)] uppercase tracking-[0.08em]">Business Contact</p>
                   
                   {viewingVendor.phone && (
-                    <div className="flex items-center gap-3 p-4 rounded-[14px] border border-green-200/50 bg-gradient-to-r from-green-50 to-green-100">
-                      <div className="p-2.5 rounded-[10px] bg-green-600/10">
-                        <Phone className="w-[18px] h-[18px] text-green-600" />
+                    <div className="flex items-center gap-3 p-4 rounded-[14px] border border-[var(--border-light)] bg-[var(--bg-tertiary)]">
+                      <div className="p-2.5 rounded-[10px] bg-[var(--bg-card)] border border-[var(--border-light)]">
+                        <Phone className="w-[18px] h-[18px] text-[var(--text-secondary)]" />
                       </div>
                       <div className="flex-1">
                         <p className="text-xs font-semibold text-[var(--text-secondary)]">Business Phone</p>
@@ -691,9 +732,9 @@ export default function Vendors() {
                   )}
                   
                   {viewingVendor.email && (
-                    <div className="flex items-center gap-3 p-4 rounded-[14px] border border-blue-200/50 bg-gradient-to-r from-blue-50 to-blue-100">
-                      <div className="p-2.5 rounded-[10px] bg-blue-600/10">
-                        <Mail className="w-[18px] h-[18px] text-blue-600" />
+                    <div className="flex items-center gap-3 p-4 rounded-[14px] border border-[var(--border-light)] bg-[var(--bg-tertiary)]">
+                      <div className="p-2.5 rounded-[10px] bg-[var(--bg-card)] border border-[var(--border-light)]">
+                        <Mail className="w-[18px] h-[18px] text-[var(--text-secondary)]" />
                       </div>
                       <div className="flex-1">
                         <p className="text-xs font-semibold text-[var(--text-secondary)]">Business Email</p>
@@ -721,12 +762,12 @@ export default function Vendors() {
                   Tax Details
                 </h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <div className="p-4 rounded-[14px] bg-gradient-to-br from-amber-50 to-amber-100 border-l-4 border-amber-400">
-                    <p className="text-xs font-semibold text-amber-700 mb-2">GST Number</p>
+                  <div className="p-4 rounded-[14px] bg-[var(--bg-tertiary)] border border-[var(--border-light)]">
+                    <p className="text-xs font-semibold text-[var(--text-secondary)] mb-2">GST Number</p>
                     <p className="text-base font-bold text-[var(--text-primary)] font-mono">{viewingVendor.gstNumber || 'Not Provided'}</p>
                   </div>
-                  <div className="p-4 rounded-[14px] bg-gradient-to-br from-amber-50 to-amber-100 border-l-4 border-amber-400">
-                    <p className="text-xs font-semibold text-amber-700 mb-2">PAN Number</p>
+                  <div className="p-4 rounded-[14px] bg-[var(--bg-tertiary)] border border-[var(--border-light)]">
+                    <p className="text-xs font-semibold text-[var(--text-secondary)] mb-2">PAN Number</p>
                     <p className="text-base font-bold text-[var(--text-primary)] font-mono">{viewingVendor.panNumber || 'Not Provided'}</p>
                   </div>
                 </div>
@@ -739,17 +780,17 @@ export default function Vendors() {
                   Banking Details
                 </h4>
                 <div className="grid gap-3">
-                  <div className="p-4 rounded-[14px] bg-gradient-to-br from-indigo-100 to-indigo-200 border-l-4 border-indigo-500">
-                    <p className="text-xs font-semibold text-indigo-700 mb-2">Bank Name</p>
+                  <div className="p-4 rounded-[14px] bg-[var(--bg-tertiary)] border border-[var(--border-light)]">
+                    <p className="text-xs font-semibold text-[var(--text-secondary)] mb-2">Bank Name</p>
                     <p className="text-base font-bold text-[var(--text-primary)] font-mono">{viewingVendor.bankName || 'Not Provided'}</p>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <div className="p-4 rounded-[14px] bg-gradient-to-br from-indigo-100 to-indigo-200 border-l-4 border-indigo-500">
-                      <p className="text-xs font-semibold text-indigo-700 mb-2">Account Number</p>
+                    <div className="p-4 rounded-[14px] bg-[var(--bg-tertiary)] border border-[var(--border-light)]">
+                      <p className="text-xs font-semibold text-[var(--text-secondary)] mb-2">Account Number</p>
                       <p className="text-base font-bold text-[var(--text-primary)] font-mono">{viewingVendor.accountNumber || 'Not Provided'}</p>
                     </div>
-                    <div className="p-4 rounded-[14px] bg-gradient-to-br from-indigo-100 to-indigo-200 border-l-4 border-indigo-500">
-                      <p className="text-xs font-semibold text-indigo-700 mb-2">IFSC Code</p>
+                    <div className="p-4 rounded-[14px] bg-[var(--bg-tertiary)] border border-[var(--border-light)]">
+                      <p className="text-xs font-semibold text-[var(--text-secondary)] mb-2">IFSC Code</p>
                       <p className="text-base font-bold text-[var(--text-primary)] font-mono">{viewingVendor.ifscCode || 'Not Provided'}</p>
                     </div>
                   </div>
@@ -762,7 +803,7 @@ export default function Vendors() {
                   <div className="flex justify-between gap-4 flex-wrap">
                     <div>
                       <p className="text-xs font-semibold text-[var(--text-tertiary)] mb-2">Approval Status</p>
-                      <span className={clsx('inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-bold text-white shadow-[0_10px_18px_rgba(15,23,42,0.15)]', approvalBadgeClass[viewingVendor.approvalStatus] || approvalBadgeClass.PENDING)}>
+                      <span className={clsx('inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-semibold', approvalBadgeClass[viewingVendor.approvalStatus] || approvalBadgeClass.PENDING)}>
                         {viewingVendor.approvalStatus === 'APPROVED' ? '✓ Approved' :
                          viewingVendor.approvalStatus === 'REJECTED' ? '✗ Rejected' :
                          '⏳ Pending Approval'}
@@ -770,7 +811,7 @@ export default function Vendors() {
                     </div>
                     <div>
                       <p className="text-xs font-semibold text-[var(--text-tertiary)] mb-2">Active Status</p>
-                      <span className={clsx('inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-bold text-white shadow-[0_10px_18px_rgba(15,23,42,0.15)]', viewingVendor.isActive ? 'bg-green-600' : 'bg-slate-500')}>
+                      <span className={clsx('inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-semibold', viewingVendor.isActive ? 'border border-emerald-300/70 bg-emerald-50 text-emerald-700 dark:border-emerald-500/40 dark:bg-emerald-500/20 dark:text-emerald-300' : 'border border-slate-300/70 bg-slate-100 text-slate-700 dark:border-slate-500/40 dark:bg-slate-500/20 dark:text-slate-300')}>
                         {viewingVendor.isActive ? '✓ Active' : '✗ Inactive'}
                       </span>
                     </div>
@@ -787,20 +828,24 @@ export default function Vendors() {
                     {/* Approval Action Buttons */}
                     <div className="flex gap-2 flex-wrap">
                       {canApproveRejectVendors && viewingVendor.approvalStatus !== 'APPROVED' && (
-                        <button
+                        <NeonSweepButton
+                          tone="emerald"
+                          size="md"
                           onClick={() => handleApprove(viewingVendor)}
-                          className="px-4 py-2 rounded-[10px] text-sm font-bold border-none text-white bg-green-600 hover:bg-green-700 transition-colors"
+                          className="px-4"
                         >
                           ✓ Approve
-                        </button>
+                        </NeonSweepButton>
                       )}
                       {canApproveRejectVendors && viewingVendor.approvalStatus !== 'REJECTED' && (
-                        <button
+                        <NeonSweepButton
+                          tone="danger"
+                          size="md"
                           onClick={() => handleReject(viewingVendor)}
-                          className="px-4 py-2 rounded-[10px] text-sm font-bold border-none text-white bg-red-600 hover:bg-red-700 transition-colors"
+                          className="px-4"
                         >
                           ✗ Reject
-                        </button>
+                        </NeonSweepButton>
                       )}
                     </div>
                   </div>
@@ -810,23 +855,27 @@ export default function Vendors() {
 
             <div className="sticky bottom-0 p-6 border-t border-[var(--border-light)] bg-[var(--bg-tertiary)]">
               <div className="flex gap-3 flex-wrap">
-                <button
+                <NeonSweepButton
+                  tone="cyan"
+                  size="sm"
                   onClick={() => { 
                     setViewingVendor(null)
                     setEditingVendor(viewingVendor)
                     setShowModal(true) 
                   }}
-                  className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 text-white font-semibold border-none hover:bg-blue-700 transition-colors"
+                  className="px-5"
                 >
                   <Edit size={18} />
                   Edit Vendor
-                </button>
-                <button
+                </NeonSweepButton>
+                <NeonSweepButton
+                  tone="slate"
+                  size="md"
                   onClick={() => setViewingVendor(null)}
-                  className="px-5 py-2.5 rounded-xl border border-[var(--border-light)] bg-transparent text-slate-700 font-semibold hover:bg-[var(--bg-tertiary)] transition-colors"
+                  className="px-5"
                 >
                   Close
-                </button>
+                </NeonSweepButton>
               </div>
             </div>
           </div>
