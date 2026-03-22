@@ -157,8 +157,16 @@ export const AuthProvider = ({ children }) => {
           localStorage.setItem('user', JSON.stringify(userData))
           // Resume location refresh if SOCIETY_ADMIN is already logged in
           startLocationRefresh(userData.role)
-        } catch {
-          // Cookie/token invalid - use localStorage data if available
+        } catch (error) {
+          // Clear stale cached auth only when backend explicitly rejects the token.
+          const status = error?.response?.status
+          if (status === 401 || status === 403) {
+            stopLocationRefresh()
+            setUser(null)
+            localStorage.removeItem('token')
+            localStorage.removeItem('user')
+            queryClient.clear()
+          }
         }
       }
       // Only update loading if it was true (avoids unnecessary re-render when cached user exists)
