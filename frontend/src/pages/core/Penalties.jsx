@@ -5,6 +5,7 @@ import { useAuth } from '../../context/AuthContext'
 import { useToast } from '../../context/ToastContext'
 import PageShell from '../../components/PageShell'
 import NeonSweepButton from '../../components/NeonSweepButton'
+import EmptyStateSection from '../../components/EmptyStateSection'
 import { Ban, Plus, Search, X } from 'lucide-react'
 
 const penaltyTypeOptions = [
@@ -144,7 +145,14 @@ export default function Penalties() {
       </div>
 
       <div className="flex flex-col gap-3.5">
-        {filtered.length === 0 && <div className="text-center text-[var(--text-secondary)] p-10">No penalties found.</div>}
+        {filtered.length === 0 && (
+          <EmptyStateSection
+            title="No penalties found"
+            description="No penalties match your selected filters right now."
+            icon={Ban}
+            className="p-10"
+          />
+        )}
         {filtered.map(p => (
           <div key={p.id} className={`bg-[var(--card)] border border-[var(--border-default)] rounded-xl px-5 py-4 ${itemBorderMap[p.status?.toLowerCase()] || ''}`}>
             <div className="flex justify-between items-center mb-[0.45rem]">

@@ -6,7 +6,7 @@ import { useToast } from '../../context'
 import { transactionApi, exportApi, downloadBlob, flatApi } from '../../../../api'
 import { Plus, Search, X, TrendingUp, TrendingDown, DollarSign, FileSpreadsheet, Home, Pencil, Trash2 } from 'lucide-react'
 import clsx from 'clsx'
-import { PermissionDenied, InfoTooltip, NeonSweepButton } from '../../components'
+import { PermissionDenied, InfoTooltip, NeonSweepButton, EmptyStateSection } from '../../components'
 import { HeroSkeleton, FinancePageSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
 import useMinLoadingTime from '../../hooks/useMinLoadingTime'
 import { formatDate } from '../../utils/formatUtils'
@@ -276,7 +276,7 @@ export default function Transactions() {
     }
   }
 
-  const showSkeleton = useMinLoadingTime(isLoading || isError)
+  const showSkeleton = useMinLoadingTime(isLoading)
 
   if (!canAccessTransactions) {
     return <PermissionDenied message="You don't have permission to manage transactions" />
@@ -492,7 +492,13 @@ export default function Transactions() {
 
           <div className="lg:hidden divide-y divide-[var(--border-light)]">
             {filteredTransactions.length === 0 ? (
-              <div className="p-8 text-center text-sm text-[var(--text-tertiary)]">No transactions found</div>
+              <div className="p-4">
+                <EmptyStateSection
+                  title="No transactions found"
+                  description="No transaction entries match your current search and filters."
+                  icon={DollarSign}
+                />
+              </div>
             ) : (
               filteredTransactions.map((t) => (
                 <div key={t.id} className="p-3 sm:p-4">

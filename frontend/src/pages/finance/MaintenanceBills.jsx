@@ -442,7 +442,7 @@ export default function MaintenanceBills() {
     }
   }
 
-  const showSkeleton = useMinLoadingTime(isLoading || isError)
+  const showSkeleton = useMinLoadingTime(isLoading)
 
   if (!hasManagePermission) {
     return <PermissionDenied message="You don't have permission to manage maintenance bills" />

@@ -127,7 +127,7 @@ export default function Contracts() {
     return diff
   }
 
-  const showSkeleton = useMinLoadingTime(isLoading || isError)
+  const showSkeleton = useMinLoadingTime(isLoading)
 
   if (showSkeleton) return (
     <div>

@@ -6,7 +6,7 @@ import { useConfirmDialog } from '../../context'
 import { useToast } from '../../context'
 import { vehicleApi, flatApi, societyApi } from '../../../../api'
 import { Plus, Edit, Trash2, Search, X, Car, Bike, Upload } from 'lucide-react'
-import { FormInput, SmartSelect, BulkImportModal, InfoTooltip, NeonSweepButton, PaginationControls } from '../../components'
+import { FormInput, SmartSelect, BulkImportModal, InfoTooltip, NeonSweepButton, PaginationControls, EmptyStateSection } from '../../components'
 import { HeroSkeleton, StatCardSkeleton, CardGridSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
 import useMinLoadingTime from '../../hooks/useMinLoadingTime'
 
@@ -176,7 +176,7 @@ export default function Vehicles() {
     return <Car className="h-5 w-5 text-blue-600" />
   } 
 
-  const showSkeleton = useMinLoadingTime(isLoading || isError)
+  const showSkeleton = useMinLoadingTime(isLoading)
 
   if (showSkeleton) {
     return (
@@ -418,7 +418,12 @@ export default function Vehicles() {
                 {filteredVehicles.length === 0 && (
                   <tr>
                     <td colSpan="6" className="px-6 py-8 text-center text-[var(--text-tertiary)]">
-                      No vehicles found
+                      <EmptyStateSection
+                        title="No vehicles found"
+                        description="No vehicle records match your current search and filters."
+                        icon={Car}
+                        className="p-6"
+                      />
                     </td>
                   </tr>
                 )}
@@ -428,7 +433,13 @@ export default function Vehicles() {
 
           <div className="lg:hidden divide-y divide-[var(--border-light)]">
             {filteredVehicles.length === 0 ? (
-              <div className="px-6 py-8 text-center text-sm text-[var(--text-tertiary)]">No vehicles found</div>
+                <div className="p-4">
+                  <EmptyStateSection
+                    title="No vehicles found"
+                    description="No vehicle records match your current search and filters."
+                    icon={Car}
+                  />
+                </div>
             ) : (
               paginatedVehicles.map((vehicle) => (
                 <div key={vehicle.id} className="p-3 sm:p-4">

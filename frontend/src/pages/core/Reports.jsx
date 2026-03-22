@@ -20,7 +20,7 @@ import {
   FileSpreadsheet,
 } from 'lucide-react'
 import clsx from 'clsx'
-import { PermissionDenied, InfoTooltip, NeonSweepButton } from '../../components'
+import { PermissionDenied, InfoTooltip, NeonSweepButton, EmptyStateSection } from '../../components'
 import { ReportsSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
 import useMinLoadingTime from '../../hooks/useMinLoadingTime'
 
@@ -107,7 +107,7 @@ export default function Reports() {
     ? (isScopedMode ? (invalidUrlSociety ? '' : parsedSocietyIdFromUrl) : selectedSocietyId)
     : user?.societyId
 
-  const { data: report, isLoading, isError } = useQuery({
+  const { data: report, isLoading } = useQuery({
     queryKey: ['report', reportType, societyId, customStartDate, customEndDate],
     queryFn: async () => {
       if (!societyId) return null
@@ -126,7 +126,7 @@ export default function Reports() {
     enabled: !!societyId && !invalidUrlSociety && hasPermission,
   })
 
-  const showSkeleton = useMinLoadingTime(isLoading || isError || isScopedSocietyLoading)
+  const showSkeleton = useMinLoadingTime(isLoading || isScopedSocietyLoading)
 
   // Permission check
   if (!hasPermission) {
@@ -441,7 +441,12 @@ export default function Reports() {
                   ))}
                 </div>
               ) : (
-                <p className="text-center py-6 text-[var(--text-tertiary)]">No income data</p>
+                <EmptyStateSection
+                  title="No income data"
+                  description="No income entries are available for this report range."
+                  icon={PieChart}
+                  className="border-dashed p-6"
+                />
               )}
             </div>
 
@@ -463,7 +468,12 @@ export default function Reports() {
                   ))}
                 </div>
               ) : (
-                <p className="text-center py-6 text-[var(--text-tertiary)]">No expense data</p>
+                <EmptyStateSection
+                  title="No expense data"
+                  description="No expense entries are available for this report range."
+                  icon={PieChart}
+                  className="border-dashed p-6"
+                />
               )}
             </div>
           </div>
@@ -500,7 +510,12 @@ export default function Reports() {
                   })}
                 </div>
               ) : (
-                <p className="text-center py-6 text-[var(--text-tertiary)]">No data</p>
+                <EmptyStateSection
+                  title="No payment mode data"
+                  description="Income payment mode split is not available for this range."
+                  icon={BarChart3}
+                  className="border-dashed p-6"
+                />
               )}
             </div>
 
@@ -534,7 +549,12 @@ export default function Reports() {
                   })}
                 </div>
               ) : (
-                <p className="text-center py-6 text-[var(--text-tertiary)]">No data</p>
+                <EmptyStateSection
+                  title="No payment mode data"
+                  description="Expense payment mode split is not available for this range."
+                  icon={BarChart3}
+                  className="border-dashed p-6"
+                />
               )}
             </div>
           </div>

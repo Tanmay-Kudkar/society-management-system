@@ -12,7 +12,7 @@ import {
 } from 'lucide-react'
 import clsx from 'clsx'
 import { validateFlatForm, validateUserForm, parseApiError } from '../../utils'
-import { SmartSelect, FormInput, NumberInput, PhoneInput, FormErrorSummary, InfoTooltip, NeonSweepButton, PaginationControls } from '../../components'
+import { SmartSelect, FormInput, NumberInput, PhoneInput, FormErrorSummary, InfoTooltip, NeonSweepButton, PaginationControls, EmptyStateSection } from '../../components'
 import { BulkImportModal as SharedBulkImportModal } from '../../components'
 import { HeroSkeleton, TabsSkeleton, FiltersSkeleton, CardGridSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
 import useMinLoadingTime from '../../hooks/useMinLoadingTime'
@@ -119,6 +119,7 @@ export default function UnitManagement() {
   // Filter states
   const [searchTerm, setSearchTerm] = useState('')
   const filterType = unitTypeFromUrl || ''
+  const filterStatus = searchParams.get('status') || ''
   const [viewMode, setViewMode] = useState('units') // 'units' or 'table'
   const [unitPage, setUnitPage] = useState(1)
   const [unitPageSize, setUnitPageSize] = useState(12)
@@ -136,7 +137,7 @@ export default function UnitManagement() {
 
   // Fetch flats/units
   // PO/OO must have effectiveSocietyId (from URL), otherwise skip
-  const { data: flats = [], isLoading: flatsLoading, isError: flatsError } = useQuery({
+  const { data: flats = [], isLoading: flatsLoading } = useQuery({
     queryKey: ['flats', effectiveSocietyId],
     queryFn: () => effectiveSocietyId 
       ? flatApi.getBySociety(effectiveSocietyId).then(res => res.data)
@@ -237,9 +238,15 @@ export default function UnitManagement() {
         f.flatNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         assignedUser?.name?.toLowerCase().includes(searchTerm.toLowerCase())
       const matchesType = !filterType || f.unitType === filterType
-      return matchesSearch && matchesType
+      
+      const isOccupied = !!assignedUser || !!unitUserMap[f.id]?.tenant
+      const matchesStatus = !filterStatus ||
+        (filterStatus === 'OCCUPIED' && isOccupied) ||
+        (filterStatus === 'VACANT' && !isOccupied)
+
+      return matchesSearch && matchesType && matchesStatus
     })
-  }, [flats, searchTerm, filterType, unitUserMap])
+  }, [flats, searchTerm, filterType, filterStatus, unitUserMap])
 
   const paginatedUnits = useMemo(() => {
     const start = (unitPage - 1) * unitPageSize
@@ -877,7 +884,7 @@ export default function UnitManagement() {
     maxOffices: currentSociety?.totalOffices || 0,
   }
 
-  const showSkeleton = useMinLoadingTime(flatsLoading || flatsError)
+  const showSkeleton = useMinLoadingTime(flatsLoading)
 
   if (showSkeleton) return (
     <div>
@@ -949,45 +956,41 @@ export default function UnitManagement() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-2 mb-7 p-[0.45rem] rounded-[14px] border border-[var(--border-default)] shadow-[var(--shadow-sm)] max-sm:p-[0.3rem] max-sm:gap-[0.3rem]" role="tablist" aria-label="Unit management sections" style={{ background: 'linear-gradient(180deg, color-mix(in srgb, var(--bg-tertiary) 92%, transparent) 0%, color-mix(in srgb, var(--bg-secondary) 94%, transparent) 100%)' }}>
+      <div className="flex gap-2 mb-7 p-[0.35rem] rounded-[16px] border border-[var(--border-default)] shadow-[var(--shadow-sm)] max-sm:p-[0.3rem] max-sm:gap-[0.3rem] bg-[var(--bg-tertiary)] dark:border-[rgba(148,163,184,0.16)]" role="tablist" aria-label="Unit management sections">
         <button
           onClick={() => switchTab('units')}
           type="button"
           className={clsx(
-            'appearance-none border-none flex-1 min-h-[46px] flex items-center justify-center gap-2 py-[10px] px-4 rounded-[11px] font-semibold cursor-pointer transition-all max-sm:min-h-[40px] max-sm:py-2 max-sm:px-2 max-sm:text-[0.85rem]',
+            'appearance-none flex-1 min-h-[46px] flex items-center justify-center gap-2 py-[10px] px-4 rounded-[12px] font-bold cursor-pointer transition-all max-sm:min-h-[40px] max-sm:py-2 max-sm:px-2 max-sm:text-[0.85rem] border',
             activeTab === 'units'
-              ? 'text-[var(--text-primary)] shadow-[var(--shadow-sm)]'
-              : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+              ? 'text-blue-700 bg-white shadow-[0_2px_12px_rgba(59,130,246,0.12)] border-blue-200 dark:bg-[#1e293b] dark:text-blue-400 dark:border-[rgba(59,130,246,0.5)]'
+              : 'text-[var(--text-secondary)] border-transparent hover:text-[var(--text-primary)] hover:bg-[var(--bg-card)]'
           )}
-          style={activeTab === 'units' ? { background: 'color-mix(in srgb, var(--color-primary-100) 55%, var(--bg-card))', border: '1px solid color-mix(in srgb, var(--color-primary-200) 72%, transparent)' } : undefined}
           role="tab"
           aria-selected={activeTab === 'units'}
         >
           <Home size={18} />
           Units
           <span
-            className={clsx('ml-[2px] px-[0.55rem] py-[0.15rem] rounded-full text-xs font-semibold border max-sm:hidden', activeTab === 'units' ? 'text-[#3b82f6]' : 'border-[var(--border-light)]')}
-            style={{ background: activeTab === 'units' ? 'color-mix(in srgb, var(--color-primary-100) 40%, var(--bg-card))' : 'color-mix(in srgb, var(--bg-tertiary) 65%, var(--bg-card))', borderColor: activeTab === 'units' ? 'color-mix(in srgb, var(--color-primary-200) 70%, transparent)' : undefined }}
+            className={clsx('ml-[2px] px-[0.55rem] py-[0.15rem] rounded-[6px] text-xs font-bold max-sm:hidden transition-colors', activeTab === 'units' ? 'bg-blue-100 text-blue-700 dark:bg-[rgba(59,130,246,0.15)] dark:text-blue-400' : 'bg-[var(--bg-secondary)] text-[var(--text-tertiary)]')}
           >{flats.length}</span>
         </button>
         <button
           onClick={() => switchTab('users')}
           type="button"
           className={clsx(
-            'appearance-none border-none flex-1 min-h-[46px] flex items-center justify-center gap-2 py-[10px] px-4 rounded-[11px] font-semibold cursor-pointer transition-all max-sm:min-h-[40px] max-sm:py-2 max-sm:px-2 max-sm:text-[0.85rem]',
+            'appearance-none flex-1 min-h-[46px] flex items-center justify-center gap-2 py-[10px] px-4 rounded-[12px] font-bold cursor-pointer transition-all max-sm:min-h-[40px] max-sm:py-2 max-sm:px-2 max-sm:text-[0.85rem] border',
             activeTab === 'users'
-              ? 'text-[var(--text-primary)] shadow-[var(--shadow-sm)]'
-              : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+              ? 'text-blue-700 bg-white shadow-[0_2px_12px_rgba(59,130,246,0.12)] border-blue-200 dark:bg-[#1e293b] dark:text-blue-400 dark:border-[rgba(59,130,246,0.5)]'
+              : 'text-[var(--text-secondary)] border-transparent hover:text-[var(--text-primary)] hover:bg-[var(--bg-card)]'
           )}
-          style={activeTab === 'users' ? { background: 'color-mix(in srgb, var(--color-primary-100) 55%, var(--bg-card))', border: '1px solid color-mix(in srgb, var(--color-primary-200) 72%, transparent)' } : undefined}
           role="tab"
           aria-selected={activeTab === 'users'}
         >
           <Users size={18} />
           Users
           <span
-            className={clsx('ml-[2px] px-[0.55rem] py-[0.15rem] rounded-full text-xs font-semibold border max-sm:hidden', activeTab === 'users' ? 'text-[#3b82f6]' : 'border-[var(--border-light)]')}
-            style={{ background: activeTab === 'users' ? 'color-mix(in srgb, var(--color-primary-100) 40%, var(--bg-card))' : 'color-mix(in srgb, var(--bg-tertiary) 65%, var(--bg-card))', borderColor: activeTab === 'users' ? 'color-mix(in srgb, var(--color-primary-200) 70%, transparent)' : undefined }}
+            className={clsx('ml-[2px] px-[0.55rem] py-[0.15rem] rounded-[6px] text-xs font-bold max-sm:hidden transition-colors', activeTab === 'users' ? 'bg-blue-100 text-blue-700 dark:bg-[rgba(59,130,246,0.15)] dark:text-blue-400' : 'bg-[var(--bg-secondary)] text-[var(--text-tertiary)]')}
           >{scopedUsers.length}</span>
         </button>
       </div>
@@ -997,13 +1000,64 @@ export default function UnitManagement() {
       <>
       {/* Stats Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-[0.85rem] mb-6 max-[360px]:mb-4 max-[360px]:gap-2">
-        <StatCard label="Total Units" value={stats.totalUnits} icon={Layers} color="blue" />
-        <StatCard label="Flats" value={`${stats.flats}/${stats.maxFlats}`} icon={Home} color="indigo" />
-        <StatCard label="Shops" value={`${stats.shops}/${stats.maxShops}`} icon={Store} color="green" />
-        <StatCard label="Offices" value={`${stats.offices}/${stats.maxOffices}`} icon={Briefcase} color="purple" />
-        <StatCard label="Occupied" value={stats.occupied} icon={UserCheck} color="teal" />
-        <StatCard label="Vacant" value={stats.vacant} icon={UserX} color="orange" />
-        <StatCard label="Assigned" value={stats.assignedUsers} icon={Users} color="pink" />
+        <StatCard 
+          label="Total Units" value={stats.totalUnits} icon={Layers} color="blue" 
+          onClick={() => {
+            const params = new URLSearchParams(searchParams)
+            params.delete('status')
+            params.delete('unitType')
+            setSearchParams(params, { replace: true })
+          }}
+          active={!filterStatus && !filterType}
+        />
+        <StatCard 
+          label="Flats" value={`${stats.flats}/${stats.maxFlats}`} icon={Home} color="indigo" 
+          onClick={() => {
+            const params = new URLSearchParams(searchParams)
+            params.set('unitType', 'FLAT')
+            setSearchParams(params, { replace: true })
+          }}
+          active={filterType === 'FLAT'}
+        />
+        <StatCard 
+          label="Shops" value={`${stats.shops}/${stats.maxShops}`} icon={Store} color="green" 
+          onClick={() => {
+            const params = new URLSearchParams(searchParams)
+            params.set('unitType', 'SHOP')
+            setSearchParams(params, { replace: true })
+          }}
+          active={filterType === 'SHOP'}
+        />
+        <StatCard 
+          label="Offices" value={`${stats.offices}/${stats.maxOffices}`} icon={Briefcase} color="purple" 
+          onClick={() => {
+            const params = new URLSearchParams(searchParams)
+            params.set('unitType', 'OFFICE')
+            setSearchParams(params, { replace: true })
+          }}
+          active={filterType === 'OFFICE'}
+        />
+        <StatCard 
+          label="Occupied" value={stats.occupied} icon={UserCheck} color="teal" 
+          onClick={() => {
+            const params = new URLSearchParams(searchParams)
+            params.set('status', 'OCCUPIED')
+            setSearchParams(params, { replace: true })
+          }}
+          active={filterStatus === 'OCCUPIED'}
+        />
+        <StatCard 
+          label="Vacant" value={stats.vacant} icon={UserX} color="orange" 
+          onClick={() => {
+            const params = new URLSearchParams(searchParams)
+            params.set('status', 'VACANT')
+            setSearchParams(params, { replace: true })
+          }}
+          active={filterStatus === 'VACANT'}
+        />
+        <StatCard 
+          label="Assigned" value={stats.assignedUsers} icon={Users} color="pink" 
+        />
       </div>
 
       {/* API Error Alert */}
@@ -1044,13 +1098,31 @@ export default function UnitManagement() {
               }
               setSearchParams(params, { replace: true })
             }}
-            className="w-full min-h-[42px] py-[0.55rem] px-3 rounded-xl border border-[var(--border-default)] text-[var(--text-primary)] transition-all focus:outline-none sm:w-[11rem] sm:flex-none"
+            className="w-full min-h-[42px] py-[0.55rem] px-3 rounded-xl border border-[var(--border-default)] text-[var(--text-primary)] transition-all focus:outline-none sm:w-[10rem] sm:flex-none"
             style={{ background: 'color-mix(in srgb, var(--bg-card) 86%, var(--bg-secondary))' }}
           >
             <option value="">All Types</option>
             <option value="FLAT">Flats</option>
             <option value="SHOP">Shops</option>
             <option value="OFFICE">Offices</option>
+          </select>
+          <select
+            value={filterStatus}
+            onChange={(e) => {
+              const params = new URLSearchParams(searchParams)
+              if (e.target.value) {
+                params.set('status', e.target.value)
+              } else {
+                params.delete('status')
+              }
+              setSearchParams(params, { replace: true })
+            }}
+            className="w-full min-h-[42px] py-[0.55rem] px-3 rounded-xl border border-[var(--border-default)] text-[var(--text-primary)] transition-all focus:outline-none sm:w-[10rem] sm:flex-none"
+            style={{ background: 'color-mix(in srgb, var(--bg-card) 86%, var(--bg-secondary))' }}
+          >
+            <option value="">All Statuses</option>
+            <option value="OCCUPIED">Occupied</option>
+            <option value="VACANT">Vacant</option>
           </select>
           {/* View toggle */}
           <div className="inline-flex flex-none self-stretch rounded-xl border border-[var(--border-default)] overflow-hidden bg-[var(--bg-card)]">
@@ -1095,111 +1167,103 @@ export default function UnitManagement() {
             const isOccupied = !!assignedUser || !!linkedTenant
             
             return (
-              <div key={unit.id} className="p-[1.15rem] rounded-[14px] bg-[var(--bg-card)] border border-[var(--border-default)] shadow-[var(--shadow-sm)] dark:border-[rgba(148,163,184,0.22)] dark:shadow-[0_10px_22px_rgba(2,6,23,0.45)]">
+              <div key={unit.id} className="rounded-2xl border border-[var(--border-default)] bg-[var(--bg-card)] p-3 sm:p-4 shadow-[0_10px_24px_rgba(15,23,42,0.1)] dark:border-[rgba(148,163,184,0.22)] dark:shadow-[0_12px_28px_rgba(2,6,23,0.5)]">
                 {/* Unit Header */}
-                <div className="flex items-start justify-between mb-4">
+                <div className="mb-3 flex flex-col gap-2 border-b border-[var(--border-default)] pb-3 sm:flex-row sm:items-start sm:justify-between">
                   <div className="flex items-center gap-3">
-                    <div className={clsx('w-12 h-12 rounded-[0.9rem] flex items-center justify-center border', unitColor)} style={{ background: 'color-mix(in srgb, var(--color-primary-100) 40%, var(--bg-tertiary))', borderColor: 'color-mix(in srgb, var(--color-primary-200) 58%, transparent)' }}>
-                      <UnitIcon className="w-6 h-6" />
+                    <div className={clsx('flex h-10 w-10 items-center justify-center rounded-lg border border-[var(--border-default)]', unitColor)} style={{ background: 'color-mix(in srgb, var(--bg-tertiary) 65%, transparent)' }}>
+                      <UnitIcon className="w-5 h-5 text-[var(--text-secondary)]" />
                     </div>
                     <div>
-                      <h3 className="text-[1.1rem] font-bold text-[var(--text-primary)]">{unit.flatNumber}</h3>
-                      <div className="inline-flex items-center gap-2 text-[0.8rem] text-[var(--text-tertiary)]">
-                        {unit.wingName && (
-                          <span className="inline-flex items-center gap-1">
-                            <Layers className="w-3 h-3" />
-                            {unit.wingName}
-                          </span>
-                        )}
-                        <span>Floor {unit.floor}</span>
-                      </div>
+                      <h3 className="text-[1.1rem] font-bold text-[var(--text-primary)] leading-tight">{unit.flatNumber}</h3>
+                      <p className="mt-0.5 max-w-[220px] text-[0.75rem] text-[var(--text-tertiary)] sm:max-w-[160px] sm:truncate">
+                        {unit.wingName && <span>{unit.wingName} &bull; </span>}
+                        {unit.floor != null && <span>{unit.floor}</span>}
+                        <span> &bull; {unit.flatType || unit.unitType || 'FLAT'}</span>
+                        {unit.area > 0 && <span> &bull; {unit.area} sq.ft</span>}
+                      </p>
                     </div>
                   </div>
                   <span className={clsx(
-                    'py-1 px-[0.7rem] rounded-full text-xs font-semibold',
+                    'self-start rounded-md px-2.5 py-1 text-[0.65rem] font-bold uppercase tracking-wider',
                     isOccupied
-                      ? 'text-[color-mix(in_srgb,var(--color-success)_80%,var(--text-primary))]'
-                      : 'text-[var(--text-secondary)]'
-                  )} style={{ background: isOccupied ? 'color-mix(in srgb, var(--color-success) 22%, transparent)' : 'color-mix(in srgb, var(--bg-tertiary) 80%, transparent)' }}>
+                      ? 'bg-[rgba(22,163,74,0.1)] text-[#166534] dark:bg-[rgba(34,197,94,0.15)] dark:text-[#4ade80]'
+                      : 'bg-[var(--bg-tertiary)] text-[var(--text-secondary)]'
+                  )}>
                     {isOccupied ? 'Occupied' : 'Vacant'}
                   </span>
                 </div>
 
-                {/* Unit Details */}
-                <div className="flex flex-col gap-2 text-[0.85rem] mb-4">
-                  <div className="flex justify-between">
-                    <span className="text-[var(--text-tertiary)]">Type:</span>
-                    <span className="font-semibold text-[var(--text-primary)]">{unit.flatType || unit.unitType || 'FLAT'}</span>
-                  </div>
-                  {unit.area > 0 && (
-                    <div className="flex justify-between">
-                      <span className="text-[var(--text-tertiary)]">Area:</span>
-                      <span className="font-semibold text-[var(--text-primary)]">{unit.area} sq.ft</span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Assigned User - single user per unit */}
-                <div className="border-t border-[var(--border-default)] pt-4 mb-4">
-                  <p className="text-[0.7rem] uppercase tracking-[0.08em] text-[var(--text-tertiary)] mb-2">Assigned User</p>
+                {/* User / Tenant Info */}
+                <div className="mb-4 flex min-h-[4.5rem] flex-col justify-center rounded-xl border border-[var(--border-default)] bg-[color-mix(in_srgb,var(--bg-card)_82%,var(--bg-tertiary)_18%)] p-3">
                   {assignedUser ? (
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: 'linear-gradient(135deg, rgba(100,116,139,0.70) 0%, rgba(30,41,59,0.90) 100%)' }}>
-                        <span className="text-white font-bold text-[0.85rem]">
+                    <div className="flex flex-wrap items-start gap-3">
+                      <div className="w-8 h-8 rounded-full bg-[var(--bg-tertiary)] flex items-center justify-center shrink-0 border border-[var(--border-default)]">
+                        <span className="text-[var(--text-secondary)] font-bold text-xs">
                           {assignedUser.name?.charAt(0)?.toUpperCase()}
                         </span>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-[var(--text-primary)] truncate">{assignedUser.name}</p>
-                        <p className="text-xs text-[var(--text-tertiary)] truncate">{assignedUser.phone || assignedUser.email}</p>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-[0.9rem] font-semibold text-[var(--text-primary)] truncate">{assignedUser.name}</p>
+                        <p className="text-[0.75rem] text-[var(--text-tertiary)] truncate mt-[1px]">{assignedUser.phone || assignedUser.email}</p>
+                        {linkedTenant && (
+                          <p className="text-[0.72rem] text-[#c2410c] truncate mt-1 dark:text-[#f59e0b]">
+                            Tenant: {linkedTenant.name}{linkedTenant.phone ? ` - ${linkedTenant.phone}` : ''}
+                          </p>
+                        )}
                       </div>
-                      <span className={clsx(
-                        'inline-flex items-center justify-center leading-none text-[0.7rem] font-semibold py-1 px-[0.55rem] rounded-full',
-                        assignedUser.role === 'MEMBER'
-                          ? 'text-[var(--text-secondary)]'
-                          : assignedUser.role === 'TENANT'
-                          ? 'bg-[rgba(249,115,22,0.15)] text-[#c2410c]'
-                          : null
-                      )} style={assignedUser.role === 'MEMBER' ? { background: 'color-mix(in srgb, var(--text-tertiary) 18%, transparent)' } : undefined}>
-                        {assignedUser.role === 'MEMBER' ? 'Owner' : formatRoleLabel(assignedUser.role)}
-                      </span>
-                      {canEditUnits && (
-                        <button
-                          onClick={() => openEditUserModal(assignedUser, unit)}
-                          className="appearance-none w-7 h-7 inline-flex items-center justify-center p-0 rounded-lg border text-[var(--text-secondary)] transition-all hover:text-[var(--text-primary)] dark:border-[rgba(148,163,184,0.26)] dark:bg-[rgba(148,163,184,0.14)] dark:text-[rgba(241,245,249,0.94)] dark:hover:bg-[rgba(148,163,184,0.22)] dark:hover:text-white"
-                          style={{ borderColor: 'color-mix(in srgb, var(--border-light) 75%, transparent)', background: 'color-mix(in srgb, var(--bg-tertiary) 60%, transparent)' }}
-                          title="Edit User"
-                        >
-                          <Edit size={14} />
-                        </button>
-                      )}
+                      <div className="ml-auto flex shrink-0 flex-col items-end gap-1.5 max-[420px]:ml-0 max-[420px]:w-full max-[420px]:flex-row max-[420px]:flex-wrap max-[420px]:items-center max-[420px]:justify-start">
+                        <span className={clsx(
+                          "rounded-md px-2 py-[0.2rem] text-[0.65rem] font-bold uppercase tracking-wide",
+                          assignedUser.role === "MEMBER" 
+                            ? "bg-[rgba(71,85,105,0.08)] text-[var(--text-secondary)] dark:bg-[rgba(148,163,184,0.12)]"
+                            : "bg-[rgba(99,102,241,0.1)] text-[#4338ca] dark:bg-[rgba(99,102,241,0.15)] dark:text-[#818cf8]"
+                        )}>
+                          {assignedUser.role === "MEMBER" ? "Owner" : formatRoleLabel(assignedUser.role)}
+                        </span>
+                        {linkedTenant && (
+                          <span className="rounded-md bg-[rgba(245,158,11,0.1)] px-2 py-[0.2rem] text-[0.65rem] font-bold uppercase tracking-wide text-[#b45309] dark:bg-[rgba(245,158,11,0.15)] dark:text-[#fbbf24]">
+                            Tenant
+                          </span>
+                        )}
+                        {canEditUnits && (
+                          <button
+                            onClick={() => openEditUserModal(assignedUser, unit)}
+                            className="inline-flex items-center justify-center rounded-md border border-[rgba(59,130,246,0.32)] bg-[rgba(59,130,246,0.12)] px-2 py-[0.2rem] text-[0.65rem] font-semibold text-[#1d4ed8] dark:border-[rgba(96,165,250,0.35)] dark:bg-[rgba(59,130,246,0.16)] dark:text-[#93c5fd]"
+                          >
+                            Edit
+                          </button>
+                        )}
+                      </div>
                     </div>
-                  ) : (
-                    <p className="text-[var(--text-tertiary)] text-[0.85rem] italic">No user assigned</p>
-                  )}
-                  {linkedTenant && (
-                    <div className="mt-3 rounded-xl border border-[var(--border-default)] px-3 py-2" style={{ background: 'color-mix(in srgb, var(--bg-tertiary) 70%, transparent)' }}>
-                      <p className="text-[0.68rem] uppercase tracking-[0.08em] text-[var(--text-tertiary)]">Active Tenant</p>
-                      <div className="mt-1 flex items-center justify-between gap-2">
-                        <div className="min-w-0">
-                          <p className="text-[0.83rem] font-semibold text-[var(--text-primary)] truncate">{linkedTenant.name}</p>
-                          <p className="text-[0.72rem] text-[var(--text-tertiary)] truncate">{linkedTenant.phone || linkedTenant.email || 'No contact'}</p>
-                        </div>
-                        <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[0.68rem] font-semibold bg-[rgba(249,115,22,0.15)] text-[#c2410c]">
+                  ) : linkedTenant ? (
+                    <div className="flex flex-wrap items-start gap-3">
+                      <div className="w-8 h-8 rounded-full bg-[var(--bg-tertiary)] flex items-center justify-center shrink-0 border border-[var(--border-default)]">
+                        <span className="text-[var(--text-secondary)] font-bold text-xs">
+                          {linkedTenant.name?.charAt(0)?.toUpperCase() || 'T'}
+                        </span>
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-[0.9rem] font-semibold text-[var(--text-primary)] truncate">{linkedTenant.name || 'Tenant'}</p>
+                        <p className="text-[0.75rem] text-[var(--text-tertiary)] truncate mt-[1px]">{linkedTenant.phone || linkedTenant.email || '-'}</p>
+                      </div>
+                      <div className="ml-auto flex shrink-0 flex-col items-end gap-1.5 max-[420px]:ml-0 max-[420px]:w-full max-[420px]:flex-row max-[420px]:flex-wrap max-[420px]:items-center max-[420px]:justify-start">
+                        <span className="rounded-md bg-[rgba(245,158,11,0.1)] px-2 py-[0.2rem] text-[0.65rem] font-bold uppercase tracking-wide text-[#b45309] dark:bg-[rgba(245,158,11,0.15)] dark:text-[#fbbf24]">
                           Tenant
                         </span>
                       </div>
                     </div>
+                  ) : (
+                    <p className="text-[0.85rem] text-[var(--text-tertiary)] italic">No owner assigned</p>
                   )}
                 </div>
 
                 {/* Actions */}
                 {canEditUnits && (
-                  <div className="flex gap-2 pt-3 border-t border-[var(--border-default)]">
+                  <div className="flex flex-wrap gap-2 border-t border-[var(--border-default)] pt-3">
                     <button
                       onClick={() => openUnitModal(unit)}
-                      className="appearance-none flex-1 inline-flex items-center justify-center gap-[0.35rem] py-2 px-3 rounded-xl border text-[0.85rem] font-semibold text-[var(--text-primary)] transition-all dark:border-[rgba(148,163,184,0.26)] dark:bg-[rgba(15,23,42,0.75)] dark:text-[rgba(241,245,249,0.96)] dark:hover:bg-[rgba(30,41,59,0.92)]"
-                      style={{ borderColor: 'color-mix(in srgb, var(--border-light) 78%, transparent)', background: 'color-mix(in srgb, var(--bg-tertiary) 68%, transparent)' }}
+                      className="inline-flex h-9 min-w-[110px] flex-1 items-center justify-center gap-[0.35rem] rounded-lg border border-[rgba(148,163,184,0.2)] bg-[var(--bg-tertiary)] px-3 text-[0.8rem] font-semibold text-[var(--text-primary)]"
                     >
                       <Edit size={14} />
                       Edit
@@ -1207,11 +1271,10 @@ export default function UnitManagement() {
                     {!hasAssignedUser && (
                       <button
                         onClick={() => openUserModal(unit)}
-                        className="appearance-none flex-1 inline-flex items-center justify-center gap-[0.35rem] py-2 px-3 rounded-xl border text-[0.85rem] font-semibold text-[var(--text-primary)] transition-all dark:border-[rgba(148,163,184,0.26)] dark:bg-[rgba(15,23,42,0.75)] dark:text-[rgba(241,245,249,0.96)] dark:hover:bg-[rgba(30,41,59,0.92)]"
-                        style={{ borderColor: 'color-mix(in srgb, var(--border-light) 78%, transparent)', background: 'color-mix(in srgb, var(--bg-tertiary) 85%, transparent)' }}
+                        className="inline-flex h-9 min-w-[110px] flex-1 items-center justify-center gap-[0.35rem] rounded-lg border border-[rgba(59,130,246,0.25)] bg-[rgba(59,130,246,0.1)] px-3 text-[0.8rem] font-semibold text-[#2563eb] dark:text-[#60a5fa]"
                       >
                         <UserPlus size={14} />
-                        Assign Owner
+                        Assign
                       </button>
                     )}
                     <button
@@ -1252,9 +1315,10 @@ export default function UnitManagement() {
                           }
                         }
                       }}
-                      className="appearance-none w-9 h-9 inline-flex items-center justify-center p-0 rounded-xl border border-[rgba(239,68,68,0.35)] text-[#dc2626] bg-[rgba(239,68,68,0.1)] transition-all hover:bg-[rgba(239,68,68,0.16)] hover:border-[rgba(239,68,68,0.5)] dark:text-[rgba(252,165,165,0.98)] dark:bg-[rgba(127,29,29,0.34)] dark:border-[rgba(239,68,68,0.42)] dark:hover:bg-[rgba(127,29,29,0.5)]"
+                      className="inline-flex h-9 min-w-[92px] items-center justify-center gap-1.5 rounded-lg border border-[rgba(239,68,68,0.28)] bg-[rgba(239,68,68,0.08)] px-3 text-[0.78rem] font-semibold text-[#dc2626] sm:w-[2.15rem] sm:min-w-0 sm:px-0 dark:text-[#f87171]"
                     >
-                      <Trash2 size={16} />
+                      <Trash2 size={15} />
+                      <span className="sm:hidden">Delete</span>
                     </button>
                   </div>
                 )}
@@ -1524,9 +1588,13 @@ export default function UnitManagement() {
         {/* Users Table */}
         <div className="rounded-[14px] bg-[var(--bg-card)] border border-[var(--border-default)] shadow-[var(--shadow-sm)] overflow-hidden dark:bg-[rgba(2,6,23,0.55)] dark:border-[rgba(148,163,184,0.18)] dark:shadow-[0_10px_22px_rgba(2,6,23,0.45)]">
           {!filteredTabUsers.length ? (
-            <div className="p-8 text-center">
-              <Users className="w-12 h-12 mx-auto mb-3 text-[#cbd5e1] dark:text-[#475569]" />
-              <p className="text-[#64748b] dark:text-[#94a3b8]">No users found</p>
+            <div className="p-4">
+              <EmptyStateSection
+                title="No users found"
+                description="No users match the active search and role filters."
+                icon={Users}
+                className="p-8"
+              />
             </div>
           ) : (
             <>
@@ -2036,7 +2104,7 @@ export default function UnitManagement() {
 
 // Stat Card Component
 // eslint-disable-next-line no-unused-vars
-function StatCard({ label, value, icon: Icon, color }) {
+function StatCard({ label, value, icon: Icon, color, onClick, active }) {
   const colorClasses = {
     blue: 'bg-[rgba(59,130,246,0.15)] text-[#3b82f6]',
     indigo: 'bg-[rgba(99,102,241,0.15)] text-[#6366f1]',
@@ -2046,9 +2114,18 @@ function StatCard({ label, value, icon: Icon, color }) {
     orange: 'bg-[rgba(249,115,22,0.15)] text-[#f97316]',
     pink: 'bg-[rgba(236,72,153,0.15)] text-[#ec4899]',
   }
-  
+
   return (
-    <div className="p-4 rounded-[14px] bg-[var(--bg-card)] border border-[var(--border-light)] shadow-[var(--shadow-sm)] dark:border-[rgba(148,163,184,0.22)] dark:shadow-[0_10px_22px_rgba(2,6,23,0.45)]">
+    <div
+      onClick={onClick}
+      className={clsx(
+        "p-4 rounded-[14px] bg-[var(--bg-card)] border shadow-[var(--shadow-sm)] dark:shadow-[0_10px_22px_rgba(2,6,23,0.45)] transition-all",
+        onClick ? "cursor-pointer hover:-translate-y-0.5 hover:shadow-md" : "",
+        active 
+          ? "border-[#3b82f6] shadow-[0_0_0_1px_rgba(59,130,246,0.5)] dark:border-[#3b82f6]" 
+          : "border-[var(--border-light)] dark:border-[rgba(148,163,184,0.22)]"
+      )}
+    >
       <div className="flex items-center gap-3">
         <div className={clsx('w-8 h-8 rounded-xl flex items-center justify-center', colorClasses[color])}>
           <Icon className="w-4 h-4" />

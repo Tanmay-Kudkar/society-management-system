@@ -5,7 +5,7 @@ import { useAuth } from '../../context'
 import { visitorApi } from '../../../../api'
 import { Plus, Search, X, UserX, Clock, LogIn, LogOut, AlertTriangle } from 'lucide-react'
 import clsx from 'clsx'
-import { FormInput, SmartSelect, FormTextarea, InfoTooltip, NeonSweepButton } from '../../components'
+import { FormInput, SmartSelect, FormTextarea, InfoTooltip, NeonSweepButton, EmptyStateSection } from '../../components'
 import { PermissionDenied } from '../../components'
 import { HeroSkeleton, SummaryRowSkeleton, FiltersSkeleton, ListSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
 import useMinLoadingTime from '../../hooks/useMinLoadingTime'
@@ -57,6 +57,7 @@ export default function Visitors() {
   const isMember = user?.role && user.role !== 'VISITOR'
 
   const isPlatformLevel = user?.role === 'MASTER_ADMIN'
+  const isResidentMember = user?.role === 'MEMBER'
   const isStaff = ['MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'MANAGER', 'EMPLOYEE'].includes(user?.role)
   const isSecurityPersonnel = ['MASTER_ADMIN', 'SOCIETY_ADMIN', 'MANAGER', 'EMPLOYEE'].includes(user?.role)
   const canCreateVisitorEntries = isSecurityPersonnel
@@ -65,6 +66,21 @@ export default function Visitors() {
   const effectiveSocietyId = isPlatformLevel && societyIdFromUrl ? societyIdFromUrl : user?.societyId
 
   const queryFnByMode = () => {
+    if (isResidentMember) {
+      if (!user?.flatId) return Promise.resolve([])
+      return visitorApi.getByFlat(user.flatId, user.id).then(res => {
+        const list = Array.isArray(res?.data) ? res.data : []
+        if (viewMode === 'today') {
+          const today = new Date().toLocaleDateString('en-CA')
+          return list.filter((visitor) => {
+            const createdAt = parseServerDateTime(visitor.createdAt)
+            if (!createdAt) return false
+            return createdAt.toLocaleDateString('en-CA') === today
+          })
+        }
+        return list
+      })
+    }
     if (viewMode === 'today') {
       return visitorApi.getTodayArrivals(effectiveSocietyId, user.id).then(res => res.data)
     }
@@ -77,7 +93,7 @@ export default function Visitors() {
   const { data: visitors = [], isLoading, isError } = useQuery({
     queryKey: ['visitors', user?.id, effectiveSocietyId, viewMode, overstayThreshold],
     queryFn: queryFnByMode,
-    enabled: !!user?.id && !!effectiveSocietyId,
+    enabled: !!user?.id && (isResidentMember ? !!user?.flatId : !!effectiveSocietyId),
   })
 
   const closeModal = (force = false) => {
@@ -147,7 +163,7 @@ export default function Visitors() {
     verifyOtpMutation.mutate({ id: visitor.id, otpCode })
   }
 
-  const showSkeleton = useMinLoadingTime(isLoading || isError)
+  const showSkeleton = useMinLoadingTime(isLoading)
 
   if (!isMember) {
     return <PermissionDenied message="You don't have permission to access visitor management" />
@@ -289,9 +305,12 @@ export default function Visitors() {
 
       <div className="flex flex-col gap-2">
         {filteredVisitors.length === 0 && (
-          <div className="rounded-2xl border border-[color-mix(in_srgb,var(--border-default)_86%,#334155_14%)] bg-[color-mix(in_srgb,var(--bg-card)_90%,var(--bg-tertiary)_10%)] p-5 text-center text-[var(--text-tertiary)] shadow-[0_8px_24px_rgba(15,23,42,0.08)]">
-            No visitors found
-          </div>
+          <EmptyStateSection
+            title="No visitors found"
+            description="No visitor records match your current filters."
+            icon={UserX}
+            className="p-5"
+          />
         )}
         {filteredVisitors.map((visitor) => {
           const StatusIcon = statusIcons[visitor.status] || Clock

@@ -499,6 +499,9 @@ public class TicketServiceImpl implements TicketService {
         response.setTicketId(reply.getTicket().getId());
         response.setRepliedById(reply.getRepliedBy().getId());
         response.setRepliedByName(reply.getRepliedBy().getName());
+        response.setRepliedByRole(reply.getRepliedBy().getRole() != null ? reply.getRepliedBy().getRole().name() : null);
+        response.setRepliedByEmail(reply.getRepliedBy().getEmail());
+        response.setRepliedByPhone(reply.getRepliedBy().getPhone());
         response.setMessage(reply.getMessage());
         response.setCreatedAt(toOffsetIsoDateTime(reply.getCreatedAt()));
         return response;

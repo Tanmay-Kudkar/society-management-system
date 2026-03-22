@@ -148,7 +148,7 @@ export default function EmergencyContacts() {
     }, {})
   }, [filteredContacts])
 
-  const showSkeleton = useMinLoadingTime(isLoading || isError)
+  const showSkeleton = useMinLoadingTime(isLoading)
 
   if (showSkeleton) return (
     <div>

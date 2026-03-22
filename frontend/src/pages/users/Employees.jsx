@@ -5,7 +5,7 @@ import { useAuth } from '../../context'
 import { useToast } from '../../context'
 import { employeeApi, attendanceApi, employeeSalaryPaymentApi, userApi, downloadBlob } from '../../../../api'
 import { Users, CalendarCheck2, Wallet, BadgeCheck, Paperclip } from 'lucide-react'
-import { NeonSweepButton } from '../../components'
+import { NeonSweepButton, EmptyStateSection } from '../../components'
 
 const ATTENDANCE_STATUS = ['PRESENT', 'ABSENT', 'HALF_DAY', 'LEAVE']
 const PHONE_REGEX = /^(\+91)?[6-9]\d{9}$/
@@ -628,7 +628,12 @@ export default function Employees() {
               {!loadingEmployees && !loadingAttendance && employees.length === 0 && (
                 <tr>
                   <td colSpan={7} className="px-4 py-10 text-center text-[var(--text-tertiary)]">
-                    No employee records found for this society.
+                    <EmptyStateSection
+                      title="No employee records found"
+                      description="Employees will appear here once added for this society."
+                      icon={Users}
+                      className="p-6"
+                    />
                   </td>
                 </tr>
               )}
@@ -682,8 +687,13 @@ export default function Employees() {
             )
           })}
           {!loadingEmployees && !loadingAttendance && employees.length === 0 && (
-            <div className="px-2 py-8 text-center text-sm text-[var(--text-tertiary)]">
-              No employee records found for this society.
+            <div className="px-2 py-3">
+              <EmptyStateSection
+                title="No employee records found"
+                description="Employees will appear here once added for this society."
+                icon={Users}
+                className="p-6"
+              />
             </div>
           )}
         </div>

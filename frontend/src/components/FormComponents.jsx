@@ -238,6 +238,7 @@ export const SmartSelect = ({
   defaultValue,
   onChange,
   options = [],
+  hideDisabledOptions = true,
   error,
   required = false,
   disabled = false,
@@ -249,6 +250,10 @@ export const SmartSelect = ({
   ...props
 }) => {
   const [focused, setFocused] = useState(false);
+  const selectedValue = value ?? defaultValue
+  const selectableOptions = hideDisabledOptions
+    ? options.filter((opt) => !opt?.disabled || String(opt?.value ?? '') === String(selectedValue ?? ''))
+    : options
 
   // If only 1 option → show as a locked badge
   const inputBase =
@@ -257,8 +262,8 @@ export const SmartSelect = ({
   const inputWarn = "border-amber-500 ring-2 ring-amber-500/20";
   const inputDisabled = "opacity-60 cursor-not-allowed";
 
-  if (options.length === 1) {
-    const only = options[0];
+  if (selectableOptions.length === 1) {
+    const only = selectableOptions[0];
     return (
       <div className={clsx("flex flex-col gap-1.5 min-w-0", className)}>
         {label && (
@@ -282,7 +287,7 @@ export const SmartSelect = ({
     );
   }
 
-  if (options.length === 0) {
+  if (selectableOptions.length === 0) {
     return (
       <div className={clsx("flex flex-col gap-1.5 min-w-0", className)}>
         {label && (
@@ -330,7 +335,7 @@ export const SmartSelect = ({
           {...props}
         >
           {showPlaceholder && <option value="">{placeholder}</option>}
-          {options.map((opt) => (
+          {selectableOptions.map((opt) => (
             <option key={opt.value} value={opt.value} disabled={!!opt.disabled}>
               {opt.label}
             </option>
@@ -354,6 +359,7 @@ export const FormSelect = ({
   defaultValue,
   onChange,
   options = [],
+  hideDisabledOptions = true,
   error,
   required = false,
   disabled = false,
@@ -369,6 +375,7 @@ export const FormSelect = ({
       defaultValue={defaultValue}
       onChange={onChange}
       options={options}
+      hideDisabledOptions={hideDisabledOptions}
       error={error}
       required={required}
       disabled={disabled}
