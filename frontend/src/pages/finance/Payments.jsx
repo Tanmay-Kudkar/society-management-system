@@ -54,7 +54,7 @@ export default function Payments() {
   const effectiveSocietyId = isPlatformLevel && societyIdFromUrl ? parseInt(societyIdFromUrl) : user?.societyId
 
   // Fetch payments based on user role
-  const { data: payments = [], isLoading, isError } = useQuery({
+  const { data: payments = [], isLoading, isError, error: paymentsError } = useQuery({
     queryKey: ['payments', effectiveSocietyId],
     queryFn: async () => {
       if (effectiveSocietyId) {
@@ -219,7 +219,7 @@ export default function Payments() {
     return `${minutes}m ${String(seconds).padStart(2, '0')}s left`
   }
 
-  const showSkeleton = useMinLoadingTime(isLoading || isError)
+  const showSkeleton = useMinLoadingTime(isLoading)
 
   if (!canAccessPayments) {
     return <PermissionDenied message="You don't have permission to view payments" />
@@ -248,6 +248,26 @@ export default function Payments() {
         <WakeUpBanner />
         <HeroSkeleton />
         <FinancePageSkeleton summaryCount={4} rows={6} cols={5} />
+      </div>
+    )
+  }
+
+  if (isError) {
+    const message = paymentsError?.response?.data?.message || 'Unable to load online payments right now.'
+    return (
+      <div className="rounded-2xl border border-rose-500/30 bg-rose-500/10 p-5">
+        <div className="mb-2 flex items-center gap-2 text-rose-600">
+          <AlertTriangle size={18} />
+          <h2 className="text-sm font-semibold">Failed to load online payments</h2>
+        </div>
+        <p className="text-sm text-[var(--text-secondary)]">{message}</p>
+        <button
+          type="button"
+          onClick={() => queryClient.invalidateQueries(['payments'])}
+          className="mt-4 inline-flex items-center rounded-lg border border-rose-500/40 px-3 py-1.5 text-xs font-semibold text-rose-600 transition hover:bg-rose-500/10"
+        >
+          Retry
+        </button>
       </div>
     )
   }

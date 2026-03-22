@@ -441,18 +441,28 @@ public class PaymentService {
 
     @Transactional
     public void deletePayment(Long id, Long deletedByUserId) {
+        User requester = getAuthenticatedUser();
         Payment payment = paymentRepository.findByIdAndDeletedAtIsNull(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Payment not found"));
 
+        if (!canReadPayment(requester, payment)) {
+            throw new ApiException(HttpStatus.FORBIDDEN, "Access denied to this payment record");
+        }
+
         payment.setDeletedAt(LocalDateTime.now());
-        payment.setDeletedBy(deletedByUserId);
+        payment.setDeletedBy(requester.getId());
         paymentRepository.save(payment);
     }
 
     @Transactional
     public PaymentResponse undoDeletePayment(Long id) {
+        User requester = getAuthenticatedUser();
         Payment payment = paymentRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Payment not found"));
+
+        if (!canReadPayment(requester, payment)) {
+            throw new ApiException(HttpStatus.FORBIDDEN, "Access denied to this payment record");
+        }
 
         if (payment.getDeletedAt() == null) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "Payment is not deleted");
@@ -469,6 +479,9 @@ public class PaymentService {
     }
 
     public List<PaymentResponse> getDeletedPaymentsBySociety(Long societyId) {
+        User requester = getAuthenticatedUser();
+        enforceRequesterCanAccessSociety(requester, societyId);
+
         return paymentRepository.findBySocietyIdAndDeletedAtIsNotNullOrderByDeletedAtDesc(societyId)
                 .stream()
                 .map(this::mapToResponse)
@@ -507,6 +520,13 @@ public class PaymentService {
             throw new ApiException(HttpStatus.FORBIDDEN, "You can access only your own payments");
         }
 
+        if (isManagementRole(requester.getRole()) && requester.getRole() != Role.MASTER_ADMIN) {
+            User targetUser = userRepository.findById(userId)
+                    .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+            Long targetSocietyId = targetUser.getSociety() != null ? targetUser.getSociety().getId() : null;
+            enforceRequesterCanAccessSociety(requester, targetSocietyId);
+        }
+
         return paymentRepository.findByUserIdAndDeletedAtIsNullOrderByCreatedAtDesc(userId)
                 .stream()
                 .filter(payment -> canReadPayment(requester, payment))
@@ -515,6 +535,9 @@ public class PaymentService {
     }
 
     public List<PaymentResponse> getPaymentsBySociety(Long societyId) {
+        User requester = getAuthenticatedUser();
+        enforceRequesterCanAccessSociety(requester, societyId);
+
         return paymentRepository.findBySocietyIdAndDeletedAtIsNullOrderByCreatedAtDesc(societyId)
                 .stream()
                 .map(this::mapToResponse)
@@ -546,10 +569,53 @@ public class PaymentService {
         }
 
         if (isManagementRole(requester.getRole())) {
-            return true;
+            if (requester.getRole() == Role.MASTER_ADMIN) {
+                return true;
+            }
+            Long paymentSocietyId = resolvePaymentSocietyId(payment);
+            Long requesterSocietyId = requester.getSociety() != null ? requester.getSociety().getId() : null;
+            return requesterSocietyId != null
+                    && paymentSocietyId != null
+                    && requesterSocietyId.equals(paymentSocietyId);
         }
 
         return payment.getUser() != null && requester.getId().equals(payment.getUser().getId());
+    }
+
+    private void enforceRequesterCanAccessSociety(User requester, Long societyId) {
+        if (requester == null) {
+            throw new ApiException(HttpStatus.UNAUTHORIZED, "Not authenticated");
+        }
+
+        if (requester.getRole() == Role.MASTER_ADMIN) {
+            return;
+        }
+
+        Long requesterSocietyId = requester.getSociety() != null ? requester.getSociety().getId() : null;
+        if (requesterSocietyId == null || societyId == null || !requesterSocietyId.equals(societyId)) {
+            throw new ApiException(HttpStatus.FORBIDDEN, "Access denied for target society");
+        }
+    }
+
+    private Long resolvePaymentSocietyId(Payment payment) {
+        if (payment.getSociety() != null) {
+            return payment.getSociety().getId();
+        }
+        if (payment.getUser() != null && payment.getUser().getSociety() != null) {
+            return payment.getUser().getSociety().getId();
+        }
+        if (payment.getMaintenanceBill() != null) {
+            if (payment.getMaintenanceBill().getSociety() != null) {
+                return payment.getMaintenanceBill().getSociety().getId();
+            }
+            if (payment.getMaintenanceBill().getFlat() != null && payment.getMaintenanceBill().getFlat().getSociety() != null) {
+                return payment.getMaintenanceBill().getFlat().getSociety().getId();
+            }
+        }
+        if (payment.getVendorBill() != null && payment.getVendorBill().getSociety() != null) {
+            return payment.getVendorBill().getSociety().getId();
+        }
+        return null;
     }
 
     private boolean isManagementRole(Role role) {
