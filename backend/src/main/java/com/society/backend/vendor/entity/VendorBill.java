@@ -57,6 +57,15 @@ public class VendorBill {
     @Column(name = "reference_number")
     private String referenceNumber;
 
+    @Column(name = "received_by_role")
+    private String receivedByRole;
+
+    @Column(name = "received_by_name")
+    private String receivedByName;
+
+    @Column(name = "payment_notes", columnDefinition = "TEXT")
+    private String paymentNotes;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 

@@ -4,18 +4,19 @@ import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '../../context'
 import { useConfirmDialog } from '../../context'
 import { useToast } from '../../context'
-import { vendorBillApi, vendorApi, exportApi, downloadBlob } from '../../../../api'
+import { vendorBillApi, vendorApi, exportApi, downloadBlob, userApi, societySettingApi } from '../../../../api'
 import { Plus, Edit, Trash2, Search, X, Receipt, CheckCircle, Clock, AlertCircle, FileSpreadsheet, Download } from 'lucide-react'
 import clsx from 'clsx'
 import { InfoTooltip, NeonSweepButton } from '../../components'
 import { HeroSkeleton, FinancePageSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
 import useMinLoadingTime from '../../hooks/useMinLoadingTime'
 import { useRazorpay } from '../../hooks/useRazorpay'
+import { formatRole } from '../../utils/formatUtils'
 
 const statusColors = {
-  PENDING: 'bg-amber-100 text-amber-700',
-  PARTIAL: 'bg-blue-100 text-blue-700',
-  PAID: 'bg-green-100 text-green-800',
+  PENDING: 'border border-amber-300/70 bg-amber-50 text-amber-800 dark:border-amber-500/35 dark:bg-amber-500/15 dark:text-amber-100',
+  PARTIAL: 'border border-blue-300/70 bg-blue-50 text-blue-800 dark:border-blue-500/35 dark:bg-blue-500/15 dark:text-blue-100',
+  PAID: 'border border-emerald-300/70 bg-emerald-50 text-emerald-800 dark:border-emerald-500/35 dark:bg-emerald-500/15 dark:text-emerald-100',
 }
 
 const statusIcons = {
@@ -23,6 +24,42 @@ const statusIcons = {
   PARTIAL: AlertCircle,
   PAID: CheckCircle,
 }
+
+const paymentModeOptions = [
+  { value: 'CASH', label: 'Cash' },
+  { value: 'CHEQUE', label: 'Cheque' },
+  { value: 'UPI', label: 'UPI' },
+  { value: 'NEFT', label: 'NEFT' },
+  { value: 'IMPS', label: 'IMPS' },
+  { value: 'CARD', label: 'Card' },
+  { value: 'ONLINE', label: 'Online Transfer' },
+  { value: 'BANK_TRANSFER', label: 'Bank Transfer' },
+  { value: 'OTHER', label: 'Other' },
+]
+
+const paymentReferenceLabel = {
+  CHEQUE: 'Cheque Number',
+  UPI: 'UPI Transaction / UTR',
+  NEFT: 'NEFT UTR Number',
+  IMPS: 'IMPS Reference',
+  CARD: 'Card Transaction ID',
+  ONLINE: 'Online Reference',
+  BANK_TRANSFER: 'Bank Transfer Reference',
+  OTHER: 'Reference Details',
+  CASH: 'Receipt / Acknowledgement (Optional)',
+}
+
+const receiverRoleOptions = [
+  'SOCIETY_ADMIN',
+  'CHAIRMAN',
+  'SECRETARY',
+  'TREASURER',
+  'COMMITTEE',
+  'MANAGER',
+  'OTHER',
+]
+
+const electionSensitiveRoles = new Set(['CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE'])
 
 export default function VendorBills() {
   const { user, canManageVendorBills } = useAuth()
@@ -37,6 +74,10 @@ export default function VendorBills() {
   const [filterStatus, setFilterStatus] = useState('')
   const [isExporting, setIsExporting] = useState(false)
   const [isDownloadingReceiptId, setIsDownloadingReceiptId] = useState(null)
+  const [selectedPaymentMode, setSelectedPaymentMode] = useState('CASH')
+  const [selectedReceiverRole, setSelectedReceiverRole] = useState(user?.role || 'SECRETARY')
+  const [manualReceivedByName, setManualReceivedByName] = useState('')
+  const [paymentError, setPaymentError] = useState('')
 
   const societyIdFromUrl = searchParams.get('society')
   const parsedSocietyIdFromUrl = Number(societyIdFromUrl)
@@ -66,6 +107,63 @@ export default function VendorBills() {
     },
   })
 
+  const { data: societyUsers = [] } = useQuery({
+    queryKey: ['users-by-society', effectiveSocietyId],
+    queryFn: () => userApi.getBySociety(effectiveSocietyId).then((res) => res.data || []),
+    enabled: !!effectiveSocietyId,
+  })
+
+  const { data: societySettings } = useQuery({
+    queryKey: ['society-settings', effectiveSocietyId, user?.id],
+    queryFn: () => societySettingApi.getBySocietyId(effectiveSocietyId, user.id).then((res) => res.data),
+    enabled: !!effectiveSocietyId && !!user?.id,
+    retry: false,
+  })
+
+  const roleMatchedUsers = useMemo(() => {
+    if (selectedReceiverRole === 'OTHER') return []
+    return societyUsers.filter((societyUser) => {
+      if (!societyUser) return false
+      if (societyUser.deletedAt) return false
+      return societyUser.role === selectedReceiverRole
+    })
+  }, [selectedReceiverRole, societyUsers])
+
+  const autoResolvedReceivedByName = useMemo(() => {
+    if (selectedReceiverRole === 'OTHER') return manualReceivedByName.trim()
+    const names = [...new Set(roleMatchedUsers.map((societyUser) => (societyUser.name || '').trim()).filter(Boolean))]
+    return names.join(', ')
+  }, [manualReceivedByName, roleMatchedUsers, selectedReceiverRole])
+
+  const electionWindowStatus = useMemo(() => {
+    const startRaw = societySettings?.committeeElectionStartDate
+    const endRaw = societySettings?.committeeElectionEndDate
+    if (!startRaw || !endRaw) {
+      return { active: false, startLabel: '', endLabel: '' }
+    }
+
+    const start = new Date(startRaw)
+    const end = new Date(endRaw)
+    if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
+      return { active: false, startLabel: '', endLabel: '' }
+    }
+
+    const normalizedEnd = new Date(end)
+    normalizedEnd.setHours(23, 59, 59, 999)
+    const now = new Date()
+
+    return {
+      active: now >= start && now <= normalizedEnd,
+      startLabel: start.toLocaleDateString(),
+      endLabel: normalizedEnd.toLocaleDateString(),
+    }
+  }, [societySettings])
+
+  const isSelectedRoleUnderElection = useMemo(
+    () => electionWindowStatus.active && electionSensitiveRoles.has(selectedReceiverRole),
+    [electionWindowStatus.active, selectedReceiverRole]
+  )
+
   const closeCreateModal = (force = false) => {
     if (!force && createMutation.isPending) return
     setShowModal(false)
@@ -75,6 +173,19 @@ export default function VendorBills() {
     if (!force && paymentMutation.isPending) return
     setShowPaymentModal(false)
     setEditingBill(null)
+    setSelectedPaymentMode('CASH')
+    setSelectedReceiverRole(receiverRoleOptions.includes(user?.role) ? user.role : 'SECRETARY')
+    setManualReceivedByName('')
+    setPaymentError('')
+  }
+
+  const openPaymentModal = (bill) => {
+    setEditingBill(bill)
+    setSelectedPaymentMode('CASH')
+    setSelectedReceiverRole(receiverRoleOptions.includes(user?.role) ? user.role : 'SECRETARY')
+    setManualReceivedByName('')
+    setPaymentError('')
+    setShowPaymentModal(true)
   }
 
   const createMutation = useMutation({
@@ -86,11 +197,24 @@ export default function VendorBills() {
   })
 
   const paymentMutation = useMutation({
-    mutationFn: ({ id, amount, paymentMode, referenceNumber }) => 
-      vendorBillApi.recordPayment(id, amount, paymentMode, referenceNumber, user.id),
+    mutationFn: ({ id, amount, paymentMode, referenceNumber, receivedByRole, receivedByName, paymentNotes }) => 
+      vendorBillApi.recordPayment(
+        id,
+        amount,
+        paymentMode,
+        referenceNumber,
+        receivedByRole,
+        receivedByName,
+        paymentNotes,
+        user.id,
+      ),
     onSuccess: () => {
       queryClient.invalidateQueries(['vendorBills'])
+      toast.success('Vendor payment recorded successfully')
       closePaymentModal(true)
+    },
+    onError: (error) => {
+      toast.error(error?.response?.data?.message || 'Failed to record vendor payment')
     },
   })
 
@@ -140,11 +264,44 @@ export default function VendorBills() {
   const handlePayment = (e) => {
     e.preventDefault()
     const formData = new FormData(e.target)
+    const amount = Number(formData.get('amount'))
+    const balance = Number(editingBill?.amount || 0) - Number(editingBill?.paidAmount || 0)
+    const paymentMode = formData.get('paymentMode')
+    const referenceNumber = (formData.get('referenceNumber') || '').toString().trim()
+    const receivedByRole = (formData.get('receivedByRole') || '').toString().trim()
+    const receivedByName = (formData.get('receivedByName') || '').toString().trim()
+    const paymentNotes = (formData.get('paymentNotes') || '').toString().trim()
+
+    if (!Number.isFinite(amount) || amount <= 0) {
+      setPaymentError('Enter a valid payment amount greater than 0.')
+      return
+    }
+    if (amount > balance) {
+      setPaymentError('Payment amount cannot exceed the pending amount.')
+      return
+    }
+    if (paymentMode !== 'CASH' && !referenceNumber) {
+      setPaymentError('Reference details are required for non-cash payment modes.')
+      return
+    }
+    if (receivedByRole === 'OTHER' && !receivedByName) {
+      setPaymentError('Please enter the receiver name when role is set to OTHER.')
+      return
+    }
+    if (receivedByRole !== 'OTHER' && !receivedByName) {
+      setPaymentError('No user is assigned to the selected role. Select OTHER and enter the receiver name manually.')
+      return
+    }
+
+    setPaymentError('')
     paymentMutation.mutate({
       id: editingBill.id,
-      amount: parseFloat(formData.get('amount')),
-      paymentMode: formData.get('paymentMode'),
-      referenceNumber: formData.get('referenceNumber'),
+      amount,
+      paymentMode,
+      referenceNumber,
+      receivedByRole,
+      receivedByName,
+      paymentNotes,
     })
   }
 
@@ -263,13 +420,13 @@ export default function VendorBills() {
               placeholder="Search bills..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-3 py-2 rounded-[10px] border border-[#cbd5f5] bg-[var(--bg-card)] text-[var(--text-primary)] outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+              className="w-full rounded-[10px] border border-[var(--border-default)] bg-[var(--bg-card)] py-2 pl-10 pr-3 text-[var(--text-primary)] outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
             />
           </div>
           <select
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
-            className="w-full px-3 py-2 rounded-[10px] border border-[#cbd5f5] bg-[var(--bg-card)] text-[var(--text-primary)] outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+            className="w-full rounded-[10px] border border-[var(--border-default)] bg-[var(--bg-card)] px-3 py-2 text-[var(--text-primary)] outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 sm:w-[210px]"
           >
             <option value="">All Status</option>
             <option value="PENDING">Pending</option>
@@ -301,43 +458,51 @@ export default function VendorBills() {
                   const StatusIcon = statusIcons[bill.status] || Clock
                   return (
                     <tr key={bill.id} className="border-b border-[color-mix(in_srgb,var(--border-light)_80%,transparent)] last:border-b-0 hover:bg-[color-mix(in_srgb,var(--bg-tertiary)_70%,#e2e8f0_30%)] transition-colors">
-                      <td className="px-6 py-4 whitespace-nowrap text-[var(--text-primary)]">
+                      <td className="px-3 py-4 whitespace-nowrap text-[var(--text-primary)] sm:px-6">
                         <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-[10px] bg-orange-50 inline-flex items-center justify-center">
-                            <Receipt className="w-4 h-4 text-orange-600" />
+                          <div className="w-8 h-8 rounded-[10px] border border-orange-300/60 bg-orange-50 inline-flex items-center justify-center dark:border-orange-500/35 dark:bg-orange-500/15">
+                            <Receipt className="w-4 h-4 text-orange-600 dark:text-orange-200" />
                           </div>
                           <span className="font-semibold">{bill.vendorName}</span>
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-[var(--text-primary)]">{bill.billNumber}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-[var(--text-primary)] font-semibold">₹{bill.amount?.toLocaleString()}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-[var(--text-tertiary)]">₹{bill.paidAmount?.toLocaleString() || 0}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-[var(--text-primary)]">
+                      <td className="px-3 py-4 whitespace-nowrap text-sm font-semibold text-[var(--text-primary)] sm:px-6">{bill.billNumber}</td>
+                      <td className="px-3 py-4 whitespace-nowrap text-[var(--text-primary)] font-semibold sm:px-6">₹{bill.amount?.toLocaleString()}</td>
+                      <td className="px-3 py-4 whitespace-nowrap text-sm text-[var(--text-tertiary)] sm:px-6">₹{bill.paidAmount?.toLocaleString() || 0}</td>
+                      <td className="px-3 py-4 whitespace-nowrap text-[var(--text-primary)] sm:px-6">
                         <span className={clsx(
                           'font-semibold',
-                          bill.pendingAmount > 0 ? 'text-red-600' : 'text-green-600'
+                          bill.pendingAmount > 0 ? 'text-red-600 dark:text-red-300' : 'text-green-600 dark:text-green-300'
                         )}>
                           ₹{bill.pendingAmount?.toLocaleString() || 0}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-[var(--text-tertiary)]">
+                      <td className="px-3 py-4 whitespace-nowrap text-sm text-[var(--text-tertiary)] sm:px-6">
                         {bill.dueDate ? new Date(bill.dueDate).toLocaleDateString() : '-'}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-[var(--text-primary)]">
+                      <td className="px-3 py-4 whitespace-nowrap text-[var(--text-primary)] sm:px-6">
                         <span className={clsx('inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold', statusColors[bill.status])}>
                           <StatusIcon size={12} />
                           {bill.status}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right">
-                        {bill.status !== 'PAID' && (
-                          <button
-                            onClick={() => handleOnlinePayment(bill)}
-                            disabled={isRazorpayLoading}
-                            className="px-2 py-1 text-xs rounded-lg border border-transparent bg-green-100 text-green-700 mr-2 hover:bg-green-200 disabled:opacity-60 transition-colors"
-                          >
-                            {isRazorpayLoading ? 'Paying...' : 'Pay'}
-                          </button>
+                      <td className="px-3 py-4 whitespace-nowrap text-right sm:px-6">
+                        {canManageVendorBills() && bill.status !== 'PAID' && (
+                          <>
+                            <button
+                              onClick={() => openPaymentModal(bill)}
+                              className="mr-2 rounded-lg border border-blue-300/70 bg-blue-50 px-2 py-1 text-xs text-blue-700 transition-colors hover:bg-blue-100 dark:border-blue-500/35 dark:bg-blue-500/15 dark:text-blue-100 dark:hover:bg-blue-500/25"
+                            >
+                              Record
+                            </button>
+                            <button
+                              onClick={() => handleOnlinePayment(bill)}
+                              disabled={isRazorpayLoading}
+                              className="mr-2 rounded-lg border border-emerald-300/70 bg-emerald-50 px-2 py-1 text-xs text-emerald-700 transition-colors hover:bg-emerald-100 disabled:opacity-60 dark:border-emerald-500/35 dark:bg-emerald-500/15 dark:text-emerald-100 dark:hover:bg-emerald-500/25"
+                            >
+                              {isRazorpayLoading ? 'Paying...' : 'Pay Online'}
+                            </button>
+                          </>
                         )}
                         <button
                           onClick={() => handleDownloadReceipt(bill)}
@@ -383,7 +548,7 @@ export default function VendorBills() {
       {/* Add Bill Modal */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50">
-          <div className="w-full max-w-[420px] bg-[var(--bg-card)] rounded-2xl shadow-[0_24px_60px_rgba(15,23,42,0.2)]">
+          <div className="w-full max-w-[420px] max-h-[calc(100svh-2rem)] overflow-y-auto rounded-2xl bg-[var(--bg-card)] shadow-[0_24px_60px_rgba(15,23,42,0.2)]">
             <div className="flex items-center justify-between p-4 border-b border-[var(--border-light)]">
               <h3 className="text-lg font-semibold text-[var(--text-primary)]">Add Vendor Bill</h3>
               <button onClick={() => closeCreateModal()} className="border-none bg-transparent text-[var(--text-tertiary)] p-1 rounded-lg hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-primary)]">
@@ -392,11 +557,11 @@ export default function VendorBills() {
             </div>
             <form onSubmit={handleSubmit} className="p-4 grid gap-4">
               <div>
-                <label className="block mb-1 text-sm font-semibold text-slate-700">Vendor</label>
+                <label className="block mb-1 text-sm font-semibold text-[var(--text-secondary)]">Vendor</label>
                 <select
                   name="vendorId"
                   required
-                  className="w-full px-3 py-2 rounded-[10px] border border-[#cbd5f5] bg-[var(--bg-card)] text-[var(--text-primary)] outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                  className="w-full rounded-[10px] border border-[var(--border-default)] bg-[var(--bg-card)] px-3 py-2 text-[var(--text-primary)] outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
                 >
                   <option value="">Select Vendor</option>
                   {vendors.map(v => (
@@ -406,50 +571,50 @@ export default function VendorBills() {
               </div>
               <div className="grid grid-cols-2 gap-4 max-sm:grid-cols-1">
                 <div>
-                  <label className="block mb-1 text-sm font-semibold text-slate-700">Bill Number</label>
+                  <label className="block mb-1 text-sm font-semibold text-[var(--text-secondary)]">Bill Number</label>
                   <input
                     type="text"
                     name="billNumber"
                     required
-                    className="w-full px-3 py-2 rounded-[10px] border border-[#cbd5f5] bg-[var(--bg-card)] text-[var(--text-primary)] outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                    className="w-full rounded-[10px] border border-[var(--border-default)] bg-[var(--bg-card)] px-3 py-2 text-[var(--text-primary)] outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
                   />
                 </div>
                 <div>
-                  <label className="block mb-1 text-sm font-semibold text-slate-700">Amount</label>
+                  <label className="block mb-1 text-sm font-semibold text-[var(--text-secondary)]">Amount</label>
                   <input
                     type="number"
                     name="amount"
                     step="0.01"
                     required
-                    className="w-full px-3 py-2 rounded-[10px] border border-[#cbd5f5] bg-[var(--bg-card)] text-[var(--text-primary)] outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                    className="w-full rounded-[10px] border border-[var(--border-default)] bg-[var(--bg-card)] px-3 py-2 text-[var(--text-primary)] outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
                   />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4 max-sm:grid-cols-1">
                 <div>
-                  <label className="block mb-1 text-sm font-semibold text-slate-700">Bill Date</label>
+                  <label className="block mb-1 text-sm font-semibold text-[var(--text-secondary)]">Bill Date</label>
                   <input
                     type="date"
                     name="billDate"
                     required
-                    className="w-full px-3 py-2 rounded-[10px] border border-[#cbd5f5] bg-[var(--bg-card)] text-[var(--text-primary)] outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                    className="w-full rounded-[10px] border border-[var(--border-default)] bg-[var(--bg-card)] px-3 py-2 text-[var(--text-primary)] outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
                   />
                 </div>
                 <div>
-                  <label className="block mb-1 text-sm font-semibold text-slate-700">Due Date</label>
+                  <label className="block mb-1 text-sm font-semibold text-[var(--text-secondary)]">Due Date</label>
                   <input
                     type="date"
                     name="dueDate"
-                    className="w-full px-3 py-2 rounded-[10px] border border-[#cbd5f5] bg-[var(--bg-card)] text-[var(--text-primary)] outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                    className="w-full rounded-[10px] border border-[var(--border-default)] bg-[var(--bg-card)] px-3 py-2 text-[var(--text-primary)] outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
                   />
                 </div>
               </div>
               <div>
-                <label className="block mb-1 text-sm font-semibold text-slate-700">Description</label>
+                <label className="block mb-1 text-sm font-semibold text-[var(--text-secondary)]">Description</label>
                 <textarea
                   name="description"
                   rows={2}
-                  className="w-full px-3 py-2 rounded-[10px] border border-[#cbd5f5] bg-[var(--bg-card)] text-[var(--text-primary)] outline-none min-h-[80px] resize-y focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                  className="min-h-[80px] w-full resize-y rounded-[10px] border border-[var(--border-default)] bg-[var(--bg-card)] px-3 py-2 text-[var(--text-primary)] outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
                 />
               </div>
               <div className="flex gap-3 pt-4">
@@ -479,54 +644,119 @@ export default function VendorBills() {
 
       {/* Payment Modal */}
       {showPaymentModal && editingBill && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50">
-          <div className="w-full max-w-[420px] bg-[var(--bg-card)] rounded-2xl shadow-[0_24px_60px_rgba(15,23,42,0.2)]">
-            <div className="flex items-center justify-between p-4 border-b border-[var(--border-light)]">
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/50 p-3 sm:flex sm:items-center sm:justify-center sm:p-4">
+          <div className="my-4 flex w-full max-w-[420px] max-h-[calc(100svh-2rem)] flex-col overflow-hidden rounded-2xl bg-[var(--bg-card)] shadow-[0_24px_60px_rgba(15,23,42,0.2)] sm:my-0">
+            <div className="flex items-center justify-between border-b border-[var(--border-light)] p-4">
               <h3 className="text-lg font-semibold text-[var(--text-primary)]">Record Payment</h3>
               <button onClick={() => closePaymentModal()} className="border-none bg-transparent text-[var(--text-tertiary)] p-1 rounded-lg hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-primary)]">
                 <X size={20} />
               </button>
             </div>
-            <form onSubmit={handlePayment} className="p-4 grid gap-4">
+            <form onSubmit={handlePayment} className="grid min-h-0 flex-1 gap-3 overflow-y-auto p-4">
               <div className="p-3 rounded-xl bg-[var(--bg-tertiary)]">
                 <p className="text-sm text-[var(--text-secondary)]">Bill: <span className="font-semibold text-[var(--text-primary)]">{editingBill.billNumber}</span></p>
                 <p className="text-sm text-[var(--text-secondary)]">Total: <span className="font-semibold text-[var(--text-primary)]">₹{editingBill.amount?.toLocaleString()}</span></p>
                 <p className="text-sm text-[var(--text-secondary)]">Paid: <span className="font-semibold text-[var(--text-primary)]">₹{editingBill.paidAmount?.toLocaleString() || 0}</span></p>
-                <p className="text-sm text-[var(--text-secondary)]">Balance: <span className="font-semibold text-red-600">₹{(editingBill.amount - (editingBill.paidAmount || 0)).toLocaleString()}</span></p>
+                <p className="text-sm text-[var(--text-secondary)]">Balance: <span className="font-semibold text-red-600 dark:text-red-300">₹{(editingBill.amount - (editingBill.paidAmount || 0)).toLocaleString()}</span></p>
               </div>
+              {paymentError && (
+                <div className="rounded-xl border border-rose-300 bg-rose-50 px-3 py-2 text-sm font-medium text-rose-700 dark:border-rose-500/40 dark:bg-rose-500/15 dark:text-rose-100">
+                  {paymentError}
+                </div>
+              )}
               <div>
-                <label className="block mb-1 text-sm font-semibold text-slate-700">Payment Amount</label>
+                <label className="block mb-1 text-sm font-semibold text-[var(--text-secondary)]">Payment Amount</label>
                 <input
                   type="number"
                   name="amount"
                   step="0.01"
                   max={editingBill.amount - (editingBill.paidAmount || 0)}
                   required
-                  className="w-full px-3 py-2 rounded-[10px] border border-[#cbd5f5] bg-[var(--bg-card)] text-[var(--text-primary)] outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                  className="w-full rounded-[10px] border border-[var(--border-default)] bg-[var(--bg-card)] px-3 py-2 text-[var(--text-primary)] outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
                 />
               </div>
               <div>
-                <label className="block mb-1 text-sm font-semibold text-slate-700">Payment Mode</label>
+                <label className="block mb-1 text-sm font-semibold text-[var(--text-secondary)]">Payment Mode</label>
                 <select
                   name="paymentMode"
+                  value={selectedPaymentMode}
+                  onChange={(e) => setSelectedPaymentMode(e.target.value)}
                   required
-                  className="w-full px-3 py-2 rounded-[10px] border border-[#cbd5f5] bg-[var(--bg-card)] text-[var(--text-primary)] outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                  className="w-full rounded-[10px] border border-[var(--border-default)] bg-[var(--bg-card)] px-3 py-2 text-[var(--text-primary)] outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
                 >
-                  <option value="CASH">Cash</option>
-                  <option value="CHEQUE">Cheque</option>
-                  <option value="ONLINE">Online Transfer</option>
-                  <option value="RAZORPAY">Razorpay</option>
+                  {paymentModeOptions.map((mode) => (
+                    <option key={mode.value} value={mode.value}>{mode.label}</option>
+                  ))}
                 </select>
               </div>
               <div>
-                <label className="block mb-1 text-sm font-semibold text-slate-700">Reference Number</label>
+                <label className="block mb-1 text-sm font-semibold text-[var(--text-secondary)]">{paymentReferenceLabel[selectedPaymentMode] || 'Reference Number'}</label>
                 <input
                   type="text"
                   name="referenceNumber"
-                  className="w-full px-3 py-2 rounded-[10px] border border-[#cbd5f5] bg-[var(--bg-card)] text-[var(--text-primary)] outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                  placeholder={selectedPaymentMode === 'CASH' ? 'Optional' : 'Required'}
+                  className="w-full rounded-[10px] border border-[var(--border-default)] bg-[var(--bg-card)] px-3 py-2 text-[var(--text-primary)] outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
                 />
               </div>
-              <div className="flex gap-3 pt-4">
+              <div>
+                <label className="block mb-1 text-sm font-semibold text-[var(--text-secondary)]">Received By (Role)</label>
+                <select
+                  name="receivedByRole"
+                  value={selectedReceiverRole}
+                  onChange={(e) => setSelectedReceiverRole(e.target.value)}
+                  className="w-full rounded-[10px] border border-[var(--border-default)] bg-[var(--bg-card)] px-3 py-2 text-[var(--text-primary)] outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                >
+                  {receiverRoleOptions.map((role) => (
+                    <option key={role} value={role}>{formatRole(role)}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="rounded-xl border border-[var(--border-light)] bg-[var(--bg-tertiary)] px-3 py-2">
+                <div className="text-xs font-semibold uppercase tracking-wide text-[var(--text-tertiary)]">Received By (Auto)</div>
+                <div className="mt-1 text-sm font-semibold text-[var(--text-primary)]">
+                  {selectedReceiverRole === 'OTHER' ? 'Manual entry required' : (autoResolvedReceivedByName || `${formatRole(selectedReceiverRole)} not assigned`)}
+                </div>
+                {selectedReceiverRole !== 'OTHER' && isSelectedRoleUnderElection && (
+                  <p className="mt-1 text-xs font-medium text-amber-700 dark:text-amber-300">
+                    {formatRole(selectedReceiverRole)} is under election window ({electionWindowStatus.startLabel} - {electionWindowStatus.endLabel}).
+                  </p>
+                )}
+                {selectedReceiverRole !== 'OTHER' && !autoResolvedReceivedByName && !isSelectedRoleUnderElection && (
+                  <p className="mt-1 text-xs font-medium text-rose-700 dark:text-rose-300">
+                    No active assignee found for this role. Choose OTHER and fill name manually.
+                  </p>
+                )}
+                {selectedReceiverRole !== 'OTHER' && (
+                  <input type="hidden" name="receivedByName" value={autoResolvedReceivedByName} />
+                )}
+              </div>
+              <div
+                className={clsx(
+                  'overflow-hidden transition-all duration-300 ease-out',
+                  selectedReceiverRole === 'OTHER' ? 'max-h-32 opacity-100' : 'max-h-0 opacity-0'
+                )}
+                aria-hidden={selectedReceiverRole !== 'OTHER'}
+              >
+                <label className="block mb-1 text-sm font-semibold text-[var(--text-secondary)]">Received By (Name)</label>
+                <input
+                  type="text"
+                  name="receivedByName"
+                  value={manualReceivedByName}
+                  onChange={(e) => setManualReceivedByName(e.target.value)}
+                  placeholder="e.g. Rahul Sharma"
+                  className="w-full rounded-[10px] border border-[var(--border-default)] bg-[var(--bg-card)] px-3 py-2 text-[var(--text-primary)] outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                />
+              </div>
+              <div>
+                <label className="block mb-1 text-sm font-semibold text-[var(--text-secondary)]">Notes (Optional)</label>
+                <textarea
+                  name="paymentNotes"
+                  rows={2}
+                  placeholder="Example: Vendor collected by UPI to secretary due to gateway issue"
+                  className="min-h-[70px] w-full resize-y rounded-[10px] border border-[var(--border-default)] bg-[var(--bg-card)] px-3 py-2 text-[var(--text-primary)] outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                />
+              </div>
+              <div className="sticky bottom-0 flex gap-3 border-t border-[var(--border-light)] bg-[var(--bg-card)] pt-3">
                 <NeonSweepButton
                   type="button"
                   tone="slate"

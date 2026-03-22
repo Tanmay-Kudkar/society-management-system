@@ -26,6 +26,9 @@ public class VendorBillResponse {
     private String description;
     private String paymentMode;
     private String referenceNumber;
+    private String receivedByRole;
+    private String receivedByName;
+    private String paymentNotes;
     private LocalDateTime createdAt;
     private LocalDateTime paidAt;
 }

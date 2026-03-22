@@ -76,8 +76,19 @@ public class VendorBillController {
             @RequestParam BigDecimal amount,
             @RequestParam String paymentMode,
             @RequestParam(required = false) String referenceNumber,
+            @RequestParam(required = false) String receivedByRole,
+            @RequestParam(required = false) String receivedByName,
+            @RequestParam(required = false) String paymentNotes,
             @RequestParam Long userId) {
-        return ResponseEntity.ok(vendorBillService.recordPayment(id, amount, paymentMode, referenceNumber, userId));
+        return ResponseEntity.ok(vendorBillService.recordPayment(
+                id,
+                amount,
+                paymentMode,
+                referenceNumber,
+                receivedByRole,
+                receivedByName,
+                paymentNotes,
+                userId));
     }
 
     @GetMapping("/{id}/receipt/pdf")

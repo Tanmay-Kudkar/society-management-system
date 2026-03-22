@@ -72,6 +72,9 @@ public class VendorBillServiceImpl implements VendorBillService {
         bill.setDescription(request.getDescription());
         bill.setPaymentMode(request.getPaymentMode());
         bill.setReferenceNumber(request.getReferenceNumber());
+        bill.setReceivedByRole(request.getReceivedByRole());
+        bill.setReceivedByName(request.getReceivedByName());
+        bill.setPaymentNotes(request.getPaymentNotes());
 
         updateBillStatus(bill);
 
@@ -180,8 +183,8 @@ public class VendorBillServiceImpl implements VendorBillService {
 
     @Override
     @Transactional
-    public VendorBillResponse recordPayment(Long id, BigDecimal amount, String paymentMode, String referenceNumber,
-            Long userId) {
+        public VendorBillResponse recordPayment(Long id, BigDecimal amount, String paymentMode, String referenceNumber,
+            String receivedByRole, String receivedByName, String paymentNotes, Long userId) {
         roleService.requireAdminOrCommittee(userId);
 
         VendorBill bill = vendorBillRepository.findById(id)
@@ -195,6 +198,9 @@ public class VendorBillServiceImpl implements VendorBillService {
         bill.setPaidAmount(newPaidAmount);
         bill.setPaymentMode(paymentMode);
         bill.setReferenceNumber(referenceNumber);
+        bill.setReceivedByRole(receivedByRole);
+        bill.setReceivedByName(receivedByName);
+        bill.setPaymentNotes(paymentNotes);
 
         updateBillStatus(bill);
 
@@ -322,6 +328,9 @@ public class VendorBillServiceImpl implements VendorBillService {
             addDetailRow(details, "Due Date", bill.getDueDate() != null ? String.valueOf(bill.getDueDate()) : "-", bodyBold, bodyFont);
             addDetailRow(details, "Payment Mode", safe(bill.getPaymentMode()), bodyBold, bodyFont);
             addDetailRow(details, "Reference", safe(bill.getReferenceNumber()), bodyBold, bodyFont);
+            addDetailRow(details, "Received By (Role)", safe(bill.getReceivedByRole()), bodyBold, bodyFont);
+            addDetailRow(details, "Received By (Name)", safe(bill.getReceivedByName()), bodyBold, bodyFont);
+            addDetailRow(details, "Payment Notes", safe(bill.getPaymentNotes()), bodyBold, bodyFont);
             addDetailRow(details, "Paid At", bill.getPaidAt() != null ? String.valueOf(bill.getPaidAt()) : "-", bodyBold, bodyFont);
             document.add(details);
 
@@ -422,6 +431,9 @@ public class VendorBillServiceImpl implements VendorBillService {
         response.setDescription(bill.getDescription());
         response.setPaymentMode(bill.getPaymentMode());
         response.setReferenceNumber(bill.getReferenceNumber());
+        response.setReceivedByRole(bill.getReceivedByRole());
+        response.setReceivedByName(bill.getReceivedByName());
+        response.setPaymentNotes(bill.getPaymentNotes());
         response.setCreatedAt(bill.getCreatedAt());
         response.setPaidAt(bill.getPaidAt());
         return response;
