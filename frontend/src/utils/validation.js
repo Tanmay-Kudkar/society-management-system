@@ -1,6 +1,6 @@
 /**
- * Validation utility for forms
- * Provides comprehensive validation with clear error messages
+ * Validation utility for forms.
+ * This module only contains form validation helpers.
  */
 
 // Email validation regex
@@ -226,9 +226,9 @@ export const validateDocumentForm = (data) => {
   }
 }
 
-/**
- * Vendor form validation
- */
+
+// Vendor form validation
+
 export const validateVendorForm = (data) => {
   const errors = {}
   
@@ -253,9 +253,9 @@ export const validateVendorForm = (data) => {
   }
 }
 
-/**
- * Maintenance bill form validation
- */
+
+// Maintenance bill form validation
+ 
 export const validateMaintenanceBillForm = (data) => {
   const errors = {}
   
@@ -273,46 +273,6 @@ export const validateMaintenanceBillForm = (data) => {
     errors
   }
 }
-
-/**
- * Parse API error response to user-friendly messages
- */
-export const parseApiError = (error) => {
-  if (!error.response) {
-    return 'Network error. Please check your connection.'
-  }
-  
-  const { status, data } = error.response
-  
-  // Handle common HTTP status codes
-  switch (status) {
-    case 400:
-      return data?.message || 'Invalid input. Please check your data.'
-    case 401:
-      return 'Session expired. Please login again.'
-    case 403:
-      return data?.message || 'You do not have permission to perform this action.'
-    case 404:
-      return data?.message || 'Requested resource not found.'
-    case 409:
-      // Duplicate entry - parse for specific fields
-      const msg = data?.message || ''
-      if (msg.toLowerCase().includes('email')) {
-        return 'Email already exists. Please use a different email.'
-      }
-      if (msg.toLowerCase().includes('flat')) {
-        return 'Flat number already exists in this society.'
-      }
-      return msg || 'This record already exists.'
-    case 422:
-      return data?.message || 'Validation failed. Please check your input.'
-    case 500:
-      return 'Server error. Please try again later.'
-    default:
-      return data?.message || 'An error occurred. Please try again.'
-  }
-}
-
 export default {
   validateRequired,
   validateEmail,
@@ -327,5 +287,4 @@ export default {
   validateDocumentForm,
   validateVendorForm,
   validateMaintenanceBillForm,
-  parseApiError,
 }

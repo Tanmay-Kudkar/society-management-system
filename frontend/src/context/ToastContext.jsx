@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useCallback, useEffect } from 'react'
 import { CheckCircle, XCircle, AlertTriangle, Info, X } from 'lucide-react'
 import clsx from 'clsx'
+import { normalizeErrorMessage } from '../utils'
 
 const ToastContext = createContext()
 
@@ -18,7 +19,10 @@ export function ToastProvider({ children }) {
   const addToast = useCallback((message, type = 'info', duration = 4000) => {
     const id = Date.now() + Math.random()
     const payload = typeof message === 'string' ? { message } : (message || {})
-    const normalizedMessage = payload.message || 'Something happened'
+    const baseMessage = payload.message || 'Something happened'
+    const normalizedMessage = type === 'error'
+      ? normalizeErrorMessage(baseMessage, 'Something went wrong. Please try again.')
+      : baseMessage
     const title = payload.title
 
     setToasts(prev => [...prev, { id, message: normalizedMessage, title, type, duration, isExiting: false }])

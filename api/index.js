@@ -504,6 +504,8 @@ export const exportApi = {
         : `/api/export/vendor-bills/${societyId}`;
       return api.get(url, { responseType: 'blob' });
     },
+  vendors: (societyId) =>
+    api.get(`/api/export/vendors/${societyId}`, { responseType: 'blob' }),
   tickets: (societyId, status) => 
     api.get(`/api/export/tickets/${societyId}${status ? `?status=${status}` : ''}`, { responseType: 'blob' }),
   flats: (societyId) =>
@@ -522,6 +524,8 @@ export const exportApi = {
     api.get(`/api/export/all-transactions?startDate=${startDate}&endDate=${endDate}`, { responseType: 'blob' }),
   allTickets: (status) => 
     api.get(`/api/export/all-tickets${status ? `?status=${status}` : ''}`, { responseType: 'blob' }),
+  allVendors: () =>
+    api.get('/api/export/all-vendors', { responseType: 'blob' }),
 }
 
 // Visitor API

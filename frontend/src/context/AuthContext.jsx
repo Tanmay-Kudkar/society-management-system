@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { authApi } from '../../../api'
+import { getErrorMessage } from '../utils'
 
 const AuthContext = createContext(null)
 
@@ -234,7 +235,7 @@ export const AuthProvider = ({ children }) => {
     } catch (error) {
       return { 
         success: false, 
-        error: error.response?.data?.message || 'Login failed' 
+        error: getErrorMessage(error, 'Sign-in could not be completed right now.')
       }
     }
   }, [startLocationRefresh])
