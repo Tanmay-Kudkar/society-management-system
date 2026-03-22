@@ -61,8 +61,29 @@ public class PaymentService {
     public CreateOrderResponse createOrder(CreateOrderRequest request) {
         RazorpayClient client = requireRazorpayClient();
         try {
-            User user = userRepository.findById(request.getUserId())
+            User requester = getAuthenticatedUser();
+            Long targetUserId = request.getUserId() != null ? request.getUserId() : requester.getId();
+
+            User user = userRepository.findById(targetUserId)
                     .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+            if (!requester.getId().equals(user.getId())) {
+                if (!isManagementRole(requester.getRole())) {
+                    throw new ApiException(HttpStatus.FORBIDDEN,
+                            "You are not allowed to create payment orders for another user");
+                }
+
+                // Non-master roles can act only inside their own society scope.
+                if (requester.getRole() != Role.MASTER_ADMIN) {
+                    Long requesterSocietyId = requester.getSociety() != null ? requester.getSociety().getId() : null;
+                    Long targetSocietyId = user.getSociety() != null ? user.getSociety().getId() : null;
+                    if (requesterSocietyId == null || targetSocietyId == null
+                            || !requesterSocietyId.equals(targetSocietyId)) {
+                        throw new ApiException(HttpStatus.FORBIDDEN,
+                                "You can create payment orders only for users in your society");
+                    }
+                }
+            }
 
             // Create Razorpay order
             JSONObject orderRequest = new JSONObject();
@@ -152,6 +173,14 @@ public class PaymentService {
 
         // Verify signature
         try {
+            if (!request.getRazorpayOrderId().equals(payment.getRazorpayOrderId())) {
+                payment.setStatus("FAILED");
+                payment.setErrorCode("ORDER_MISMATCH");
+                payment.setErrorDescription("Order id does not match payment record");
+                paymentRepository.save(payment);
+                throw new ApiException(HttpStatus.BAD_REQUEST, "Payment verification failed: order mismatch");
+            }
+
             JSONObject options = new JSONObject();
             options.put("razorpay_order_id", request.getRazorpayOrderId());
             options.put("razorpay_payment_id", request.getRazorpayPaymentId());
