@@ -313,6 +313,14 @@ CREATE TABLE IF NOT EXISTS vendor_bills (
 );
 
 -- ----------------------------------------------------------------
+-- MIGRATION: VENDOR BILL PAYMENT METADATA (for existing databases)
+-- ----------------------------------------------------------------
+ALTER TABLE IF EXISTS vendor_bills
+    ADD COLUMN IF NOT EXISTS received_by_role VARCHAR(50),
+    ADD COLUMN IF NOT EXISTS received_by_name VARCHAR(255),
+    ADD COLUMN IF NOT EXISTS payment_notes TEXT;
+
+-- ----------------------------------------------------------------
 -- 16. CONTRACTS
 -- ----------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS contracts (

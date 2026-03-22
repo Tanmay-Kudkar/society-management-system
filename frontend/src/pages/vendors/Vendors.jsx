@@ -298,7 +298,7 @@ export default function Vendors() {
             placeholder="Search vendors..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-3 py-2 rounded-[10px] border border-[#cbd5f5] bg-[var(--bg-card)] text-[var(--text-primary)] outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+            className="w-full rounded-[10px] border border-[var(--border-default)] bg-[var(--bg-card)] py-2 pl-10 pr-3 text-[var(--text-primary)] outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
           />
         </div>
       </div>
@@ -312,13 +312,13 @@ export default function Vendors() {
               className="relative overflow-hidden rounded-3xl border border-[var(--border-light)] bg-[var(--bg-card)] p-5 shadow-[0_10px_30px_rgba(2,8,20,0.08)]"
             >
               <div className="relative mb-4 flex items-start justify-between">
-                <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl border border-[var(--border-light)] bg-[var(--bg-tertiary)]">
+                <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl border border-[var(--border-light)] bg-[var(--bg-tertiary)] dark:border-[rgba(148,163,184,0.24)]">
                   <Truck className="h-6 w-6 text-orange-600 dark:text-orange-300" />
                 </div>
                 <div className="flex gap-1.5 rounded-xl border border-[var(--border-light)] bg-[color-mix(in_srgb,var(--bg-card)_88%,black_12%)] p-1 shadow-sm">
                   <button
                     onClick={() => setViewingVendor(vendor)}
-                    className="inline-flex items-center justify-center rounded-[10px] p-2 text-[var(--text-tertiary)]"
+                    className="inline-flex items-center justify-center rounded-[10px] p-2 text-[var(--text-tertiary)] transition-colors hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-primary)]"
                     title="View Details"
                   >
                     <Eye size={18} />
@@ -328,7 +328,7 @@ export default function Vendors() {
                       setEditingVendor(vendor)
                       setShowModal(true) 
                     }}
-                    className="inline-flex items-center justify-center rounded-[10px] p-2 text-[var(--text-tertiary)]"
+                    className="inline-flex items-center justify-center rounded-[10px] p-2 text-[var(--text-tertiary)] transition-colors hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-primary)]"
                     title="Edit"
                   >
                     <Edit size={18} />
@@ -369,7 +369,7 @@ export default function Vendors() {
                         })
                       }
                     }}
-                    className="inline-flex items-center justify-center rounded-[10px] p-2 text-[var(--text-tertiary)]"
+                    className="inline-flex items-center justify-center rounded-[10px] p-2 text-[var(--text-tertiary)] transition-colors hover:bg-[var(--bg-tertiary)] hover:text-red-400"
                     title="Delete"
                   >
                     <Trash2 size={18} />
@@ -426,7 +426,7 @@ export default function Vendors() {
       {/* Modal */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50">
-          <div className="w-full max-w-[540px] max-h-[90vh] overflow-y-auto overflow-x-hidden overscroll-contain bg-[var(--bg-card)] rounded-2xl shadow-[0_24px_60px_rgba(15,23,42,0.2)]">
+          <div className="w-full max-w-[540px] max-h-[calc(100svh-2rem)] overflow-y-auto overflow-x-hidden overscroll-contain rounded-2xl bg-[var(--bg-card)] shadow-[0_24px_60px_rgba(15,23,42,0.2)]">
             <div className="sticky top-0 z-20 bg-[var(--bg-card)] flex items-center justify-between p-4 border-b border-[var(--border-light)]">
               <h3 className="text-lg font-semibold text-[var(--text-primary)]">{editingVendor ? 'Edit Vendor' : 'Add Vendor'}</h3>
               <button onClick={() => closeModal()} className="border-none bg-transparent text-[var(--text-tertiary)] p-1 rounded-lg hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-primary)]">
@@ -469,7 +469,7 @@ export default function Vendors() {
               
               {/* Contact Person Section */}
               <div className="border-t border-[var(--border-light)] pt-4">
-                <h3 className="text-sm font-semibold text-slate-700 mb-3 inline-flex items-center gap-2">
+                <h3 className="mb-3 inline-flex items-center gap-2 text-sm font-semibold text-[var(--text-secondary)]">
                   <User size={16} />
                   Contact Person Details
                 </h3>
@@ -502,7 +502,7 @@ export default function Vendors() {
 
               {/* Vendor Business Contact Section */}
               <div className="border-t border-[var(--border-light)] pt-4">
-                <h3 className="text-sm font-semibold text-slate-700 mb-3 inline-flex items-center gap-2">
+                <h3 className="mb-3 inline-flex items-center gap-2 text-sm font-semibold text-[var(--text-secondary)]">
                   <Building2 size={16} />
                   Vendor Business Contact
                 </h3>
@@ -542,7 +542,7 @@ export default function Vendors() {
 
               {/* Tax Details */}
               <div className="border-t border-[var(--border-light)] pt-4">
-                <h4 className="text-sm font-semibold text-slate-700 mb-3">Tax Details</h4>
+                <h4 className="mb-3 text-sm font-semibold text-[var(--text-secondary)]">Tax Details</h4>
                 <div className="grid grid-cols-2 gap-4 max-sm:grid-cols-1">
                   <FormInput
                     label="GST Number"
@@ -563,7 +563,7 @@ export default function Vendors() {
 
               {/* Banking Details */}
               <div className="border-t border-[var(--border-light)] pt-4">
-                <h4 className="text-sm font-semibold text-slate-700 mb-3">Banking Details</h4>
+                <h4 className="mb-3 text-sm font-semibold text-[var(--text-secondary)]">Banking Details</h4>
                 <div className="grid gap-4">
                   <FormInput
                     label="Bank Name"
@@ -619,7 +619,7 @@ export default function Vendors() {
       {/* View Details Modal */}
       {viewingVendor && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-          <div className="w-full max-w-[960px] max-h-[90vh] bg-[var(--bg-card)] rounded-[20px] overflow-hidden flex flex-col shadow-[0_30px_70px_rgba(15,23,42,0.25)]">
+          <div className="flex w-full max-w-[960px] max-h-[calc(100svh-2rem)] flex-col overflow-hidden rounded-[20px] bg-[var(--bg-card)] shadow-[0_30px_70px_rgba(15,23,42,0.25)]">
             {/* Header */}
             <div className="flex items-center justify-between p-6 border-b border-[var(--border-light)] bg-[var(--bg-card)]">
               <div className="flex items-center gap-4">
@@ -640,7 +640,7 @@ export default function Vendors() {
             </div>
             
             {/* Scrollable Content */}
-            <div className="p-6 overflow-y-auto grid gap-6">
+            <div className="grid gap-6 overflow-y-auto p-4 sm:p-6">
               {/* Basic Information */}
               <div className="grid gap-4">
                 <h4 className="text-xs font-bold uppercase tracking-widest text-[var(--text-tertiary)] inline-flex items-center gap-2 pb-2 border-b border-[var(--border-light)]">
@@ -692,7 +692,7 @@ export default function Vendors() {
                       </div>
                     </div>
                     
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                       {viewingVendor.contactPersonPhone && (
                         <div className="flex items-center gap-2 p-3 rounded-xl bg-[var(--bg-card)] border border-[var(--border-light)]">
                           <Phone className="w-4 h-4 text-[var(--text-secondary)]" />
@@ -798,7 +798,7 @@ export default function Vendors() {
               </div>
 
               {/* Status & Approval */}
-              <div className="p-5 rounded-2xl bg-[var(--bg-tertiary)] border border-[var(--border-light)]">
+              <div className="rounded-2xl border border-[var(--border-light)] bg-[var(--bg-tertiary)] p-4 sm:p-5">
                 <div className="grid gap-4">
                   <div className="flex justify-between gap-4 flex-wrap">
                     <div>
@@ -853,8 +853,8 @@ export default function Vendors() {
               </div>
             </div>
 
-            <div className="sticky bottom-0 p-6 border-t border-[var(--border-light)] bg-[var(--bg-tertiary)]">
-              <div className="flex gap-3 flex-wrap">
+            <div className="sticky bottom-0 border-t border-[var(--border-light)] bg-[var(--bg-tertiary)] p-4 sm:p-6">
+              <div className="flex flex-wrap gap-3">
                 <NeonSweepButton
                   tone="cyan"
                   size="sm"
@@ -863,7 +863,7 @@ export default function Vendors() {
                     setEditingVendor(viewingVendor)
                     setShowModal(true) 
                   }}
-                  className="px-5"
+                  className="w-full px-5 sm:w-auto"
                 >
                   <Edit size={18} />
                   Edit Vendor
@@ -872,7 +872,7 @@ export default function Vendors() {
                   tone="slate"
                   size="md"
                   onClick={() => setViewingVendor(null)}
-                  className="px-5"
+                  className="w-full px-5 sm:w-auto"
                 >
                   Close
                 </NeonSweepButton>

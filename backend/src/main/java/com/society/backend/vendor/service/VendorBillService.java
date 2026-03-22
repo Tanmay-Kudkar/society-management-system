@@ -24,7 +24,7 @@ public interface VendorBillService {
     VendorBillResponse update(Long id, VendorBillRequest request, Long userId);
 
     VendorBillResponse recordPayment(Long id, BigDecimal amount, String paymentMode, String referenceNumber,
-            Long userId);
+            String receivedByRole, String receivedByName, String paymentNotes, Long userId);
 
     VendorBillResponse recordOnlinePayment(Long id, BigDecimal amount, String paymentMode, String referenceNumber,
             Long userId);

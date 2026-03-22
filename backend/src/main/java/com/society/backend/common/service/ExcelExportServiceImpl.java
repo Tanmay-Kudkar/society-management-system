@@ -409,12 +409,15 @@ public class ExcelExportServiceImpl implements ExcelExportService {
             Cell titleCell = titleRow.createCell(0);
             titleCell.setCellValue("Vendor Bills Report");
             titleCell.setCellStyle(titleStyle);
-            sheet.addMergedRegion(new CellRangeAddress(0, 0, 0, 9));
+                sheet.addMergedRegion(new CellRangeAddress(0, 0, 0, 14));
 
             // Headers
             Row headerRow = sheet.createRow(2);
-            String[] headers = { "ID", "Bill Number", "Vendor", "Bill Date", "Due Date", "Amount", "Paid", "Status",
-                    "Overdue Days", "Description" };
+                String[] headers = {
+                    "ID", "Bill Number", "Vendor", "Bill Date", "Due Date", "Amount", "Paid", "Status",
+                    "Overdue Days", "Payment Mode", "Reference", "Received By Role", "Received By Name",
+                    "Payment Notes", "Description"
+                };
             for (int i = 0; i < headers.length; i++) {
                 Cell cell = headerRow.createCell(i);
                 cell.setCellValue(headers[i]);
@@ -444,7 +447,12 @@ public class ExcelExportServiceImpl implements ExcelExportService {
 
                 row.createCell(7).setCellValue(b.getStatus());
                 row.createCell(8).setCellValue(b.getPendingDays());
-                row.createCell(9).setCellValue(b.getDescription() != null ? b.getDescription() : "");
+                row.createCell(9).setCellValue(b.getPaymentMode() != null ? b.getPaymentMode() : "");
+                row.createCell(10).setCellValue(b.getReferenceNumber() != null ? b.getReferenceNumber() : "");
+                row.createCell(11).setCellValue(b.getReceivedByRole() != null ? b.getReceivedByRole() : "");
+                row.createCell(12).setCellValue(b.getReceivedByName() != null ? b.getReceivedByName() : "");
+                row.createCell(13).setCellValue(b.getPaymentNotes() != null ? b.getPaymentNotes() : "");
+                row.createCell(14).setCellValue(b.getDescription() != null ? b.getDescription() : "");
 
                 totalAmount = totalAmount.add(b.getAmount());
                 if (b.getPaidAmount() != null) {
@@ -455,10 +463,10 @@ public class ExcelExportServiceImpl implements ExcelExportService {
 
             // Summary
             rowNum += 2;
-            rowNum = writeSummaryTitleRow(sheet, rowNum, 4, 5, "SUMMARY", summaryHeaderStyle);
-            rowNum = writeSummaryCurrencyRow(sheet, rowNum, 4, "Total Amount", totalAmount, summaryLabelStyle, summaryCurrencyStyle);
-            rowNum = writeSummaryCurrencyRow(sheet, rowNum, 4, "Total Paid", totalPaid, summaryLabelStyle, summaryCurrencyStyle);
-            rowNum = writeSummaryCurrencyRow(sheet, rowNum, 4, "Pending", totalAmount.subtract(totalPaid), summaryLabelStyle, summaryCurrencyStyle);
+            rowNum = writeSummaryTitleRow(sheet, rowNum, 8, 9, "SUMMARY", summaryHeaderStyle);
+            rowNum = writeSummaryCurrencyRow(sheet, rowNum, 8, "Total Amount", totalAmount, summaryLabelStyle, summaryCurrencyStyle);
+            rowNum = writeSummaryCurrencyRow(sheet, rowNum, 8, "Total Paid", totalPaid, summaryLabelStyle, summaryCurrencyStyle);
+            rowNum = writeSummaryCurrencyRow(sheet, rowNum, 8, "Pending", totalAmount.subtract(totalPaid), summaryLabelStyle, summaryCurrencyStyle);
 
             applyCommonSheetStyling(sheet, 2, 3, dataEndRow, 1, 7);
 
