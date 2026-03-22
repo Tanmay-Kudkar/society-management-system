@@ -25,7 +25,10 @@ import com.society.backend.common.service.RoleService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 
 import java.io.IOException;
 import java.time.DayOfWeek;
@@ -43,6 +46,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
+@Transactional
 public class ComplaintServiceImpl implements ComplaintService {
     private static final long UNDO_WINDOW_MINUTES = 5L;
     private static final long DUE_SOON_THRESHOLD_MINUTES = 120L;
@@ -72,6 +76,9 @@ public class ComplaintServiceImpl implements ComplaintService {
 
     @Value("${member.direct-communication.complaint-categories:NOISE,PARKING,MAINTENANCE,CLEANLINESS,NEIGHBOR_ISSUE,OTHER}")
     private String memberDirectComplaintCategories;
+
+    @PersistenceContext
+    private EntityManager entityManager;
 
     private final ComplaintRepository complaintRepository;
     private final ComplaintCommentRepository complaintCommentRepository;
@@ -608,7 +615,6 @@ public class ComplaintServiceImpl implements ComplaintService {
         }
 
         if (force) {
-            appendHistory(complaint, actor, "DELETED_PERMANENT", complaint.getStatus(), "DELETED", "Complaint permanently deleted");
             complaintRepository.delete(complaint);
             return;
         }
@@ -854,6 +860,11 @@ public class ComplaintServiceImpl implements ComplaintService {
     }
 
     private void appendHistory(Complaint complaint, User actor, String actionType, String fromStatus, String toStatus, String note) {
+        // Ensure complaint is managed in the current session
+        if (complaint != null && complaint.getId() != null) {
+            complaint = entityManager.contains(complaint) ? complaint : entityManager.find(Complaint.class, complaint.getId());
+        }
+        
         ComplaintHistory history = new ComplaintHistory();
         history.setComplaint(complaint);
         history.setActor(actor);
