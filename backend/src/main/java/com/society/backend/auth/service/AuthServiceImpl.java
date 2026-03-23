@@ -163,11 +163,21 @@ public class AuthServiceImpl implements AuthService {
         // Validate portal type against user role (if provided)
         validatePortalAccess(request.getPortalType(), user.getRole());
 
-        if (isSocietyAdminRole(user.getRole())
-            && (request.getLatitude() == null || request.getLongitude() == null)) {
-            throw new ApiException(
-                HttpStatus.BAD_REQUEST,
-                "Location is required for Society Admin login. Enable location permission or set pin manually.");
+        if (isSocietyAdminRole(user.getRole())) {
+            Society society = user.getSociety();
+            if (society == null) {
+                throw new ApiException(HttpStatus.FORBIDDEN,
+                        "Society Admin must be linked to a society before login.");
+            }
+            if (society.getExactLatitude() == null || society.getExactLongitude() == null) {
+                throw new ApiException(HttpStatus.BAD_REQUEST,
+                        "Exact society location is not configured. Ask Master Admin to set society location.");
+            }
+            if (request.getLatitude() == null || request.getLongitude() == null) {
+                throw new ApiException(
+                    HttpStatus.BAD_REQUEST,
+                    "Location is required for Society Admin login. Enable location permission or set pin manually.");
+            }
         }
 
         // Generate JWT token (longer expiry if remember me)
@@ -276,30 +286,16 @@ public class AuthServiceImpl implements AuthService {
             return new LoginAudit(user, action, ip, userAgent, latitude, longitude);
         }
 
-        Optional<LoginAudit> previousLogin = loginAuditRepository
-                .findTopByUserIdAndActionAndLatitudeIsNotNullAndLongitudeIsNotNullOrderByTimestampDesc(
-                        user.getId(),
-                        LoginAudit.Action.LOGIN);
-
-        if (previousLogin.isEmpty()) {
-            return new LoginAudit(
-                    user,
-                    action,
-                    ip,
-                    userAgent,
-                    latitude,
-                    longitude,
-                    true,
-                    0.0,
-                    societyAdminProximityThresholdMeters);
+        Society society = user.getSociety();
+        if (society == null || society.getExactLatitude() == null || society.getExactLongitude() == null) {
+            return new LoginAudit(user, action, ip, userAgent, latitude, longitude);
         }
 
-        LoginAudit anchor = previousLogin.get();
         double distanceMeters = haversineMeters(
                 latitude,
                 longitude,
-                anchor.getLatitude(),
-                anchor.getLongitude());
+                society.getExactLatitude(),
+                society.getExactLongitude());
 
         boolean isNearby = distanceMeters <= societyAdminProximityThresholdMeters;
         return new LoginAudit(
@@ -319,29 +315,23 @@ public class AuthServiceImpl implements AuthService {
     public void updateCurrentLocation(Long userId, Double latitude, Double longitude) {
         if (latitude == null || longitude == null) return;
 
+        User user = userRepository.findById(userId).orElse(null);
+        Society society = user != null ? user.getSociety() : null;
+        Double societyLatitude = society != null ? society.getExactLatitude() : null;
+        Double societyLongitude = society != null ? society.getExactLongitude() : null;
+
         loginAuditRepository
                 .findTopByUserIdAndActionOrderByTimestampDesc(userId, LoginAudit.Action.LOGIN)
                 .ifPresent(current -> {
                     current.setLatitude(latitude);
                     current.setLongitude(longitude);
 
-                    // Recalculate proximity against the previous LOGIN location
-                    loginAuditRepository
-                            .findTopByUserIdAndActionAndLatitudeIsNotNullAndLongitudeIsNotNullOrderByTimestampDesc(
-                                    userId, LoginAudit.Action.LOGIN)
-                            .filter(prev -> !prev.getId().equals(current.getId()))
-                            .ifPresentOrElse(prev -> {
-                                double dist = haversineMeters(latitude, longitude,
-                                        prev.getLatitude(), prev.getLongitude());
-                                current.setDistanceMeters(dist);
-                                current.setIsNearby(dist <= societyAdminProximityThresholdMeters);
-                                current.setProximityThresholdMeters(societyAdminProximityThresholdMeters);
-                            }, () -> {
-                                // First location-bearing LOGIN acts as baseline and is treated as nearby.
-                                current.setDistanceMeters(0.0);
-                                current.setIsNearby(true);
-                                current.setProximityThresholdMeters(societyAdminProximityThresholdMeters);
-                            });
+                    if (societyLatitude != null && societyLongitude != null) {
+                        double dist = haversineMeters(latitude, longitude, societyLatitude, societyLongitude);
+                        current.setDistanceMeters(dist);
+                        current.setIsNearby(dist <= societyAdminProximityThresholdMeters);
+                        current.setProximityThresholdMeters(societyAdminProximityThresholdMeters);
+                    }
 
                     loginAuditRepository.save(current);
                 });

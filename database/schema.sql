@@ -15,6 +15,8 @@ CREATE TABLE IF NOT EXISTS societies (
     registration_number VARCHAR(255),
     email           VARCHAR(255),
     telephone       VARCHAR(255),
+    exact_latitude  DOUBLE PRECISION,
+    exact_longitude DOUBLE PRECISION,
     total_flats     INT DEFAULT 0,
     total_shops     INT DEFAULT 0,
     total_offices   INT DEFAULT 0,
