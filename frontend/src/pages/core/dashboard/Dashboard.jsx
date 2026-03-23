@@ -1,4 +1,5 @@
-import { AlertTriangle, Bell, Clock, Cloud, CreditCard, DollarSign, ShieldCheck, Sun, Ticket } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { AlertTriangle, Bell, Clock, Cloud, CreditCard, DollarSign, MapPin, ShieldCheck, Sun, Ticket } from "lucide-react";
 
 import { DashboardSkeleton, WakeUpBanner } from "../../../components/SkeletonLoaders";
 import MetricPanel from "./components/MetricPanel";
@@ -12,6 +13,8 @@ import RolePrioritySection from "./sections/RolePrioritySection";
 import useDashboardData from "./hooks/useDashboardData";
 import useDashboardStats from "./hooks/useDashboardStats";
 import { formatCurrency, getTimeGreeting, sectionShellClass } from "./utils/dashboardUtils";
+
+const MISSING_LOCATION_DISMISS_KEY = "dashboard.missingSocietyLocationDismissed.v1";
 
 const getWeatherIcon = (code) => {
   if (code === 0) return <Sun className="h-7 w-7 animate-sun text-[var(--text-secondary)]" />;
@@ -51,6 +54,33 @@ export default function Dashboard() {
     notices,
     societies,
   } = dashboardData;
+
+  const missingLocationSocieties = useMemo(
+    () => societies.filter((society) => society?.exactLatitude == null || society?.exactLongitude == null),
+    [societies],
+  );
+
+  const missingLocationSignature = useMemo(
+    () => missingLocationSocieties.map((society) => society.id).sort((a, b) => a - b).join(","),
+    [missingLocationSocieties],
+  );
+
+  const [isMissingLocationBannerDismissed, setIsMissingLocationBannerDismissed] = useState(false);
+
+  useEffect(() => {
+    if (!isPlatformOwner || !missingLocationSignature) {
+      setIsMissingLocationBannerDismissed(false);
+      return;
+    }
+
+    const storedSignature = localStorage.getItem(MISSING_LOCATION_DISMISS_KEY) || "";
+    setIsMissingLocationBannerDismissed(storedSignature === missingLocationSignature);
+  }, [isPlatformOwner, missingLocationSignature]);
+
+  const dismissMissingLocationBanner = () => {
+    localStorage.setItem(MISSING_LOCATION_DISMISS_KEY, missingLocationSignature);
+    setIsMissingLocationBannerDismissed(true);
+  };
 
   const navigateToScoped = (path) => {
     if (user?.role === 'MASTER_ADMIN' && dashboardSocietyId) {
@@ -114,6 +144,57 @@ export default function Dashboard() {
         currentSocietyName={currentSocietyName}
         currentSocietyId={dashboardSocietyId}
       />
+
+      {isPlatformOwner && missingLocationSocieties.length > 0 && !isMissingLocationBannerDismissed && (
+        <section className={sectionShellClass}>
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex items-start gap-3">
+              <div className="mt-0.5 rounded-lg bg-amber-500/15 p-2 text-amber-600">
+                <AlertTriangle className="h-5 w-5" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-[var(--text-primary)]">Society Location Setup Pending</h3>
+                <p className="mt-1 text-sm text-[var(--text-secondary)]">
+                  {missingLocationSocieties.length} societies are missing exact location. Society Admin login for those societies will be blocked until location is configured.
+                </p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {missingLocationSocieties.slice(0, 6).map((society) => (
+                    <span
+                      key={society.id}
+                      className="inline-flex items-center gap-1 rounded-full border border-amber-500/30 bg-amber-500/10 px-2.5 py-1 text-xs font-semibold text-amber-700"
+                    >
+                      <MapPin className="h-3.5 w-3.5" />
+                      {society.name || `Society ${society.id}`}
+                    </span>
+                  ))}
+                  {missingLocationSocieties.length > 6 && (
+                    <span className="inline-flex items-center rounded-full border border-[var(--border-default)] bg-[var(--bg-tertiary)] px-2.5 py-1 text-xs font-semibold text-[var(--text-secondary)]">
+                      +{missingLocationSocieties.length - 6} more
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex shrink-0 items-center gap-2">
+              <button
+                type="button"
+                onClick={() => navigate("/society-admins")}
+                className="rounded-lg border border-cyan-600/40 bg-cyan-600/10 px-3 py-1.5 text-xs font-bold text-cyan-700 transition hover:bg-cyan-600/20"
+              >
+                Review Societies
+              </button>
+              <button
+                type="button"
+                onClick={dismissMissingLocationBanner}
+                className="rounded-lg border border-[var(--border-default)] bg-[var(--bg-tertiary)] px-3 py-1.5 text-xs font-semibold text-[var(--text-secondary)] transition hover:text-[var(--text-primary)]"
+              >
+                Dismiss
+              </button>
+            </div>
+          </div>
+        </section>
+      )}
 
       <PrimaryStatsSection roleUi={roleUi} primaryStats={primaryStats} />
       <RolePrioritySection role={role} roleActionItems={roleActionItems} />

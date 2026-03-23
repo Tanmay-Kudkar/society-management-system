@@ -37,6 +37,12 @@ public class Society {
 
     private String telephone;
 
+    @Column(name = "exact_latitude")
+    private Double exactLatitude;
+
+    @Column(name = "exact_longitude")
+    private Double exactLongitude;
+
     // Total capacity for units (for planning/display purposes)
     @Column(name = "total_flats")
     private Integer totalFlats = 0;
