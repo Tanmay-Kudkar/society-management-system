@@ -25,9 +25,13 @@ public class SchemaMigrationRunner {
                 jdbcTemplate.execute(
                         "ALTER TABLE societies ADD COLUMN IF NOT EXISTS has_wings BOOLEAN DEFAULT TRUE");
                 jdbcTemplate.execute(
+                        "ALTER TABLE societies ADD COLUMN IF NOT EXISTS exact_latitude DOUBLE PRECISION");
+                jdbcTemplate.execute(
+                        "ALTER TABLE societies ADD COLUMN IF NOT EXISTS exact_longitude DOUBLE PRECISION");
+                jdbcTemplate.execute(
                         "UPDATE societies SET has_wings = CASE WHEN total_wings > 0 THEN TRUE ELSE FALSE END WHERE has_wings IS NULL");
                 jdbcTemplate.execute("ALTER TABLE societies ALTER COLUMN has_wings SET DEFAULT TRUE");
-                log.info("societies.has_wings column verified/updated");
+                log.info("societies.has_wings and exact location columns verified/updated");
             } catch (Exception ex) {
                 log.warn("Failed to add/update societies.has_wings column: {}", ex.getMessage());
             }

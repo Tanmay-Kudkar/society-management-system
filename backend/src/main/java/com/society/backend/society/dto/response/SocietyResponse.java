@@ -19,6 +19,8 @@ public class SocietyResponse {
     private String registrationNumber;
     private String email;
     private String telephone;
+    private Double exactLatitude;
+    private Double exactLongitude;
 
     // Total capacity for units
     private Integer totalFlats;
