@@ -443,13 +443,13 @@ button {
   }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
-  }
+.reduce-motion *,
+.reduce-motion *::before,
+.reduce-motion *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
 }
 
 select option {
@@ -1113,38 +1113,36 @@ table th {
   animation: pulse 2s ease-in-out infinite;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .animate-fadeIn,
-  .animate-fade-in-up,
-  .animate-scale-in,
-  .animate-slide-up,
-  .animate-slide-in-right,
-  .animate-slide-in-left,
-  .animate-success-pulse,
-  .ticket-focus-glow,
-  .ticket-focus-glow::after,
-  .page-focus-glow,
-  .page-focus-glow::after,
-  .animate-ticker,
-  .animate-sun,
-  .animate-bounce-custom,
-  .animate-pulse-custom,
-  .loader-6,
-  .loader-6::before,
-  .loader-6::after {
-    animation: none !important;
-    opacity: 1 !important;
-    transform: none !important;
-  }
+.reduce-motion .animate-fadeIn,
+.reduce-motion .animate-fade-in-up,
+.reduce-motion .animate-scale-in,
+.reduce-motion .animate-slide-up,
+.reduce-motion .animate-slide-in-right,
+.reduce-motion .animate-slide-in-left,
+.reduce-motion .animate-success-pulse,
+.reduce-motion .ticket-focus-glow,
+.reduce-motion .ticket-focus-glow::after,
+.reduce-motion .page-focus-glow,
+.reduce-motion .page-focus-glow::after,
+.reduce-motion .animate-ticker,
+.reduce-motion .animate-sun,
+.reduce-motion .animate-bounce-custom,
+.reduce-motion .animate-pulse-custom,
+.reduce-motion .loader-6,
+.reduce-motion .loader-6::before,
+.reduce-motion .loader-6::after {
+  animation: none !important;
+  opacity: 1 !important;
+  transform: none !important;
+}
 
-  .landing-page button:not(.no-sweep),
-  .landing-page button:not(.no-sweep)::after {
-    transition: none !important;
-  }
+.reduce-motion .landing-page button:not(.no-sweep),
+.reduce-motion .landing-page button:not(.no-sweep)::after {
+  transition: none !important;
+}
 
-  .landing-page button:not(.no-sweep)::after {
-    display: none !important;
-  }
+.reduce-motion .landing-page button:not(.no-sweep)::after {
+  display: none !important;
 }
 
 /* ============================================
