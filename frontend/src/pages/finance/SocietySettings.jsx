@@ -114,14 +114,15 @@ export default function SocietySettings() {
 
   const {
     data: scopedSociety,
-    isError: isScopedSocietyMissing,
+    error: scopedSocietyError,
     isLoading: isScopedSocietyLoading,
   } = useQuery({
     queryKey: ['society-exists', effectiveSocietyId],
     queryFn: () => societyApi.getById(effectiveSocietyId).then((res) => res.data),
     enabled: isMasterAdmin && !!effectiveSocietyId,
-    retry: false,
   })
+
+  const isScopedSocietyMissing = scopedSocietyError?.response?.status === 404
 
   const invalidUrlSociety = isMasterAdmin && !!societyIdFromUrl && (!hasValidSocietyIdInUrl || isScopedSocietyMissing)
 

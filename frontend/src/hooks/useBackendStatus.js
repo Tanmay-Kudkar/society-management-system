@@ -9,74 +9,130 @@
  */
 import { useState, useEffect, useRef } from 'react'
 
-const WAKE_THRESHOLD = 4000   // ms — if first request takes longer, assume cold start
-const HEALTH_ENDPOINT = '/health'  // lightweight ping endpoint
-const SESSION_KEY = 'backend_awake'
-const RETRY_INTERVAL_MS = 500
+const WAKE_THRESHOLD = 1200 // ms — show loader when a request is visibly slow
+const HEALTH_ENDPOINT = '/health' // lightweight ping endpoint
+const RETRY_INTERVAL_MS = 1000
+const REQUEST_ACTIVITY_EVENT = 'societyhub:request-activity'
 
 export default function useBackendStatus(apiBaseUrl) {
   const [isWakingUp, setIsWakingUp] = useState(false)
-  const checked = useRef(false)
+  const [statusText, setStatusText] = useState('Waiting for server response...')
+
+  const activeRequestCountRef = useRef(0)
+  const hasConnectionFailureRef = useRef(false)
+  const isWakingUpRef = useRef(false)
+  const wakeTimerRef = useRef(null)
+  const retryTimerRef = useRef(null)
+  const retryControllerRef = useRef(null)
 
   useEffect(() => {
-    // Only run once per session
-    if (checked.current) return
-    if (sessionStorage.getItem(SESSION_KEY) === '1') return
-    checked.current = true
+    isWakingUpRef.current = isWakingUp
+  }, [isWakingUp])
 
-    const controller = new AbortController()
-    let timer
-    let retryTimer
-    let currentController = controller
-
-    // If the fetch hasn't resolved within threshold, flag wake-up
-    timer = setTimeout(() => setIsWakingUp(true), WAKE_THRESHOLD)
-
+  useEffect(() => {
     const base = apiBaseUrl || import.meta.env?.VITE_API_URL || 'http://localhost:8080'
 
-    const pingBackend = (signal) => fetch(`${base}${HEALTH_ENDPOINT}`, { signal, mode: 'cors' })
+    const clearWakeTimer = () => {
+      if (wakeTimerRef.current) {
+        clearTimeout(wakeTimerRef.current)
+        wakeTimerRef.current = null
+      }
+    }
 
-    const scheduleRetry = () => {
-      if (!checked.current) return
+    const clearRetryTimer = () => {
+      if (retryTimerRef.current) {
+        clearTimeout(retryTimerRef.current)
+        retryTimerRef.current = null
+      }
+    }
 
-      retryTimer = setTimeout(() => {
-        const retryController = new AbortController()
-        currentController = retryController
+    const stopWakeState = () => {
+      clearWakeTimer()
+      clearRetryTimer()
+      if (retryControllerRef.current) {
+        retryControllerRef.current.abort()
+        retryControllerRef.current = null
+      }
+      setIsWakingUp(false)
+      setStatusText('Waiting for server response...')
+    }
 
-        pingBackend(retryController.signal)
-          .then(() => {
-            clearTimeout(timer)
-            setIsWakingUp(false)
-            sessionStorage.setItem(SESSION_KEY, '1')
-          })
-          .catch(() => {
-            setIsWakingUp(true)
-            scheduleRetry()
-          })
+    const pingBackend = async () => {
+      const controller = new AbortController()
+      retryControllerRef.current = controller
+      await fetch(`${base}${HEALTH_ENDPOINT}`, { signal: controller.signal, mode: 'cors' })
+    }
+
+    const scheduleHealthProbe = () => {
+      clearRetryTimer()
+      retryTimerRef.current = setTimeout(async () => {
+        if (activeRequestCountRef.current <= 0) return
+        try {
+          await pingBackend()
+          if (activeRequestCountRef.current > 0) {
+            setStatusText('Waiting for server response...')
+          }
+        } catch {
+          if (activeRequestCountRef.current > 0) {
+            setStatusText('Reconnecting to server...')
+          }
+        } finally {
+          if (activeRequestCountRef.current > 0) {
+            scheduleHealthProbe()
+          }
+        }
       }, RETRY_INTERVAL_MS)
     }
 
-    pingBackend(controller.signal)
-      .then(() => {
-        clearTimeout(timer)
-        setIsWakingUp(false)
-        sessionStorage.setItem(SESSION_KEY, '1')
-      })
-      .catch(() => {
-        // Network error — still waking up
-        clearTimeout(timer)
+    const startWakeIfStillSlow = () => {
+      if (activeRequestCountRef.current <= 0) return
+      wakeTimerRef.current = setTimeout(() => {
+        if (activeRequestCountRef.current > 0) {
+          setIsWakingUp(true)
+          setStatusText('Waiting for server response...')
+          scheduleHealthProbe()
+        }
+      }, WAKE_THRESHOLD)
+    }
+
+    const handleRequestActivity = (event) => {
+      const count = Number(event?.detail?.activeRequestCount || 0)
+      const hasConnectionFailure = Boolean(event?.detail?.hasConnectionFailure)
+      activeRequestCountRef.current = count
+      hasConnectionFailureRef.current = hasConnectionFailure
+
+      if (count > 0) {
+        if (!wakeTimerRef.current && !isWakingUpRef.current) {
+          startWakeIfStillSlow()
+        }
+        return
+      }
+
+      // Keep loader visible between retry attempts while backend is still unreachable.
+      if (hasConnectionFailure) {
+        clearWakeTimer()
         setIsWakingUp(true)
-        // Keep retrying quickly for free-tier wake-up scenarios.
-        scheduleRetry()
-      })
+        setStatusText('Reconnecting to server...')
+        if (!retryTimerRef.current) {
+          scheduleHealthProbe()
+        }
+        return
+      }
+
+      stopWakeState()
+    }
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener(REQUEST_ACTIVITY_EVENT, handleRequestActivity)
+    }
 
     return () => {
-      checked.current = false
-      clearTimeout(timer)
-      clearTimeout(retryTimer)
-      currentController.abort()
+      if (typeof window !== 'undefined') {
+        window.removeEventListener(REQUEST_ACTIVITY_EVENT, handleRequestActivity)
+      }
+      stopWakeState()
     }
   }, [apiBaseUrl])
 
-  return isWakingUp
+  return { isWakingUp, statusText }
 }

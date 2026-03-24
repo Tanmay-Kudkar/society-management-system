@@ -199,7 +199,7 @@ export default function Login() {
   }
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center bg-[color-mix(in_srgb,var(--bg-primary)_92%,#0f172a_8%)] px-2.5 py-4 sm:px-5 sm:py-7 lg:px-7 lg:py-8">
+    <div className="relative flex min-h-screen items-start justify-center overflow-y-auto bg-[color-mix(in_srgb,var(--bg-primary)_92%,#0f172a_8%)] px-2 py-3 sm:items-center sm:px-5 sm:py-7 lg:px-7 lg:py-8">
       <div
         className={`pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,color-mix(in_srgb,var(--accent-primary)_2%,var(--bg-primary))_0%,var(--bg-primary)_50%)] transition-opacity duration-700 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
       />
@@ -258,18 +258,19 @@ export default function Login() {
             </div>
           </aside>
 
-          <section className={`relative flex flex-col bg-transparent p-4 transition-all duration-700 ease-out sm:p-7 lg:p-8 ${isLoaded ? 'translate-y-0 opacity-100' : 'translate-y-3 opacity-0'}`} style={{ transitionDelay: '90ms' }}>
-            <Link
-              to="/"
-              className="absolute left-2 top-2 z-10 inline-flex min-h-9 items-center gap-1.5 rounded-xl border border-[color-mix(in_srgb,var(--border-light)_90%,#334155_10%)] bg-[color-mix(in_srgb,var(--bg-primary)_86%,#111827_14%)] px-2.5 py-1.5 text-xs font-semibold text-[var(--text-secondary)] no-underline transition-colors duration-200 hover:text-[var(--text-primary)] sm:left-3 sm:top-3 lg:hidden"
-              aria-label="Back to welcome page"
-            >
-              <ArrowLeft size={14} />
-              <span>Back</span>
-            </Link>
+          <section className={`relative flex flex-col bg-transparent p-3.5 transition-all duration-700 ease-out sm:p-7 lg:p-8 ${isLoaded ? 'translate-y-0 opacity-100' : 'translate-y-3 opacity-0'}`} style={{ transitionDelay: '90ms' }}>
+            <div className="z-10 mb-4 flex items-center justify-between gap-2 sm:absolute sm:left-3 sm:right-3 sm:top-3 sm:mb-0">
+              <Link
+                to="/"
+                className="inline-flex min-h-9 items-center gap-1.5 rounded-xl border border-[color-mix(in_srgb,var(--border-light)_90%,#334155_10%)] bg-[color-mix(in_srgb,var(--bg-primary)_86%,#111827_14%)] px-2.5 py-1.5 text-xs font-semibold text-[var(--text-secondary)] no-underline transition-colors duration-200 hover:text-[var(--text-primary)] lg:hidden"
+                aria-label="Back to welcome page"
+              >
+                <ArrowLeft size={14} />
+                <span>Back</span>
+              </Link>
 
-            <div className="absolute right-2 top-2 z-10 rounded-xl border border-[color-mix(in_srgb,var(--border-light)_90%,#334155_10%)] bg-[color-mix(in_srgb,var(--bg-primary)_86%,#111827_14%)] p-1 sm:right-3 sm:top-3">
-              <div className="flex items-center gap-1">
+              <div className="ml-auto rounded-xl border border-[color-mix(in_srgb,var(--border-light)_90%,#334155_10%)] bg-[color-mix(in_srgb,var(--bg-primary)_86%,#111827_14%)] p-1">
+                <div className="flex items-center gap-1">
                 {[
                   { key: 'system', icon: Monitor, label: 'System', active: !isManual, action: resetToSystemTheme },
                   { key: 'light', icon: Sun, label: 'Light', active: isManual && theme === 'light', action: () => setTheme('light') },
@@ -283,14 +284,15 @@ export default function Login() {
                     aria-label={`Switch theme: ${opt.label}`}
                   >
                     <opt.icon size={15} />
-                    <span className="hidden sm:inline">{opt.label}</span>
+                    <span className="hidden min-[390px]:inline">{opt.label}</span>
                   </button>
                 ))}
+                </div>
               </div>
             </div>
-            <div className="flex h-full flex-col justify-start pt-14 sm:pt-16">
-              <div className="mb-7">
-                <h1 className="mb-2 text-[clamp(1.95rem,2.2vw,2.2rem)] font-extrabold leading-none tracking-[-0.02em] text-[color-mix(in_srgb,var(--text-primary)_92%,#e2e8f0_8%)]">Sign in</h1>
+            <div className="flex h-full flex-col justify-start pt-1 sm:pt-16">
+              <div className="mb-6 sm:mb-7">
+                <h1 className="mb-2 text-[clamp(1.75rem,8vw,2.2rem)] font-extrabold leading-none tracking-[-0.02em] text-[color-mix(in_srgb,var(--text-primary)_92%,#e2e8f0_8%)]">Sign in</h1>
                 <p className="pt-3 text-sm text-[color-mix(in_srgb,var(--text-secondary)_88%,#94a3b8_12%)]">Access your society management dashboard</p>
               </div>
 
@@ -411,21 +413,21 @@ export default function Login() {
                         type="button"
                         onClick={detectLocation}
                         disabled={locating}
-                        className="rounded-md border border-[color-mix(in_srgb,var(--border-default)_78%,#334155_22%)] px-2.5 py-1.5 text-xs font-semibold text-[var(--text-primary)] transition-all duration-200 hover:border-[color-mix(in_srgb,var(--accent-primary)_44%,var(--border-default))] hover:bg-[color-mix(in_srgb,var(--bg-tertiary)_72%,transparent)] disabled:opacity-60"
+                        className="min-w-[92px] flex-1 rounded-md border border-[color-mix(in_srgb,var(--border-default)_78%,#334155_22%)] px-2.5 py-1.5 text-xs font-semibold text-[var(--text-primary)] transition-all duration-200 hover:border-[color-mix(in_srgb,var(--accent-primary)_44%,var(--border-default))] hover:bg-[color-mix(in_srgb,var(--bg-tertiary)_72%,transparent)] disabled:opacity-60"
                       >
                         {locating ? 'Locating...' : 'Refresh'}
                       </button>
                       <button
                         type="button"
                         onClick={() => setIsLocationPanelOpen(true)}
-                        className="rounded-md border border-[color-mix(in_srgb,var(--border-default)_78%,#334155_22%)] px-2.5 py-1.5 text-xs font-semibold text-[var(--text-primary)] transition-all duration-200 hover:border-[color-mix(in_srgb,var(--accent-primary)_44%,var(--border-default))] hover:bg-[color-mix(in_srgb,var(--bg-tertiary)_72%,transparent)]"
+                        className="min-w-[92px] flex-1 rounded-md border border-[color-mix(in_srgb,var(--border-default)_78%,#334155_22%)] px-2.5 py-1.5 text-xs font-semibold text-[var(--text-primary)] transition-all duration-200 hover:border-[color-mix(in_srgb,var(--accent-primary)_44%,var(--border-default))] hover:bg-[color-mix(in_srgb,var(--bg-tertiary)_72%,transparent)]"
                       >
                         Adjust Map
                       </button>
                       <button
                         type="button"
                         onClick={() => setShowCoordinates((prev) => !prev)}
-                        className="rounded-md border border-[color-mix(in_srgb,var(--border-default)_78%,#334155_22%)] px-2.5 py-1.5 text-xs font-semibold text-[var(--text-primary)] transition-all duration-200 hover:border-[color-mix(in_srgb,var(--accent-primary)_44%,var(--border-default))] hover:bg-[color-mix(in_srgb,var(--bg-tertiary)_72%,transparent)]"
+                        className="min-w-[92px] flex-1 rounded-md border border-[color-mix(in_srgb,var(--border-default)_78%,#334155_22%)] px-2.5 py-1.5 text-xs font-semibold text-[var(--text-primary)] transition-all duration-200 hover:border-[color-mix(in_srgb,var(--accent-primary)_44%,var(--border-default))] hover:bg-[color-mix(in_srgb,var(--bg-tertiary)_72%,transparent)]"
                       >
                         {showCoordinates ? 'Hide Coords' : 'Show Coords'}
                       </button>
