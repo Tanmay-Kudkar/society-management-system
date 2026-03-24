@@ -416,11 +416,17 @@ public class AuthServiceImpl implements AuthService {
     @Override
     @Transactional
     public void forgotPassword(String email) {
-        User user = userRepository.findByEmail(email).orElse(null);
+        String normalizedEmail = email == null ? "" : email.trim();
+        if (normalizedEmail.isBlank()) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Email is required");
+        }
 
-        // Always return success to avoid email enumeration attacks
-        if (user == null || (user.getIsActive() != null && !user.getIsActive())) {
-            return;
+        User user = userRepository.findByEmailIgnoreCase(normalizedEmail)
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "No account found for this email"));
+
+        if (user.getIsActive() != null && !user.getIsActive()) {
+            throw new ApiException(HttpStatus.FORBIDDEN,
+                    "This account is inactive. Please contact your society admin.");
         }
 
         // Delete any existing reset tokens for this user
@@ -440,7 +446,8 @@ public class AuthServiceImpl implements AuthService {
             emailService.sendPasswordResetEmail(user.getEmail(), user.getName(), token);
         } catch (Exception e) {
             logger.error("Failed to send password reset email to {}: {}", user.getEmail(), e.getMessage());
-            // Don't expose email sending failures to the user
+            throw new ApiException(HttpStatus.SERVICE_UNAVAILABLE,
+                    "Unable to send reset email right now. Please try again shortly.");
         }
     }
 
