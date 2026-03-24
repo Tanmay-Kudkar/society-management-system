@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { useTheme } from '../../context'
 import { authApi } from '../../../../api'
 import { Building2, Mail, ArrowLeft, CheckCircle, AlertCircle, Send } from 'lucide-react'
+import clsx from 'clsx'
 import PublicSweepButton from '../../components/PublicSweepButton'
 import PublicOutlineButton from '../../components/PublicOutlineButton'
 
@@ -59,12 +60,21 @@ export default function ForgotPassword() {
                 <p className="text-sm leading-relaxed text-[var(--text-secondary)]">Enter your account email and we will send a secure reset link that expires in 30 minutes.</p>
               </div>
 
-              {error && (
-                <div className="mb-4 flex items-center gap-2 rounded-2xl border border-red-300/40 bg-red-500/10 px-3 py-2 text-sm text-red-500">
+              <div
+                className={clsx(
+                  'mb-4 overflow-hidden rounded-2xl border transition-all duration-300 ease-out',
+                  error
+                    ? 'max-h-24 translate-y-0 border-red-300/40 bg-red-500/10 px-3 py-2 opacity-100'
+                    : 'max-h-0 -translate-y-1 border-transparent bg-transparent px-0 py-0 opacity-0'
+                )}
+                role="alert"
+                aria-live="polite"
+              >
+                <div className="flex items-center gap-2 text-sm text-red-500">
                   <AlertCircle className="h-4 w-4" />
                   <p>{error}</p>
                 </div>
-              )}
+              </div>
 
               <form onSubmit={handleSubmit} className="grid gap-4">
                 <div className="grid gap-2">
@@ -116,7 +126,7 @@ export default function ForgotPassword() {
               </div>
               <h3 className="mb-2 text-2xl font-extrabold text-[var(--text-primary)]">Check Your Email</h3>
               <p className="mb-2 text-sm leading-6 text-[var(--text-secondary)]">
-                If an account exists for <strong>{email}</strong>, you'll receive a password reset link shortly.
+                A password reset link has been sent to <strong>{email}</strong>.
               </p>
               <p className="mb-5 text-xs text-[var(--text-tertiary)]">Didn't receive the email? Check your spam folder or try again in a few minutes.</p>
               <PublicOutlineButton onClick={() => { setSent(false); setEmail('') }} className="rounded-xl px-4 py-2 text-sm font-semibold">

@@ -104,9 +104,8 @@ public class AuthController {
     public ResponseEntity<Map<String, String>> forgotPassword(
             @Valid @RequestBody ForgotPasswordRequest request) {
         authService.forgotPassword(request.getEmail());
-        // Always return success to prevent email enumeration
         return ResponseEntity.ok(Map.of(
-                "message", "If an account with that email exists, a password reset link has been sent."));
+            "message", "Password reset link sent successfully."));
     }
 
     @PostMapping("/reset-password")
