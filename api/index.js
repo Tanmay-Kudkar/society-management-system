@@ -1,6 +1,19 @@
 import axios from 'axios'
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080'
+export const REQUEST_ACTIVITY_EVENT = 'societyhub:request-activity'
+
+let activeRequestCount = 0
+let hasConnectionFailure = false
+
+const emitRequestActivity = () => {
+  if (typeof window === 'undefined') return
+  window.dispatchEvent(
+    new CustomEvent(REQUEST_ACTIVITY_EVENT, {
+      detail: { activeRequestCount, hasConnectionFailure },
+    })
+  )
+}
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -13,6 +26,9 @@ const api = axios.create({
 // Request interceptor to add auth token (fallback for header-based auth)
 api.interceptors.request.use(
   (config) => {
+    activeRequestCount += 1
+    emitRequestActivity()
+
     const token = localStorage.getItem('token')
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
@@ -24,8 +40,17 @@ api.interceptors.request.use(
 
 // Response interceptor for error handling
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    hasConnectionFailure = false
+    activeRequestCount = Math.max(0, activeRequestCount - 1)
+    emitRequestActivity()
+    return response
+  },
   (error) => {
+    hasConnectionFailure = !error?.response
+    activeRequestCount = Math.max(0, activeRequestCount - 1)
+    emitRequestActivity()
+
     if (error.response?.status === 401) {
       localStorage.removeItem('token')
       localStorage.removeItem('user')

@@ -117,7 +117,6 @@ export default function VendorBills() {
     queryKey: ['society-settings', effectiveSocietyId, user?.id],
     queryFn: () => societySettingApi.getBySocietyId(effectiveSocietyId, user.id).then((res) => res.data),
     enabled: !!effectiveSocietyId && !!user?.id,
-    retry: false,
   })
 
   const roleMatchedUsers = useMemo(() => {
