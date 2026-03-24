@@ -258,7 +258,7 @@ export default function Login() {
             </div>
           </aside>
 
-          <section className={`relative flex flex-col bg-transparent p-3.5 transition-all duration-700 ease-out sm:p-7 lg:p-8 ${isLoaded ? 'translate-y-0 opacity-100' : 'translate-y-3 opacity-0'}`} style={{ transitionDelay: '90ms' }}>
+          <section className={`relative flex min-w-0 flex-col bg-transparent p-3.5 transition-all duration-700 ease-out sm:p-7 lg:p-8 ${isLoaded ? 'translate-y-0 opacity-100' : 'translate-y-3 opacity-0'}`} style={{ transitionDelay: '90ms' }}>
             <div className="z-10 mb-4 flex items-center justify-between gap-2 sm:absolute sm:left-3 sm:right-3 sm:top-3 sm:mb-0">
               <Link
                 to="/"
@@ -290,7 +290,7 @@ export default function Login() {
                 </div>
               </div>
             </div>
-            <div className="flex h-full flex-col justify-start pt-1 sm:pt-16">
+            <div className="flex h-full min-w-0 flex-col justify-start pt-1 sm:pt-16">
               <div className="mb-6 sm:mb-7">
                 <h1 className="mb-2 text-[clamp(1.75rem,8vw,2.2rem)] font-extrabold leading-none tracking-[-0.02em] text-[color-mix(in_srgb,var(--text-primary)_92%,#e2e8f0_8%)]">Sign in</h1>
                 <p className="pt-3 text-sm text-[color-mix(in_srgb,var(--text-secondary)_88%,#94a3b8_12%)]">Access your society management dashboard</p>
@@ -304,7 +304,7 @@ export default function Login() {
                 </div>
               )}
 
-              <form onSubmit={handleSubmit} className={`flex flex-col gap-4 sm:gap-5 ${shake ? 'login-form-shake' : ''}`}>
+              <form onSubmit={handleSubmit} className={`flex min-w-0 flex-col gap-4 sm:gap-5 ${shake ? 'login-form-shake' : ''}`}>
                 <div className="flex flex-col gap-2">
                   <label className="text-sm font-semibold text-[color-mix(in_srgb,var(--text-primary)_88%,#e2e8f0_12%)]">Email address</label>
                   <div className={`flex min-h-[2.95rem] items-center rounded-[10px] border bg-[color-mix(in_srgb,var(--bg-primary)_92%,#111827_8%)] transition-[border-color,box-shadow,background-color] duration-300 ease-out ${fieldErrors.email ? 'border-red-500 shadow-[0_0_0_1px_color-mix(in_srgb,#ef4444_35%,transparent)]' : 'border-[color-mix(in_srgb,var(--border-default)_82%,#334155_18%)] focus-within:border-[color-mix(in_srgb,var(--accent-primary)_76%,#1e40af_24%)] focus-within:bg-[color-mix(in_srgb,var(--bg-primary)_80%,var(--accent-primary)_20%)] focus-within:shadow-[0_0_0_3px_color-mix(in_srgb,var(--accent-primary)_20%,transparent)]'}`}>
@@ -331,9 +331,9 @@ export default function Login() {
                 </div>
 
                 <div className="flex flex-col gap-2">
-                  <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+                  <div className="flex min-w-0 flex-col items-start gap-1 min-[420px]:flex-row min-[420px]:items-center min-[420px]:justify-between">
                     <label className="min-w-0 text-sm font-semibold text-[color-mix(in_srgb,var(--text-primary)_88%,#e2e8f0_12%)]">Password</label>
-                    <Link to="/forgot-password" className="shrink-0 whitespace-nowrap text-xs text-[color-mix(in_srgb,var(--text-secondary)_80%,var(--accent-primary)_20%)] no-underline transition-colors duration-200 hover:text-[var(--accent-primary)]">Forgot password?</Link>
+                    <Link to="/forgot-password" className="text-xs text-[color-mix(in_srgb,var(--text-secondary)_80%,var(--accent-primary)_20%)] no-underline transition-colors duration-200 hover:text-[var(--accent-primary)]">Forgot password?</Link>
                   </div>
                   <div className={`flex min-h-[2.95rem] items-center rounded-[10px] border bg-[color-mix(in_srgb,var(--bg-primary)_92%,#111827_8%)] transition-[border-color,box-shadow,background-color] duration-300 ease-out ${fieldErrors.password ? 'border-red-500 shadow-[0_0_0_1px_color-mix(in_srgb,#ef4444_35%,transparent)]' : 'border-[color-mix(in_srgb,var(--border-default)_82%,#334155_18%)] focus-within:border-[color-mix(in_srgb,var(--accent-primary)_76%,#1e40af_24%)] focus-within:bg-[color-mix(in_srgb,var(--bg-primary)_80%,var(--accent-primary)_20%)] focus-within:shadow-[0_0_0_3px_color-mix(in_srgb,var(--accent-primary)_20%,transparent)]'}`}>
                     <Lock size={16} className="ml-3 shrink-0 text-[var(--text-tertiary)]" />
@@ -374,12 +374,12 @@ export default function Login() {
 
                 <div className="rounded-[10px] border border-[color-mix(in_srgb,var(--border-default)_78%,#334155_22%)] bg-[color-mix(in_srgb,var(--bg-primary)_90%,#0f172a_10%)] p-3.5 transition-colors duration-300 hover:border-[color-mix(in_srgb,var(--accent-primary)_40%,var(--border-default))]">
                   <div className="flex flex-col gap-2.5">
-                    <div className="flex flex-wrap items-center justify-between gap-2 sm:gap-3">
-                      <p className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.04em] text-[color-mix(in_srgb,var(--text-secondary)_75%,#94a3b8_25%)]">
+                    <div className="flex min-w-0 flex-col items-start gap-2 min-[420px]:flex-row min-[420px]:items-center min-[420px]:justify-between sm:gap-3">
+                      <p className="inline-flex min-w-0 items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.04em] text-[color-mix(in_srgb,var(--text-secondary)_75%,#94a3b8_25%)]">
                         <MapPin size={12} className="shrink-0" />
                         <span className="truncate">OSM Proximity Monitor</span>
                       </p>
-                      <span className="max-w-full shrink-0 rounded-full bg-[color-mix(in_srgb,var(--bg-primary)_80%,transparent)] px-2 py-0.5 text-[10px] font-medium text-[var(--text-tertiary)]">
+                      <span className="max-w-full rounded-full bg-[color-mix(in_srgb,var(--bg-primary)_80%,transparent)] px-2 py-0.5 text-[10px] font-medium text-[var(--text-tertiary)]">
                         Session Pin
                       </span>
                     </div>
@@ -445,7 +445,7 @@ export default function Login() {
                 <p className="text-center text-xs text-[var(--text-tertiary)]">Authorized users only. Activity may be monitored.</p>
               </form>
 
-              <p className="mt-5 text-center text-sm text-[var(--text-secondary)]">
+              <p className="mt-5 min-w-0 text-center text-sm text-[var(--text-secondary)] break-words">
                 Don't have an account?{' '}
                 <Link to="/contact" className="font-semibold text-[var(--accent-primary)] no-underline transition-colors duration-200 hover:text-[color-mix(in_srgb,var(--accent-primary)_78%,var(--accent-secondary))]">Contact Administrator</Link>
               </p>

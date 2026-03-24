@@ -30,22 +30,8 @@ function applyInitialThemeClass() {
 function enablePerformanceModeWhenNeeded() {
   if (typeof window === "undefined") return;
 
-  const reducedMotion = window.matchMedia?.(
-    "(prefers-reduced-motion: reduce)",
-  )?.matches;
-  const reducedData = window.matchMedia?.(
-    "(prefers-reduced-data: reduce)",
-  )?.matches;
-
-  const shouldEnablePerfMode = Boolean(
-    reducedMotion ||
-    reducedData
-  );
-
-  if (shouldEnablePerfMode) {
-    document.documentElement.classList.add("perf-lite");
-    document.body.classList.add("perf-lite");
-  }
+  // Keep full animations enabled across devices by default.
+  // perf-lite can still be enabled manually by adding the class when needed.
 }
 
 enablePerformanceModeWhenNeeded();

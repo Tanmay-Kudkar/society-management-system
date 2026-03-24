@@ -221,6 +221,21 @@ export const FiltersSkeleton = ({ filterCount = 2, showSearch = true }) => (
   </div>
 )
 
+/* ─── Society Admins: search/filter area skeleton ─── */
+export const SocietyAdminsFiltersSkeleton = () => (
+  <div className={`${containerClass} mb-6 rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] p-5`}>
+    <div className="flex flex-col gap-3.5">
+      <Bone height={12} style={{ width: '22%' }} />
+      <Bone height={40} style={{ width: '100%', borderRadius: 'var(--radius-lg)' }} />
+      <div className="flex flex-wrap items-center gap-2.5 pt-0.5">
+        <Bone width={132} height={30} variant="pill" />
+        <Bone width={156} height={30} variant="pill" />
+        <Bone width={124} height={30} variant="pill" />
+      </div>
+    </div>
+  </div>
+)
+
 /* ─── Tab Bar Skeleton ─── */
 export const TabsSkeleton = ({ tabCount = 3 }) => (
   <div className={`${containerClass} mb-5 flex w-fit gap-1 rounded-lg bg-[var(--bg-elevated)] p-1`}>
@@ -245,7 +260,7 @@ export const SummaryRowSkeleton = ({ count = 4 }) => (
 
 /* ─── List Skeleton (vertical card list like Tickets, Complaints) ─── */
 export const ListSkeleton = ({ count = 5, showAvatar = true }) => (
-  <div className={`${containerClass} flex flex-col gap-3`}>
+  <div className={`${containerClass} flex flex-col gap-4`}>
     {Array.from({ length: count }).map((_, i) => (
       <div key={i} className={`${cardClass} min-h-20 flex-row items-center px-5 py-4`}>
         {showAvatar && <Bone width={42} height={42} variant="circle" style={{ flexShrink: 0 }} />}

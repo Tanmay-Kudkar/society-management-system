@@ -12,7 +12,7 @@ import {
   StateCitySelector, SmartSelect, NeonSweepButton, EmptyStateSection
 } from '../../components'
 import { BulkImportModal } from '../../components'
-import { FiltersSkeleton, CardGridSkeleton, HeroSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
+import { SocietyAdminsFiltersSkeleton, CardGridSkeleton, HeroSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
 import useMinLoadingTime from '../../hooks/useMinLoadingTime'
 import {
   UserCheck, Plus, Edit, Trash2, Search, X, Building2,
@@ -946,7 +946,7 @@ export default function SocietyAdmins() {
       <div className="p-6 max-md:p-4 min-h-[calc(100vh-68px)] bg-[var(--bg-secondary)] text-[var(--text-primary)]">
         <WakeUpBanner show />
         <HeroSkeleton statCount={3} />
-        <FiltersSkeleton filterCount={2} />
+        <SocietyAdminsFiltersSkeleton />
         <CardGridSkeleton count={6} />
       </div>
     )
