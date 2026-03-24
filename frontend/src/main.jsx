@@ -36,19 +36,10 @@ function enablePerformanceModeWhenNeeded() {
   const reducedData = window.matchMedia?.(
     "(prefers-reduced-data: reduce)",
   )?.matches;
-  const coarsePointer = window.matchMedia?.("(pointer: coarse)")?.matches;
-  const smallScreen = window.innerWidth <= 768;
-  const deviceMemory = navigator.deviceMemory || 0;
-  const cpuCores = navigator.hardwareConcurrency || 0;
-
-  const lowSpecDevice =
-    (deviceMemory > 0 && deviceMemory <= 4) || (cpuCores > 0 && cpuCores <= 4);
 
   const shouldEnablePerfMode = Boolean(
     reducedMotion ||
-    reducedData ||
-    lowSpecDevice ||
-    (coarsePointer && smallScreen),
+    reducedData
   );
 
   if (shouldEnablePerfMode) {
