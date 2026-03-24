@@ -72,7 +72,10 @@ export default function PageShell({
         )}
 
         {loading ? (
-          <div className="py-4 text-[0.95rem] text-[var(--text-secondary)]">Loading...</div>
+          <div className="flex items-center gap-3 py-4 text-[0.95rem] text-[var(--text-secondary)]" role="status" aria-live="polite">
+            <span className="loader-6 loader-6--page" aria-hidden="true" />
+            <span>Loading...</span>
+          </div>
         ) : (
           children
         )}

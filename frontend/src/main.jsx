@@ -60,6 +60,19 @@ function enablePerformanceModeWhenNeeded() {
 enablePerformanceModeWhenNeeded();
 applyInitialThemeClass();
 
+function isBackendUnavailableError(error) {
+  if (!error) return false;
+  if (error?.response?.status) return false;
+
+  const code = String(error?.code || "").toUpperCase();
+  if (code === "ERR_NETWORK" || code === "ECONNABORTED" || code === "ETIMEDOUT") {
+    return true;
+  }
+
+  const message = String(error?.message || "");
+  return /failed to fetch|network error|connection refused|err_connection_refused|load failed/i.test(message);
+}
+
 const queryClient = new QueryClient({
   mutationCache: new MutationCache({
     onError: (error, _variables, _context, mutation) => {
@@ -81,11 +94,16 @@ const queryClient = new QueryClient({
         // Don't retry on client-side errors (bad request/auth/validation)
         const status = error?.response?.status;
         if (status >= 400 && status < 500) return false;
+        // Keep trying while backend is unavailable so pages stay in loading state.
+        if (isBackendUnavailableError(error)) return true;
         // Retry transient failures only a few times
         return failureCount < 3;
       },
 
-      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 15000),
+      retryDelay: (attemptIndex, error) =>
+        isBackendUnavailableError(error)
+          ? 500
+          : Math.min(1000 * 2 ** attemptIndex, 15000),
       
       // Auto-recover when backend comes back: poll failed queries every 0.5s.
       

@@ -642,6 +642,7 @@ export default function Layout() {
   const toast = useToast();
   const navigate = useNavigate();
   const location = useLocation();
+  const mobileTopbarRef = useRef(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [openAccordion, setOpenAccordion] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(null);
@@ -660,13 +661,14 @@ export default function Layout() {
   const parsedSocietyParam = Number(societyParam);
   const hasNumericSocietyParam = Number.isInteger(parsedSocietyParam) && parsedSocietyParam > 0;
 
-  const { isError: isMasterSocietyParamMissing } = useQuery({
+  const { error: masterSocietyParamError } = useQuery({
     queryKey: ["layout-society-exists", parsedSocietyParam],
     queryFn: () => societyApi.getById(parsedSocietyParam).then((res) => res.data),
     enabled: isMasterAdmin && hasSocietyParam && hasNumericSocietyParam,
-    retry: false,
     staleTime: 60_000,
   });
+
+  const isMasterSocietyParamMissing = masterSocietyParamError?.response?.status === 404;
 
   const notifyGuard = (message) => {
     const key = `${location.pathname}|${location.search}|${message}`;
@@ -815,6 +817,28 @@ export default function Layout() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const applyMobileNavbarHeight = () => {
+      const fallbackHeight = 56;
+      const measuredHeight = mobileTopbarRef.current?.getBoundingClientRect?.().height;
+      const resolvedHeight = Number.isFinite(measuredHeight) && measuredHeight > 0
+        ? Math.round(measuredHeight)
+        : fallbackHeight;
+      document.documentElement.style.setProperty("--mobile-navbar-height", `${resolvedHeight}px`);
+    };
+
+    applyMobileNavbarHeight();
+    window.addEventListener("resize", applyMobileNavbarHeight);
+    window.addEventListener("orientationchange", applyMobileNavbarHeight);
+
+    return () => {
+      window.removeEventListener("resize", applyMobileNavbarHeight);
+      window.removeEventListener("orientationchange", applyMobileNavbarHeight);
+    };
+  }, []);
+
   return (
     <div className="min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)]">
       {/* Desktop Sidebar */}
@@ -872,7 +896,7 @@ export default function Layout() {
 
       {/* Top Navbar */}
       <header className="fixed inset-x-0 top-0 z-40 lg:left-[272px]">
-        <div className="h-14 border-b border-[var(--border-default)] bg-[var(--bg-secondary)] backdrop-blur-[8px] sm:h-16">
+        <div ref={mobileTopbarRef} className="h-14 border-b border-[var(--border-default)] bg-[var(--bg-secondary)] backdrop-blur-[8px] sm:h-16">
           <div className="mx-auto flex h-full max-w-[1800px] items-center justify-between gap-4 px-4 lg:justify-end lg:px-6 [&>*]:min-w-0">
             {/* Logo - visible on mobile only */}
             <div className="group flex cursor-pointer items-center gap-3 text-decoration-none lg:hidden" onClick={() => navigate(resolvePath("/dashboard"))}>

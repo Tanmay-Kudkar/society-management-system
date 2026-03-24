@@ -78,7 +78,7 @@ export default function LoginAudit() {
   const [searchTerm, setSearchTerm] = useState('')
   const [filterAction, setFilterAction] = useState('')
   const [filterProximity, setFilterProximity] = useState('')
-  const isWakingUp = useBackendStatus()
+  const { isWakingUp } = useBackendStatus()
   const queryClient = useQueryClient()
 
   const { data: societies = [], isLoading: societiesLoading, isError: societiesError, isFetching: societiesFetching, refetch: refetchSocieties } = useQuery({
