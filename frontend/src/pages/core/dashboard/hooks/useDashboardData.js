@@ -106,8 +106,17 @@ export default function useDashboardData() {
   });
 
   const { data: complaints = [] } = useQuery({
-    queryKey: ["complaints", dashboardSocietyId, user?.id],
-    queryFn: () => dashboardSocietyId && user?.id ? complaintApi.getBySociety(dashboardSocietyId, user.id).then((res) => res.data).catch(() => []) : complaintApi.getAll(user?.id).then((res) => res.data).catch(() => []),
+    queryKey: ["complaints", user?.id, dashboardSocietyId],
+    queryFn: () => {
+      if (!user?.id) return Promise.resolve([])
+      if (isMemberOrTenant) {
+        return complaintApi.getByUser(user.id, user.id).then((res) => res.data).catch(() => [])
+      }
+      if (dashboardSocietyId) {
+        return complaintApi.getBySociety(dashboardSocietyId, user.id).then((res) => res.data).catch(() => [])
+      }
+      return complaintApi.getAll(user.id).then((res) => res.data).catch(() => [])
+    },
     enabled: !!user?.id,
     placeholderData: [],
   });

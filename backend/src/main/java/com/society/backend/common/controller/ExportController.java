@@ -76,6 +76,7 @@ public class ExportController {
         }
 
         @GetMapping("/tickets/{societyId}")
+        @PreAuthorize("hasAnyRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE')")
         public ResponseEntity<byte[]> exportTickets(
                         @PathVariable Long societyId,
                         @RequestParam(required = false) String status) {
