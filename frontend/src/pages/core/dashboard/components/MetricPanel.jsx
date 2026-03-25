@@ -25,10 +25,10 @@ export default function MetricPanel({ title, value, helper, icon: Icon, tone = "
       tabIndex={interactive ? 0 : undefined}
     >
       <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="text-[11px] font-black uppercase tracking-[0.16em] text-[var(--text-tertiary)]">{title}</p>
-          <p className="mt-3 text-[28px] font-black leading-none tracking-tight text-[var(--text-primary)]">{value}</p>
-          {helper && <p className="mt-2 text-sm text-[var(--text-secondary)]">{helper}</p>}
+        <div className="min-w-0">
+          <p className="break-words text-[11px] font-black uppercase tracking-[0.16em] text-[var(--text-tertiary)]">{title}</p>
+          <p className="mt-3 break-words text-[24px] font-black leading-none tracking-tight text-[var(--text-primary)] sm:text-[28px]">{value}</p>
+          {helper && <p className="mt-2 break-words text-sm text-[var(--text-secondary)]">{helper}</p>}
         </div>
         {Icon && (
           <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/60 text-[var(--text-primary)] shadow-inner dark:bg-white/5">

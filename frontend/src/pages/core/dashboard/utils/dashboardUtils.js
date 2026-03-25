@@ -1,6 +1,6 @@
-export const sectionShellClass = "rounded-[28px] border border-[color-mix(in_srgb,var(--border-default)_88%,white_12%)] bg-[linear-gradient(180deg,color-mix(in_srgb,var(--bg-secondary)_96%,white_4%),color-mix(in_srgb,var(--bg-secondary)_100%,black_0%))] p-6 shadow-[0_20px_60px_rgba(2,6,23,0.08)]";
+export const sectionShellClass = "rounded-[28px] border border-[color-mix(in_srgb,var(--border-default)_88%,white_12%)] bg-[linear-gradient(180deg,color-mix(in_srgb,var(--bg-secondary)_96%,white_4%),color-mix(in_srgb,var(--bg-secondary)_100%,black_0%))] p-4 sm:p-6 shadow-[0_20px_60px_rgba(2,6,23,0.08)]";
 
-export const panelClass = "rounded-[24px] border border-[color-mix(in_srgb,var(--border-default)_90%,white_10%)] bg-[color-mix(in_srgb,var(--bg-tertiary)_88%,white_12%)] p-5 shadow-[0_12px_35px_rgba(15,23,42,0.08)]";
+export const panelClass = "rounded-[24px] border border-[color-mix(in_srgb,var(--border-default)_90%,white_10%)] bg-[color-mix(in_srgb,var(--bg-tertiary)_88%,white_12%)] p-4 sm:p-5 shadow-[0_12px_35px_rgba(15,23,42,0.08)]";
 
 export const toneClasses = {
   blue: "bg-blue-500",

@@ -24,13 +24,13 @@ export default function FeedPanel({ title, icon, items, emptyText, badgeLabel, a
             <p className="mt-0.5 text-xs text-[var(--text-secondary)] sm:text-sm">Latest high-signal updates only.</p>
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center sm:justify-end">
+        <div className="grid grid-cols-1 gap-2 sm:flex sm:items-center sm:justify-end">
           {badgeLabel && <span className="inline-flex items-center justify-center rounded-full border border-[var(--border-default)] bg-[var(--bg-tertiary)] px-3 py-1 text-xs font-semibold text-[var(--text-secondary)]">{badgeLabel}</span>}
           {actionLabel && typeof onActionClick === "function" && (
             <button
               type="button"
               onClick={onActionClick}
-              className="inline-flex items-center justify-center whitespace-nowrap rounded-full border border-[var(--border-default)] bg-[var(--bg-card)] px-3 py-1 text-xs font-semibold text-[var(--accent-primary)]"
+              className="inline-flex items-center justify-center rounded-full border border-[var(--border-default)] bg-[var(--bg-card)] px-3 py-1 text-xs font-semibold text-[var(--accent-primary)] whitespace-normal break-words sm:whitespace-nowrap"
             >
               {actionLabel}
             </button>
@@ -53,7 +53,7 @@ export default function FeedPanel({ title, icon, items, emptyText, badgeLabel, a
             >
               <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
                 <div className="min-w-0">
-                  <p className="text-sm font-semibold text-[var(--text-primary)]">{item.title}</p>
+                  <p className="break-words text-sm font-semibold text-[var(--text-primary)]">{item.title}</p>
                   {item.meta && <p className="mt-1 text-xs text-[var(--text-tertiary)]">{item.meta}</p>}
                 </div>
                 {item.badge && <span className={clsx("inline-flex self-start rounded-full border px-2.5 py-1 text-[11px] font-semibold", badgeClasses[item.badgeTone || "neutral"])}>{item.badge}</span>}
