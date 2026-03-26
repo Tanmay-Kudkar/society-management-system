@@ -770,8 +770,12 @@ export default function Layout() {
     return (path) => withSocietyScope(path, scopedSocietyId);
   }, [isMasterSocietyMode, scopedSocietyId]);
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    const result = await logout();
+    if (!result?.success) {
+      toast.error(result?.error || "Unable to logout right now.");
+      return;
+    }
     navigate("/login");
   };
 

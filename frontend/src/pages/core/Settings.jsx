@@ -338,8 +338,11 @@ export default function Settings() {
 
       if (emailChanged) {
         setSaved(true)
-        setTimeout(() => {
-          logout()
+        setTimeout(async () => {
+          const result = await logout()
+          if (!result?.success) {
+            setError(result?.error || 'Unable to logout right now')
+          }
         }, 900)
         return
       }
@@ -434,8 +437,11 @@ export default function Settings() {
   }
 
   /* ── Logout all ── */
-  const handleLogoutAll = () => {
-    logout()
+  const handleLogoutAll = async () => {
+    const result = await logout()
+    if (!result?.success) {
+      setError(result?.error || 'Unable to logout right now')
+    }
   }
 
   if (!user) {
