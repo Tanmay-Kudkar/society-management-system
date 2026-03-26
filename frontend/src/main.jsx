@@ -7,7 +7,6 @@ import {
 } from "@tanstack/react-query";
 import { AuthProvider, SettingsProvider } from "./context";
 import App from "./App.jsx";
-import "leaflet/dist/leaflet.css";
 import "./styles/global.css";
 
 function applyInitialThemeClass() {

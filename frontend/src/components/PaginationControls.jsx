@@ -17,6 +17,7 @@ export default function PaginationControls({
 
   const startIndex = (safePage - 1) * normalizedPageSize + 1
   const endIndex = Math.min(safePage * normalizedPageSize, totalItems)
+  const canChangePageSize = typeof onPageSizeChange === 'function' && Array.isArray(pageSizeOptions) && pageSizeOptions.length > 0
 
   return (
     <div
@@ -31,20 +32,22 @@ export default function PaginationControls({
       </p>
 
       <div className="flex flex-wrap items-center gap-2">
-        <label className="inline-flex items-center gap-2 text-sm text-[var(--text-secondary)]">
-          Per page
-          <select
-            value={normalizedPageSize}
-            onChange={(e) => onPageSizeChange?.(Number(e.target.value))}
-            className="rounded-lg border border-[var(--border-default)] bg-[var(--bg-card)] px-2 py-1 text-sm text-[var(--text-primary)] outline-none"
-          >
-            {pageSizeOptions.map((option) => (
-              <option key={option} value={option}>
-                {option}
-              </option>
-            ))}
-          </select>
-        </label>
+        {canChangePageSize && (
+          <label className="inline-flex items-center gap-2 text-sm text-[var(--text-secondary)]">
+            Per page
+            <select
+              value={normalizedPageSize}
+              onChange={(e) => onPageSizeChange(Number(e.target.value))}
+              className="rounded-lg border border-[var(--border-default)] bg-[var(--bg-card)] px-2 py-1 text-sm text-[var(--text-primary)] outline-none"
+            >
+              {pageSizeOptions.map((option) => (
+                <option key={option} value={option}>
+                  {option}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
 
         <button
           type="button"

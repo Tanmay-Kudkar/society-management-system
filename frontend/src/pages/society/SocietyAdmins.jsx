@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, lazy, Suspense } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context'
@@ -17,19 +17,13 @@ import useMinLoadingTime from '../../hooks/useMinLoadingTime'
 import {
   UserCheck, Plus, Edit, Trash2, Search, X, Building2,
   Eye, EyeOff, Mail, Phone, MapPin, Shield, ChevronRight,
-  Home, Store, Layers, User, Upload, LocateFixed
+  Home, Store, Layers, User, Upload
 } from 'lucide-react'
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const PINCODE_REGEX = /^\d{6}$/
-const DEFAULT_SOCIETY_LOCATION = {
-  latitude: 19.076,
-  longitude: 72.8777,
-}
 const pageShellClass = 'rounded-[28px] border border-[color-mix(in_srgb,var(--border-default)_88%,white_12%)] bg-[linear-gradient(180deg,color-mix(in_srgb,var(--bg-secondary)_96%,white_4%),color-mix(in_srgb,var(--bg-secondary)_100%,black_0%))] shadow-[0_20px_60px_rgba(2,6,23,0.08)]'
 const pagePanelClass = 'rounded-[18px] border border-[color-mix(in_srgb,var(--border-default)_90%,white_10%)] bg-[color-mix(in_srgb,var(--bg-tertiary)_88%,white_12%)] shadow-[0_12px_30px_rgba(15,23,42,0.08)]'
-
-const LocationPickerMap = lazy(() => import('../../components/LocationPickerMap'))
 
 const BULK_FIELD_CONFIG = [
   { key: 'adminName', label: 'Admin Name', required: true, description: 'Full name of society admin', sample: 'Rahul Sharma', aliases: ['adminname', 'admin_name'] },
@@ -44,8 +38,6 @@ const BULK_FIELD_CONFIG = [
   { key: 'registrationNumber', label: 'Registration Number', required: true, description: 'Unique society registration number', sample: 'MH-REG-2026-001', aliases: ['registrationnumber', 'registration_number', 'registrationno', 'registration_no'] },
   { key: 'societyEmail', label: 'Society Email', required: true, description: 'Official society email', sample: 'contact@greenheights.in', aliases: ['societyemail', 'society_email'] },
   { key: 'societyPhone', label: 'Society Phone', required: true, description: '10-digit contact mobile number', sample: '9988776655', aliases: ['societyphone', 'society_phone', 'telephone'] },
-  { key: 'exactLatitude', label: 'Exact Latitude', required: true, description: 'Latitude used for society-admin login proximity checks', sample: '19.0760', aliases: ['exactlatitude', 'exact_latitude', 'latitude', 'lat'] },
-  { key: 'exactLongitude', label: 'Exact Longitude', required: true, description: 'Longitude used for society-admin login proximity checks', sample: '72.8777', aliases: ['exactlongitude', 'exact_longitude', 'longitude', 'lng', 'lon'] },
   { key: 'totalFlats', label: 'Flats', required: true, description: 'Total flat count (0 or more)', sample: '120', aliases: ['flats', 'totalflats', 'total_flats'] },
   { key: 'totalShops', label: 'Shops', required: true, description: 'Total shop count (0 or more)', sample: '8', aliases: ['shops', 'totalshops', 'total_shops'] },
   { key: 'totalOffices', label: 'Offices', required: true, description: 'Total office count (0 or more)', sample: '5', aliases: ['offices', 'totaloffices', 'total_offices'] },
@@ -122,7 +114,7 @@ const validateBulkRows = ({ rows, isPlatformOwner, existingAdminEmails, existing
     const requiredFields = [
       'adminName', 'adminEmail', 'adminPassword', 'adminPhone',
       'societyName', 'address', 'state', 'city', 'pincode',
-      'registrationNumber', 'societyEmail', 'societyPhone', 'exactLatitude', 'exactLongitude',
+      'registrationNumber', 'societyEmail', 'societyPhone',
       'totalFlats', 'totalShops', 'totalOffices', 'totalWings', 'totalFloors',
     ]
 
@@ -177,17 +169,6 @@ const validateBulkRows = ({ rows, isPlatformOwner, existingAdminEmails, existing
       }
     })
 
-    const exactLatitude = Number(normalizeText(row.exactLatitude))
-    const exactLongitude = Number(normalizeText(row.exactLongitude))
-
-    if (!Number.isFinite(exactLatitude) || exactLatitude < -90 || exactLatitude > 90) {
-      errors.push('Exact Latitude must be a number between -90 and 90')
-    }
-
-    if (!Number.isFinite(exactLongitude) || exactLongitude < -180 || exactLongitude > 180) {
-      errors.push('Exact Longitude must be a number between -180 and 180')
-    }
-
     if (adminEmail) {
       const adminEmailKey = `admin:${adminEmail}`
       if (seenEmails.has(adminEmailKey)) {
@@ -239,8 +220,6 @@ const validateBulkRows = ({ rows, isPlatformOwner, existingAdminEmails, existing
       registrationNumber: normalizeText(row.registrationNumber),
       societyEmail,
       societyPhone,
-      exactLatitude,
-      exactLongitude,
       totalFlats: parsedNumbers.totalFlats,
       totalShops: parsedNumbers.totalShops,
       totalOffices: parsedNumbers.totalOffices,
@@ -301,8 +280,6 @@ export default function SocietyAdmins() {
   const [adminFilter, setAdminFilter] = useState('all')
   const [deletingSocietyId, setDeletingSocietyId] = useState(null)
   const [hasWingsEnabled, setHasWingsEnabled] = useState(true)
-  const [exactLocation, setExactLocation] = useState(DEFAULT_SOCIETY_LOCATION)
-  const [capturingLocation, setCapturingLocation] = useState(false)
 
   // Fetch all users, filter to SOCIETY_ADMIN
   const { data: allUsers = [], isLoading: usersLoading } = useQuery({
@@ -341,6 +318,7 @@ export default function SocietyAdmins() {
 
   const editingSociety = editingAdmin?.societyId ? societyMap[editingAdmin.societyId] : null
   const activeSociety = assignmentSociety || editingSociety
+  const canConfigureWings = !editingAdmin && !assignmentSociety
 
   useEffect(() => {
     if (!showModal) return
@@ -349,45 +327,6 @@ export default function SocietyAdmins() {
       : true
     setHasWingsEnabled(Boolean(defaultHasWings))
   }, [showModal, activeSociety])
-
-  useEffect(() => {
-    if (!showModal) return
-    setExactLocation({
-      latitude: Number.isFinite(Number(activeSociety?.exactLatitude))
-        ? Number(activeSociety.exactLatitude)
-        : DEFAULT_SOCIETY_LOCATION.latitude,
-      longitude: Number.isFinite(Number(activeSociety?.exactLongitude))
-        ? Number(activeSociety.exactLongitude)
-        : DEFAULT_SOCIETY_LOCATION.longitude,
-    })
-  }, [showModal, activeSociety])
-
-  const captureBrowserLocation = () => {
-    if (!navigator.geolocation) {
-      setFormError('Geolocation is not supported by this browser. Set latitude/longitude manually.')
-      return
-    }
-
-    setCapturingLocation(true)
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        setExactLocation({
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
-        })
-        setCapturingLocation(false)
-      },
-      () => {
-        setFormError('Unable to fetch current location. Move the map pin or enter coordinates manually.')
-        setCapturingLocation(false)
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 7000,
-        maximumAge: 120000,
-      },
-    )
-  }
 
   const filteredAdmins = useMemo(() => {
     const q = searchTerm.toLowerCase()
@@ -512,8 +451,6 @@ export default function SocietyAdmins() {
           registrationNumber: row.registrationNumber,
           email: row.societyEmail,
           telephone: row.societyPhone,
-          exactLatitude: row.exactLatitude,
-          exactLongitude: row.exactLongitude,
           totalFlats: row.totalFlats,
           totalShops: row.totalShops,
           totalOffices: row.totalOffices,
@@ -830,6 +767,9 @@ export default function SocietyAdmins() {
   const handleSubmit = (e) => {
     e.preventDefault()
     const fd = new FormData(e.target)
+    const resolvedHasWings = canConfigureWings
+      ? hasWingsEnabled
+      : Boolean(activeSociety?.hasWings ?? ((activeSociety?.totalWings ?? 0) > 0))
 
     const adminData = {
       name: fd.get('adminName')?.trim(),
@@ -847,14 +787,14 @@ export default function SocietyAdmins() {
       registrationNumber: fd.get('registrationNumber')?.trim(),
       email: fd.get('societyEmail')?.trim(),
       telephone: (fd.get('telephone') || fd.get('societyPhone'))?.trim(),
-      exactLatitude: Number(exactLocation.latitude),
-      exactLongitude: Number(exactLocation.longitude),
       totalFlats: parseInt(fd.get('totalFlats'), 10),
       totalShops: parseInt(fd.get('totalShops'), 10),
       totalOffices: parseInt(fd.get('totalOffices'), 10),
-      totalWings: hasWingsEnabled ? parseInt(fd.get('totalWings'), 10) : 0,
-      totalFloors: parseInt(fd.get('totalFloors'), 10),
-      hasWings: hasWingsEnabled,
+      totalWings: resolvedHasWings
+        ? parseInt(canConfigureWings ? fd.get('totalWings') : String(activeSociety?.totalWings ?? 0), 10)
+        : 0,
+      totalFloors: parseInt(fd.get('totalFloors') || String(activeSociety?.totalFloors ?? 1), 10),
+      hasWings: resolvedHasWings,
       twoWheelerParkingCapacity: fd.get('twoWheelerParkingCapacity') ? parseInt(fd.get('twoWheelerParkingCapacity'), 10) || undefined : undefined,
       fourWheelerParkingCapacity: fd.get('fourWheelerParkingCapacity') ? parseInt(fd.get('fourWheelerParkingCapacity'), 10) || undefined : undefined,
     }
@@ -887,12 +827,10 @@ export default function SocietyAdmins() {
     if (!societyData.registrationNumber) missingSocietyFields.push('Registration Number')
     if (!societyData.email) missingSocietyFields.push('Society Email')
     if (!societyData.telephone) missingSocietyFields.push('Society Phone')
-    if (!Number.isFinite(societyData.exactLatitude)) missingSocietyFields.push('Exact Latitude')
-    if (!Number.isFinite(societyData.exactLongitude)) missingSocietyFields.push('Exact Longitude')
     if (Number.isNaN(societyData.totalFlats)) missingSocietyFields.push('Flats')
     if (Number.isNaN(societyData.totalShops)) missingSocietyFields.push('Shops')
     if (Number.isNaN(societyData.totalOffices)) missingSocietyFields.push('Offices')
-    if (hasWingsEnabled && Number.isNaN(societyData.totalWings)) missingSocietyFields.push('Wings')
+    if (resolvedHasWings && Number.isNaN(societyData.totalWings)) missingSocietyFields.push('Wings')
     if (Number.isNaN(societyData.totalFloors)) missingSocietyFields.push('Floors')
 
     if (missingSocietyFields.length > 0) {
@@ -902,16 +840,6 @@ export default function SocietyAdmins() {
 
     if (societyData.totalFloors < 1) {
       setFormError('Floors must be at least 1')
-      return
-    }
-
-    if (societyData.exactLatitude < -90 || societyData.exactLatitude > 90) {
-      setFormError('Exact Latitude must be between -90 and 90')
-      return
-    }
-
-    if (societyData.exactLongitude < -180 || societyData.exactLongitude > 180) {
-      setFormError('Exact Longitude must be between -180 and 180')
       return
     }
 
@@ -1259,96 +1187,35 @@ export default function SocietyAdmins() {
               </div>
 
               <div className="flex flex-col gap-3">
-                <h4 className="m-0 text-sm font-semibold text-[var(--text-secondary)] flex items-center gap-2 pb-2 border-b border-[var(--border-light)]"><MapPin size={16} /> Exact Society Location</h4>
-                <p className="m-0 text-xs text-[var(--text-tertiary)]">Required for Society Admin login verification. Use current location, drag the map pin, or type coordinates.</p>
-                <div className="flex items-center justify-between gap-3 rounded-xl border border-[var(--border-light)] bg-[var(--bg-tertiary)] px-3 py-2">
-                  <div className="text-xs text-[var(--text-secondary)]">
-                    {exactLocation.latitude.toFixed(6)}, {exactLocation.longitude.toFixed(6)}
-                  </div>
-                  <NeonSweepButton
-                    tone="slate"
-                    size="sm"
-                    type="button"
-                    onClick={captureBrowserLocation}
-                    disabled={capturingLocation}
-                  >
-                    <LocateFixed size={15} />
-                    {capturingLocation ? 'Capturing...' : 'Use Current Location'}
-                  </NeonSweepButton>
-                </div>
-                <div className="grid grid-cols-2 max-md:grid-cols-1 gap-3">
-                  <NumberInput
-                    label="Exact Latitude"
-                    name="exactLatitude"
-                    min={-90}
-                    max={90}
-                    step="any"
-                    value={exactLocation.latitude}
-                    onChange={(event) => {
-                      const nextValue = Number(event.target.value)
-                      setExactLocation((prev) => ({
-                        ...prev,
-                        latitude: Number.isFinite(nextValue) ? nextValue : prev.latitude,
-                      }))
-                    }}
-                    required
-                  />
-                  <NumberInput
-                    label="Exact Longitude"
-                    name="exactLongitude"
-                    min={-180}
-                    max={180}
-                    step="any"
-                    value={exactLocation.longitude}
-                    onChange={(event) => {
-                      const nextValue = Number(event.target.value)
-                      setExactLocation((prev) => ({
-                        ...prev,
-                        longitude: Number.isFinite(nextValue) ? nextValue : prev.longitude,
-                      }))
-                    }}
-                    required
-                  />
-                </div>
-                <div className="overflow-hidden rounded-xl border border-[var(--border-light)] bg-[var(--bg-secondary)]">
-                  <Suspense fallback={<div className="h-[260px] grid place-items-center text-sm text-[var(--text-tertiary)]">Loading map...</div>}>
-                    <LocationPickerMap
-                      location={exactLocation}
-                      onPick={(picked) => {
-                        setExactLocation({
-                          latitude: picked.latitude,
-                          longitude: picked.longitude,
-                        })
-                      }}
-                    />
-                  </Suspense>
-                </div>
-              </div>
-
-              <div className="flex flex-col gap-3">
                 <h4 className="m-0 text-sm font-semibold text-[var(--text-secondary)] flex items-center gap-2 pb-2 border-b border-[var(--border-light)]"><Home size={16} /> Property Capacity</h4>
-                <label className="inline-flex items-center gap-2 rounded-xl border border-[var(--border-light)] bg-[var(--bg-tertiary)] px-3 py-2 text-sm text-[var(--text-primary)]">
-                  <input
-                    type="checkbox"
-                    name="hasWings"
-                    checked={hasWingsEnabled}
-                    onChange={(e) => setHasWingsEnabled(e.target.checked)}
-                    className="h-4 w-4 accent-cyan-600"
-                  />
-                  Society has multiple wings/towers
-                </label>
-                <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
+                {canConfigureWings ? (
+                  <label className="inline-flex items-center gap-2 rounded-xl border border-[var(--border-light)] bg-[var(--bg-tertiary)] px-3 py-2 text-sm text-[var(--text-primary)]">
+                    <input
+                      type="checkbox"
+                      name="hasWings"
+                      checked={hasWingsEnabled}
+                      onChange={(e) => setHasWingsEnabled(e.target.checked)}
+                      className="h-4 w-4 accent-cyan-600"
+                    />
+                    Society has multiple wings/towers
+                  </label>
+                ) : (
+                  <div className="rounded-xl border border-[var(--border-light)] bg-[var(--bg-tertiary)] px-3 py-2 text-sm text-[var(--text-secondary)]">
+                    Wing mode is locked after society creation to avoid unit/wing data mismatch.
+                  </div>
+                )}
+                <input type="hidden" name="totalFloors" value={activeSociety?.totalFloors ?? 1} />
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
                   <NumberInput label="Flats" name="totalFlats" min={0} defaultValue={activeSociety?.totalFlats ?? 0} required />
                   <NumberInput label="Shops" name="totalShops" min={0} defaultValue={activeSociety?.totalShops ?? 0} required />
                   <NumberInput label="Offices" name="totalOffices" min={0} defaultValue={activeSociety?.totalOffices ?? 0} required />
-                  <NumberInput label="Floors" name="totalFloors" min={1} defaultValue={activeSociety?.totalFloors ?? 1} required />
                   <NumberInput
                     label="Wings"
                     name="totalWings"
                     min={0}
                     defaultValue={activeSociety?.totalWings ?? 0}
-                    required={hasWingsEnabled}
-                    disabled={!hasWingsEnabled}
+                    required={hasWingsEnabled && canConfigureWings}
+                    disabled={!hasWingsEnabled || !canConfigureWings}
                   />
                 </div>
                 {!hasWingsEnabled && (
