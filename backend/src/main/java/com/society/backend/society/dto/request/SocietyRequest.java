@@ -42,12 +42,10 @@ public class SocietyRequest {
     @Pattern(regexp = "^(\\+91)?[6-9]\\d{9}$", message = "Invalid telephone format")
     private String telephone;
 
-    @NotNull(message = "Exact latitude is required")
     @DecimalMin(value = "-90.0", message = "Exact latitude must be at least -90")
     @DecimalMax(value = "90.0", message = "Exact latitude must be at most 90")
     private Double exactLatitude;
 
-    @NotNull(message = "Exact longitude is required")
     @DecimalMin(value = "-180.0", message = "Exact longitude must be at least -180")
     @DecimalMax(value = "180.0", message = "Exact longitude must be at most 180")
     private Double exactLongitude;

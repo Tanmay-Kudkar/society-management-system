@@ -117,7 +117,6 @@ export default function Dashboard() {
     fourWheelerCount,
     twoWheelerCount,
     ticketsBySociety,
-    pendingTickets,
   } = dashboardStats;
 
   if (showSkeleton) {
@@ -335,12 +334,11 @@ export default function Dashboard() {
             </section>
           )}
 
-          {isSocietyOpsLevel && (
+          {isSocietyOpsLevel && canSeeContractAlerts && (
             <AlertsSection
               canSeeContractAlerts={canSeeContractAlerts}
               expiringContracts={expiringContracts}
               expiringTenants={expiringTenants}
-              pendingTickets={pendingTickets}
               navigate={navigateToScoped}
             />
           )}

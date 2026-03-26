@@ -3,6 +3,20 @@ import axios from 'axios'
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080'
 export const REQUEST_ACTIVITY_EVENT = 'societyhub:request-activity'
 
+const getStoredToken = () => {
+  if (typeof window === 'undefined') return null
+  return localStorage.getItem('token') || sessionStorage.getItem('token')
+}
+
+const clearStoredAuth = () => {
+  if (typeof window === 'undefined') return
+  localStorage.removeItem('token')
+  localStorage.removeItem('user')
+  localStorage.removeItem('authStorageMode')
+  sessionStorage.removeItem('token')
+  sessionStorage.removeItem('user')
+}
+
 let activeRequestCount = 0
 let hasConnectionFailure = false
 
@@ -29,7 +43,7 @@ api.interceptors.request.use(
     activeRequestCount += 1
     emitRequestActivity()
 
-    const token = localStorage.getItem('token')
+    const token = getStoredToken()
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
     }
@@ -52,8 +66,7 @@ api.interceptors.response.use(
     emitRequestActivity()
 
     if (error.response?.status === 401) {
-      localStorage.removeItem('token')
-      localStorage.removeItem('user')
+      clearStoredAuth()
       // Do NOT use window.location.href in web apps - it bypasses React Router
       // and causes 404 on SPAs. Let the app's auth context/router handle redirects.
       // Mobile apps may need to handle 401 differently in their own interceptor.
@@ -163,6 +176,7 @@ export const flatApi = {
 export const wingApi = {
   getBySociety: (societyId) => api.get(`/api/wings/society/${societyId}`),
   create: (data) => api.post('/api/wings', data),
+  delete: (id, force = false) => api.delete(`/api/wings/${id}?force=${force}`),
   syncWithSocietyConfig: (societyId, force = false) => api.post(`/api/wings/society/${societyId}/sync-config?force=${force}`),
 }
 

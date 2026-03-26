@@ -1,9 +1,9 @@
-import { AlertTriangle, Clock, UserCheck } from "lucide-react";
+import { AlertTriangle, UserCheck } from "lucide-react";
 import AlertCard from "../components/AlertCard";
 
-export default function AlertsSection({ canSeeContractAlerts, expiringContracts, expiringTenants, pendingTickets, navigate }) {
+export default function AlertsSection({ canSeeContractAlerts, expiringContracts, expiringTenants, navigate }) {
   return (
-    <div className="grid gap-5 lg:grid-cols-3">
+    <div className="grid gap-5 lg:grid-cols-2">
       {canSeeContractAlerts && (
         <AlertCard
           title="Expiring Contracts"
@@ -32,18 +32,6 @@ export default function AlertsSection({ canSeeContractAlerts, expiringContracts,
           onActionClick={() => navigate("/tenants")}
         />
       )}
-      <AlertCard
-        title="Pending Tickets"
-        icon={Clock}
-        tone="red"
-        items={pendingTickets.map((ticket) => ({
-          title: ticket.title,
-          subtitle: ticket.type,
-          onClick: () => navigate(`/tickets?ticket=${encodeURIComponent(ticket.id)}`),
-        }))}
-        actionLabel="Open Tickets"
-        onActionClick={() => navigate("/tickets")}
-      />
     </div>
   );
 }

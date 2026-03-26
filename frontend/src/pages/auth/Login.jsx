@@ -16,6 +16,7 @@ const DEFAULT_LOCATION = {
   latitude: 19.076,
   longitude: 72.8777,
 }
+const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || ''
 
 export default function Login() {
   const [email, setEmail] = useState('')
@@ -41,15 +42,15 @@ export default function Login() {
   const navigate = useNavigate()
 
   const resolveLocationName = useCallback(async (latitude, longitude) => {
+    if (!GOOGLE_MAPS_API_KEY) {
+      setLocationName('Pinned location selected')
+      return
+    }
+
     setIsResolvingLocation(true)
     try {
       const response = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`,
-        {
-          headers: {
-            Accept: 'application/json',
-          },
-        },
+        `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${GOOGLE_MAPS_API_KEY}`,
       )
 
       if (!response.ok) {
@@ -57,16 +58,25 @@ export default function Login() {
       }
 
       const data = await response.json()
-      const address = data?.address || {}
+      const firstResult = data?.results?.[0]
+      const components = firstResult?.address_components || []
+
+      const getAddressPart = (types) => {
+        const found = components.find((component) =>
+          Array.isArray(component.types) && component.types.some((type) => types.includes(type)),
+        )
+        return found?.long_name || ''
+      }
+
       const conciseName = [
-        address.suburb || address.neighbourhood || address.road || address.hamlet,
-        address.city || address.town || address.village || address.county,
-        address.state,
+        getAddressPart(['sublocality', 'sublocality_level_1', 'neighborhood', 'route']),
+        getAddressPart(['locality', 'administrative_area_level_2']),
+        getAddressPart(['administrative_area_level_1']),
       ]
         .filter(Boolean)
         .join(', ')
 
-      setLocationName(conciseName || data?.display_name || 'Pinned location selected')
+      setLocationName(conciseName || firstResult?.formatted_address || 'Pinned location selected')
     } catch (_) {
       setLocationName('Pinned location selected')
     } finally {
@@ -377,7 +387,7 @@ export default function Login() {
                     <div className="flex min-w-0 flex-col items-start gap-2 min-[420px]:flex-row min-[420px]:items-center min-[420px]:justify-between sm:gap-3">
                       <p className="inline-flex min-w-0 items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.04em] text-[color-mix(in_srgb,var(--text-secondary)_75%,#94a3b8_25%)]">
                         <MapPin size={12} className="shrink-0" />
-                        <span className="truncate">OSM Proximity Monitor</span>
+                        <span className="truncate">Google Maps Proximity Monitor</span>
                       </p>
                       <span className="max-w-full rounded-full bg-[color-mix(in_srgb,var(--bg-primary)_80%,transparent)] px-2 py-0.5 text-[10px] font-medium text-[var(--text-tertiary)]">
                         Session Pin

@@ -37,4 +37,13 @@ public class WingController {
         int removed = wingService.syncWithSocietyConfig(societyId, force);
         return ResponseEntity.ok("Wing synchronization complete. Removed " + removed + " extra wing(s).");
     }
+
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'MANAGER')")
+    public ResponseEntity<Void> delete(
+            @PathVariable Long id,
+            @RequestParam(defaultValue = "false") boolean force) {
+        wingService.delete(id, force);
+        return ResponseEntity.noContent().build();
+    }
 }

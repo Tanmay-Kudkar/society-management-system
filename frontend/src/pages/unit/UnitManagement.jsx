@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef, useEffect } from 'react'
+import { useState, useMemo, useRef, useEffect, useCallback } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '../../context'
@@ -8,7 +8,7 @@ import { flatApi, societyApi, wingApi, userApi, tenantApi } from '../../../../ap
 import { 
   Plus, Edit, Trash2, Search, X, Home, Store, Briefcase, Layers, 
   Users, UserPlus, UserCheck, UserX, Upload, Download, AlertCircle,
-  Link, Unlink, UserCog, Building2, Shield, FileSpreadsheet, CheckCircle, XCircle, Info, Eye, EyeOff
+  Link, Unlink, UserCog, Building2, Shield, FileSpreadsheet, CheckCircle, XCircle, Info, Eye, EyeOff, User, Phone, ChevronDown
 } from 'lucide-react'
 import clsx from 'clsx'
 import { validateFlatForm, validateUserForm, parseApiError } from '../../utils'
@@ -56,7 +56,13 @@ const formatRoleLabel = (role) => {
 
 export default function UnitManagement() {
   const { user, isCommitteeLevel, canManageWings } = useAuth()
-  const { showToast } = useToast()
+  const toast = useToast()
+  const showToast = useCallback((message, type = 'info') => {
+    const handler = toast?.[type] || toast?.info
+    if (typeof handler === 'function') {
+      handler(message)
+    }
+  }, [toast])
   const confirmDialog = useConfirmDialog()
   const queryClient = useQueryClient()
   const [searchParams, setSearchParams] = useSearchParams()
@@ -110,6 +116,7 @@ export default function UnitManagement() {
   const [showUserModal, setShowUserModal] = useState(false)
   const [showEditUserModal, setShowEditUserModal] = useState(false)
   const [showBulkImportModal, setShowBulkImportModal] = useState(false)
+  const [showWingManagementModal, setShowWingManagementModal] = useState(false)
   
   // Editing states
   const [editingUnit, setEditingUnit] = useState(null)
@@ -119,6 +126,7 @@ export default function UnitManagement() {
   // Filter states
   const [searchTerm, setSearchTerm] = useState('')
   const filterType = unitTypeFromUrl || ''
+  const filterWing = searchParams.get('wing') || ''
   const filterStatus = searchParams.get('status') || ''
   const [viewMode, setViewMode] = useState('units') // 'units' or 'table'
   const [unitPage, setUnitPage] = useState(1)
@@ -231,30 +239,152 @@ export default function UnitManagement() {
   }, [flats, scopedUsers, memberUsers, activeTenantByFlatId])
 
   // Filtered data - search includes assigned user name
+  const wingFilterOptions = useMemo(() => {
+    const set = new Set()
+    flats.forEach((f) => {
+      const wing = (f.wingName || '').trim()
+      if (wing) set.add(wing)
+    })
+    return Array.from(set).sort((a, b) => a.localeCompare(b))
+  }, [flats])
+
+  const hasWingStructure = currentSociety?.hasWings !== false && wingFilterOptions.length > 0
+  const noWingsMode = currentSociety?.hasWings === false
+
+  const visibleUnitsForTypeOptions = useMemo(() => {
+    if (!hasWingStructure) return flats
+    if (!filterWing) return []
+
+    const wingName = filterWing === '__NO_WING__' ? '' : filterWing
+    return flats.filter((flat) => {
+      const currentWing = (flat.wingName || '').trim()
+      return wingName ? currentWing === wingName : !currentWing
+    })
+  }, [flats, filterWing, hasWingStructure])
+
+  const availableTypeOptions = useMemo(() => {
+    const typeSet = new Set()
+    visibleUnitsForTypeOptions.forEach((flat) => {
+      typeSet.add(flat.unitType || 'FLAT')
+    })
+    return ['FLAT', 'SHOP', 'OFFICE'].filter((type) => typeSet.has(type))
+  }, [visibleUnitsForTypeOptions])
+
+  const effectiveFilterType = availableTypeOptions.includes(filterType) ? filterType : ''
+  const mustSelectWingAndType = hasWingStructure && (!filterWing || !effectiveFilterType)
+
   const filteredUnits = useMemo(() => {
+    if (mustSelectWingAndType) return []
+
     return flats.filter(f => {
       const assignedUser = unitUserMap[f.id]?.member
       const matchesSearch = 
         f.flatNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         assignedUser?.name?.toLowerCase().includes(searchTerm.toLowerCase())
-      const matchesType = !filterType || f.unitType === filterType
+      const matchesType = !effectiveFilterType || f.unitType === effectiveFilterType
+      const wingName = (f.wingName || '').trim()
+      const matchesWing = !filterWing
+        || (filterWing === '__NO_WING__' ? !wingName : wingName === filterWing)
       
       const isOccupied = !!assignedUser || !!unitUserMap[f.id]?.tenant
       const matchesStatus = !filterStatus ||
         (filterStatus === 'OCCUPIED' && isOccupied) ||
         (filterStatus === 'VACANT' && !isOccupied)
 
-      return matchesSearch && matchesType && matchesStatus
+      return matchesSearch && matchesType && matchesWing && matchesStatus
     })
-  }, [flats, searchTerm, filterType, filterStatus, unitUserMap])
+  }, [flats, mustSelectWingAndType, searchTerm, effectiveFilterType, filterWing, filterStatus, unitUserMap])
+
+  const unitCardsMeasureRef = useRef(null)
+  const [cardsColumns, setCardsColumns] = useState(4)
+  const [cardsRows, setCardsRows] = useState(3)
+  const CARD_COL_WIDTH = 360
+  const CARD_COL_GAP = 16
+
+  useEffect(() => {
+    if (viewMode !== 'units') return
+
+    const el = unitCardsMeasureRef.current
+    if (!el) return
+
+    const computeLayout = () => {
+      const width = el.clientWidth || 0
+      const cols = Math.max(1, Math.floor((width + CARD_COL_GAP) / (CARD_COL_WIDTH + CARD_COL_GAP)))
+      setCardsColumns(cols)
+
+      const height = window.innerHeight || 0
+      const rows = height >= 1200 ? 5 : height >= 980 ? 4 : height >= 820 ? 3 : 2
+      setCardsRows(rows)
+    }
+
+    computeLayout()
+
+    let ro
+    if (typeof ResizeObserver !== 'undefined') {
+      ro = new ResizeObserver(() => computeLayout())
+      ro.observe(el)
+    } else {
+      window.addEventListener('resize', computeLayout)
+    }
+
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', computeLayout)
+    }
+
+    return () => {
+      if (ro) ro.disconnect()
+      window.removeEventListener('resize', computeLayout)
+      if (window.visualViewport) {
+        window.visualViewport.removeEventListener('resize', computeLayout)
+      }
+    }
+  }, [viewMode])
+
+  const autoCardsPageSize = useMemo(() => {
+    const computed = Math.max(12, Math.min(120, cardsColumns * cardsRows))
+    return computed
+  }, [cardsColumns, cardsRows])
+
+  const effectiveUnitPageSize = viewMode === 'units' ? autoCardsPageSize : unitPageSize
+  const effectiveUnitTotalPages = useMemo(() => {
+    return Math.max(1, Math.ceil(filteredUnits.length / effectiveUnitPageSize))
+  }, [filteredUnits.length, effectiveUnitPageSize])
+  const safeUnitPage = Math.min(Math.max(1, unitPage), effectiveUnitTotalPages)
 
   const paginatedUnits = useMemo(() => {
-    const start = (unitPage - 1) * unitPageSize
-    return filteredUnits.slice(start, start + unitPageSize)
-  }, [filteredUnits, unitPage, unitPageSize])
+    const start = (safeUnitPage - 1) * effectiveUnitPageSize
+    return filteredUnits.slice(start, start + effectiveUnitPageSize)
+  }, [filteredUnits, safeUnitPage, effectiveUnitPageSize])
+
+  const groupedPaginatedUnits = useMemo(() => {
+    const typeOrder = { FLAT: 0, SHOP: 1, OFFICE: 2 }
+    const buckets = paginatedUnits.reduce((acc, unit) => {
+      const wingKey = (unit.wingName || 'No Wing').trim()
+      const typeKey = unit.unitType || 'FLAT'
+
+      if (!acc[wingKey]) acc[wingKey] = {}
+      if (!acc[wingKey][typeKey]) acc[wingKey][typeKey] = []
+      acc[wingKey][typeKey].push(unit)
+      return acc
+    }, {})
+
+    return Object.entries(buckets)
+      .sort(([a], [b]) => {
+        if (a === 'No Wing') return 1
+        if (b === 'No Wing') return -1
+        return a.localeCompare(b)
+      })
+      .map(([wing, typeMap]) => ({
+        wing,
+        total: Object.values(typeMap).reduce((sum, units) => sum + units.length, 0),
+        types: Object.entries(typeMap)
+          .sort(([a], [b]) => (typeOrder[a] ?? 99) - (typeOrder[b] ?? 99))
+          .map(([type, units]) => ({ type, units })),
+      }))
+  }, [paginatedUnits])
 
   function closeUnitModal(force = false) {
-    if (!force && (createUnitMutation.isPending || updateUnitMutation.isPending || createWingMutation.isPending)) return
+    if (!force && (createUnitMutation.isPending || updateUnitMutation.isPending || createWingMutation.isPending || deleteWingMutation.isPending)) return
     setShowUnitModal(false)
     setEditingUnit(null)
     setUnitFormErrors({})
@@ -320,10 +450,68 @@ export default function UnitManagement() {
   const createWingMutation = useMutation({
     mutationFn: (payload) => wingApi.create(payload),
     onSuccess: () => {
-      queryClient.invalidateQueries(['wings'])
-      queryClient.invalidateQueries(['society', effectiveSocietyId])
+      queryClient.invalidateQueries({ queryKey: ['wings'] })
+      queryClient.invalidateQueries({ queryKey: ['society', effectiveSocietyId] })
     },
   })
+
+  const deleteWingMutation = useMutation({
+    mutationFn: ({ id, force = false }) => wingApi.delete(id, force),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['wings'] })
+      queryClient.invalidateQueries({ queryKey: ['society', effectiveSocietyId] })
+      queryClient.invalidateQueries({ queryKey: ['flats'] })
+      showToast('Wing deleted successfully', 'success')
+    },
+    onError: (err) => {
+      setApiError(parseApiError(err))
+    },
+  })
+
+  const handleDeleteWing = async (wing) => {
+    if (!wing) return
+
+    const linkedCount = flats.filter((flat) => String(flat.wingId || '') === String(wing.id)).length
+
+    const confirmed = await confirmDialog({
+      title: 'Delete Wing',
+      message: `Delete ${wing.name}?${linkedCount > 0 ? ' This wing has linked units.' : ''}`,
+      confirmText: linkedCount > 0 ? 'Force Delete' : 'Delete',
+      tone: 'danger',
+      details: [
+        { label: 'Wing', value: wing.name },
+        { label: 'Floors', value: wing.totalFloors ?? '-' },
+        { label: 'Linked Units', value: linkedCount },
+      ],
+      caution: linkedCount > 0
+        ? 'Force delete will unlink units and remove the wing.'
+        : 'This will permanently remove the wing.',
+    })
+    if (!confirmed) return
+
+    try {
+      await deleteWingMutation.mutateAsync({ id: wing.id, force: linkedCount > 0 })
+      if (String(selectedWingId) === String(wing.id)) {
+        setSelectedWingId('')
+      }
+    } catch (error) {
+      const message = error?.response?.data?.message || ''
+      if (error?.response?.status === 409) {
+        const forceConfirmed = await confirmDialog({
+          title: 'Force Delete Wing',
+          message: `${message}\n\nForce delete will unlink units and remove the wing. Continue?`,
+          confirmText: 'Force Delete',
+          tone: 'danger',
+        })
+        if (forceConfirmed) {
+          await deleteWingMutation.mutateAsync({ id: wing.id, force: true })
+          if (String(selectedWingId) === String(wing.id)) {
+            setSelectedWingId('')
+          }
+        }
+      }
+    }
+  }
 
   // User mutations
   const createUserMutation = useMutation({
@@ -350,7 +538,7 @@ export default function UnitManagement() {
     },
   })
 
-  // ─── User Management Tab: queries & mutations ─────────────────────────
+  // User management tab: queries and mutations
 
   // Fetch roles that current user can create/update/delete
   const { data: creatableRoles = [] } = useQuery({
@@ -479,7 +667,7 @@ export default function UnitManagement() {
 
   useEffect(() => {
     setUnitPage(1)
-  }, [searchTerm, filterType, activeTab])
+  }, [searchTerm, filterType, filterWing, filterStatus, activeTab])
 
   useEffect(() => {
     setTabUsersPage(1)
@@ -583,7 +771,7 @@ export default function UnitManagement() {
     standaloneUpdateUserMutation.mutate({ id: editingStandaloneUser.id, data })
   }
 
-  // ─── End User Management Tab ──────────────────────────────────────────
+  // End user management tab
 
   // Handle unit form submission
   const handleUnitSubmit = async (e) => {
@@ -927,6 +1115,17 @@ export default function UnitManagement() {
         <div className="w-full sm:w-auto flex flex-wrap gap-3">
           {canEditUnits && activeTab === 'units' && (
             <>
+              {canCreateWingsInline && effectiveSocietyId && (
+                <NeonSweepButton
+                  tone="slate"
+                  size="md"
+                  onClick={() => setShowWingManagementModal(true)}
+                  className="w-full sm:w-auto"
+                >
+                  <Building2 size={18} />
+                  Manage Wings
+                </NeonSweepButton>
+              )}
               <NeonSweepButton
                 tone="cyan"
                 size="md"
@@ -1012,65 +1211,28 @@ export default function UnitManagement() {
         </button>
       </div>
 
-      {/* ═══════════════════ UNITS TAB ═══════════════════ */}
+      {/* Units tab */}
       {activeTab === 'units' && (
       <>
       {/* Stats Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-[0.85rem] mb-6 max-[360px]:mb-4 max-[360px]:gap-2">
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-7 gap-[0.85rem] mb-6 max-[360px]:mb-4 max-[360px]:gap-2">
         <StatCard 
           label="Total Units" value={stats.totalUnits} icon={Layers} color="blue" 
-          onClick={() => {
-            const params = new URLSearchParams(searchParams)
-            params.delete('status')
-            params.delete('unitType')
-            setSearchParams(params, { replace: true })
-          }}
-          active={!filterStatus && !filterType}
         />
         <StatCard 
           label="Flats" value={`${stats.flats}/${stats.maxFlats}`} icon={Home} color="indigo" 
-          onClick={() => {
-            const params = new URLSearchParams(searchParams)
-            params.set('unitType', 'FLAT')
-            setSearchParams(params, { replace: true })
-          }}
-          active={filterType === 'FLAT'}
         />
         <StatCard 
           label="Shops" value={`${stats.shops}/${stats.maxShops}`} icon={Store} color="green" 
-          onClick={() => {
-            const params = new URLSearchParams(searchParams)
-            params.set('unitType', 'SHOP')
-            setSearchParams(params, { replace: true })
-          }}
-          active={filterType === 'SHOP'}
         />
         <StatCard 
           label="Offices" value={`${stats.offices}/${stats.maxOffices}`} icon={Briefcase} color="purple" 
-          onClick={() => {
-            const params = new URLSearchParams(searchParams)
-            params.set('unitType', 'OFFICE')
-            setSearchParams(params, { replace: true })
-          }}
-          active={filterType === 'OFFICE'}
         />
         <StatCard 
           label="Occupied" value={stats.occupied} icon={UserCheck} color="teal" 
-          onClick={() => {
-            const params = new URLSearchParams(searchParams)
-            params.set('status', 'OCCUPIED')
-            setSearchParams(params, { replace: true })
-          }}
-          active={filterStatus === 'OCCUPIED'}
         />
         <StatCard 
           label="Vacant" value={stats.vacant} icon={UserX} color="orange" 
-          onClick={() => {
-            const params = new URLSearchParams(searchParams)
-            params.set('status', 'VACANT')
-            setSearchParams(params, { replace: true })
-          }}
-          active={filterStatus === 'VACANT'}
         />
         <StatCard 
           label="Assigned" value={stats.assignedUsers} icon={Users} color="pink" 
@@ -1092,8 +1254,8 @@ export default function UnitManagement() {
 
       {/* Filters */}
       <div className="p-[0.9rem] rounded-[14px] bg-[var(--bg-card)] border border-[var(--border-default)] shadow-[var(--shadow-sm)] mb-6 max-[360px]:mb-4 max-[360px]:p-3 dark:border-[rgba(148,163,184,0.22)] dark:shadow-[0_10px_22px_rgba(2,6,23,0.45)]">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-          <div className="relative flex-1">
+        <div className="flex flex-col gap-3">
+          <div className="relative w-full">
             <Search className="absolute left-3 top-1/2 w-5 h-5 -translate-y-1/2 text-[var(--text-tertiary)]" />
             <input
               type="text"
@@ -1104,45 +1266,116 @@ export default function UnitManagement() {
               style={{ background: 'color-mix(in srgb, var(--bg-card) 86%, var(--bg-secondary))' }}
             />
           </div>
-          <select
-            value={filterType}
-            onChange={(e) => {
-              const params = new URLSearchParams(searchParams)
-              if (e.target.value) {
-                params.set('unitType', e.target.value)
-              } else {
-                params.delete('unitType')
-              }
-              setSearchParams(params, { replace: true })
-            }}
-            className="w-full min-h-[42px] py-[0.55rem] px-3 rounded-xl border border-[var(--border-default)] text-[var(--text-primary)] transition-all focus:outline-none sm:w-[10rem] sm:flex-none"
-            style={{ background: 'color-mix(in srgb, var(--bg-card) 86%, var(--bg-secondary))' }}
-          >
-            <option value="">All Types</option>
-            <option value="FLAT">Flats</option>
-            <option value="SHOP">Shops</option>
-            <option value="OFFICE">Offices</option>
-          </select>
-          <select
-            value={filterStatus}
-            onChange={(e) => {
-              const params = new URLSearchParams(searchParams)
-              if (e.target.value) {
-                params.set('status', e.target.value)
-              } else {
-                params.delete('status')
-              }
-              setSearchParams(params, { replace: true })
-            }}
-            className="w-full min-h-[42px] py-[0.55rem] px-3 rounded-xl border border-[var(--border-default)] text-[var(--text-primary)] transition-all focus:outline-none sm:w-[10rem] sm:flex-none"
-            style={{ background: 'color-mix(in srgb, var(--bg-card) 86%, var(--bg-secondary))' }}
-          >
-            <option value="">All Statuses</option>
-            <option value="OCCUPIED">Occupied</option>
-            <option value="VACANT">Vacant</option>
-          </select>
+
+          <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center">
+          {hasWingStructure && (
+            <div className="relative w-full sm:w-auto">
+              <select
+                value={filterWing}
+                onChange={(e) => {
+                  const params = new URLSearchParams(searchParams)
+                  if (e.target.value) {
+                    params.set('wing', e.target.value)
+                    params.delete('unitType')
+                  } else {
+                    params.delete('wing')
+                    params.delete('unitType')
+                  }
+                  setSearchParams(params, { replace: true })
+                }}
+                className="w-full min-h-[42px] appearance-none py-[0.55rem] pl-3 pr-9 rounded-xl border border-[var(--border-default)] text-[var(--text-primary)] transition-all focus:outline-none sm:w-auto sm:flex-none"
+                style={{ background: 'color-mix(in srgb, var(--bg-card) 86%, var(--bg-secondary))' }}
+              >
+                <option value="">Wing</option>
+                {wingFilterOptions.map((wing) => (
+                  <option key={wing} value={wing}>
+                    {wing}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown size={16} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)]" />
+            </div>
+          )}
+          {hasWingStructure ? (
+            filterWing ? (
+              <div className="relative w-full sm:w-auto">
+                <select
+                  value={effectiveFilterType}
+                  onChange={(e) => {
+                    const params = new URLSearchParams(searchParams)
+                    if (e.target.value) {
+                      params.set('unitType', e.target.value)
+                    } else {
+                      params.delete('unitType')
+                    }
+                    setSearchParams(params, { replace: true })
+                  }}
+                  className="w-full min-h-[42px] appearance-none py-[0.55rem] pl-3 pr-9 rounded-xl border border-[var(--border-default)] text-[var(--text-primary)] transition-all focus:outline-none sm:w-auto sm:flex-none"
+                  style={{ background: 'color-mix(in srgb, var(--bg-card) 86%, var(--bg-secondary))' }}
+                >
+                  <option value="">Select Type</option>
+                  {availableTypeOptions.map((type) => (
+                    <option key={type} value={type}>
+                      {type === 'FLAT' ? 'Flats' : type === 'SHOP' ? 'Shops' : 'Offices'}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown size={16} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)]" />
+              </div>
+            ) : (
+              <div className="inline-flex min-h-[42px] items-center rounded-xl border border-dashed border-[var(--border-default)] px-3 text-[0.8rem] text-[var(--text-tertiary)] sm:w-auto sm:flex-none">
+                Select a wing first
+              </div>
+            )
+          ) : (
+            <div className="relative w-full sm:w-auto">
+              <select
+                value={effectiveFilterType}
+                onChange={(e) => {
+                  const params = new URLSearchParams(searchParams)
+                  if (e.target.value) {
+                    params.set('unitType', e.target.value)
+                  } else {
+                    params.delete('unitType')
+                  }
+                  setSearchParams(params, { replace: true })
+                }}
+                className="w-full min-h-[42px] appearance-none py-[0.55rem] pl-3 pr-9 rounded-xl border border-[var(--border-default)] text-[var(--text-primary)] transition-all focus:outline-none sm:w-auto sm:flex-none"
+                style={{ background: 'color-mix(in srgb, var(--bg-card) 86%, var(--bg-secondary))' }}
+              >
+                <option value="">Select Type</option>
+                {availableTypeOptions.map((type) => (
+                  <option key={type} value={type}>
+                    {type === 'FLAT' ? 'Flats' : type === 'SHOP' ? 'Shops' : 'Offices'}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown size={16} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)]" />
+            </div>
+          )}
+          <div className="relative w-full sm:w-auto">
+            <select
+              value={filterStatus}
+              onChange={(e) => {
+                const params = new URLSearchParams(searchParams)
+                if (e.target.value) {
+                  params.set('status', e.target.value)
+                } else {
+                  params.delete('status')
+                }
+                setSearchParams(params, { replace: true })
+              }}
+              className="w-full min-h-[42px] appearance-none py-[0.55rem] pl-3 pr-9 rounded-xl border border-[var(--border-default)] text-[var(--text-primary)] transition-all focus:outline-none sm:w-auto sm:flex-none"
+              style={{ background: 'color-mix(in srgb, var(--bg-card) 86%, var(--bg-secondary))' }}
+            >
+              <option value="">All Statuses</option>
+              <option value="OCCUPIED">Occupied</option>
+              <option value="VACANT">Vacant</option>
+            </select>
+            <ChevronDown size={16} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)]" />
+          </div>
           {/* View toggle */}
-          <div className="inline-flex flex-none self-stretch rounded-xl border border-[var(--border-default)] overflow-hidden bg-[var(--bg-card)]">
+          <div className="inline-flex w-full flex-none self-stretch rounded-xl border border-[var(--border-default)] overflow-hidden bg-[var(--bg-card)] sm:w-auto sm:self-auto sm:ml-auto">
             <button
               onClick={() => setViewMode('units')}
               className={clsx(
@@ -1168,41 +1401,75 @@ export default function UnitManagement() {
               Table
             </button>
           </div>
+          </div>
         </div>
       </div>
 
       {/* Content */}
-      {viewMode === 'units' ? (
+      {mustSelectWingAndType ? (
+        <div className="rounded-[14px] border border-[var(--border-default)] bg-[var(--bg-card)] px-5 py-8 text-center shadow-[var(--shadow-sm)]">
+          <h3 className="m-0 text-[1rem] font-semibold text-[var(--text-primary)]">Select filters to view units</h3>
+          <p className="mt-2 text-[0.86rem] text-[var(--text-tertiary)]">
+            Choose both a Wing and a Unit Type to render units.
+          </p>
+        </div>
+      ) : viewMode === 'units' ? (
         /* Card View */
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {paginatedUnits.map((unit) => {
+        <div ref={unitCardsMeasureRef} className="space-y-6">
+          {groupedPaginatedUnits.map((wingGroup) => (
+            <section key={wingGroup.wing} className="space-y-4">
+              {noWingsMode ? null : (
+                <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-[var(--border-default)] bg-[var(--bg-card)] px-4 py-2.5">
+                  <h3 className="text-[0.92rem] font-bold text-[var(--text-primary)]">{wingGroup.wing}</h3>
+                  <span className="rounded-full bg-[var(--bg-tertiary)] px-2.5 py-1 text-[0.68rem] font-semibold text-[var(--text-secondary)]">
+                    {wingGroup.total} units
+                  </span>
+                </div>
+              )}
+
+              {wingGroup.types.map((typeGroup) => (
+                <div key={`${wingGroup.wing}-${typeGroup.type}`} className="space-y-3">
+                  <div className="inline-flex items-center rounded-full border border-[var(--border-default)] bg-[var(--bg-card)] px-3 py-1 text-[0.72rem] font-semibold uppercase tracking-[0.06em] text-[var(--text-secondary)]">
+                    {typeGroup.type}
+                  </div>
+
+                  <div className="grid gap-4 justify-start motion-safe:transition-[grid-template-columns] motion-safe:duration-300 [grid-template-columns:repeat(auto-fit,minmax(min(360px,100%),360px))]">
+                    {typeGroup.units.map((unit) => {
             const UnitIcon = getUnitIcon(unit.unitType)
             const unitColor = getUnitColor(unit.unitType)
             const assignedUser = unitUserMap[unit.id]?.member
             const linkedTenant = unitUserMap[unit.id]?.tenant
             const hasAssignedUser = !!assignedUser
             const isOccupied = !!assignedUser || !!linkedTenant
+            const ownerRoleLabel = assignedUser
+              ? (assignedUser.role === 'MEMBER' ? 'Owner' : formatRoleLabel(assignedUser.role))
+              : null
+            const ownerContact = assignedUser?.phone || assignedUser?.email || null
             
             return (
-              <div key={unit.id} className="rounded-2xl border border-[var(--border-default)] bg-[var(--bg-card)] p-3 sm:p-4 shadow-[0_10px_24px_rgba(15,23,42,0.1)] dark:border-[rgba(148,163,184,0.22)] dark:shadow-[0_12px_28px_rgba(2,6,23,0.5)]">
+              <div
+                key={unit.id}
+                className="relative h-full min-h-[480px] rounded-2xl border-2 border-[var(--border-strong)] bg-[var(--bg-card)] p-4 max-[360px]:min-h-[460px] max-[360px]:p-3.5 sm:p-5 shadow-[var(--shadow-xl)] ring-1 ring-[color-mix(in_srgb,var(--bg-tertiary)_55%,transparent)]"
+              >
+              <div className="flex h-full flex-col">
                 {/* Unit Header */}
-                <div className="mb-3 flex flex-col gap-2 border-b border-[var(--border-default)] pb-3 sm:flex-row sm:items-start sm:justify-between">
-                  <div className="flex items-center gap-3">
+                <div className="mb-4 flex flex-col gap-2 border-b border-[var(--border-default)] pb-4 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="flex items-start gap-3">
                     <div className={clsx('flex h-10 w-10 items-center justify-center rounded-lg border border-[var(--border-default)]', unitColor)} style={{ background: 'color-mix(in srgb, var(--bg-tertiary) 65%, transparent)' }}>
                       <UnitIcon className="w-5 h-5 text-[var(--text-secondary)]" />
                     </div>
                     <div>
-                      <h3 className="text-[1.1rem] font-bold text-[var(--text-primary)] leading-tight">{unit.flatNumber}</h3>
-                      <p className="mt-0.5 max-w-[220px] text-[0.75rem] text-[var(--text-tertiary)] sm:max-w-[160px] sm:truncate">
+                      <h3 className="text-[1.2rem] font-bold text-[var(--text-primary)] leading-tight">{unit.flatNumber}</h3>
+                      <p className="mt-1 break-words text-[0.79rem] leading-relaxed text-[var(--text-tertiary)]">
                         {unit.wingName && <span>{unit.wingName} &bull; </span>}
-                        {unit.floor != null && <span>{unit.floor}</span>}
+                        {unit.floor != null && <span>Floor {unit.floor}</span>}
                         <span> &bull; {unit.flatType || unit.unitType || 'FLAT'}</span>
                         {unit.area > 0 && <span> &bull; {unit.area} sq.ft</span>}
                       </p>
                     </div>
                   </div>
                   <span className={clsx(
-                    'self-start rounded-md px-2.5 py-1 text-[0.65rem] font-bold uppercase tracking-wider',
+                    'self-start whitespace-nowrap rounded-full px-2.5 py-1 text-[0.65rem] font-bold uppercase tracking-wider',
                     isOccupied
                       ? 'bg-[rgba(22,163,74,0.1)] text-[#166534] dark:bg-[rgba(34,197,94,0.15)] dark:text-[#4ade80]'
                       : 'bg-[var(--bg-tertiary)] text-[var(--text-secondary)]'
@@ -1211,90 +1478,102 @@ export default function UnitManagement() {
                   </span>
                 </div>
 
-                {/* User / Tenant Info */}
-                <div className="mb-4 flex min-h-[4.5rem] flex-col justify-center rounded-xl border border-[var(--border-default)] bg-[color-mix(in_srgb,var(--bg-card)_82%,var(--bg-tertiary)_18%)] p-3">
-                  {assignedUser ? (
-                    <div className="flex flex-wrap items-start gap-3">
-                      <div className="w-8 h-8 rounded-full bg-[var(--bg-tertiary)] flex items-center justify-center shrink-0 border border-[var(--border-default)]">
-                        <span className="text-[var(--text-secondary)] font-bold text-xs">
-                          {assignedUser.name?.charAt(0)?.toUpperCase()}
-                        </span>
+                {/* Owner / Tenant Sections */}
+                <div className="flex-1 space-y-3.5 max-[360px]:space-y-3">
+                  <div className="min-h-[120px] rounded-xl border border-[var(--border-default)] bg-[color-mix(in_srgb,var(--bg-card)_86%,var(--bg-tertiary)_14%)] p-3.5 max-[360px]:min-h-[112px] max-[360px]:p-3">
+                    <p className="mb-2 text-[0.68rem] font-semibold uppercase tracking-[0.08em] text-[var(--text-tertiary)]">Owner</p>
+                    {assignedUser ? (
+                      <div className="flex items-start gap-3 max-[360px]:gap-2.5">
+                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[var(--border-default)] bg-[var(--bg-tertiary)]">
+                          <span className="text-xs font-bold text-[var(--text-secondary)]">{assignedUser.name?.charAt(0)?.toUpperCase()}</span>
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <p className="truncate text-[0.92rem] font-semibold text-[var(--text-primary)] max-[360px]:text-[0.84rem]">{assignedUser.name}</p>
+                            {ownerRoleLabel && (
+                              <span className="rounded-full border border-[rgba(99,102,241,0.26)] bg-[rgba(99,102,241,0.1)] px-2 py-[0.12rem] text-[0.66rem] font-semibold text-[#4338ca] max-[360px]:px-1.5 max-[360px]:py-[0.08rem] max-[360px]:text-[0.6rem] dark:border-[rgba(129,140,248,0.32)] dark:bg-[rgba(99,102,241,0.18)] dark:text-[#c7d2fe]">
+                                {ownerRoleLabel}
+                              </span>
+                            )}
+                          </div>
+                          {ownerContact && (
+                            <div className="mt-1.5 flex items-center gap-1.5 text-[0.79rem] text-[var(--text-secondary)] max-[360px]:text-[0.72rem]">
+                              <Phone className="h-3.5 w-3.5 max-[360px]:h-3 max-[360px]:w-3" />
+                              {assignedUser?.phone ? (
+                                <a href={`tel:${assignedUser.phone}`} className="truncate text-[#2563eb] transition-colors hover:text-[#1d4ed8] dark:text-[#60a5fa] dark:hover:text-[#93c5fd]">
+                                  {assignedUser.phone}
+                                </a>
+                              ) : (
+                                <span className="truncate">{ownerContact}</span>
+                              )}
+                            </div>
+                          )}
+                        </div>
                       </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="text-[0.9rem] font-semibold text-[var(--text-primary)] truncate">{assignedUser.name}</p>
-                        <p className="text-[0.75rem] text-[var(--text-tertiary)] truncate mt-[1px]">{assignedUser.phone || assignedUser.email}</p>
-                        {linkedTenant && (
-                          <p className="text-[0.72rem] text-[#c2410c] truncate mt-1 dark:text-[#f59e0b]">
-                            Tenant: {linkedTenant.name}{linkedTenant.phone ? ` - ${linkedTenant.phone}` : ''}
-                          </p>
-                        )}
+                    ) : (
+                      <p className="text-[0.82rem] italic text-[var(--text-tertiary)]">No owner assigned</p>
+                    )}
+                  </div>
+
+                  <div className="min-h-[104px] rounded-xl border border-[var(--border-default)] bg-[color-mix(in_srgb,var(--bg-card)_88%,var(--bg-tertiary)_12%)] p-3.5 max-[360px]:min-h-[96px] max-[360px]:p-3">
+                    <p className="mb-2 text-[0.68rem] font-semibold uppercase tracking-[0.08em] text-[var(--text-tertiary)]">Tenant</p>
+                    {linkedTenant ? (
+                      <div className="flex items-start gap-2.5 text-[0.84rem] text-[var(--text-secondary)] max-[360px]:text-[0.78rem]">
+                        <User className="mt-[2px] h-4 w-4 shrink-0 text-[var(--text-tertiary)] max-[360px]:h-3.5 max-[360px]:w-3.5" />
+                        <div className="min-w-0">
+                          <p className="truncate font-medium text-[var(--text-secondary)]">{linkedTenant.name}</p>
+                          {linkedTenant.phone && <p className="truncate text-[0.76rem] text-[var(--text-tertiary)] max-[360px]:text-[0.7rem]">{linkedTenant.phone}</p>}
+                        </div>
                       </div>
-                      <div className="ml-auto flex shrink-0 flex-col items-end gap-1.5 max-[420px]:ml-0 max-[420px]:w-full max-[420px]:flex-row max-[420px]:flex-wrap max-[420px]:items-center max-[420px]:justify-start">
-                        <span className={clsx(
-                          "rounded-md px-2 py-[0.2rem] text-[0.65rem] font-bold uppercase tracking-wide",
-                          assignedUser.role === "MEMBER" 
-                            ? "bg-[rgba(71,85,105,0.08)] text-[var(--text-secondary)] dark:bg-[rgba(148,163,184,0.12)]"
-                            : "bg-[rgba(99,102,241,0.1)] text-[#4338ca] dark:bg-[rgba(99,102,241,0.15)] dark:text-[#818cf8]"
-                        )}>
-                          {assignedUser.role === "MEMBER" ? "Owner" : formatRoleLabel(assignedUser.role)}
-                        </span>
-                        {linkedTenant && (
-                          <span className="rounded-md bg-[rgba(245,158,11,0.1)] px-2 py-[0.2rem] text-[0.65rem] font-bold uppercase tracking-wide text-[#b45309] dark:bg-[rgba(245,158,11,0.15)] dark:text-[#fbbf24]">
-                            Tenant
-                          </span>
-                        )}
-                        {canEditUnits && (
-                          <button
-                            onClick={() => openEditUserModal(assignedUser, unit)}
-                            className="inline-flex items-center justify-center rounded-md border border-[rgba(59,130,246,0.32)] bg-[rgba(59,130,246,0.12)] px-2 py-[0.2rem] text-[0.65rem] font-semibold text-[#1d4ed8] dark:border-[rgba(96,165,250,0.35)] dark:bg-[rgba(59,130,246,0.16)] dark:text-[#93c5fd]"
-                          >
-                            Edit
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  ) : linkedTenant ? (
-                    <div className="flex flex-wrap items-start gap-3">
-                      <div className="w-8 h-8 rounded-full bg-[var(--bg-tertiary)] flex items-center justify-center shrink-0 border border-[var(--border-default)]">
-                        <span className="text-[var(--text-secondary)] font-bold text-xs">
-                          {linkedTenant.name?.charAt(0)?.toUpperCase() || 'T'}
-                        </span>
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="text-[0.9rem] font-semibold text-[var(--text-primary)] truncate">{linkedTenant.name || 'Tenant'}</p>
-                        <p className="text-[0.75rem] text-[var(--text-tertiary)] truncate mt-[1px]">{linkedTenant.phone || linkedTenant.email || '-'}</p>
-                      </div>
-                      <div className="ml-auto flex shrink-0 flex-col items-end gap-1.5 max-[420px]:ml-0 max-[420px]:w-full max-[420px]:flex-row max-[420px]:flex-wrap max-[420px]:items-center max-[420px]:justify-start">
-                        <span className="rounded-md bg-[rgba(245,158,11,0.1)] px-2 py-[0.2rem] text-[0.65rem] font-bold uppercase tracking-wide text-[#b45309] dark:bg-[rgba(245,158,11,0.15)] dark:text-[#fbbf24]">
-                          Tenant
-                        </span>
-                      </div>
-                    </div>
-                  ) : (
-                    <p className="text-[0.85rem] text-[var(--text-tertiary)] italic">No owner assigned</p>
-                  )}
+                    ) : (
+                      <p className="text-[0.82rem] italic text-[var(--text-tertiary)]">No active tenant</p>
+                    )}
+                  </div>
                 </div>
 
                 {/* Actions */}
                 {canEditUnits && (
-                  <div className="flex flex-wrap gap-2 border-t border-[var(--border-default)] pt-3">
-                    <button
+                  <div className="mt-4 grid grid-cols-2 gap-2.5 border-t border-[var(--border-default)] pt-4">
+                    <NeonSweepButton
+                      tone="slate"
+                      size="sm"
                       onClick={() => openUnitModal(unit)}
-                      className="inline-flex h-9 min-w-[110px] flex-1 items-center justify-center gap-[0.35rem] rounded-lg border border-[rgba(148,163,184,0.2)] bg-[var(--bg-tertiary)] px-3 text-[0.8rem] font-semibold text-[var(--text-primary)]"
+                      className="w-full min-h-[36px] font-semibold max-[340px]:px-0"
                     >
-                      <Edit size={14} />
-                      Edit
-                    </button>
-                    {!hasAssignedUser && (
-                      <button
-                        onClick={() => openUserModal(unit)}
-                        className="inline-flex h-9 min-w-[110px] flex-1 items-center justify-center gap-[0.35rem] rounded-lg border border-[rgba(59,130,246,0.25)] bg-[rgba(59,130,246,0.1)] px-3 text-[0.8rem] font-semibold text-[#2563eb] dark:text-[#60a5fa]"
+                      <span className="inline-flex items-center justify-center gap-1.5 max-[340px]:gap-0">
+                        <Edit size={14} />
+                        <span className="max-[340px]:hidden">Edit Unit</span>
+                      </span>
+                    </NeonSweepButton>
+                    {assignedUser && (
+                      <NeonSweepButton
+                        tone="violet"
+                        size="sm"
+                        onClick={() => openEditUserModal(assignedUser, unit)}
+                        className="w-full min-h-[36px] font-semibold max-[340px]:px-0"
                       >
-                        <UserPlus size={14} />
-                        Assign
-                      </button>
+                        <span className="inline-flex items-center justify-center gap-1.5 max-[340px]:gap-0">
+                          <UserCog size={14} />
+                          <span className="max-[340px]:hidden">Edit User</span>
+                        </span>
+                      </NeonSweepButton>
                     )}
-                    <button
+                    {!hasAssignedUser && (
+                      <NeonSweepButton
+                        tone="cyan"
+                        size="sm"
+                        onClick={() => openUserModal(unit)}
+                        className="w-full min-h-[36px] font-semibold max-[340px]:px-0"
+                      >
+                        <span className="inline-flex items-center justify-center gap-1.5 max-[340px]:gap-0">
+                          <UserPlus size={14} />
+                          <span className="max-[340px]:hidden">Assign</span>
+                        </span>
+                      </NeonSweepButton>
+                    )}
+                    <NeonSweepButton
+                      tone="danger"
+                      size="sm"
                       onClick={async () => {
                         const confirmed = await confirmDialog({
                           title: 'Delete Unit',
@@ -1332,22 +1611,30 @@ export default function UnitManagement() {
                           }
                         }
                       }}
-                      className="inline-flex h-9 min-w-[92px] items-center justify-center gap-1.5 rounded-lg border border-[rgba(239,68,68,0.28)] bg-[rgba(239,68,68,0.08)] px-3 text-[0.78rem] font-semibold text-[#dc2626] sm:w-[2.15rem] sm:min-w-0 sm:px-0 dark:text-[#f87171]"
+                      className="col-span-2 w-full min-h-[36px] font-semibold max-[340px]:px-0"
                     >
-                      <Trash2 size={15} />
-                      <span className="sm:hidden">Delete</span>
-                    </button>
+                      <span className="inline-flex items-center justify-center gap-1.5 max-[340px]:gap-0">
+                        <Trash2 size={15} />
+                        <span className="max-[340px]:hidden">Delete</span>
+                      </span>
+                    </NeonSweepButton>
                   </div>
                 )}
               </div>
+              </div>
             )
           })}
+                  </div>
+                </div>
+              ))}
+            </section>
+          ))}
         </div>
       ) : (
         /* Table View */
         <div className="rounded-[14px] bg-[var(--bg-card)] border border-[var(--border-default)] shadow-[var(--shadow-sm)] overflow-hidden dark:border-[rgba(148,163,184,0.22)] dark:shadow-[0_10px_22px_rgba(2,6,23,0.45)]">
           <div className="overflow-x-auto">
-            <table className="w-full border-collapse min-w-[900px]">
+            <table className="w-full border-collapse min-w-[960px]">
               <thead className="border-b border-[var(--border-default)] dark:border-b-[rgba(148,163,184,0.16)]" style={{ background: 'linear-gradient(90deg, color-mix(in srgb, var(--bg-tertiary) 88%, transparent) 0%, color-mix(in srgb, var(--bg-secondary) 92%, transparent) 100%)' }}>
                 <tr>
                   <th className="py-3 px-6 text-left text-xs font-semibold uppercase tracking-[0.08em] text-[var(--text-tertiary)]">Unit</th>
@@ -1372,7 +1659,7 @@ export default function UnitManagement() {
                     <tr key={unit.id} className="transition-colors hover:bg-[rgba(30,41,59,0.04)] dark:hover:bg-[rgba(30,41,59,0.45)]">
                       <td className="py-[0.85rem] px-6 text-[0.9rem] text-[var(--text-primary)]">
                         <div className="flex items-center gap-3">
-                          <div className={clsx('w-8 h-8 rounded-[0.6rem] flex items-center justify-center border', getUnitColor(unit.unitType))} style={{ background: 'color-mix(in srgb, var(--color-primary-100) 40%, var(--bg-tertiary))', borderColor: 'color-mix(in srgb, var(--color-primary-200) 58%, transparent)' }}>
+                          <div className={clsx('w-8 h-8 shrink-0 rounded-[0.6rem] flex items-center justify-center border', getUnitColor(unit.unitType))} style={{ background: 'color-mix(in srgb, var(--color-primary-100) 40%, var(--bg-tertiary))', borderColor: 'color-mix(in srgb, var(--color-primary-200) 58%, transparent)' }}>
                             <UnitIcon className="w-4 h-4" />
                           </div>
                           <div>
@@ -1383,9 +1670,9 @@ export default function UnitManagement() {
                       </td>
                       <td className="py-[0.85rem] px-6 text-[0.9rem] text-[var(--text-primary)]">
                         {unit.wingName ? (
-                          <span className="inline-flex items-center gap-[0.4rem] py-1 px-[0.6rem] rounded-full text-xs bg-[rgba(99,102,241,0.15)] text-[#4338ca]">
-                            <Layers className="w-3 h-3" />
-                            {unit.wingName}
+                          <span className="inline-flex max-w-[11rem] items-center gap-[0.4rem] whitespace-nowrap py-1 px-[0.6rem] rounded-full text-xs bg-[rgba(99,102,241,0.15)] text-[#4338ca]">
+                            <Layers className="w-3 h-3 shrink-0" />
+                            <span className="truncate">{String(unit.wingName || '').replace(/^[\u2022•\-\s]+/, '')}</span>
                           </span>
                         ) : (
                           <span className="text-[var(--text-tertiary)]">-</span>
@@ -1496,20 +1783,23 @@ export default function UnitManagement() {
         </div>
       )}
 
-      <PaginationControls
-        totalItems={filteredUnits.length}
-        currentPage={unitPage}
-        pageSize={unitPageSize}
-        onPageChange={setUnitPage}
-        onPageSizeChange={(nextSize) => {
-          setUnitPageSize(nextSize)
-          setUnitPage(1)
-        }}
-      />
+      {!mustSelectWingAndType && (
+        <PaginationControls
+          totalItems={filteredUnits.length}
+          currentPage={safeUnitPage}
+          pageSize={effectiveUnitPageSize}
+          onPageChange={setUnitPage}
+          onPageSizeChange={viewMode === 'table' ? (nextSize) => {
+            setUnitPageSize(nextSize)
+            setUnitPage(1)
+          } : undefined}
+          pageSizeOptions={viewMode === 'table' ? [12, 24, 48] : undefined}
+        />
+      )}
       </>
       )}
 
-      {/* ═══════════════════ USERS TAB ═══════════════════ */}
+      {/* Users tab */}
       {activeTab === 'users' && (
       <>
         {/* Role Permissions Info */}
@@ -1616,7 +1906,7 @@ export default function UnitManagement() {
           ) : (
             <>
             <div className="hidden overflow-x-auto lg:block">
-              <table className="w-full">
+              <table className="w-full min-w-[1080px]">
                 <thead className="border-b border-[var(--border-default)] dark:border-b-[rgba(148,163,184,0.16)]" style={{ background: 'linear-gradient(90deg, color-mix(in srgb, var(--bg-tertiary) 88%, transparent) 0%, color-mix(in srgb, var(--bg-secondary) 92%, transparent) 100%)' }}>
                   <tr>
                     <th className="py-[14px] px-6 text-left text-[11.5px] font-[650] text-[var(--text-secondary)] tracking-[0.05em] uppercase">Name</th>
@@ -1655,12 +1945,12 @@ export default function UnitManagement() {
                             {u.role?.replace(/_/g, ' ')}
                           </span>
                         </td>
-                        <td className="py-[14px] px-6 whitespace-nowrap text-[13px] text-[var(--text-primary)]">
+                        <td className="py-[14px] px-6 text-[13px] text-[var(--text-primary)]">
                           {userFlat ? (
-                            <span className="inline-flex items-center gap-[6px]">
-                              <Home className="w-[14px] h-[14px] text-[var(--text-tertiary)]" />
-                              {userFlat.flatNumber}
-                              {userFlat.wingName && <span className="text-[var(--text-tertiary)] text-xs">({userFlat.wingName})</span>}
+                            <span className="inline-flex max-w-[16rem] items-center gap-[6px] rounded-full border border-[var(--border-light)] bg-[color-mix(in_srgb,var(--bg-tertiary)_55%,transparent)] px-2.5 py-1 text-[12px]">
+                              <Home className="w-[13px] h-[13px] shrink-0 text-[var(--text-tertiary)]" />
+                              <span className="truncate font-semibold text-[var(--text-primary)]">{userFlat.flatNumber}</span>
+                              {userFlat.wingName && <span className="truncate text-[var(--text-tertiary)] text-[11px]">({String(userFlat.wingName || '').replace(/^[\u2022•\-\s]+/, '')})</span>}
                             </span>
                           ) : (
                             <span className="text-[var(--text-tertiary)]">-</span>
@@ -1733,7 +2023,17 @@ export default function UnitManagement() {
                       <p className="text-[var(--text-secondary)]">Role</p>
                       <p className="text-right text-[var(--text-primary)]">{u.role?.replace(/_/g, ' ')}</p>
                       <p className="text-[var(--text-secondary)]">Property</p>
-                      <p className="text-right text-[var(--text-primary)]">{userFlat ? `${userFlat.flatNumber}${userFlat.wingName ? ` (${userFlat.wingName})` : ''}` : '-'}</p>
+                      <div className="justify-self-end">
+                        {userFlat ? (
+                          <span className="inline-flex max-w-[11.5rem] items-center gap-[6px] rounded-full border border-[var(--border-light)] bg-[color-mix(in_srgb,var(--bg-tertiary)_55%,transparent)] px-2.5 py-1 text-[11px] sm:max-w-[13rem] sm:text-[12px]">
+                            <Home className="w-[13px] h-[13px] shrink-0 text-[var(--text-tertiary)]" />
+                            <span className="truncate font-semibold text-[var(--text-primary)]">{userFlat.flatNumber}</span>
+                            {userFlat.wingName && <span className="truncate text-[var(--text-tertiary)] text-[10px] sm:text-[11px]">({String(userFlat.wingName || '').replace(/^[\u2022•\-\s]+/, '')})</span>}
+                          </span>
+                        ) : (
+                          <span className="text-[var(--text-tertiary)]">-</span>
+                        )}
+                      </div>
                       <p className="text-[var(--text-secondary)]">Phone</p>
                       <p className="text-right text-[var(--text-primary)]">{u.phone || '-'}</p>
                     </div>
@@ -2115,13 +2415,23 @@ export default function UnitManagement() {
         />
       )}
 
+      {showWingManagementModal && (
+        <WingManagementModal
+          wings={wings}
+          flats={flats}
+          isLoading={deleteWingMutation.isPending}
+          onClose={() => setShowWingManagementModal(false)}
+          onDeleteWing={handleDeleteWing}
+        />
+      )}
+
     </div>
   )
 }
 
 // Stat Card Component
 // eslint-disable-next-line no-unused-vars
-function StatCard({ label, value, icon: Icon, color, onClick, active }) {
+function StatCard({ label, value, icon: Icon, color }) {
   const colorClasses = {
     blue: 'bg-[rgba(59,130,246,0.15)] text-[#3b82f6]',
     indigo: 'bg-[rgba(99,102,241,0.15)] text-[#6366f1]',
@@ -2134,22 +2444,17 @@ function StatCard({ label, value, icon: Icon, color, onClick, active }) {
 
   return (
     <div
-      onClick={onClick}
       className={clsx(
-        "p-4 rounded-[14px] bg-[var(--bg-card)] border shadow-[var(--shadow-sm)] dark:shadow-[0_10px_22px_rgba(2,6,23,0.45)] transition-all",
-        onClick ? "cursor-pointer hover:-translate-y-0.5 hover:shadow-md" : "",
-        active 
-          ? "border-[#3b82f6] shadow-[0_0_0_1px_rgba(59,130,246,0.5)] dark:border-[#3b82f6]" 
-          : "border-[var(--border-light)] dark:border-[rgba(148,163,184,0.22)]"
+        "p-3.5 sm:p-4 rounded-[14px] bg-[var(--bg-card)] border shadow-[var(--shadow-sm)] dark:shadow-[0_10px_22px_rgba(2,6,23,0.45)] border-[var(--border-light)] dark:border-[rgba(148,163,184,0.22)]"
       )}
     >
-      <div className="flex items-center gap-3">
-        <div className={clsx('w-8 h-8 rounded-xl flex items-center justify-center', colorClasses[color])}>
-          <Icon className="w-4 h-4" />
+      <div className="flex items-center gap-3 min-w-0">
+        <div className={clsx('h-9 w-9 min-h-9 min-w-9 flex-none rounded-xl flex items-center justify-center', colorClasses[color])}>
+          <Icon className="h-[17px] w-[17px] flex-none" />
         </div>
-        <div>
-          <p className="text-xl font-bold text-[var(--text-primary)]">{value}</p>
-          <p className="text-xs font-medium text-[var(--text-tertiary)]">{label}</p>
+        <div className="min-w-0">
+          <p className="truncate whitespace-nowrap text-[clamp(1.12rem,1.65vw,1.5rem)] leading-none font-bold text-[var(--text-primary)]">{value}</p>
+          <p className="mt-1 truncate text-[11px] leading-tight font-medium text-[var(--text-tertiary)]">{label}</p>
         </div>
       </div>
     </div>
@@ -2527,9 +2832,9 @@ function UnitFormModal({ unit, flats, societies, wings, currentSociety, hasWings
                 required
                 error={errors.unitType}
                 options={[
-                  { value: 'FLAT', label: '🏠 Flat' },
-                  { value: 'SHOP', label: '🏪 Shop' },
-                  { value: 'OFFICE', label: '🏢 Office' },
+                  { value: 'FLAT', label: 'Flat' },
+                  { value: 'SHOP', label: 'Shop' },
+                  { value: 'OFFICE', label: 'Office' },
                 ]}
               />
 
@@ -2586,14 +2891,18 @@ function UnitFormModal({ unit, flats, societies, wings, currentSociety, hasWings
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               {hasWingsEnabled ? (
                 <div className="space-y-3 sm:col-span-2">
-                  <SmartSelect
-                    label={`Wing (Optional)${selectedWingId && selectedWing?.totalFloors ? ` (Max Floor: ${selectedWing.totalFloors})` : ''}`}
-                    value={selectedWingId}
-                    onChange={(e) => setSelectedWingId(e.target.value)}
-                    placeholder="Select Wing"
-                    showPlaceholder={false}
-                    options={availableWings.map(w => ({ value: w.id, label: `${w.name}${w.totalFloors ? ` (${w.totalFloors} floors)` : ''}` }))}
-                  />
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+                    <div className="flex-1">
+                      <SmartSelect
+                        label={`Wing (Optional)${selectedWingId && selectedWing?.totalFloors ? ` (Max Floor: ${selectedWing.totalFloors})` : ''}`}
+                        value={selectedWingId}
+                        onChange={(e) => setSelectedWingId(e.target.value)}
+                        placeholder="Select Wing"
+                        showPlaceholder={false}
+                        options={availableWings.map(w => ({ value: w.id, label: `${w.name}${w.totalFloors ? ` (${w.totalFloors} floors)` : ''}` }))}
+                      />
+                    </div>
+                  </div>
                   {availableWings.length === 0 && (
                     <div className="rounded-xl border border-[var(--border-default)] bg-[var(--bg-tertiary)] px-3 py-2.5 text-sm text-[var(--text-secondary)]">
                       {isPlatformLevel
@@ -2977,6 +3286,92 @@ function EditUserFormModal({ user, unit, roleOptions, users = [], societyId, err
             </NeonSweepButton>
           </div>
         </form>
+      </div>
+    </div>
+  )
+}
+
+function WingManagementModal({ wings = [], flats = [], onClose, onDeleteWing, isLoading }) {
+  const wingCountMap = useMemo(() => {
+    return wings.reduce((acc, wing) => {
+      const linkedCount = flats.filter((flat) => String(flat.wingId || '') === String(wing.id)).length
+      acc[wing.id] = linkedCount
+      return acc
+    }, {})
+  }, [wings, flats])
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[rgba(15,23,42,0.6)]">
+      <div className="w-full max-w-[34rem] max-h-[90vh] overflow-y-auto rounded-2xl bg-[var(--bg-card)] border border-[var(--border-light)] shadow-[0_24px_48px_rgba(15,23,42,0.24)]">
+        <div className="sticky top-0 flex items-center justify-between gap-3 p-4 px-5 border-b border-[var(--border-light)] bg-[var(--bg-card)] z-[1]">
+          <div>
+            <h3 className="text-[1.1rem] font-semibold text-[var(--text-primary)]">Manage Wings</h3>
+            <p className="text-[0.8rem] text-[var(--text-tertiary)]">Delete a wing from the society</p>
+          </div>
+          <button onClick={onClose} className="p-[0.35rem] rounded-[0.6rem] text-[var(--text-tertiary)] hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-primary)]">
+            <X size={20} />
+          </button>
+        </div>
+
+        <div className="p-5 space-y-3">
+          {wings.length === 0 ? (
+            <div className="rounded-xl border border-[var(--border-default)] bg-[var(--bg-tertiary)] px-4 py-3 text-sm text-[var(--text-secondary)]">
+              No wings found for this society.
+            </div>
+          ) : (
+            wings.map((wing) => {
+              const linkedCount = wingCountMap[wing.id] || 0
+              const hasLinkedUnits = linkedCount > 0
+              const wingDeleteLabel = hasLinkedUnits ? 'Force Delete' : 'Delete Wing'
+              return (
+                <div
+                  key={wing.id}
+                  className={clsx(
+                    'flex flex-col gap-3 rounded-xl border-2 p-4 shadow-[var(--shadow-lg)] sm:flex-row sm:items-center sm:justify-between',
+                    hasLinkedUnits
+                      ? 'border-[rgba(239,68,68,0.55)] bg-[rgba(239,68,68,0.05)] ring-1 ring-[rgba(239,68,68,0.18)]'
+                      : 'border-[var(--border-strong)] bg-[var(--bg-card)]',
+                  )}
+                >
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <Building2 size={16} className="text-[var(--text-secondary)]" />
+                      <p className="truncate text-[0.98rem] font-semibold text-[var(--text-primary)]">{wing.name}</p>
+                    </div>
+                    <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-[var(--text-tertiary)]">
+                      <span>{wing.totalFloors ? `${wing.totalFloors} floors` : 'Floor count not set'}</span>
+                      <span>•</span>
+                      <span>{linkedCount} linked unit{linkedCount === 1 ? '' : 's'}</span>
+                      {hasLinkedUnits && (
+                        <span className="inline-flex items-center rounded-full border border-[rgba(239,68,68,0.35)] bg-[rgba(239,68,68,0.12)] px-2 py-[0.15rem] font-semibold text-[#b91c1c]">
+                          Delete will unlink them
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  <NeonSweepButton
+                    tone="danger"
+                    size="sm"
+                    type="button"
+                    disabled={isLoading}
+                    onClick={() => onDeleteWing(wing)}
+                    className="w-full sm:w-auto"
+                  >
+                    <Trash2 size={14} />
+                    {wingDeleteLabel}
+                  </NeonSweepButton>
+                </div>
+              )
+            })
+          )}
+        </div>
+
+        <div className="flex gap-3 p-5 pt-0 border-t border-[var(--border-light)]">
+          <NeonSweepButton tone="slate" size="md" type="button" onClick={onClose} className="flex-1">
+            Close
+          </NeonSweepButton>
+        </div>
       </div>
     </div>
   )

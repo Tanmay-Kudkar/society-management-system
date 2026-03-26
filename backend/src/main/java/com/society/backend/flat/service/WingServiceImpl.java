@@ -57,10 +57,9 @@ public class WingServiceImpl implements WingService {
     @Transactional
     public List<WingResponse> getBySociety(Long societyId) {
         roleService.enforceSocietyScope(roleService.getCurrentUser(), societyId);
-        Society society = societyRepository.findById(societyId)
-                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Society not found"));
-        ensureConfiguredWingRecordsExist(society);
-        return getConfiguredWingsForSociety(societyId).stream()
+        societyRepository.findById(societyId)
+            .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Society not found"));
+        return getSortedWingsForSociety(societyId).stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
@@ -269,54 +268,6 @@ public class WingServiceImpl implements WingService {
         response.setOfficeCount(flatRepository.countByWingIdAndUnitType(wingId, "OFFICE"));
 
         return response;
-    }
-
-    private List<Wing> getConfiguredWingsForSociety(Long societyId) {
-        Society society = societyRepository.findById(societyId)
-            .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Society not found"));
-
-        List<Wing> wings = getSortedWingsForSociety(societyId);
-
-        int totalWingsLimit = society.getTotalWings() != null ? society.getTotalWings() : 0;
-        if (totalWingsLimit > 0 && wings.size() > totalWingsLimit) {
-            return wings.subList(0, totalWingsLimit);
-        }
-
-        return wings;
-    }
-
-    private void ensureConfiguredWingRecordsExist(Society society) {
-        if (Boolean.FALSE.equals(society.getHasWings())) {
-            return;
-        }
-
-        int totalWings = society.getTotalWings() != null ? society.getTotalWings() : 0;
-        if (totalWings <= 0) {
-            return;
-        }
-
-        int totalFloors = society.getTotalFloors() != null && society.getTotalFloors() > 0
-                ? society.getTotalFloors()
-                : 1;
-
-        Set<String> existingNames = wingRepository.findBySocietyId(society.getId()).stream()
-                .map(Wing::getName)
-                .filter(name -> name != null && !name.isBlank())
-                .map(name -> name.trim().toUpperCase())
-                .collect(Collectors.toSet());
-
-        for (int i = 0; i < totalWings; i++) {
-            String expectedName = String.valueOf((char) ('A' + i));
-            if (existingNames.contains(expectedName)) {
-                continue;
-            }
-
-            Wing wing = new Wing();
-            wing.setSociety(society);
-            wing.setName(expectedName);
-            wing.setTotalFloors(totalFloors);
-            wingRepository.save(wing);
-        }
     }
 
     private List<Wing> getSortedWingsForSociety(Long societyId) {
