@@ -1,42 +1,67 @@
-import { MapContainer, TileLayer, Circle, CircleMarker, useMapEvents } from 'react-leaflet'
+import { GoogleMap, MarkerF, CircleF, useJsApiLoader } from '@react-google-maps/api'
 
-function LocationPicker({ location, onPick }) {
-  useMapEvents({
-    click: (event) => {
-      onPick({
-        latitude: event.latlng.lat,
-        longitude: event.latlng.lng,
-      })
-    },
-  })
-
-  return null
-}
+const mapContainerStyle = { height: '260px', width: '100%' }
 
 export default function LocationPickerMap({ location, onPick }) {
+  const googleMapsApiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || ''
+  const { isLoaded, loadError } = useJsApiLoader({
+    id: 'google-map-login-location-picker',
+    googleMapsApiKey,
+  })
+
+  if (!googleMapsApiKey) {
+    return (
+      <div className="flex h-[260px] items-center justify-center text-center text-sm text-[var(--text-secondary)]">
+        Google Maps API key missing. Set VITE_GOOGLE_MAPS_API_KEY.
+      </div>
+    )
+  }
+
+  if (loadError) {
+    return (
+      <div className="flex h-[260px] items-center justify-center text-sm text-[var(--text-secondary)]">
+        Failed to load Google Maps.
+      </div>
+    )
+  }
+
+  if (!isLoaded) {
+    return (
+      <div className="flex h-[260px] items-center justify-center text-sm text-[var(--text-secondary)]">
+        Loading map...
+      </div>
+    )
+  }
+
+  const center = { lat: location.latitude, lng: location.longitude }
+
   return (
-    <MapContainer
-      key={`${location.latitude}-${location.longitude}`}
-      center={[location.latitude, location.longitude]}
+    <GoogleMap
+      mapContainerStyle={mapContainerStyle}
+      center={center}
       zoom={16}
-      scrollWheelZoom
-      style={{ height: '260px', width: '100%' }}
+      onClick={(event) => {
+        const lat = event.latLng?.lat()
+        const lng = event.latLng?.lng()
+        if (!Number.isFinite(lat) || !Number.isFinite(lng)) return
+        onPick({ latitude: lat, longitude: lng })
+      }}
+      options={{
+        streetViewControl: false,
+        mapTypeControl: false,
+        fullscreenControl: false,
+      }}
     >
-      <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-      />
-      <Circle
-        center={[location.latitude, location.longitude]}
+      <CircleF
+        center={center}
         radius={300}
-        pathOptions={{ color: '#0ea5e9', fillColor: '#38bdf8', fillOpacity: 0.2 }}
+        options={{
+          strokeColor: '#0ea5e9',
+          fillColor: '#38bdf8',
+          fillOpacity: 0.2,
+        }}
       />
-      <CircleMarker
-        center={[location.latitude, location.longitude]}
-        radius={8}
-        pathOptions={{ color: '#f97316', fillColor: '#fb923c', fillOpacity: 0.95 }}
-      />
-      <LocationPicker location={location} onPick={onPick} />
-    </MapContainer>
+      <MarkerF position={center} />
+    </GoogleMap>
   )
 }
