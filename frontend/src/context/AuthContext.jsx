@@ -241,7 +241,17 @@ export const AuthProvider = ({ children }) => {
   }, [startLocationRefresh])
 
   const logout = useCallback(async () => {
+    const role = user?.role
     const location = await getCurrentLocation()
+
+    // Hard guard: Society Admin must have live location enabled to logout.
+    if (role === 'SOCIETY_ADMIN' && !location) {
+      return {
+        success: false,
+        error: 'Enable location services and allow GPS access to complete logout.',
+      }
+    }
+
     const fallbackLocation = lastKnownLocationRef.current || readLastKnownLocation()
     const logoutLocation = location || fallbackLocation || undefined
     stopLocationRefresh()
@@ -250,7 +260,9 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('token')
     localStorage.removeItem('user')
     authApi.logout(logoutLocation).catch(() => {})
-  }, [getCurrentLocation, stopLocationRefresh, queryClient])
+
+    return { success: true }
+  }, [getCurrentLocation, stopLocationRefresh, queryClient, user?.role])
 
   const hasRole = useCallback((...roles) => {
     if (!user) return false
