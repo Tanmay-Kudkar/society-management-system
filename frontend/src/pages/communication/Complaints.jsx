@@ -76,6 +76,15 @@ const formatComplaintDateTimeWithDay = (value) => {
   })
 }
 
+const formatComplaintStatusLabel = (status) => {
+  const normalized = String(status || '').toUpperCase()
+  if (normalized === 'PENDING') return 'Open'
+  if (normalized === 'UNDER_REVIEW' || normalized === 'IN_PROGRESS') return 'In Progress'
+  if (normalized === 'RESOLVED') return 'Resolved'
+  if (normalized === 'REJECTED') return 'Rejected'
+  return normalized || '-'
+}
+
 const formatDurationMinutes = (minutes) => {
   if (minutes === null || minutes === undefined || Number.isNaN(Number(minutes))) {
     return '-'
@@ -206,15 +215,24 @@ export default function Complaints() {
       queryClient.setQueryData(complaintQueryKey, (old = []) => [optimisticComplaint, ...old])
       return { previousComplaints }
     },
-    onSuccess: () => {
+    onSuccess: (response) => {
+      const createdComplaint = response?.data
       queryClient.invalidateQueries({ queryKey: complaintQueryKey })
       closeModal(true)
+      toast.success(
+        [
+          'Complaint logged successfully',
+          `ID: ${createdComplaint?.complaintNumber || createdComplaint?.id || '-'}`,
+          `Status: ${formatComplaintStatusLabel(createdComplaint?.status)}`,
+          `Date: ${formatComplaintDateTimeWithDay(createdComplaint?.createdAt || new Date().toISOString())}`,
+        ].join(' | ')
+      )
     },
     onError: (error, _variables, context) => {
       if (context?.previousComplaints) {
         queryClient.setQueryData(complaintQueryKey, context.previousComplaints)
       }
-      toast.error(error?.response?.data?.message || 'Failed to create complaint')
+      toast.error(error?.response?.data?.message || 'Failed to log complaint. Please try again.')
     },
   })
 

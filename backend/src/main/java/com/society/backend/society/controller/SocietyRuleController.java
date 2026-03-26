@@ -25,12 +25,14 @@ public class SocietyRuleController {
     private final SocietyRuleService service;
 
     @PostMapping
+    @PreAuthorize("hasAnyRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'MANAGER')")
     public ResponseEntity<SocietyRuleResponse> create(@Valid @RequestBody SocietyRuleRequest request,
                                                       @RequestHeader("X-User-Id") Long userId) {
         return ResponseEntity.ok(service.create(request, userId));
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'MANAGER')")
     public ResponseEntity<SocietyRuleResponse> update(@PathVariable Long id,
                                                       @Valid @RequestBody SocietyRuleRequest request,
                                                       @RequestHeader("X-User-Id") Long userId) {
@@ -56,6 +58,7 @@ public class SocietyRuleController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'MANAGER')")
     public ResponseEntity<Void> delete(@PathVariable Long id,
                                        @RequestHeader("X-User-Id") Long userId) {
         service.delete(id, userId);
@@ -63,12 +66,14 @@ public class SocietyRuleController {
     }
 
     @PatchMapping("/{id}/publish")
+    @PreAuthorize("hasAnyRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'MANAGER')")
     public ResponseEntity<SocietyRuleResponse> publish(@PathVariable Long id,
                                                        @RequestHeader("X-User-Id") Long userId) {
         return ResponseEntity.ok(service.publish(id, userId));
     }
 
     @PatchMapping("/{id}/archive")
+    @PreAuthorize("hasAnyRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'MANAGER')")
     public ResponseEntity<SocietyRuleResponse> archive(@PathVariable Long id,
                                                        @RequestHeader("X-User-Id") Long userId) {
         return ResponseEntity.ok(service.archive(id, userId));

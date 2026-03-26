@@ -38,6 +38,7 @@ import java.time.ZonedDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -183,7 +184,7 @@ public class ComplaintServiceImpl implements ComplaintService {
 
         // MASTER_ADMIN sees all complaints
         if (user.getRole().name().equals("MASTER_ADMIN")) {
-            return complaintRepository.findAll().stream()
+            return sortComplaintsByLatest(complaintRepository.findAll()).stream()
                     .filter(this::isVisibleForListing)
                     .filter(complaint -> canViewComplaint(user, complaint))
                     .map(this::toResponse)
@@ -192,7 +193,7 @@ public class ComplaintServiceImpl implements ComplaintService {
 
         // Others see only complaints from their society
         if (user.getSociety() != null) {
-            return complaintRepository.findBySocietyId(user.getSociety().getId()).stream()
+            return sortComplaintsByLatest(complaintRepository.findBySocietyId(user.getSociety().getId())).stream()
                     .filter(this::isVisibleForListing)
                     .filter(complaint -> canViewComplaint(user, complaint))
                     .map(this::toResponse)
@@ -207,7 +208,7 @@ public class ComplaintServiceImpl implements ComplaintService {
     public List<ComplaintResponse> getBySociety(Long societyId) {
         User currentUser = roleService.getCurrentUser();
         roleService.enforceSocietyScope(currentUser, societyId);
-        return complaintRepository.findBySocietyId(societyId).stream()
+        return sortComplaintsByLatest(complaintRepository.findBySocietyId(societyId)).stream()
                 .filter(this::isVisibleForListing)
             .filter(complaint -> canViewComplaint(currentUser, complaint))
                 .map(this::toResponse)
@@ -222,7 +223,7 @@ public class ComplaintServiceImpl implements ComplaintService {
                 throw new ApiException(HttpStatus.FORBIDDEN, "Cannot access other users' complaints");
             }
         }
-        return complaintRepository.findByUserId(userId).stream()
+        return complaintRepository.findByUserIdOrderByCreatedAtDesc(userId).stream()
             .filter(this::isVisibleForListing)
                 .map(this::toResponse)
                 .collect(Collectors.toList());
@@ -231,7 +232,7 @@ public class ComplaintServiceImpl implements ComplaintService {
     @Override
     public List<ComplaintResponse> getByStatus(String status) {
         User currentUser = roleService.getCurrentUser();
-        return complaintRepository.findByStatus(status).stream()
+        return sortComplaintsByLatest(complaintRepository.findByStatus(status)).stream()
                 .filter(this::isVisibleForListing)
             .filter(complaint -> canViewComplaint(currentUser, complaint))
                 .map(this::toResponse)
@@ -690,6 +691,19 @@ public class ComplaintServiceImpl implements ComplaintService {
             return true;
         }
         return isUndoWindowOpen(complaint.getDeleteUndoExpiresAt(), LocalDateTime.now());
+    }
+
+    private List<Complaint> sortComplaintsByLatest(List<Complaint> complaints) {
+        if (complaints == null || complaints.isEmpty()) {
+            return List.of();
+        }
+
+        return complaints.stream()
+                .sorted(Comparator
+                        .comparing(Complaint::getCreatedAt, Comparator.nullsLast(Comparator.naturalOrder()))
+                        .thenComparing(Complaint::getId, Comparator.nullsLast(Comparator.naturalOrder()))
+                        .reversed())
+                .collect(Collectors.toList());
     }
 
     private boolean isUndoWindowOpen(LocalDateTime expiry, LocalDateTime now) {
