@@ -292,7 +292,7 @@ export default function useDashboardStats(input) {
 
   const memberIssueStats = useMemo(() => {
     const myTickets = allTickets.filter((ticket) => ticket.raisedById === user?.id);
-    const myComplaints = complaints.filter((complaint) => complaint.raisedById === user?.id);
+    const myComplaints = complaints.filter((complaint) => complaint.userId === user?.id || complaint.raisedById === user?.id);
     return {
       myTicketsCount: myTickets.length,
       myOpenTicketsCount: myTickets.filter((ticket) => isActiveTicketStatus(ticket.status)).length,

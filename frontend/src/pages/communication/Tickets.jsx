@@ -102,7 +102,7 @@ const isTicketEditable = (ticket) => {
 }
 
 export default function Tickets() {
-  const { user, canCreateTickets, canManageTickets } = useAuth()
+  const { user, canCreateTickets, canManageTickets, canExportData } = useAuth()
   const toast = useToast()
   const queryClient = useQueryClient()
   const navigate = useNavigate()
@@ -143,6 +143,7 @@ export default function Tickets() {
 
   // Check if current user is MASTER_ADMIN
   const isPlatformLevel = user?.role === 'MASTER_ADMIN'
+  const canExportTickets = canExportData() && user?.role !== 'MEMBER'
   const requiresClosureApproval = ['SOCIETY_ADMIN', 'MANAGER'].includes(user?.role)
   const canDeleteTickets = ['MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY'].includes(user?.role)
   const canAssignTickets = ['MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'MANAGER'].includes(user?.role)
@@ -640,16 +641,18 @@ export default function Tickets() {
           </div>
         </div>
         <div className="flex flex-wrap gap-3">
-          <NeonSweepButton
-            tone="slate"
-            size="md"
-            onClick={handleExport}
-            disabled={isExporting}
-            className="w-full sm:w-auto"
-          >
-            <FileSpreadsheet size={20} />
-            {isExporting ? 'Exporting...' : 'Export XLSX'}
-          </NeonSweepButton>
+          {canExportTickets && (
+            <NeonSweepButton
+              tone="slate"
+              size="md"
+              onClick={handleExport}
+              disabled={isExporting}
+              className="w-full sm:w-auto"
+            >
+              <FileSpreadsheet size={20} />
+              {isExporting ? 'Exporting...' : 'Export XLSX'}
+            </NeonSweepButton>
+          )}
           {canCreateTickets() && (
             <NeonSweepButton
               tone="violet"

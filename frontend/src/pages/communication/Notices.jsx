@@ -89,9 +89,10 @@ export default function Notices() {
     MEETING: 'Meeting',
   }
 
-  const attendanceExcludedRoles = ['VENDOR', 'TENANT', 'VISITOR']
-  const canRecordMeetingAttendance = Boolean(user?.role) && !attendanceExcludedRoles.includes(user.role)
-  const canViewMeetingAttendance = canRecordMeetingAttendance
+  const attendanceRecordRoles = ['MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'MANAGER', 'EMPLOYEE']
+  const attendanceViewRoles = ['MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'MANAGER', 'EMPLOYEE']
+  const canRecordMeetingAttendance = attendanceRecordRoles.includes(user?.role)
+  const canViewMeetingAttendance = attendanceViewRoles.includes(user?.role)
 
   // Get society filter from URL (for MASTER_ADMIN viewing specific society)
   const societyIdFromUrl = searchParams.get('society')

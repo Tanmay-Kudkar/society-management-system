@@ -199,15 +199,17 @@ export default function Tenants() {
         </div>
         {canEditTenants && (
           <div className="flex flex-wrap gap-3">
-            <NeonSweepButton
-              tone="cyan"
-              size="md"
-              onClick={() => setShowBulkImport(true)}
-              className="w-full sm:w-auto"
-            >
-              <Upload size={20} />
-              Bulk Import
-            </NeonSweepButton>
+            {!isResidentMember && (
+              <NeonSweepButton
+                tone="cyan"
+                size="md"
+                onClick={() => setShowBulkImport(true)}
+                className="w-full sm:w-auto"
+              >
+                <Upload size={20} />
+                Bulk Import
+              </NeonSweepButton>
+            )}
             <NeonSweepButton
               tone="violet"
               size="md"
