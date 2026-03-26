@@ -44,6 +44,9 @@ public class Complaint {
     @Column(nullable = false)
     private String subject;
 
+    @Column(nullable = false)
+    private String title;
+
     @Column(columnDefinition = "TEXT")
     private String description;
 

@@ -865,10 +865,27 @@ export default function UnitManagement() {
   const getUnitIcon = (type) => unitTypeIcons[type] || Home
   const getUnitColor = (type) => unitTypeClasses[type] || unitTypeClasses.FLAT
 
+  const toNonNegativeInt = (value) => {
+    const parsed = Number(value)
+    if (!Number.isFinite(parsed) || parsed < 0) return null
+    return Math.floor(parsed)
+  }
+
+  const resolveCapacity = (configuredValue, actualValue, currentCount) => {
+    const configured = toNonNegativeInt(configuredValue)
+    if (configured != null && configured > 0) return configured
+
+    const actual = toNonNegativeInt(actualValue)
+    if (actual != null && actual > 0) return actual
+
+    return currentCount > 0 ? currentCount : 0
+  }
+
   // Stats - count units with assigned user as occupied
   const occupiedUnits = flats.filter(f => {
     const hasAssignedUser = memberUsers.some(u => u.flatId === f.id)
-    return hasAssignedUser || f.ownerName
+    const hasActiveTenant = !!activeTenantByFlatId[f.id]
+    return hasAssignedUser || hasActiveTenant || f.ownerName
   })
   const stats = {
     totalUnits: flats.length,
@@ -879,9 +896,9 @@ export default function UnitManagement() {
     vacant: flats.length - occupiedUnits.length,
     assignedUsers: memberUsers.filter(u => u.flatId).length,
     // Capacity limits from society
-    maxFlats: currentSociety?.totalFlats || 0,
-    maxShops: currentSociety?.totalShops || 0,
-    maxOffices: currentSociety?.totalOffices || 0,
+    maxFlats: resolveCapacity(currentSociety?.totalFlats, currentSociety?.actualFlats, flats.filter(f => !f.unitType || f.unitType === 'FLAT').length),
+    maxShops: resolveCapacity(currentSociety?.totalShops, currentSociety?.actualShops, flats.filter(f => f.unitType === 'SHOP').length),
+    maxOffices: resolveCapacity(currentSociety?.totalOffices, currentSociety?.actualOffices, flats.filter(f => f.unitType === 'OFFICE').length),
   }
 
   const showSkeleton = useMinLoadingTime(flatsLoading)
