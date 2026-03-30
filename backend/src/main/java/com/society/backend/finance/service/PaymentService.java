@@ -60,6 +60,7 @@ public class PaymentService {
     @Transactional
     public CreateOrderResponse createOrder(CreateOrderRequest request) {
         RazorpayClient client = requireRazorpayClient();
+        validateCreateOrderRequest(request);
         try {
             User requester = getAuthenticatedUser();
             Long targetUserId = request.getUserId() != null ? request.getUserId() : requester.getId();
@@ -105,13 +106,13 @@ public class PaymentService {
 
             // Create payment record in database
             Payment payment = new Payment();
-            payment.setRazorpayOrderId(order.get("id"));
+            payment.setRazorpayOrderId(String.valueOf(order.get("id")));
             payment.setAmount(request.getAmount());
             payment.setCurrency(razorpayConfig.getCurrency());
             payment.setStatus("CREATED");
             payment.setPaymentType(request.getPaymentType());
             payment.setDescription(request.getDescription());
-            payment.setReceiptNumber(order.get("receipt"));
+            payment.setReceiptNumber(String.valueOf(order.get("receipt")));
             payment.setUser(user);
 
             if (user.getSociety() != null) {
@@ -143,11 +144,11 @@ public class PaymentService {
             Payment savedPayment = paymentRepository.save(payment);
 
             return CreateOrderResponse.builder()
-                    .orderId(order.get("id"))
+                    .orderId(String.valueOf(order.get("id")))
                     .amount(request.getAmount())
                     .currency(razorpayConfig.getCurrency())
                     .keyId(razorpayConfig.getKeyId())
-                    .receipt(order.get("receipt"))
+                    .receipt(String.valueOf(order.get("receipt")))
                     .description(request.getDescription())
                     .paymentId(savedPayment.getId())
                     .customerName(user.getName())
@@ -159,12 +160,38 @@ public class PaymentService {
             log.error("Error creating Razorpay order", e);
             throw new ApiException(HttpStatus.BAD_GATEWAY,
                     "Failed to create payment order with Razorpay. Please verify gateway credentials and retry.");
+        } catch (DataIntegrityViolationException e) {
+            log.error("Payment create-order failed due to data integrity violation for userId={} maintenanceBillId={} vendorBillId={}",
+                    request.getUserId(), request.getMaintenanceBillId(), request.getVendorBillId(), e);
+            throw new ApiException(HttpStatus.CONFLICT,
+                    "Unable to create payment order due to conflicting payment data. Please refresh and try again.");
         } catch (ApiException | ResourceNotFoundException e) {
             throw e;
         } catch (Exception e) {
-            log.error("Unexpected error while creating payment order", e);
+            log.error("Unexpected error while creating payment order for userId={} maintenanceBillId={} vendorBillId={} amount={}",
+                    request.getUserId(), request.getMaintenanceBillId(), request.getVendorBillId(), request.getAmount(), e);
             throw new ApiException(HttpStatus.INTERNAL_SERVER_ERROR,
                     "Unable to create payment order right now. Please try again later.");
+        }
+    }
+
+    private void validateCreateOrderRequest(CreateOrderRequest request) {
+        if (request.getMaintenanceBillId() != null && request.getVendorBillId() != null) {
+            throw new ApiException(HttpStatus.BAD_REQUEST,
+                    "Choose either maintenanceBillId or vendorBillId, not both.");
+        }
+
+        if (request.getAmount() == null || request.getAmount().compareTo(BigDecimal.ZERO) <= 0) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Amount must be greater than 0");
+        }
+
+        if (request.getAmount().scale() > 2) {
+            throw new ApiException(HttpStatus.BAD_REQUEST,
+                    "Amount can have at most 2 decimal places.");
+        }
+
+        if (!StringUtils.hasText(request.getPaymentType())) {
+            request.setPaymentType("MAINTENANCE");
         }
     }
 
