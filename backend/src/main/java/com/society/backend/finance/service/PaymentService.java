@@ -135,8 +135,15 @@ public class PaymentService {
                     .build();
 
         } catch (RazorpayException e) {
-            log.error("Error creating Razorpay order: {}", e.getMessage());
-            throw new RuntimeException("Failed to create payment order: " + e.getMessage());
+            log.error("Error creating Razorpay order", e);
+            throw new ApiException(HttpStatus.BAD_GATEWAY,
+                    "Failed to create payment order with Razorpay. Please verify gateway credentials and retry.");
+        } catch (ApiException | ResourceNotFoundException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("Unexpected error while creating payment order", e);
+            throw new ApiException(HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Unable to create payment order right now. Please try again later.");
         }
     }
 
@@ -538,7 +545,8 @@ public class PaymentService {
                 && StringUtils.hasText(razorpayConfig.getKeySecret())) {
             return razorpayClient.get();
         }
-        throw new IllegalStateException("Razorpay is not configured. Set RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET to enable online payments.");
+        throw new ApiException(HttpStatus.SERVICE_UNAVAILABLE,
+                "Online payments are temporarily unavailable. Razorpay is not configured (RAZORPAY_KEY_ID/RAZORPAY_KEY_SECRET).");
     }
 
     private void handlePaymentCapturedWebhook(JSONObject payload) {

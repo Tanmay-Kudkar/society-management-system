@@ -43,13 +43,27 @@ export function useRazorpay({ onSuccess, onError, onDismiss } = {}) {
 
   // Mutation to handle failure
   const handleFailureMutation = useMutation({
-    mutationFn: ({ paymentId, errorCode, errorDescription }) => 
+    mutationFn: ({ paymentId, errorCode, errorDescription }) =>
       paymentApi.handleFailure(paymentId, errorCode, errorDescription),
   })
 
   const handleCancelMutation = useMutation({
     mutationFn: ({ paymentId, reason }) => paymentApi.handleCancel(paymentId, reason),
   })
+
+  const normalizeError = useCallback((err, fallbackMessage) => {
+    const message =
+      err?.response?.data?.message ||
+      err?.response?.data?.error ||
+      err?.message ||
+      fallbackMessage
+
+    return {
+      ...err,
+      message,
+      description: err?.description || message,
+    }
+  }, [])
 
   const initiatePayment = useCallback(async ({
     amount,
@@ -106,9 +120,10 @@ export function useRazorpay({ onSuccess, onError, onDismiss } = {}) {
             setIsLoading(false)
             onSuccess?.(verifyResponse.data)
           } catch (verifyError) {
+            const normalizedError = normalizeError(verifyError, 'Payment verification failed')
             setIsLoading(false)
-            setError(verifyError.message || 'Payment verification failed')
-            onError?.(verifyError)
+            setError(normalizedError.message)
+            onError?.(normalizedError)
           }
         },
         modal: {
@@ -156,12 +171,12 @@ export function useRazorpay({ onSuccess, onError, onDismiss } = {}) {
 
       razorpayInstance.open()
     } catch (err) {
+      const normalizedError = normalizeError(err, 'Failed to initiate payment')
       setIsLoading(false)
-      const errorMessage = err.response?.data?.message || err.message || 'Failed to initiate payment'
-      setError(errorMessage)
-      onError?.(err)
+      setError(normalizedError.message)
+      onError?.(normalizedError)
     }
-  }, [createOrderMutation, verifyPaymentMutation, handleFailureMutation, handleCancelMutation, onSuccess, onError, onDismiss, queryClient])
+  }, [createOrderMutation, verifyPaymentMutation, handleFailureMutation, handleCancelMutation, normalizeError, onSuccess, onError, onDismiss, queryClient])
 
   return {
     initiatePayment,
