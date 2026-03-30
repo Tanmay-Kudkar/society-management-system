@@ -52,9 +52,14 @@ export function useRazorpay({ onSuccess, onError, onDismiss } = {}) {
   })
 
   const normalizeError = useCallback((err, fallbackMessage) => {
+    const responseData = err?.response?.data
+    const responseMessage =
+      typeof responseData === 'string'
+        ? responseData
+        : responseData?.message || responseData?.error
+
     const message =
-      err?.response?.data?.message ||
-      err?.response?.data?.error ||
+      responseMessage ||
       err?.message ||
       fallbackMessage
 
