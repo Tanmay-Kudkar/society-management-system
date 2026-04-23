@@ -93,13 +93,14 @@ export default function Reports() {
 
   const {
     isLoading: isScopedSocietyLoading,
-    isError: isScopedSocietyMissing,
+    error: scopedSocietyError,
   } = useQuery({
     queryKey: ['reports-society-exists', parsedSocietyIdFromUrl],
     queryFn: () => societyApi.getById(parsedSocietyIdFromUrl).then(res => res.data),
     enabled: isScopedMode && hasValidSocietyIdInUrl && hasPermission,
-    retry: false,
   })
+
+  const isScopedSocietyMissing = scopedSocietyError?.response?.status === 404
 
   const invalidUrlSociety = isScopedMode && (!hasValidSocietyIdInUrl || isScopedSocietyMissing)
 

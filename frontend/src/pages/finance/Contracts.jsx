@@ -170,13 +170,13 @@ export default function Contracts() {
               placeholder="Search contracts..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full rounded-[10px] border border-[#cbd5f5] bg-[var(--bg-card)] px-3 py-2 pl-10 text-[var(--text-primary)] outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+              className="w-full rounded-[10px] border border-[var(--border-default)] bg-[var(--bg-card)] px-3 py-2 pl-10 text-[var(--text-primary)] outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
             />
           </div>
           <select
             value={filterType}
             onChange={(e) => setFilterType(e.target.value)}
-            className="w-full rounded-[10px] border border-[#cbd5f5] bg-[var(--bg-card)] px-3 py-2 text-[var(--text-primary)] outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 sm:w-auto sm:min-w-[200px]"
+            className="w-full rounded-[10px] border border-[var(--border-default)] bg-[var(--bg-card)] px-3 py-2 text-[var(--text-primary)] outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 sm:w-auto sm:min-w-[200px]"
           >
             <option value="">All Types</option>
             {contractTypes.map(type => (
@@ -209,10 +209,10 @@ export default function Contracts() {
                   
                   return (
                     <tr key={contract.id} className="transition hover:bg-[var(--bg-tertiary)]">
-                      <td className="whitespace-nowrap px-6 py-4 text-[var(--text-primary)]">
+                      <td className="whitespace-nowrap px-3 py-4 text-[var(--text-primary)] sm:px-6">
                         <div className="flex items-center gap-3">
-                          <div className="inline-flex h-8 w-8 items-center justify-center rounded-[10px] bg-indigo-50">
-                            <FileText className="h-4 w-4 text-indigo-600" />
+                          <div className="inline-flex h-8 w-8 items-center justify-center rounded-[10px] border border-indigo-300/60 bg-indigo-50 dark:border-indigo-500/35 dark:bg-indigo-500/15">
+                            <FileText className="h-4 w-4 text-indigo-600 dark:text-indigo-200" />
                           </div>
                           <div>
                             <span className="font-semibold text-[var(--text-primary)]">{contract.title}</span>
@@ -220,31 +220,31 @@ export default function Contracts() {
                           </div>
                         </div>
                       </td>
-                      <td className="whitespace-nowrap px-6 py-4 text-[var(--text-primary)]">
-                        <span className="inline-flex items-center rounded-full bg-[var(--bg-tertiary)] px-2 py-1 text-xs text-slate-700">
+                      <td className="whitespace-nowrap px-3 py-4 text-[var(--text-primary)] sm:px-6">
+                        <span className="inline-flex items-center rounded-full border border-[var(--border-light)] bg-[var(--bg-tertiary)] px-2 py-1 text-xs text-[var(--text-secondary)]">
                           {contract.contractType?.replace('_', ' ')}
                         </span>
                       </td>
-                      <td className="whitespace-nowrap px-6 py-4 text-sm text-[var(--text-tertiary)]">{contract.vendorName || '-'}</td>
-                      <td className="whitespace-nowrap px-6 py-4 text-sm text-[var(--text-tertiary)]">
+                      <td className="whitespace-nowrap px-3 py-4 text-sm text-[var(--text-tertiary)] sm:px-6">{contract.vendorName || '-'}</td>
+                      <td className="whitespace-nowrap px-3 py-4 text-sm text-[var(--text-tertiary)] sm:px-6">
                         {contract.startDate && new Date(contract.startDate).toLocaleDateString()} - {contract.endDate && new Date(contract.endDate).toLocaleDateString()}
                       </td>
-                      <td className="whitespace-nowrap px-6 py-4 text-[var(--text-primary)]">
+                      <td className="whitespace-nowrap px-3 py-4 text-[var(--text-primary)] sm:px-6">
                         {isExpired ? (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2.5 py-1 text-xs font-semibold text-red-700">
+                          <span className="inline-flex items-center gap-1 rounded-full border border-red-300/70 bg-red-50 px-2.5 py-1 text-xs font-semibold text-red-700 dark:border-red-500/35 dark:bg-red-500/15 dark:text-red-100">
                             <AlertTriangle size={12} /> Expired
                           </span>
                         ) : isExpiring ? (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-700">
+                          <span className="inline-flex items-center gap-1 rounded-full border border-amber-300/70 bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700 dark:border-amber-500/35 dark:bg-amber-500/15 dark:text-amber-100">
                             <AlertTriangle size={12} /> {daysLeft} days left
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-700">
+                          <span className="inline-flex items-center gap-1 rounded-full border border-emerald-300/70 bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700 dark:border-emerald-500/35 dark:bg-emerald-500/15 dark:text-emerald-100">
                             <CheckCircle size={12} /> Active
                           </span>
                         )}
                       </td>
-                      <td className="whitespace-nowrap px-6 py-4 text-right text-[var(--text-primary)]">
+                      <td className="whitespace-nowrap px-3 py-4 text-right text-[var(--text-primary)] sm:px-6">
                         <button
                           onClick={() => { setEditingContract(contract); setShowModal(true) }}
                           className="inline-flex items-center justify-center rounded-[10px] border-0 bg-transparent p-1.5 text-[var(--text-tertiary)] transition hover:text-blue-600"
@@ -288,7 +288,7 @@ export default function Contracts() {
       <AnimatedModal
         open={showModal}
         onRequestClose={closeContractModal}
-        className="max-h-[calc(100vh-3rem)] w-full max-w-[520px] overflow-y-auto rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] shadow-[0_8px_24px_rgba(0,0,0,0.12)]"
+        className="flex w-full max-w-[520px] max-h-[calc(100svh-2rem)] flex-col overflow-hidden rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] shadow-[0_8px_24px_rgba(0,0,0,0.12)]"
         durationMs={MODAL_ANIMATION_DURATION}
       >
             <div className="sticky top-0 flex items-center justify-between border-b border-[var(--border-light)] bg-inherit p-4">
@@ -297,7 +297,7 @@ export default function Contracts() {
                 <X size={20} />
               </button>
             </div>
-            <form onSubmit={handleSubmit} className="grid gap-4 p-4">
+            <form onSubmit={handleSubmit} className="grid min-h-0 flex-1 gap-4 overflow-y-auto p-4">
               <FormInput
                 label="Title"
                 name="title"
@@ -351,7 +351,7 @@ export default function Contracts() {
                 defaultValue={editingContract?.description}
                 rows={3}
               />
-              <div className="flex gap-3 pt-4">
+              <div className="sticky bottom-0 flex gap-3 border-t border-[var(--border-light)] bg-[var(--bg-card)] pt-3">
                 <NeonSweepButton
                   type="button"
                   tone="slate"

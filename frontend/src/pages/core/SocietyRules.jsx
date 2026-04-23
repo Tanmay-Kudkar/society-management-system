@@ -51,6 +51,7 @@ export default function SocietyRules() {
   const qc = useQueryClient();
   const societyId = user?.societyId;
   const userId = user?.id;
+  const canManageRules = ['MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'MANAGER'].includes(user?.role);
   const canLoadSocietyData = Boolean(societyId && userId);
 
   const [showModal, setShowModal] = useState(false);
@@ -270,9 +271,11 @@ export default function SocietyRules() {
             </option>
           ))}
         </select>
-        <NeonSweepButton tone="violet" size="md" onClick={openCreate}>
-          <Plus size={16} /> Add Rule
-        </NeonSweepButton>
+        {canManageRules && (
+          <NeonSweepButton tone="violet" size="md" onClick={openCreate}>
+            <Plus size={16} /> Add Rule
+          </NeonSweepButton>
+        )}
       </div>
 
       {/* List */}
@@ -325,7 +328,7 @@ export default function SocietyRules() {
               <NeonSweepButton tone="slate" size="sm" onClick={() => setViewRule(r)}>
                 <Eye size={14} /> View
               </NeonSweepButton>
-              {r.status === "DRAFT" && (
+              {canManageRules && r.status === "DRAFT" && (
                 <>
                   <NeonSweepButton tone="cyan" size="sm" onClick={() => publishMut.mutate(r.id)}>
                     <Send size={14} /> Publish
@@ -335,17 +338,21 @@ export default function SocietyRules() {
                   </NeonSweepButton>
                 </>
               )}
-              {(r.status === "PUBLISHED" || r.status === "APPROVED") && (
+              {canManageRules && (r.status === "PUBLISHED" || r.status === "APPROVED") && (
                 <NeonSweepButton tone="slate" size="sm" onClick={() => archiveMut.mutate(r.id)}>
                   <Archive size={14} /> Archive
                 </NeonSweepButton>
               )}
-              <NeonSweepButton tone="slate" size="sm" onClick={() => openEdit(r)}>
-                <Edit2 size={14} /> Edit
-              </NeonSweepButton>
-              <NeonSweepButton tone="danger" size="sm" onClick={() => deleteMut.mutate(r.id)}>
-                <Trash2 size={14} />
-              </NeonSweepButton>
+              {canManageRules && (
+                <NeonSweepButton tone="slate" size="sm" onClick={() => openEdit(r)}>
+                  <Edit2 size={14} /> Edit
+                </NeonSweepButton>
+              )}
+              {canManageRules && (
+                <NeonSweepButton tone="danger" size="sm" onClick={() => deleteMut.mutate(r.id)}>
+                  <Trash2 size={14} /> Delete
+                </NeonSweepButton>
+              )}
             </div>
           </div>
         ))}
@@ -483,15 +490,17 @@ export default function SocietyRules() {
                   />
                 </div>
                 <div className="flex flex-col gap-[0.3rem]">
-                  <label className="flex items-center gap-2 text-[0.82rem] font-semibold text-[var(--text-secondary)]">
+                  <label className="text-[0.82rem] font-semibold text-[var(--text-secondary)]">Mandatory</label>
+                  <label className="flex items-center gap-2 rounded-lg border border-[var(--border-default)] bg-[var(--bg-card)] py-[0.45rem] px-[0.7rem] text-[0.9rem] text-[var(--text-primary)]">
                     <input
                       type="checkbox"
+                      className="h-4 w-4 accent-[var(--accent-primary)]"
                       checked={form.isMandatory}
                       onChange={(e) =>
                         setForm({ ...form, isMandatory: e.target.checked })
                       }
                     />
-                    Mandatory
+                    Mark mandatory
                   </label>
                 </div>
                 <div className="flex flex-col gap-[0.3rem] col-span-full">

@@ -7,7 +7,6 @@ import {
 } from "@tanstack/react-query";
 import { AuthProvider, SettingsProvider } from "./context";
 import App from "./App.jsx";
-import "leaflet/dist/leaflet.css";
 import "./styles/global.css";
 
 function applyInitialThemeClass() {
@@ -30,35 +29,25 @@ function applyInitialThemeClass() {
 function enablePerformanceModeWhenNeeded() {
   if (typeof window === "undefined") return;
 
-  const reducedMotion = window.matchMedia?.(
-    "(prefers-reduced-motion: reduce)",
-  )?.matches;
-  const reducedData = window.matchMedia?.(
-    "(prefers-reduced-data: reduce)",
-  )?.matches;
-  const coarsePointer = window.matchMedia?.("(pointer: coarse)")?.matches;
-  const smallScreen = window.innerWidth <= 768;
-  const deviceMemory = navigator.deviceMemory || 0;
-  const cpuCores = navigator.hardwareConcurrency || 0;
-
-  const lowSpecDevice =
-    (deviceMemory > 0 && deviceMemory <= 4) || (cpuCores > 0 && cpuCores <= 4);
-
-  const shouldEnablePerfMode = Boolean(
-    reducedMotion ||
-    reducedData ||
-    lowSpecDevice ||
-    (coarsePointer && smallScreen),
-  );
-
-  if (shouldEnablePerfMode) {
-    document.documentElement.classList.add("perf-lite");
-    document.body.classList.add("perf-lite");
-  }
+  // Keep full animations enabled across devices by default.
+  // perf-lite can still be enabled manually by adding the class when needed.
 }
 
 enablePerformanceModeWhenNeeded();
 applyInitialThemeClass();
+
+function isBackendUnavailableError(error) {
+  if (!error) return false;
+  if (error?.response?.status) return false;
+
+  const code = String(error?.code || "").toUpperCase();
+  if (code === "ERR_NETWORK" || code === "ECONNABORTED" || code === "ETIMEDOUT") {
+    return true;
+  }
+
+  const message = String(error?.message || "");
+  return /failed to fetch|network error|connection refused|err_connection_refused|load failed/i.test(message);
+}
 
 const queryClient = new QueryClient({
   mutationCache: new MutationCache({
@@ -81,11 +70,16 @@ const queryClient = new QueryClient({
         // Don't retry on client-side errors (bad request/auth/validation)
         const status = error?.response?.status;
         if (status >= 400 && status < 500) return false;
+        // Keep trying while backend is unavailable so pages stay in loading state.
+        if (isBackendUnavailableError(error)) return true;
         // Retry transient failures only a few times
         return failureCount < 3;
       },
 
-      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 15000),
+      retryDelay: (attemptIndex, error) =>
+        isBackendUnavailableError(error)
+          ? 500
+          : Math.min(1000 * 2 ** attemptIndex, 15000),
       
       // Auto-recover when backend comes back: poll failed queries every 0.5s.
       

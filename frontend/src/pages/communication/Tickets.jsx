@@ -102,7 +102,7 @@ const isTicketEditable = (ticket) => {
 }
 
 export default function Tickets() {
-  const { user, canCreateTickets, canManageTickets } = useAuth()
+  const { user, canCreateTickets, canManageTickets, canExportData } = useAuth()
   const toast = useToast()
   const queryClient = useQueryClient()
   const navigate = useNavigate()
@@ -143,6 +143,7 @@ export default function Tickets() {
 
   // Check if current user is MASTER_ADMIN
   const isPlatformLevel = user?.role === 'MASTER_ADMIN'
+  const canExportTickets = canExportData() && user?.role !== 'MEMBER'
   const requiresClosureApproval = ['SOCIETY_ADMIN', 'MANAGER'].includes(user?.role)
   const canDeleteTickets = ['MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY'].includes(user?.role)
   const canAssignTickets = ['MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'MANAGER'].includes(user?.role)
@@ -640,16 +641,18 @@ export default function Tickets() {
           </div>
         </div>
         <div className="flex flex-wrap gap-3">
-          <NeonSweepButton
-            tone="slate"
-            size="md"
-            onClick={handleExport}
-            disabled={isExporting}
-            className="w-full sm:w-auto"
-          >
-            <FileSpreadsheet size={20} />
-            {isExporting ? 'Exporting...' : 'Export XLSX'}
-          </NeonSweepButton>
+          {canExportTickets && (
+            <NeonSweepButton
+              tone="slate"
+              size="md"
+              onClick={handleExport}
+              disabled={isExporting}
+              className="w-full sm:w-auto"
+            >
+              <FileSpreadsheet size={20} />
+              {isExporting ? 'Exporting...' : 'Export XLSX'}
+            </NeonSweepButton>
+          )}
           {canCreateTickets() && (
             <NeonSweepButton
               tone="violet"
@@ -1025,7 +1028,7 @@ export default function Tickets() {
 
       {/* Create Ticket Modal */}
       <AnimatedModal open={showModal}>
-        <div className="w-full max-w-[40rem] rounded-2xl bg-[var(--bg-card)] border border-[var(--border-light)] shadow-[0_24px_48px_rgba(15,23,42,0.2)]">
+        <div className="mx-auto w-full max-w-[40rem] rounded-2xl bg-[var(--bg-card)] border border-[var(--border-light)] shadow-[0_24px_48px_rgba(15,23,42,0.2)]">
             <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--border-light)]">
               <h3 className="text-lg font-semibold text-[var(--text-primary)]">Create Ticket</h3>
               <button onClick={() => setShowModal(false)} className="rounded-[0.65rem] p-1 text-[var(--text-tertiary)] transition-colors hover:bg-slate-400/20 hover:text-[var(--text-primary)]">
@@ -1040,7 +1043,7 @@ export default function Tickets() {
                     name="societyId"
                     required
                     defaultValue={effectiveSocietyId || ''}
-                    className="w-full py-[0.55rem] px-3 rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] text-[var(--text-primary)] transition-all focus:outline-none focus:border-blue-600 focus:ring-[3px] focus:ring-blue-600/20"
+                    className="w-full py-[0.55rem] px-3 rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] text-[var(--text-primary)] transition-all focus:outline-none focus:border-[var(--accent-primary)] focus:ring-[3px] focus:ring-[color-mix(in_srgb,var(--accent-primary)_18%,transparent)]"
                   >
                     <option value="" disabled>Select society</option>
                     {societies.map((society) => (
@@ -1051,16 +1054,16 @@ export default function Tickets() {
               )}
               <div className="flex flex-col gap-1.5">
                 <label className="text-[0.85rem] font-semibold text-[var(--text-secondary)]">Title</label>
-                <input type="text" name="title" required className="w-full py-[0.55rem] px-3 rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] text-[var(--text-primary)] transition-all focus:outline-none focus:border-blue-600 focus:ring-[3px] focus:ring-blue-600/20" />
+                <input type="text" name="title" required className="w-full py-[0.55rem] px-3 rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] text-[var(--text-primary)] transition-all focus:outline-none focus:border-[var(--accent-primary)] focus:ring-[3px] focus:ring-[color-mix(in_srgb,var(--accent-primary)_18%,transparent)]" />
               </div>
               <div className="flex flex-col gap-1.5">
                 <label className="text-[0.85rem] font-semibold text-[var(--text-secondary)]">Description</label>
-                <textarea name="description" rows={3} required className="w-full py-[0.55rem] px-3 rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] text-[var(--text-primary)] transition-all resize-y focus:outline-none focus:border-blue-600 focus:ring-[3px] focus:ring-blue-600/20" />
+                <textarea name="description" rows={3} required className="w-full py-[0.55rem] px-3 rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] text-[var(--text-primary)] transition-all resize-y focus:outline-none focus:border-[var(--accent-primary)] focus:ring-[3px] focus:ring-[color-mix(in_srgb,var(--accent-primary)_18%,transparent)]" />
               </div>
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div className="flex flex-col gap-1.5">
                   <label className="text-[0.85rem] font-semibold text-[var(--text-secondary)]">Type</label>
-                  <select name="type" required className="w-full py-[0.55rem] px-3 rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] text-[var(--text-primary)] transition-all focus:outline-none focus:border-blue-600 focus:ring-[3px] focus:ring-blue-600/20">
+                  <select name="type" required className="w-full py-[0.55rem] px-3 rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] text-[var(--text-primary)] transition-all focus:outline-none focus:border-[var(--accent-primary)] focus:ring-[3px] focus:ring-[color-mix(in_srgb,var(--accent-primary)_18%,transparent)]">
                     <option value="REQUEST">Request</option>
                     <option value="ISSUE">Issue</option>
                     {!isCommitteeUser && <option value="TASK">Task</option>}
@@ -1068,7 +1071,7 @@ export default function Tickets() {
                 </div>
                 <div className="flex flex-col gap-1.5">
                   <label className="text-[0.85rem] font-semibold text-[var(--text-secondary)]">Priority</label>
-                  <select name="priority" required className="w-full py-[0.55rem] px-3 rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] text-[var(--text-primary)] transition-all focus:outline-none focus:border-blue-600 focus:ring-[3px] focus:ring-blue-600/20">
+                  <select name="priority" required className="w-full py-[0.55rem] px-3 rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] text-[var(--text-primary)] transition-all focus:outline-none focus:border-[var(--accent-primary)] focus:ring-[3px] focus:ring-[color-mix(in_srgb,var(--accent-primary)_18%,transparent)]">
                     <option value="LOW">Low</option>
                     <option value="MEDIUM">Medium</option>
                     <option value="HIGH">High</option>
@@ -1087,7 +1090,7 @@ export default function Tickets() {
       {/* Assign Modal */}
       <AnimatedModal open={showAssignModal}>
         {selectedTicket && (
-          <div className="w-full max-w-[40rem] rounded-2xl bg-[var(--bg-card)] border border-[var(--border-light)] shadow-[0_24px_48px_rgba(15,23,42,0.2)]">
+          <div className="mx-auto w-full max-w-[40rem] rounded-2xl bg-[var(--bg-card)] border border-[var(--border-light)] shadow-[0_24px_48px_rgba(15,23,42,0.2)]">
             <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--border-light)]">
               <h3 className="text-lg font-semibold text-[var(--text-primary)]">Assign Ticket</h3>
               <button onClick={closeAssignModal} className="rounded-[0.65rem] p-1 text-[var(--text-tertiary)] transition-colors hover:bg-slate-400/20 hover:text-[var(--text-primary)]">
@@ -1101,7 +1104,7 @@ export default function Tickets() {
               </div>
               <div className="flex flex-col gap-1.5">
                 <label className="text-[0.85rem] font-semibold text-[var(--text-secondary)]">Assign To</label>
-                <select name="employeeId" required className="w-full py-[0.55rem] px-3 rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] text-[var(--text-primary)] transition-all focus:outline-none focus:border-blue-600 focus:ring-[3px] focus:ring-blue-600/20">
+                <select name="employeeId" required className="w-full py-[0.55rem] px-3 rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] text-[var(--text-primary)] transition-all focus:outline-none focus:border-[var(--accent-primary)] focus:ring-[3px] focus:ring-[color-mix(in_srgb,var(--accent-primary)_18%,transparent)]">
                   <option value="">Select Employee</option>
                   {employees.map(e => <option key={e.id} value={e.id}>{e.name} ({e.email})</option>)}
                 </select>
@@ -1118,7 +1121,7 @@ export default function Tickets() {
       {/* Reply Modal */}
       <AnimatedModal open={showReplyModal}>
         {selectedTicket && (
-          <div className="w-full max-w-[40rem] rounded-2xl bg-[var(--bg-card)] border border-[var(--border-light)] shadow-[0_24px_48px_rgba(15,23,42,0.2)]">
+          <div className="mx-auto w-full max-w-[40rem] rounded-2xl bg-[var(--bg-card)] border border-[var(--border-light)] shadow-[0_24px_48px_rgba(15,23,42,0.2)]">
             <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--border-light)]">
               <h3 className="text-lg font-semibold text-[var(--text-primary)]">Reply to Ticket</h3>
               <button
@@ -1140,7 +1143,7 @@ export default function Tickets() {
                   onChange={(e) => setReplyMessage(e.target.value)}
                   rows={4}
                   required
-                  className="w-full py-[0.55rem] px-3 rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] text-[var(--text-primary)] transition-all resize-y focus:outline-none focus:border-blue-600 focus:ring-[3px] focus:ring-blue-600/20"
+                  className="w-full py-[0.55rem] px-3 rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] text-[var(--text-primary)] transition-all resize-y focus:outline-none focus:border-[var(--accent-primary)] focus:ring-[3px] focus:ring-[color-mix(in_srgb,var(--accent-primary)_18%,transparent)]"
                   placeholder="Write your reply..."
                 />
               </div>
@@ -1172,7 +1175,7 @@ export default function Tickets() {
       {/* Edit Modal */}
       <AnimatedModal open={showEditModal}>
         {ticketToEdit && (
-          <div className="w-full max-w-[42rem] rounded-2xl bg-[var(--bg-card)] border border-[var(--border-light)] shadow-[0_24px_48px_rgba(15,23,42,0.2)]">
+          <div className="mx-auto w-full max-w-[42rem] rounded-2xl bg-[var(--bg-card)] border border-[var(--border-light)] shadow-[0_24px_48px_rgba(15,23,42,0.2)]">
             <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--border-light)]">
               <h3 className="text-lg font-semibold text-[var(--text-primary)]">Edit Ticket</h3>
               <button
@@ -1193,7 +1196,7 @@ export default function Tickets() {
                   value={editForm.title}
                   onChange={(e) => setEditForm((prev) => ({ ...prev, title: e.target.value }))}
                   required
-                  className="w-full py-[0.55rem] px-3 rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] text-[var(--text-primary)] transition-all focus:outline-none focus:border-blue-600 focus:ring-[3px] focus:ring-blue-600/20"
+                  className="w-full py-[0.55rem] px-3 rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] text-[var(--text-primary)] transition-all focus:outline-none focus:border-[var(--accent-primary)] focus:ring-[3px] focus:ring-[color-mix(in_srgb,var(--accent-primary)_18%,transparent)]"
                 />
               </div>
               <div className="flex flex-col gap-1.5">
@@ -1203,7 +1206,7 @@ export default function Tickets() {
                   value={editForm.description}
                   onChange={(e) => setEditForm((prev) => ({ ...prev, description: e.target.value }))}
                   required
-                  className="w-full py-[0.55rem] px-3 rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] text-[var(--text-primary)] transition-all resize-y focus:outline-none focus:border-blue-600 focus:ring-[3px] focus:ring-blue-600/20"
+                  className="w-full py-[0.55rem] px-3 rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] text-[var(--text-primary)] transition-all resize-y focus:outline-none focus:border-[var(--accent-primary)] focus:ring-[3px] focus:ring-[color-mix(in_srgb,var(--accent-primary)_18%,transparent)]"
                 />
               </div>
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -1212,7 +1215,7 @@ export default function Tickets() {
                   <select
                     value={editForm.type}
                     onChange={(e) => setEditForm((prev) => ({ ...prev, type: e.target.value }))}
-                    className="w-full py-[0.55rem] px-3 rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] text-[var(--text-primary)] transition-all focus:outline-none focus:border-blue-600 focus:ring-[3px] focus:ring-blue-600/20"
+                    className="w-full py-[0.55rem] px-3 rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] text-[var(--text-primary)] transition-all focus:outline-none focus:border-[var(--accent-primary)] focus:ring-[3px] focus:ring-[color-mix(in_srgb,var(--accent-primary)_18%,transparent)]"
                   >
                     <option value="REQUEST">Request</option>
                     <option value="ISSUE">Issue</option>
@@ -1224,7 +1227,7 @@ export default function Tickets() {
                   <select
                     value={editForm.priority}
                     onChange={(e) => setEditForm((prev) => ({ ...prev, priority: e.target.value }))}
-                    className="w-full py-[0.55rem] px-3 rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] text-[var(--text-primary)] transition-all focus:outline-none focus:border-blue-600 focus:ring-[3px] focus:ring-blue-600/20"
+                    className="w-full py-[0.55rem] px-3 rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] text-[var(--text-primary)] transition-all focus:outline-none focus:border-[var(--accent-primary)] focus:ring-[3px] focus:ring-[color-mix(in_srgb,var(--accent-primary)_18%,transparent)]"
                   >
                     <option value="LOW">Low</option>
                     <option value="MEDIUM">Medium</option>
@@ -1262,7 +1265,7 @@ export default function Tickets() {
       {/* Delete Modal */}
       <AnimatedModal open={showDeleteModal}>
         {ticketToDelete && (
-          <div className="w-full max-w-[30rem] rounded-2xl bg-[var(--bg-card)] border border-[var(--border-light)] shadow-[0_24px_48px_rgba(15,23,42,0.2)]">
+          <div className="mx-auto w-full max-w-[30rem] rounded-2xl bg-[var(--bg-card)] border border-[var(--border-light)] shadow-[0_24px_48px_rgba(15,23,42,0.2)]">
             <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--border-light)]">
               <h3 className="text-lg font-semibold text-[var(--text-primary)]">Delete Ticket</h3>
               <button
@@ -1311,7 +1314,7 @@ export default function Tickets() {
       {/* Final Warning Force Delete Modal */}
       <AnimatedModal open={showForceDeleteModal}>
         {ticketToDelete && (
-          <div className="w-full max-w-[30rem] rounded-2xl bg-[var(--bg-card)] border border-[var(--border-light)] shadow-[0_24px_48px_rgba(15,23,42,0.2)]">
+          <div className="mx-auto w-full max-w-[30rem] rounded-2xl bg-[var(--bg-card)] border border-[var(--border-light)] shadow-[0_24px_48px_rgba(15,23,42,0.2)]">
             <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--border-light)]">
               <h3 className="text-lg font-semibold text-[var(--text-primary)]">Final Warning: Force Delete Ticket</h3>
               <button

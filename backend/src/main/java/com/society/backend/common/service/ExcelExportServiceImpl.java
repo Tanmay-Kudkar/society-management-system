@@ -1,5 +1,6 @@
 package com.society.backend.common.service;
 
+import com.society.backend.common.exception.ApiException;
 import com.society.backend.flat.repository.FlatRepository;
 import com.society.backend.finance.dto.response.FinancialReportResponse;
 import com.society.backend.finance.service.ReportService;
@@ -8,10 +9,15 @@ import com.society.backend.finance.repository.PaymentRepository;
 import com.society.backend.ticket.repository.TicketRepository;
 import com.society.backend.finance.repository.TransactionRepository;
 import com.society.backend.vendor.repository.VendorBillRepository;
+import com.society.backend.vendor.repository.VendorRepository;
 import lombok.RequiredArgsConstructor;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
+import org.apache.poi.xssf.usermodel.DefaultIndexedColorMap;
+import org.apache.poi.xssf.usermodel.XSSFCellStyle;
+import org.apache.poi.xssf.usermodel.XSSFColor;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayOutputStream;
@@ -19,9 +25,14 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 
 import com.society.backend.finance.entity.MaintenanceBill;
 import com.society.backend.finance.entity.Payment;
@@ -35,10 +46,15 @@ import com.society.backend.vendor.entity.VendorBill;
 @RequiredArgsConstructor
 public class ExcelExportServiceImpl implements ExcelExportService {
 
+    private static final DateTimeFormatter EXPORT_DATE_FORMAT = DateTimeFormatter.ofPattern("dd MMM yyyy", Locale.ENGLISH);
+    private static final DateTimeFormatter EXPORT_DATE_TIME_FORMAT = DateTimeFormatter.ofPattern("dd MMM yyyy, hh:mm a", Locale.ENGLISH);
+    private static final DateTimeFormatter EXPORT_MONTH_FORMAT = DateTimeFormatter.ofPattern("MMMM yyyy", Locale.ENGLISH);
+
     private final TransactionRepository transactionRepository;
     private final PaymentRepository paymentRepository;
     private final MaintenanceBillRepository maintenanceBillRepository;
     private final VendorBillRepository vendorBillRepository;
+    private final VendorRepository vendorRepository;
     private final TicketRepository ticketRepository;
     private final FlatRepository flatRepository;
     private final ReportService reportService;
@@ -59,9 +75,13 @@ public class ExcelExportServiceImpl implements ExcelExportService {
             Sheet sheet = workbook.createSheet("Transactions");
 
             // Create styles
+            CellStyle titleStyle = createTitleStyle(workbook);
             CellStyle headerStyle = createHeaderStyle(workbook);
             CellStyle currencyStyle = createCurrencyStyle(workbook);
             CellStyle dateStyle = createDateStyle(workbook);
+            CellStyle summaryHeaderStyle = createSummaryHeaderStyle(workbook);
+            CellStyle summaryLabelStyle = createSummaryLabelStyle(workbook);
+            CellStyle summaryCurrencyStyle = createSummaryCurrencyValueStyle(workbook);
 
             // Title row
             Row titleRow = sheet.createRow(0);
@@ -73,11 +93,6 @@ public class ExcelExportServiceImpl implements ExcelExportService {
                 titleText = "Transaction Report (" + startDate + " to " + endDate + ")";
             }
             titleCell.setCellValue(titleText);
-            CellStyle titleStyle = workbook.createCellStyle();
-            Font titleFont = workbook.createFont();
-            titleFont.setBold(true);
-            titleFont.setFontHeightInPoints((short) 14);
-            titleStyle.setFont(titleFont);
             titleCell.setCellStyle(titleStyle);
             sheet.addMergedRegion(new CellRangeAddress(0, 0, 0, 17));
 
@@ -102,7 +117,7 @@ public class ExcelExportServiceImpl implements ExcelExportService {
                 row.createCell(0).setCellValue(t.getId());
 
                 Cell dateCell = row.createCell(1);
-                dateCell.setCellValue(t.getTransactionDate().toString());
+                dateCell.setCellValue(formatExportDate(t.getTransactionDate()));
                 dateCell.setCellStyle(dateStyle);
 
                 row.createCell(2).setCellValue(t.getTransactionType());
@@ -240,26 +255,16 @@ public class ExcelExportServiceImpl implements ExcelExportService {
                     totalExpense = totalExpense.add(t.getAmount());
                 }
             }
+            int dataEndRow = rowNum - 1;
 
             // Summary section
             rowNum += 2;
-            Row summaryRow1 = sheet.createRow(rowNum++);
-            summaryRow1.createCell(4).setCellValue("Total Income:");
-            Cell incomeCell = summaryRow1.createCell(5);
-            incomeCell.setCellValue(totalIncome.doubleValue());
-            incomeCell.setCellStyle(currencyStyle);
+            rowNum = writeSummaryTitleRow(sheet, rowNum, 4, 5, "SUMMARY", summaryHeaderStyle);
+            rowNum = writeSummaryCurrencyRow(sheet, rowNum, 4, "Total Income", totalIncome, summaryLabelStyle, summaryCurrencyStyle);
+            rowNum = writeSummaryCurrencyRow(sheet, rowNum, 4, "Total Expense", totalExpense, summaryLabelStyle, summaryCurrencyStyle);
+            rowNum = writeSummaryCurrencyRow(sheet, rowNum, 4, "Net Balance", totalIncome.subtract(totalExpense), summaryLabelStyle, summaryCurrencyStyle);
 
-            Row summaryRow2 = sheet.createRow(rowNum++);
-            summaryRow2.createCell(4).setCellValue("Total Expense:");
-            Cell expenseCell = summaryRow2.createCell(5);
-            expenseCell.setCellValue(totalExpense.doubleValue());
-            expenseCell.setCellStyle(currencyStyle);
-
-            Row summaryRow3 = sheet.createRow(rowNum++);
-            summaryRow3.createCell(4).setCellValue("Net Balance:");
-            Cell netCell = summaryRow3.createCell(5);
-            netCell.setCellValue(totalIncome.subtract(totalExpense).doubleValue());
-            netCell.setCellStyle(currencyStyle);
+            applyCommonSheetStyling(sheet, 2, 3, dataEndRow, 1);
 
             // Auto-size columns with minimum width
             autoSizeColumnsWithMinWidth(sheet, headers.length, 12);
@@ -288,22 +293,33 @@ public class ExcelExportServiceImpl implements ExcelExportService {
                     .toList();
         }
 
+        if (bills.isEmpty()) {
+            String monthLabel = month != null && !month.isBlank() ? formatExportMonth(month) : "selected period";
+            throw new ApiException(HttpStatus.BAD_REQUEST,
+                "No maintenance bills found for " + monthLabel + " in the selected society.");
+        }
+
         try (Workbook workbook = new XSSFWorkbook()) {
             Sheet sheet = workbook.createSheet("Maintenance Bills");
 
+            CellStyle titleStyle = createTitleStyle(workbook);
             CellStyle headerStyle = createHeaderStyle(workbook);
             CellStyle currencyStyle = createCurrencyStyle(workbook);
+            CellStyle summaryHeaderStyle = createSummaryHeaderStyle(workbook);
+            CellStyle summaryLabelStyle = createSummaryLabelStyle(workbook);
+            CellStyle summaryValueStyle = createSummaryValueStyle(workbook);
+            CellStyle summaryCurrencyStyle = createSummaryCurrencyValueStyle(workbook);
 
             // Title
             Row titleRow = sheet.createRow(0);
             Cell titleCell = titleRow.createCell(0);
-            titleCell.setCellValue("Maintenance Bills Report" + (month != null ? " - " + month : ""));
-            sheet.addMergedRegion(new CellRangeAddress(0, 0, 0, 8));
+            titleCell.setCellValue("Maintenance Bills Report" + (month != null ? " - " + formatExportMonth(month) : ""));
+            titleCell.setCellStyle(titleStyle);
+            sheet.addMergedRegion(new CellRangeAddress(0, 0, 0, 7));
 
             // Headers
             Row headerRow = sheet.createRow(2);
-            String[] headers = { "ID", "Flat", "Society", "Month", "Amount", "Paid Amount", "Due Date", "Status",
-                    "Payment Mode" };
+            String[] headers = { "ID", "Flat", "Society", "Amount", "Paid Amount", "Due Date", "Status", "Payment Mode" };
             for (int i = 0; i < headers.length; i++) {
                 Cell cell = headerRow.createCell(i);
                 cell.setCellValue(headers[i]);
@@ -320,49 +336,35 @@ public class ExcelExportServiceImpl implements ExcelExportService {
                 row.createCell(0).setCellValue(b.getId());
                 row.createCell(1).setCellValue(b.getFlat().getFlatNumber());
                 row.createCell(2).setCellValue(b.getFlat().getSociety().getName());
-                row.createCell(3).setCellValue(b.getBillMonth());
 
-                Cell amountCell = row.createCell(4);
+                Cell amountCell = row.createCell(3);
                 amountCell.setCellValue(b.getAmount().doubleValue());
                 amountCell.setCellStyle(currencyStyle);
 
-                Cell paidCell = row.createCell(5);
+                Cell paidCell = row.createCell(4);
                 paidCell.setCellValue(b.getPaidAmount() != null ? b.getPaidAmount().doubleValue() : 0);
                 paidCell.setCellStyle(currencyStyle);
 
-                row.createCell(6).setCellValue(b.getDueDate() != null ? b.getDueDate().toString() : "");
-                row.createCell(7).setCellValue(b.getStatus());
-                row.createCell(8).setCellValue(b.getPaymentMode() != null ? b.getPaymentMode() : "");
+                row.createCell(5).setCellValue(formatExportDate(b.getDueDate()));
+                row.createCell(6).setCellValue(b.getStatus());
+                row.createCell(7).setCellValue(b.getPaymentMode() != null ? b.getPaymentMode() : "");
 
                 totalAmount = totalAmount.add(b.getAmount());
                 if (b.getPaidAmount() != null) {
                     totalPaid = totalPaid.add(b.getPaidAmount());
                 }
             }
+            int dataEndRow = rowNum - 1;
 
             // Summary
             rowNum += 2;
-            Row summaryRow1 = sheet.createRow(rowNum++);
-            summaryRow1.createCell(3).setCellValue("Total Bills:");
-            summaryRow1.createCell(4).setCellValue(bills.size());
+            rowNum = writeSummaryTitleRow(sheet, rowNum, 3, 4, "SUMMARY", summaryHeaderStyle);
+            rowNum = writeSummaryCountRow(sheet, rowNum, 3, "Total Bills", bills.size(), summaryLabelStyle, summaryValueStyle);
+            rowNum = writeSummaryCurrencyRow(sheet, rowNum, 3, "Total Amount", totalAmount, summaryLabelStyle, summaryCurrencyStyle);
+            rowNum = writeSummaryCurrencyRow(sheet, rowNum, 3, "Total Collected", totalPaid, summaryLabelStyle, summaryCurrencyStyle);
+            rowNum = writeSummaryCurrencyRow(sheet, rowNum, 3, "Pending", totalAmount.subtract(totalPaid), summaryLabelStyle, summaryCurrencyStyle);
 
-            Row summaryRow2 = sheet.createRow(rowNum++);
-            summaryRow2.createCell(3).setCellValue("Total Amount:");
-            Cell totalAmountCell = summaryRow2.createCell(4);
-            totalAmountCell.setCellValue(totalAmount.doubleValue());
-            totalAmountCell.setCellStyle(currencyStyle);
-
-            Row summaryRow3 = sheet.createRow(rowNum++);
-            summaryRow3.createCell(3).setCellValue("Total Collected:");
-            Cell totalCollectedCell = summaryRow3.createCell(4);
-            totalCollectedCell.setCellValue(totalPaid.doubleValue());
-            totalCollectedCell.setCellStyle(currencyStyle);
-
-            Row summaryRow4 = sheet.createRow(rowNum++);
-            summaryRow4.createCell(3).setCellValue("Pending:");
-            Cell pendingCell = summaryRow4.createCell(4);
-            pendingCell.setCellValue(totalAmount.subtract(totalPaid).doubleValue());
-            pendingCell.setCellStyle(currencyStyle);
+            applyCommonSheetStyling(sheet, 2, 3, dataEndRow, 1, 6);
 
             autoSizeColumnsWithMinWidth(sheet, headers.length, 12);
 
@@ -395,19 +397,27 @@ public class ExcelExportServiceImpl implements ExcelExportService {
         try (Workbook workbook = new XSSFWorkbook()) {
             Sheet sheet = workbook.createSheet("Vendor Bills");
 
+            CellStyle titleStyle = createTitleStyle(workbook);
             CellStyle headerStyle = createHeaderStyle(workbook);
             CellStyle currencyStyle = createCurrencyStyle(workbook);
+            CellStyle summaryHeaderStyle = createSummaryHeaderStyle(workbook);
+            CellStyle summaryLabelStyle = createSummaryLabelStyle(workbook);
+            CellStyle summaryCurrencyStyle = createSummaryCurrencyValueStyle(workbook);
 
             // Title
             Row titleRow = sheet.createRow(0);
             Cell titleCell = titleRow.createCell(0);
             titleCell.setCellValue("Vendor Bills Report");
-            sheet.addMergedRegion(new CellRangeAddress(0, 0, 0, 9));
+            titleCell.setCellStyle(titleStyle);
+                sheet.addMergedRegion(new CellRangeAddress(0, 0, 0, 14));
 
             // Headers
             Row headerRow = sheet.createRow(2);
-            String[] headers = { "ID", "Bill Number", "Vendor", "Bill Date", "Due Date", "Amount", "Paid", "Status",
-                    "Overdue Days", "Description" };
+                String[] headers = {
+                    "ID", "Bill Number", "Vendor", "Bill Date", "Due Date", "Amount", "Paid", "Status",
+                    "Overdue Days", "Payment Mode", "Reference", "Received By Role", "Received By Name",
+                    "Payment Notes", "Description"
+                };
             for (int i = 0; i < headers.length; i++) {
                 Cell cell = headerRow.createCell(i);
                 cell.setCellValue(headers[i]);
@@ -424,8 +434,8 @@ public class ExcelExportServiceImpl implements ExcelExportService {
                 row.createCell(0).setCellValue(b.getId());
                 row.createCell(1).setCellValue(b.getBillNumber() != null ? b.getBillNumber() : "");
                 row.createCell(2).setCellValue(b.getVendor().getName());
-                row.createCell(3).setCellValue(b.getBillDate().toString());
-                row.createCell(4).setCellValue(b.getDueDate() != null ? b.getDueDate().toString() : "");
+                row.createCell(3).setCellValue(formatExportDate(b.getBillDate()));
+                row.createCell(4).setCellValue(formatExportDate(b.getDueDate()));
 
                 Cell amountCell = row.createCell(5);
                 amountCell.setCellValue(b.getAmount().doubleValue());
@@ -437,33 +447,28 @@ public class ExcelExportServiceImpl implements ExcelExportService {
 
                 row.createCell(7).setCellValue(b.getStatus());
                 row.createCell(8).setCellValue(b.getPendingDays());
-                row.createCell(9).setCellValue(b.getDescription() != null ? b.getDescription() : "");
+                row.createCell(9).setCellValue(b.getPaymentMode() != null ? b.getPaymentMode() : "");
+                row.createCell(10).setCellValue(b.getReferenceNumber() != null ? b.getReferenceNumber() : "");
+                row.createCell(11).setCellValue(b.getReceivedByRole() != null ? b.getReceivedByRole() : "");
+                row.createCell(12).setCellValue(b.getReceivedByName() != null ? b.getReceivedByName() : "");
+                row.createCell(13).setCellValue(b.getPaymentNotes() != null ? b.getPaymentNotes() : "");
+                row.createCell(14).setCellValue(b.getDescription() != null ? b.getDescription() : "");
 
                 totalAmount = totalAmount.add(b.getAmount());
                 if (b.getPaidAmount() != null) {
                     totalPaid = totalPaid.add(b.getPaidAmount());
                 }
             }
+            int dataEndRow = rowNum - 1;
 
             // Summary
             rowNum += 2;
-            Row summaryRow = sheet.createRow(rowNum++);
-            summaryRow.createCell(4).setCellValue("Total Amount:");
-            Cell totalCell = summaryRow.createCell(5);
-            totalCell.setCellValue(totalAmount.doubleValue());
-            totalCell.setCellStyle(currencyStyle);
+            rowNum = writeSummaryTitleRow(sheet, rowNum, 8, 9, "SUMMARY", summaryHeaderStyle);
+            rowNum = writeSummaryCurrencyRow(sheet, rowNum, 8, "Total Amount", totalAmount, summaryLabelStyle, summaryCurrencyStyle);
+            rowNum = writeSummaryCurrencyRow(sheet, rowNum, 8, "Total Paid", totalPaid, summaryLabelStyle, summaryCurrencyStyle);
+            rowNum = writeSummaryCurrencyRow(sheet, rowNum, 8, "Pending", totalAmount.subtract(totalPaid), summaryLabelStyle, summaryCurrencyStyle);
 
-            Row summaryRow2 = sheet.createRow(rowNum++);
-            summaryRow2.createCell(4).setCellValue("Total Paid:");
-            Cell paidTotalCell = summaryRow2.createCell(5);
-            paidTotalCell.setCellValue(totalPaid.doubleValue());
-            paidTotalCell.setCellStyle(currencyStyle);
-
-            Row summaryRow3 = sheet.createRow(rowNum++);
-            summaryRow3.createCell(4).setCellValue("Pending:");
-            Cell pendingCell = summaryRow3.createCell(5);
-            pendingCell.setCellValue(totalAmount.subtract(totalPaid).doubleValue());
-            pendingCell.setCellStyle(currencyStyle);
+            applyCommonSheetStyling(sheet, 2, 3, dataEndRow, 1, 7);
 
             autoSizeColumnsWithMinWidth(sheet, headers.length, 12);
 
@@ -472,6 +477,83 @@ public class ExcelExportServiceImpl implements ExcelExportService {
             return outputStream;
         } catch (IOException e) {
             throw new RuntimeException("Failed to export vendor bills", e);
+        }
+    }
+
+    @Override
+    public ByteArrayOutputStream exportVendors(Long societyId) {
+        List<Vendor> vendors;
+        if (societyId != null) {
+            vendors = vendorRepository.findBySocietyId(societyId);
+        } else {
+            vendors = vendorRepository.findAll();
+        }
+
+        try (Workbook workbook = new XSSFWorkbook()) {
+            Sheet sheet = workbook.createSheet("Vendors");
+
+            CellStyle titleStyle = createTitleStyle(workbook);
+            CellStyle headerStyle = createHeaderStyle(workbook);
+            CellStyle summaryHeaderStyle = createSummaryHeaderStyle(workbook);
+            CellStyle summaryLabelStyle = createSummaryLabelStyle(workbook);
+            CellStyle summaryValueStyle = createSummaryValueStyle(workbook);
+
+            Row titleRow = sheet.createRow(0);
+            Cell titleCell = titleRow.createCell(0);
+            titleCell.setCellValue("Vendors Directory");
+            titleCell.setCellStyle(titleStyle);
+            sheet.addMergedRegion(new CellRangeAddress(0, 0, 0, 14));
+
+            Row headerRow = sheet.createRow(2);
+            String[] headers = {
+                    "ID", "Vendor Name", "Service Type", "Society", "Contact Person", "Contact Phone",
+                    "Contact Email", "Business Phone", "Business Email", "Address", "GST Number", "PAN Number",
+                    "Approval Status", "Active", "Created At"
+            };
+            for (int i = 0; i < headers.length; i++) {
+                Cell cell = headerRow.createCell(i);
+                cell.setCellValue(headers[i]);
+                cell.setCellStyle(headerStyle);
+            }
+
+            int rowNum = 3;
+            for (Vendor v : vendors) {
+                Row row = sheet.createRow(rowNum++);
+                row.createCell(0).setCellValue(v.getId() != null ? v.getId() : 0L);
+                row.createCell(1).setCellValue(v.getName() != null ? v.getName() : "");
+                row.createCell(2).setCellValue(v.getServiceType() != null ? v.getServiceType() : "");
+                row.createCell(3).setCellValue(v.getSociety() != null && v.getSociety().getName() != null ? v.getSociety().getName() : "Common");
+                row.createCell(4).setCellValue(v.getContactPerson() != null ? v.getContactPerson() : "");
+                row.createCell(5).setCellValue(v.getContactPersonPhone() != null ? v.getContactPersonPhone() : "");
+                row.createCell(6).setCellValue(v.getContactPersonEmail() != null ? v.getContactPersonEmail() : "");
+                row.createCell(7).setCellValue(v.getPhone() != null ? v.getPhone() : "");
+                row.createCell(8).setCellValue(v.getEmail() != null ? v.getEmail() : "");
+                row.createCell(9).setCellValue(v.getAddress() != null ? v.getAddress() : "");
+                row.createCell(10).setCellValue(v.getGstNumber() != null ? v.getGstNumber() : "");
+                row.createCell(11).setCellValue(v.getPanNumber() != null ? v.getPanNumber() : "");
+                row.createCell(12).setCellValue(v.getApprovalStatus() != null ? v.getApprovalStatus() : "PENDING");
+                row.createCell(13).setCellValue(Boolean.TRUE.equals(v.getIsActive()) ? "Yes" : "No");
+                row.createCell(14).setCellValue(formatExportDateTime(v.getCreatedAt()));
+            }
+            int dataEndRow = rowNum - 1;
+
+            rowNum += 2;
+            long approvedCount = vendors.stream().filter(v -> "APPROVED".equalsIgnoreCase(v.getApprovalStatus())).count();
+            long activeCount = vendors.stream().filter(v -> Boolean.TRUE.equals(v.getIsActive())).count();
+            rowNum = writeSummaryTitleRow(sheet, rowNum, 0, 1, "SUMMARY", summaryHeaderStyle);
+            rowNum = writeSummaryCountRow(sheet, rowNum, 0, "Total Vendors", vendors.size(), summaryLabelStyle, summaryValueStyle);
+            rowNum = writeSummaryCountRow(sheet, rowNum, 0, "Approved", approvedCount, summaryLabelStyle, summaryValueStyle);
+            rowNum = writeSummaryCountRow(sheet, rowNum, 0, "Active", activeCount, summaryLabelStyle, summaryValueStyle);
+
+            applyCommonSheetStyling(sheet, 2, 3, dataEndRow, 1, 12);
+
+            autoSizeColumnsWithMinWidth(sheet, headers.length, 12);
+
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            workbook.write(outputStream);
+            return outputStream;
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to export vendors", e);
         }
     }
 
@@ -491,19 +573,25 @@ public class ExcelExportServiceImpl implements ExcelExportService {
         try (Workbook workbook = new XSSFWorkbook()) {
             Sheet sheet = workbook.createSheet("Tickets");
 
+            CellStyle titleStyle = createTitleStyle(workbook);
             CellStyle headerStyle = createHeaderStyle(workbook);
+            CellStyle summaryHeaderStyle = createSummaryHeaderStyle(workbook);
+            CellStyle summaryLabelStyle = createSummaryLabelStyle(workbook);
+            CellStyle summaryValueStyle = createSummaryValueStyle(workbook);
 
             // Title
             Row titleRow = sheet.createRow(0);
             Cell titleCell = titleRow.createCell(0);
             titleCell.setCellValue("Tickets Report");
-                sheet.addMergedRegion(new CellRangeAddress(0, 0, 0, 16));
+            titleCell.setCellStyle(titleStyle);
+            sheet.addMergedRegion(new CellRangeAddress(0, 0, 0, 16));
 
             // Headers
             Row headerRow = sheet.createRow(2);
-                String[] headers = {
+            headerRow.setHeightInPoints(24f);
+            String[] headers = {
                     "ID",
-                        "Society",
+                    "Society",
                     "Title",
                     "Type",
                     "Priority",
@@ -519,7 +607,7 @@ public class ExcelExportServiceImpl implements ExcelExportService {
                     "Overdue Days",
                     "Escalation Level",
                         "Created At"
-                };
+                    };
             for (int i = 0; i < headers.length; i++) {
                 Cell cell = headerRow.createCell(i);
                 cell.setCellValue(headers[i]);
@@ -542,12 +630,13 @@ public class ExcelExportServiceImpl implements ExcelExportService {
                 row.createCell(9).setCellValue(t.getAssignedTo() != null ? t.getAssignedTo().getName() : "Unassigned");
                 row.createCell(10).setCellValue(t.getResolution() != null ? t.getResolution() : "");
                 row.createCell(11).setCellValue(t.getLastReplyBy() != null ? t.getLastReplyBy() : "");
-                row.createCell(12).setCellValue(t.getLastReplyAt() != null ? t.getLastReplyAt().toString() : "");
+                row.createCell(12).setCellValue(formatExportDateTime(t.getLastReplyAt()));
                 row.createCell(13).setCellValue(Boolean.TRUE.equals(t.getIsOverdue()) ? "Yes" : "No");
                 row.createCell(14).setCellValue(t.getOverdueDays() != null ? t.getOverdueDays() : 0);
                 row.createCell(15).setCellValue(t.getEscalationLevel() != null ? t.getEscalationLevel() : 0);
-                row.createCell(16).setCellValue(t.getCreatedAt() != null ? t.getCreatedAt().toString() : "");
+                row.createCell(16).setCellValue(formatExportDateTime(t.getCreatedAt()));
             }
+            int dataEndRow = rowNum - 1;
 
             // Summary
             rowNum += 2;
@@ -556,11 +645,22 @@ public class ExcelExportServiceImpl implements ExcelExportService {
             long resolved = tickets.stream().filter(t -> "RESOLVED".equals(t.getStatus())).count();
             long closed = tickets.stream().filter(t -> "CLOSED".equals(t.getStatus())).count();
 
-            sheet.createRow(rowNum++).createCell(0).setCellValue("Summary:");
-            sheet.createRow(rowNum).createCell(0).setCellValue("Open: " + open);
-            sheet.getRow(rowNum++).createCell(2).setCellValue("In Progress: " + inProgress);
-            sheet.createRow(rowNum).createCell(0).setCellValue("Resolved: " + resolved);
-            sheet.getRow(rowNum++).createCell(2).setCellValue("Closed: " + closed);
+            rowNum = writeSummaryTitleRow(sheet, rowNum, 0, 2, "SUMMARY", summaryHeaderStyle);
+
+            Row summaryHeaderRow = sheet.createRow(rowNum++);
+            Cell metricHeader = summaryHeaderRow.createCell(0);
+            metricHeader.setCellValue("Metric");
+            metricHeader.setCellStyle(headerStyle);
+            Cell countHeader = summaryHeaderRow.createCell(1);
+            countHeader.setCellValue("Count");
+            countHeader.setCellStyle(headerStyle);
+
+            rowNum = writeTicketSummaryRow(sheet, rowNum, "Open", open, summaryLabelStyle, summaryValueStyle);
+            rowNum = writeTicketSummaryRow(sheet, rowNum, "In Progress", inProgress, summaryLabelStyle, summaryValueStyle);
+            rowNum = writeTicketSummaryRow(sheet, rowNum, "Resolved", resolved, summaryLabelStyle, summaryValueStyle);
+            rowNum = writeTicketSummaryRow(sheet, rowNum, "Closed", closed, summaryLabelStyle, summaryValueStyle);
+
+            applyCommonSheetStyling(sheet, 2, 3, dataEndRow, 1, 5);
 
             autoSizeColumnsWithMinWidth(sheet, headers.length, 12);
 
@@ -584,12 +684,17 @@ public class ExcelExportServiceImpl implements ExcelExportService {
         try (Workbook workbook = new XSSFWorkbook()) {
             Sheet sheet = workbook.createSheet("Flats");
 
+            CellStyle titleStyle = createTitleStyle(workbook);
             CellStyle headerStyle = createHeaderStyle(workbook);
+            CellStyle summaryHeaderStyle = createSummaryHeaderStyle(workbook);
+            CellStyle summaryLabelStyle = createSummaryLabelStyle(workbook);
+            CellStyle summaryValueStyle = createSummaryValueStyle(workbook);
 
             // Title
             Row titleRow = sheet.createRow(0);
             Cell titleCell = titleRow.createCell(0);
             titleCell.setCellValue("Flats Directory");
+            titleCell.setCellStyle(titleStyle);
             sheet.addMergedRegion(new CellRangeAddress(0, 0, 0, 8));
 
             // Headers
@@ -616,13 +721,17 @@ public class ExcelExportServiceImpl implements ExcelExportService {
                 row.createCell(7).setCellValue(f.getOwnerEmail() != null ? f.getOwnerEmail() : "");
                 row.createCell(8).setCellValue(f.getIsOccupied() != null && f.getIsOccupied() ? "Yes" : "No");
             }
+            int dataEndRow = rowNum - 1;
 
             // Summary
             rowNum += 2;
             long occupied = flats.stream().filter(f -> f.getIsOccupied() != null && f.getIsOccupied()).count();
-            sheet.createRow(rowNum++).createCell(0).setCellValue("Total Flats: " + flats.size());
-            sheet.createRow(rowNum++).createCell(0).setCellValue("Occupied: " + occupied);
-            sheet.createRow(rowNum++).createCell(0).setCellValue("Vacant: " + (flats.size() - occupied));
+            rowNum = writeSummaryTitleRow(sheet, rowNum, 0, 1, "SUMMARY", summaryHeaderStyle);
+            rowNum = writeSummaryCountRow(sheet, rowNum, 0, "Total Flats", flats.size(), summaryLabelStyle, summaryValueStyle);
+            rowNum = writeSummaryCountRow(sheet, rowNum, 0, "Occupied", occupied, summaryLabelStyle, summaryValueStyle);
+            rowNum = writeSummaryCountRow(sheet, rowNum, 0, "Vacant", flats.size() - occupied, summaryLabelStyle, summaryValueStyle);
+
+            applyCommonSheetStyling(sheet, 2, 3, dataEndRow, 1);
 
             autoSizeColumnsWithMinWidth(sheet, headers.length, 12);
 
@@ -659,13 +768,13 @@ public class ExcelExportServiceImpl implements ExcelExportService {
         try (Workbook workbook = new XSSFWorkbook()) {
             Sheet sheet = workbook.createSheet("Financial Report");
 
+            CellStyle titleStyle = createTitleStyle(workbook);
             CellStyle headerStyle = createHeaderStyle(workbook);
             CellStyle currencyStyle = createCurrencyStyle(workbook);
-            CellStyle titleStyle = workbook.createCellStyle();
-            Font titleFont = workbook.createFont();
-            titleFont.setBold(true);
-            titleFont.setFontHeightInPoints((short) 14);
-            titleStyle.setFont(titleFont);
+            CellStyle summaryHeaderStyle = createSummaryHeaderStyle(workbook);
+            CellStyle summaryLabelStyle = createSummaryLabelStyle(workbook);
+            CellStyle summaryValueStyle = createSummaryValueStyle(workbook);
+            CellStyle summaryCurrencyStyle = createSummaryCurrencyValueStyle(workbook);
 
             // Title
             int rowNum = 0;
@@ -681,9 +790,7 @@ public class ExcelExportServiceImpl implements ExcelExportService {
 
             rowNum++;
 
-            Row summaryHeader = sheet.createRow(rowNum++);
-            summaryHeader.createCell(0).setCellValue("SUMMARY");
-            summaryHeader.getCell(0).setCellStyle(headerStyle);
+            rowNum = writeSummaryTitleRow(sheet, rowNum, 0, 1, "SUMMARY", summaryHeaderStyle);
 
             String[] summaryLabels = { "Total Income", "Total Expense", "Net Balance", "Cash Balance" };
             BigDecimal[] summaryValues = {
@@ -694,11 +801,7 @@ public class ExcelExportServiceImpl implements ExcelExportService {
             };
 
             for (int i = 0; i < summaryLabels.length; i++) {
-                Row row = sheet.createRow(rowNum++);
-                row.createCell(0).setCellValue(summaryLabels[i]);
-                Cell valueCell = row.createCell(1);
-                valueCell.setCellValue(summaryValues[i].doubleValue());
-                valueCell.setCellStyle(currencyStyle);
+                rowNum = writeSummaryCurrencyRow(sheet, rowNum, 0, summaryLabels[i], summaryValues[i], summaryLabelStyle, summaryCurrencyStyle);
             }
 
             if ("COMPARISON".equals(normalizedType)) {
@@ -706,13 +809,15 @@ public class ExcelExportServiceImpl implements ExcelExportService {
                 previousIncome.createCell(0).setCellValue("Previous Period Income");
                 Cell previousIncomeValue = previousIncome.createCell(1);
                 previousIncomeValue.setCellValue(safeAmount(report.getPreviousPeriodIncome()).doubleValue());
-                previousIncomeValue.setCellStyle(currencyStyle);
+                previousIncome.getCell(0).setCellStyle(summaryLabelStyle);
+                previousIncomeValue.setCellStyle(summaryCurrencyStyle);
 
                 Row previousExpense = sheet.createRow(rowNum++);
                 previousExpense.createCell(0).setCellValue("Previous Period Expense");
                 Cell previousExpenseValue = previousExpense.createCell(1);
                 previousExpenseValue.setCellValue(safeAmount(report.getPreviousPeriodExpense()).doubleValue());
-                previousExpenseValue.setCellStyle(currencyStyle);
+                previousExpense.getCell(0).setCellStyle(summaryLabelStyle);
+                previousExpenseValue.setCellStyle(summaryCurrencyStyle);
             }
 
             rowNum += 2;
@@ -724,38 +829,38 @@ public class ExcelExportServiceImpl implements ExcelExportService {
             if (!"COMPARISON".equals(normalizedType)) {
                 Row billsHeader = sheet.createRow(rowNum++);
                 billsHeader.createCell(0).setCellValue("BILLS SUMMARY");
-                billsHeader.getCell(0).setCellStyle(headerStyle);
+                billsHeader.getCell(0).setCellStyle(summaryHeaderStyle);
 
-                rowNum = writeNumberMetricRow(sheet, rowNum, "Total Bills", report.getTotalBillsGenerated());
-                rowNum = writeNumberMetricRow(sheet, rowNum, "Paid Bills", report.getBillsPaid());
-                rowNum = writeNumberMetricRow(sheet, rowNum, "Pending Bills", report.getBillsPending());
-                rowNum = writeCurrencyMetricRow(sheet, rowNum, "Collected Amount", report.getBillsCollectedAmount(), currencyStyle);
-                rowNum = writeCurrencyMetricRow(sheet, rowNum, "Pending Amount", report.getBillsPendingAmount(), currencyStyle);
+                rowNum = writeNumberMetricRow(sheet, rowNum, "Total Bills", report.getTotalBillsGenerated(), summaryLabelStyle, summaryValueStyle);
+                rowNum = writeNumberMetricRow(sheet, rowNum, "Paid Bills", report.getBillsPaid(), summaryLabelStyle, summaryValueStyle);
+                rowNum = writeNumberMetricRow(sheet, rowNum, "Pending Bills", report.getBillsPending(), summaryLabelStyle, summaryValueStyle);
+                rowNum = writeCurrencyMetricRow(sheet, rowNum, "Collected Amount", report.getBillsCollectedAmount(), summaryLabelStyle, summaryCurrencyStyle);
+                rowNum = writeCurrencyMetricRow(sheet, rowNum, "Pending Amount", report.getBillsPendingAmount(), summaryLabelStyle, summaryCurrencyStyle);
 
                 rowNum += 2;
                 Row statsHeader = sheet.createRow(rowNum++);
                 statsHeader.createCell(0).setCellValue("PERIOD STATISTICS");
-                statsHeader.getCell(0).setCellStyle(headerStyle);
+                statsHeader.getCell(0).setCellStyle(summaryHeaderStyle);
 
-                rowNum = writeNumberMetricRow(sheet, rowNum, "Transactions", report.getTransactionCount());
-                rowNum = writeCurrencyMetricRow(sheet, rowNum, "Late Fees Collected", report.getLateFeeCollected(), currencyStyle);
-                rowNum = writeCurrencyMetricRow(sheet, rowNum, "Discounts Given", report.getDiscountGiven(), currencyStyle);
-                rowNum = writeCurrencyMetricRow(sheet, rowNum, "Tax Collected", report.getTaxCollected(), currencyStyle);
+                rowNum = writeNumberMetricRow(sheet, rowNum, "Transactions", report.getTransactionCount(), summaryLabelStyle, summaryValueStyle);
+                rowNum = writeCurrencyMetricRow(sheet, rowNum, "Late Fees Collected", report.getLateFeeCollected(), summaryLabelStyle, summaryCurrencyStyle);
+                rowNum = writeCurrencyMetricRow(sheet, rowNum, "Discounts Given", report.getDiscountGiven(), summaryLabelStyle, summaryCurrencyStyle);
+                rowNum = writeCurrencyMetricRow(sheet, rowNum, "Tax Collected", report.getTaxCollected(), summaryLabelStyle, summaryCurrencyStyle);
 
                 rowNum += 2;
                 Row duesHeader = sheet.createRow(rowNum++);
                 duesHeader.createCell(0).setCellValue("OUTSTANDING DUES");
-                duesHeader.getCell(0).setCellStyle(headerStyle);
+                duesHeader.getCell(0).setCellStyle(summaryHeaderStyle);
 
-                rowNum = writeNumberMetricRow(sheet, rowNum, "Unpaid / Partial Bills", report.getOutstandingDuesCount());
-                rowNum = writeCurrencyMetricRow(sheet, rowNum, "Outstanding Dues Amount", report.getOutstandingDuesAmount(), currencyStyle);
+                rowNum = writeNumberMetricRow(sheet, rowNum, "Unpaid / Partial Bills", report.getOutstandingDuesCount(), summaryLabelStyle, summaryValueStyle);
+                rowNum = writeCurrencyMetricRow(sheet, rowNum, "Outstanding Dues Amount", report.getOutstandingDuesAmount(), summaryLabelStyle, summaryCurrencyStyle);
 
                 rowNum += 2;
                 Row upcomingHeader = sheet.createRow(rowNum++);
                 upcomingHeader.createCell(0).setCellValue("UPCOMING PAYMENTS");
-                upcomingHeader.getCell(0).setCellStyle(headerStyle);
+                upcomingHeader.getCell(0).setCellStyle(summaryHeaderStyle);
 
-                rowNum = writeCurrencyMetricRow(sheet, rowNum, "Upcoming Total", report.getUpcomingExpenses(), currencyStyle);
+                rowNum = writeCurrencyMetricRow(sheet, rowNum, "Upcoming Total", report.getUpcomingExpenses(), summaryLabelStyle, summaryCurrencyStyle);
 
                 if (report.getUpcomingPayments() != null && !report.getUpcomingPayments().isEmpty()) {
                     Row upcomingTableHeader = sheet.createRow(rowNum++);
@@ -770,7 +875,7 @@ public class ExcelExportServiceImpl implements ExcelExportService {
                         Row row = sheet.createRow(rowNum++);
                         row.createCell(0).setCellValue(payment.getDescription() != null ? payment.getDescription() : "-");
                         row.createCell(1).setCellValue(prettyLabel(payment.getType()));
-                        row.createCell(2).setCellValue(payment.getDueDate() != null ? payment.getDueDate().toString() : "-");
+                        row.createCell(2).setCellValue(payment.getDueDate() != null ? formatExportDate(payment.getDueDate()) : "-");
                         Cell amountCell = row.createCell(3);
                         amountCell.setCellValue(safeAmount(payment.getAmount()).doubleValue());
                         amountCell.setCellStyle(currencyStyle);
@@ -832,7 +937,7 @@ public class ExcelExportServiceImpl implements ExcelExportService {
                     BigDecimal expense = safeAmount(trend.getExpense());
                     BigDecimal net = income.subtract(expense);
 
-                    row.createCell(0).setCellValue(trend.getDate() != null ? trend.getDate().toString() : "-");
+                    row.createCell(0).setCellValue(trend.getDate() != null ? formatExportDate(trend.getDate()) : "-");
 
                     Cell incomeCell = row.createCell(1);
                     incomeCell.setCellValue(income.doubleValue());
@@ -847,6 +952,8 @@ public class ExcelExportServiceImpl implements ExcelExportService {
                     netCell.setCellStyle(currencyStyle);
                 }
             }
+
+            applyCommonSheetStyling(sheet, 2, -1, -1, 1);
 
             autoSizeColumnsWithMinWidth(sheet, 8, 14);
 
@@ -885,20 +992,173 @@ public class ExcelExportServiceImpl implements ExcelExportService {
         return rowNum + 1;
     }
 
-    private int writeNumberMetricRow(Sheet sheet, int rowNum, String label, Integer value) {
+    private int writeNumberMetricRow(Sheet sheet, int rowNum, String label, Integer value,
+            CellStyle labelStyle, CellStyle valueStyle) {
         Row row = sheet.createRow(rowNum++);
-        row.createCell(0).setCellValue(label);
-        row.createCell(1).setCellValue(value != null ? value : 0);
+        Cell labelCell = row.createCell(0);
+        labelCell.setCellValue(label);
+        labelCell.setCellStyle(labelStyle);
+
+        Cell valueCell = row.createCell(1);
+        valueCell.setCellValue(value != null ? value : 0);
+        valueCell.setCellStyle(valueStyle);
         return rowNum;
     }
 
-    private int writeCurrencyMetricRow(Sheet sheet, int rowNum, String label, BigDecimal value, CellStyle currencyStyle) {
+    private int writeCurrencyMetricRow(Sheet sheet, int rowNum, String label, BigDecimal value,
+            CellStyle labelStyle, CellStyle currencyValueStyle) {
         Row row = sheet.createRow(rowNum++);
-        row.createCell(0).setCellValue(label);
+        Cell labelCell = row.createCell(0);
+        labelCell.setCellValue(label);
+        labelCell.setCellStyle(labelStyle);
+
         Cell valueCell = row.createCell(1);
         valueCell.setCellValue(safeAmount(value).doubleValue());
-        valueCell.setCellStyle(currencyStyle);
+        valueCell.setCellStyle(currencyValueStyle);
         return rowNum;
+    }
+
+    private int writeSummaryTitleRow(Sheet sheet, int rowNum, int startColumn, int endColumn,
+            String title, CellStyle headerStyle) {
+        Row row = sheet.createRow(rowNum++);
+        for (int col = startColumn; col <= endColumn; col++) {
+            Cell cell = row.createCell(col);
+            cell.setCellStyle(headerStyle);
+            if (col == startColumn) {
+                cell.setCellValue(title);
+            }
+        }
+        sheet.addMergedRegion(new CellRangeAddress(row.getRowNum(), row.getRowNum(), startColumn, endColumn));
+        return rowNum;
+    }
+
+    private int writeSummaryCountRow(Sheet sheet, int rowNum, int labelColumn, String label, long value,
+            CellStyle labelStyle, CellStyle valueStyle) {
+        Row row = sheet.createRow(rowNum++);
+        Cell labelCell = row.createCell(labelColumn);
+        labelCell.setCellValue(label);
+        labelCell.setCellStyle(labelStyle);
+
+        Cell valueCell = row.createCell(labelColumn + 1);
+        valueCell.setCellValue(value);
+        valueCell.setCellStyle(valueStyle);
+        return rowNum;
+    }
+
+    private int writeSummaryCurrencyRow(Sheet sheet, int rowNum, int labelColumn, String label, BigDecimal value,
+            CellStyle labelStyle, CellStyle currencyValueStyle) {
+        Row row = sheet.createRow(rowNum++);
+        Cell labelCell = row.createCell(labelColumn);
+        labelCell.setCellValue(label);
+        labelCell.setCellStyle(labelStyle);
+
+        Cell valueCell = row.createCell(labelColumn + 1);
+        valueCell.setCellValue(safeAmount(value).doubleValue());
+        valueCell.setCellStyle(currencyValueStyle);
+        return rowNum;
+    }
+
+    private void applyCommonSheetStyling(Sheet sheet, int headerRowIndex, int dataStartRow, int dataEndRow,
+            int freezeColumnCount, int... statusColumns) {
+        sheet.createFreezePane(Math.max(freezeColumnCount, 0), headerRowIndex + 1);
+        sheet.setRepeatingRows(CellRangeAddress.valueOf("$1:$" + (headerRowIndex + 1)));
+        sheet.setHorizontallyCenter(true);
+        sheet.setFitToPage(true);
+        sheet.setAutobreaks(true);
+
+        PrintSetup printSetup = sheet.getPrintSetup();
+        printSetup.setLandscape(true);
+        printSetup.setFitWidth((short) 1);
+        printSetup.setFitHeight((short) 0);
+
+        if (dataStartRow >= 0 && dataEndRow >= dataStartRow) {
+            applyDataBandingAndStatusHighlight(sheet, dataStartRow, dataEndRow, statusColumns);
+        }
+    }
+
+    private void applyDataBandingAndStatusHighlight(Sheet sheet, int dataStartRow, int dataEndRow, int... statusColumns) {
+        Workbook workbook = sheet.getWorkbook();
+        DataFormatter formatter = new DataFormatter(Locale.ENGLISH);
+        Map<String, CellStyle> styleCache = new HashMap<>();
+        Map<Integer, Boolean> statusColumnLookup = new HashMap<>();
+        for (int statusColumn : statusColumns) {
+            statusColumnLookup.put(statusColumn, Boolean.TRUE);
+        }
+
+        for (int rowIndex = dataStartRow; rowIndex <= dataEndRow; rowIndex++) {
+            Row row = sheet.getRow(rowIndex);
+            if (row == null || row.getLastCellNum() <= 0) {
+                continue;
+            }
+
+            for (int columnIndex = 0; columnIndex < row.getLastCellNum(); columnIndex++) {
+                Cell cell = row.getCell(columnIndex);
+                if (cell == null) {
+                    continue;
+                }
+
+                String normalizedText = formatter.formatCellValue(cell).trim().toUpperCase(Locale.ENGLISH);
+                String variant;
+                boolean isStatusColumn = Boolean.TRUE.equals(statusColumnLookup.get(columnIndex));
+                if (isStatusColumn && (normalizedText.contains("OVERDUE") || normalizedText.contains("UNPAID")
+                        || normalizedText.contains("PENDING") || normalizedText.contains("FAILED")
+                        || normalizedText.contains("REJECTED"))) {
+                    variant = "critical";
+                } else if (isStatusColumn && (normalizedText.contains("PARTIAL")
+                        || normalizedText.contains("IN_PROGRESS") || normalizedText.contains("PROCESSING"))) {
+                    variant = "warning";
+                } else if (isStatusColumn && (normalizedText.contains("PAID") || normalizedText.contains("SUCCESS")
+                        || normalizedText.contains("COMPLETED") || normalizedText.contains("CLOSED")
+                        || normalizedText.contains("RESOLVED") || normalizedText.contains("APPROVED")
+                        || normalizedText.contains("ACTIVE"))) {
+                    variant = "good";
+                } else {
+                    continue;
+                }
+
+                CellStyle baseStyle = cell.getCellStyle();
+                String cacheKey = baseStyle.getIndex() + ":" + variant;
+                CellStyle styledCell = styleCache.get(cacheKey);
+                if (styledCell == null) {
+                    styledCell = workbook.createCellStyle();
+                    styledCell.cloneStyleFrom(baseStyle);
+
+                    Font baseFont = workbook.getFontAt(baseStyle.getFontIndex());
+                    Font font = workbook.createFont();
+                    font.setBold(baseFont.getBold());
+                    font.setFontHeight(baseFont.getFontHeight());
+                    font.setFontName(baseFont.getFontName());
+                    font.setItalic(baseFont.getItalic());
+                    font.setUnderline(baseFont.getUnderline());
+                    font.setColor(baseFont.getColor());
+
+                    if ("critical".equals(variant)) {
+                        applyFillColor(styledCell, new byte[] { (byte) 255, (byte) 0, (byte) 0 }, IndexedColors.RED);
+                    } else if ("warning".equals(variant)) {
+                        applyFillColor(styledCell, new byte[] { (byte) 80, (byte) 180, (byte) 220 }, IndexedColors.LIGHT_CORNFLOWER_BLUE);
+                    } else if ("good".equals(variant)) {
+                        applyFillColor(styledCell, new byte[] { (byte) 92, (byte) 214, (byte) 92 }, IndexedColors.BRIGHT_GREEN);
+                    }
+
+                    font.setBold(true);
+                    font.setColor(IndexedColors.BLACK.getIndex());
+
+                    styledCell.setFont(font);
+                    styleCache.put(cacheKey, styledCell);
+                }
+
+                cell.setCellStyle(styledCell);
+            }
+        }
+    }
+
+    private void applyFillColor(CellStyle style, byte[] rgbColor, IndexedColors fallback) {
+        style.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+        if (style instanceof XSSFCellStyle xssfStyle) {
+            xssfStyle.setFillForegroundColor(new XSSFColor(rgbColor, new DefaultIndexedColorMap()));
+        } else {
+            style.setFillForegroundColor(fallback.getIndex());
+        }
     }
 
     private BigDecimal safeAmount(BigDecimal value) {
@@ -983,7 +1243,7 @@ public class ExcelExportServiceImpl implements ExcelExportService {
 
     private String resolveTransactionPaymentMonth(Transaction transaction) {
         if (transaction.getPaymentMonth() != null && !transaction.getPaymentMonth().isBlank()) {
-            return transaction.getPaymentMonth();
+            return formatExportMonth(transaction.getPaymentMonth());
         }
         return "MAINTENANCE".equals(transaction.getCategory()) ? "Missing" : "N/A";
     }
@@ -1001,17 +1261,13 @@ public class ExcelExportServiceImpl implements ExcelExportService {
 
         try (Workbook workbook = new XSSFWorkbook()) {
             Sheet sheet = workbook.createSheet("Payments");
+            CellStyle titleStyle = createTitleStyle(workbook);
             CellStyle headerStyle = createHeaderStyle(workbook);
             CellStyle currencyStyle = createCurrencyStyle(workbook);
 
             Row titleRow = sheet.createRow(0);
             Cell titleCell = titleRow.createCell(0);
             titleCell.setCellValue("Online Payments Report");
-            CellStyle titleStyle = workbook.createCellStyle();
-            Font titleFont = workbook.createFont();
-            titleFont.setBold(true);
-            titleFont.setFontHeightInPoints((short) 14);
-            titleStyle.setFont(titleFont);
             titleCell.setCellStyle(titleStyle);
             sheet.addMergedRegion(new CellRangeAddress(0, 0, 0, 16));
 
@@ -1052,9 +1308,12 @@ public class ExcelExportServiceImpl implements ExcelExportService {
 
                 row.createCell(13).setCellValue(p.getSettlementStatus() != null ? p.getSettlementStatus() : "NONE");
                 row.createCell(14).setCellValue(p.getSettlementUtr() != null ? p.getSettlementUtr() : "");
-                row.createCell(15).setCellValue(p.getCreatedAt() != null ? p.getCreatedAt().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME) : "");
-                row.createCell(16).setCellValue(p.getPaidAt() != null ? p.getPaidAt().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME) : "");
+                row.createCell(15).setCellValue(formatExportDateTime(p.getCreatedAt()));
+                row.createCell(16).setCellValue(formatExportDateTime(p.getPaidAt()));
             }
+            int dataEndRow = rowNum - 1;
+
+            applyCommonSheetStyling(sheet, 2, 3, dataEndRow, 1, 7, 11, 13);
 
             autoSizeColumnsWithMinWidth(sheet, 17, 12);
 
@@ -1070,14 +1329,98 @@ public class ExcelExportServiceImpl implements ExcelExportService {
         CellStyle style = workbook.createCellStyle();
         Font font = workbook.createFont();
         font.setBold(true);
+        font.setFontHeightInPoints((short) 11);
         style.setFont(font);
         style.setFillForegroundColor(IndexedColors.GREY_25_PERCENT.getIndex());
         style.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+        style.setAlignment(HorizontalAlignment.CENTER);
+        style.setVerticalAlignment(VerticalAlignment.CENTER);
+        style.setWrapText(false);
         style.setBorderBottom(BorderStyle.THIN);
         style.setBorderTop(BorderStyle.THIN);
         style.setBorderLeft(BorderStyle.THIN);
         style.setBorderRight(BorderStyle.THIN);
         return style;
+    }
+
+    private CellStyle createTitleStyle(Workbook workbook) {
+        CellStyle style = workbook.createCellStyle();
+        Font font = workbook.createFont();
+        font.setBold(true);
+        font.setFontHeightInPoints((short) 16);
+        style.setFont(font);
+        style.setAlignment(HorizontalAlignment.CENTER);
+        style.setVerticalAlignment(VerticalAlignment.CENTER);
+        return style;
+    }
+
+    private CellStyle createSummaryHeaderStyle(Workbook workbook) {
+        CellStyle style = workbook.createCellStyle();
+        Font font = workbook.createFont();
+        font.setBold(true);
+        font.setFontHeightInPoints((short) 11);
+        font.setColor(IndexedColors.WHITE.getIndex());
+        style.setFont(font);
+        style.setFillForegroundColor(IndexedColors.BLUE_GREY.getIndex());
+        style.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+        style.setAlignment(HorizontalAlignment.CENTER);
+        style.setVerticalAlignment(VerticalAlignment.CENTER);
+        style.setBorderBottom(BorderStyle.THIN);
+        style.setBorderTop(BorderStyle.THIN);
+        style.setBorderLeft(BorderStyle.THIN);
+        style.setBorderRight(BorderStyle.THIN);
+        return style;
+    }
+
+    private CellStyle createSummaryLabelStyle(Workbook workbook) {
+        CellStyle style = workbook.createCellStyle();
+        Font font = workbook.createFont();
+        font.setBold(true);
+        font.setFontHeightInPoints((short) 10);
+        style.setFont(font);
+        style.setFillForegroundColor(IndexedColors.GREY_25_PERCENT.getIndex());
+        style.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+        style.setAlignment(HorizontalAlignment.LEFT);
+        style.setVerticalAlignment(VerticalAlignment.CENTER);
+        style.setBorderBottom(BorderStyle.THIN);
+        style.setBorderTop(BorderStyle.THIN);
+        style.setBorderLeft(BorderStyle.THIN);
+        style.setBorderRight(BorderStyle.THIN);
+        return style;
+    }
+
+    private CellStyle createSummaryValueStyle(Workbook workbook) {
+        CellStyle style = workbook.createCellStyle();
+        Font font = workbook.createFont();
+        font.setBold(true);
+        font.setFontHeightInPoints((short) 10);
+        style.setFont(font);
+        style.setAlignment(HorizontalAlignment.RIGHT);
+        style.setVerticalAlignment(VerticalAlignment.CENTER);
+        style.setBorderBottom(BorderStyle.THIN);
+        style.setBorderTop(BorderStyle.THIN);
+        style.setBorderLeft(BorderStyle.THIN);
+        style.setBorderRight(BorderStyle.THIN);
+        return style;
+    }
+
+    private CellStyle createSummaryCurrencyValueStyle(Workbook workbook) {
+        CellStyle style = createSummaryValueStyle(workbook);
+        DataFormat format = workbook.createDataFormat();
+        style.setDataFormat(format.getFormat("#,##0.00"));
+        return style;
+    }
+
+    private int writeTicketSummaryRow(Sheet sheet, int rowNum, String metric, long count,
+                                      CellStyle labelStyle, CellStyle valueStyle) {
+        Row row = sheet.createRow(rowNum++);
+        Cell metricCell = row.createCell(0);
+        metricCell.setCellValue(metric);
+        metricCell.setCellStyle(labelStyle);
+        Cell countCell = row.createCell(1);
+        countCell.setCellValue(count);
+        countCell.setCellStyle(valueStyle);
+        return rowNum;
     }
 
     private CellStyle createCurrencyStyle(Workbook workbook) {
@@ -1094,16 +1437,105 @@ public class ExcelExportServiceImpl implements ExcelExportService {
         return style;
     }
 
-    private void autoSizeColumnsWithMinWidth(Sheet sheet, int columnCount, int minCharWidth) {
-        int minWidth = minCharWidth * 256;
-        for (int i = 0; i < columnCount; i++) {
-            sheet.autoSizeColumn(i);
-            if (sheet.getColumnWidth(i) < minWidth) {
-                sheet.setColumnWidth(i, minWidth);
+    private String formatExportDate(LocalDate value) {
+        return value != null ? value.format(EXPORT_DATE_FORMAT) : "";
+    }
+
+    private String formatExportDateTime(LocalDateTime value) {
+        return value != null ? value.format(EXPORT_DATE_TIME_FORMAT) : "";
+    }
+
+    private String formatExportMonth(String value) {
+        if (value == null || value.isBlank()) {
+            return "";
+        }
+
+        String normalized = value.trim();
+        DateTimeFormatter[] supportedPatterns = new DateTimeFormatter[] {
+                DateTimeFormatter.ofPattern("yyyy-MM", Locale.ENGLISH),
+                DateTimeFormatter.ofPattern("MM/yyyy", Locale.ENGLISH),
+                DateTimeFormatter.ofPattern("yyyy/MM", Locale.ENGLISH),
+                DateTimeFormatter.ofPattern("MMM yyyy", Locale.ENGLISH),
+                DateTimeFormatter.ofPattern("MMMM yyyy", Locale.ENGLISH)
+        };
+
+        for (DateTimeFormatter pattern : supportedPatterns) {
+            try {
+                return YearMonth.parse(normalized, pattern).format(EXPORT_MONTH_FORMAT);
+            } catch (DateTimeParseException ignored) {
+                // try next pattern
             }
+        }
+
+        return normalized;
+    }
+
+    private int countNonEmptyCells(Row row, int columnCount, DataFormatter formatter) {
+        int count = 0;
+        for (int i = 0; i < columnCount; i++) {
+            Cell cell = row.getCell(i);
+            if (cell == null) {
+                continue;
+            }
+            String value = formatter.formatCellValue(cell);
+            if (value != null && !value.trim().isEmpty()) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    private void autoSizeColumnsWithMinWidth(Sheet sheet, int columnCount, int minCharWidth) {
+        int minWidthChars = Math.max(minCharWidth, 1);
+        int maxWidthChars = 80;
+        int paddingChars = 3;
+        DataFormatter formatter = new DataFormatter(Locale.ENGLISH);
+        Workbook workbook = sheet.getWorkbook();
+        Map<Short, CellStyle> centeredStyleCache = new HashMap<>();
+
+        for (int i = 0; i < columnCount; i++) {
+            int longestTextChars = 0;
+
+            for (Row row : sheet) {
+                if (row.getRowNum() == 0) {
+                    continue; // Skip merged title row so table columns aren't distorted.
+                }
+
+                int nonEmptyCells = countNonEmptyCells(row, columnCount, formatter);
+                if (nonEmptyCells > 0 && nonEmptyCells < 3) {
+                    continue; // Skip summary/sparse rows when sizing table columns.
+                }
+
+                Cell cell = row.getCell(i);
+                if (cell == null) {
+                    continue;
+                }
+
+                // Center-align all export cells while preserving existing borders/fills/formats.
+                CellStyle baseStyle = cell.getCellStyle();
+                short styleIndex = baseStyle.getIndex();
+                CellStyle centeredStyle = centeredStyleCache.get(styleIndex);
+                if (centeredStyle == null) {
+                    centeredStyle = workbook.createCellStyle();
+                    centeredStyle.cloneStyleFrom(baseStyle);
+                    centeredStyle.setAlignment(HorizontalAlignment.CENTER);
+                    centeredStyle.setVerticalAlignment(VerticalAlignment.CENTER);
+                    centeredStyleCache.put(styleIndex, centeredStyle);
+                }
+                cell.setCellStyle(centeredStyle);
+
+                String displayText = formatter.formatCellValue(cell);
+                if (displayText != null) {
+                    int effectiveLength = displayText.trim().length();
+                    if (effectiveLength > longestTextChars) {
+                        longestTextChars = effectiveLength;
+                    }
+                }
+            }
+
+            int desiredChars = Math.max(longestTextChars + paddingChars, minWidthChars);
+            desiredChars = Math.min(desiredChars, maxWidthChars);
+            sheet.setColumnWidth(i, desiredChars * 256);
         }
     }
 }
-
-
-

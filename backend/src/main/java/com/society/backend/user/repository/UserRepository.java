@@ -15,6 +15,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     Optional<User> findByEmail(String email);
 
+    Optional<User> findByEmailIgnoreCase(String email);
+
     @Query("SELECT u FROM User u LEFT JOIN FETCH u.society WHERE u.society.id = :societyId")
     List<User> findBySocietyId(@Param("societyId") Long societyId);
 

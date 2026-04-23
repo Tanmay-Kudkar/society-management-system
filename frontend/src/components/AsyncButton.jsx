@@ -66,7 +66,7 @@ export default function AsyncButton({
             )}
             aria-hidden
           >
-            <span className="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+            <span className="loader-6 loader-6--btn" />
           </span>
         </>
       ) : (

@@ -1,11 +1,57 @@
 import { createContext, useContext, useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { authApi } from '../../../api'
+import { getErrorMessage } from '../utils'
 
 const AuthContext = createContext(null)
 
 const LOCATION_REFRESH_INTERVAL_MS = 5 * 60 * 1000 // 5 minutes
 const LAST_KNOWN_LOCATION_STORAGE_KEY = 'auth.lastKnownLocation'
+const AUTH_STORAGE_MODE_KEY = 'authStorageMode'
+
+const readAuthStorageMode = () => {
+  try {
+    return localStorage.getItem(AUTH_STORAGE_MODE_KEY)
+  } catch {
+    return null
+  }
+}
+
+const getPreferredAuthStorage = () => {
+  const mode = readAuthStorageMode()
+  if (mode === 'session') return sessionStorage
+  if (mode === 'local') return localStorage
+
+  if (localStorage.getItem('token')) return localStorage
+  if (sessionStorage.getItem('token')) return sessionStorage
+  return localStorage
+}
+
+const getStoredToken = () => {
+  if (typeof window === 'undefined') return null
+  return localStorage.getItem('token') || sessionStorage.getItem('token')
+}
+
+const clearStoredAuth = () => {
+  if (typeof window === 'undefined') return
+  localStorage.removeItem('token')
+  localStorage.removeItem('user')
+  localStorage.removeItem(AUTH_STORAGE_MODE_KEY)
+  sessionStorage.removeItem('token')
+  sessionStorage.removeItem('user')
+}
+
+const saveAuthSession = ({ token, user, rememberMe }) => {
+  if (typeof window === 'undefined') return
+  const targetStorage = rememberMe ? localStorage : sessionStorage
+  const secondaryStorage = rememberMe ? sessionStorage : localStorage
+
+  secondaryStorage.removeItem('token')
+  secondaryStorage.removeItem('user')
+  targetStorage.setItem('token', token)
+  targetStorage.setItem('user', JSON.stringify(user))
+  localStorage.setItem(AUTH_STORAGE_MODE_KEY, rememberMe ? 'local' : 'session')
+}
 
 const isFiniteCoordinate = (value) => Number.isFinite(value)
 
@@ -48,8 +94,9 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(() => {
     // Initialize from localStorage immediately to prevent flash
     try {
-      const storedUser = localStorage.getItem('user')
-      const token = localStorage.getItem('token')
+      const storage = getPreferredAuthStorage()
+      const storedUser = storage.getItem('user')
+      const token = getStoredToken()
       if (storedUser && storedUser !== 'undefined' && token) {
         return JSON.parse(storedUser)
       }
@@ -61,8 +108,9 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(() => {
     // Skip loading spinner when cached user data exists
     try {
-      const storedUser = localStorage.getItem('user')
-      const token = localStorage.getItem('token')
+      const storage = getPreferredAuthStorage()
+      const storedUser = storage.getItem('user')
+      const token = getStoredToken()
       if (storedUser && storedUser !== 'undefined' && token) {
         return false // cached user available, render immediately
       }
@@ -129,7 +177,7 @@ export const AuthProvider = ({ children }) => {
     authChecked.current = true
 
     const checkAuth = async () => {
-      const token = localStorage.getItem('token')
+      const token = getStoredToken()
       
       // Only try /auth/me if we have a token (meaning user previously logged in)
       if (token) {
@@ -154,7 +202,8 @@ export const AuthProvider = ({ children }) => {
 
             return isSameUser ? prevUser : userData
           })
-          localStorage.setItem('user', JSON.stringify(userData))
+          const storage = getPreferredAuthStorage()
+          storage.setItem('user', JSON.stringify(userData))
           // Resume location refresh if SOCIETY_ADMIN is already logged in
           startLocationRefresh(userData.role)
         } catch (error) {
@@ -163,8 +212,7 @@ export const AuthProvider = ({ children }) => {
           if (status === 401 || status === 403) {
             stopLocationRefresh()
             setUser(null)
-            localStorage.removeItem('token')
-            localStorage.removeItem('user')
+            clearStoredAuth()
             queryClient.clear()
           }
         }
@@ -224,9 +272,8 @@ export const AuthProvider = ({ children }) => {
       if (previousLoginAt) {
         localStorage.setItem('previousLoginAt', previousLoginAt)
       }
-      
-      localStorage.setItem('token', token)
-      localStorage.setItem('user', JSON.stringify(userData))
+
+      saveAuthSession({ token, user: userData, rememberMe: Boolean(rememberMe) })
       setUser(userData)
       startLocationRefresh(role)
       
@@ -234,22 +281,33 @@ export const AuthProvider = ({ children }) => {
     } catch (error) {
       return { 
         success: false, 
-        error: error.response?.data?.message || 'Login failed' 
+        error: getErrorMessage(error, 'Sign-in could not be completed right now.')
       }
     }
   }, [startLocationRefresh])
 
   const logout = useCallback(async () => {
+    const role = user?.role
     const location = await getCurrentLocation()
+
+    // Hard guard: Society Admin must have live location enabled to logout.
+    if (role === 'SOCIETY_ADMIN' && !location) {
+      return {
+        success: false,
+        error: 'Enable location services and allow GPS access to complete logout.',
+      }
+    }
+
     const fallbackLocation = lastKnownLocationRef.current || readLastKnownLocation()
     const logoutLocation = location || fallbackLocation || undefined
     stopLocationRefresh()
     setUser(null)
     queryClient.clear()
-    localStorage.removeItem('token')
-    localStorage.removeItem('user')
+    clearStoredAuth()
     authApi.logout(logoutLocation).catch(() => {})
-  }, [getCurrentLocation, stopLocationRefresh, queryClient])
+
+    return { success: true }
+  }, [getCurrentLocation, stopLocationRefresh, queryClient, user?.role])
 
   const hasRole = useCallback((...roles) => {
     if (!user) return false
@@ -306,7 +364,8 @@ export const AuthProvider = ({ children }) => {
 
   const updateUser = useCallback((updatedUser) => {
     setUser(updatedUser)
-    localStorage.setItem('user', JSON.stringify(updatedUser))
+    const storage = getPreferredAuthStorage()
+    storage.setItem('user', JSON.stringify(updatedUser))
   }, [])
 
   const value = useMemo(() => ({

@@ -62,7 +62,21 @@ public class ExportController {
                                 .body(outputStream.toByteArray());
         }
 
+        @GetMapping("/vendors/{societyId}")
+        public ResponseEntity<byte[]> exportVendors(
+                        @PathVariable Long societyId) {
+
+                ByteArrayOutputStream outputStream = excelExportService.exportVendors(societyId);
+                String filename = "vendors_" + LocalDate.now() + ".xlsx";
+
+                return ResponseEntity.ok()
+                                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename)
+                                .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                                .body(outputStream.toByteArray());
+        }
+
         @GetMapping("/tickets/{societyId}")
+        @PreAuthorize("hasAnyRole('MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE')")
         public ResponseEntity<byte[]> exportTickets(
                         @PathVariable Long societyId,
                         @RequestParam(required = false) String status) {
@@ -125,6 +139,18 @@ public class ExportController {
                 return ResponseEntity.ok()
                                 .header(HttpHeaders.CONTENT_DISPOSITION,
                                                 "attachment; filename=all_tickets_" + LocalDate.now() + ".xlsx")
+                                .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                                .body(outputStream.toByteArray());
+        }
+
+        @GetMapping("/all-vendors")
+        @PreAuthorize("hasRole('MASTER_ADMIN')")
+        public ResponseEntity<byte[]> exportAllVendors() {
+
+                ByteArrayOutputStream outputStream = excelExportService.exportVendors(null);
+                return ResponseEntity.ok()
+                                .header(HttpHeaders.CONTENT_DISPOSITION,
+                                                "attachment; filename=all_vendors_" + LocalDate.now() + ".xlsx")
                                 .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
                                 .body(outputStream.toByteArray());
         }

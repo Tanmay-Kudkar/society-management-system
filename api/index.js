@@ -1,6 +1,33 @@
 import axios from 'axios'
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080'
+export const REQUEST_ACTIVITY_EVENT = 'societyhub:request-activity'
+
+const getStoredToken = () => {
+  if (typeof window === 'undefined') return null
+  return localStorage.getItem('token') || sessionStorage.getItem('token')
+}
+
+const clearStoredAuth = () => {
+  if (typeof window === 'undefined') return
+  localStorage.removeItem('token')
+  localStorage.removeItem('user')
+  localStorage.removeItem('authStorageMode')
+  sessionStorage.removeItem('token')
+  sessionStorage.removeItem('user')
+}
+
+let activeRequestCount = 0
+let hasConnectionFailure = false
+
+const emitRequestActivity = () => {
+  if (typeof window === 'undefined') return
+  window.dispatchEvent(
+    new CustomEvent(REQUEST_ACTIVITY_EVENT, {
+      detail: { activeRequestCount, hasConnectionFailure },
+    })
+  )
+}
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -13,7 +40,10 @@ const api = axios.create({
 // Request interceptor to add auth token (fallback for header-based auth)
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token')
+    activeRequestCount += 1
+    emitRequestActivity()
+
+    const token = getStoredToken()
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
     }
@@ -24,11 +54,19 @@ api.interceptors.request.use(
 
 // Response interceptor for error handling
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    hasConnectionFailure = false
+    activeRequestCount = Math.max(0, activeRequestCount - 1)
+    emitRequestActivity()
+    return response
+  },
   (error) => {
+    hasConnectionFailure = !error?.response
+    activeRequestCount = Math.max(0, activeRequestCount - 1)
+    emitRequestActivity()
+
     if (error.response?.status === 401) {
-      localStorage.removeItem('token')
-      localStorage.removeItem('user')
+      clearStoredAuth()
       // Do NOT use window.location.href in web apps - it bypasses React Router
       // and causes 404 on SPAs. Let the app's auth context/router handle redirects.
       // Mobile apps may need to handle 401 differently in their own interceptor.
@@ -138,6 +176,7 @@ export const flatApi = {
 export const wingApi = {
   getBySociety: (societyId) => api.get(`/api/wings/society/${societyId}`),
   create: (data) => api.post('/api/wings', data),
+  delete: (id, force = false) => api.delete(`/api/wings/${id}?force=${force}`),
   syncWithSocietyConfig: (societyId, force = false) => api.post(`/api/wings/society/${societyId}/sync-config?force=${force}`),
 }
 
@@ -186,8 +225,8 @@ export const vendorBillApi = {
   getPending: (societyId) => api.get(`/vendor-bills/pending/${societyId}`),
   create: (data, userId) => api.post(`/vendor-bills?userId=${userId}`, data),
   update: (id, data, userId) => api.put(`/vendor-bills/${id}?userId=${userId}`, data),
-  recordPayment: (id, amount, paymentMode, referenceNumber, userId) => 
-    api.post(`/vendor-bills/${id}/payment?amount=${amount}&paymentMode=${paymentMode}&referenceNumber=${encodeURIComponent(referenceNumber || '')}&userId=${userId}`),
+  recordPayment: (id, amount, paymentMode, referenceNumber, receivedByRole, receivedByName, paymentNotes, userId) => 
+    api.post(`/vendor-bills/${id}/payment?amount=${amount}&paymentMode=${paymentMode}&referenceNumber=${encodeURIComponent(referenceNumber || '')}&receivedByRole=${encodeURIComponent(receivedByRole || '')}&receivedByName=${encodeURIComponent(receivedByName || '')}&paymentNotes=${encodeURIComponent(paymentNotes || '')}&userId=${userId}`),
   downloadReceiptPdf: (id, userId) =>
     api.get(`/vendor-bills/${id}/receipt/pdf?userId=${userId}`, { responseType: 'blob' }),
   delete: (id, userId, force = true) => api.delete(`/vendor-bills/${id}?userId=${userId}${force ? '&force=true' : ''}`),
@@ -504,6 +543,8 @@ export const exportApi = {
         : `/api/export/vendor-bills/${societyId}`;
       return api.get(url, { responseType: 'blob' });
     },
+  vendors: (societyId) =>
+    api.get(`/api/export/vendors/${societyId}`, { responseType: 'blob' }),
   tickets: (societyId, status) => 
     api.get(`/api/export/tickets/${societyId}${status ? `?status=${status}` : ''}`, { responseType: 'blob' }),
   flats: (societyId) =>
@@ -522,6 +563,8 @@ export const exportApi = {
     api.get(`/api/export/all-transactions?startDate=${startDate}&endDate=${endDate}`, { responseType: 'blob' }),
   allTickets: (status) => 
     api.get(`/api/export/all-tickets${status ? `?status=${status}` : ''}`, { responseType: 'blob' }),
+  allVendors: () =>
+    api.get('/api/export/all-vendors', { responseType: 'blob' }),
 }
 
 // Visitor API

@@ -172,6 +172,8 @@ public class SocietyServiceImpl implements SocietyService {
         society.setRegistrationNumber(request.getRegistrationNumber());
         society.setEmail(request.getEmail());
         society.setTelephone(request.getTelephone());
+        society.setExactLatitude(request.getExactLatitude());
+        society.setExactLongitude(request.getExactLongitude());
         society.setTotalFlats(request.getTotalFlats() != null ? request.getTotalFlats() : 0);
         society.setTotalShops(request.getTotalShops() != null ? request.getTotalShops() : 0);
         society.setTotalOffices(request.getTotalOffices() != null ? request.getTotalOffices() : 0);
@@ -193,6 +195,8 @@ public class SocietyServiceImpl implements SocietyService {
         response.setRegistrationNumber(society.getRegistrationNumber());
         response.setEmail(society.getEmail());
         response.setTelephone(society.getTelephone());
+        response.setExactLatitude(society.getExactLatitude());
+        response.setExactLongitude(society.getExactLongitude());
 
         // Total capacity
         response.setTotalFlats(society.getTotalFlats());

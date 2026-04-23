@@ -21,7 +21,7 @@ const boneVariantClasses = {
 }
 
 const boneBaseClass = 'animate-pulse bg-slate-300/60 dark:bg-slate-700/60'
-const containerClass = 'animate-pulse/50'
+const containerClass = 'animate-pulse/50 hidden sm:block'
 const cardClass = 'flex flex-col gap-3.5 overflow-hidden rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] p-5'
 const statClass = 'flex min-h-[100px] flex-col gap-3 rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] p-5'
 
@@ -34,28 +34,78 @@ export const Bone = ({ width, height, style, className = '', variant = '' }) => 
 )
 
 /* ─── Wake-up Banner (shown only when backend is cold-starting) ─── */
-export const WakeUpBanner = () => {
-  const isWakingUp = useBackendStatus()
-  if (!isWakingUp) return null
+export const WakeUpBanner = ({ show }) => {
+  const { isWakingUp, statusText } = useBackendStatus()
+  const shouldShow = typeof show === 'boolean' ? show : isWakingUp
+  if (!shouldShow) return null
+
+  const isReconnecting = statusText?.toLowerCase().startsWith('reconnecting')
+
   return (
-    <div className="mb-5 flex items-center gap-3 rounded-xl border border-[color-mix(in_srgb,var(--color-info)_25%,var(--border-light))] bg-[linear-gradient(135deg,color-mix(in_srgb,var(--color-info)_14%,var(--bg-card)),color-mix(in_srgb,var(--accent-primary)_10%,var(--bg-card)))] px-5 py-3">
-      <span className="animate-pulse text-xl">☕</span>
-      <div className="flex-1">
-        <div className="mb-0.5 text-sm font-semibold text-[var(--text-primary)]">Waking up the server…</div>
-        <div className="text-xs text-[var(--text-tertiary)]">
-          servers sleep after inactivity. This takes 30–50 seconds.
+    <>
+      <div
+        className="fixed inset-x-0 bottom-0 z-40 flex flex-col items-center justify-center gap-4 bg-[color-mix(in_srgb,var(--bg-primary)_95%,transparent)] px-6 text-center sm:hidden"
+        style={{ top: 'var(--mobile-navbar-height, 56px)' }}
+      >
+        <span className="loader-6 loader-6--mobile" aria-hidden="true" />
+        <div className="max-w-[300px]">
+          <div className="mb-1 text-base font-semibold text-[var(--text-primary)]">
+            Waking up the server
+            <span className="loader-status-dots" aria-hidden="true">
+              <span className="loader-status-dot" />
+              <span className="loader-status-dot" />
+              <span className="loader-status-dot" />
+            </span>
+          </div>
+          <div className="text-sm text-[var(--text-tertiary)]">This can take around 2 minutes.</div>
+          <div className="mt-1 text-xs text-[var(--text-muted)]">
+            {isReconnecting ? (
+              <>
+                Reconnecting to server
+                <span className="loader-status-dots" aria-hidden="true">
+                  <span className="loader-status-dot" />
+                  <span className="loader-status-dot" />
+                  <span className="loader-status-dot" />
+                </span>
+              </>
+            ) : (
+              statusText
+            )}
+          </div>
         </div>
       </div>
-      <div className="flex gap-1">
-        {[0, 0.2, 0.4].map((delay, index) => (
-          <div
-            key={index}
-            className="h-1.5 w-1.5 animate-pulse rounded-full bg-[var(--accent-primary)]"
-            style={{ animationDelay: `${delay}s` }}
-          />
-        ))}
+
+      <div className="mb-5 hidden items-center gap-3 rounded-xl border border-[color-mix(in_srgb,var(--color-info)_25%,var(--border-light))] bg-[linear-gradient(135deg,color-mix(in_srgb,var(--color-info)_14%,var(--bg-card)),color-mix(in_srgb,var(--accent-primary)_10%,var(--bg-card)))] px-5 py-3 sm:flex">
+        <span className="loader-6" aria-hidden="true" />
+        <div className="flex-1">
+          <div className="mb-0.5 text-sm font-semibold text-[var(--text-primary)]">
+            Waking up the server
+            <span className="loader-status-dots" aria-hidden="true">
+              <span className="loader-status-dot" />
+              <span className="loader-status-dot" />
+              <span className="loader-status-dot" />
+            </span>
+          </div>
+          <div className="text-xs text-[var(--text-tertiary)]">
+            Servers sleep after inactivity. This can take around 2 minutes.
+          </div>
+          <div className="mt-0.5 text-[11px] text-[var(--text-muted)]">
+            {isReconnecting ? (
+              <>
+                Reconnecting to server
+                <span className="loader-status-dots" aria-hidden="true">
+                  <span className="loader-status-dot" />
+                  <span className="loader-status-dot" />
+                  <span className="loader-status-dot" />
+                </span>
+              </>
+            ) : (
+              statusText
+            )}
+          </div>
+        </div>
       </div>
-    </div>
+    </>
   )
 }
 
@@ -171,6 +221,21 @@ export const FiltersSkeleton = ({ filterCount = 2, showSearch = true }) => (
   </div>
 )
 
+/* ─── Society Admins: search/filter area skeleton ─── */
+export const SocietyAdminsFiltersSkeleton = () => (
+  <div className={`${containerClass} mb-6 rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] p-5`}>
+    <div className="flex flex-col gap-3.5">
+      <Bone height={12} style={{ width: '22%' }} />
+      <Bone height={40} style={{ width: '100%', borderRadius: 'var(--radius-lg)' }} />
+      <div className="flex flex-wrap items-center gap-2.5 pt-0.5">
+        <Bone width={132} height={30} variant="pill" />
+        <Bone width={156} height={30} variant="pill" />
+        <Bone width={124} height={30} variant="pill" />
+      </div>
+    </div>
+  </div>
+)
+
 /* ─── Tab Bar Skeleton ─── */
 export const TabsSkeleton = ({ tabCount = 3 }) => (
   <div className={`${containerClass} mb-5 flex w-fit gap-1 rounded-lg bg-[var(--bg-elevated)] p-1`}>
@@ -195,7 +260,7 @@ export const SummaryRowSkeleton = ({ count = 4 }) => (
 
 /* ─── List Skeleton (vertical card list like Tickets, Complaints) ─── */
 export const ListSkeleton = ({ count = 5, showAvatar = true }) => (
-  <div className={`${containerClass} flex flex-col gap-3`}>
+  <div className={`${containerClass} flex flex-col gap-4`}>
     {Array.from({ length: count }).map((_, i) => (
       <div key={i} className={`${cardClass} min-h-20 flex-row items-center px-5 py-4`}>
         {showAvatar && <Bone width={42} height={42} variant="circle" style={{ flexShrink: 0 }} />}

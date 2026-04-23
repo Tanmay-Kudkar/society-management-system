@@ -15,6 +15,8 @@ CREATE TABLE IF NOT EXISTS societies (
     registration_number VARCHAR(255),
     email           VARCHAR(255),
     telephone       VARCHAR(255),
+    exact_latitude  DOUBLE PRECISION,
+    exact_longitude DOUBLE PRECISION,
     total_flats     INT DEFAULT 0,
     total_shops     INT DEFAULT 0,
     total_offices   INT DEFAULT 0,
@@ -311,6 +313,14 @@ CREATE TABLE IF NOT EXISTS vendor_bills (
     created_at          TIMESTAMP DEFAULT NOW(),
     paid_at             TIMESTAMP
 );
+
+-- ----------------------------------------------------------------
+-- MIGRATION: VENDOR BILL PAYMENT METADATA (for existing databases)
+-- ----------------------------------------------------------------
+ALTER TABLE IF EXISTS vendor_bills
+    ADD COLUMN IF NOT EXISTS received_by_role VARCHAR(50),
+    ADD COLUMN IF NOT EXISTS received_by_name VARCHAR(255),
+    ADD COLUMN IF NOT EXISTS payment_notes TEXT;
 
 -- ----------------------------------------------------------------
 -- 16. CONTRACTS

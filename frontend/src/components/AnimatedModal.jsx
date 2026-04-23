@@ -148,7 +148,7 @@ export default function AnimatedModal({
   return (
     <div
       className={clsx(
-        'fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 transition-opacity',
+        'fixed inset-0 z-50 overflow-y-auto overscroll-contain bg-slate-900/60 p-2 transition-opacity sm:p-4',
         isVisible ? 'opacity-100' : 'opacity-0 pointer-events-none',
         backdropClassName
       )}
@@ -158,7 +158,7 @@ export default function AnimatedModal({
     >
       <div
         className={clsx(
-          'mx-auto flex w-full items-center justify-center transition-all ease-out',
+          'mx-auto flex min-h-[calc(100svh-1rem)] w-full items-center justify-center py-2 transition-all ease-out sm:min-h-[calc(100svh-2rem)] sm:py-4',
           isVisible ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-2 scale-[0.985]',
           wrapperClassName
         )}
@@ -167,7 +167,7 @@ export default function AnimatedModal({
         <div
           ref={modalRef}
           tabIndex={-1}
-          className={clsx('flex w-full justify-center', className)}
+          className={clsx('w-full max-h-[calc(100svh-1rem)] overflow-y-auto sm:max-h-[calc(100svh-2rem)]', className)}
           style={{
             transitionDuration: `${effectiveDuration}ms`,
             ...panelThemeVariables,

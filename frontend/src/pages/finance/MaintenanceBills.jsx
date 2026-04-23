@@ -11,6 +11,7 @@ import { HeroSkeleton, FinancePageSkeleton, WakeUpBanner } from '../../component
 import { useRazorpay } from '../../hooks/useRazorpay'
 import useMinLoadingTime from '../../hooks/useMinLoadingTime'
 import { useToast } from '../../context'
+import { getErrorPayload, getErrorPayloadAsync } from '../../utils'
 
 const MODAL_ANIMATION_DURATION = 220
 
@@ -70,6 +71,24 @@ const statusClasses = {
   OVERDUE: 'inline-flex items-center py-1 px-3 rounded-full text-xs font-semibold bg-[#fee2e2] text-[#991b1b]',
 }
 
+function InlineModalError({ message }) {
+  return (
+    <div
+      className={clsx(
+        'overflow-hidden rounded-xl border border-[#fca5a5] bg-[#fff1f2] transition-all duration-300 ease-out',
+        message ? 'max-h-28 translate-y-0 opacity-100 p-3' : 'max-h-0 -translate-y-1 opacity-0 p-0 border-transparent'
+      )}
+      role="alert"
+      aria-live="polite"
+    >
+      <div className="flex items-start gap-2 text-[#991b1b]">
+        <AlertCircle size={16} className="mt-0.5 shrink-0" />
+        <p className="text-xs font-semibold leading-5">{message}</p>
+      </div>
+    </div>
+  )
+}
+
 export default function MaintenanceBills() {
   const { user, canManageMaintenanceBills } = useAuth()
   const hasManagePermission = canManageMaintenanceBills()
@@ -81,12 +100,18 @@ export default function MaintenanceBills() {
   const [showEditModal, setShowEditModal] = useState(false)
   const [showPaymentModal, setShowPaymentModal] = useState(false)
   const [showBulkModal, setShowBulkModal] = useState(false)
+  const [showExportModal, setShowExportModal] = useState(false)
   const [showDeleteMonthModal, setShowDeleteMonthModal] = useState(false)
   const [selectedBill, setSelectedBill] = useState(null)
   const [editingBill, setEditingBill] = useState(null)
+  const [editBillError, setEditBillError] = useState('')
+  const [paymentError, setPaymentError] = useState('')
   const [editForm, setEditForm] = useState({ billMonth: '', amount: '', dueDate: '' })
   const [deleteMonth, setDeleteMonth] = useState('')
   const [deleteMonthConfirmText, setDeleteMonthConfirmText] = useState('')
+  const [deleteMonthError, setDeleteMonthError] = useState('')
+  const [exportMonth, setExportMonth] = useState('')
+  const [exportError, setExportError] = useState('')
   const [searchTerm, setSearchTerm] = useState('')
   const [filterStatus, setFilterStatus] = useState('')
   const [isExporting, setIsExporting] = useState(false)
@@ -96,11 +121,13 @@ export default function MaintenanceBills() {
   const [bulkBillMonth, setBulkBillMonth] = useState('')
   const [previewCount, setPreviewCount] = useState(null)
   const [isLoadingPreview, setIsLoadingPreview] = useState(false)
+  const [bulkGenerateError, setBulkGenerateError] = useState('')
 
   function closeEditModal() {
     setShowEditModal(false)
     window.setTimeout(() => {
       setEditingBill(null)
+      setEditBillError('')
     }, MODAL_ANIMATION_DURATION)
   }
 
@@ -109,6 +136,15 @@ export default function MaintenanceBills() {
     window.setTimeout(() => {
       setDeleteMonth('')
       setDeleteMonthConfirmText('')
+      setDeleteMonthError('')
+    }, MODAL_ANIMATION_DURATION)
+  }
+
+  function closeExportModal() {
+    setShowExportModal(false)
+    window.setTimeout(() => {
+      setExportMonth('')
+      setExportError('')
     }, MODAL_ANIMATION_DURATION)
   }
 
@@ -117,6 +153,7 @@ export default function MaintenanceBills() {
     window.setTimeout(() => {
       setBulkBillMonth('')
       setPreviewCount(null)
+      setBulkGenerateError('')
     }, MODAL_ANIMATION_DURATION)
   }
 
@@ -124,6 +161,7 @@ export default function MaintenanceBills() {
     setShowPaymentModal(false)
     window.setTimeout(() => {
       setSelectedBill(null)
+      setPaymentError('')
     }, MODAL_ANIMATION_DURATION)
   }
 
@@ -194,7 +232,7 @@ export default function MaintenanceBills() {
   // Determine effective society ID for filtering
   const effectiveSocietyId = isPlatformLevel && societyIdFromUrl ? parseInt(societyIdFromUrl) : user?.societyId
 
-  const { data: allBills = [], isLoading, isError } = useQuery({
+  const { data: allBills = [], isLoading } = useQuery({
     queryKey: ['maintenanceBills'],
     queryFn: () => maintenanceBillApi.getAll().then(res => res.data),
     enabled: hasManagePermission,
@@ -214,7 +252,8 @@ export default function MaintenanceBills() {
       toast.success('Maintenance bill updated successfully')
     },
     onError: (error) => {
-      toast.error(error?.response?.data?.message || 'Failed to update maintenance bill')
+      const payload = getErrorPayload(error, 'Your changes could not be saved right now.')
+      setEditBillError(payload.retryable ? `${payload.message} You can retry now.` : payload.message)
     },
   })
 
@@ -237,7 +276,6 @@ export default function MaintenanceBills() {
       )
 
       for (const bill of scopedBills) {
-        // eslint-disable-next-line no-await-in-loop
         await maintenanceBillApi.delete(bill.id, user.id)
       }
 
@@ -249,7 +287,12 @@ export default function MaintenanceBills() {
       toast.success(`Deleted ${deletedCount} bill${deletedCount === 1 ? '' : 's'} for selected month`)
     },
     onError: (error) => {
-      toast.error(error?.response?.data?.message || 'Failed to delete bills for selected month')
+      const payload = getErrorPayload(error, 'Month-wise deletion could not be completed right now.')
+      if (payload.code === 'DELETE_HTTP_409') {
+        setDeleteMonthError('Some bills are linked to existing finance records and cannot be removed in bulk.')
+        return
+      }
+      setDeleteMonthError(payload.retryable ? `${payload.message} You can retry now.` : payload.message)
     },
   })
 
@@ -262,7 +305,8 @@ export default function MaintenanceBills() {
       toast.success('Bills generated for eligible units')
     },
     onError: (error) => {
-      toast.error(error?.response?.data?.message || 'No new eligible units found for this month')
+      const payload = getErrorPayload(error, 'No eligible units were found for the selected month.')
+      setBulkGenerateError(payload.retryable ? `${payload.message} You can retry now.` : payload.message)
     },
   })
 
@@ -275,7 +319,12 @@ export default function MaintenanceBills() {
       toast.success('Payment recorded successfully')
     },
     onError: (error) => {
-      toast.error(error?.response?.data?.message || 'Failed to record payment')
+      const payload = getErrorPayload(error, 'Payment could not be recorded right now.')
+      if (payload.code === 'PAYMENT_HTTP_402') {
+        setPaymentError('Payment authorization is required to continue.')
+        return
+      }
+      setPaymentError(payload.retryable ? `${payload.message} You can retry now.` : payload.message)
     },
   })
 
@@ -289,6 +338,7 @@ export default function MaintenanceBills() {
   }, [bills, searchTerm, filterStatus])
 
   const handleEditBill = (bill) => {
+    setEditBillError('')
     setEditingBill(bill)
     setEditForm({
       billMonth: bill.billMonth || '',
@@ -304,9 +354,11 @@ export default function MaintenanceBills() {
 
     const amount = toNumber(editForm.amount)
     if (amount <= 0) {
-      toast.error('Amount must be greater than 0')
+      setEditBillError('Amount must be greater than 0.')
       return
     }
+
+    setEditBillError('')
 
     updateMutation.mutate({
       id: editingBill.id,
@@ -348,20 +400,22 @@ export default function MaintenanceBills() {
   const handleDeleteMonthSubmit = (e) => {
     e.preventDefault()
     if (!deleteMonth) {
-      toast.error('Please select a month first')
+      setDeleteMonthError('Please select a month first.')
       return
     }
 
     const monthBills = bills.filter((bill) => bill.billMonth === deleteMonth)
     if (monthBills.length === 0) {
-      toast.info('No bills found for selected month in this society')
+      setDeleteMonthError('No bills found for the selected month in this society.')
       return
     }
 
     if (deleteMonthConfirmText.trim().toUpperCase() !== 'DELETE') {
-      toast.error('Type DELETE to confirm month-wise deletion')
+      setDeleteMonthError('Type DELETE to confirm month-wise deletion.')
       return
     }
+
+    setDeleteMonthError('')
 
     const paidOrPartialCount = monthBills.filter((bill) => bill.status === 'PAID' || bill.status === 'PARTIAL').length
     const warning = paidOrPartialCount > 0
@@ -379,6 +433,7 @@ export default function MaintenanceBills() {
   const handleBulkGenerate = (e) => {
     e.preventDefault()
     const formData = new FormData(e.target)
+    setBulkGenerateError('')
     bulkGenerateMutation.mutate({
       societyId: effectiveSocietyId,
       billMonth: formData.get('billMonth'),
@@ -415,9 +470,23 @@ export default function MaintenanceBills() {
   const handlePayment = (e) => {
     e.preventDefault()
     const formData = new FormData(e.target)
+    const amount = toNumber(formData.get('amount'))
+    const balance = getBillBalance(selectedBill)
+
+    if (amount <= 0) {
+      setPaymentError('Payment amount must be greater than 0.')
+      return
+    }
+
+    if (amount > balance) {
+      setPaymentError('Payment amount cannot exceed current balance.')
+      return
+    }
+
+    setPaymentError('')
     paymentMutation.mutate({
       id: selectedBill.id,
-      amount: parseFloat(formData.get('amount')),
+      amount,
       paymentMode: formData.get('paymentMode'),
       referenceNumber: formData.get('referenceNumber'),
     })
@@ -425,18 +494,26 @@ export default function MaintenanceBills() {
 
   const handleExport = async () => {
     if (!effectiveSocietyId) {
-      toast.error('Society context is required for export')
+      setExportError('Society context is required for export.')
       return
     }
 
+    if (!exportMonth) {
+      setExportError('Please select a bill month to export.')
+      return
+    }
+
+    setExportError('')
     setIsExporting(true)
     try {
-      const response = await exportApi.maintenanceBills(effectiveSocietyId, null)
+      const response = await exportApi.maintenanceBills(effectiveSocietyId, exportMonth)
       const datePart = new Date().toISOString().split('T')[0]
-      downloadBlob(response.data, `maintenance_bills_${datePart}.xlsx`)
+      downloadBlob(response.data, `maintenance_bills_${exportMonth}_${datePart}.xlsx`)
       toast.success('Maintenance bills exported successfully')
+      closeExportModal()
     } catch (error) {
-      toast.error(error?.response?.data?.message || 'Failed to export maintenance bills')
+      const payload = await getErrorPayloadAsync(error, 'No maintenance bills were found for the selected month. Please choose a different month.')
+      setExportError(payload.retryable ? `${payload.message} Please retry in a moment.` : payload.message)
     } finally {
       setIsExporting(false)
     }
@@ -476,7 +553,10 @@ export default function MaintenanceBills() {
               <NeonSweepButton
                 tone="slate"
                 size="md"
-                onClick={handleExport}
+                onClick={() => {
+                  setExportError('')
+                  setShowExportModal(true)
+                }}
                 disabled={isExporting}
                 className="w-full sm:w-auto"
               >
@@ -486,7 +566,10 @@ export default function MaintenanceBills() {
               <NeonSweepButton
                 tone="cyan"
                 size="md"
-                onClick={() => setShowBulkModal(true)}
+                onClick={() => {
+                  setBulkGenerateError('')
+                  setShowBulkModal(true)
+                }}
                 className="w-full sm:w-auto"
               >
                 <Wallet size={18} />
@@ -495,7 +578,10 @@ export default function MaintenanceBills() {
               <NeonSweepButton
                 tone="danger"
                 size="md"
-                onClick={() => setShowDeleteMonthModal(true)}
+                onClick={() => {
+                  setDeleteMonthError('')
+                  setShowDeleteMonthModal(true)
+                }}
                 className="w-full sm:w-auto"
               >
                 <AlertTriangle size={18} />
@@ -780,12 +866,16 @@ export default function MaintenanceBills() {
                 <p className="text-[0.85rem]">Flat: <span className="font-semibold text-[var(--text-primary)]">{editingBill?.flatNumber || '-'}</span></p>
                 <p className="text-[0.85rem]">Current Status: <span className="font-semibold text-[var(--text-primary)]">{editingBill?.status || '-'}</span></p>
               </div>
+              <InlineModalError message={editBillError} />
               <div className="flex flex-col gap-[0.4rem]">
                 <label className="text-[0.85rem] font-semibold text-[var(--text-secondary)]">Bill Month</label>
                 <input
                   type="month"
                   value={editForm.billMonth}
-                  onChange={(e) => setEditForm((prev) => ({ ...prev, billMonth: e.target.value }))}
+                  onChange={(e) => {
+                    setEditForm((prev) => ({ ...prev, billMonth: e.target.value }))
+                    if (editBillError) setEditBillError('')
+                  }}
                   required
                   className="w-full rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] px-3 py-[0.55rem] text-[var(--text-primary)] transition-all focus:border-[#2563eb] focus:outline-none focus:shadow-[0_0_0_3px_rgba(37,99,235,0.2)]"
                 />
@@ -797,7 +887,10 @@ export default function MaintenanceBills() {
                   step="0.01"
                   min="0"
                   value={editForm.amount}
-                  onChange={(e) => setEditForm((prev) => ({ ...prev, amount: e.target.value }))}
+                  onChange={(e) => {
+                    setEditForm((prev) => ({ ...prev, amount: e.target.value }))
+                    if (editBillError) setEditBillError('')
+                  }}
                   required
                   className="w-full rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] px-3 py-[0.55rem] text-[var(--text-primary)] transition-all focus:border-[#2563eb] focus:outline-none focus:shadow-[0_0_0_3px_rgba(37,99,235,0.2)]"
                 />
@@ -807,7 +900,10 @@ export default function MaintenanceBills() {
                 <input
                   type="date"
                   value={editForm.dueDate || ''}
-                  onChange={(e) => setEditForm((prev) => ({ ...prev, dueDate: e.target.value }))}
+                  onChange={(e) => {
+                    setEditForm((prev) => ({ ...prev, dueDate: e.target.value }))
+                    if (editBillError) setEditBillError('')
+                  }}
                   className="w-full rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] px-3 py-[0.55rem] text-[var(--text-primary)] transition-all focus:border-[#2563eb] focus:outline-none focus:shadow-[0_0_0_3px_rgba(37,99,235,0.2)]"
                 />
               </div>
@@ -818,51 +914,121 @@ export default function MaintenanceBills() {
                 <NeonSweepButton type="submit" tone="cyan" size="md" className="flex-1" disabled={updateMutation.isPending}>
                   {updateMutation.isPending ? 'Saving...' : 'Save Changes'}
                 </NeonSweepButton>
+                              setPaymentError('')
               </div>
             </form>
+      </AnimatedModal>
+
+      {/* Export Month Modal */}
+      <AnimatedModal
+        open={showExportModal}
+        onRequestClose={closeExportModal}
+        className="flex w-full max-w-[28rem] flex-col rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] shadow-[0_8px_24px_rgba(0,0,0,0.12)]"
+        durationMs={MODAL_ANIMATION_DURATION}
+      >
+        <div className="border-b border-[var(--border-light)] px-5 py-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-[1.1rem] font-semibold text-[var(--text-primary)]">Export Maintenance Bills</h3>
+            <button onClick={closeExportModal} className="rounded-md p-1 text-[var(--text-tertiary)] transition-colors hover:bg-[rgba(148,163,184,0.2)] hover:text-[var(--text-primary)]">
+              <X size={20} />
+            </button>
+          </div>
+        </div>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault()
+            handleExport()
+          }}
+          className="flex flex-col gap-4 p-5"
+        >
+          <div className="rounded-xl bg-[var(--bg-tertiary)] p-3 text-[0.82rem] text-[var(--text-secondary)]">
+            Choose which month's maintenance bills should be exported.
+          </div>
+          <InlineModalError message={exportError} />
+          <div className="flex flex-col gap-[0.4rem]">
+            <label className="text-[0.85rem] font-semibold text-[var(--text-secondary)]">Bill Month</label>
+            <input
+              type="month"
+              value={exportMonth}
+              onChange={(e) => {
+                setExportMonth(e.target.value)
+                if (exportError) setExportError('')
+              }}
+              required
+              className="w-full rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] px-3 py-[0.55rem] text-[var(--text-primary)] transition-all focus:border-[#2563eb] focus:outline-none focus:shadow-[0_0_0_3px_rgba(37,99,235,0.2)]"
+            />
+          </div>
+          <div className="grid grid-cols-1 gap-2 pt-2 sm:grid-cols-2">
+            <NeonSweepButton
+              type="button"
+              tone="slate"
+              size="md"
+              onClick={closeExportModal}
+              className="w-full"
+            >
+              Cancel
+            </NeonSweepButton>
+            <NeonSweepButton
+              type="submit"
+              tone="cyan"
+              size="md"
+              className="w-full"
+              disabled={isExporting || !exportMonth}
+            >
+              {isExporting ? 'Exporting...' : 'Export XLSX'}
+            </NeonSweepButton>
+          </div>
+        </form>
       </AnimatedModal>
 
       {/* Delete Month Bills Modal */}
       <AnimatedModal
         open={showDeleteMonthModal}
         onRequestClose={closeDeleteMonthModal}
-        className="w-full max-w-[28rem] rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] shadow-[0_8px_24px_rgba(0,0,0,0.12)]"
+        className="w-full max-w-[28rem] rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] shadow-[0_8px_24px_rgba(0,0,0,0.12)] dark:border-[rgba(148,163,184,0.2)] dark:shadow-[0_14px_32px_rgba(2,6,23,0.55)]"
         durationMs={MODAL_ANIMATION_DURATION}
       >
-            <div className="border-b border-[var(--border-light)] px-5 py-4">
+            <div className="border-b border-[var(--border-light)] px-5 py-4 dark:border-[rgba(148,163,184,0.16)]">
               <div className="flex items-center justify-between">
                 <h3 className="text-[1.1rem] font-semibold text-[var(--text-primary)]">Delete Bills By Month</h3>
-                <button onClick={closeDeleteMonthModal} className="rounded-md p-1 text-[var(--text-tertiary)] transition-colors hover:bg-[rgba(148,163,184,0.2)] hover:text-[var(--text-primary)]">
+                <button onClick={closeDeleteMonthModal} className="rounded-md p-1 text-[var(--text-tertiary)] transition-colors hover:bg-[rgba(148,163,184,0.2)] hover:text-[var(--text-primary)] dark:hover:bg-[rgba(148,163,184,0.12)] dark:hover:text-[rgba(248,250,252,0.96)]">
                   <X size={20} />
                 </button>
               </div>
             </div>
             <form onSubmit={handleDeleteMonthSubmit} className="flex flex-col gap-4 p-5">
-              <div className="flex items-start gap-2 rounded-xl border border-[#fca5a5] bg-[#fff1f2] p-3 text-[#991b1b]">
+              <div className="flex items-start gap-2 rounded-xl border border-rose-300 bg-rose-50 p-3 text-rose-900 shadow-sm dark:border-rose-400/60 dark:bg-[rgba(127,29,29,0.46)] dark:text-[#fff1f2]">
                 <AlertTriangle size={16} className="mt-0.5 shrink-0" />
-                <p className="text-xs font-semibold leading-5">
+                <p className="text-xs font-bold leading-5">
                   Paid or partially paid bills may be linked to finance totals. Delete only if bills were generated by mistake.
                 </p>
               </div>
+              <InlineModalError message={deleteMonthError} />
               <div className="flex flex-col gap-[0.4rem]">
-                <label className="text-[0.85rem] font-semibold text-[var(--text-secondary)]">Select Month</label>
+                <label className="text-[0.85rem] font-semibold text-[var(--text-secondary)] dark:text-[rgba(226,232,240,0.88)]">Select Month</label>
                 <input
                   type="month"
                   value={deleteMonth}
-                  onChange={(e) => setDeleteMonth(e.target.value)}
+                  onChange={(e) => {
+                    setDeleteMonth(e.target.value)
+                    if (deleteMonthError) setDeleteMonthError('')
+                  }}
                   required
-                  className="w-full rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] px-3 py-[0.55rem] text-[var(--text-primary)] transition-all focus:border-[#2563eb] focus:outline-none focus:shadow-[0_0_0_3px_rgba(37,99,235,0.2)]"
+                  className="w-full rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] px-3 py-[0.55rem] text-[var(--text-primary)] transition-all placeholder:text-[var(--text-tertiary)] focus:border-[#2563eb] focus:outline-none focus:shadow-[0_0_0_3px_rgba(37,99,235,0.2)] dark:border-[rgba(148,163,184,0.2)] dark:bg-[rgba(2,6,23,0.45)] dark:text-[rgba(248,250,252,0.96)] dark:placeholder:text-[rgba(148,163,184,0.82)]"
                 />
               </div>
               <div className="flex flex-col gap-[0.4rem]">
-                <label className="text-[0.85rem] font-semibold text-[var(--text-secondary)]">Type DELETE to confirm</label>
+                <label className="text-[0.85rem] font-semibold text-[var(--text-secondary)] dark:text-[rgba(226,232,240,0.88)]">Type DELETE to confirm</label>
                 <input
                   type="text"
                   value={deleteMonthConfirmText}
-                  onChange={(e) => setDeleteMonthConfirmText(e.target.value)}
+                  onChange={(e) => {
+                    setDeleteMonthConfirmText(e.target.value)
+                    if (deleteMonthError) setDeleteMonthError('')
+                  }}
                   placeholder="DELETE"
                   required
-                  className="w-full rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] px-3 py-[0.55rem] text-[var(--text-primary)] transition-all focus:border-[#2563eb] focus:outline-none focus:shadow-[0_0_0_3px_rgba(37,99,235,0.2)]"
+                  className="w-full rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] px-3 py-[0.55rem] text-[var(--text-primary)] transition-all placeholder:text-[var(--text-tertiary)] focus:border-[#2563eb] focus:outline-none focus:shadow-[0_0_0_3px_rgba(37,99,235,0.2)] dark:border-[rgba(148,163,184,0.2)] dark:bg-[rgba(2,6,23,0.45)] dark:text-[rgba(248,250,252,0.96)] dark:placeholder:text-[rgba(148,163,184,0.82)]"
                 />
               </div>
               <div className="grid grid-cols-1 gap-2 pt-2 sm:grid-cols-2">
@@ -902,6 +1068,7 @@ export default function MaintenanceBills() {
               </button>
             </div>
             <form onSubmit={handleBulkGenerate} className="p-5 flex flex-col gap-4 overflow-y-auto flex-1 min-h-0">
+              <InlineModalError message={bulkGenerateError} />
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="flex flex-col gap-[0.4rem]">
                   <label className="text-[0.85rem] font-semibold text-[var(--text-secondary)]">Bill Month</label>
@@ -910,7 +1077,10 @@ export default function MaintenanceBills() {
                     name="billMonth"
                     required
                     value={bulkBillMonth}
-                    onChange={(e) => setBulkBillMonth(e.target.value)}
+                    onChange={(e) => {
+                      setBulkBillMonth(e.target.value)
+                      if (bulkGenerateError) setBulkGenerateError('')
+                    }}
                     className="w-full py-[0.55rem] px-3 rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] text-[var(--text-primary)] transition-all focus:outline-none focus:border-[#2563eb] focus:shadow-[0_0_0_3px_rgba(37,99,235,0.2)]"
                   />
                 </div>
@@ -932,24 +1102,24 @@ export default function MaintenanceBills() {
               
               {/* Preview Count */}
               <div className={clsx(
-                'flex items-center gap-2 p-3 rounded-xl text-[var(--text-secondary)]',
+                'flex items-center gap-2 rounded-xl border p-3 transition-colors',
                 previewCount !== null && previewCount > 0 
-                  ? 'bg-[rgba(59,130,246,0.1)] text-[#1d4ed8]'
+                  ? 'border-blue-300/70 bg-blue-50 text-blue-700 dark:border-blue-500/35 dark:bg-blue-500/15 dark:text-blue-200'
                   : previewCount === 0
-                    ? 'bg-[#fef9c3] text-[#92400e]'
-                    : 'bg-[var(--bg-tertiary)]'
+                    ? 'border-amber-300/80 bg-amber-50 text-amber-900 dark:border-amber-500/35 dark:bg-amber-500/15 dark:text-amber-50'
+                    : 'border-[var(--border-light)] bg-[var(--bg-tertiary)] text-[var(--text-secondary)]'
               )}>
-                <Info className="w-4 h-4" />
+                <Info className="h-4 w-4 shrink-0" />
                 {isLoadingPreview ? (
-                  <span className="text-[0.85rem]">Calculating...</span>
+                  <span className="text-[0.85rem] font-medium">Calculating...</span>
                 ) : previewCount !== null ? (
-                  <span className="text-[0.85rem]">
+                  <span className="text-[0.85rem] font-medium leading-snug">
                     <strong>{previewCount}</strong> eligible {previewCount === 1 ? 'unit' : 'units'} will receive bills
                   </span>
                 ) : bulkBillMonth ? (
-                  <span className="text-[0.85rem]">Preview updates automatically for all units</span>
+                  <span className="text-[0.85rem] font-medium leading-snug">Preview updates automatically for all units</span>
                 ) : (
-                  <span className="text-[0.85rem]">Select a bill month to see how many units will be billed</span>
+                  <span className="text-[0.85rem] font-medium leading-snug">Select a bill month to see how many units will be billed</span>
                 )}
               </div>
               
@@ -980,39 +1150,46 @@ export default function MaintenanceBills() {
       <AnimatedModal
         open={showPaymentModal && !!selectedBill}
         onRequestClose={closePaymentModal}
-        className="w-full max-w-[32rem] max-h-[calc(100vh-3rem)] flex flex-col rounded-xl bg-[var(--bg-card)] border border-[var(--border-light)] shadow-[0_8px_24px_rgba(0,0,0,0.12)]"
+        className="flex w-full max-w-[32rem] max-h-[calc(100dvh-2rem)] flex-col overflow-hidden rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] shadow-[0_8px_24px_rgba(0,0,0,0.12)] dark:border-[rgba(148,163,184,0.2)] dark:shadow-[0_14px_32px_rgba(2,6,23,0.55)]"
         durationMs={MODAL_ANIMATION_DURATION}
       >
-            <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--border-light)] shrink-0">
+            <div className="shrink-0 flex items-center justify-between border-b border-[var(--border-light)] px-5 py-4 dark:border-[rgba(148,163,184,0.16)]">
               <h3 className="text-[1.1rem] font-semibold text-[var(--text-primary)]">Record Payment</h3>
-              <button onClick={closePaymentModal} className="rounded-md p-1 text-[var(--text-tertiary)] transition-colors hover:bg-[rgba(148,163,184,0.2)] hover:text-[var(--text-primary)]">
+              <button onClick={closePaymentModal} className="rounded-md p-1 text-[var(--text-tertiary)] transition-colors hover:bg-[rgba(148,163,184,0.2)] hover:text-[var(--text-primary)] dark:hover:bg-[rgba(148,163,184,0.12)] dark:hover:text-[rgba(248,250,252,0.96)]">
                 <X size={20} />
               </button>
             </div>
-            <form onSubmit={handlePayment} className="p-5 flex flex-col gap-4 overflow-y-auto flex-1 min-h-0">
-              <div className="p-3 rounded-xl bg-[var(--bg-tertiary)] text-[var(--text-secondary)]">
-                <p className="text-[0.85rem]">Flat: <span className="font-semibold text-[var(--text-primary)]">{selectedBill?.flatNumber || '-'}</span></p>
-                <p className="text-[0.85rem]">Month: <span className="font-semibold text-[var(--text-primary)]">{selectedBill?.billMonth || '-'}</span></p>
-                <p className="text-[0.85rem]">Total: <span className="font-semibold text-[var(--text-primary)]">₹{getBillTotal(selectedBill).toLocaleString()}</span></p>
-                <p className="text-[0.85rem]">Balance: <span className="font-semibold text-[#dc2626]">₹{getBillBalance(selectedBill).toLocaleString()}</span></p>
+            <form
+              onSubmit={handlePayment}
+              onChange={() => {
+                if (paymentError) setPaymentError('')
+              }}
+              className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-4 sm:p-5"
+            >
+              <div className="rounded-xl border border-[var(--border-light)] bg-[var(--bg-tertiary)] p-3 text-[var(--text-secondary)] dark:border-[rgba(148,163,184,0.16)] dark:bg-[rgba(17,24,39,0.72)] dark:text-[rgba(226,232,240,0.9)]">
+                <p className="text-[0.85rem]">Flat: <span className="font-semibold text-[var(--text-primary)] dark:text-[rgba(248,250,252,0.98)]">{selectedBill?.flatNumber || '-'}</span></p>
+                <p className="text-[0.85rem]">Month: <span className="font-semibold text-[var(--text-primary)] dark:text-[rgba(248,250,252,0.98)]">{selectedBill?.billMonth || '-'}</span></p>
+                <p className="text-[0.85rem]">Total: <span className="font-semibold text-[var(--text-primary)] dark:text-[rgba(248,250,252,0.98)]">₹{getBillTotal(selectedBill).toLocaleString()}</span></p>
+                <p className="text-[0.85rem]">Balance: <span className="font-semibold text-[#dc2626] dark:text-[#fca5a5]">₹{getBillBalance(selectedBill).toLocaleString()}</span></p>
               </div>
+              <InlineModalError message={paymentError} />
               <div className="flex flex-col gap-[0.4rem]">
-                <label className="text-[0.85rem] font-semibold text-[var(--text-secondary)]">Amount</label>
+                <label className="text-[0.85rem] font-semibold text-[var(--text-secondary)] dark:text-[rgba(226,232,240,0.88)]">Amount</label>
                 <input
                   type="number"
                   name="amount"
                   step="0.01"
                   max={getBillBalance(selectedBill)}
                   required
-                  className="w-full py-[0.55rem] px-3 rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] text-[var(--text-primary)] transition-all focus:outline-none focus:border-[#2563eb] focus:shadow-[0_0_0_3px_rgba(37,99,235,0.2)]"
+                  className="w-full rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] px-3 py-[0.55rem] text-[var(--text-primary)] transition-all placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[#2563eb] focus:shadow-[0_0_0_3px_rgba(37,99,235,0.2)] dark:border-[rgba(148,163,184,0.2)] dark:bg-[rgba(2,6,23,0.45)] dark:text-[rgba(248,250,252,0.96)] dark:placeholder:text-[rgba(148,163,184,0.82)]"
                 />
               </div>
               <div className="flex flex-col gap-[0.4rem]">
-                <label className="text-[0.85rem] font-semibold text-[var(--text-secondary)]">Payment Mode</label>
+                <label className="text-[0.85rem] font-semibold text-[var(--text-secondary)] dark:text-[rgba(226,232,240,0.88)]">Payment Mode</label>
                 <select
                   name="paymentMode"
                   required
-                  className="w-full py-[0.55rem] px-3 rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] text-[var(--text-primary)] transition-all focus:outline-none focus:border-[#2563eb] focus:shadow-[0_0_0_3px_rgba(37,99,235,0.2)]"
+                  className="w-full rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] px-3 py-[0.55rem] text-[var(--text-primary)] transition-all focus:outline-none focus:border-[#2563eb] focus:shadow-[0_0_0_3px_rgba(37,99,235,0.2)] dark:border-[rgba(148,163,184,0.2)] dark:bg-[rgba(2,6,23,0.45)] dark:text-[rgba(248,250,252,0.96)]"
                 >
                   <option value="CASH">Cash</option>
                   <option value="CHEQUE">Cheque</option>
@@ -1020,11 +1197,11 @@ export default function MaintenanceBills() {
                 </select>
               </div>
               <div className="flex flex-col gap-[0.4rem]">
-                <label className="text-[0.85rem] font-semibold text-[var(--text-secondary)]">Reference Number</label>
+                <label className="text-[0.85rem] font-semibold text-[var(--text-secondary)] dark:text-[rgba(226,232,240,0.88)]">Reference Number</label>
                 <input
                   type="text"
                   name="referenceNumber"
-                  className="w-full py-[0.55rem] px-3 rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] text-[var(--text-primary)] transition-all focus:outline-none focus:border-[#2563eb] focus:shadow-[0_0_0_3px_rgba(37,99,235,0.2)]"
+                  className="w-full rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] px-3 py-[0.55rem] text-[var(--text-primary)] transition-all placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[#2563eb] focus:shadow-[0_0_0_3px_rgba(37,99,235,0.2)] dark:border-[rgba(148,163,184,0.2)] dark:bg-[rgba(2,6,23,0.45)] dark:text-[rgba(248,250,252,0.96)] dark:placeholder:text-[rgba(148,163,184,0.82)]"
                 />
               </div>
               <div className="flex gap-3 pt-2">

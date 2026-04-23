@@ -12,7 +12,7 @@ import {
   StateCitySelector, SmartSelect, NeonSweepButton, EmptyStateSection
 } from '../../components'
 import { BulkImportModal } from '../../components'
-import { FiltersSkeleton, CardGridSkeleton, HeroSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
+import { SocietyAdminsFiltersSkeleton, CardGridSkeleton, HeroSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
 import useMinLoadingTime from '../../hooks/useMinLoadingTime'
 import {
   UserCheck, Plus, Edit, Trash2, Search, X, Building2,
@@ -318,6 +318,7 @@ export default function SocietyAdmins() {
 
   const editingSociety = editingAdmin?.societyId ? societyMap[editingAdmin.societyId] : null
   const activeSociety = assignmentSociety || editingSociety
+  const canConfigureWings = !editingAdmin && !assignmentSociety
 
   useEffect(() => {
     if (!showModal) return
@@ -766,6 +767,9 @@ export default function SocietyAdmins() {
   const handleSubmit = (e) => {
     e.preventDefault()
     const fd = new FormData(e.target)
+    const resolvedHasWings = canConfigureWings
+      ? hasWingsEnabled
+      : Boolean(activeSociety?.hasWings ?? ((activeSociety?.totalWings ?? 0) > 0))
 
     const adminData = {
       name: fd.get('adminName')?.trim(),
@@ -786,9 +790,11 @@ export default function SocietyAdmins() {
       totalFlats: parseInt(fd.get('totalFlats'), 10),
       totalShops: parseInt(fd.get('totalShops'), 10),
       totalOffices: parseInt(fd.get('totalOffices'), 10),
-      totalWings: hasWingsEnabled ? parseInt(fd.get('totalWings'), 10) : 0,
-      totalFloors: parseInt(fd.get('totalFloors'), 10),
-      hasWings: hasWingsEnabled,
+      totalWings: resolvedHasWings
+        ? parseInt(canConfigureWings ? fd.get('totalWings') : String(activeSociety?.totalWings ?? 0), 10)
+        : 0,
+      totalFloors: parseInt(fd.get('totalFloors') || String(activeSociety?.totalFloors ?? 1), 10),
+      hasWings: resolvedHasWings,
       twoWheelerParkingCapacity: fd.get('twoWheelerParkingCapacity') ? parseInt(fd.get('twoWheelerParkingCapacity'), 10) || undefined : undefined,
       fourWheelerParkingCapacity: fd.get('fourWheelerParkingCapacity') ? parseInt(fd.get('fourWheelerParkingCapacity'), 10) || undefined : undefined,
     }
@@ -824,7 +830,7 @@ export default function SocietyAdmins() {
     if (Number.isNaN(societyData.totalFlats)) missingSocietyFields.push('Flats')
     if (Number.isNaN(societyData.totalShops)) missingSocietyFields.push('Shops')
     if (Number.isNaN(societyData.totalOffices)) missingSocietyFields.push('Offices')
-    if (hasWingsEnabled && Number.isNaN(societyData.totalWings)) missingSocietyFields.push('Wings')
+    if (resolvedHasWings && Number.isNaN(societyData.totalWings)) missingSocietyFields.push('Wings')
     if (Number.isNaN(societyData.totalFloors)) missingSocietyFields.push('Floors')
 
     if (missingSocietyFields.length > 0) {
@@ -868,7 +874,7 @@ export default function SocietyAdmins() {
       <div className="p-6 max-md:p-4 min-h-[calc(100vh-68px)] bg-[var(--bg-secondary)] text-[var(--text-primary)]">
         <WakeUpBanner show />
         <HeroSkeleton statCount={3} />
-        <FiltersSkeleton filterCount={2} />
+        <SocietyAdminsFiltersSkeleton />
         <CardGridSkeleton count={6} />
       </div>
     )
@@ -1182,28 +1188,34 @@ export default function SocietyAdmins() {
 
               <div className="flex flex-col gap-3">
                 <h4 className="m-0 text-sm font-semibold text-[var(--text-secondary)] flex items-center gap-2 pb-2 border-b border-[var(--border-light)]"><Home size={16} /> Property Capacity</h4>
-                <label className="inline-flex items-center gap-2 rounded-xl border border-[var(--border-light)] bg-[var(--bg-tertiary)] px-3 py-2 text-sm text-[var(--text-primary)]">
-                  <input
-                    type="checkbox"
-                    name="hasWings"
-                    checked={hasWingsEnabled}
-                    onChange={(e) => setHasWingsEnabled(e.target.checked)}
-                    className="h-4 w-4 accent-cyan-600"
-                  />
-                  Society has multiple wings/towers
-                </label>
-                <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
+                {canConfigureWings ? (
+                  <label className="inline-flex items-center gap-2 rounded-xl border border-[var(--border-light)] bg-[var(--bg-tertiary)] px-3 py-2 text-sm text-[var(--text-primary)]">
+                    <input
+                      type="checkbox"
+                      name="hasWings"
+                      checked={hasWingsEnabled}
+                      onChange={(e) => setHasWingsEnabled(e.target.checked)}
+                      className="h-4 w-4 accent-cyan-600"
+                    />
+                    Society has multiple wings/towers
+                  </label>
+                ) : (
+                  <div className="rounded-xl border border-[var(--border-light)] bg-[var(--bg-tertiary)] px-3 py-2 text-sm text-[var(--text-secondary)]">
+                    Wing mode is locked after society creation to avoid unit/wing data mismatch.
+                  </div>
+                )}
+                <input type="hidden" name="totalFloors" value={activeSociety?.totalFloors ?? 1} />
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
                   <NumberInput label="Flats" name="totalFlats" min={0} defaultValue={activeSociety?.totalFlats ?? 0} required />
                   <NumberInput label="Shops" name="totalShops" min={0} defaultValue={activeSociety?.totalShops ?? 0} required />
                   <NumberInput label="Offices" name="totalOffices" min={0} defaultValue={activeSociety?.totalOffices ?? 0} required />
-                  <NumberInput label="Floors" name="totalFloors" min={1} defaultValue={activeSociety?.totalFloors ?? 1} required />
                   <NumberInput
                     label="Wings"
                     name="totalWings"
                     min={0}
                     defaultValue={activeSociety?.totalWings ?? 0}
-                    required={hasWingsEnabled}
-                    disabled={!hasWingsEnabled}
+                    required={hasWingsEnabled && canConfigureWings}
+                    disabled={!hasWingsEnabled || !canConfigureWings}
                   />
                 </div>
                 {!hasWingsEnabled && (

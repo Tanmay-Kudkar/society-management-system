@@ -56,6 +56,7 @@
   --text-secondary: #f2f6fb;
   --text-tertiary: #c8d2de;
   --text-muted: #a9b5c3;
+  --loader-6-trail: #5d5d5d;
   --text-inverse: #000000;
   --placeholder-color: #6b7f96;
 
@@ -146,6 +147,7 @@
   --text-secondary: #0f172a;
   --text-tertiary: #1e293b;
   --text-muted: #334155;
+  --loader-6-trail: #94a3b8;
   --text-inverse: #ffffff;
   --placeholder-color: #94a3b8;
 
@@ -441,13 +443,13 @@ button {
   }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
-  }
+.reduce-motion *,
+.reduce-motion *::before,
+.reduce-motion *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
 }
 
 select option {
@@ -847,6 +849,227 @@ table th {
   animation: sun-spin 10s linear infinite;
 }
 
+/* Loader 6: geometric cube loader used on skeleton wait states */
+.loader-6 {
+  width: 48px;
+  height: 48px;
+  display: inline-block;
+  position: relative;
+  transform: rotate(45deg) scale(0.7);
+  transform-origin: center;
+  flex-shrink: 0;
+}
+
+.loader-6--page {
+  transform: rotate(45deg) scale(0.55);
+}
+
+.loader-6--btn {
+  width: 22px;
+  height: 22px;
+  transform: rotate(45deg) scale(0.95);
+}
+
+.loader-6--btn::before,
+.loader-6--btn::after {
+  width: 11px;
+  height: 11px;
+}
+
+.loader-6--btn::before {
+  top: -11px;
+}
+
+.loader-6--mobile {
+  width: 72px;
+  height: 72px;
+  transform: rotate(45deg) scale(1);
+}
+
+.loader-6--mobile::before,
+.loader-6--mobile::after {
+  width: 36px;
+  height: 36px;
+}
+
+.loader-6--mobile::before {
+  top: -36px;
+}
+
+.loader-status-dots {
+  display: inline-block;
+  margin-left: 0.12em;
+  width: 3ch;
+  text-align: left;
+  line-height: inherit;
+  vertical-align: baseline;
+}
+
+.loader-status-dot {
+  display: inline-block;
+  line-height: inherit;
+  vertical-align: baseline;
+  opacity: 0;
+}
+
+.loader-status-dot::before {
+  content: '.';
+}
+
+.loader-status-dot:nth-child(1) {
+  animation: loaderDot1 2.2s infinite steps(1, end);
+}
+
+.loader-status-dot:nth-child(2) {
+  animation: loaderDot2 2.2s infinite steps(1, end);
+}
+
+.loader-status-dot:nth-child(3) {
+  animation: loaderDot3 2.2s infinite steps(1, end);
+}
+
+/* Cycle: 0 dots -> 1 dot -> 2 dots -> 3 dots -> reset */
+@keyframes loaderDot1 {
+  0%,
+  24% {
+    opacity: 0;
+  }
+  25%,
+  99% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes loaderDot2 {
+  0%,
+  49% {
+    opacity: 0;
+  }
+  50%,
+  99% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes loaderDot3 {
+  0%,
+  74% {
+    opacity: 0;
+  }
+  75%,
+  99% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+.loader-6::before {
+  content: "";
+  box-sizing: border-box;
+  width: 24px;
+  height: 24px;
+  position: absolute;
+  left: 0;
+  top: -24px;
+  animation: animloader 4s ease infinite;
+}
+
+.loader-6::after {
+  content: "";
+  box-sizing: border-box;
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 24px;
+  height: 24px;
+  background: #00a9fe;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.15);
+  animation: animloader2 2s ease infinite;
+}
+
+@keyframes animloader {
+  0% {
+    box-shadow: 0 24px rgba(255, 255, 255, 0),
+      24px 24px rgba(255, 255, 255, 0),
+      24px 48px rgba(255, 255, 255, 0),
+      0px 48px rgba(255, 255, 255, 0);
+  }
+  12% {
+    box-shadow: 0 24px var(--loader-6-trail),
+      24px 24px rgba(255, 255, 255, 0),
+      24px 48px rgba(255, 255, 255, 0),
+      0px 48px rgba(255, 255, 255, 0);
+  }
+  25% {
+    box-shadow: 0 24px var(--loader-6-trail),
+      24px 24px var(--loader-6-trail),
+      24px 48px rgba(255, 255, 255, 0),
+      0px 48px rgba(255, 255, 255, 0);
+  }
+  37% {
+    box-shadow: 0 24px var(--loader-6-trail),
+      24px 24px var(--loader-6-trail),
+      24px 48px var(--loader-6-trail),
+      0px 48px rgba(255, 255, 255, 0);
+  }
+  50% {
+    box-shadow: 0 24px var(--loader-6-trail),
+      24px 24px var(--loader-6-trail),
+      24px 48px var(--loader-6-trail),
+      0px 48px var(--loader-6-trail);
+  }
+  62% {
+    box-shadow: 0 24px rgba(255, 255, 255, 0),
+      24px 24px var(--loader-6-trail),
+      24px 48px var(--loader-6-trail),
+      0px 48px var(--loader-6-trail);
+  }
+  75% {
+    box-shadow: 0 24px rgba(255, 255, 255, 0),
+      24px 24px rgba(255, 255, 255, 0),
+      24px 48px var(--loader-6-trail),
+      0px 48px var(--loader-6-trail);
+  }
+  87% {
+    box-shadow: 0 24px rgba(255, 255, 255, 0),
+      24px 24px rgba(255, 255, 255, 0),
+      24px 48px rgba(255, 255, 255, 0),
+      0px 48px var(--loader-6-trail);
+  }
+  100% {
+    box-shadow: 0 24px rgba(255, 255, 255, 0),
+      24px 24px rgba(255, 255, 255, 0),
+      24px 48px rgba(255, 255, 255, 0),
+      0px 48px rgba(255, 255, 255, 0);
+  }
+}
+
+@keyframes animloader2 {
+  0% {
+    transform: translate(0, 0) rotateX(0) rotateY(0);
+  }
+  25% {
+    transform: translate(100%, 0) rotateX(0) rotateY(180deg);
+  }
+  50% {
+    transform: translate(100%, 100%) rotateX(-180deg) rotateY(180deg);
+  }
+  75% {
+    transform: translate(0, 100%) rotateX(-180deg) rotateY(360deg);
+  }
+  100% {
+    transform: translate(0, 0) rotateX(0) rotateY(360deg);
+  }
+}
+
 /* Shared sweep hover for public landing-page buttons */
 .landing-page button:not(.no-sweep) {
   position: relative;
@@ -890,35 +1113,36 @@ table th {
   animation: pulse 2s ease-in-out infinite;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .animate-fadeIn,
-  .animate-fade-in-up,
-  .animate-scale-in,
-  .animate-slide-up,
-  .animate-slide-in-right,
-  .animate-slide-in-left,
-  .animate-success-pulse,
-  .ticket-focus-glow,
-  .ticket-focus-glow::after,
-  .page-focus-glow,
-  .page-focus-glow::after,
-  .animate-ticker,
-  .animate-sun,
-  .animate-bounce-custom,
-  .animate-pulse-custom {
-    animation: none !important;
-    opacity: 1 !important;
-    transform: none !important;
-  }
+.reduce-motion .animate-fadeIn,
+.reduce-motion .animate-fade-in-up,
+.reduce-motion .animate-scale-in,
+.reduce-motion .animate-slide-up,
+.reduce-motion .animate-slide-in-right,
+.reduce-motion .animate-slide-in-left,
+.reduce-motion .animate-success-pulse,
+.reduce-motion .ticket-focus-glow,
+.reduce-motion .ticket-focus-glow::after,
+.reduce-motion .page-focus-glow,
+.reduce-motion .page-focus-glow::after,
+.reduce-motion .animate-ticker,
+.reduce-motion .animate-sun,
+.reduce-motion .animate-bounce-custom,
+.reduce-motion .animate-pulse-custom,
+.reduce-motion .loader-6,
+.reduce-motion .loader-6::before,
+.reduce-motion .loader-6::after {
+  animation: none !important;
+  opacity: 1 !important;
+  transform: none !important;
+}
 
-  .landing-page button:not(.no-sweep),
-  .landing-page button:not(.no-sweep)::after {
-    transition: none !important;
-  }
+.reduce-motion .landing-page button:not(.no-sweep),
+.reduce-motion .landing-page button:not(.no-sweep)::after {
+  transition: none !important;
+}
 
-  .landing-page button:not(.no-sweep)::after {
-    display: none !important;
-  }
+.reduce-motion .landing-page button:not(.no-sweep)::after {
+  display: none !important;
 }
 
 /* ============================================

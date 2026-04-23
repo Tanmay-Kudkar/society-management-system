@@ -1,6 +1,8 @@
-import { AlertTriangle, Bell, Clock, Cloud, CreditCard, DollarSign, ShieldCheck, Sun, Ticket } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { AlertTriangle, Bell, Clock, Cloud, CreditCard, DollarSign, MapPin, ShieldCheck, Sun, Ticket } from "lucide-react";
 
 import { DashboardSkeleton, WakeUpBanner } from "../../../components/SkeletonLoaders";
+import { NeonSweepButton } from "../../../components";
 import MetricPanel from "./components/MetricPanel";
 import SectionHeader from "./components/SectionHeader";
 import AlertsSection from "./sections/AlertsSection";
@@ -12,6 +14,8 @@ import RolePrioritySection from "./sections/RolePrioritySection";
 import useDashboardData from "./hooks/useDashboardData";
 import useDashboardStats from "./hooks/useDashboardStats";
 import { formatCurrency, getTimeGreeting, sectionShellClass } from "./utils/dashboardUtils";
+
+const MISSING_LOCATION_DISMISS_KEY = "dashboard.missingSocietyLocationDismissed.v1";
 
 const getWeatherIcon = (code) => {
   if (code === 0) return <Sun className="h-7 w-7 animate-sun text-[var(--text-secondary)]" />;
@@ -52,6 +56,33 @@ export default function Dashboard() {
     societies,
   } = dashboardData;
 
+  const missingLocationSocieties = useMemo(
+    () => societies.filter((society) => society?.exactLatitude == null || society?.exactLongitude == null),
+    [societies],
+  );
+
+  const missingLocationSignature = useMemo(
+    () => missingLocationSocieties.map((society) => society.id).sort((a, b) => a - b).join(","),
+    [missingLocationSocieties],
+  );
+
+  const [isMissingLocationBannerDismissed, setIsMissingLocationBannerDismissed] = useState(false);
+
+  useEffect(() => {
+    if (!isPlatformOwner || !missingLocationSignature) {
+      setIsMissingLocationBannerDismissed(false);
+      return;
+    }
+
+    const storedSignature = localStorage.getItem(MISSING_LOCATION_DISMISS_KEY) || "";
+    setIsMissingLocationBannerDismissed(storedSignature === missingLocationSignature);
+  }, [isPlatformOwner, missingLocationSignature]);
+
+  const dismissMissingLocationBanner = () => {
+    localStorage.setItem(MISSING_LOCATION_DISMISS_KEY, missingLocationSignature);
+    setIsMissingLocationBannerDismissed(true);
+  };
+
   const navigateToScoped = (path) => {
     if (user?.role === 'MASTER_ADMIN' && dashboardSocietyId) {
       const [pathname, search = ""] = String(path).split("?")
@@ -86,7 +117,6 @@ export default function Dashboard() {
     fourWheelerCount,
     twoWheelerCount,
     ticketsBySociety,
-    pendingTickets,
   } = dashboardStats;
 
   if (showSkeleton) {
@@ -114,6 +144,71 @@ export default function Dashboard() {
         currentSocietyName={currentSocietyName}
         currentSocietyId={dashboardSocietyId}
       />
+
+      {isPlatformOwner && missingLocationSocieties.length > 0 && !isMissingLocationBannerDismissed && (
+        <section className={sectionShellClass}>
+          <div className="flex flex-col gap-4 sm:gap-5 lg:flex-row lg:items-start lg:justify-between">
+            <div className="min-w-0 flex-1">
+              <div className="flex items-start gap-3 sm:gap-3.5">
+                <div className="mt-0.5 shrink-0 rounded-lg bg-amber-500/15 p-2 text-amber-600">
+                  <AlertTriangle className="h-5 w-5" />
+                </div>
+                <div className="min-w-0">
+                  <h3 className="text-[15px] font-extrabold leading-tight tracking-tight text-[var(--text-primary)] sm:text-base">
+                    Society Location Setup Pending
+                  </h3>
+                  <p className="mt-1.5 max-w-[44ch] text-[13px] leading-[1.45] text-[var(--text-secondary)] sm:text-sm sm:leading-relaxed">
+                    <span className="sm:hidden">
+                      {missingLocationSocieties.length} societies need exact location for accurate proximity insights.
+                    </span>
+                    <span className="hidden sm:inline">
+                      {missingLocationSocieties.length} societies are missing exact location. Configure location to enable accurate Society Admin proximity monitoring.
+                    </span>
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-3 flex flex-wrap gap-2">
+                {missingLocationSocieties.slice(0, 6).map((society) => (
+                  <span
+                    key={society.id}
+                    className="inline-flex max-w-full items-center gap-1 rounded-full border border-amber-500/30 bg-amber-500/10 px-2.5 py-1 text-xs font-semibold text-amber-700"
+                  >
+                    <MapPin className="h-3.5 w-3.5 shrink-0" />
+                    <span className="truncate">{society.name || `Society ${society.id}`}</span>
+                  </span>
+                ))}
+                {missingLocationSocieties.length > 6 && (
+                  <span className="inline-flex items-center rounded-full border border-[var(--border-default)] bg-[var(--bg-tertiary)] px-2.5 py-1 text-xs font-semibold text-[var(--text-secondary)]">
+                    +{missingLocationSocieties.length - 6} more
+                  </span>
+                )}
+              </div>
+            </div>
+
+            <div className="flex w-full shrink-0 flex-col gap-2 sm:w-auto sm:flex-row sm:items-center sm:justify-end">
+              <NeonSweepButton
+                type="button"
+                tone="cyan"
+                size="sm"
+                onClick={() => navigate("/society-admins")}
+                className="w-full sm:w-auto"
+              >
+                Review Societies
+              </NeonSweepButton>
+              <NeonSweepButton
+                type="button"
+                tone="slate"
+                size="sm"
+                onClick={dismissMissingLocationBanner}
+                className="w-full sm:w-auto"
+              >
+                Dismiss
+              </NeonSweepButton>
+            </div>
+          </div>
+        </section>
+      )}
 
       <PrimaryStatsSection roleUi={roleUi} primaryStats={primaryStats} />
       <RolePrioritySection role={role} roleActionItems={roleActionItems} />
@@ -239,12 +334,11 @@ export default function Dashboard() {
             </section>
           )}
 
-          {isSocietyOpsLevel && (
+          {isSocietyOpsLevel && canSeeContractAlerts && (
             <AlertsSection
               canSeeContractAlerts={canSeeContractAlerts}
               expiringContracts={expiringContracts}
               expiringTenants={expiringTenants}
-              pendingTickets={pendingTickets}
               navigate={navigateToScoped}
             />
           )}

@@ -19,6 +19,11 @@ public interface ExcelExportService {
     ByteArrayOutputStream exportVendorBills(Long societyId, String startDate, String endDate);
 
     /**
+     * Export vendors to Excel
+     */
+    ByteArrayOutputStream exportVendors(Long societyId);
+
+    /**
      * Export tickets to Excel
      */
     ByteArrayOutputStream exportTickets(Long societyId, String status);

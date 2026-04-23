@@ -25,7 +25,10 @@ import com.society.backend.common.service.RoleService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 
 import java.io.IOException;
 import java.time.DayOfWeek;
@@ -35,6 +38,7 @@ import java.time.ZonedDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -43,6 +47,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
+@Transactional
 public class ComplaintServiceImpl implements ComplaintService {
     private static final long UNDO_WINDOW_MINUTES = 5L;
     private static final long DUE_SOON_THRESHOLD_MINUTES = 120L;
@@ -72,6 +77,9 @@ public class ComplaintServiceImpl implements ComplaintService {
 
     @Value("${member.direct-communication.complaint-categories:NOISE,PARKING,MAINTENANCE,CLEANLINESS,NEIGHBOR_ISSUE,OTHER}")
     private String memberDirectComplaintCategories;
+
+    @PersistenceContext
+    private EntityManager entityManager;
 
     private final ComplaintRepository complaintRepository;
     private final ComplaintCommentRepository complaintCommentRepository;
@@ -117,6 +125,7 @@ public class ComplaintServiceImpl implements ComplaintService {
         Complaint complaint = new Complaint();
         complaint.setUser(user);
         complaint.setSubject(request.getSubject());
+        complaint.setTitle(request.getSubject());
         complaint.setDescription(request.getDescription());
         complaint.setCategory(normalizedCategory);
         complaint.setPriority(normalizePriority(request.getPriority()));
@@ -176,7 +185,7 @@ public class ComplaintServiceImpl implements ComplaintService {
 
         // MASTER_ADMIN sees all complaints
         if (user.getRole().name().equals("MASTER_ADMIN")) {
-            return complaintRepository.findAll().stream()
+            return sortComplaintsByLatest(complaintRepository.findAll()).stream()
                     .filter(this::isVisibleForListing)
                     .filter(complaint -> canViewComplaint(user, complaint))
                     .map(this::toResponse)
@@ -185,7 +194,7 @@ public class ComplaintServiceImpl implements ComplaintService {
 
         // Others see only complaints from their society
         if (user.getSociety() != null) {
-            return complaintRepository.findBySocietyId(user.getSociety().getId()).stream()
+            return sortComplaintsByLatest(complaintRepository.findBySocietyId(user.getSociety().getId())).stream()
                     .filter(this::isVisibleForListing)
                     .filter(complaint -> canViewComplaint(user, complaint))
                     .map(this::toResponse)
@@ -200,7 +209,7 @@ public class ComplaintServiceImpl implements ComplaintService {
     public List<ComplaintResponse> getBySociety(Long societyId) {
         User currentUser = roleService.getCurrentUser();
         roleService.enforceSocietyScope(currentUser, societyId);
-        return complaintRepository.findBySocietyId(societyId).stream()
+        return sortComplaintsByLatest(complaintRepository.findBySocietyId(societyId)).stream()
                 .filter(this::isVisibleForListing)
             .filter(complaint -> canViewComplaint(currentUser, complaint))
                 .map(this::toResponse)
@@ -215,7 +224,7 @@ public class ComplaintServiceImpl implements ComplaintService {
                 throw new ApiException(HttpStatus.FORBIDDEN, "Cannot access other users' complaints");
             }
         }
-        return complaintRepository.findByUserId(userId).stream()
+        return complaintRepository.findByUserIdOrderByCreatedAtDesc(userId).stream()
             .filter(this::isVisibleForListing)
                 .map(this::toResponse)
                 .collect(Collectors.toList());
@@ -224,7 +233,7 @@ public class ComplaintServiceImpl implements ComplaintService {
     @Override
     public List<ComplaintResponse> getByStatus(String status) {
         User currentUser = roleService.getCurrentUser();
-        return complaintRepository.findByStatus(status).stream()
+        return sortComplaintsByLatest(complaintRepository.findByStatus(status)).stream()
                 .filter(this::isVisibleForListing)
             .filter(complaint -> canViewComplaint(currentUser, complaint))
                 .map(this::toResponse)
@@ -268,6 +277,7 @@ public class ComplaintServiceImpl implements ComplaintService {
         }
 
         complaint.setSubject(request.getSubject());
+        complaint.setTitle(request.getSubject());
         complaint.setDescription(request.getDescription());
         complaint.setCategory(normalizeCategory(request.getCategory()));
         complaint.setPriority(normalizePriority(request.getPriority()));
@@ -608,7 +618,6 @@ public class ComplaintServiceImpl implements ComplaintService {
         }
 
         if (force) {
-            appendHistory(complaint, actor, "DELETED_PERMANENT", complaint.getStatus(), "DELETED", "Complaint permanently deleted");
             complaintRepository.delete(complaint);
             return;
         }
@@ -684,6 +693,19 @@ public class ComplaintServiceImpl implements ComplaintService {
             return true;
         }
         return isUndoWindowOpen(complaint.getDeleteUndoExpiresAt(), LocalDateTime.now());
+    }
+
+    private List<Complaint> sortComplaintsByLatest(List<Complaint> complaints) {
+        if (complaints == null || complaints.isEmpty()) {
+            return List.of();
+        }
+
+        return complaints.stream()
+                .sorted(Comparator
+                        .comparing(Complaint::getCreatedAt, Comparator.nullsLast(Comparator.naturalOrder()))
+                        .thenComparing(Complaint::getId, Comparator.nullsLast(Comparator.naturalOrder()))
+                        .reversed())
+                .collect(Collectors.toList());
     }
 
     private boolean isUndoWindowOpen(LocalDateTime expiry, LocalDateTime now) {
@@ -854,6 +876,11 @@ public class ComplaintServiceImpl implements ComplaintService {
     }
 
     private void appendHistory(Complaint complaint, User actor, String actionType, String fromStatus, String toStatus, String note) {
+        // Ensure complaint is managed in the current session
+        if (complaint != null && complaint.getId() != null) {
+            complaint = entityManager.contains(complaint) ? complaint : entityManager.find(Complaint.class, complaint.getId());
+        }
+        
         ComplaintHistory history = new ComplaintHistory();
         history.setComplaint(complaint);
         history.setActor(actor);

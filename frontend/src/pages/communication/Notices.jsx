@@ -89,9 +89,10 @@ export default function Notices() {
     MEETING: 'Meeting',
   }
 
-  const attendanceExcludedRoles = ['VENDOR', 'TENANT', 'VISITOR']
-  const canRecordMeetingAttendance = Boolean(user?.role) && !attendanceExcludedRoles.includes(user.role)
-  const canViewMeetingAttendance = canRecordMeetingAttendance
+  const attendanceRecordRoles = ['MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'MANAGER', 'EMPLOYEE']
+  const attendanceViewRoles = ['MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'MANAGER', 'EMPLOYEE']
+  const canRecordMeetingAttendance = attendanceRecordRoles.includes(user?.role)
+  const canViewMeetingAttendance = attendanceViewRoles.includes(user?.role)
 
   // Get society filter from URL (for MASTER_ADMIN viewing specific society)
   const societyIdFromUrl = searchParams.get('society')
@@ -685,7 +686,7 @@ export default function Notices() {
       )}
 
       <AnimatedModal open={showAttendanceModal} onRequestClose={closeAttendanceModal} closeOnBackdrop>
-        <div className="max-h-[calc(100vh-2.4rem)] w-[min(96vw,68rem)] overflow-y-auto rounded-2xl border border-[var(--border-light)] bg-[var(--bg-card)] shadow-[0_20px_48px_rgba(2,8,23,0.28)]">
+        <div className="mx-auto max-h-[calc(100vh-2.4rem)] w-[min(96vw,68rem)] overflow-y-auto rounded-2xl border border-[var(--border-light)] bg-[var(--bg-card)] shadow-[0_20px_48px_rgba(2,8,23,0.28)]">
           <div className="flex items-center justify-between border-b border-[var(--border-light)] p-4">
             <div>
               <h3 className="text-lg font-bold text-[var(--text-primary)]">Meeting Attendance</h3>
@@ -869,7 +870,7 @@ export default function Notices() {
 
       {/* Modal */}
       <AnimatedModal open={showModal} onRequestClose={closeModal} closeOnBackdrop>
-        <div className="max-h-[calc(100vh-3rem)] w-full max-w-2xl overflow-y-auto rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] shadow-[0_8px_24px_rgba(0,0,0,0.12)]">
+        <div className="mx-auto max-h-[calc(100vh-3rem)] w-full max-w-2xl overflow-y-auto rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] shadow-[0_8px_24px_rgba(0,0,0,0.12)]">
             <div className="flex items-center justify-between border-b border-[var(--border-light)] p-4">
               <h3 className="text-lg font-bold text-[var(--text-primary)]">{editingNotice ? 'Edit Notice' : 'Add Notice'}</h3>
               <button onClick={closeModal} className="rounded-lg p-1 text-[var(--text-tertiary)] transition hover:bg-[var(--bg-tertiary)]">
