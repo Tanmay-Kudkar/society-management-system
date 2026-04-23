@@ -1099,7 +1099,7 @@ export default function Complaints() {
 
       {/* Create Complaint Modal */}
       <AnimatedModal open={showModal} onRequestClose={closeModal} closeOnBackdrop>
-        <div className="mx-2 w-[calc(100vw-1rem)] max-w-[980px] max-h-[calc(100vh-1.2rem)] overflow-y-auto rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] shadow-[0_8px_24px_rgba(0,0,0,0.12)] sm:mx-0 sm:w-full sm:max-h-[calc(100vh-2.5rem)]">
+        <div className="mx-auto w-[calc(100vw-1rem)] max-w-[980px] max-h-[calc(100vh-1.2rem)] overflow-y-auto rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] shadow-[0_8px_24px_rgba(0,0,0,0.12)] sm:w-full sm:max-h-[calc(100vh-2.5rem)]">
             <div className="flex items-center justify-between border-b border-[var(--border-light)] p-3 sm:p-4">
               <h3 className="text-lg font-semibold text-[var(--text-primary)]">{editingComplaint ? 'Edit Complaint' : 'Log Complaint'}</h3>
               <button onClick={closeModal} className="border-none bg-transparent text-[var(--text-tertiary)] p-1 rounded-lg hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-primary)]">
@@ -1288,7 +1288,7 @@ export default function Complaints() {
 
       {/* Resolve Complaint Modal */}
       <AnimatedModal open={showResolutionModal} onRequestClose={closeResolutionModal} closeOnBackdrop>
-        <div className="w-full max-w-[36rem] rounded-2xl border border-[var(--border-light)] bg-[var(--bg-card)] shadow-[0_24px_48px_rgba(15,23,42,0.25)]">
+        <div className="mx-auto w-full max-w-[36rem] rounded-2xl border border-[var(--border-light)] bg-[var(--bg-card)] shadow-[0_24px_48px_rgba(15,23,42,0.25)]">
           <div className="flex items-center justify-between border-b border-[var(--border-light)] px-5 py-4">
             <h3 className="text-lg font-semibold text-[var(--text-primary)]">Resolve Complaint</h3>
             <button
@@ -1316,7 +1316,7 @@ export default function Complaints() {
               onChange={(e) => setResolutionDraft(e.target.value)}
               rows={4}
               placeholder="Describe how this complaint was resolved..."
-              className="w-full rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] px-3 py-2.5 text-[var(--text-primary)] outline-none transition placeholder:text-[var(--text-tertiary)] focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+              className="w-full rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] px-3 py-2.5 text-[var(--text-primary)] outline-none transition placeholder:text-[var(--text-tertiary)] focus:border-[var(--accent-primary)] focus:ring-2 focus:ring-[color-mix(in_srgb,var(--accent-primary)_18%,transparent)]"
             />
 
             <div className="mt-4 flex gap-3">

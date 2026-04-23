@@ -302,7 +302,7 @@ export default function EmergencyContacts() {
 
       {/* Modal */}
       <AnimatedModal open={showModal} onRequestClose={closeModal} closeOnBackdrop>
-        <div className="w-full max-w-[32rem] max-h-[calc(100vh-3rem)] flex flex-col rounded-xl bg-[var(--bg-card)] shadow-[0_8px_24px_rgba(0,0,0,0.12)]">
+        <div className="mx-auto w-full max-w-[32rem] max-h-[calc(100vh-3rem)] flex flex-col rounded-xl bg-[var(--bg-card)] shadow-[0_8px_24px_rgba(0,0,0,0.12)]">
             <div className="flex items-center justify-between p-4 border-b border-[var(--border-light)]">
               <h3 className="text-lg font-bold text-[var(--text-primary)]">{editingContact ? 'Edit Contact' : 'Add Emergency Contact'}</h3>
               <button onClick={closeModal} className="p-1 rounded-lg text-[var(--text-tertiary)] hover:bg-[var(--bg-tertiary)]">
@@ -355,13 +355,13 @@ export default function EmergencyContacts() {
                 required
               />
               <div>
-                <label className="text-sm font-semibold text-[#334155] mb-1">Notes (Optional)</label>
+                <label className="mb-1 text-sm font-semibold text-[var(--text-secondary)]">Notes (Optional)</label>
                 <textarea
                   name="notes"
                   rows={2}
                   defaultValue={editingContact?.notes || ''}
                   placeholder="Additional notes..."
-                  className="w-full py-2 px-3 rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] text-[var(--text-primary)] transition-all min-h-16 focus:outline-none focus:border-[#2563eb] focus:shadow-[0_0_0_3px_rgba(37,99,235,0.2)]"
+                  className="w-full py-2 px-3 rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] text-[var(--text-primary)] transition-all min-h-16 focus:outline-none focus:border-[var(--accent-primary)] focus:shadow-[0_0_0_3px_color-mix(in_srgb,var(--accent-primary)_22%,transparent)]"
                 />
               </div>
               <div className="flex gap-3 pt-2">
@@ -385,7 +385,7 @@ export default function EmergencyContacts() {
       {/* Delete Confirmation Modal */}
       <AnimatedModal open={showDeleteModal} onRequestClose={cancelDelete} closeOnBackdrop>
         {contactToDelete && (
-          <div className="w-full max-w-[32rem] max-h-[calc(100vh-3rem)] flex flex-col rounded-xl bg-[var(--bg-card)] shadow-[0_8px_24px_rgba(0,0,0,0.12)]">
+          <div className="mx-auto w-full max-w-[32rem] max-h-[calc(100vh-3rem)] flex flex-col rounded-xl bg-[var(--bg-card)] shadow-[0_8px_24px_rgba(0,0,0,0.12)]">
             <div className="p-6 text-center">
               <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-[#fee2e2] inline-flex items-center justify-center">
                 <AlertCircle className="w-6 h-6 text-[#dc2626]" />

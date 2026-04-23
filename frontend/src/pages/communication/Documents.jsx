@@ -314,7 +314,7 @@ export default function Documents() {
 
       {/* Modal */}
       <AnimatedModal open={showModal} onRequestClose={closeModal} closeOnBackdrop>
-        <div className="max-h-[calc(100vh-3rem)] w-full max-w-3xl overflow-y-auto rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] shadow-[0_8px_24px_rgba(0,0,0,0.12)]">
+        <div className="mx-auto max-h-[calc(100vh-3rem)] w-full max-w-3xl overflow-y-auto rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] shadow-[0_8px_24px_rgba(0,0,0,0.12)]">
             <div className="sticky top-0 z-[2] flex items-center justify-between border-b border-[var(--border-light)] bg-[var(--bg-card)] p-4">
               <h3 className="text-lg font-bold text-[var(--text-primary)]">{editingDocument ? 'Edit Template' : 'Add Document Template'}</h3>
               <button onClick={closeModal} className="rounded-lg p-1 text-[var(--text-tertiary)] transition hover:bg-[var(--bg-tertiary)]">
@@ -330,7 +330,7 @@ export default function Documents() {
                     name="title"
                     defaultValue={editingDocument?.title || ''}
                     required
-                    className="w-full rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] px-3 py-2 text-[var(--text-primary)] outline-none transition focus:border-blue-600 focus:shadow-[0_0_0_3px_rgba(37,99,235,0.2)]"
+                    className="w-full rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] px-3 py-2 text-[var(--text-primary)] outline-none transition focus:border-[var(--accent-primary)] focus:shadow-[0_0_0_3px_color-mix(in_srgb,var(--accent-primary)_22%,transparent)]"
                   />
                 </div>
                 <div className="grid gap-2">
@@ -339,7 +339,7 @@ export default function Documents() {
                     name="templateType"
                     defaultValue={editingDocument?.templateType || 'OTHER'}
                     required
-                    className="w-full rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] px-3 py-2 text-[var(--text-primary)] outline-none transition focus:border-blue-600 focus:shadow-[0_0_0_3px_rgba(37,99,235,0.2)]"
+                    className="w-full rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] px-3 py-2 text-[var(--text-primary)] outline-none transition focus:border-[var(--accent-primary)] focus:shadow-[0_0_0_3px_color-mix(in_srgb,var(--accent-primary)_22%,transparent)]"
                   >
                     <option value="NOC">NOC</option>
                     <option value="LETTER">Letter</option>
@@ -352,14 +352,14 @@ export default function Documents() {
               </div>
               <div className="grid gap-2">
                 <label className="text-sm font-semibold text-[var(--text-primary)]">Template Content</label>
-                <p className="text-xs text-[var(--text-tertiary)]">Use placeholders like {'{{owner_name}}'}, {'{{flat_number}}'}, {'{{society_name}}'}, {'{{date}}'} etc.</p>
+                <p className="text-xs text-[var(--text-tertiary)]">Optional auto-fill: Owner {'{{ownerName}}'}, Flat {'{{flatNumber}}'}, Society {'{{societyName}}'}, Date {'{{date}}'}.</p>
                 <textarea
                   name="content"
                   rows={10}
                   defaultValue={editingDocument?.content || ''}
                   required
-                  placeholder="Enter template content with placeholders..."
-                  className="w-full rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] px-3 py-2 text-[var(--text-primary)] outline-none transition placeholder:text-[var(--text-tertiary)] focus:border-blue-600 focus:shadow-[0_0_0_3px_rgba(37,99,235,0.2)]"
+                  placeholder="Enter template content..."
+                  className="w-full rounded-xl border border-[var(--border-light)] bg-[var(--bg-card)] px-3 py-2 text-[var(--text-primary)] outline-none transition placeholder:text-[var(--text-tertiary)] focus:border-[var(--accent-primary)] focus:shadow-[0_0_0_3px_color-mix(in_srgb,var(--accent-primary)_22%,transparent)]"
                 />
               </div>
               <div className="flex gap-3 pt-2">

@@ -1,11 +1,12 @@
 import { useState, useMemo } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { penaltyApi } from '../../../../api'
+import { flatApi, penaltyApi, userApi } from '../../../../api'
 import { useAuth } from '../../context/AuthContext'
 import { useToast } from '../../context/ToastContext'
 import PageShell from '../../components/PageShell'
 import NeonSweepButton from '../../components/NeonSweepButton'
 import EmptyStateSection from '../../components/EmptyStateSection'
+import { FormInput, FormTextarea, NumberInput, SmartSelect } from '../../components'
 import { Ban, Plus, Search, X } from 'lucide-react'
 
 const penaltyTypeOptions = [
@@ -48,12 +49,54 @@ export default function Penalties() {
   const userId = user?.id
   const canLoadSocietyData = Boolean(societyId && userId)
 
+  const canManagePenalties = ['MASTER_ADMIN', 'SOCIETY_ADMIN', 'CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE', 'MANAGER'].includes(user?.role)
+
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
   const [typeFilter, setTypeFilter] = useState('')
   const [showModal, setShowModal] = useState(false)
   const [editingId, setEditingId] = useState(null)
   const [form, setForm] = useState(emptyForm)
+  const [formErrors, setFormErrors] = useState({})
+
+  const { data: userOptionsRaw = [] } = useQuery({
+    queryKey: ['penalty-issue-users', societyId],
+    queryFn: () => userApi.getAll().then(r => r.data),
+    enabled: !!societyId && showModal && canManagePenalties,
+  })
+
+  const { data: flatOptionsRaw = [] } = useQuery({
+    queryKey: ['penalty-issue-flats', societyId],
+    queryFn: () => flatApi.getBySociety(societyId).then(r => r.data),
+    enabled: !!societyId && showModal && canManagePenalties,
+  })
+
+  const usersInSociety = useMemo(() => {
+    const list = Array.isArray(userOptionsRaw) ? userOptionsRaw : []
+    return societyId ? list.filter(u => u?.societyId === societyId) : list
+  }, [userOptionsRaw, societyId])
+
+  const flatById = useMemo(() => {
+    const list = Array.isArray(flatOptionsRaw) ? flatOptionsRaw : []
+    return new Map(list.filter(Boolean).map(f => [f.id, f]))
+  }, [flatOptionsRaw])
+
+  const issuedToOptions = useMemo(() => {
+    const candidates = usersInSociety.filter(u => u && u.role !== 'VISITOR' && u.role !== 'VENDOR')
+    const sorted = [...candidates].sort((a, b) => String(a?.name || '').localeCompare(String(b?.name || '')))
+
+    return sorted.map((u) => {
+      const flat = u.flatId ? flatById.get(u.flatId) : null
+      const unitLabel = flat
+        ? `${flat.wingName ? `${flat.wingName}-` : ''}${flat.flatNumber}`
+        : (u.flatNumber ? u.flatNumber : '')
+      const fallback = u.role ? u.role.replaceAll('_', ' ') : `User #${u.id}`
+      return {
+        value: String(u.id),
+        label: unitLabel ? `${u.name} • ${unitLabel}` : `${u.name} • ${fallback}`,
+      }
+    })
+  }, [usersInSociety, flatById])
 
   const { data: penalties = [], isLoading } = useQuery({
     queryKey: ['penalties', societyId],
@@ -95,10 +138,12 @@ export default function Penalties() {
     setShowModal(false)
     setEditingId(null)
     setForm(emptyForm)
+    setFormErrors({})
   }
 
   const openEdit = (p) => {
     setEditingId(p.id)
+    setFormErrors({})
     setForm({
       issuedToId: p.issuedToId || '', flatNumber: p.flatNumber || '', wing: p.wing || '',
       penaltyType: p.penaltyType || 'VIOLATION', title: p.title || '', description: p.description || '',
@@ -109,7 +154,35 @@ export default function Penalties() {
 
   const handleSubmit = (e) => {
     e.preventDefault()
-    saveMutation.mutate({ ...form, societyId, issuedToId: Number(form.issuedToId), amount: Number(form.amount) || 0 })
+    const nextErrors = {}
+
+    if (!societyId) nextErrors.societyId = 'Society is required'
+    if (!form.issuedToId) nextErrors.issuedToId = 'Select a resident/user'
+    if (!form.penaltyType) nextErrors.penaltyType = 'Penalty type is required'
+
+    const title = String(form.title || '').trim()
+    if (!title) nextErrors.title = 'Title is required'
+    else if (title.length < 3) nextErrors.title = 'Enter at least 3 characters'
+
+    const amountNum = Number(form.amount)
+    if (!form.amount && form.amount !== 0) nextErrors.amount = 'Amount is required'
+    else if (Number.isNaN(amountNum) || amountNum <= 0) nextErrors.amount = 'Enter a valid amount (> 0)'
+
+    if (Object.keys(nextErrors).length > 0) {
+      setFormErrors(nextErrors)
+      toast.validation('Please fix the highlighted fields')
+      return
+    }
+
+    saveMutation.mutate({
+      ...form,
+      societyId,
+      issuedToId: Number(form.issuedToId),
+      title,
+      description: String(form.description || '').trim() || null,
+      adminNotes: String(form.adminNotes || '').trim() || null,
+      amount: amountNum,
+    })
   }
 
   const summaryCards = [
@@ -141,7 +214,20 @@ export default function Penalties() {
           <option value="">All Types</option>
           {penaltyTypeOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
         </select>
-        <NeonSweepButton tone="violet" size="md" onClick={() => setShowModal(true)}><Plus size={16} /> Issue Penalty</NeonSweepButton>
+        {canManagePenalties && (
+          <NeonSweepButton
+            tone="violet"
+            size="md"
+            onClick={() => {
+              setEditingId(null)
+              setForm(emptyForm)
+              setFormErrors({})
+              setShowModal(true)
+            }}
+          >
+            <Plus size={16} /> Issue Penalty
+          </NeonSweepButton>
+        )}
       </div>
 
       <div className="flex flex-col gap-3.5">
@@ -175,17 +261,25 @@ export default function Penalties() {
             {p.waivedReason && <div className="text-[0.82rem] text-[var(--text-secondary)] italic mb-0.5">Waiver: {p.waivedReason}</div>}
             {p.appealNotes && <div className="text-[0.82rem] text-[var(--text-secondary)] italic mb-0.5">Appeal: {p.appealNotes}</div>}
             <div className="flex flex-wrap gap-[0.45rem] mt-2.5">
-              {p.paymentStatus === 'UNPAID' && p.status === 'ACTIVE' && (
+              {(canManagePenalties || p.issuedToId === userId) && p.paymentStatus === 'UNPAID' && p.status === 'ACTIVE' && (
                 <button className="inline-flex items-center gap-1.5 px-3.5 py-[0.42rem] border-none rounded-lg text-[0.85rem] font-semibold cursor-pointer transition-opacity hover:opacity-85 bg-[var(--success,#22c55e)] text-white" onClick={() => payMut.mutate(p.id)}>Mark Paid</button>
               )}
               {p.status === 'ACTIVE' && (
                 <>
-                  <button className="inline-flex items-center gap-1.5 px-3.5 py-[0.42rem] border-none rounded-lg text-[0.85rem] font-semibold cursor-pointer transition-opacity hover:opacity-85 bg-cyan-500 text-white" onClick={() => waiveMut.mutate(p.id)}>Waive</button>
-                  <button className="inline-flex items-center gap-1.5 px-3.5 py-[0.42rem] border-none rounded-lg text-[0.85rem] font-semibold cursor-pointer transition-opacity hover:opacity-85 bg-[var(--warning,#f59e0b)] text-white" onClick={() => appealMut.mutate(p.id)}>Appeal</button>
+                  {canManagePenalties && (
+                    <button className="inline-flex items-center gap-1.5 px-3.5 py-[0.42rem] border-none rounded-lg text-[0.85rem] font-semibold cursor-pointer transition-opacity hover:opacity-85 bg-cyan-500 text-white" onClick={() => waiveMut.mutate(p.id)}>Waive</button>
+                  )}
+                  {p.issuedToId === userId && (
+                    <button className="inline-flex items-center gap-1.5 px-3.5 py-[0.42rem] border-none rounded-lg text-[0.85rem] font-semibold cursor-pointer transition-opacity hover:opacity-85 bg-[var(--warning,#f59e0b)] text-white" onClick={() => appealMut.mutate(p.id)}>Appeal</button>
+                  )}
                 </>
               )}
-              <button className="inline-flex items-center gap-1.5 px-3.5 py-[0.42rem] rounded-lg text-[0.85rem] font-semibold cursor-pointer transition-opacity hover:opacity-85 bg-[var(--card)] text-[var(--text-primary)] border border-[var(--border-default)]" onClick={() => openEdit(p)}>Edit</button>
-              <button className="inline-flex items-center gap-1.5 px-3.5 py-[0.42rem] rounded-lg text-[0.85rem] font-semibold cursor-pointer transition-opacity hover:opacity-85 bg-transparent text-[var(--error,#ef4444)] border border-[var(--error,#ef4444)]" onClick={() => deleteMut.mutate(p.id)}>Delete</button>
+              {canManagePenalties && (
+                <>
+                  <button className="inline-flex items-center gap-1.5 px-3.5 py-[0.42rem] rounded-lg text-[0.85rem] font-semibold cursor-pointer transition-opacity hover:opacity-85 bg-[var(--card)] text-[var(--text-primary)] border border-[var(--border-default)]" onClick={() => openEdit(p)}>Edit</button>
+                  <button className="inline-flex items-center gap-1.5 px-3.5 py-[0.42rem] rounded-lg text-[0.85rem] font-semibold cursor-pointer transition-opacity hover:opacity-85 bg-transparent text-[var(--error,#ef4444)] border border-[var(--error,#ef4444)]" onClick={() => deleteMut.mutate(p.id)}>Delete</button>
+                </>
+              )}
             </div>
           </div>
         ))}
@@ -193,25 +287,138 @@ export default function Penalties() {
 
       {showModal && (
         <div className="fixed inset-0 bg-black/45 flex items-center justify-center z-[1200]" onClick={closeModal}>
-          <div className="relative isolate bg-[var(--bg-secondary,#ffffff)] border border-[var(--border-default)] rounded-xl w-[95%] max-w-[600px] max-h-[90vh] overflow-y-auto shadow-[0_8px_32px_rgba(0,0,0,0.18)]" onClick={e => e.stopPropagation()}>
-            <div className="flex justify-between items-center px-5 py-4 border-b border-[var(--border-default)]"><h3 className="m-0 text-lg">{editingId ? 'Edit Penalty' : 'Issue Penalty'}</h3><button className="bg-transparent border-none cursor-pointer text-[var(--text-secondary)]" onClick={closeModal}><X size={20} /></button></div>
-            <form onSubmit={handleSubmit} className="p-5">
-              <div className="grid grid-cols-2 items-start gap-3.5 max-[600px]:grid-cols-1">
-                <div className="flex flex-col gap-1"><label className="text-[0.82rem] font-semibold text-[var(--text-secondary)]">Issued To (User ID) *</label><input required type="number" value={form.issuedToId} onChange={e => setForm({ ...form, issuedToId: e.target.value })} className="px-[0.7rem] py-[0.45rem] border border-[var(--border-default)] rounded-lg bg-[var(--bg-card)] text-[var(--text-primary)] text-[0.9rem]" /></div>
-                <div className="flex flex-col gap-1"><label className="text-[0.82rem] font-semibold text-[var(--text-secondary)]">Flat Number</label><input value={form.flatNumber} onChange={e => setForm({ ...form, flatNumber: e.target.value })} className="px-[0.7rem] py-[0.45rem] border border-[var(--border-default)] rounded-lg bg-[var(--bg-card)] text-[var(--text-primary)] text-[0.9rem]" /></div>
-                <div className="flex flex-col gap-1"><label className="text-[0.82rem] font-semibold text-[var(--text-secondary)]">Wing</label><input value={form.wing} onChange={e => setForm({ ...form, wing: e.target.value })} className="px-[0.7rem] py-[0.45rem] border border-[var(--border-default)] rounded-lg bg-[var(--bg-card)] text-[var(--text-primary)] text-[0.9rem]" /></div>
-                <div className="flex flex-col gap-1"><label className="text-[0.82rem] font-semibold text-[var(--text-secondary)]">Type *</label>
-                  <select value={form.penaltyType} onChange={e => setForm({ ...form, penaltyType: e.target.value })} className="px-[0.7rem] py-[0.45rem] border border-[var(--border-default)] rounded-lg bg-[var(--bg-card)] text-[var(--text-primary)] text-[0.9rem]">
-                    {penaltyTypeOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-                  </select>
-                </div>
-                <div className="flex flex-col gap-1 col-span-full"><label className="text-[0.82rem] font-semibold text-[var(--text-secondary)]">Title *</label><input required value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} className="px-[0.7rem] py-[0.45rem] border border-[var(--border-default)] rounded-lg bg-[var(--bg-card)] text-[var(--text-primary)] text-[0.9rem]" /></div>
-                <div className="flex flex-col gap-1"><label className="text-[0.82rem] font-semibold text-[var(--text-secondary)]">Amount (₹) *</label><input required type="number" min="0" step="0.01" value={form.amount} onChange={e => setForm({ ...form, amount: e.target.value })} className="px-[0.7rem] py-[0.45rem] border border-[var(--border-default)] rounded-lg bg-[var(--bg-card)] text-[var(--text-primary)] text-[0.9rem]" /></div>
-                <div className="flex flex-col gap-1"><label className="text-[0.82rem] font-semibold text-[var(--text-secondary)]">Due Date</label><input type="date" value={form.dueDate} onChange={e => setForm({ ...form, dueDate: e.target.value })} className="px-[0.7rem] py-[0.45rem] border border-[var(--border-default)] rounded-lg bg-[var(--bg-card)] text-[var(--text-primary)] text-[0.9rem]" /></div>
-                <div className="flex flex-col gap-1 col-span-full"><label className="text-[0.82rem] font-semibold text-[var(--text-secondary)]">Description</label><textarea rows={2} value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} className="px-[0.7rem] py-[0.45rem] border border-[var(--border-default)] rounded-lg bg-[var(--bg-card)] text-[var(--text-primary)] text-[0.9rem]" /></div>
-                <div className="flex flex-col gap-1 col-span-full"><label className="text-[0.82rem] font-semibold text-[var(--text-secondary)]">Admin Notes</label><textarea rows={2} value={form.adminNotes} onChange={e => setForm({ ...form, adminNotes: e.target.value })} className="px-[0.7rem] py-[0.45rem] border border-[var(--border-default)] rounded-lg bg-[var(--bg-card)] text-[var(--text-primary)] text-[0.9rem]" /></div>
+          <div className="relative isolate bg-[color-mix(in_srgb,var(--bg-card)_96%,var(--bg-tertiary)_4%)] border border-[color-mix(in_srgb,var(--border-default)_86%,#334155_14%)] rounded-2xl w-[95%] max-w-[640px] max-h-[90vh] overflow-y-auto shadow-[0_24px_64px_rgba(2,6,23,0.35)]" onClick={e => e.stopPropagation()}>
+            <div className="flex justify-between items-center px-5 py-4 border-b border-[var(--border-light)]">
+              <h3 className="m-0 text-lg font-bold text-[var(--text-primary)]">{editingId ? 'Edit Penalty' : 'Issue Penalty'}</h3>
+              <button className="rounded-md p-1 text-[var(--text-tertiary)] transition hover:bg-[var(--bg-tertiary)]" onClick={closeModal}><X size={20} /></button>
+            </div>
+
+            <form onSubmit={handleSubmit} className="p-5" noValidate>
+              <div className="grid grid-cols-1 items-start gap-4 sm:grid-cols-2">
+                <SmartSelect
+                  label="Issued To"
+                  name="issuedToId"
+                  value={form.issuedToId}
+                  onChange={(e) => {
+                    const value = e.target.value
+                    if (editingId) return
+                    const selectedUser = usersInSociety.find(u => String(u.id) === String(value))
+                    const flat = selectedUser?.flatId ? flatById.get(selectedUser.flatId) : null
+                    setForm(prev => ({
+                      ...prev,
+                      issuedToId: value,
+                      flatNumber: flat?.flatNumber || selectedUser?.flatNumber || '',
+                      wing: flat?.wingName || '',
+                    }))
+                    if (formErrors.issuedToId) setFormErrors(prev => ({ ...prev, issuedToId: '' }))
+                  }}
+                  options={issuedToOptions}
+                  placeholder={issuedToOptions.length ? 'Select resident/user' : 'Loading users...'}
+                  required
+                  disabled={!!editingId}
+                  error={formErrors.issuedToId}
+                />
+
+                <SmartSelect
+                  label="Type"
+                  name="penaltyType"
+                  value={form.penaltyType}
+                  onChange={(e) => {
+                    setForm(prev => ({ ...prev, penaltyType: e.target.value }))
+                    if (formErrors.penaltyType) setFormErrors(prev => ({ ...prev, penaltyType: '' }))
+                  }}
+                  options={penaltyTypeOptions}
+                  required
+                  error={formErrors.penaltyType}
+                />
+
+                <FormInput
+                  label="Flat Number"
+                  name="flatNumber"
+                  value={form.flatNumber}
+                  onChange={(e) => setForm(prev => ({ ...prev, flatNumber: e.target.value }))}
+                  disabled
+                  hint={editingId ? 'Unit cannot be changed in edit mode' : 'Auto-filled from selected resident'}
+                />
+
+                <FormInput
+                  label="Wing"
+                  name="wing"
+                  value={form.wing}
+                  onChange={(e) => setForm(prev => ({ ...prev, wing: e.target.value }))}
+                  disabled
+                  hint={editingId ? 'Unit cannot be changed in edit mode' : 'Auto-filled from selected resident'}
+                />
+
+                <FormInput
+                  className="sm:col-span-2"
+                  label="Title"
+                  name="title"
+                  value={form.title}
+                  onChange={(e) => {
+                    setForm(prev => ({ ...prev, title: e.target.value }))
+                    if (formErrors.title) setFormErrors(prev => ({ ...prev, title: '' }))
+                  }}
+                  error={formErrors.title}
+                  required
+                  maxLength={120}
+                  placeholder="e.g. Parking violation"
+                  autoFocus
+                />
+
+                <NumberInput
+                  label="Amount (₹)"
+                  name="amount"
+                  value={form.amount}
+                  onChange={(e) => {
+                    setForm(prev => ({ ...prev, amount: e.target.value }))
+                    if (formErrors.amount) setFormErrors(prev => ({ ...prev, amount: '' }))
+                  }}
+                  error={formErrors.amount}
+                  required
+                  min={0}
+                  step={0.01}
+                  placeholder="0"
+                />
+
+                <FormInput
+                  label="Due Date"
+                  name="dueDate"
+                  type="date"
+                  value={form.dueDate}
+                  onChange={(e) => setForm(prev => ({ ...prev, dueDate: e.target.value }))}
+                />
+
+                <FormTextarea
+                  className="sm:col-span-2"
+                  label="Description"
+                  name="description"
+                  rows={2}
+                  value={form.description}
+                  onChange={(e) => setForm(prev => ({ ...prev, description: e.target.value }))}
+                  placeholder="Optional"
+                  maxLength={500}
+                />
+
+                <FormTextarea
+                  className="sm:col-span-2"
+                  label="Admin Notes"
+                  name="adminNotes"
+                  rows={2}
+                  value={form.adminNotes}
+                  onChange={(e) => setForm(prev => ({ ...prev, adminNotes: e.target.value }))}
+                  placeholder="Optional"
+                  maxLength={500}
+                />
               </div>
-              <div className="flex justify-end gap-2.5 mt-5 pt-4 border-t border-[var(--border-default)]">
+
+              {formErrors.societyId && (
+                <div className="mt-4 rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-sm text-amber-700">
+                  {formErrors.societyId}
+                </div>
+              )}
+
+              <div className="flex justify-end gap-2.5 mt-5 pt-4 border-t border-[var(--border-light)]">
                 <NeonSweepButton type="button" tone="slate" size="md" onClick={closeModal}>Cancel</NeonSweepButton>
                 <NeonSweepButton type="submit" tone="violet" size="md" disabled={saveMutation.isPending}>{saveMutation.isPending ? 'Saving...' : editingId ? 'Update' : 'Issue'}</NeonSweepButton>
               </div>
