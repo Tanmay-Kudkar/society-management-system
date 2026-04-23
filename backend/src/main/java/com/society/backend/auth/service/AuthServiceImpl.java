@@ -169,15 +169,6 @@ public class AuthServiceImpl implements AuthService {
                 throw new ApiException(HttpStatus.FORBIDDEN,
                         "Society Admin must be linked to a society before login.");
             }
-            if (society.getExactLatitude() == null || society.getExactLongitude() == null) {
-                throw new ApiException(HttpStatus.BAD_REQUEST,
-                        "Exact society location is not configured. Ask Master Admin to set society location.");
-            }
-            if (request.getLatitude() == null || request.getLongitude() == null) {
-                throw new ApiException(
-                    HttpStatus.BAD_REQUEST,
-                    "Location is required for Society Admin login. Enable location permission or set pin manually.");
-            }
         }
 
         // Generate JWT token (longer expiry if remember me)
