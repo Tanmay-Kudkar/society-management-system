@@ -159,10 +159,10 @@ export default function Dashboard() {
                   </h3>
                   <p className="mt-1.5 max-w-[44ch] text-[13px] leading-[1.45] text-[var(--text-secondary)] sm:text-sm sm:leading-relaxed">
                     <span className="sm:hidden">
-                      {missingLocationSocieties.length} societies need exact location. Admin login is blocked until setup.
+                      {missingLocationSocieties.length} societies need exact location for accurate proximity insights.
                     </span>
                     <span className="hidden sm:inline">
-                      {missingLocationSocieties.length} societies are missing exact location. Society Admin login for those societies will be blocked until location is configured.
+                      {missingLocationSocieties.length} societies are missing exact location. Configure location to enable accurate Society Admin proximity monitoring.
                     </span>
                   </p>
                 </div>

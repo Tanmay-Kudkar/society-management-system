@@ -125,6 +125,7 @@ public class ComplaintServiceImpl implements ComplaintService {
         Complaint complaint = new Complaint();
         complaint.setUser(user);
         complaint.setSubject(request.getSubject());
+        complaint.setTitle(request.getSubject());
         complaint.setDescription(request.getDescription());
         complaint.setCategory(normalizedCategory);
         complaint.setPriority(normalizePriority(request.getPriority()));
@@ -276,6 +277,7 @@ public class ComplaintServiceImpl implements ComplaintService {
         }
 
         complaint.setSubject(request.getSubject());
+        complaint.setTitle(request.getSubject());
         complaint.setDescription(request.getDescription());
         complaint.setCategory(normalizeCategory(request.getCategory()));
         complaint.setPriority(normalizePriority(request.getPriority()));
