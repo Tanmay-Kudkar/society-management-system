@@ -490,15 +490,17 @@ export default function SocietyRules() {
                   />
                 </div>
                 <div className="flex flex-col gap-[0.3rem]">
-                  <label className="flex items-center gap-2 text-[0.82rem] font-semibold text-[var(--text-secondary)]">
+                  <label className="text-[0.82rem] font-semibold text-[var(--text-secondary)]">Mandatory</label>
+                  <label className="flex items-center gap-2 rounded-lg border border-[var(--border-default)] bg-[var(--bg-card)] py-[0.45rem] px-[0.7rem] text-[0.9rem] text-[var(--text-primary)]">
                     <input
                       type="checkbox"
+                      className="h-4 w-4 accent-[var(--accent-primary)]"
                       checked={form.isMandatory}
                       onChange={(e) =>
                         setForm({ ...form, isMandatory: e.target.checked })
                       }
                     />
-                    Mandatory
+                    Mark mandatory
                   </label>
                 </div>
                 <div className="flex flex-col gap-[0.3rem] col-span-full">

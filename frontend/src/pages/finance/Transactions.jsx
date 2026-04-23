@@ -446,9 +446,9 @@ export default function Transactions() {
                     <td className="py-[0.85rem] px-6 text-[0.9rem] text-[var(--text-tertiary)]">{t.category}</td>
                     <td className="py-[0.85rem] px-6 text-[0.9rem] text-[var(--text-tertiary)]">
                       {t.flatNumber ? (
-                        <span className="inline-flex items-center gap-[0.35rem] py-1 px-[0.6rem] rounded-full text-xs font-semibold text-[#1d4ed8] bg-[rgba(37,99,235,0.12)]">
-                          <Home size={10} />
-                          {t.flatNumber}
+                        <span className="inline-flex items-center gap-[0.35rem] whitespace-nowrap py-1 px-[0.6rem] rounded-full text-xs font-semibold text-[#1d4ed8] bg-[rgba(37,99,235,0.12)]">
+                          <Home size={10} className="shrink-0" />
+                          <span className="leading-none">{t.flatNumber}</span>
                         </span>
                       ) : '-'}
                     </td>
@@ -524,9 +524,9 @@ export default function Transactions() {
                       {paymentModes.find(m => m.value === t.paymentMode)?.label || t.paymentMode}
                     </span>
                     {t.flatNumber ? (
-                      <span className="inline-flex items-center gap-[0.35rem] py-0.5 px-2 sm:py-1 sm:px-[0.6rem] rounded-full text-[11px] sm:text-xs font-semibold text-[#1d4ed8] bg-[rgba(37,99,235,0.12)]">
-                        <Home size={10} />
-                        {t.flatNumber}
+                      <span className="inline-flex items-center gap-[0.35rem] whitespace-nowrap py-0.5 px-2 sm:py-1 sm:px-[0.6rem] rounded-full text-[11px] sm:text-xs font-semibold text-[#1d4ed8] bg-[rgba(37,99,235,0.12)]">
+                        <Home size={10} className="shrink-0" />
+                        <span className="leading-none">{t.flatNumber}</span>
                       </span>
                     ) : null}
                   </div>
