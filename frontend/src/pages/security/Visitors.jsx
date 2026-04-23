@@ -1,11 +1,11 @@
 import { useMemo, useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useSearchParams } from 'react-router-dom'
-import { useAuth } from '../../context'
+import { useAuth, useToast } from '../../context'
 import { visitorApi } from '../../../../api'
 import { Plus, Search, X, UserX, Clock, LogIn, LogOut, AlertTriangle } from 'lucide-react'
 import clsx from 'clsx'
-import { FormInput, SmartSelect, FormTextarea, InfoTooltip, NeonSweepButton, EmptyStateSection } from '../../components'
+import { FormInput, PhoneInput, SmartSelect, FormTextarea, InfoTooltip, NeonSweepButton, EmptyStateSection } from '../../components'
 import { PermissionDenied } from '../../components'
 import { HeroSkeleton, SummaryRowSkeleton, FiltersSkeleton, ListSkeleton, WakeUpBanner } from '../../components/SkeletonLoaders'
 import useMinLoadingTime from '../../hooks/useMinLoadingTime'
@@ -45,6 +45,7 @@ const iconColorClasses = {
 
 export default function Visitors() {
   const { user } = useAuth()
+  const toast = useToast()
   const queryClient = useQueryClient()
   const [searchParams] = useSearchParams()
   const [showModal, setShowModal] = useState(false)
@@ -53,6 +54,17 @@ export default function Visitors() {
   const [filterType, setFilterType] = useState('')
   const [viewMode, setViewMode] = useState('all')
   const [overstayThreshold, setOverstayThreshold] = useState('4')
+
+  const [createForm, setCreateForm] = useState({
+    visitorName: '',
+    visitorPhone: '',
+    visitorType: '',
+    purpose: '',
+    vehicleNumber: '',
+    notes: '',
+    isPreApproved: true,
+  })
+  const [createErrors, setCreateErrors] = useState({})
 
   const isMember = user?.role && user.role !== 'VISITOR'
 
@@ -99,11 +111,29 @@ export default function Visitors() {
   const closeModal = (force = false) => {
     if (!force && createMutation.isPending) return
     setShowModal(false)
+    setCreateErrors({})
+    setCreateForm({
+      visitorName: '',
+      visitorPhone: '',
+      visitorType: '',
+      purpose: '',
+      vehicleNumber: '',
+      notes: '',
+      isPreApproved: true,
+    })
   }
 
   const createMutation = useMutation({
     mutationFn: (data) => visitorApi.create(user.id, data),
-    onSuccess: () => { queryClient.invalidateQueries(['visitors']); closeModal(true) },
+    onSuccess: () => {
+      queryClient.invalidateQueries(['visitors'])
+      toast.success('Visitor added')
+      closeModal(true)
+    },
+    onError: (err) => {
+      const message = err?.response?.data?.message || err?.message || 'Failed to add visitor'
+      toast.error(message)
+    },
   })
 
   const checkInMutation = useMutation({
@@ -140,19 +170,64 @@ export default function Visitors() {
     return matchesSearch && matchesStatus && matchesType
   }), [visitors, searchTerm, filterStatus, filterType])
 
+  const validateCreateForm = () => {
+    const nextErrors = {}
+
+    const resolvedSocietyId = effectiveSocietyId ? Number(effectiveSocietyId) : null
+    if (!resolvedSocietyId || Number.isNaN(resolvedSocietyId)) {
+      nextErrors.societyId = 'Society is required'
+    }
+
+    const visitorName = (createForm.visitorName || '').trim()
+    if (!visitorName) nextErrors.visitorName = 'Visitor name is required'
+    else if (visitorName.length < 2) nextErrors.visitorName = 'Enter at least 2 characters'
+
+    if (!createForm.visitorType) nextErrors.visitorType = 'Visitor type is required'
+
+    const phoneDigits = String(createForm.visitorPhone || '').replace(/[^0-9]/g, '')
+    if (phoneDigits.length > 0) {
+      if (phoneDigits.length !== 10) nextErrors.visitorPhone = 'Enter a 10-digit phone number'
+      else if (!/^[6-9]/.test(phoneDigits)) nextErrors.visitorPhone = 'Phone must start with 6, 7, 8, or 9'
+    }
+
+    const vehicleNumber = (createForm.vehicleNumber || '').trim()
+    if (vehicleNumber) {
+      const normalizedVehicle = vehicleNumber.toUpperCase()
+      if (!/^[A-Z0-9\-\s]{3,20}$/.test(normalizedVehicle)) {
+        nextErrors.vehicleNumber = 'Use letters/numbers only (3–20 chars)'
+      }
+    }
+
+    const purpose = (createForm.purpose || '').trim()
+    if (purpose && purpose.length < 3) nextErrors.purpose = 'Enter at least 3 characters'
+
+    const notes = (createForm.notes || '').trim()
+    if (notes && notes.length > 250) nextErrors.notes = 'Keep notes within 250 characters'
+
+    setCreateErrors(nextErrors)
+    return { isValid: Object.keys(nextErrors).length === 0, resolvedSocietyId }
+  }
+
   const handleSubmit = (e) => {
     e.preventDefault()
-    const formData = new FormData(e.target)
-    createMutation.mutate({
-      visitorName: formData.get('visitorName'),
-      visitorPhone: formData.get('visitorPhone'),
-      visitorType: formData.get('visitorType'),
-      purpose: formData.get('purpose'),
-      vehicleNumber: formData.get('vehicleNumber'),
-      notes: formData.get('notes'),
-      societyId: user.societyId,
-      isPreApproved: formData.get('isPreApproved') === 'on',
-    })
+    const { isValid, resolvedSocietyId } = validateCreateForm()
+    if (!isValid) {
+      toast.validation('Please fix the highlighted fields')
+      return
+    }
+
+    const payload = {
+      visitorName: (createForm.visitorName || '').trim(),
+      visitorPhone: String(createForm.visitorPhone || '').replace(/[^0-9]/g, ''),
+      visitorType: createForm.visitorType,
+      purpose: (createForm.purpose || '').trim() || null,
+      vehicleNumber: (createForm.vehicleNumber || '').trim().toUpperCase() || null,
+      notes: (createForm.notes || '').trim() || null,
+      societyId: resolvedSocietyId,
+      isPreApproved: !!createForm.isPreApproved,
+    }
+
+    createMutation.mutate(payload)
   }
 
   const requiresOtp = (visitorType) => ['DELIVERY', 'CAB'].includes(visitorType)
@@ -194,7 +269,19 @@ export default function Visitors() {
           <NeonSweepButton
             tone="violet"
             size="md"
-            onClick={() => setShowModal(true)}
+            onClick={() => {
+              setCreateErrors({})
+              setCreateForm({
+                visitorName: '',
+                visitorPhone: '',
+                visitorType: '',
+                purpose: '',
+                vehicleNumber: '',
+                notes: '',
+                isPreApproved: true,
+              })
+              setShowModal(true)
+            }}
             className="w-full sm:w-auto"
           >
             <Plus size={20} />
@@ -391,21 +478,112 @@ export default function Visitors() {
               <h3 className="text-lg font-bold text-[var(--text-primary)]">Pre-approve Visitor</h3>
               <button onClick={() => closeModal()} className="rounded-md p-1 text-[var(--text-tertiary)] transition hover:bg-[var(--bg-tertiary)]"><X size={20} /></button>
             </div>
-            <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-              <FormInput label="Visitor Name" name="visitorName" required />
-              <FormInput label="Phone Number" name="visitorPhone" />
-              <SmartSelect label="Visitor Type" name="visitorType" required options={[
+            <form onSubmit={handleSubmit} className="flex flex-col gap-4" noValidate>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <FormInput
+                  label="Visitor Name"
+                  name="visitorName"
+                  value={createForm.visitorName}
+                  onChange={(e) => {
+                    setCreateForm(prev => ({ ...prev, visitorName: e.target.value }))
+                    if (createErrors.visitorName) setCreateErrors(prev => ({ ...prev, visitorName: '' }))
+                  }}
+                  error={createErrors.visitorName}
+                  required
+                  placeholder="e.g. Rahul Sharma"
+                  maxLength={80}
+                  autoFocus
+                />
+
+                <PhoneInput
+                  label="Phone Number"
+                  name="visitorPhone"
+                  value={createForm.visitorPhone}
+                  onChange={(e) => {
+                    setCreateForm(prev => ({ ...prev, visitorPhone: e.target.value }))
+                    if (createErrors.visitorPhone) setCreateErrors(prev => ({ ...prev, visitorPhone: '' }))
+                  }}
+                  error={createErrors.visitorPhone}
+                />
+              </div>
+
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <SmartSelect
+                  label="Visitor Type"
+                  name="visitorType"
+                  required
+                  value={createForm.visitorType}
+                  onChange={(e) => {
+                    setCreateForm(prev => ({ ...prev, visitorType: e.target.value }))
+                    if (createErrors.visitorType) setCreateErrors(prev => ({ ...prev, visitorType: '' }))
+                  }}
+                  error={createErrors.visitorType}
+                  options={[
                 { value: 'GUEST', label: 'Guest' },
                 { value: 'DELIVERY', label: 'Delivery' },
                 { value: 'CAB', label: 'Cab' },
                 { value: 'SERVICE', label: 'Service' },
                 { value: 'OTHER', label: 'Other' },
-              ]} placeholder="Select Type" />
-              <FormInput label="Purpose" name="purpose" />
-              <FormInput label="Vehicle Number" name="vehicleNumber" />
-              <FormTextarea label="Notes" name="notes" rows={3} />
+                  ]}
+                  placeholder="Select type"
+                />
+
+                <FormInput
+                  label="Purpose"
+                  name="purpose"
+                  value={createForm.purpose}
+                  onChange={(e) => {
+                    setCreateForm(prev => ({ ...prev, purpose: e.target.value }))
+                    if (createErrors.purpose) setCreateErrors(prev => ({ ...prev, purpose: '' }))
+                  }}
+                  error={createErrors.purpose}
+                  placeholder="e.g. Package delivery"
+                  maxLength={120}
+                />
+              </div>
+
+              <FormInput
+                label="Vehicle Number"
+                name="vehicleNumber"
+                value={createForm.vehicleNumber}
+                onChange={(e) => {
+                  setCreateForm(prev => ({ ...prev, vehicleNumber: e.target.value }))
+                  if (createErrors.vehicleNumber) setCreateErrors(prev => ({ ...prev, vehicleNumber: '' }))
+                }}
+                error={createErrors.vehicleNumber}
+                placeholder="Optional"
+                maxLength={20}
+              />
+
+              <FormTextarea
+                label="Notes"
+                name="notes"
+                rows={3}
+                value={createForm.notes}
+                onChange={(e) => {
+                  setCreateForm(prev => ({ ...prev, notes: e.target.value }))
+                  if (createErrors.notes) setCreateErrors(prev => ({ ...prev, notes: '' }))
+                }}
+                error={createErrors.notes}
+                placeholder="Optional"
+                maxLength={250}
+              />
+
+              {createErrors.societyId && (
+                <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-sm text-amber-700">
+                  {createErrors.societyId}
+                </div>
+              )}
+
               <label className="inline-flex items-center gap-2 text-sm font-medium text-[var(--text-secondary)]">
-                <input type="checkbox" name="isPreApproved" defaultChecked className="h-4 w-4 accent-[var(--accent-primary)]" /> Pre-approve this visitor
+                <input
+                  type="checkbox"
+                  name="isPreApproved"
+                  checked={createForm.isPreApproved}
+                  onChange={(e) => setCreateForm(prev => ({ ...prev, isPreApproved: e.target.checked }))}
+                  className="h-4 w-4 accent-[var(--accent-primary)]"
+                />
+                Pre-approve this visitor
               </label>
               <div className="mt-2 flex items-center justify-end gap-3 border-t border-[var(--border-light)] pt-4">
                 <NeonSweepButton type="button" tone="slate" size="md" onClick={() => closeModal()}>
