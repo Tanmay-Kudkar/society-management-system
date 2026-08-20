@@ -26,7 +26,7 @@ const pageShellClass = 'rounded-[28px] border border-[color-mix(in_srgb,var(--bo
 const pagePanelClass = 'rounded-[18px] border border-[color-mix(in_srgb,var(--border-default)_90%,white_10%)] bg-[color-mix(in_srgb,var(--bg-tertiary)_88%,white_12%)] shadow-[0_12px_30px_rgba(15,23,42,0.08)]'
 
 const BULK_FIELD_CONFIG = [
-  { key: 'adminName', label: 'Admin Name', required: true, description: 'Full name of society admin', sample: 'Rahul Sharma', aliases: ['adminname', 'admin_name'] },
+  { key: 'adminName', label: 'Admin Name', required: true, description: 'Full name of society admin', sample: 'Full Name', aliases: ['adminname', 'admin_name'] },
   { key: 'adminEmail', label: 'Admin Email', required: true, description: 'Login email for admin account', sample: 'rahul.sharma@example.com', aliases: ['adminemail', 'admin_email'] },
   { key: 'adminPassword', label: 'Admin Password', required: true, description: 'Minimum 6 characters', sample: 'Admin@123', aliases: ['adminpassword', 'admin_password'] },
   { key: 'adminPhone', label: 'Admin Phone', required: true, description: '10-digit Indian mobile number', sample: '9876543210', aliases: ['adminphone', 'admin_phone'] },

@@ -490,7 +490,7 @@ export default function Visitors() {
                   }}
                   error={createErrors.visitorName}
                   required
-                  placeholder="e.g. Rahul Sharma"
+                  placeholder="e.g. Full Name"
                   maxLength={80}
                   autoFocus
                 />

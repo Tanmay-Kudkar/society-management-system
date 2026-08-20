@@ -50,14 +50,14 @@ export default function PublicFooter() {
                   SocietyHub
                 </span>
                 <span className="text-[0.75rem] font-[800] text-[#334155] dark:text-slate-400">
-                  By SocietyHub Technologies
+                  Society Management Platform
                 </span>
               </div>
             </div>
             <p className="max-w-[360px] text-[0.92rem] font-medium leading-[1.6] text-[#334155] dark:text-slate-300 sm:text-[0.95rem]">
-              SocietyHub is aimed at making life in your residential society
-              easy and secure. Manage visitor access, domestic help and
-              services, and much more.
+              Developed and operated by Tanmay Vijay Kudkar. SocietyHub helps
+              residential societies manage residents, maintenance, payments,
+              notices, complaints, facilities, and vendors from one system.
             </p>
           </div>
 
@@ -129,27 +129,27 @@ export default function PublicFooter() {
             </div>
           ))}
 
-          <div className="flex min-w-0 shrink-0 flex-col gap-3 sm:gap-4">
+          <div className="flex min-w-0 flex-col gap-3 sm:gap-4">
             <h4 className="text-[0.74rem] font-[900] tracking-[0.08em] text-[#0f172a] dark:text-white sm:text-[0.8rem]">
               CONTACT US
             </h4>
             <ul className="m-0 flex list-none flex-col gap-3 p-0 sm:gap-4">
               <li>
                 <a
-                  href="mailto:assist@societyhub.com"
-                  className="group inline-flex items-center gap-2 text-[0.9rem] font-bold text-[#475569] no-underline transition-colors hover:text-[#0f172a] dark:text-slate-300 dark:hover:text-white sm:text-[0.95rem]"
+                  href="mailto:kudkartanmay25@gmail.com"
+                  className="group inline-flex w-full min-w-0 items-center gap-2 text-[0.9rem] font-bold text-[#475569] no-underline transition-colors hover:text-[#0f172a] dark:text-slate-300 dark:hover:text-white sm:text-[0.95rem]"
                 >
                   <Mail size={19} className="shrink-0 stroke-[2.5] text-[#334155] transition-colors group-hover:text-[#0f172a] dark:text-slate-400 dark:group-hover:text-white" />
-                  <span className="whitespace-nowrap">assist@societyhub.com</span>
+                  <span className="min-w-0 break-all">kudkartanmay25@gmail.com</span>
                 </a>
               </li>
               <li>
                 <a
-                  href="tel:+919119300000"
+                  href="tel:+918104970317"
                   className="group inline-flex items-center gap-2 whitespace-nowrap text-[0.9rem] font-bold text-[#475569] no-underline transition-colors hover:text-[#0f172a] dark:text-slate-300 dark:hover:text-white sm:text-[0.95rem]"
                 >
                   <Phone size={19} className="stroke-[2.5] text-[#334155] transition-colors group-hover:text-[#0f172a] dark:text-slate-400 dark:group-hover:text-white" />
-                  +91 91193 00000
+                  +91 8104970317
                 </a>
               </li>
             </ul>
@@ -194,7 +194,8 @@ export default function PublicFooter() {
 
         <div className="border-t border-[#cbd5e1] pt-5 text-center sm:pt-6 sm:text-left dark:border-slate-800/80">
           <p className="text-[0.78rem] font-bold text-[#64748b] dark:text-slate-500 sm:text-[0.85rem]">
-            &copy; SocietyHub Technologies Pvt. Ltd. – All Rights Reserved.
+            &copy; SocietyHub. Developed and operated by Tanmay Vijay Kudkar.
+            All Rights Reserved.
           </p>
         </div>
       </div>

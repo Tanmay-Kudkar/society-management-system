@@ -5,32 +5,17 @@ import {
   Zap,
   Shield,
   Globe,
-  Users,
   Award,
   ArrowRight,
-  Crown,
-  Cpu,
-  Palette,
-  Code2,
-  Bug,
+  Building2,
+  Mail,
+  Phone,
 } from "lucide-react";
 import PageShell from "../../components/PageShell";
 import PublicSweepButton from "../../components/PublicSweepButton";
 
 export default function About() {
   const navigate = useNavigate();
-
-  const team = [
-    { name: "Tanmay Kudkar", role: "Founder & CEO", avatarIcon: Crown },
-    { name: "Parth Waghe", role: "Chief Technology Officer", avatarIcon: Cpu },
-    { name: "Atharva Raut", role: "Chief Design Officer", avatarIcon: Palette },
-    {
-      name: "Tanmay Kudkar & Yash Thakur",
-      role: "Lead Developers",
-      avatarIcon: Code2,
-    },
-    { name: "Nidhish Vartak", role: "Lead QA Tester", avatarIcon: Bug },
-  ];
 
   const values = [
     {
@@ -102,8 +87,9 @@ export default function About() {
             className="animate-fade-in-up mx-auto max-w-[42rem] text-[1.15rem] text-[var(--text-secondary)]"
             style={{ animationDelay: "200ms" }}
           >
-            We're on a mission to transform how housing societies operate,
-            making management seamless and residents happier.
+            SocietyHub is a digital society management platform designed to
+            simplify the day-to-day operations of residential societies and
+            housing communities.
           </p>
         </div>
       </section>
@@ -118,19 +104,15 @@ export default function About() {
               </h2>
               <div className="flex flex-col gap-4 leading-7 text-[var(--text-secondary)]">
                 <p>
-                  SocietyHub was born from a simple observation: managing a
-                  housing society shouldn't require spreadsheets, endless phone
-                  calls, and paper notices.
+                  The platform brings resident management, maintenance
+                  management, payments, notices, complaints, facilities,
+                  vendors, and other society operations together in one
+                  centralized system.
                 </p>
                 <p>
-                  Founded in 2024, we set out to build a platform that brings
-                  society management into the digital age. What started as a
-                  project to help our own society has grown into a solution
-                  trusted by hundreds of communities.
-                </p>
-                <p>
-                  Today, we're proud to serve over 500 societies, helping them
-                  save time, reduce conflicts, and build stronger communities.
+                  SocietyHub is developed and operated by Tanmay Vijay Kudkar.
+                  The focus is to deliver a reliable, secure, and scalable SaaS
+                  platform for modern community management.
                 </p>
               </div>
             </div>
@@ -196,12 +178,12 @@ export default function About() {
         </div>
       </section>
 
-      {/* Team */}
+      {/* Ownership */}
       <section className="bg-[var(--bg-primary)] px-4 pb-8 pt-14 sm:pb-9 sm:pt-[4.5rem]">
-        <div className="mx-auto max-w-6xl">
+        <div className="mx-auto max-w-4xl">
           <div className="mb-8 text-center">
             <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-[color-mix(in_srgb,var(--accent-primary)_20%,transparent)] bg-[color-mix(in_srgb,var(--accent-primary)_8%,var(--bg-primary))] px-4 py-2">
-              <Users
+              <Building2
                 className="h-4 w-4"
                 style={{ color: "var(--accent-primary)" }}
               />
@@ -209,36 +191,37 @@ export default function About() {
                 className="text-sm font-semibold"
                 style={{ color: "var(--accent-primary)" }}
               >
-                Our Team
+                Ownership
               </span>
             </div>
             <h2 className="text-3xl font-extrabold text-[var(--text-primary)]">
-              Meet the People Behind SocietyHub
+              SocietyHub Ownership & Operations
             </h2>
           </div>
-          <div className="stagger-children grid grid-cols-1 gap-7 md:grid-cols-2 xl:grid-cols-3">
-            {team.map((member, i) => (
-              <div
-                key={i}
-                className="group mx-auto flex min-h-full w-full max-w-[360px] flex-col items-center rounded-[1.35rem] border border-[color-mix(in_srgb,var(--accent-primary)_22%,var(--border-default))] bg-[linear-gradient(160deg,color-mix(in_srgb,var(--bg-card)_92%,var(--accent-primary)_8%)_0%,color-mix(in_srgb,var(--bg-card)_98%,transparent)_100%)] px-7 pb-8 pt-0 text-center shadow-[0_14px_32px_color-mix(in_srgb,var(--accent-primary)_14%,transparent)] transition-all duration-300 hover:border-[color-mix(in_srgb,var(--accent-primary)_38%,var(--border-default))] hover:shadow-[0_22px_44px_color-mix(in_srgb,var(--accent-primary)_22%,transparent)]"
+          <div className="mx-auto max-w-[760px] rounded-[1.35rem] border border-[color-mix(in_srgb,var(--accent-primary)_22%,var(--border-default))] bg-[linear-gradient(160deg,color-mix(in_srgb,var(--bg-card)_92%,var(--accent-primary)_8%)_0%,color-mix(in_srgb,var(--bg-card)_98%,transparent)_100%)] px-7 pb-8 pt-7 text-center shadow-[0_14px_32px_color-mix(in_srgb,var(--accent-primary)_14%,transparent)]">
+            <h3 className="mb-2 text-[2rem] font-extrabold leading-[1.16] tracking-[-0.012em] text-[var(--text-primary)]">
+              Tanmay Vijay Kudkar
+            </h3>
+            <p className="mb-6 inline-flex min-h-[2.4rem] items-center rounded-full border border-[color-mix(in_srgb,var(--accent-primary)_30%,transparent)] bg-[color-mix(in_srgb,var(--accent-primary)_10%,transparent)] px-4 text-center text-[0.98rem] font-semibold leading-[1.3] text-[color-mix(in_srgb,var(--text-primary)_82%,var(--text-secondary))]">
+              Developed and operated by Tanmay Vijay Kudkar
+            </p>
+
+            <div className="mx-auto flex w-full max-w-[520px] flex-col gap-3 rounded-2xl border border-[var(--border-light)] bg-[var(--bg-card)] p-5 text-left">
+              <a
+                href="mailto:kudkartanmay25@gmail.com"
+                className="inline-flex items-center gap-2 text-[0.98rem] font-semibold text-[var(--text-primary)] no-underline hover:underline"
               >
-                <div className="mb-6 h-1.5 w-[78%] rounded-b-full bg-[linear-gradient(90deg,var(--accent-primary),var(--accent-secondary))] opacity-90" />
-                <div
-                  className="mb-6 flex h-[6.8rem] w-[6.8rem] items-center justify-center rounded-[1.15rem] text-white shadow-[0_16px_30px_color-mix(in_srgb,var(--accent-primary)_30%,transparent)] transition-transform duration-300 group-hover:scale-[1.05]"
-                  style={{
-                    background: `linear-gradient(to bottom right, var(--accent-primary), var(--accent-secondary))`,
-                  }}
-                >
-                  <member.avatarIcon className="h-8 w-8 text-white [stroke-width:2.25]" />
-                </div>
-                <h3 className="mb-4 min-h-[4.1rem] text-center text-[2rem] font-extrabold leading-[1.16] tracking-[-0.012em] text-[var(--text-primary)]">
-                  {member.name}
-                </h3>
-                <p className="inline-flex min-h-[2.4rem] items-center rounded-full border border-[color-mix(in_srgb,var(--accent-primary)_30%,transparent)] bg-[color-mix(in_srgb,var(--accent-primary)_10%,transparent)] px-4 text-center text-[0.98rem] font-semibold leading-[1.3] text-[color-mix(in_srgb,var(--text-primary)_82%,var(--text-secondary))]">
-                  {member.role}
-                </p>
-              </div>
-            ))}
+                <Mail className="h-4 w-4" />
+                kudkartanmay25@gmail.com
+              </a>
+              <a
+                href="tel:+918104970317"
+                className="inline-flex items-center gap-2 text-[0.98rem] font-semibold text-[var(--text-primary)] no-underline hover:underline"
+              >
+                <Phone className="h-4 w-4" />
+                +91 8104970317
+              </a>
+            </div>
           </div>
         </div>
       </section>

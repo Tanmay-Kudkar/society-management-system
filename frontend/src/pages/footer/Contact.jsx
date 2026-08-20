@@ -39,14 +39,14 @@ export default function Contact() {
     {
       icon: Mail,
       title: "Email Us",
-      value: "support@societyhub.com",
-      description: "We reply within 24 hours",
+      value: "kudkartanmay25@gmail.com",
+      description: "Owner and operator contact",
     },
     {
       icon: Phone,
       title: "Call Us",
-      value: "+91 1800-745-8456",
-      description: "Mon-Sat, 9AM-6PM IST",
+      value: "+91 8104970317",
+      description: "Owner and operator contact",
     },
     {
       icon: MapPin,
@@ -108,7 +108,7 @@ export default function Contact() {
                   {method.title}
                 </h3>
                 <p
-                  className="mb-2 text-[0.8rem] font-bold tracking-tight text-blue-600 dark:text-blue-400 sm:text-[0.85rem] lg:text-[0.75rem] xl:text-[0.9rem] w-full max-w-[100%] overflow-hidden text-ellipsis whitespace-nowrap"
+                  className="mb-2 w-full max-w-[100%] text-[0.8rem] font-bold tracking-tight text-blue-600 break-all dark:text-blue-400 sm:text-[0.85rem] lg:text-[0.75rem] xl:text-[0.9rem]"
                   title={method.value}
                 >
                   {method.value}
@@ -166,13 +166,13 @@ export default function Contact() {
                       label: "Your Name",
                       key: "name",
                       type: "text",
-                      placeholder: "Rohit Mehra",
+                      placeholder: "Your full name",
                     },
                     {
                       label: "Email Address",
                       key: "email",
                       type: "email",
-                      placeholder: "rohitmehra@gmail.com",
+                      placeholder: "name@example.com",
                     },
                   ].map((field) => (
                     <div key={field.key}>

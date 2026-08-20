@@ -174,7 +174,7 @@ export default function Help() {
                     Contact Support
                     <ArrowRight className="h-[1.1rem] w-[1.1rem] opacity-90 transition-opacity duration-300 group-hover:opacity-100" />
                   </PublicSweepButton>
-                  <PublicOutlineButton as="a" href="mailto:support@societyhub.com" className="flex h-[3.25rem] items-center justify-center px-8 text-[1rem] font-bold rounded-[1.1rem] no-underline">
+                  <PublicOutlineButton as="a" href="mailto:kudkartanmay25@gmail.com" className="flex h-[3.25rem] items-center justify-center px-8 text-[1rem] font-bold rounded-[1.1rem] no-underline">
                     Email Support
                   </PublicOutlineButton>
                 </div>

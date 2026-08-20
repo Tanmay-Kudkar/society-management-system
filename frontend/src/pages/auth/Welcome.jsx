@@ -308,7 +308,7 @@ export default function Welcome() {
                     <input
                       value={enrollName}
                       onChange={(e) => setEnrollName(e.target.value)}
-                      placeholder="e.g. Rahul Sharma"
+                      placeholder="Enter full name"
                       autoComplete="name"
                       className="peer h-14 w-full rounded-2xl border-2 border-[color-mix(in_srgb,var(--border-default)_60%,transparent)] bg-[var(--bg-primary)] px-5 text-[1rem] font-medium text-[var(--text-primary)] placeholder:text-[var(--text-muted)] transition-[border-color,box-shadow,background-color] duration-300 ease-out focus:border-[var(--accent-primary)] focus:outline-none focus:ring-4 focus:ring-[color-mix(in_srgb,var(--accent-primary)_15%,transparent)]"
                     />
